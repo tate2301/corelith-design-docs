@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Corelith — Settings kit</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<script src="../icons.js" defer></script>
+<script src="../kit-nav.js" defer></script>
+<style>
+  body { background: var(--canvas); padding: 24px; }
+  .wrap { max-width: 1480px; margin: 0 auto; display: grid; gap: 16px; }
+  .section-label { display: flex; align-items: baseline; gap: 12px; padding: 16px 4px 0; }
+  .section-label h2 { font: var(--type-section-title); margin: 0; }
+  .section-label .num { font: var(--type-mono); color: var(--text-subtle); }
+  .section-label .note { color: var(--text-muted); font: var(--type-caption); margin-left: auto; }
+
+  .frame { border: 1px solid var(--border); border-radius: 14px; overflow: clip; background: var(--canvas); }
+
+  /* App shell shared */
+  .erp-shell { display: grid; grid-template-columns: 252px 1fr; min-height: 920px; }
+  .erp-sidebar { background: var(--canvas); border-right: 1px solid var(--border); padding: 16px 12px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .erp-org-switcher { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+  .erp-org-switcher .mark { width: 26px; height: 26px; background: var(--ink); color: #fff; border-radius: 6px; display: grid; place-items: center; }
+  .erp-org-switcher .mark svg { width: 16px; height: 16px; color: var(--brand-300); }
+  .erp-org-switcher .name { font: 600 14px/1 var(--font-sans); color: var(--text-strong); flex: 1; }
+  .erp-org-switcher .chev { color: var(--text-subtle); }
+  .erp-section-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 10px 8px; font: var(--type-caption); color: var(--text-subtle); }
+  .erp-nav { display: grid; gap: 1px; }
+  .erp-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; font: 500 13.5px/1 var(--font-sans); color: var(--text-body); cursor: pointer; text-align: left; }
+  .erp-item:hover { background: var(--surface-muted); }
+  .erp-item.active { background: var(--brand-soft); color: var(--brand-strong); }
+  .erp-item svg { width: 16px; height: 16px; color: var(--text-muted); flex: none; }
+  .erp-item.active svg { color: var(--brand); }
+
+  .erp-main { display: flex; flex-direction: column; min-width: 0; }
+  .clean-toolbar { display: flex; align-items: center; gap: 10px; padding: 12px 24px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .clean-toolbar .breadcrumb { display: inline-flex; align-items: center; gap: 8px; font: var(--type-body); color: var(--text-muted); }
+  .clean-toolbar .breadcrumb a { color: inherit; text-decoration: none; }
+  .clean-toolbar .breadcrumb a:last-child { color: var(--text-strong); font-weight: 500; }
+  .clean-toolbar .breadcrumb .sep { color: var(--text-subtle); display: inline-flex; }
+  .clean-toolbar .spacer { flex: 1; }
+  .clean-toolbar .ic-btn { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); border-radius: 6px; cursor: pointer; }
+  .clean-toolbar .ic-btn:hover { background: var(--surface-muted); color: var(--text-strong); }
+
+  /* Settings two-column inside main */
+  .settings-layout { display: grid; grid-template-columns: 240px 1fr; gap: 48px; padding: 24px 48px 64px; max-width: 1200px; margin: 0 auto; width: 100%; }
+  .settings-rail { display: grid; gap: 1px; align-content: start; }
+  .settings-rail .group-label { font: var(--type-caption); color: var(--text-subtle); padding: 18px 12px 6px; }
+  .settings-rail .ri { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 12px; border-radius: 8px; font: 500 13.5px/1 var(--font-sans); color: var(--text-body); cursor: pointer; text-align: left; }
+  .settings-rail .ri:hover { background: var(--surface-muted); }
+  .settings-rail .ri.active { background: var(--brand-soft); color: var(--brand-strong); }
+  .settings-rail .ri svg { width: 14px; height: 14px; color: var(--text-muted); }
+  .settings-rail .ri.active svg { color: var(--brand); }
+  .settings-rail .ri .tag { margin-left: auto; }
+
+  .settings-main { display: grid; gap: 40px; min-width: 0; }
+  .settings-section { display: grid; gap: 8px; }
+  .settings-section > h2 { font: var(--type-page-title); font-weight: 600; color: var(--text-strong); margin: 0 0 4px; }
+  .settings-section > .desc { font: var(--type-body); color: var(--text-muted); margin: 0 0 12px; max-width: 64ch; }
+
+  .settings-row { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: center; padding: 18px 0; border-top: 1px solid var(--border-subtle); }
+  .settings-row:first-of-type { border-top: none; padding-top: 8px; }
+  .settings-row .title { font: var(--type-label); color: var(--text-strong); }
+  .settings-row .help { font: var(--type-body-sm); color: var(--text-muted); margin-top: 4px; max-width: 56ch; line-height: 1.55; }
+  .settings-row .ctl { justify-self: end; min-width: 200px; }
+  .settings-row .ctl.short { min-width: 60px; }
+  .settings-row .ctl.input { min-width: 280px; }
+
+  .id-pill { display: inline-flex; padding: 4px 10px; background: var(--surface-muted); border-radius: 6px; font-family: var(--font-mono); font-size: 12px; color: var(--text-strong); }
+
+  /* Brand identity preview tile */
+  .brand-preview { display: grid; grid-template-columns: 120px 1fr; gap: 18px; align-items: center; padding: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; }
+  .brand-preview .logo-tile { width: 120px; height: 96px; border-radius: 10px; background: var(--brand); color: #fff; display: grid; place-items: center; }
+  .brand-preview .logo-tile svg { width: 56px; height: 56px; }
+  .brand-preview .nm { font-family: var(--font-serif); font-weight: 600; font-size: 22px; color: var(--text-strong); }
+  .brand-preview .sb { font: var(--type-body-sm); color: var(--text-muted); margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ S.01 · Workspace ============ -->
+  <div class="section-label"><span class="num">S.01</span><h2>Settings — Workspace</h2><span class="note">Identity · branding · ID</span></div>
+
+  <div class="frame">
+    <div class="erp-shell">
+      <aside class="erp-sidebar">
+        <div class="erp-org-switcher"><span class="mark" data-icon="corelith" data-icon-size="16"></span><span class="name">Huchu Enterprises</span><span class="chev" data-icon="chevron"></span></div>
+        <nav class="erp-nav" style="margin-top: 12px;">
+          <button class="erp-item"><span data-icon="home"></span>Overview</button>
+          <button class="erp-item"><span data-icon="add"></span>Create</button>
+        </nav>
+        <div class="erp-section-head"><span>Gold Operations</span></div>
+        <nav class="erp-nav">
+          <button class="erp-item"><span data-icon="warehouse"></span>Production</button>
+          <button class="erp-item"><span data-icon="car"></span>Movement &amp; Settlement</button>
+          <button class="erp-item"><span data-icon="user"></span>Human Resources</button>
+          <button class="erp-item"><span data-icon="list"></span>Accounting Master</button>
+          <button class="erp-item active"><span data-icon="settings"></span>Settings</button>
+        </nav>
+      </aside>
+
+      <main class="erp-main">
+        <div class="clean-toolbar">
+          <nav class="breadcrumb">
+            <a>Home</a><span class="sep" data-icon="chright"></span>
+            <a>Settings</a><span class="sep" data-icon="chright"></span>
+            <a>Workspace</a>
+          </nav>
+          <div class="spacer"></div>
+          <button class="ic-btn" data-icon="bell"></button>
+        </div>
+
+        <div class="settings-layout">
+          <nav class="settings-rail">
+            <div class="group-label">Workspace</div>
+            <button class="ri active">General</button>
+            <button class="ri">Brand identity</button>
+            <button class="ri">Sites &amp; locations</button>
+            <button class="ri">Subsidiaries</button>
+            <div class="group-label">People</div>
+            <button class="ri">Members &amp; roles <span class="badge badge-neutral tag">14</span></button>
+            <button class="ri">Invitations</button>
+            <button class="ri">Approval matrix</button>
+            <div class="group-label">Accounting</div>
+            <button class="ri">Posting policies</button>
+            <button class="ri">Periods &amp; cutoff</button>
+            <button class="ri">Tax &amp; FX</button>
+            <div class="group-label">Plan</div>
+            <button class="ri">Billing</button>
+            <button class="ri">Usage</button>
+            <div class="group-label">Security</div>
+            <button class="ri">SSO &amp; SAML</button>
+            <button class="ri">API keys</button>
+            <button class="ri">Audit log</button>
+            <div class="group-label">Notifications</div>
+            <button class="ri">Channels</button>
+            <button class="ri">Webhooks</button>
+          </nav>
+
+          <div class="settings-main">
+            <section class="settings-section">
+              <h2>Workspace</h2>
+              <p class="desc">The information that identifies this tenant across the product, on documents, and in API responses.</p>
+
+              <div class="brand-preview">
+                <div class="logo-tile" data-icon="corelith" data-icon-size="56"></div>
+                <div>
+                  <div class="nm">Huchu Enterprises</div>
+                  <div class="sb">huchu.corelith.io · 14 sites · USD</div>
+                </div>
+              </div>
+
+              <div class="settings-row">
+                <div>
+                  <div class="title">Display name</div>
+                  <div class="help">Used in the sidebar, on invoices, and in the workspace switcher.</div>
+                </div>
+                <div class="ctl input"><input class="input" value="Huchu Enterprises"></div>
+              </div>
+              <div class="settings-row">
+                <div>
+                  <div class="title">Subdomain</div>
+                  <div class="help">Members sign in at this address.</div>
+                </div>
+                <div class="ctl input" style="display: flex; align-items: center; gap: 8px;">
+                  <input class="input" value="huchu" style="width: 140px;">
+                  <span class="t-mono t-muted">.corelith.io</span>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div>
+                  <div class="title">Workspace ID</div>
+                  <div class="help">Reference for API integrations and support.</div>
+                </div>
+                <div class="ctl"><span class="id-pill">f83d1a09-511c-45a3-835c-21ea18df88cf</span></div>
+              </div>
+              <div class="settings-row">
+                <div>
+                  <div class="title">Default currency</div>
+                  <div class="help">Used for new ledger accounts. Existing accounts keep their own currency.</div>
+                </div>
+                <div class="ctl"><select class="select" style="width: 200px;"><option>USD — US Dollar</option><option>ZWL</option><option>ZAR</option></select></div>
+              </div>
+              <div class="settings-row">
+                <div>
+                  <div class="title">Time zone</div>
+                  <div class="help">Affects cutoff windows and reporting timestamps.</div>
+                </div>
+                <div class="ctl"><select class="select" style="width: 240px;"><option>Africa/Harare (CAT, +02:00)</option></select></div>
+              </div>
+              <div class="settings-row">
+                <div>
+                  <div class="title">Fiscal year start</div>
+                  <div class="help">Used by financial reports and period locking.</div>
+                </div>
+                <div class="ctl"><input class="input" value="January 1" style="width: 160px;"></div>
+              </div>
+            </section>
+
+            <section class="settings-section">
+              <h2>Branding</h2>
+              <p class="desc">These values flow to invoice PDFs, the sign-in page, and the workspace switcher.</p>
+              <div class="settings-row">
+                <div>
+                  <div class="title">Primary colour</div>
+                  <div class="help">Used on primary buttons and focus rings.</div>
+                </div>
+                <div class="ctl" style="display: flex; align-items: center; gap: 8px;">
+                  <input class="input" value="#0B5DF0" style="width: 160px;">
+                  <span style="width: 36px; height: 36px; border-radius: 6px; background: var(--brand); border: 1px solid var(--border);"></span>
+                </div>
+              </div>
+              <div class="settings-row">
+                <div>
+                  <div class="title">Document footer</div>
+                  <div class="help">Appears at the bottom of every invoice and statement.</div>
+                </div>
+                <div class="ctl input"><input class="input" value="Huchu Enterprises · VAT 10184201"></div>
+              </div>
+              <div class="settings-row">
+                <div>
+                  <div class="title">Dark-mode logo</div>
+                  <div class="help">Optional. Falls back to the primary logo on dark backgrounds.</div>
+                </div>
+                <div class="ctl"><button class="btn btn-secondary btn-sm">Upload SVG</button></div>
+              </div>
+            </section>
+
+            <section class="settings-section">
+              <h2>Danger zone</h2>
+              <div class="settings-row">
+                <div>
+                  <div class="title">Archive workspace</div>
+                  <div class="help">Locks all data read-only. Members lose access. You can restore within 90 days.</div>
+                </div>
+                <div class="ctl"><button class="btn btn-destructive-soft">Archive</button></div>
+              </div>
+              <div class="settings-row">
+                <div>
+                  <div class="title">Delete workspace</div>
+                  <div class="help">Permanently removes every record, journal, and file. This action cannot be undone.</div>
+                </div>
+                <div class="ctl"><button class="btn btn-destructive">Delete workspace</button></div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ============ S.02 · Members & roles ============ -->
+  <div class="section-label"><span class="num">S.02</span><h2>Settings — Members &amp; roles</h2><span class="note">Directory · role assignment · invitations</span></div>
+
+  <div class="frame">
+    <div class="erp-shell">
+      <aside class="erp-sidebar">
+        <div class="erp-org-switcher"><span class="mark" data-icon="corelith" data-icon-size="16"></span><span class="name">Huchu Enterprises</span><span class="chev" data-icon="chevron"></span></div>
+        <nav class="erp-nav" style="margin-top: 12px;">
+          <button class="erp-item"><span data-icon="home"></span>Overview</button>
+          <button class="erp-item"><span data-icon="add"></span>Create</button>
+        </nav>
+        <div class="erp-section-head"><span>Gold Operations</span></div>
+        <nav class="erp-nav">
+          <button class="erp-item"><span data-icon="warehouse"></span>Production</button>
+          <button class="erp-item"><span data-icon="user"></span>Human Resources</button>
+          <button class="erp-item active"><span data-icon="settings"></span>Settings</button>
+        </nav>
+      </aside>
+
+      <main class="erp-main">
+        <div class="clean-toolbar">
+          <nav class="breadcrumb">
+            <a>Home</a><span class="sep" data-icon="chright"></span>
+            <a>Settings</a><span class="sep" data-icon="chright"></span>
+            <a>Members &amp; roles</a>
+          </nav>
+          <div class="spacer"></div>
+          <button class="ic-btn" data-icon="bell"></button>
+          <button class="btn btn-primary btn-sm"><span data-icon="plus"></span>Invite members</button>
+        </div>
+
+        <div class="settings-layout">
+          <nav class="settings-rail">
+            <div class="group-label">Workspace</div>
+            <button class="ri">General</button>
+            <button class="ri">Brand identity</button>
+            <button class="ri">Sites &amp; locations</button>
+            <button class="ri">Subsidiaries</button>
+            <div class="group-label">People</div>
+            <button class="ri active">Members &amp; roles <span class="badge badge-neutral tag">14</span></button>
+            <button class="ri">Invitations <span class="badge badge-info tag">3</span></button>
+            <button class="ri">Approval matrix</button>
+            <div class="group-label">Accounting</div>
+            <button class="ri">Posting policies</button>
+            <button class="ri">Periods &amp; cutoff</button>
+            <button class="ri">Tax &amp; FX</button>
+            <div class="group-label">Plan</div>
+            <button class="ri">Billing</button>
+            <button class="ri">Usage</button>
+            <div class="group-label">Security</div>
+            <button class="ri">SSO &amp; SAML</button>
+            <button class="ri">API keys</button>
+            <button class="ri">Audit log</button>
+          </nav>
+
+          <div class="settings-main">
+            <section class="settings-section">
+              <h2>Members &amp; roles</h2>
+              <p class="desc">14 active members. Roles are evaluated in order: Superadmin → Manager → Clerk → Field operator. Site-scoped permissions are configured under each member.</p>
+
+              <div class="data-toolbar" style="padding: 0 0 16px;">
+                <div class="search-input">
+                  <span data-icon="search"></span>
+                  <input placeholder="Search members by name, email, or role…">
+                </div>
+                <button class="fchip active">All</button>
+                <button class="fchip">Active</button>
+                <button class="fchip">Inactive</button>
+                <div class="spacer"></div>
+                <button class="btn btn-secondary btn-sm"><span data-icon="download"></span>Export</button>
+              </div>
+
+              <table class="dtable">
+                <thead>
+                  <tr>
+                    <th style="width: 28px;"><input type="checkbox" class="check"></th>
+                    <th>Member</th>
+                    <th>Role</th>
+                    <th>Sites</th>
+                    <th>Status</th>
+                    <th>Last active</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><input type="checkbox" class="check"></td>
+                    <td><div style="display: flex; gap: 10px; align-items: center;"><span class="avatar" style="background: var(--brand-soft); color: var(--brand-strong);">TM</span><div><div class="lead-name">Tatenda Manhanga</div><div class="lead-sub">owner@huchu.com</div></div></div></td>
+                    <td><span class="erp-pill superadmin">Superadmin</span></td>
+                    <td>All</td>
+                    <td><span class="status-dot ok">Active</span></td>
+                    <td>2 minutes ago</td>
+                    <td class="action"><button class="more" data-icon="morev"></button></td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" class="check"></td>
+                    <td><div style="display: flex; gap: 10px; align-items: center;"><span class="avatar">AO</span><div><div class="lead-name">Amara Obi</div><div class="lead-sub">amara@huchu.com</div></div></div></td>
+                    <td><span class="erp-pill manager">Manager</span></td>
+                    <td>3 sites</td>
+                    <td><span class="status-dot ok">Active</span></td>
+                    <td>14 minutes ago</td>
+                    <td class="action"><button class="more" data-icon="morev"></button></td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" class="check"></td>
+                    <td><div style="display: flex; gap: 10px; align-items: center;"><span class="avatar ink">JN</span><div><div class="lead-name">Juma Nkosi</div><div class="lead-sub">juma@huchu.com</div></div></div></td>
+                    <td><span class="erp-pill manager">Manager</span></td>
+                    <td>Gokwe</td>
+                    <td><span class="status-dot ok">Active</span></td>
+                    <td>1 hour ago</td>
+                    <td class="action"><button class="more" data-icon="morev"></button></td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" class="check"></td>
+                    <td><div style="display: flex; gap: 10px; align-items: center;"><span class="avatar" style="background: var(--tone-success-bg); color: var(--tone-success);">RT</span><div><div class="lead-name">Rhea Toma</div><div class="lead-sub">rhea@huchu.com</div></div></div></td>
+                    <td><span class="erp-pill clerk">Clerk</span></td>
+                    <td>Gokwe</td>
+                    <td><span class="status-dot ok">Active</span></td>
+                    <td>Yesterday</td>
+                    <td class="action"><button class="more" data-icon="morev"></button></td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" class="check"></td>
+                    <td><div style="display: flex; gap: 10px; align-items: center;"><span class="avatar">KA</span><div><div class="lead-name">Kesh Aron</div><div class="lead-sub">kesh@huchu.com</div></div></div></td>
+                    <td><span class="erp-pill clerk">Clerk</span></td>
+                    <td>Kadoma</td>
+                    <td><span class="status-dot idle">Idle</span></td>
+                    <td>4 days ago</td>
+                    <td class="action"><button class="more" data-icon="morev"></button></td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" class="check"></td>
+                    <td><div style="display: flex; gap: 10px; align-items: center;"><span class="avatar">PM</span><div><div class="lead-name">Patricia Mubvumi</div><div class="lead-sub">mubvumip60@gmail.com</div></div></div></td>
+                    <td><span class="erp-pill manager">Manager</span></td>
+                    <td>Mutare</td>
+                    <td><span class="status-dot ok">Active</span></td>
+                    <td>Mar 25, 1:27 PM</td>
+                    <td class="action"><button class="more" data-icon="morev"></button></td>
+                  </tr>
+                  <tr>
+                    <td><input type="checkbox" class="check"></td>
+                    <td><div style="display: flex; gap: 10px; align-items: center;"><span class="avatar" style="background: var(--surface-muted);">WH</span><div><div class="lead-name">Willard Huchu</div><div class="lead-sub">willard@huchu.com</div></div></div></td>
+                    <td><span class="erp-pill manager">Manager</span></td>
+                    <td>Gokwe</td>
+                    <td><span class="status-dot idle ring">Inactive</span></td>
+                    <td>Feb 18, 10:46 AM</td>
+                    <td class="action"><button class="more" data-icon="morev"></button></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="pager-row" style="padding: 14px 0 0;">
+                <span>Showing 1–7 of 14 members</span>
+                <div class="ctrls">
+                  <button class="btn btn-secondary btn-sm">Previous</button>
+                  <span class="t-mono">Page 1 of 2</span>
+                  <button class="btn btn-secondary btn-sm">Next</button>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ============ S.03 · Posting policies ============ -->
+  <div class="section-label"><span class="num">S.03</span><h2>Settings — Posting policies</h2><span class="note">Cutoff · approval thresholds · four-eyes</span></div>
+
+  <div class="frame">
+    <div class="erp-shell">
+      <aside class="erp-sidebar">
+        <div class="erp-org-switcher"><span class="mark" data-icon="corelith" data-icon-size="16"></span><span class="name">Huchu Enterprises</span><span class="chev" data-icon="chevron"></span></div>
+        <nav class="erp-nav" style="margin-top: 12px;">
+          <button class="erp-item"><span data-icon="home"></span>Overview</button>
+        </nav>
+        <div class="erp-section-head"><span>Gold Operations</span></div>
+        <nav class="erp-nav">
+          <button class="erp-item"><span data-icon="warehouse"></span>Production</button>
+          <button class="erp-item active"><span data-icon="settings"></span>Settings</button>
+        </nav>
+      </aside>
+
+      <main class="erp-main">
+        <div class="clean-toolbar">
+          <nav class="breadcrumb">
+            <a>Home</a><span class="sep" data-icon="chright"></span>
+            <a>Settings</a><span class="sep" data-icon="chright"></span>
+            <a>Posting policies</a>
+          </nav>
+          <div class="spacer"></div>
+          <button class="ic-btn" data-icon="bell"></button>
+          <button class="btn btn-primary btn-sm">Save changes</button>
+        </div>
+
+        <div class="settings-layout">
+          <nav class="settings-rail">
+            <div class="group-label">Workspace</div>
+            <button class="ri">General</button>
+            <button class="ri">Brand identity</button>
+            <button class="ri">Sites &amp; locations</button>
+            <button class="ri">Subsidiaries</button>
+            <div class="group-label">People</div>
+            <button class="ri">Members &amp; roles</button>
+            <button class="ri">Invitations</button>
+            <button class="ri">Approval matrix</button>
+            <div class="group-label">Accounting</div>
+            <button class="ri active">Posting policies</button>
+            <button class="ri">Periods &amp; cutoff</button>
+            <button class="ri">Tax &amp; FX</button>
+            <div class="group-label">Plan</div>
+            <button class="ri">Billing</button>
+            <button class="ri">Usage</button>
+            <div class="group-label">Security</div>
+            <button class="ri">SSO &amp; SAML</button>
+            <button class="ri">API keys</button>
+            <button class="ri">Audit log</button>
+          </nav>
+
+          <div class="settings-main">
+            <section class="settings-section">
+              <h2>Cutoff &amp; period locking</h2>
+              <p class="desc">When the day's books close. Entries submitted after cutoff fall into the next period.</p>
+              <div class="settings-row">
+                <div><div class="title">Daily cutoff time</div><div class="help">Local time. All operator entries must be posted before this.</div></div>
+                <div class="ctl"><input class="input" value="10:00 CAT" style="width: 160px;"></div>
+              </div>
+              <div class="settings-row">
+                <div><div class="title">Hard-lock period</div><div class="help">After lock, entries can only be added through reversing journals.</div></div>
+                <div class="ctl"><select class="select" style="width: 200px;"><option>5 days after close</option><option>End of next period</option></select></div>
+              </div>
+              <div class="settings-row">
+                <div><div class="title">Grace overrides</div><div class="help">Allow named managers to post after cutoff with a reason code.</div></div>
+                <div class="ctl"><input type="checkbox" class="switch" checked></div>
+              </div>
+            </section>
+
+            <section class="settings-section">
+              <h2>Four-eyes enforcement</h2>
+              <p class="desc">Require a second approver for journals above a threshold. The preparer cannot approve their own entry.</p>
+              <div class="settings-row">
+                <div><div class="title">Threshold amount</div><div class="help">Journals at or above this amount need a second approver.</div></div>
+                <div class="ctl"><input class="input" value="$ 10,000.00" style="width: 200px;"></div>
+              </div>
+              <div class="settings-row">
+                <div><div class="title">Override reason codes</div><div class="help">Required when a controller approves outside the matrix.</div></div>
+                <div class="ctl"><select class="select" style="width: 280px;"><option>Operator urgency · time-critical</option><option>Named delegate on leave</option></select></div>
+              </div>
+              <div class="settings-row">
+                <div><div class="title">Auto-escalate after</div><div class="help">If no approver responds, route to the next role.</div></div>
+                <div class="ctl"><select class="select" style="width: 160px;"><option>2 hours</option><option>4 hours</option><option>End of day</option></select></div>
+              </div>
+            </section>
+
+            <section class="settings-section">
+              <h2>Anomaly detection</h2>
+              <p class="desc">When a posting falls outside the tolerance band, surface it as an exception instead of failing silently.</p>
+              <div class="settings-row">
+                <div><div class="title">Variance tolerance</div><div class="help">Percentage difference between source and posted amounts.</div></div>
+                <div class="ctl"><input class="input" value="0.25%" style="width: 120px;"></div>
+              </div>
+              <div class="settings-row">
+                <div><div class="title">Hold posting on anomaly</div><div class="help">Journals are drafted but not committed until a manager reviews.</div></div>
+                <div class="ctl"><input type="checkbox" class="switch" checked></div>
+              </div>
+            </section>
+
+            <div class="alert info">
+              <span data-icon="info"></span>
+              <div>
+                <div class="alert-title">Policy changes are audit-logged</div>
+                <div class="alert-body">Anyone with the Audit log permission can see who changed what, and when. Effective date is the next cutoff.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ============ S.04 · Billing ============ -->
+  <div class="section-label"><span class="num">S.04</span><h2>Settings — Billing</h2><span class="note">Plan · payment method · invoices</span></div>
+
+  <div class="frame">
+    <div class="erp-shell">
+      <aside class="erp-sidebar">
+        <div class="erp-org-switcher"><span class="mark" data-icon="corelith" data-icon-size="16"></span><span class="name">Huchu Enterprises</span><span class="chev" data-icon="chevron"></span></div>
+        <nav class="erp-nav" style="margin-top: 12px;">
+          <button class="erp-item"><span data-icon="home"></span>Overview</button>
+        </nav>
+        <div class="erp-section-head"><span>Gold Operations</span></div>
+        <nav class="erp-nav">
+          <button class="erp-item active"><span data-icon="settings"></span>Settings</button>
+        </nav>
+      </aside>
+
+      <main class="erp-main">
+        <div class="clean-toolbar">
+          <nav class="breadcrumb">
+            <a>Home</a><span class="sep" data-icon="chright"></span>
+            <a>Settings</a><span class="sep" data-icon="chright"></span>
+            <a>Billing</a>
+          </nav>
+          <div class="spacer"></div>
+          <button class="ic-btn" data-icon="bell"></button>
+        </div>
+
+        <div class="settings-layout">
+          <nav class="settings-rail">
+            <div class="group-label">Workspace</div>
+            <button class="ri">General</button>
+            <button class="ri">Brand identity</button>
+            <button class="ri">Sites &amp; locations</button>
+            <div class="group-label">People</div>
+            <button class="ri">Members &amp; roles</button>
+            <button class="ri">Approval matrix</button>
+            <div class="group-label">Accounting</div>
+            <button class="ri">Posting policies</button>
+            <button class="ri">Periods &amp; cutoff</button>
+            <div class="group-label">Plan</div>
+            <button class="ri active">Billing</button>
+            <button class="ri">Usage</button>
+            <div class="group-label">Security</div>
+            <button class="ri">SSO &amp; SAML</button>
+            <button class="ri">API keys</button>
+            <button class="ri">Audit log</button>
+          </nav>
+
+          <div class="settings-main">
+            <section class="settings-section">
+              <h2>Plan</h2>
+              <p class="desc">Your current plan and billing period.</p>
+
+              <div class="pricing-card featured" style="max-width: 520px;">
+                <span class="pc-badge">Current</span>
+                <div class="pc-name">Operations</div>
+                <div class="pc-price">$ 480 <span class="u">/ mo</span></div>
+                <div class="pc-desc">Multi-site operator plan · 14 sites · unlimited members</div>
+                <ul>
+                  <li>Production logging &amp; pours</li>
+                  <li>Posting Studio &amp; ledger imports</li>
+                  <li>Approval workflows with delegation</li>
+                  <li>API access &amp; webhooks</li>
+                  <li>Priority support</li>
+                </ul>
+                <div class="t-caption">Next charge: <strong style="color: var(--text-strong);">Jun 8, 2026</strong> · $480.00</div>
+                <div style="display: flex; gap: 8px;">
+                  <button class="btn btn-secondary">Change plan</button>
+                  <button class="btn btn-ghost">Compare plans</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="settings-section">
+              <h2>Payment method</h2>
+              <div style="display: grid; gap: 12px; max-width: 520px;">
+                <div class="pay-card">
+                  <span class="brand-tile">VISA</span>
+                  <div><div class="pc-line">···· ···· ···· 4384</div><div class="pc-meta">Default · expires 09/28</div></div>
+                  <button class="btn btn-ghost btn-icon btn-sm" data-icon="more"></button>
+                </div>
+                <button class="btn btn-secondary" style="justify-self: start;"><span data-icon="plus"></span>Add payment method</button>
+              </div>
+            </section>
+
+            <section class="settings-section">
+              <h2>Invoices</h2>
+              <table class="dtable">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th class="num">Amount</th>
+                    <th>Status</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>May 8, 2026</td>
+                    <td>Operations · May 2026</td>
+                    <td class="num">$ 480.00</td>
+                    <td><span class="status-dot ok">Paid</span></td>
+                    <td class="action"><button class="more" data-icon="download"></button></td>
+                  </tr>
+                  <tr>
+                    <td>Apr 8, 2026</td>
+                    <td>Operations · April 2026</td>
+                    <td class="num">$ 480.00</td>
+                    <td><span class="status-dot ok">Paid</span></td>
+                    <td class="action"><button class="more" data-icon="download"></button></td>
+                  </tr>
+                  <tr>
+                    <td>Mar 8, 2026</td>
+                    <td>Operations · March 2026</td>
+                    <td class="num">$ 480.00</td>
+                    <td><span class="status-dot ok">Paid</span></td>
+                    <td class="action"><button class="more" data-icon="download"></button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </section>
+
+            <section class="settings-section">
+              <h2>Cancellation</h2>
+              <div class="settings-row">
+                <div>
+                  <div class="title">Cancel subscription</div>
+                  <div class="help">You'll keep Operations access until <strong style="color: var(--text-strong);">Jun 8, 2026</strong>. After that, the workspace becomes read-only.</div>
+                </div>
+                <div class="ctl"><button class="btn btn-destructive">Cancel plan</button></div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

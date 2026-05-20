@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Corelith — Sign-in kit</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<script src="../icons.js" defer></script>
+<script src="../kit-nav.js" defer></script>
+<style>
+  body { background: var(--canvas); padding: 24px; }
+  .wrap { max-width: 1480px; margin: 0 auto; display: grid; gap: 16px; }
+  .section-label { display: flex; align-items: baseline; gap: 12px; padding: 16px 4px 0; }
+  .section-label h2 { font: var(--type-section-title); margin: 0; }
+  .section-label .num { font: var(--type-mono); color: var(--text-subtle); }
+  .section-label .note { color: var(--text-muted); font: var(--type-caption); margin-left: auto; }
+
+  .frame { border: 1px solid var(--border); border-radius: 14px; overflow: clip; background: var(--canvas); }
+
+  /* ===== Variant A: split (brand left, form right) ===== */
+  .split { display: grid; grid-template-columns: 520px 1fr; min-height: 720px; }
+  .split-brand {
+    background: var(--brand);
+    color: #fff;
+    padding: 48px 44px;
+    display: flex; flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+  .split-brand::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 18% 20%, rgba(255,255,255,0.18), transparent 40%),
+      radial-gradient(circle at 82% 78%, rgba(8,55,156,0.45), transparent 50%);
+    pointer-events: none;
+  }
+  .split-brand-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(ellipse 110% 70% at 50% 30%, black, transparent 80%);
+  }
+  .split-brand-inner { position: relative; display: flex; flex-direction: column; height: 100%; }
+  .split-brand .logo {
+    display: inline-flex; align-items: center; gap: 12px;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 22px;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+  .split-brand .logo .mark { color: #fff; }
+  .split-brand h2 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: 44px;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin: auto 0 24px;
+    color: #fff;
+    text-wrap: balance;
+    max-width: 16ch;
+  }
+  .split-brand .pitch { color: rgba(255,255,255,0.78); font: var(--type-body-lg); max-width: 38ch; line-height: 1.55; margin-bottom: 32px; }
+  .split-brand .meta { display: flex; gap: 16px; align-items: center; color: rgba(255,255,255,0.6); font: var(--type-caption); }
+  .split-brand .meta .dot { width: 6px; height: 6px; background: rgba(255,255,255,0.4); border-radius: 50%; }
+
+  .split-form { padding: 48px 56px; display: flex; flex-direction: column; }
+  .split-form .topnav { display: flex; align-items: center; justify-content: space-between; }
+  .split-form .topnav-link { color: var(--text-muted); font: var(--type-body-sm); }
+  .split-form .topnav-link a { color: var(--brand-strong); font-weight: 500; }
+
+  .form-wrap { max-width: 380px; width: 100%; margin: auto 0; }
+  .form-wrap h1 {
+    font: var(--type-display-sm);
+    font-size: 30px;
+    margin: 0 0 8px;
+    letter-spacing: -0.015em;
+  }
+  .form-wrap .h-sub { color: var(--text-muted); font: var(--type-body); margin: 0 0 32px; }
+
+  .form-group { display: grid; gap: 14px; }
+  .form-group .field-label-row { display: flex; justify-content: space-between; align-items: baseline; }
+  .form-group .field-label-row a { color: var(--brand-strong); font: var(--type-caption); }
+
+  .input-with-icon { position: relative; }
+  .input-with-icon input { padding-left: 38px; }
+  .input-with-icon .ic-lead { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-subtle); }
+  .input-with-icon .ic-tail { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text-subtle); background: transparent; border: none; cursor: pointer; padding: 4px; }
+  .input-with-icon .ic-tail:hover { color: var(--text-strong); }
+
+  .btn-block { width: 100%; }
+
+  .sso-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .sso-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 40px; border-radius: 8px; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text-strong); font: 500 13px/1 var(--font-sans); cursor: pointer; }
+  .sso-btn:hover { background: var(--surface-muted); }
+
+  .divider-row { display: flex; align-items: center; gap: 12px; margin: 8px 0; color: var(--text-subtle); font: var(--type-caption); }
+  .divider-row::before, .divider-row::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+  .terms { font: var(--type-caption); color: var(--text-muted); text-align: center; margin-top: 24px; }
+  .terms a { color: var(--brand-strong); }
+
+  /* ===== Variant B: centered single-card ===== */
+  .centered { background: var(--canvas); padding: 64px 24px; display: flex; align-items: center; justify-content: center; min-height: 720px; position: relative; }
+  .centered::before {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(11,93,240,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(11,93,240,0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black, transparent 90%);
+    pointer-events: none;
+  }
+  .centered-card {
+    position: relative;
+    max-width: 420px;
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 40px 36px;
+    box-shadow: 0 1px 0 rgba(42,38,34,0.04);
+  }
+  .centered-card .logo { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 28px; font: 600 18px/1 var(--font-sans); color: var(--text-strong); }
+  .centered-card .logo .mark { color: var(--brand); }
+  .centered-card h1 { font: var(--type-display-sm); font-size: 26px; margin: 0 0 6px; letter-spacing: -0.015em; }
+  .centered-card .h-sub { color: var(--text-muted); font: var(--type-body); margin: 0 0 28px; }
+  .centered-card .footnote { text-align: center; margin-top: 24px; color: var(--text-muted); font: var(--type-body-sm); }
+  .centered-card .footnote a { color: var(--brand-strong); font-weight: 500; }
+
+  /* ===== Variant C: SSO / workspace picker ===== */
+  .sso-wrap { padding: 64px 24px; min-height: 720px; display: flex; align-items: center; justify-content: center; }
+  .sso-card { max-width: 460px; width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: clip; }
+  .sso-card .head { padding: 32px 36px 20px; }
+  .sso-card .logo { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 24px; font: 600 18px/1 var(--font-sans); color: var(--text-strong); }
+  .sso-card .logo .mark { color: var(--brand); }
+  .sso-card h1 { font: var(--type-display-sm); font-size: 26px; margin: 0 0 6px; letter-spacing: -0.015em; }
+  .sso-card .h-sub { color: var(--text-muted); font: var(--type-body); margin: 0; }
+  .sso-list { padding: 8px; }
+  .ws-row { display: grid; grid-template-columns: 32px 1fr auto; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 8px; cursor: pointer; }
+  .ws-row:hover { background: var(--surface-muted); }
+  .ws-row .ws-mark { width: 32px; height: 32px; border-radius: 6px; display: grid; place-items: center; background: var(--brand-soft); color: var(--brand-strong); font: 600 13px/1 var(--font-sans); }
+  .ws-row .ws-mark.huchu { background: var(--ink); color: #fff; }
+  .ws-row .ws-name { font: var(--type-label); color: var(--text-strong); }
+  .ws-row .ws-sub { font: var(--type-caption); color: var(--text-muted); margin-top: 2px; }
+  .ws-row .chev { color: var(--text-subtle); }
+  .sso-card .foot { padding: 16px 36px 28px; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; font: var(--type-body-sm); color: var(--text-muted); }
+  .sso-card .foot a { color: var(--brand-strong); font-weight: 500; }
+
+  .logo-mark-svg {
+    width: 22px; height: 22px;
+    display: inline-grid; place-items: center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Variant A — split brand-left -->
+  <div class="section-label"><span class="num">SI.01</span><h2>Sign in — split layout</h2><span class="note">Brand panel left · form right · SSO above the fold</span></div>
+
+  <div class="frame">
+    <div class="split">
+      <aside class="split-brand">
+        <div class="split-brand-grid"></div>
+        <div class="split-brand-inner">
+          <span class="logo">
+            <span class="mark logo-mark-svg" data-icon="corelith" data-icon-size="22"></span>
+            Corelith
+          </span>
+          <h2>The operating layer for the companies that actually move things.</h2>
+          <p class="pitch">One ledger. One workflow. One audit trail across every site, every shift, every reconciliation.</p>
+          <div class="meta">
+            <span>SOC 2 Type II</span><span class="dot"></span>
+            <span>ISO 27001</span><span class="dot"></span>
+            <span>POPIA-ready</span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="split-form">
+        <div class="topnav">
+          <span class="topnav-link">Need help? <a>Contact support</a></span>
+          <span class="topnav-link">No account? <a>Request a workspace</a></span>
+        </div>
+
+        <div class="form-wrap">
+          <h1>Sign in to Corelith</h1>
+          <p class="h-sub">Welcome back. Pick up where you left off.</p>
+
+          <div class="sso-row">
+            <button class="sso-btn"><span style="color: #4285F4; font-weight: 700;">G</span>Google</button>
+            <button class="sso-btn"><span style="color: var(--ink); font-weight: 700;"></span>Microsoft</button>
+            <button class="sso-btn"><span data-icon="lock"></span>SAML SSO</button>
+          </div>
+
+          <div class="divider-row">or with email</div>
+
+          <form class="form-group">
+            <div class="field">
+              <label class="field-label">Work email</label>
+              <div class="input-with-icon">
+                <span class="ic-lead" data-icon="mail"></span>
+                <input class="input" type="email" placeholder="you@huchu.com" />
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label-row">
+                <label class="field-label">Password</label>
+                <a>Forgot?</a>
+              </div>
+              <div class="input-with-icon">
+                <span class="ic-lead" data-icon="lock"></span>
+                <input class="input" type="password" value="••••••••••••" />
+                <button class="ic-tail" type="button" data-icon="eye" aria-label="Show password"></button>
+              </div>
+            </div>
+            <label class="check-row" style="margin-top: 4px;">
+              <input type="checkbox" class="check" checked> Keep me signed in on this device
+            </label>
+            <button type="submit" class="btn btn-primary btn-lg btn-block" style="margin-top: 12px;">Sign in</button>
+          </form>
+
+          <p class="terms">
+            By continuing you agree to the <a>Terms</a> and <a>Privacy Policy</a>.
+          </p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Variant B — centered card -->
+  <div class="section-label"><span class="num">SI.02</span><h2>Sign in — centered card</h2><span class="note">Marketing-light variant for trial accounts and embedded sign-in</span></div>
+
+  <div class="frame">
+    <div class="centered">
+      <div class="centered-card">
+        <span class="logo">
+          <span class="mark logo-mark-svg" style="color: var(--brand);" data-icon="corelith" data-icon-size="22"></span>
+          Corelith
+        </span>
+        <h1>Welcome back</h1>
+        <p class="h-sub">Sign in to your Huchu Enterprises workspace.</p>
+
+        <form class="form-group">
+          <div class="field">
+            <label class="field-label">Work email</label>
+            <input class="input" type="email" value="owner@huchu.com" />
+          </div>
+          <div class="field">
+            <div class="field-label-row">
+              <label class="field-label">Password</label>
+              <a href="#" style="color: var(--brand-strong); font: var(--type-caption);">Forgot password?</a>
+            </div>
+            <input class="input" type="password" value="••••••••" />
+          </div>
+          <button class="btn btn-primary btn-lg btn-block" style="margin-top: 8px;">Continue</button>
+        </form>
+
+        <div class="divider-row" style="margin: 24px 0 16px;">or</div>
+
+        <button class="sso-btn" style="width: 100%; height: 44px;"><span data-icon="lock"></span>Continue with SAML SSO</button>
+
+        <p class="footnote">
+          Don't have a workspace? <a>Request access →</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Variant C — workspace picker -->
+  <div class="section-label"><span class="num">SI.03</span><h2>Workspace picker</h2><span class="note">After sign-in, when the email is associated with multiple tenants</span></div>
+
+  <div class="frame">
+    <div class="sso-wrap">
+      <div class="sso-card">
+        <div class="head">
+          <span class="logo">
+            <span class="mark logo-mark-svg" data-icon="corelith" data-icon-size="22"></span>
+            Corelith
+          </span>
+          <h1>Choose a workspace</h1>
+          <p class="h-sub">Signed in as <strong style="color: var(--text-strong);">owner@huchu.com</strong>. Three workspaces use this email.</p>
+        </div>
+
+        <div class="sso-list">
+          <a class="ws-row" href="#">
+            <span class="ws-mark huchu"><span style="color: var(--brand-300);" data-icon="corelith" data-icon-size="14"></span></span>
+            <div>
+              <div class="ws-name">Huchu Enterprises</div>
+              <div class="ws-sub">huchu.corelith.io · Owner · 14 active sites</div>
+            </div>
+            <span class="chev" data-icon="chright"></span>
+          </a>
+          <a class="ws-row" href="#">
+            <span class="ws-mark">FL</span>
+            <div>
+              <div class="ws-name">Frazier Logistics</div>
+              <div class="ws-sub">frazier.corelith.io · Member · 3 active sites</div>
+            </div>
+            <span class="chev" data-icon="chright"></span>
+          </a>
+          <a class="ws-row" href="#">
+            <span class="ws-mark">UJ</span>
+            <div>
+              <div class="ws-name">Unijobs ZW</div>
+              <div class="ws-sub">unijobs.corelith.io · Member · 1 active site</div>
+            </div>
+            <span class="chev" data-icon="chright"></span>
+          </a>
+        </div>
+
+        <div class="foot">
+          <span>Looking for another workspace?</span>
+          <a>Use a different email</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

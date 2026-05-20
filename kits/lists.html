@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Corelith — Lists kit</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<script src="../icons.js" defer></script>
+<script src="../kit-nav.js" defer></script>
+<style>
+  body { background: var(--canvas); padding: 24px; }
+  .wrap { max-width: 1400px; margin: 0 auto; display: grid; gap: 16px; }
+  .kit-head {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 28px 32px; margin-bottom: 12px;
+  }
+  .kit-head h1 { font: var(--type-page-title); margin: 6px 0 8px; }
+  .kit-head p { color: var(--text-muted); font: var(--type-body); max-width: 70ch; margin: 0; }
+
+  .section-label { display: flex; align-items: baseline; gap: 12px; padding: 24px 4px 12px; }
+  .section-label h2 { font: var(--type-section-title); margin: 0; }
+  .section-label .num { font: var(--type-mono); color: var(--text-subtle); }
+  .section-label .note { color: var(--text-muted); font: var(--type-caption); margin-left: auto; }
+
+  /* ===== L.01 · Project list (avatar + status + meta) ===== */
+  .project-list {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; overflow: clip;
+  }
+  .proj-row {
+    display: grid;
+    grid-template-columns: 40px 1fr 140px 140px 120px 32px;
+    gap: 16px; align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+    cursor: pointer;
+  }
+  .proj-row:last-child { border-bottom: none; }
+  .proj-row:hover { background: var(--surface-muted); }
+  .proj-row .pic {
+    width: 40px; height: 40px; border-radius: 8px;
+    display: grid; place-items: center;
+    font: 600 14px/1 var(--font-sans);
+    background: var(--brand-soft); color: var(--brand-strong);
+  }
+  .proj-row .pic.warn { background: var(--tone-warn-bg); color: var(--tone-warn); }
+  .proj-row .pic.success { background: var(--tone-success-bg); color: var(--tone-success); }
+  .proj-row .pic.neutral { background: var(--surface-muted); color: var(--text-strong); }
+  .proj-row .nm { font: var(--type-label); color: var(--text-strong); }
+  .proj-row .sb { font: var(--type-caption); color: var(--text-muted); margin-top: 2px; }
+  .proj-row .members { display: flex; }
+  .proj-row .members .avatar { margin-left: -6px; border: 2px solid var(--surface); }
+  .proj-row .members .avatar:first-child { margin-left: 0; }
+  .proj-row .progress-cell { display: grid; gap: 4px; }
+  .proj-row .progress-cell .pn { font: var(--type-caption); color: var(--text-muted); font-family: var(--font-mono); }
+  .proj-row .due { font: var(--type-body-sm); color: var(--text-body); }
+  .proj-row .due.overdue { color: var(--tone-danger); font-weight: 500; }
+
+  /* ===== L.02 · Listing cards (3-col grid of richer cards) ===== */
+  .listing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .listing-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; overflow: clip; display: grid;
+    grid-template-rows: 140px auto auto;
+  }
+  .listing-card .lc-hero {
+    background: linear-gradient(135deg, var(--brand-soft) 0%, var(--brand-100) 100%);
+    position: relative; display: grid; place-items: center;
+    color: var(--brand-strong);
+  }
+  .listing-card .lc-hero.gem    { background: linear-gradient(135deg, #FEF4DA, #F4C15B); color: #6B5119; }
+  .listing-card .lc-hero.copper { background: linear-gradient(135deg, var(--tone-warn-bg), #E2A458); color: #6B4419; }
+  .listing-card .lc-hero.silver { background: linear-gradient(135deg, var(--surface-muted), var(--border-strong)); color: var(--text-strong); }
+  .listing-card .lc-hero .lc-mark { font-family: var(--font-serif); font-weight: 600; font-size: 38px; letter-spacing: -0.02em; }
+  .listing-card .lc-hero .lc-badge {
+    position: absolute; top: 12px; right: 12px;
+    padding: 4px 10px; border-radius: 9999px;
+    background: rgba(255,255,255,0.85);
+    font: 500 11px/1 var(--font-sans); color: var(--text-strong);
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .listing-card .lc-body { padding: 16px 18px 8px; }
+  .listing-card .lc-cat { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+  .listing-card .lc-title { font: var(--type-section-title); margin: 6px 0 4px; }
+  .listing-card .lc-meta { font: var(--type-body-sm); color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 10px; }
+  .listing-card .lc-meta span { display: inline-flex; align-items: center; gap: 4px; }
+  .listing-card .lc-foot {
+    padding: 14px 18px; border-top: 1px solid var(--border-subtle);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .listing-card .lc-price { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 600; color: var(--text-strong); }
+  .listing-card .lc-price .u { color: var(--text-muted); font-weight: 400; margin-left: 2px; font-family: var(--font-sans); }
+
+  /* ===== L.03 · Invoice list (timeline by date) ===== */
+  .invoice-frame {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; overflow: clip;
+  }
+  .inv-section { padding: 8px 0; }
+  .inv-date-h {
+    padding: 12px 22px;
+    font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-muted); background: var(--surface-muted);
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between;
+  }
+  .inv-date-h .total { color: var(--text-strong); font-family: var(--font-mono); font-weight: 600; letter-spacing: 0; }
+  .inv-row {
+    display: grid;
+    grid-template-columns: 90px 1fr auto auto 110px;
+    gap: 20px; align-items: center;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .inv-row:last-of-type { border-bottom: none; }
+  .inv-row:hover { background: var(--surface-muted); }
+  .inv-row .ref { font-family: var(--font-mono); color: var(--brand-strong); font-weight: 500; }
+  .inv-row .cust { font: var(--type-label); color: var(--text-strong); }
+  .inv-row .desc { font: var(--type-caption); color: var(--text-muted); margin-top: 2px; }
+  .inv-row .amt { font-family: var(--font-mono); font-weight: 600; color: var(--text-strong); font-variant-numeric: tabular-nums; text-align: right; }
+
+  /* ===== L.04 · People list (compact) ===== */
+  .people-list {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; overflow: clip;
+  }
+  .ppl-row {
+    display: grid;
+    grid-template-columns: 36px 1fr 140px 100px 120px 32px;
+    gap: 16px; align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .ppl-row:last-child { border-bottom: none; }
+  .ppl-row:hover { background: var(--surface-muted); }
+  .ppl-row .nm { font: var(--type-label); color: var(--text-strong); }
+  .ppl-row .ml { font: var(--type-caption); color: var(--text-muted); margin-top: 2px; }
+  .ppl-row .last-seen { font: var(--type-caption); color: var(--text-muted); }
+
+  /* ===== L.05 · Activity timeline (vertical) ===== */
+  .timeline {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 28px 32px;
+  }
+  .tl-day { display: grid; grid-template-columns: 92px 1fr; gap: 24px; padding: 8px 0 24px; border-top: 1px solid var(--border-subtle); }
+  .tl-day:first-child { border-top: none; padding-top: 0; }
+  .tl-day .day-lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); padding-top: 6px; }
+  .tl-events { display: grid; gap: 16px; position: relative; padding-left: 18px; }
+  .tl-events::before { content: ""; position: absolute; left: 5px; top: 8px; bottom: 8px; width: 1px; background: var(--border); }
+  .tl-event { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: start; }
+  .tl-event::before { content: ""; position: absolute; left: -19px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--surface); border: 2px solid var(--border-strong); }
+  .tl-event.brand::before { background: var(--brand); border-color: var(--brand); }
+  .tl-event.warn::before { background: var(--tone-warn); border-color: var(--tone-warn); }
+  .tl-event.success::before { background: var(--tone-success); border-color: var(--tone-success); }
+  .tl-event.danger::before { background: var(--tone-danger); border-color: var(--tone-danger); }
+  .tl-event .who { font: var(--type-label); color: var(--text-strong); }
+  .tl-event .body { font: var(--type-body-sm); color: var(--text-body); margin-top: 4px; line-height: 1.55; }
+  .tl-event .body strong { color: var(--text-strong); font-weight: 500; }
+  .tl-event .when { font: var(--type-caption); color: var(--text-subtle); white-space: nowrap; font-family: var(--font-mono); }
+
+  /* ===== L.06 · Compact ledger (definition list) ===== */
+  .dlist {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 6px 24px;
+  }
+  .dlist-row {
+    display: grid; grid-template-columns: 220px 1fr auto;
+    gap: 24px; align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .dlist-row:last-child { border-bottom: none; }
+  .dlist-row .k { font: var(--type-label); color: var(--text-muted); }
+  .dlist-row .v { font: var(--type-body); color: var(--text-strong); }
+  .dlist-row .v.mono { font-family: var(--font-mono); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="kit-head">
+    <span class="t-eyebrow">Lists kit</span>
+    <h1>Six list shapes for six kinds of data.</h1>
+    <p>The right list for a given data type is rarely a table. Projects need members and progress. Listings need imagery. Invoices group by date. People want avatar + role + last seen. Activity wants a timeline. Records want a definition list. Pick by content, not by habit.</p>
+  </header>
+
+  <!-- ============ L.01 · PROJECTS ============ -->
+  <div class="section-label"><span class="num">L.01</span><h2>Project list</h2><span class="note">Initials tile · members stack · progress · due date</span></div>
+  <div class="project-list">
+    <div class="proj-row">
+      <span class="pic">GO</span>
+      <div>
+        <div class="nm">Gold Operations · Q3 modernisation</div>
+        <div class="sb">12 modules · Production, Movement &amp; Settlement, Insights</div>
+      </div>
+      <div class="members">
+        <span class="avatar sm" style="background: var(--brand-soft); color: var(--brand-strong);">AO</span>
+        <span class="avatar sm">JN</span>
+        <span class="avatar sm ink">RT</span>
+        <span class="avatar sm" style="background: var(--tone-success-bg); color: var(--tone-success);">+8</span>
+      </div>
+      <div class="progress-cell">
+        <div class="progress"><span style="width: 68%;"></span></div>
+        <div class="pn">68% · 23 of 34</div>
+      </div>
+      <div class="due">Due May 28</div>
+      <button class="ic-btn" data-icon="more"></button>
+    </div>
+
+    <div class="proj-row">
+      <span class="pic warn">AM</span>
+      <div>
+        <div class="nm">Accounting Master · period close automation</div>
+        <div class="sb">7 modules · Receivables, Payables, Posting Studio</div>
+      </div>
+      <div class="members">
+        <span class="avatar sm" style="background: var(--tone-warn-bg); color: var(--tone-warn);">CM</span>
+        <span class="avatar sm">NM</span>
+      </div>
+      <div class="progress-cell">
+        <div class="progress warn"><span style="width: 42%;"></span></div>
+        <div class="pn">42% · 9 of 22</div>
+      </div>
+      <div class="due overdue">2 days overdue</div>
+      <button class="ic-btn" data-icon="more"></button>
+    </div>
+
+    <div class="proj-row">
+      <span class="pic success">HR</span>
+      <div>
+        <div class="nm">HR &amp; payroll · employee directory revamp</div>
+        <div class="sb">3 modules · Directory, Compensation, Payroll</div>
+      </div>
+      <div class="members">
+        <span class="avatar sm" style="background: var(--brand-soft); color: var(--brand-strong);">VN</span>
+        <span class="avatar sm" style="background: var(--tone-success-bg); color: var(--tone-success);">WM</span>
+        <span class="avatar sm">SC</span>
+        <span class="avatar sm">PR</span>
+      </div>
+      <div class="progress-cell">
+        <div class="progress success"><span style="width: 96%;"></span></div>
+        <div class="pn">96% · 24 of 25</div>
+      </div>
+      <div class="due">Due May 16</div>
+      <button class="ic-btn" data-icon="more"></button>
+    </div>
+
+    <div class="proj-row">
+      <span class="pic neutral">SI</span>
+      <div>
+        <div class="nm">Stores &amp; Inventory · barcode rollout</div>
+        <div class="sb">5 modules · Receiving, Stockpiles, Transfers</div>
+      </div>
+      <div class="members">
+        <span class="avatar sm">PT</span>
+        <span class="avatar sm">WH</span>
+      </div>
+      <div class="progress-cell">
+        <div class="progress"><span style="width: 12%;"></span></div>
+        <div class="pn">12% · 3 of 25</div>
+      </div>
+      <div class="due">Due Jul 14</div>
+      <button class="ic-btn" data-icon="more"></button>
+    </div>
+  </div>
+
+  <!-- ============ L.02 · LISTINGS ============ -->
+  <div class="section-label"><span class="num">L.02</span><h2>Inventory listings</h2><span class="note">Hero tile · category · meta · price footer</span></div>
+  <div class="listing-grid">
+    <div class="listing-card">
+      <div class="lc-hero gem">
+        <div class="lc-badge">On site</div>
+        <div class="lc-mark">14.6 g</div>
+      </div>
+      <div class="lc-body">
+        <div class="lc-cat">Gold bar · 24K</div>
+        <div class="lc-title">BAR-0123</div>
+        <div class="lc-meta">
+          <span><span data-icon="warehouse"></span>Gokwe · Vault</span>
+          <span><span data-icon="calendar"></span>Poured 5/9/2026</span>
+        </div>
+      </div>
+      <div class="lc-foot">
+        <span class="lc-price">$1,168.00<span class="u"> · est.</span></span>
+        <button class="btn btn-secondary btn-sm">View pour</button>
+      </div>
+    </div>
+
+    <div class="listing-card">
+      <div class="lc-hero copper">
+        <div class="lc-badge">Sold</div>
+        <div class="lc-mark">8.7 g</div>
+      </div>
+      <div class="lc-body">
+        <div class="lc-cat">Gold bar · 22K</div>
+        <div class="lc-title">BAR-0210</div>
+        <div class="lc-meta">
+          <span><span data-icon="warehouse"></span>Gokwe · Vault</span>
+          <span><span data-icon="user"></span>Mutemeri</span>
+        </div>
+      </div>
+      <div class="lc-foot">
+        <span class="lc-price">$696.00<span class="u"> · settled</span></span>
+        <button class="btn btn-secondary btn-sm">View sale</button>
+      </div>
+    </div>
+
+    <div class="listing-card">
+      <div class="lc-hero silver">
+        <div class="lc-badge">On site</div>
+        <div class="lc-mark">35.8 g</div>
+      </div>
+      <div class="lc-body">
+        <div class="lc-cat">Bulk pour</div>
+        <div class="lc-title">BATCH-20260414-031</div>
+        <div class="lc-meta">
+          <span><span data-icon="warehouse"></span>Gokwe · Vault</span>
+          <span><span data-icon="user"></span>Chadakufa</span>
+        </div>
+      </div>
+      <div class="lc-foot">
+        <span class="lc-price">$2,864.00<span class="u"> · est.</span></span>
+        <button class="btn btn-secondary btn-sm">View pour</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ L.03 · INVOICES (date-grouped) ============ -->
+  <div class="section-label"><span class="num">L.03</span><h2>Invoices — grouped by date</h2><span class="note">Date headers with running total · customer · ref · status</span></div>
+  <div class="invoice-frame">
+    <div class="inv-section">
+      <div class="inv-date-h"><span>Friday, May 9, 2026</span><span class="total">Day total · $4,872.00</span></div>
+      <div class="inv-row">
+        <span class="ref">BAR-0123</span>
+        <div><div class="cust">Gokwe Buyer Co.</div><div class="desc">Cash sale · 14.600 g · gold price $80.00/g</div></div>
+        <span class="erp-pill sold with-dot">Paid</span>
+        <span class="t-caption" style="color: var(--text-muted);">cash</span>
+        <span class="amt">$4,000.00</span>
+      </div>
+      <div class="inv-row">
+        <span class="ref">BAR-0122</span>
+        <div><div class="cust">Highbank</div><div class="desc">Bank transfer · 4.100 g</div></div>
+        <span class="erp-pill committed with-dot">Settled</span>
+        <span class="t-caption" style="color: var(--text-muted);">bank</span>
+        <span class="amt">$328.00</span>
+      </div>
+      <div class="inv-row">
+        <span class="ref">BAR-0124</span>
+        <div><div class="cust">Gokwe Buyer Co.</div><div class="desc">Cash sale · 1.600 g</div></div>
+        <span class="erp-pill pending with-dot">Pending</span>
+        <span class="t-caption" style="color: var(--text-muted);">cash</span>
+        <span class="amt">$128.00</span>
+      </div>
+      <div class="inv-row">
+        <span class="ref">BAR-0121</span>
+        <div><div class="cust">Gokwe Buyer Co.</div><div class="desc">Cash sale · 5.300 g</div></div>
+        <span class="erp-pill sold with-dot">Paid</span>
+        <span class="t-caption" style="color: var(--text-muted);">cash</span>
+        <span class="amt">$416.00</span>
+      </div>
+    </div>
+    <div class="inv-section">
+      <div class="inv-date-h"><span>Thursday, May 8, 2026</span><span class="total">Day total · $696.00</span></div>
+      <div class="inv-row">
+        <span class="ref">BAR-0210</span>
+        <div><div class="cust">Mutemeri (worker share)</div><div class="desc">In-kind · 8.700 g</div></div>
+        <span class="erp-pill committed with-dot">Settled</span>
+        <span class="t-caption" style="color: var(--text-muted);">in-kind</span>
+        <span class="amt">$696.00</span>
+      </div>
+    </div>
+    <div class="inv-section">
+      <div class="inv-date-h"><span>Wednesday, May 7, 2026</span><span class="total">Day total · $1,104.00</span></div>
+      <div class="inv-row">
+        <span class="ref">BAR-0207</span>
+        <div><div class="cust">Highbank</div><div class="desc">Bank transfer · 10.000 g</div></div>
+        <span class="erp-pill committed with-dot">Settled</span>
+        <span class="t-caption" style="color: var(--text-muted);">bank</span>
+        <span class="amt">$800.00</span>
+      </div>
+      <div class="inv-row">
+        <span class="ref">BAR-0211</span>
+        <div><div class="cust">Velapi Nyanyire (worker share)</div><div class="desc">In-kind · 3.800 g</div></div>
+        <span class="erp-pill sold with-dot">Paid</span>
+        <span class="t-caption" style="color: var(--text-muted);">in-kind</span>
+        <span class="amt">$304.00</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ L.04 · PEOPLE ============ -->
+  <div class="section-label"><span class="num">L.04</span><h2>People list</h2><span class="note">Avatar · name + email · role · status · last seen</span></div>
+  <div class="people-list">
+    <div class="ppl-row">
+      <span class="avatar" style="background: var(--brand-soft); color: var(--brand-strong);">AO</span>
+      <div><div class="nm">Amara Obi</div><div class="ml">amara.obi@huchu.com</div></div>
+      <span class="erp-pill mapped">Superadmin</span>
+      <span class="status-dot ok">Active</span>
+      <span class="last-seen">2 minutes ago</span>
+      <button class="ic-btn" data-icon="more"></button>
+    </div>
+    <div class="ppl-row">
+      <span class="avatar">JN</span>
+      <div><div class="nm">Juma Nkosi</div><div class="ml">juma@huchu.com</div></div>
+      <span class="erp-pill on-site">Manager</span>
+      <span class="status-dot ok">Active</span>
+      <span class="last-seen">1 hour ago</span>
+      <button class="ic-btn" data-icon="more"></button>
+    </div>
+    <div class="ppl-row">
+      <span class="avatar ink">RT</span>
+      <div><div class="nm">Rhea Toma</div><div class="ml">rhea@huchu.com</div></div>
+      <span class="erp-pill mapping">Clerk</span>
+      <span class="status-dot ok">Active</span>
+      <span class="last-seen">Yesterday</span>
+      <button class="ic-btn" data-icon="more"></button>
+    </div>
+    <div class="ppl-row">
+      <span class="avatar" style="background: var(--tone-success-bg); color: var(--tone-success);">KA</span>
+      <div><div class="nm">Kesh Aron</div><div class="ml">kesh@huchu.com</div></div>
+      <span class="erp-pill mapping">Clerk</span>
+      <span class="status-dot idle">Idle</span>
+      <span class="last-seen">4 days ago</span>
+      <button class="ic-btn" data-icon="more"></button>
+    </div>
+    <div class="ppl-row">
+      <span class="avatar" style="background: var(--surface-muted);">PM</span>
+      <div><div class="nm">Patricia Mubvumi</div><div class="ml">mubvumip60@gmail.com</div></div>
+      <span class="erp-pill on-site">Manager</span>
+      <span class="status-dot ok">Active</span>
+      <span class="last-seen">3/25/2026, 1:27 PM</span>
+      <button class="ic-btn" data-icon="more"></button>
+    </div>
+    <div class="ppl-row">
+      <span class="avatar">WH</span>
+      <div><div class="nm">Willard Huchu</div><div class="ml">willard@huchu.com</div></div>
+      <span class="erp-pill on-site">Manager</span>
+      <span class="status-dot idle ring">Inactive</span>
+      <span class="last-seen">2/18/2026, 10:46 AM</span>
+      <button class="ic-btn" data-icon="more"></button>
+    </div>
+  </div>
+
+  <!-- ============ L.05 · ACTIVITY TIMELINE ============ -->
+  <div class="section-label"><span class="num">L.05</span><h2>Activity timeline</h2><span class="note">Day-grouped events · color-coded dots · monospaced timestamps</span></div>
+  <div class="timeline">
+    <div class="tl-day">
+      <div class="day-lbl">Today<br><span style="text-transform: none; color: var(--text-subtle); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0;">May 15</span></div>
+      <div class="tl-events">
+        <div class="tl-event brand">
+          <div>
+            <div class="who">Tatenda</div>
+            <div class="body">Committed posting batch <strong>POST-0419</strong> · 198 integration events replayed.</div>
+          </div>
+          <div class="when">02:23</div>
+        </div>
+        <div class="tl-event warn">
+          <div>
+            <div class="who">Corelith</div>
+            <div class="body"><strong>ledger_v3.csv</strong> finished mapping. 12 created · 90 flagged · 0 failed.</div>
+          </div>
+          <div class="when">02:21</div>
+        </div>
+        <div class="tl-event success">
+          <div>
+            <div class="who">Juma Nkosi</div>
+            <div class="body">Approved <strong>JE-10927</strong>. Variance cleared at site 14.</div>
+          </div>
+          <div class="when">01:08</div>
+        </div>
+      </div>
+    </div>
+    <div class="tl-day">
+      <div class="day-lbl">Yesterday<br><span style="text-transform: none; color: var(--text-subtle); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0;">May 14</span></div>
+      <div class="tl-events">
+        <div class="tl-event">
+          <div>
+            <div class="who">Amara Obi</div>
+            <div class="body">Mentioned you in <strong>JE-10920</strong>: "Can you confirm the FX rate before close?"</div>
+          </div>
+          <div class="when">17:42</div>
+        </div>
+        <div class="tl-event danger">
+          <div>
+            <div class="who">Corelith</div>
+            <div class="body">Reconciliation failed at site 14 — bank feed mismatch <strong>+$11,640.00</strong>. SLA: 2h 40m.</div>
+          </div>
+          <div class="when">14:12</div>
+        </div>
+        <div class="tl-event">
+          <div>
+            <div class="who">Tatenda</div>
+            <div class="body">Updated brand identity colours. Live preview applied across the workspace.</div>
+          </div>
+          <div class="when">11:01</div>
+        </div>
+      </div>
+    </div>
+    <div class="tl-day">
+      <div class="day-lbl">May 13</div>
+      <div class="tl-events">
+        <div class="tl-event success">
+          <div>
+            <div class="who">Christopher Mutemeri</div>
+            <div class="body">Allocated <strong>80.35 g</strong> for the week ending May 14 · worker share $6,428.00.</div>
+          </div>
+          <div class="when">19:30</div>
+        </div>
+        <div class="tl-event">
+          <div>
+            <div class="who">Superuser Developer</div>
+            <div class="body">Rotated the platform API key. Existing tokens remain valid.</div>
+          </div>
+          <div class="when">08:14</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ L.06 · DEFINITION LIST ============ -->
+  <div class="section-label"><span class="num">L.06</span><h2>Record details — definition list</h2><span class="note">Key-value rows for entity / record metadata</span></div>
+  <div class="dlist">
+    <div class="dlist-row">
+      <div class="k">Batch ID</div>
+      <div class="v mono">BAR-0123</div>
+      <button class="btn btn-ghost btn-icon btn-sm" aria-label="Copy"><span data-icon="external"></span></button>
+    </div>
+    <div class="dlist-row">
+      <div class="k">Status</div>
+      <div class="v"><span class="erp-pill sold with-dot">Sold</span></div>
+      <button class="btn btn-ghost btn-sm">Change</button>
+    </div>
+    <div class="dlist-row">
+      <div class="k">Site</div>
+      <div class="v">Gokwe · Vault</div>
+      <button class="btn btn-ghost btn-icon btn-sm" aria-label="More"><span data-icon="more"></span></button>
+    </div>
+    <div class="dlist-row">
+      <div class="k">Gross weight</div>
+      <div class="v mono">14.600 g</div>
+      <button class="btn btn-ghost btn-icon btn-sm" aria-label="More"><span data-icon="more"></span></button>
+    </div>
+    <div class="dlist-row">
+      <div class="k">Shift leader</div>
+      <div class="v">Admond Moyo</div>
+      <button class="btn btn-ghost btn-icon btn-sm" aria-label="More"><span data-icon="more"></span></button>
+    </div>
+    <div class="dlist-row">
+      <div class="k">Recorded by</div>
+      <div class="v">Superuser Developer</div>
+      <button class="btn btn-ghost btn-icon btn-sm" aria-label="More"><span data-icon="more"></span></button>
+    </div>
+    <div class="dlist-row">
+      <div class="k">Recorded at</div>
+      <div class="v mono">2026-05-09 · 05:58 UTC</div>
+      <button class="btn btn-ghost btn-icon btn-sm" aria-label="More"><span data-icon="more"></span></button>
+    </div>
+    <div class="dlist-row">
+      <div class="k">Value · est.</div>
+      <div class="v mono" style="color: var(--text-strong); font-weight: 600;">$1,168.00</div>
+      <button class="btn btn-ghost btn-sm">Revalue</button>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

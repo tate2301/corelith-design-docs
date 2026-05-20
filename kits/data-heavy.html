@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Corelith — Data-heavy page kit</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<script src="../icons.js" defer></script>
+<script src="../kit-nav.js" defer></script>
+<style>
+  body { background: var(--canvas); padding: 24px; }
+  .frame { max-width: 1480px; margin: 0 auto 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: clip; }
+  .kit-head { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px 28px; margin: 0 auto 16px; max-width: 1480px; }
+  .kit-head h1 { font: var(--type-page-title); margin: 4px 0 6px; }
+  .kit-head p { color: var(--text-muted); font: var(--type-body); margin: 0; max-width: 70ch; }
+
+  .erp-shell { display: grid; grid-template-columns: 252px 1fr; min-height: 920px; }
+  .erp-sidebar { background: var(--canvas); border-right: 1px solid var(--border); padding: 16px 12px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .erp-org-switcher { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+  .erp-org-switcher .mark { width: 26px; height: 26px; background: var(--ink); color: #fff; border-radius: 6px; display: grid; place-items: center; }
+  .erp-org-switcher .mark svg { width: 16px; height: 16px; color: var(--brand-300); }
+  .erp-org-switcher .name { font: 600 14px/1 var(--font-sans); color: var(--text-strong); flex: 1; }
+  .erp-org-switcher .chev { color: var(--text-subtle); }
+  .erp-section-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 10px 8px; font: var(--type-caption); color: var(--text-subtle); }
+  .erp-nav { display: grid; gap: 1px; }
+  .erp-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; font: 500 13.5px/1 var(--font-sans); color: var(--text-body); cursor: pointer; border: none; background: transparent; text-align: left; }
+  .erp-item:hover { background: var(--surface-muted); }
+  .erp-item.active { background: var(--brand-soft); color: var(--brand-strong); }
+  .erp-item.parent-active { color: var(--text-strong); }
+  .erp-item svg { width: 16px; height: 16px; color: var(--text-muted); flex: none; }
+  .erp-item.active svg { color: var(--brand); }
+  .erp-item.has-children::after { content: ""; width: 6px; height: 6px; border-right: 1.5px solid var(--text-subtle); border-bottom: 1.5px solid var(--text-subtle); transform: rotate(-45deg); margin-left: auto; }
+  .erp-item.expanded.has-children::after { transform: rotate(45deg); }
+  .erp-sub { padding-left: 26px; display: grid; gap: 1px; }
+  .erp-sub .erp-item { font-size: 13px; padding: 6px 10px; }
+  .erp-sub .erp-item.active { background: var(--brand-soft); color: var(--brand-strong); }
+
+  .erp-main { display: flex; flex-direction: column; min-width: 0; }
+  .erp-topbar { display: flex; align-items: center; gap: 10px; padding: 14px 24px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .erp-topbar .ic-btn { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); border-radius: 6px; background: transparent; border: none; cursor: pointer; }
+  .erp-topbar .ic-btn:hover { background: var(--surface-muted); color: var(--text-strong); }
+  .erp-topbar .breadcrumb { display: inline-flex; align-items: center; gap: 8px; font: var(--type-body); color: var(--text-muted); }
+  .erp-topbar .breadcrumb a { color: inherit; text-decoration: none; }
+  .erp-topbar .breadcrumb a:last-child { color: var(--text-strong); font-weight: 500; }
+  .erp-topbar .breadcrumb .sep { color: var(--text-subtle); display: inline-flex; }
+  .erp-topbar .spacer { flex: 1; }
+
+  .erp-page { padding: 28px 32px 32px; display: grid; gap: 24px; min-width: 0; }
+  .erp-page-h h1 { font: var(--type-display-sm); font-size: 28px; margin: 0; }
+
+  /* Tab strip (Overview/Pours...) */
+  .iconstrip { display: flex; gap: 2px; padding: 6px; background: var(--surface-muted); border-radius: 10px; overflow-x: auto; }
+  .iconstrip-tab { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 7px; background: transparent; border: none; color: var(--text-muted); font: 500 13px/1 var(--font-sans); cursor: pointer; white-space: nowrap; }
+  .iconstrip-tab:hover { color: var(--text-strong); }
+  .iconstrip-tab.active { background: var(--surface); color: var(--text-strong); box-shadow: 0 1px 2px rgba(42,38,34,0.06), 0 0 0 1px var(--border); }
+  .iconstrip-tab svg { width: 16px; height: 16px; color: var(--text-muted); }
+  .iconstrip-tab.active svg { color: var(--brand); }
+
+  /* Data toolbar */
+  .data-toolbar { display: flex; align-items: center; gap: 10px; padding: 14px 22px; }
+  .search-input { position: relative; flex: 0 1 360px; }
+  .search-input input { width: 100%; height: 36px; padding: 0 12px 0 36px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); font: var(--type-body); outline: none; }
+  .search-input input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--focus-ring-soft); }
+  .search-input span[data-icon] { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-subtle); }
+  .data-toolbar .spacer { flex: 1; }
+
+  /* Big data table */
+  .data-table { width: 100%; border-collapse: separate; border-spacing: 0; font: var(--type-body); }
+  .data-table thead th { text-align: left; padding: 12px 16px; font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--surface); white-space: nowrap; }
+  .data-table thead th.num { text-align: right; }
+  .data-table tbody td { padding: 14px 16px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
+  .data-table tbody tr:hover td { background: var(--surface-muted); }
+  .data-table td.num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .data-table .id-link { color: var(--brand-strong); font-family: var(--font-mono); font-weight: 500; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
+  .data-table .id-link:hover { text-decoration: underline; }
+  .data-table .id-link svg { width: 12px; height: 12px; }
+
+  .erp-pill { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 9999px; font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; }
+  .erp-pill.on-site { background: var(--brand-50); color: var(--brand-strong); }
+  .erp-pill.sold    { background: var(--tone-success-bg); color: var(--tone-success); }
+  .erp-pill.pending { background: var(--tone-warn-bg); color: var(--tone-warn); }
+
+  /* Posting Studio: secondary rail (Views) + table */
+  .studio-layout { display: grid; grid-template-columns: 220px 220px 1fr; gap: 24px; padding: 22px; align-items: flex-start; }
+  .studio-rail { display: grid; gap: 1px; }
+  .studio-rail .ri { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; font: 500 13px/1 var(--font-sans); color: var(--text-body); cursor: pointer; }
+  .studio-rail .ri:hover { background: var(--surface-muted); }
+  .studio-rail .ri.active { background: var(--brand-soft); color: var(--brand-strong); }
+  .studio-rail .ri svg { width: 14px; height: 14px; color: var(--text-muted); }
+  .studio-rail .ri.active svg { color: var(--brand); }
+  .studio-views-label { font: var(--type-caption); color: var(--text-subtle); padding: 6px 12px 8px; }
+  .studio-content { min-width: 0; }
+  .studio-content-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 0 0 16px; }
+  .studio-content-h .ti { font: var(--type-section-title); }
+  .studio-content-h .sub { font: var(--type-body-sm); color: var(--text-muted); margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<header class="kit-head">
+  <span class="t-eyebrow">Data-heavy page</span>
+  <h1>Batch history — Production › Pours</h1>
+  <p>The first of two data-heavy patterns in the kit. A sidebar with an expanded section, a sub-rail of detail tabs, a global topbar action ("Record batch"), a search-toolbar, and a long, scrollable table. The Posting Studio variant below shows the secondary-rail layout used when one page has multiple sibling tables.</p>
+</header>
+
+<!-- ================= D.01 · Batch history ================= -->
+<div class="frame">
+  <div class="erp-shell">
+    <aside class="erp-sidebar">
+      <div class="erp-org-switcher">
+        <span class="mark" data-icon="corelith" data-icon-size="16"></span>
+        <span class="name">Gold Operations</span>
+        <span class="chev" data-icon="chevron"></span>
+      </div>
+      <nav class="erp-nav" style="margin-top: 12px;">
+        <button class="erp-item"><span data-icon="home"></span>Overview</button>
+        <button class="erp-item"><span data-icon="add"></span>Create</button>
+      </nav>
+      <div class="erp-section-head"><span>Gold Operations</span><span data-icon="chevron" data-icon-size="14"></span></div>
+      <nav class="erp-nav">
+        <button class="erp-item expanded has-children parent-active"><span data-icon="warehouse"></span>Production</button>
+        <div class="erp-sub">
+          <button class="erp-item">Shift outputs</button>
+          <button class="erp-item active">Pours</button>
+          <button class="erp-item">Stockpiles</button>
+          <button class="erp-item">Plant runs</button>
+        </div>
+        <button class="erp-item has-children"><span data-icon="car"></span>Movement &amp; Settlement</button>
+        <button class="erp-item has-children"><span data-icon="trending"></span>Insights</button>
+        <button class="erp-item has-children"><span data-icon="user"></span>Human Resources</button>
+        <button class="erp-item has-children"><span data-icon="list"></span>Accounting Master</button>
+        <button class="erp-item has-children"><span data-icon="settings"></span>Management</button>
+      </nav>
+      <div class="erp-section-head"><span>More</span><span data-icon="chevron" data-icon-size="14"></span></div>
+      <nav class="erp-nav">
+        <button class="erp-item has-children"><span data-icon="box"></span>Stores &amp; Inventory</button>
+        <button class="erp-item has-children"><span data-icon="settings"></span>Maintenance &amp; Assets</button>
+        <button class="erp-item has-children"><span data-icon="camera"></span>CCTV</button>
+      </nav>
+    </aside>
+
+    <main class="erp-main">
+      <div class="erp-topbar">
+        <button class="ic-btn" data-icon="sidebar"></button>
+        <nav class="breadcrumb">
+          <a>Home</a><span class="sep" data-icon="chright"></span>
+          <a>Gold Control</a><span class="sep" data-icon="chright"></span>
+          <a>Intake</a><span class="sep" data-icon="chright"></span>
+          <a>Pours</a>
+        </nav>
+        <div class="spacer"></div>
+        <button class="ic-btn" data-icon="bell"></button>
+        <button class="btn btn-primary btn-sm">Record batch</button>
+      </div>
+
+      <div class="erp-page">
+        <div class="erp-page-h"><h1>Batches</h1></div>
+
+        <div class="iconstrip">
+          <button class="iconstrip-tab"><span data-icon="home"></span>Overview</button>
+          <button class="iconstrip-tab active"><span data-icon="box"></span>Pours</button>
+          <button class="iconstrip-tab"><span data-icon="coins"></span>Purchases</button>
+          <button class="iconstrip-tab"><span data-icon="car"></span>Dispatches</button>
+          <button class="iconstrip-tab"><span data-icon="check"></span>Receipts</button>
+          <button class="iconstrip-tab"><span data-icon="card"></span>Pricing</button>
+          <button class="iconstrip-tab"><span data-icon="receipt"></span>Payouts</button>
+          <button class="iconstrip-tab"><span data-icon="info"></span>Exceptions</button>
+          <button class="iconstrip-tab"><span data-icon="list"></span>Reports</button>
+        </div>
+
+        <div>
+          <h2 style="font: var(--type-section-title); margin: 8px 0 16px;">Batch history</h2>
+
+          <div class="data-toolbar" style="padding-left: 0; padding-right: 0;">
+            <div class="search-input">
+              <span data-icon="search"></span>
+              <input placeholder="Search by batch ID, site, or storage" />
+            </div>
+            <button class="btn btn-primary btn-sm">Search</button>
+            <button class="btn btn-secondary btn-sm">Columns</button>
+            <div class="spacer"></div>
+            <button class="btn btn-secondary btn-sm"><span data-icon="download"></span>Export <span data-icon="chevron"></span></button>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 28px;"><input type="checkbox" class="check"></th>
+                  <th>Date</th>
+                  <th>Batch ID</th>
+                  <th>Status</th>
+                  <th>Site</th>
+                  <th>Storage</th>
+                  <th class="num">Gross weight</th>
+                  <th>Shift leader</th>
+                  <th>Recorded by</th>
+                  <th>Recorded at</th>
+                  <th class="num">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><input type="checkbox" class="check"></td><td>5/9/2026, 2…</td><td><a class="id-link">BAR-0122 <span data-icon="chright"></span></a></td><td><span class="erp-pill on-site">On site</span></td><td>Gokwe</td><td>Vault</td><td class="num">4.100 g</td><td>Simbarashe Chinji</td><td>Superuser Developer</td><td>5/9/2026, 5:56:…</td><td class="num">$328.00</td></tr>
+                <tr><td><input type="checkbox" class="check"></td><td>5/9/2026, 2…</td><td><a class="id-link">BAR-0123 <span data-icon="chright"></span></a></td><td><span class="erp-pill sold">Sold</span></td><td>Gokwe</td><td>Vault</td><td class="num">14.600 g</td><td>Admond Moyo</td><td>Superuser Developer</td><td>5/9/2026, 5:58:…</td><td class="num">$1,168.00</td></tr>
+                <tr><td><input type="checkbox" class="check"></td><td>5/9/2026, 2…</td><td><a class="id-link">BAR-0124 <span data-icon="chright"></span></a></td><td><span class="erp-pill on-site">On site</span></td><td>Gokwe</td><td>Vault</td><td class="num">1.600 g</td><td>Mdudusi Sibanda</td><td>Superuser Developer</td><td>5/9/2026, 5:59:…</td><td class="num">$128.00</td></tr>
+                <tr><td><input type="checkbox" class="check"></td><td>5/8/2026, 2…</td><td><a class="id-link">BAR-0214 <span data-icon="chright"></span></a></td><td><span class="erp-pill on-site">On site</span></td><td>Gokwe</td><td>Vault</td><td class="num">5.200 g</td><td>Christopher Mutemeri</td><td>Superuser Developer</td><td>5/9/2026, 9:44:…</td><td class="num">$416.00</td></tr>
+                <tr><td><input type="checkbox" class="check"></td><td>5/8/2026, 2…</td><td><a class="id-link">BAR-0213 <span data-icon="chright"></span></a></td><td><span class="erp-pill on-site">On site</span></td><td>Gokwe</td><td>Vault</td><td class="num">2.600 g</td><td>Prince Nyathi</td><td>Superuser Developer</td><td>5/9/2026, 9:44:…</td><td class="num">$208.00</td></tr>
+                <tr><td><input type="checkbox" class="check"></td><td>5/8/2026, 2…</td><td><a class="id-link">BAR-0212 <span data-icon="chright"></span></a></td><td><span class="erp-pill on-site">On site</span></td><td>Gokwe</td><td>Vault</td><td class="num">5.000 g</td><td>Nkosilati Mphofu</td><td>Superuser Developer</td><td>5/9/2026, 9:44:…</td><td class="num">$400.00</td></tr>
+                <tr><td><input type="checkbox" class="check"></td><td>5/7/2026, 2…</td><td><a class="id-link">BAR-0210 <span data-icon="chright"></span></a></td><td><span class="erp-pill on-site">On site</span></td><td>Gokwe</td><td>Vault</td><td class="num">8.700 g</td><td>Christopher Mutemeri</td><td>Superuser Developer</td><td>5/9/2026, 9:44:…</td><td class="num">$696.00</td></tr>
+                <tr><td><input type="checkbox" class="check"></td><td>5/7/2026, 2…</td><td><a class="id-link">BAR-0211 <span data-icon="chright"></span></a></td><td><span class="erp-pill on-site">On site</span></td><td>Gokwe</td><td>Vault</td><td class="num">8.800 g</td><td>Velapi Nyanyire</td><td>Superuser Developer</td><td>5/9/2026, 9:44:…</td><td class="num">$704.00</td></tr>
+                <tr><td><input type="checkbox" class="check"></td><td>5/6/2026, 2…</td><td><a class="id-link">BAR-0208 <span data-icon="chright"></span></a></td><td><span class="erp-pill on-site">On site</span></td><td>Gokwe</td><td>Vault</td><td class="num">1.600 g</td><td>Willy Majoni</td><td>Superuser Developer</td><td>5/9/2026, 9:44:…</td><td class="num">$128.00</td></tr>
+                <tr><td><input type="checkbox" class="check"></td><td>5/6/2026, 2…</td><td><a class="id-link">BAR-0206 <span data-icon="chright"></span></a></td><td><span class="erp-pill on-site">On site</span></td><td>Gokwe</td><td>Vault</td><td class="num">13.200 g</td><td>Simbarashe Chinji</td><td>Superuser Developer</td><td>5/9/2026, 9:44:…</td><td class="num">$1,056.00</td></tr>
+                <tr><td><input type="checkbox" class="check"></td><td>5/6/2026, 2…</td><td><a class="id-link">BAR-0207 <span data-icon="chright"></span></a></td><td><span class="erp-pill on-site">On site</span></td><td>Gokwe</td><td>Vault</td><td class="num">10.000 g</td><td>Willy Majoni</td><td>Superuser Developer</td><td>5/9/2026, 9:44:…</td><td class="num">$800.00</td></tr>
+                <tr><td><input type="checkbox" class="check"></td><td>5/6/2026, 2…</td><td><a class="id-link">BAR-0209 <span data-icon="chright"></span></a></td><td><span class="erp-pill on-site">On site</span></td><td>Gokwe</td><td>Vault</td><td class="num">2.300 g</td><td>Prince Nyathi</td><td>Superuser Developer</td><td>5/9/2026, 9:44:…</td><td class="num">$184.00</td></tr>
+                <tr><td><input type="checkbox" class="check"></td><td>5/5/2026, 2…</td><td><a class="id-link">BAR-0204 <span data-icon="chright"></span></a></td><td><span class="erp-pill on-site">On site</span></td><td>Gokwe</td><td>Vault</td><td class="num">1.600 g</td><td>Mdudusi Sibanda</td><td>Superuser Developer</td><td>5/9/2026, 9:44:…</td><td class="num">$128.00</td></tr>
+                <tr><td><input type="checkbox" class="check"></td><td>5/5/2026, 2…</td><td><a class="id-link">BAR-0203 <span data-icon="chright"></span></a></td><td><span class="erp-pill on-site">On site</span></td><td>Gokwe</td><td>Vault</td><td class="num">4.400 g</td><td>Nkosilati Mphofu</td><td>Superuser Developer</td><td>5/9/2026, 9:44:…</td><td class="num">$352.00</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0 0; color: var(--text-muted); font: var(--type-body-sm);">
+            <div>Showing <b style="color: var(--text-strong); font-weight: 600;">14</b> of 412 batches</div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <span>Rows per page</span>
+              <select class="select" style="width: 80px; height: 32px;"><option>25</option><option>50</option></select>
+              <button class="btn btn-secondary btn-sm">Previous</button>
+              <span class="t-mono">Page 1 of 17</span>
+              <button class="btn btn-secondary btn-sm">Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ================= D.02 · Posting Studio (with secondary rail) ================= -->
+<header class="kit-head">
+  <h1>Posting Studio — Accounting › Posting rules</h1>
+  <p>The secondary-rail variant. The page lives inside its own section nav ("Overview / Core / Receivables…"), then a Views rail picks which table to render. One table at a time, never two.</p>
+</header>
+
+<div class="frame">
+  <div class="erp-shell">
+    <aside class="erp-sidebar">
+      <div class="erp-org-switcher">
+        <span class="mark" data-icon="corelith" data-icon-size="16"></span>
+        <span class="name">Gold Operations</span>
+        <span class="chev" data-icon="chevron"></span>
+      </div>
+      <nav class="erp-nav" style="margin-top: 12px;">
+        <button class="erp-item"><span data-icon="home"></span>Overview</button>
+        <button class="erp-item"><span data-icon="add"></span>Create</button>
+      </nav>
+      <div class="erp-section-head"><span>Gold Operations</span><span data-icon="chevron" data-icon-size="14"></span></div>
+      <nav class="erp-nav">
+        <button class="erp-item has-children"><span data-icon="warehouse"></span>Production</button>
+        <button class="erp-item has-children"><span data-icon="car"></span>Movement &amp; Settlement</button>
+        <button class="erp-item has-children"><span data-icon="trending"></span>Insights</button>
+        <button class="erp-item has-children"><span data-icon="user"></span>Human Resources</button>
+        <button class="erp-item expanded has-children parent-active"><span data-icon="list"></span>Accounting Master</button>
+        <div class="erp-sub">
+          <button class="erp-item">Overview</button>
+          <button class="erp-item">Receivables</button>
+          <button class="erp-item">Sales</button>
+          <button class="erp-item">Payables</button>
+          <button class="erp-item">Purchases</button>
+          <button class="erp-item">Financial Reports</button>
+          <button class="erp-item">Trial Balance</button>
+          <button class="erp-item">Financial Statements</button>
+          <button class="erp-item">Banking</button>
+          <button class="erp-item">Chart of Accounts</button>
+          <button class="erp-item">Periods</button>
+          <button class="erp-item">Journals</button>
+          <button class="erp-item active">Posting Rules</button>
+          <button class="erp-item">Cost Centers</button>
+        </div>
+        <button class="erp-item has-children"><span data-icon="settings"></span>Management</button>
+      </nav>
+    </aside>
+
+    <main class="erp-main">
+      <div class="erp-topbar">
+        <button class="ic-btn" data-icon="sidebar"></button>
+        <nav class="breadcrumb">
+          <a>Home</a><span class="sep" data-icon="chright"></span>
+          <a>Accounting</a><span class="sep" data-icon="chright"></span>
+          <a>Posting Rules</a>
+        </nav>
+        <div class="spacer"></div>
+        <button class="ic-btn" data-icon="bell"></button>
+      </div>
+
+      <div class="erp-page">
+        <div class="erp-page-h"><h1>Posting Studio</h1></div>
+
+        <div class="iconstrip">
+          <button class="iconstrip-tab"><span data-icon="list"></span>Chart of Accounts</button>
+          <button class="iconstrip-tab"><span data-icon="receipt"></span>Journals</button>
+          <button class="iconstrip-tab"><span data-icon="calendar"></span>Periods</button>
+          <button class="iconstrip-tab active"><span data-icon="settings"></span>Posting Rules</button>
+        </div>
+
+        <div class="studio-layout" style="padding: 0;">
+          <nav class="studio-rail">
+            <button class="ri"><span data-icon="home"></span>Overview</button>
+            <button class="ri active"><span data-icon="settings"></span>Core</button>
+            <button class="ri"><span data-icon="coins"></span>Receivables</button>
+            <button class="ri"><span data-icon="receipt"></span>Payables</button>
+            <button class="ri"><span data-icon="card"></span>Treasury</button>
+            <button class="ri"><span data-icon="user"></span>Controls</button>
+            <button class="ri"><span data-icon="list"></span>Reports</button>
+          </nav>
+
+          <nav class="studio-rail">
+            <div class="studio-views-label">VIEWS</div>
+            <button class="ri">Rule library</button>
+            <button class="ri">Retail defaults</button>
+            <button class="ri">Simulation</button>
+            <button class="ri active">Failures &amp; replay <span class="badge badge-danger" style="margin-left: auto;">98</span></button>
+            <button class="ri">Seed &amp; readiness</button>
+          </nav>
+
+          <div class="studio-content">
+            <div class="studio-content-h">
+              <div>
+                <div class="ti">Integration event failures</div>
+                <div class="sub">198 events pending or failed</div>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-secondary btn-sm" aria-label="Refresh"><span data-icon="refresh"></span></button>
+                <button class="btn btn-primary btn-sm"><span data-icon="refresh"></span>Replay all</button>
+              </div>
+            </div>
+
+            <table class="data-table">
+              <thead>
+                <tr><th>Status</th><th>Source type</th><th>Description</th><th class="num">Amount</th><th class="num">Attempts</th><th>Last error</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><span class="erp-pill pending">Pending</span></td><td>Gold Shift Expense</td><td>Lcd — allocation abd246bb-1c…</td><td class="num">40.00</td><td class="num">0</td><td class="t-muted">—</td></tr>
+                <tr><td><span class="erp-pill pending">Pending</span></td><td>Gold Shift Expense</td><td>Shoots — allocation abd246bb…</td><td class="num">8.00</td><td class="num">0</td><td class="t-muted">—</td></tr>
+                <tr><td><span class="erp-pill pending">Pending</span></td><td>Gold Shift Expense</td><td>Diesel — allocation abd246bb-…</td><td class="num">80.00</td><td class="num">0</td><td class="t-muted">—</td></tr>
+                <tr><td><span class="erp-pill pending">Pending</span></td><td>Gold Shift — Worker Share (Boys)</td><td>Boys share — allocation abd24…</td><td class="num">240.00</td><td class="num">0</td><td class="t-muted">—</td></tr>
+                <tr><td><span class="erp-pill pending">Pending</span></td><td>Gold Shift Expense</td><td>Lcd — allocation e6ac2c0c-d3…</td><td class="num">40.00</td><td class="num">0</td><td class="t-muted">—</td></tr>
+                <tr><td><span class="erp-pill pending">Pending</span></td><td>Gold Shift Expense</td><td>Shoots — allocation e6ac2c0c-…</td><td class="num">8.00</td><td class="num">0</td><td class="t-muted">—</td></tr>
+                <tr><td><span class="erp-pill pending">Pending</span></td><td>Gold Shift Expense</td><td>Diesel — allocation e6ac2c0c-…</td><td class="num">80.00</td><td class="num">0</td><td class="t-muted">—</td></tr>
+                <tr><td><span class="erp-pill pending">Pending</span></td><td>Gold Shift — Worker Share (Boys)</td><td>Boys share — allocation e6ac2…</td><td class="num">160.00</td><td class="num">0</td><td class="t-muted">—</td></tr>
+                <tr><td><span class="erp-pill pending">Pending</span></td><td>Gold Shift Expense</td><td>Lcd — allocation c7d14aba-6c9…</td><td class="num">40.00</td><td class="num">0</td><td class="t-muted">—</td></tr>
+                <tr><td><span class="erp-pill pending">Pending</span></td><td>Gold Shift Expense</td><td>Shoots — allocation c7d14aba-…</td><td class="num">120.00</td><td class="num">0</td><td class="t-muted">—</td></tr>
+                <tr><td><span class="erp-pill pending">Pending</span></td><td>Gold Shift Expense</td><td>Diesel — allocation c7d14aba-…</td><td class="num">80.00</td><td class="num">0</td><td class="t-muted">—</td></tr>
+                <tr><td><span class="erp-pill pending">Pending</span></td><td>Gold Shift — Worker Share (Boys)</td><td>Boys share — allocation c7d14…</td><td class="num">240.00</td><td class="num">0</td><td class="t-muted">—</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+</body>
+</html>

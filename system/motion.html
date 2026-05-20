@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" /><title>Motion · Corelith DS</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<style>
+  .motion-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .motion-tile { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); overflow: clip; }
+  .motion-tile .stage { display: grid; place-items: center; padding: 32px 16px; min-height: 140px; background: var(--canvas); }
+  .motion-tile .stage .box { width: 80px; height: 60px; border-radius: 8px; background: var(--brand); }
+  .motion-tile .info { padding: 14px 16px; }
+  .motion-tile .nm { font: var(--type-label-sm); color: var(--text-strong); }
+  .motion-tile .tok { font: var(--type-caption); font-family: var(--font-mono); color: var(--text-muted); margin-top: 4px; }
+  .motion-tile button.replay { float: right; padding: 4px 8px; font: 500 11px/1 var(--font-sans); color: var(--brand-strong); border-radius: 4px; cursor: pointer; }
+  .motion-tile button.replay:hover { background: var(--brand-soft); }
+  .ease-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .ease-tile { border: 1px solid var(--border); border-radius: 10px; padding: 16px; background: var(--surface); }
+  .ease-tile .nm { font: var(--type-label-sm); color: var(--text-strong); }
+  .ease-tile .tok { font: var(--type-caption); font-family: var(--font-mono); color: var(--text-muted); margin-top: 4px; }
+  .ease-tile svg { display: block; margin: 12px 0 6px; width: 100%; height: 60px; }
+  .ease-tile svg path { fill: none; stroke: var(--brand); stroke-width: 2; }
+  .duration-bars { display: grid; gap: 8px; }
+  .duration-bar { display: grid; grid-template-columns: 120px 1fr 60px; gap: 12px; align-items: center; font: var(--type-body-sm); }
+  .duration-bar .label { font-family: var(--font-mono); color: var(--text-strong); }
+  .duration-bar .track { height: 8px; background: var(--surface-muted); border-radius: 9999px; overflow: clip; }
+  .duration-bar .track > span { display: block; height: 100%; background: var(--brand); border-radius: inherit; }
+  .duration-bar .val { font-family: var(--font-mono); color: var(--text-muted); text-align: right; }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs"><a href="../index.html">Home</a><span class="sep">/</span><a href="foundations.html">Foundations</a><span class="sep">/</span><span>Motion</span></div>
+    <h1>Motion</h1>
+    <p class="lede">Motion clarifies state changes — it never decorates. Four durations, four easings, six entrance primitives. Reduced-motion always wins.</p>
+    <div class="meta">
+      <span class="meta-pill">9 primitives</span>
+      <span class="meta-pill">4 durations</span>
+      <span class="meta-pill"><span data-icon="check" data-icon-size="12"></span>prefers-reduced-motion</span>
+    </div>
+  </header>
+
+  <section id="durations">
+    <h2 class="ds-h2">Durations</h2>
+    <p class="ds-h2-sub">Shorter for state changes, longer for entrances. Never longer than 480ms — operators are working.</p>
+    <div class="ds-specimen">
+      <div class="ds-specimen-stage plain padded stack" style="gap: 14px;">
+        <div class="duration-bars">
+          <div class="duration-bar"><span class="label">--dur-instant</span><div class="track"><span style="width: 8%;"></span></div><span class="val">80ms</span></div>
+          <div class="duration-bar"><span class="label">--dur-fast</span><div class="track"><span style="width: 18%;"></span></div><span class="val">120ms</span></div>
+          <div class="duration-bar"><span class="label">--dur-base</span><div class="track"><span style="width: 32%;"></span></div><span class="val">200ms</span></div>
+          <div class="duration-bar"><span class="label">--dur-slow</span><div class="track"><span style="width: 52%;"></span></div><span class="val">320ms</span></div>
+          <div class="duration-bar"><span class="label">--dur-slower</span><div class="track"><span style="width: 78%;"></span></div><span class="val">480ms</span></div>
+          <div class="duration-bar"><span class="label">--dur-page</span><div class="track"><span style="width: 100%;"></span></div><span class="val">640ms</span></div>
+        </div>
+      </div>
+    </div>
+
+    <table class="ds-props">
+      <thead><tr><th>Token</th><th>Value</th><th>Use for</th></tr></thead>
+      <tbody>
+        <tr><td>--dur-instant</td><td>80ms</td><td>Tooltips, instant feedback</td></tr>
+        <tr><td>--dur-fast</td><td>120ms</td><td>Hover, button states</td></tr>
+        <tr><td>--dur-base</td><td>200ms</td><td>Popover &amp; modal entry</td></tr>
+        <tr><td>--dur-slow</td><td>320ms</td><td>Side sheet, page-section reveals</td></tr>
+        <tr><td>--dur-slower</td><td>480ms</td><td>Full-screen transitions</td></tr>
+        <tr><td>--dur-page</td><td>640ms</td><td>Page-level orchestration</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="easings">
+    <h2 class="ds-h2">Easings</h2>
+    <p class="ds-h2-sub">Four curves. Out for entrances, in-out for transforms, spring for delight, snap for instantaneous corrections.</p>
+    <div class="ease-grid">
+      <div class="ease-tile">
+        <div class="nm">Out</div>
+        <div class="tok">--ease-out</div>
+        <svg viewBox="0 0 100 60"><path d="M 0 60 C 22 60 36 0 100 0" /></svg>
+        <div class="t-caption">Default for entrances. Cubic-bezier(0.22, 1, 0.36, 1)</div>
+      </div>
+      <div class="ease-tile">
+        <div class="nm">In-out</div>
+        <div class="tok">--ease-in-out</div>
+        <svg viewBox="0 0 100 60"><path d="M 0 60 C 65 60 35 0 100 0" /></svg>
+        <div class="t-caption">For elements that move on both sides.</div>
+      </div>
+      <div class="ease-tile">
+        <div class="nm">Spring</div>
+        <div class="tok">--ease-spring</div>
+        <svg viewBox="0 0 100 60"><path d="M 0 60 C 34 60 64 -20 100 0" /></svg>
+        <div class="t-caption">Light overshoot. For small delightful enters.</div>
+      </div>
+      <div class="ease-tile">
+        <div class="nm">Snap</div>
+        <div class="tok">--ease-snap</div>
+        <svg viewBox="0 0 100 60"><path d="M 0 60 C 20 60 20 0 100 0" /></svg>
+        <div class="t-caption">Quick step. For corrections and validation.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="primitives">
+    <h2 class="ds-h2">Animation primitives</h2>
+    <p class="ds-h2-sub">Apply one of these CSS classes to fade/slide an element in. Combine with <code class="inline">.anim-delay-1</code> through <code class="inline">.anim-delay-5</code> to orchestrate stacks.</p>
+
+    <div class="motion-grid">
+      <div class="motion-tile">
+        <div class="stage"><div class="box anim-fade-in" id="m1"></div></div>
+        <div class="info">
+          <button class="replay" onclick="document.getElementById('m1').classList.remove('anim-fade-in'); requestAnimationFrame(()=>document.getElementById('m1').classList.add('anim-fade-in'));">Replay</button>
+          <div class="nm">Fade in</div>
+          <div class="tok">.anim-fade-in</div>
+        </div>
+      </div>
+      <div class="motion-tile">
+        <div class="stage"><div class="box anim-fade-up" id="m2"></div></div>
+        <div class="info">
+          <button class="replay" onclick="document.getElementById('m2').classList.remove('anim-fade-up'); requestAnimationFrame(()=>document.getElementById('m2').classList.add('anim-fade-up'));">Replay</button>
+          <div class="nm">Fade up</div>
+          <div class="tok">.anim-fade-up</div>
+        </div>
+      </div>
+      <div class="motion-tile">
+        <div class="stage"><div class="box anim-scale-in" id="m3"></div></div>
+        <div class="info">
+          <button class="replay" onclick="document.getElementById('m3').classList.remove('anim-scale-in'); requestAnimationFrame(()=>document.getElementById('m3').classList.add('anim-scale-in'));">Replay</button>
+          <div class="nm">Scale in</div>
+          <div class="tok">.anim-scale-in</div>
+        </div>
+      </div>
+      <div class="motion-tile">
+        <div class="stage"><div class="box anim-slide-right" id="m4"></div></div>
+        <div class="info">
+          <button class="replay" onclick="document.getElementById('m4').classList.remove('anim-slide-right'); requestAnimationFrame(()=>document.getElementById('m4').classList.add('anim-slide-right'));">Replay</button>
+          <div class="nm">Slide right</div>
+          <div class="tok">.anim-slide-right</div>
+        </div>
+      </div>
+      <div class="motion-tile">
+        <div class="stage"><div class="box anim-pulse" style="background: var(--brand); border-radius: 50%; width: 60px; height: 60px;"></div></div>
+        <div class="info">
+          <div class="nm">Pulse</div>
+          <div class="tok">.anim-pulse</div>
+        </div>
+      </div>
+      <div class="motion-tile">
+        <div class="stage" style="flex-direction: column; gap: 8px;">
+          <div class="box anim-fade-up anim-delay-1" style="height: 12px; width: 120px;"></div>
+          <div class="box anim-fade-up anim-delay-2" style="height: 12px; width: 120px;"></div>
+          <div class="box anim-fade-up anim-delay-3" style="height: 12px; width: 120px;"></div>
+        </div>
+        <div class="info">
+          <div class="nm">Staggered entry</div>
+          <div class="tok">.anim-fade-up + .anim-delay-N</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="rules">
+    <h2 class="ds-h2">Do &amp; don't</h2>
+    <div class="ds-rules">
+      <div class="rule do"><span class="tag">Do</span><p>Use motion to clarify state changes. A popover opening explains where it came from.</p></div>
+      <div class="rule dont"><span class="tag">Don't</span><p>Use motion to decorate. If it doesn't communicate something, remove it.</p></div>
+      <div class="rule do"><span class="tag">Do</span><p>Respect <code class="inline">prefers-reduced-motion</code>. The token system shrinks all durations to ~0 automatically.</p></div>
+      <div class="rule dont"><span class="tag">Don't</span><p>Animate the same element on every state. Choose where animation matters.</p></div>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="elevation.html"><div class="pager-label">← Previous</div><div class="pager-title">Elevation</div></a>
+    <a href="iconography.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Iconography</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#durations" class="current">Durations</a></li>
+    <li><a href="#easings">Easings</a></li>
+    <li><a href="#primitives">Animation primitives</a></li>
+    <li><a href="#rules">Do &amp; don't</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body></html>

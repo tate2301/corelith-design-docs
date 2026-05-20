@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" /><title>Shells · Huchu DS</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<link rel="stylesheet" href="../portal-shell.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<style>
+  .shell-card { display: grid; grid-template-columns: 1fr 1.2fr; gap: 0; border: 1px solid var(--border); border-radius: 14px; overflow: clip; background: var(--surface); margin: 16px 0; }
+  @media (max-width: 900px) { .shell-card { grid-template-columns: 1fr; } }
+  .shell-card .pic { background: var(--canvas); padding: 28px; display: grid; place-items: center; min-height: 320px; position: relative; overflow: hidden; border-right: 1px solid var(--border); }
+  @media (max-width: 900px) { .shell-card .pic { border-right: 0; border-bottom: 1px solid var(--border); } }
+  .shell-card .meta { padding: 28px 32px; display: flex; flex-direction: column; }
+  .shell-card .meta .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 8px; }
+  .shell-card .meta h3 { font: 600 22px/1.2 var(--font-sans); letter-spacing: -0.015em; color: var(--text-strong); margin: 0 0 8px; }
+  .shell-card .meta p { font: 15px/1.55 var(--font-sans); color: var(--text-muted); margin: 0 0 18px; max-width: 50ch; }
+  .shell-card .meta .row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+  .shell-card .meta .row .pill { padding: 4px 10px; border-radius: 9999px; background: var(--surface-muted); font: 500 11px/1 var(--font-sans); color: var(--text-muted); display: inline-flex; align-items: center; gap: 5px; }
+  .shell-card .meta .row .pill svg { width: 11px; height: 11px; }
+  .shell-card .meta .links { display: flex; gap: 12px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border-subtle); }
+  .shell-card .meta .links a { font: 500 13px/1 var(--font-sans); color: var(--brand-strong); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+  .shell-card .meta .links a:hover { color: var(--brand-deeper); }
+
+  /* Mini schematic frames */
+  .schema-row { display: flex; gap: 14px; align-items: flex-end; }
+  .schema-frame { background: #0F1115; border-radius: 12px; padding: 4px; position: relative; }
+  .schema-frame .scr { background: var(--canvas); border-radius: 8px; overflow: hidden; padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+  .schema-frame.phone { width: 130px; height: 260px; border-radius: 22px; }
+  .schema-frame.phone .scr { border-radius: 18px; height: 100%; }
+  .schema-frame.phone::before { content: ""; position: absolute; top: 6px; left: 50%; transform: translateX(-50%); width: 36px; height: 8px; background: #0F1115; border-radius: 0 0 6px 6px; z-index: 2; }
+  .schema-frame.tab { width: 280px; height: 200px; }
+  .schema-frame.tab .scr { height: 100%; }
+  .schema-frame.desk { width: 360px; height: 220px; border-radius: 6px; }
+  .schema-frame.desk .chrome { height: 12px; background: #1A1D24; border-radius: 4px 4px 0 0; margin: -4px -4px 4px; padding: 0 6px; display: flex; align-items: center; gap: 3px; }
+  .schema-frame.desk .chrome .d { width: 4px; height: 4px; border-radius: 50%; background: #444; }
+  .schema-frame.desk .scr { height: calc(100% - 16px); }
+
+  /* Wireframe primitives — used inside schema frames */
+  .wf-bar { height: 6px; background: var(--brand-soft); border-radius: 2px; }
+  .wf-bar.b { background: var(--brand); }
+  .wf-bar.d { background: var(--ink); }
+  .wf-bar.g { background: var(--surface-muted); }
+  .wf-bar.t { background: var(--border); }
+  .wf-bar.lg { height: 10px; }
+  .wf-row { display: flex; gap: 4px; align-items: center; }
+  .wf-stack { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+  .wf-square { background: var(--surface-muted); border-radius: 3px; }
+  .wf-square.brand { background: var(--brand-soft); }
+  .wf-card { background: #fff; border: 1px solid var(--border); border-radius: 4px; padding: 4px; display: flex; flex-direction: column; gap: 3px; flex: 1; }
+  .wf-tab { height: 22px; background: var(--surface); border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding: 0 6px; gap: 4px; }
+  .wf-tab .it { width: 14px; height: 14px; background: var(--border); border-radius: 50%; }
+  .wf-tab .it.b { background: var(--brand); }
+  .wf-side { width: 30%; background: var(--canvas); border-right: 1px solid var(--border); padding: 4px; display: flex; flex-direction: column; gap: 3px; }
+  .wf-main { flex: 1; padding: 4px; display: flex; flex-direction: column; gap: 4px; }
+  .wf-top { height: 14px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 4px; gap: 3px; }
+  .wf-top .dot { width: 4px; height: 4px; background: var(--brand); border-radius: 50%; }
+  .wf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+  .wf-flex { display: flex; gap: 3px; flex: 1; }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content wide">
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs"><a href="../index.html">Home</a><span class="sep">/</span><span>Shells</span></div>
+    <h1>Shells</h1>
+    <p class="lede">A shell is the whole-page chrome — the frame within which features live. Each shell is mobile, tablet, and desktop in one. Shells are kit-scoped: dashboard shells are not portal shells, and portals never inherit dashboard chrome.</p>
+    <div class="meta">
+      <span class="meta-pill">9 shells</span>
+      <span class="meta-pill">Responsive</span>
+      <span class="meta-pill"><span data-icon="check" data-icon-size="12"></span>Mobile · tablet · desktop</span>
+    </div>
+  </header>
+
+  <section>
+    <h2 class="ds-h2">Dashboard shells</h2>
+    <p class="ds-h2-sub">For the operational product — verticals and shared modules. Anchored to the desktop because that's where ops staff work; reflows down for branch managers on phones.</p>
+
+    <div class="shell-card">
+      <div class="pic">
+        <div class="schema-frame desk">
+          <div class="chrome"><span class="d"></span><span class="d"></span><span class="d"></span></div>
+          <div class="scr" style="display: flex; flex-direction: row; padding: 0; gap: 0;">
+            <div class="wf-side">
+              <div class="wf-bar lg b" style="width: 60%;"></div>
+              <div class="wf-bar t" style="width: 80%;"></div>
+              <div class="wf-bar t" style="width: 70%;"></div>
+              <div class="wf-bar brand" style="width: 90%; background: var(--brand-soft);"></div>
+              <div class="wf-bar t" style="width: 60%;"></div>
+              <div class="wf-bar t" style="width: 75%;"></div>
+            </div>
+            <div class="wf-main">
+              <div class="wf-top"><span class="dot"></span><div class="wf-bar t" style="width: 30%;"></div></div>
+              <div class="wf-row" style="margin: 4px 0;"><div class="wf-bar lg" style="width: 40%;"></div></div>
+              <div class="wf-grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 4px;">
+                <div class="wf-card" style="min-height: 30px;"><div class="wf-bar t" style="width:60%;"></div><div class="wf-bar b" style="width:80%; height: 8px;"></div></div>
+                <div class="wf-card" style="min-height: 30px;"><div class="wf-bar t" style="width:60%;"></div><div class="wf-bar b" style="width:80%; height: 8px;"></div></div>
+                <div class="wf-card" style="min-height: 30px;"><div class="wf-bar t" style="width:60%;"></div><div class="wf-bar b" style="width:80%; height: 8px;"></div></div>
+              </div>
+              <div class="wf-card" style="margin-top: 4px;">
+                <div class="wf-bar t" style="width:30%;"></div>
+                <div class="wf-bar g" style="width:100%; height: 4px;"></div>
+                <div class="wf-bar g" style="width:90%; height: 4px;"></div>
+                <div class="wf-bar g" style="width:80%; height: 4px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <span class="lbl">SHL · 01</span>
+        <h3>Dashboard shell</h3>
+        <p>Fixed 252px sidebar with org switcher, primary action button, grouped nav and personal account footer. Top breadcrumb bar with search, notifications and the active user. Used by every vertical hub and shared module.</p>
+        <div class="row">
+          <span class="pill"><span data-icon="desktop"></span> Desktop primary</span>
+          <span class="pill"><span data-icon="tablet"></span> Tablet</span>
+          <span class="pill"><span data-icon="phone"></span> Mobile collapse</span>
+        </div>
+        <div class="links">
+          <a href="../kits/overview.html">Live shell <span data-icon="arrow"></span></a>
+          <a href="x-app-shell.html">Anatomy →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="shell-card">
+      <div class="pic">
+        <div class="schema-frame desk">
+          <div class="chrome"><span class="d"></span><span class="d"></span><span class="d"></span></div>
+          <div class="scr" style="display: flex; flex-direction: row; padding: 0; gap: 0;">
+            <div class="wf-side" style="width: 25%;">
+              <div class="wf-bar lg" style="width: 60%; background: var(--ink);"></div>
+              <div class="wf-bar t" style="width: 80%;"></div>
+              <div class="wf-bar t" style="width: 70%;"></div>
+              <div class="wf-bar t" style="width: 90%;"></div>
+            </div>
+            <div class="wf-main">
+              <div class="wf-top"><div class="wf-bar t" style="width: 30%;"></div></div>
+              <div style="display: flex; gap: 6px;">
+                <div style="width: 28%; display: flex; flex-direction: column; gap: 3px;">
+                  <div class="wf-bar t" style="width: 80%; background: var(--brand-soft);"></div>
+                  <div class="wf-bar t" style="width: 60%;"></div>
+                  <div class="wf-bar t" style="width: 70%;"></div>
+                  <div class="wf-bar t" style="width: 60%;"></div>
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                  <div class="wf-bar lg" style="width: 50%;"></div>
+                  <div class="wf-bar t" style="width: 100%; height: 4px;"></div>
+                  <div class="wf-bar t" style="width: 80%; height: 4px;"></div>
+                  <div class="wf-bar t" style="width: 90%; height: 4px;"></div>
+                  <div class="wf-bar b" style="width: 30%; height: 8px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <span class="lbl">SHL · 02</span>
+        <h3>Settings shell</h3>
+        <p>Two-rail nested layout for any settings-style surface: 240px section rail (Account, Billing, Members, Extensions) inside the dashboard chrome, with a 900px max-width content column on the right.</p>
+        <div class="row">
+          <span class="pill"><span data-icon="desktop"></span> Desktop primary</span>
+          <span class="pill"><span data-icon="phone"></span> Mobile collapse</span>
+        </div>
+        <div class="links">
+          <a href="../kits/settings.html">Live shell <span data-icon="arrow"></span></a>
+          <a href="x-settings.html">Anatomy →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="shell-card">
+      <div class="pic">
+        <div class="schema-frame desk">
+          <div class="chrome"><span class="d"></span><span class="d"></span><span class="d"></span></div>
+          <div class="scr" style="padding: 6px;">
+            <div class="wf-row" style="margin-bottom: 6px;"><div class="wf-bar lg" style="width: 35%;"></div><div style="flex:1;"></div><div class="wf-bar b" style="width: 14%; height: 10px;"></div></div>
+            <div class="wf-row" style="margin-bottom: 4px;"><div class="wf-bar t" style="width: 20%;"></div><div class="wf-bar t" style="width: 14%;"></div><div class="wf-bar t" style="width: 10%;"></div><div style="flex:1;"></div></div>
+            <div style="background: #fff; border: 1px solid var(--border); border-radius: 3px; padding: 4px; display: flex; flex-direction: column; gap: 3px;">
+              <div class="wf-row" style="height: 6px; background: var(--surface-muted); border-radius: 2px; padding: 0 4px;"></div>
+              <div class="wf-row" style="padding: 2px 0;"><div class="wf-bar t" style="width: 18%;"></div><div class="wf-bar t" style="width: 12%;"></div><div class="wf-bar t" style="width: 20%;"></div><div class="wf-bar t" style="width: 14%; margin-left: auto;"></div></div>
+              <div class="wf-row" style="padding: 2px 0;"><div class="wf-bar t" style="width: 22%;"></div><div class="wf-bar t" style="width: 10%;"></div><div class="wf-bar t" style="width: 18%;"></div><div class="wf-bar t" style="width: 14%; margin-left: auto;"></div></div>
+              <div class="wf-row" style="padding: 2px 0;"><div class="wf-bar t" style="width: 16%;"></div><div class="wf-bar t" style="width: 14%;"></div><div class="wf-bar t" style="width: 22%;"></div><div class="wf-bar t" style="width: 14%; margin-left: auto;"></div></div>
+              <div class="wf-row" style="padding: 2px 0;"><div class="wf-bar t" style="width: 20%;"></div><div class="wf-bar t" style="width: 12%;"></div><div class="wf-bar t" style="width: 16%;"></div><div class="wf-bar t" style="width: 14%; margin-left: auto;"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <span class="lbl">SHL · 03</span>
+        <h3>Data-table shell</h3>
+        <p>Full-bleed table chrome — title, filter toolbar, primary action, sticky column headers, row selection and pagination. The workhorse layout for list-heavy verticals (Stock, Customers, Audit).</p>
+        <div class="row">
+          <span class="pill"><span data-icon="desktop"></span> Desktop</span>
+          <span class="pill"><span data-icon="tablet"></span> Tablet</span>
+        </div>
+        <div class="links">
+          <a href="../kits/data-heavy.html">Live shell <span data-icon="arrow"></span></a>
+          <a href="x-data-table.html">Anatomy →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="margin-top: 64px;" id="portals">
+    <h2 class="ds-h2">Portal shells</h2>
+    <p class="ds-h2-sub">For audience-facing surfaces. Each portal has its own shell — chrome stripped to what its audience actually needs. Portals never inherit dashboard chrome.</p>
+
+    <div class="shell-card">
+      <div class="pic">
+        <div class="schema-row">
+          <div class="schema-frame phone">
+            <div class="scr">
+              <div class="wf-bar t" style="width: 100%; background: var(--brand);"></div>
+              <div class="wf-bar lg" style="width: 60%; margin-top: 4px;"></div>
+              <div class="wf-bar t" style="width: 90%;"></div>
+              <div class="wf-grid" style="margin-top: 6px;">
+                <div class="wf-card" style="min-height: 32px;"><div class="wf-bar brand" style="width:50%;"></div></div>
+                <div class="wf-card" style="min-height: 32px;"><div class="wf-bar brand" style="width:50%;"></div></div>
+                <div class="wf-card" style="min-height: 32px;"><div class="wf-bar brand" style="width:50%;"></div></div>
+                <div class="wf-card" style="min-height: 32px;"><div class="wf-bar brand" style="width:50%;"></div></div>
+              </div>
+              <div style="flex: 1;"></div>
+              <div class="wf-tab" style="margin: 4px -8px -8px;"><span class="it b"></span><span class="it"></span><span class="it"></span><span class="it"></span></div>
+            </div>
+          </div>
+          <div class="schema-frame tab">
+            <div class="scr" style="display: flex; flex-direction: row; padding: 0;">
+              <div class="wf-side" style="width: 24%;">
+                <div class="wf-bar lg b" style="width: 60%;"></div>
+                <div class="wf-bar brand" style="width:90%;"></div>
+                <div class="wf-bar t" style="width: 70%;"></div>
+                <div class="wf-bar t" style="width: 80%;"></div>
+              </div>
+              <div class="wf-main">
+                <div class="wf-bar lg" style="width: 40%;"></div>
+                <div class="wf-grid">
+                  <div class="wf-card"><div class="wf-bar t" style="width:60%;"></div><div class="wf-bar b" style="width:50%; height:7px;"></div></div>
+                  <div class="wf-card"><div class="wf-bar t" style="width:60%;"></div><div class="wf-bar b" style="width:50%; height:7px;"></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <span class="lbl">SHL · 04</span>
+        <h3>POS portal shell</h3>
+        <p>Touch point-of-sale: phone shell with bottom tab bar (Sale · Items · Receipts · More), big keypad and category tiles. Tablet folds the tabs into a side rail. Desktop adds a customer pane on the right.</p>
+        <div class="row">
+          <span class="pill"><span data-icon="phone"></span> Mobile primary</span>
+          <span class="pill"><span data-icon="tablet"></span> Tablet</span>
+          <span class="pill"><span data-icon="desktop"></span> Desktop counter</span>
+          <span class="pill"><span data-icon="zap"></span> PWA</span>
+        </div>
+        <div class="links">
+          <a href="../portals/pos/index.html">Portal hub <span data-icon="arrow"></span></a>
+          <a href="../portals/pos/sale.html">Open sale screen →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="shell-card">
+      <div class="pic">
+        <div class="schema-frame phone">
+          <div class="scr">
+            <div class="wf-bar t" style="width: 100%; height: 6px;"></div>
+            <div style="background: linear-gradient(135deg, var(--brand), var(--brand-deeper)); border-radius: 4px; padding: 6px; display: flex; flex-direction: column; gap: 3px; margin-top: 4px;">
+              <div class="wf-bar" style="width: 50%; background: rgba(255,255,255,0.3); height: 4px;"></div>
+              <div class="wf-bar" style="width: 80%; background: #fff; height: 8px;"></div>
+              <div class="wf-bar" style="width: 60%; background: rgba(255,255,255,0.4); height: 4px;"></div>
+            </div>
+            <div class="wf-bar t" style="width: 30%; margin-top: 4px;"></div>
+            <div class="wf-card"><div class="wf-bar t" style="width: 60%;"></div><div class="wf-bar g" style="width: 90%; height:4px;"></div></div>
+            <div class="wf-card"><div class="wf-bar t" style="width: 70%;"></div><div class="wf-bar g" style="width: 90%; height:4px;"></div></div>
+            <div style="flex: 1;"></div>
+            <div class="wf-tab" style="margin: 0 -8px -8px;"><span class="it b"></span><span class="it"></span><span class="it"></span><span class="it"></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <span class="lbl">SHL · 05</span>
+        <h3>Parent portal shell</h3>
+        <p>Mobile-first. Status bar, the fee-balance hero banner, simple list rows for children, a notice strip and a four-tab bottom bar (Home · Fees · Notices · Profile). Works on intermittent connectivity.</p>
+        <div class="row">
+          <span class="pill"><span data-icon="phone"></span> Mobile primary</span>
+          <span class="pill"><span data-icon="tablet"></span> Tablet</span>
+          <span class="pill"><span data-icon="zap"></span> PWA</span>
+        </div>
+        <div class="links">
+          <a href="../portals/parent/index.html">Portal hub <span data-icon="arrow"></span></a>
+          <a href="../portals/parent/dashboard.html">Open dashboard →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="shell-card">
+      <div class="pic">
+        <div class="schema-frame tab">
+          <div class="scr" style="display: flex; flex-direction: row; padding: 0;">
+            <div class="wf-side" style="width: 22%;">
+              <div class="wf-bar lg b" style="width: 60%;"></div>
+              <div class="wf-bar t" style="width: 80%;"></div>
+              <div class="wf-bar brand" style="width:90%;"></div>
+              <div class="wf-bar t" style="width: 70%;"></div>
+              <div class="wf-bar t" style="width: 80%;"></div>
+            </div>
+            <div class="wf-main">
+              <div class="wf-bar lg" style="width: 35%;"></div>
+              <div class="wf-bar t" style="width: 70%; height: 4px;"></div>
+              <div class="wf-card" style="flex: 1;">
+                <div class="wf-grid" style="grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap:3px;">
+                  <div class="wf-bar t" style="height: 6px;"></div><div class="wf-bar t" style="height: 6px;"></div><div class="wf-bar t" style="height: 6px;"></div><div class="wf-bar t" style="height: 6px;"></div><div class="wf-bar t" style="height: 6px;"></div>
+                  <div class="wf-bar b" style="height: 14px;"></div><div class="wf-bar t" style="height: 14px;"></div><div class="wf-bar t" style="height: 14px;"></div><div class="wf-bar brand" style="height: 14px;"></div><div class="wf-bar t" style="height: 14px;"></div>
+                  <div class="wf-bar t" style="height: 14px;"></div><div class="wf-bar brand" style="height: 14px;"></div><div class="wf-bar b" style="height: 14px;"></div><div class="wf-bar t" style="height: 14px;"></div><div class="wf-bar t" style="height: 14px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <span class="lbl">SHL · 06</span>
+        <h3>Student portal shell</h3>
+        <p>Tablet-first. Left rail with the student's class and term anchor; main panel devotes itself to one anchor surface (Timetable, Results, Notices, Library). On phone, the rail collapses into a sheet.</p>
+        <div class="row">
+          <span class="pill"><span data-icon="tablet"></span> Tablet primary</span>
+          <span class="pill"><span data-icon="phone"></span> Mobile</span>
+        </div>
+        <div class="links">
+          <a href="../portals/student/index.html">Portal hub <span data-icon="arrow"></span></a>
+          <a href="../portals/student/timetable.html">Open timetable →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="shell-card">
+      <div class="pic">
+        <div class="schema-frame tab">
+          <div class="scr" style="display: flex; flex-direction: row; padding: 0;">
+            <div class="wf-side" style="width: 22%;">
+              <div class="wf-bar lg" style="width: 60%; background: #4C1D95;"></div>
+              <div class="wf-bar t" style="width: 80%;"></div>
+              <div class="wf-bar t" style="width: 80%;"></div>
+              <div class="wf-bar brand" style="width:90%; background: #EDE0FF;"></div>
+              <div class="wf-bar t" style="width: 70%;"></div>
+            </div>
+            <div class="wf-main">
+              <div class="wf-bar lg" style="width: 45%;"></div>
+              <div class="wf-row"><div class="wf-bar t" style="width:50%; height:4px;"></div><div class="wf-bar b" style="width:14%; height:8px; margin-left:auto;"></div></div>
+              <div style="background: #fff; border: 1px solid var(--border); border-radius: 3px; flex: 1; padding: 4px; display:flex; flex-direction: column; gap: 3px;">
+                <div class="wf-row"><div class="wf-bar t" style="width:20%; height:4px;"></div><div class="wf-bar t" style="width:18%; height:4px;"></div><div class="wf-bar t" style="width:16%; height:4px; margin-left:auto;"></div></div>
+                <div class="wf-row"><div class="wf-bar t" style="width:20%; height:4px;"></div><div class="wf-bar t" style="width:18%; height:4px;"></div><div class="wf-bar t" style="width:16%; height:4px; margin-left:auto;"></div></div>
+                <div class="wf-row"><div class="wf-bar t" style="width:20%; height:4px;"></div><div class="wf-bar t" style="width:18%; height:4px;"></div><div class="wf-bar t" style="width:16%; height:4px; margin-left:auto;"></div></div>
+                <div class="wf-row"><div class="wf-bar t" style="width:20%; height:4px;"></div><div class="wf-bar t" style="width:18%; height:4px;"></div><div class="wf-bar t" style="width:16%; height:4px; margin-left:auto;"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <span class="lbl">SHL · 07</span>
+        <h3>Teacher portal shell</h3>
+        <p>Tablet at the front of class, desktop for grading. Side nav anchored to the active class & term; primary surface is whichever workflow the teacher just opened — marks entry, attendance, lesson plan.</p>
+        <div class="row">
+          <span class="pill"><span data-icon="tablet"></span> Tablet primary</span>
+          <span class="pill"><span data-icon="desktop"></span> Desktop</span>
+          <span class="pill"><span data-icon="phone"></span> Mobile</span>
+        </div>
+        <div class="links">
+          <a href="../portals/teacher/index.html">Portal hub <span data-icon="arrow"></span></a>
+          <a href="../portals/teacher/marks.html">Open marks entry →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="shell-card">
+      <div class="pic">
+        <div class="schema-frame desk">
+          <div class="chrome"><span class="d"></span><span class="d"></span><span class="d"></span></div>
+          <div class="scr" style="display: flex; flex-direction: row; padding: 0;">
+            <div class="wf-side" style="width: 22%;">
+              <div class="wf-bar lg" style="width: 60%; background: #7F1D1D;"></div>
+              <div class="wf-bar t" style="width: 80%;"></div>
+              <div class="wf-bar t" style="width: 70%;"></div>
+              <div class="wf-bar brand" style="width:90%; background: #FEE2E5;"></div>
+            </div>
+            <div class="wf-main">
+              <div class="wf-bar lg" style="width: 40%;"></div>
+              <div class="wf-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                <div class="wf-card"><div class="wf-bar t" style="width:60%;"></div><div class="wf-bar b" style="width:50%; height: 8px;"></div></div>
+                <div class="wf-card"><div class="wf-bar t" style="width:60%;"></div><div class="wf-bar b" style="width:50%; height: 8px;"></div></div>
+                <div class="wf-card"><div class="wf-bar t" style="width:60%;"></div><div class="wf-bar b" style="width:50%; height: 8px;"></div></div>
+              </div>
+              <div class="wf-card" style="flex: 1;"><div class="wf-bar t" style="width:30%;"></div><div class="wf-bar g" style="width:100%; height:4px;"></div><div class="wf-bar g" style="width:90%; height:4px;"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <span class="lbl">SHL · 08</span>
+        <h3>Staff portal shell</h3>
+        <p>Self-service shell for internal staff: payslips, leave, time-sheets, directory. Desktop-first but PWA-friendly. Same nav model as the dashboard, narrower and softer — staff aren't operators.</p>
+        <div class="row">
+          <span class="pill"><span data-icon="desktop"></span> Desktop primary</span>
+          <span class="pill"><span data-icon="phone"></span> PWA</span>
+        </div>
+        <div class="links">
+          <a href="../portals/staff/index.html">Portal hub <span data-icon="arrow"></span></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="shell-card">
+      <div class="pic">
+        <div class="schema-frame desk">
+          <div class="chrome"><span class="d"></span><span class="d"></span><span class="d"></span></div>
+          <div class="scr" style="background: #16181D; display: flex; flex-direction: row; padding: 0;">
+            <div class="wf-side" style="width: 22%; background: #0C0D11; border-color: #262A33;">
+              <div class="wf-bar lg" style="width: 60%; background: var(--brand);"></div>
+              <div class="wf-bar" style="width: 80%; height:5px; background: #262A33;"></div>
+              <div class="wf-bar" style="width: 70%; height:5px; background: #262A33;"></div>
+              <div class="wf-bar" style="width: 90%; height:5px; background: var(--brand-soft);"></div>
+            </div>
+            <div class="wf-main">
+              <div class="wf-bar lg" style="width: 40%; background: #fff;"></div>
+              <div class="wf-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                <div style="background: #262A33; padding:4px; border-radius:3px;"><div class="wf-bar" style="width:60%; height: 4px; background:#3D424D;"></div><div class="wf-bar" style="width: 50%; height:8px; background: var(--brand); margin-top:3px;"></div></div>
+                <div style="background: #262A33; padding:4px; border-radius:3px;"><div class="wf-bar" style="width:60%; height: 4px; background:#3D424D;"></div><div class="wf-bar" style="width: 50%; height:8px; background: var(--brand); margin-top:3px;"></div></div>
+                <div style="background: #262A33; padding:4px; border-radius:3px;"><div class="wf-bar" style="width:60%; height: 4px; background:#3D424D;"></div><div class="wf-bar" style="width: 50%; height:8px; background: var(--brand); margin-top:3px;"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="meta">
+        <span class="lbl">SHL · 09</span>
+        <h3>Admin control plane shell</h3>
+        <p>Cross-tenant operations for the platform team. Desktop-only, dark by default — pretends to be infrastructure. Subscriptions, health, support, audit. The one shell that breaks the canvas rule.</p>
+        <div class="row">
+          <span class="pill"><span data-icon="desktop"></span> Desktop only</span>
+          <span class="pill" style="background: var(--ink); color: #fff;"><span data-icon="zap"></span> Dark by default</span>
+        </div>
+        <div class="links">
+          <a href="../portals/admin/index.html">Portal hub <span data-icon="arrow"></span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="margin-top: 64px;">
+    <h2 class="ds-h2">When to use which shell</h2>
+    <p class="ds-h2-sub">A simple cheat sheet.</p>
+    <table class="ds-props">
+      <thead><tr><th>Use case</th><th>Shell</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Branch manager dashboard</td><td>Dashboard</td><td>Sidebar + table-heavy work, desktop-first</td></tr>
+        <tr><td>Workspace settings</td><td>Settings</td><td>Section rail keeps subsections discoverable</td></tr>
+        <tr><td>Stock list, customer list, audit log</td><td>Data-table</td><td>Full-bleed table chrome, sticky headers</td></tr>
+        <tr><td>Cashier on a phone</td><td>POS portal</td><td>Stripped chrome; thumb-zone keypad</td></tr>
+        <tr><td>Parent checking fees</td><td>Parent portal</td><td>Mobile-first, low-bandwidth, hero banner</td></tr>
+        <tr><td>Student timetable lookup</td><td>Student portal</td><td>Tablet calendar grid is the centre of mass</td></tr>
+        <tr><td>Teacher entering marks</td><td>Teacher portal</td><td>Class-anchored side nav + grading grid</td></tr>
+        <tr><td>Staff payslip download</td><td>Staff portal</td><td>Same nav model as dashboard, softer surfaces</td></tr>
+        <tr><td>Platform operator</td><td>Admin control plane</td><td>Dark, dense, desktop-only — feels infrastructural</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="ds-pager">
+    <a href="patterns.html"><div class="pager-label">← Previous</div><div class="pager-title">Patterns</div></a>
+    <a class="next" href="../index.html#kits"><div class="pager-label">Next →</div><div class="pager-title">Vertical kits</div></a>
+  </div>
+</main>
+</body></html>

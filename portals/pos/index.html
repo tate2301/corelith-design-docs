@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" /><title>POS terminal · Portals · Huchu DS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<style>
+  body { background: var(--canvas); }
+
+  /* Embedded shell previews (real renders, scaled down) */
+  .shell-row { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 18px; margin-top: 32px; align-items: end; }
+  @media (max-width: 1100px) { .shell-row { grid-template-columns: 1fr; } }
+
+  .device-preview { background: var(--canvas); border: 1px solid var(--border); border-radius: 14px; padding: 24px; overflow: hidden; }
+  .device-preview .pic { display: grid; place-items: center; min-height: 320px; }
+  .device-preview .lbl { display: flex; justify-content: space-between; align-items: center; padding-top: 18px; margin-top: 18px; border-top: 1px solid var(--border-subtle); }
+  .device-preview .lbl .nm { font: 500 14px/1.3 var(--font-sans); color: var(--text-strong); }
+  .device-preview .lbl .ds { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .device-preview .lbl a { font: 500 12.5px/1 var(--font-sans); color: var(--brand-strong); text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+
+  /* Mini phone (frame to render a fake screen inline) */
+  .mini-phone {
+    width: 220px; height: 460px; border-radius: 32px;
+    background: #0F1115; padding: 6px;
+    box-shadow: 0 18px 36px -10px rgba(22,24,29,0.3);
+    position: relative; flex: none;
+  }
+  .mini-phone::before { content: ""; position: absolute; top: 9px; left: 50%; transform: translateX(-50%); width: 70px; height: 18px; background: #0F1115; border-radius: 0 0 12px 12px; z-index: 2; }
+  .mini-phone .screen { width: 100%; height: 100%; background: var(--canvas); border-radius: 26px; overflow: hidden; display: flex; flex-direction: column; }
+
+  /* Tablet preview */
+  .mini-tab {
+    width: 360px; height: 280px; border-radius: 18px;
+    background: #0F1115; padding: 6px;
+    box-shadow: 0 18px 36px -10px rgba(22,24,29,0.3);
+    flex: none;
+  }
+  .mini-tab .screen { width: 100%; height: 100%; background: var(--canvas); border-radius: 13px; overflow: hidden; display: flex; }
+
+  /* Desktop preview */
+  .mini-desk {
+    width: 440px; height: 290px; border-radius: 8px;
+    background: #1A1D24; padding: 0;
+    box-shadow: 0 18px 36px -10px rgba(22,24,29,0.3);
+    overflow: hidden; flex: none;
+  }
+  .mini-desk .chrome { height: 22px; display: flex; align-items: center; gap: 4px; padding: 0 10px; }
+  .mini-desk .chrome .d { width: 6px; height: 6px; border-radius: 50%; background: #444; }
+  .mini-desk .screen { background: var(--canvas); height: calc(100% - 22px); display: flex; }
+
+  /* Mini interior content */
+  .mini-phone .sb { padding: 14px 12px 6px; display: flex; justify-content: space-between; font: 600 10px/1 var(--font-sans); color: var(--text-strong); }
+  .mini-phone .ap { height: 32px; padding: 0 10px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-sans); color: var(--text-strong); flex: none; }
+  .mini-phone .ap .h { width: 12px; height: 12px; border-radius: 3px; background: var(--surface-muted); }
+  .mini-phone .body { flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+  .mini-phone .amount { font: 700 28px/1 var(--font-sans); letter-spacing: -0.02em; color: var(--text-strong); }
+  .mini-phone .amount .c { font-size: 14px; color: var(--text-muted); }
+  .mini-phone .help { font: 9px/1.3 var(--font-sans); color: var(--text-muted); }
+  .mini-phone .chips { display: flex; gap: 4px; overflow: hidden; }
+  .mini-phone .chip { padding: 3px 8px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 9px/1 var(--font-sans); color: var(--text-strong); }
+  .mini-phone .chip.b { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .mini-phone .row { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; display: flex; justify-content: space-between; align-items: center; font: 500 9px/1.3 var(--font-sans); color: var(--text-strong); }
+  .mini-phone .row .v { font-family: var(--font-mono); color: var(--text-strong); font-size: 9px; }
+  .mini-phone .charge { background: var(--brand); color: #fff; border-radius: 8px; padding: 10px; text-align: center; font: 600 11px/1 var(--font-sans); margin-top: auto; }
+  .mini-phone .tabs { height: 32px; background: var(--surface); border-top: 1px solid var(--border); display: flex; flex: none; margin: 10px -10px -10px; }
+  .mini-phone .tabs .t { flex: 1; display: grid; place-items: center; color: var(--text-subtle); }
+  .mini-phone .tabs .t.a { color: var(--brand); }
+  .mini-phone .tabs .t svg { width: 14px; height: 14px; }
+
+  /* Tablet interior */
+  .mini-tab .side { width: 110px; background: var(--canvas); border-right: 1px solid var(--border); padding: 8px; display: flex; flex-direction: column; gap: 3px; flex: none; }
+  .mini-tab .side .brand { font: 600 11px/1 var(--font-sans); color: var(--text-strong); padding: 4px 4px 6px; }
+  .mini-tab .side .it { padding: 5px 6px; border-radius: 4px; font: 500 9px/1 var(--font-sans); color: var(--text-body); display: flex; align-items: center; gap: 5px; }
+  .mini-tab .side .it.a { background: var(--brand-soft); color: var(--brand-strong); }
+  .mini-tab .side .it .d { width: 8px; height: 8px; border-radius: 2px; background: var(--surface-muted); }
+  .mini-tab .side .it.a .d { background: var(--brand); }
+  .mini-tab .main { flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .mini-tab .main .h { font: 600 13px/1.2 var(--font-sans); color: var(--text-strong); }
+  .mini-tab .main .pills { display: flex; gap: 3px; }
+  .mini-tab .main .pills .p { padding: 2px 6px; border-radius: 9999px; background: var(--surface-muted); font: 500 8px/1 var(--font-sans); color: var(--text-muted); }
+  .mini-tab .main .pills .p.b { background: var(--brand-soft); color: var(--brand-strong); }
+  .mini-tab .main .grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 6px; flex: 1; min-height: 0; }
+  .mini-tab .main .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px; display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
+  .mini-tab .main .panel .ph { font: 500 9px/1.3 var(--font-sans); color: var(--text-strong); }
+  .mini-tab .main .panel .row { display: flex; justify-content: space-between; font: 500 8px/1.4 var(--font-sans); color: var(--text-strong); padding: 2px 0; border-bottom: 1px solid var(--border-subtle); }
+  .mini-tab .main .panel .row:last-child { border-bottom: 0; }
+  .mini-tab .main .panel .row .v { font-family: var(--font-mono); font-size: 8px; }
+  .mini-tab .main .panel.tonal { background: var(--brand-soft); border-color: var(--brand-100); }
+  .mini-tab .main .panel.tonal .row { color: var(--brand-strong); border-color: rgba(11,93,240,0.08); }
+
+  /* Desktop interior */
+  .mini-desk .side { width: 90px; background: var(--canvas); border-right: 1px solid var(--border); padding: 8px; display: flex; flex-direction: column; gap: 2px; flex: none; }
+  .mini-desk .side .brand { font: 600 11px/1 var(--font-sans); color: var(--text-strong); padding: 4px 4px 6px; }
+  .mini-desk .side .it { padding: 4px 6px; border-radius: 4px; font: 500 9px/1 var(--font-sans); color: var(--text-body); }
+  .mini-desk .side .it.a { background: var(--brand-soft); color: var(--brand-strong); }
+  .mini-desk .cat { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .mini-desk .top { height: 26px; padding: 0 10px; display: flex; align-items: center; gap: 5px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .mini-desk .top .h { font: 600 10px/1 var(--font-sans); color: var(--text-strong); }
+  .mini-desk .top .s { flex: 1; height: 16px; border-radius: 4px; background: var(--surface-muted); border: 1px solid var(--border); }
+  .mini-desk .grid { flex: 1; padding: 10px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; align-content: start; }
+  .mini-desk .grid .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 4px; display: flex; flex-direction: column; gap: 2px; }
+  .mini-desk .grid .tile .sw { height: 18px; background: var(--surface-muted); border-radius: 2px; }
+  .mini-desk .grid .tile.b1 .sw { background: #FEF4DA; }
+  .mini-desk .grid .tile.b2 .sw { background: #DCFCE7; }
+  .mini-desk .grid .tile.b3 .sw { background: #DDEAFE; }
+  .mini-desk .grid .tile.b4 .sw { background: #FEDCEA; }
+  .mini-desk .grid .tile .nm { font: 500 7px/1.2 var(--font-sans); color: var(--text-strong); }
+  .mini-desk .grid .tile .pr { font: 600 7px/1 var(--font-mono); color: var(--text-strong); }
+  .mini-desk .cart { width: 130px; background: var(--surface); border-left: 1px solid var(--border); padding: 8px; display: flex; flex-direction: column; gap: 4px; flex: none; }
+  .mini-desk .cart .h { font: 600 10px/1 var(--font-sans); color: var(--text-strong); }
+  .mini-desk .cart .row { display: flex; justify-content: space-between; font: 500 8px/1 var(--font-sans); color: var(--text-strong); padding: 3px 0; border-bottom: 1px solid var(--border-subtle); }
+  .mini-desk .cart .row .v { font-family: var(--font-mono); }
+  .mini-desk .cart .ch { margin-top: auto; padding: 6px; background: var(--brand); color: #fff; border-radius: 4px; text-align: center; font: 600 9px/1 var(--font-sans); }
+</style>
+</head>
+<body>
+
+<header class="hx-topbar">
+  <a class="brand" href="../../index.html"><span class="mark" data-icon="corelith" data-icon-size="22"></span> Huchu <span class="badge">DS · 0.5</span></a>
+  <nav>
+    <a href="../../index.html">Overview</a>
+    <a href="../../system/foundations.html">Foundations</a>
+    <a href="../../system/primitives.html">Components</a>
+    <a href="../../system/shells.html">Shells</a>
+    <a href="../../index.html#portals" class="current">Portals</a>
+  </nav>
+  <div class="spacer"></div>
+  <a class="cta" href="../../index.html#portals">All portals</a>
+</header>
+
+<div class="hub-wrap">
+  <section class="hub-hero">
+    <div class="breadcrumb">
+      <a href="../../index.html">Home</a><span class="sep">/</span>
+      <a href="../../index.html#portals">Portals</a><span class="sep">/</span>
+      <span>POS terminal</span>
+    </div>
+    <div class="area-icon portal-pos" data-icon="receipt" data-icon-size="28"></div>
+    <h1>POS terminal</h1>
+    <p class="lede">Touch point-of-sale for cashiers and field buyers. Built mobile-first, scaled up to tablet and counter desktop. Ships as a packaged Android/iOS app and a web PWA.</p>
+    <div class="meta-pills">
+      <span class="meta-pill brand">Portal</span>
+      <span class="meta-pill">3 shells</span>
+      <span class="meta-pill">5 pages</span>
+      <span class="meta-pill tone-success"><span data-icon="check" data-icon-size="11"></span>Production</span>
+      <span class="meta-pill">/portals/pos</span>
+    </div>
+  </section>
+
+  <section class="hub-section">
+    <span class="label">Shells</span>
+    <h2>Three sizes, one product</h2>
+    <p class="sub">The POS portal adapts to the device the cashier is using. The cart, the catalog, and the totals are always present — what changes is how they're framed.</p>
+
+    <div class="shell-row">
+      <!-- Mobile -->
+      <div class="device-preview">
+        <div class="pic">
+          <div class="mini-phone">
+            <div class="screen">
+              <div class="sb"><span>9:41</span><span>● ● ●</span></div>
+              <div class="ap"><span class="h"></span> New sale</div>
+              <div class="body">
+                <div class="amount"><span class="c">$</span>284<span class="c">.50</span></div>
+                <div class="help">4 items · Cash · Park Centre</div>
+                <div class="chips"><span class="chip b">All</span><span class="chip">Bev</span><span class="chip">Gro</span><span class="chip">Tob</span></div>
+                <div class="row"><span>Mazoe Orange 2L</span><span class="v">$ 9.00</span></div>
+                <div class="row"><span>Pro-bake bread</span><span class="v">$ 4.50</span></div>
+                <div class="row"><span>Cooking oil</span><span class="v">$ 3.20</span></div>
+                <div class="row" style="background: var(--brand-soft); border-color: var(--brand-100); color: var(--brand-strong);"><span>Bulk discount</span><span class="v" style="color: var(--brand-strong);">– $ 2.20</span></div>
+                <div class="charge">Charge $ 284.50</div>
+                <div class="tabs">
+                  <span class="t a"><span data-icon="receipt"></span></span>
+                  <span class="t"><span data-icon="bag"></span></span>
+                  <span class="t"><span data-icon="list"></span></span>
+                  <span class="t"><span data-icon="more"></span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="lbl">
+          <div><div class="nm">Mobile · phone</div><div class="ds">Single till, in-aisle buyers</div></div>
+          <a href="sale.html">Open <span data-icon="arrow" data-icon-size="12"></span></a>
+        </div>
+      </div>
+
+      <!-- Tablet -->
+      <div class="device-preview">
+        <div class="pic">
+          <div class="mini-tab">
+            <div class="screen">
+              <div class="side">
+                <div class="brand">Huchu POS</div>
+                <div class="it"><span class="d"></span>New sale</div>
+                <div class="it a"><span class="d"></span>Cash-up</div>
+                <div class="it"><span class="d"></span>Receipts</div>
+                <div class="it"><span class="d"></span>Items</div>
+              </div>
+              <div class="main">
+                <div class="h">Close shift · S-2841</div>
+                <div class="pills"><span class="p b">Shift S-2841</span><span class="p">Till 02</span></div>
+                <div class="grid">
+                  <div class="panel">
+                    <div class="ph">Sales summary</div>
+                    <div class="row"><span>Cash</span><span class="v">$ 1,842</span></div>
+                    <div class="row"><span>Card</span><span class="v">$ 624</span></div>
+                    <div class="row"><span>Mobile</span><span class="v">$ 199</span></div>
+                    <div class="row" style="background: var(--brand-soft); padding: 4px; border-radius: 3px; margin-top: auto; color: var(--brand-strong);"><span>Expected</span><span class="v" style="color: var(--brand-strong);">$ 1,942</span></div>
+                  </div>
+                  <div class="panel">
+                    <div class="ph">Cash count</div>
+                    <div class="row"><span>$ 50 ×14</span><span class="v">700.00</span></div>
+                    <div class="row"><span>$ 20 ×32</span><span class="v">640.00</span></div>
+                    <div class="row"><span>$ 10 ×28</span><span class="v">280.00</span></div>
+                    <div class="row" style="background: var(--tone-success-bg); padding: 4px; border-radius: 3px; margin-top: auto; color: var(--tone-success);"><span>Over by</span><span class="v" style="color: var(--tone-success);">+ $ 7.90</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="lbl">
+          <div><div class="nm">Tablet</div><div class="ds">Supervisor reconciliation</div></div>
+          <a href="cashup.html">Open <span data-icon="arrow" data-icon-size="12"></span></a>
+        </div>
+      </div>
+
+      <!-- Desktop -->
+      <div class="device-preview">
+        <div class="pic">
+          <div class="mini-desk">
+            <div class="chrome"><span class="d"></span><span class="d"></span><span class="d"></span></div>
+            <div class="screen">
+              <div class="side">
+                <div class="brand">Huchu POS</div>
+                <div class="it a">Sale</div>
+                <div class="it">Cash-up</div>
+                <div class="it">Receipts</div>
+                <div class="it">Items</div>
+                <div class="it">Customers</div>
+              </div>
+              <div class="cat">
+                <div class="top"><div class="h">New sale</div><div class="s"></div></div>
+                <div class="grid">
+                  <div class="tile b1"><div class="sw"></div><div class="nm">Mazoe</div><div class="pr">$ 4.50</div></div>
+                  <div class="tile b2"><div class="sw"></div><div class="nm">Bread</div><div class="pr">$ 1.50</div></div>
+                  <div class="tile b3"><div class="sw"></div><div class="nm">Oil</div><div class="pr">$ 3.20</div></div>
+                  <div class="tile b4"><div class="sw"></div><div class="nm">Rice</div><div class="pr">$ 9.50</div></div>
+                  <div class="tile b1"><div class="sw"></div><div class="nm">Sugar</div><div class="pr">$ 3.80</div></div>
+                  <div class="tile b2"><div class="sw"></div><div class="nm">Milk</div><div class="pr">$ 1.40</div></div>
+                  <div class="tile b3"><div class="sw"></div><div class="nm">Cola</div><div class="pr">$ 1.80</div></div>
+                  <div class="tile b4"><div class="sw"></div><div class="nm">Tea</div><div class="pr">$ 2.20</div></div>
+                </div>
+              </div>
+              <div class="cart">
+                <div class="h">Receipt #R-19281</div>
+                <div class="row"><span>Mazoe</span><span class="v">$ 9.00</span></div>
+                <div class="row"><span>Bread</span><span class="v">$ 4.50</span></div>
+                <div class="row"><span>Oil</span><span class="v">$ 3.20</span></div>
+                <div class="row"><span>VAT 14.5%</span><span class="v">$ 2.18</span></div>
+                <div class="ch">Charge $ 17.21</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="lbl">
+          <div><div class="nm">Desktop counter</div><div class="ds">Permanent till + catalog + cart</div></div>
+          <a href="counter.html">Open <span data-icon="arrow" data-icon-size="12"></span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hub-section">
+    <span class="label">Pages</span>
+    <h2>Surfaces in this kit</h2>
+    <p class="sub">Five fully designed POS surfaces. Each works across all three shells unless flagged.</p>
+    <div class="surface-grid">
+      <a class="surface-card" href="sale.html"><span class="num">01 · MOBILE</span><span class="nm">New sale</span><span class="ds">Keypad-first, line items, suggested upsell, single-tap charge.</span><span class="arrow">Open →</span></a>
+      <a class="surface-card" href="cashup.html"><span class="num">02 · TABLET</span><span class="nm">Cash-up &amp; close shift</span><span class="ds">Counted vs expected, denominators, variance tolerance.</span><span class="arrow">Open →</span></a>
+      <a class="surface-card" href="counter.html"><span class="num">03 · DESKTOP</span><span class="nm">Counter view</span><span class="ds">Permanent catalog, customer, cart, search and category bar.</span><span class="arrow">Open →</span></a>
+      <a class="surface-card coming"><span class="num">04 · ALL</span><span class="nm">Refund &amp; void</span><span class="ds">Reason codes, supervisor PIN, audit trail.</span><span class="arrow">v0.6 →</span></a>
+      <a class="surface-card coming"><span class="num">05 · ALL</span><span class="nm">Customer lookup</span><span class="ds">Loyalty profile, last orders, store credit.</span><span class="arrow">v0.6 →</span></a>
+    </div>
+  </section>
+
+  <section class="hub-section">
+    <span class="label">Patterns used</span>
+    <h2>Built from primitives</h2>
+    <p class="sub">The POS portal composes primitives and blocks already documented in the system. Nothing in here is bespoke.</p>
+    <div class="surface-grid">
+      <a class="surface-card" href="../../system/p-button.html"><span class="num">B</span><span class="nm">Buttons · Charge / Pay</span><span class="ds">Primary, secondary, ghost variants in 48px touch height.</span><span class="arrow">Docs →</span></a>
+      <a class="surface-card" href="../../system/b-stat-card.html"><span class="num">B</span><span class="nm">Sales summary cells</span><span class="ds">Stat card · used in cash-up summary.</span><span class="arrow">Docs →</span></a>
+      <a class="surface-card" href="../../system/p-input.html"><span class="num">P</span><span class="nm">Denominator inputs</span><span class="ds">Numeric input, tabular-num, right-aligned.</span><span class="arrow">Docs →</span></a>
+      <a class="surface-card" href="../../system/p-chip.html"><span class="num">P</span><span class="nm">Category chips</span><span class="ds">Chip · scrollable row of selectable filters.</span><span class="arrow">Docs →</span></a>
+    </div>
+  </section>
+
+  <div class="hub-cta">
+    <div>
+      <h3>Working on POS this sprint?</h3>
+      <p>Five surfaces ship today. Three more — refund flow, customer lookup, end-of-day Z-report — are scheduled for v0.6. Pin this page for the team.</p>
+    </div>
+    <a class="btn-link-light" href="../../system/shells.html#portals">All portal shells <span data-icon="arrow" data-icon-size="14"></span></a>
+  </div>
+</div>
+
+<footer class="hx-footer">
+  <div class="hx-footer-inner">
+    <span>© 2026 Huchu · POS portal kit v0.5</span>
+    <div class="links">
+      <a href="../../index.html">Overview</a>
+      <a href="../../system/shells.html">Shells</a>
+      <a href="../../index.html#portals">Portals</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
