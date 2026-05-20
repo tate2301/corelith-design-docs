@@ -11,9 +11,10 @@ body.ds-doc {
 /* Outer layout: top nav + (sidebar + content) */
 .ds-layout {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 260px minmax(0, 1fr);
   min-height: 100vh;
 }
+.ds-layout > * { min-width: 0; }
 
 /* === TOP BAR === */
 .ds-topbar {
@@ -56,7 +57,9 @@ body.ds-doc {
   color: var(--text-muted);
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
+.ds-topbar .ds-brand { white-space: nowrap; }
 .ds-topbar .ds-nav {
   display: flex;
   gap: 4px;
@@ -513,8 +516,9 @@ code.inline {
   gap: 48px;
   align-items: start;
 }
+.ds-doc-layout > * { min-width: 0; }
 @media (max-width: 1280px) {
-  .ds-doc-layout { grid-template-columns: 1fr; }
+  .ds-doc-layout { grid-template-columns: minmax(0, 1fr); }
   .ds-doc-layout .ds-toc { display: none; }
 }
 
@@ -659,9 +663,249 @@ code.inline {
 .ds-content a:not([class]) { color: var(--text-link); }
 .ds-content a:not([class]):hover { text-decoration: underline; text-underline-offset: 3px; }
 
-/* Mobile collapse */
-@media (max-width: 960px) {
-  .ds-layout { grid-template-columns: 1fr; }
-  .ds-sidebar { display: none; }
-  .ds-content { padding: 32px 24px 64px; }
+/* === MOBILE MENU TOGGLE (hamburger) === */
+.ds-menu-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-strong);
+  cursor: pointer;
+  flex: none;
 }
+.ds-menu-toggle:hover { background: var(--surface-muted); }
+.ds-menu-toggle:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.ds-sidebar-scrim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(22, 24, 29, 0.45);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 49;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.ds-sidebar-scrim.open { display: block; opacity: 1; }
+
+/* ============================================================
+   PREVIEW SWITCHER (Tailwind UI style)
+   Wraps .ds-specimen and .ds-variant-grid with viewport controls.
+   ============================================================ */
+.ds-preview {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  margin: 16px 0;
+  overflow: clip;
+}
+.ds-preview-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-wrap: wrap;
+}
+.ds-preview-toolbar .label {
+  font: var(--type-caption);
+  font-weight: 500;
+  color: var(--text-strong);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.ds-preview-toolbar .spacer { flex: 1; }
+.ds-preview-toolbar .ds-viewport-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface-muted);
+  border-radius: 8px;
+}
+.ds-preview-toolbar .ds-viewport-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 9px;
+  border: 0;
+  background: transparent;
+  border-radius: 6px;
+  color: var(--text-muted);
+  font: 500 12px/1 var(--font-sans);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.ds-preview-toolbar .ds-viewport-btn:hover { color: var(--text-strong); }
+.ds-preview-toolbar .ds-viewport-btn[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--text-strong);
+  box-shadow: 0 1px 2px rgba(22, 24, 29, 0.04), 0 0 0 1px var(--border);
+}
+.ds-preview-toolbar .ds-viewport-btn [data-icon] { color: currentColor; }
+.ds-preview-toolbar .ds-viewport-meta {
+  font: 500 11px/1 var(--font-mono);
+  color: var(--text-subtle);
+  min-width: 6ch;
+  text-align: right;
+}
+.ds-preview-toolbar .ds-preview-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: 500 12px/1 var(--font-sans);
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.ds-preview-toolbar .ds-preview-link:hover {
+  background: var(--surface-muted);
+  color: var(--text-strong);
+}
+.ds-preview-frame {
+  background: var(--canvas);
+  background-image:
+    linear-gradient(45deg, var(--surface-muted) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--surface-muted) 25%, transparent 25%);
+  background-size: 14px 14px;
+  background-position: 0 0, 0 7px;
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+}
+.ds-preview-frame.flush { padding: 0; background: var(--surface); background-image: none; }
+.ds-preview-stage {
+  width: 100%;
+  min-width: 0;
+  max-width: var(--ds-preview-w, 100%);
+  background: var(--surface);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: max-width var(--dur-base, 200ms) var(--ease-out);
+  box-shadow: 0 1px 0 var(--border), 0 0 0 1px var(--border);
+}
+.ds-preview-stage > .ds-specimen > .ds-specimen-stage { min-width: 0; }
+.ds-preview-stage > .ds-specimen { min-width: 0; }
+.ds-preview-stage > .ds-specimen,
+.ds-preview-stage > .ds-variant-grid {
+  margin: 0;
+  border-radius: 0;
+  border: none;
+}
+.ds-preview-stage > .ds-variant-grid {
+  padding: 16px;
+  background: var(--surface);
+}
+.ds-preview[data-viewport="mobile"] .ds-preview-stage > .ds-variant-grid {
+  grid-template-columns: 1fr;
+}
+.ds-preview[data-viewport="tablet"] .ds-preview-stage > .ds-variant-grid.cols-3,
+.ds-preview[data-viewport="tablet"] .ds-preview-stage > .ds-variant-grid.cols-4 {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* === RESPONSIVE BREAKPOINTS === */
+
+/* Tablet — collapse 4-col variant grids, TOC already hides at 1280px */
+@media (max-width: 1100px) {
+  .ds-variant-grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
+  .ds-topbar .ds-actions { display: none; }
+  .ds-topbar .ds-search { max-width: 200px; }
+  .ds-topbar .ds-search .kbd-hint { display: none; }
+}
+@media (max-width: 900px) {
+  .ds-topbar .ds-search { display: none; }
+}
+
+/* Small tablet / large phone — collapse 3-col, simplify topbar */
+@media (max-width: 900px) {
+  .ds-variant-grid.cols-3 { grid-template-columns: repeat(2, 1fr); }
+  .ds-cards.cols-3 { grid-template-columns: 1fr 1fr; }
+  .ds-content { padding: 32px 24px 64px; max-width: 100%; }
+  .ds-page-head h1 { font-size: 34px; }
+  .ds-page-head .lede { font-size: 16px; }
+  .ds-h2 { font-size: 21px; margin-top: 40px; }
+  .ds-specimen-stage { padding: 24px 20px; }
+  .ds-specimen-stage.padded { padding: 32px 24px; }
+  .ds-rules { grid-template-columns: 1fr; }
+}
+
+/* Phone — collapse to mobile drawer, single columns */
+@media (max-width: 720px) {
+  .ds-layout { grid-template-columns: 1fr; }
+  .ds-topbar { padding: 10px 16px; gap: 10px; }
+  .ds-topbar .ds-nav { display: none; }
+  .ds-topbar .ds-actions { display: none; }
+  .ds-topbar .ds-search { display: none; }
+  .ds-topbar .ds-brand .ds-badge { display: none; }
+  .ds-menu-toggle { display: inline-flex; }
+
+  .ds-sidebar {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    bottom: 0;
+    width: min(86vw, 320px);
+    height: calc(100dvh - 56px);
+    padding: 20px 14px 32px;
+    background: var(--canvas);
+    border-right: 1px solid var(--border);
+    transform: translateX(-100%);
+    transition: transform var(--dur-base, 200ms) var(--ease-out);
+    z-index: 50;
+    box-shadow: 4px 0 24px rgba(22, 24, 29, 0.08);
+  }
+  .ds-sidebar.open { transform: translateX(0); }
+
+  .ds-content { padding: 24px 18px 56px; }
+  .ds-page-head { margin-bottom: 24px; }
+  .ds-page-head h1 { font-size: 28px; line-height: 1.12; }
+  .ds-page-head .lede { font-size: 15px; }
+  .ds-page-head .meta { gap: 8px; }
+
+  .ds-variant-grid.cols-2,
+  .ds-variant-grid.cols-3,
+  .ds-variant-grid.cols-4 { grid-template-columns: 1fr; }
+  .ds-cards.cols-2, .ds-cards.cols-3 { grid-template-columns: 1fr; }
+
+  .ds-specimen { margin: 12px 0; border-radius: 12px; }
+  .ds-specimen-stage,
+  .ds-specimen-stage.padded { padding: 20px 16px; min-height: 80px; }
+
+  .ds-pager { grid-template-columns: 1fr; }
+  .ds-pager a.next { text-align: left; }
+
+  .ds-callout { padding: 14px 16px; grid-template-columns: 24px 1fr; gap: 10px; }
+
+  .ds-h2 { font-size: 20px; margin-top: 32px; }
+  .ds-h3 { font-size: 16px; margin-top: 24px; }
+
+  .ds-code { padding: 12px 14px; font-size: 11.5px; }
+
+  /* Tables become horizontally scrollable */
+  .ds-props { display: block; overflow-x: auto; white-space: nowrap; }
+
+  .ds-footer { padding: 18px 16px 24px; flex-direction: column; gap: 6px; text-align: center; }
+
+  /* Preview switcher: collapse meta + link on phone, icon-only buttons */
+  .ds-preview-toolbar { padding: 8px 10px; gap: 8px; }
+  .ds-preview-toolbar .label { display: none; }
+  .ds-preview-toolbar .ds-viewport-meta { display: none; }
+  .ds-preview-toolbar .ds-preview-link span:not([data-icon]) { display: none; }
+  .ds-preview-toolbar .ds-viewport-btn .lbl { display: none; }
+  .ds-preview-toolbar .ds-viewport-btn { padding: 0 8px; }
+  .ds-preview-frame { padding: 10px; }
+}
+
+/* Prevent runaway wide content in specimens from breaking the layout */
+.ds-content { min-width: 0; }
+.ds-specimen, .ds-variant-grid { min-width: 0; }

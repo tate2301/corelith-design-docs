@@ -161,6 +161,9 @@
   const topbar = document.createElement('header');
   topbar.className = 'ds-topbar';
   topbar.innerHTML = `
+    <button class="ds-menu-toggle" aria-label="Open menu" aria-expanded="false">
+      <span data-icon="menu" data-icon-size="18"></span>
+    </button>
     <a class="ds-brand" href="${inSystem ? '../index.html' : 'index.html'}">
       <span class="mark" data-icon="corelith" data-icon-size="22"></span>
       Huchu
@@ -208,6 +211,135 @@
   `;
   layout.appendChild(footer);
 
+  // Sidebar scrim (mobile)
+  const scrim = document.createElement('div');
+  scrim.className = 'ds-sidebar-scrim';
+  layout.appendChild(scrim);
+
+  // === Mobile menu wiring ===
+  const wireMobileMenu = () => {
+    const toggle = topbar.querySelector('.ds-menu-toggle');
+    if (!toggle) return;
+    const openMenu = () => {
+      sidebar.classList.add('open');
+      scrim.classList.add('open');
+      toggle.setAttribute('aria-expanded', 'true');
+    };
+    const closeMenu = () => {
+      sidebar.classList.remove('open');
+      scrim.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    };
+    toggle.addEventListener('click', () => {
+      if (sidebar.classList.contains('open')) closeMenu(); else openMenu();
+    });
+    scrim.addEventListener('click', closeMenu);
+    // Close on link click within sidebar
+    sidebar.addEventListener('click', (e) => {
+      if (e.target.closest('a')) closeMenu();
+    });
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && sidebar.classList.contains('open')) closeMenu();
+    });
+  };
+
+  // === Viewport preview switcher ===
+  // Wraps each .ds-specimen and top-level .ds-variant-grid with a toolbar
+  // that lets you toggle the stage between mobile/tablet/desktop/full widths.
+  const VIEWPORTS = [
+    { id: 'mobile',  label: 'Mobile',  width: 375,  icon: 'phone' },
+    { id: 'tablet',  label: 'Tablet',  width: 768,  icon: 'tablet' },
+    { id: 'desktop', label: 'Desktop', width: 1280, icon: 'desktop' },
+    { id: 'full',    label: 'Full',    width: null, icon: 'grid' },
+  ];
+
+  const enhancePreviews = (root) => {
+    const targets = [];
+    // Wrap each .ds-specimen as a preview
+    root.querySelectorAll('.ds-specimen').forEach((el) => {
+      if (el.closest('.ds-preview')) return;
+      // Skip if inside a variant grid (handled at grid level)
+      if (el.closest('.ds-variant-grid')) return;
+      targets.push({ el, kind: 'specimen' });
+    });
+    // Wrap top-level .ds-variant-grid (not nested ones inside specimens)
+    root.querySelectorAll('.ds-variant-grid').forEach((el) => {
+      if (el.closest('.ds-preview')) return;
+      if (el.closest('.ds-specimen')) return;
+      targets.push({ el, kind: 'grid' });
+    });
+
+    // On small screens default to mobile viewport so specimens render usefully
+    const initialVp = window.innerWidth <= 720 ? 'mobile' : 'full';
+
+    targets.forEach(({ el, kind }, idx) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'ds-preview';
+      wrap.dataset.viewport = initialVp;
+      const initialW = VIEWPORTS.find(v => v.id === initialVp).width;
+      wrap.style.setProperty('--ds-preview-w', initialW ? initialW + 'px' : '100%');
+
+      // Extract label from specimen-bar if present
+      let titleText = '';
+      const bar = el.querySelector(':scope > .ds-specimen-bar .label');
+      if (bar) titleText = bar.textContent.trim();
+      if (!titleText) titleText = kind === 'grid' ? 'Variants' : 'Preview';
+
+      const toolbar = document.createElement('div');
+      toolbar.className = 'ds-preview-toolbar';
+      toolbar.innerHTML = `
+        <span class="label">${titleText}</span>
+        <span class="spacer"></span>
+        <div class="ds-viewport-group" role="group" aria-label="Preview viewport">
+          ${VIEWPORTS.map(v => `
+            <button type="button"
+              class="ds-viewport-btn"
+              data-vp="${v.id}"
+              aria-pressed="${v.id === initialVp ? 'true' : 'false'}"
+              title="${v.label}${v.width ? ' · ' + v.width + 'px' : ''}">
+              <span data-icon="${v.icon}" data-icon-size="13"></span>
+              <span class="lbl">${v.label}</span>
+            </button>
+          `).join('')}
+        </div>
+        <span class="ds-viewport-meta">${initialW ? initialW + 'px' : '100%'}</span>
+      `;
+
+      const frame = document.createElement('div');
+      frame.className = 'ds-preview-frame' + (kind === 'grid' ? ' flush' : '');
+
+      const stage = document.createElement('div');
+      stage.className = 'ds-preview-stage';
+
+      // Move the element into the stage
+      el.parentNode.insertBefore(wrap, el);
+      stage.appendChild(el);
+      frame.appendChild(stage);
+      wrap.appendChild(toolbar);
+      wrap.appendChild(frame);
+
+      // Wire viewport buttons
+      toolbar.querySelectorAll('.ds-viewport-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const vpId = btn.dataset.vp;
+          const vp = VIEWPORTS.find(v => v.id === vpId);
+          toolbar.querySelectorAll('.ds-viewport-btn').forEach((b) => {
+            b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+          });
+          wrap.dataset.viewport = vpId;
+          if (vp.width) {
+            wrap.style.setProperty('--ds-preview-w', vp.width + 'px');
+            toolbar.querySelector('.ds-viewport-meta').textContent = vp.width + 'px';
+          } else {
+            wrap.style.setProperty('--ds-preview-w', '100%');
+            toolbar.querySelector('.ds-viewport-meta').textContent = '100%';
+          }
+        });
+      });
+    });
+  };
+
   // Mount: replace body content with layout
   const mount = () => {
     // Remove the original <main> from its current position
@@ -216,6 +348,10 @@
       layout.insertBefore(main, footer);
     }
     document.body.insertBefore(layout, document.body.firstChild);
+    // Enhance specimens with viewport preview switcher
+    if (main) enhancePreviews(main);
+    // Wire mobile menu
+    wireMobileMenu();
     // Render any icons now that DOM is updated
     if (window.Icons && window.Icons.render) window.Icons.render(layout);
   };

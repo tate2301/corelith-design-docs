@@ -109,6 +109,12 @@
     battery:  `<rect x="3" y="8" width="16" height="8" rx="1.5" ${P}/><rect x="20" y="10" width="2" height="4" rx="0.5" fill="currentColor" stroke="none"/><rect x="5" y="10" width="9" height="4" rx="0.5" fill="currentColor" stroke="none"/>`,
     signal:   `<path d="M4 18h2v2H4zM8 14h2v6H8zM12 10h2v10h-2zM16 6h2v14h-2z" fill="currentColor" stroke="none"/>`,
     barcode:  `<path d="M4 5v14M7 5v14M9 5v14M12 5v14M14 5v14M17 5v14M20 5v14" ${P}/>`,
+    /* Codex-flagged missing icons */
+    trending: `<path d="m3 17 6-6 4 4 8-8M14 7h7v7" ${P}/>`,
+    coins:    `<ellipse cx="9" cy="7" rx="6" ry="2.5" ${P}/><path d="M3 7v5c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V7" ${P}/><path d="M3 12v5c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-5" ${P}/><ellipse cx="16" cy="14" rx="5" ry="2" ${P}/><path d="M11 14v3c0 1.1 2.2 2 5 2s5-0.9 5-2v-3" ${P}/>`,
+    mail:     `<rect x="3" y="5" width="18" height="14" rx="2" ${P}/><path d="m3 7 9 6 9-6" ${P}/>`,
+    logout:   `<path d="M14 8V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2" ${P}/><path d="M21 12H9m12 0-4-4m4 4-4 4" ${P}/>`,
+    tag:      `<path d="M3 12 12 3l9 3-3 9-9 9-6-6z" ${P}/><circle cx="9" cy="9" r="1.4" ${P}/>`,
   };
   const SVG = (name, size) => {
     const body = I[name] || I.info;
