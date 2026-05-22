@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Dashboard · Admin portal · Huchu</title>
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../portal-kit-nav.js" defer></script>
+<style>
+  /* Page-specific: dashboard grids, KPI tiles, health strip, audit feed */
+  .adm-top { display: flex; align-items: center; gap: 14px; padding: 16px 28px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .adm-top h1 { font: 700 20px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; letter-spacing: -0.01em; }
+  .adm-top .crumb { font: 12px/1.3 var(--font-sans); color: var(--text-muted); }
+  .adm-top .spacer { flex: 1; }
+  .adm-top .pill { padding: 4px 10px; border-radius: 9999px; background: var(--surface-muted); font: 500 12px/1 var(--font-sans); color: var(--text-muted); }
+  .adm-top .pill.brand { background: var(--brand-soft); color: var(--brand-strong); }
+
+  .adm-body { padding: 22px 28px; flex: 1; overflow-y: auto; display: grid; gap: 18px; grid-template-columns: 1fr 360px; grid-template-areas: "kpi snap" "health snap" "audit audit"; align-content: start; }
+
+  .kpi-grid { grid-area: kpi; display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 14px 16px; }
+  .kpi .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); }
+  .kpi .val { font: 700 24px/1.05 var(--font-sans); color: var(--text-strong); margin-top: 10px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .kpi .delta { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; font: 500 12px/1 var(--font-sans); }
+  .kpi .delta.up { color: var(--tone-success); }
+  .kpi .delta.down { color: var(--tone-danger); }
+  .kpi .delta.flat { color: var(--text-muted); }
+
+  .health { grid-area: health; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; align-items: center; }
+  .health .item .lb { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); }
+  .health .item .vv { font: 600 16px/1.2 var(--font-mono); color: var(--text-strong); margin-top: 6px; }
+  .health .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--tone-success); display: inline-block; margin-right: 6px; vertical-align: middle; }
+  .health .dot.warn { background: var(--tone-warn); }
+
+  .audit-card { grid-area: audit; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: clip; }
+  .audit-card .h { display: flex; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--border-subtle); }
+  .audit-card .h h3 { font: 600 14px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .audit-card .h .sb { font: 12px/1 var(--font-sans); color: var(--text-muted); margin-left: 10px; }
+  .audit-card .h .spacer { flex: 1; }
+  .audit-card .h a { font: 500 12.5px/1 var(--font-sans); color: var(--brand-strong); text-decoration: none; }
+  .audit-row { display: grid; grid-template-columns: 88px 30px 1fr 120px 100px; gap: 12px; align-items: center; padding: 10px 18px; border-bottom: 1px solid var(--border-subtle); font: 13px/1.4 var(--font-sans); }
+  .audit-row:last-child { border-bottom: 0; }
+  .audit-row .ts { font: 12px/1.2 var(--font-mono); color: var(--text-muted); }
+  .audit-row .av { width: 26px; height: 26px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 11px/1 var(--font-sans); }
+  .audit-row .ev { color: var(--text-strong); }
+  .audit-row .ev .who { color: var(--text-muted); }
+  .audit-row .ip { font: 12px/1.2 var(--font-mono); color: var(--text-muted); }
+  .audit-row .sev { display: inline-flex; padding: 3px 8px; border-radius: 9999px; font: 500 11px/1 var(--font-sans); justify-self: end; }
+  .audit-row .sev.info { background: var(--surface-muted); color: var(--text-muted); }
+  .audit-row .sev.warn { background: var(--tone-warn-bg); color: var(--tone-warn); }
+  .audit-row .sev.high { background: var(--tone-danger-bg); color: var(--tone-danger); }
+
+  .snap { grid-area: snap; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; align-self: start; }
+  .snap .h { display: flex; align-items: center; gap: 10px; }
+  .snap .h .ic { width: 36px; height: 36px; border-radius: 8px; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; }
+  .snap .h .nm { font: 600 15px/1.2 var(--font-sans); color: var(--text-strong); }
+  .snap .h .sb { font: 12px/1.3 var(--font-mono); color: var(--text-muted); margin-top: 2px; }
+  .snap .row { display: flex; justify-content: space-between; align-items: baseline; font: 13px/1.4 var(--font-sans); }
+  .snap .row .k { color: var(--text-muted); }
+  .snap .row .v { font: 500 13px/1 var(--font-mono); color: var(--text-strong); font-variant-numeric: tabular-nums; }
+  .snap .seats { background: var(--surface-muted); border-radius: 10px; padding: 12px 14px; }
+  .snap .seats .top { display: flex; justify-content: space-between; font: 12px/1 var(--font-sans); color: var(--text-muted); }
+  .snap .seats .bar { height: 6px; background: var(--surface-sunken); border-radius: 4px; margin-top: 8px; overflow: hidden; }
+  .snap .seats .bar > i { display: block; height: 100%; width: 72%; background: var(--brand); border-radius: 4px; }
+  .snap .seats .lab { display: flex; justify-content: space-between; font: 600 13px/1 var(--font-sans); color: var(--text-strong); margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .snap .cta { width: 100%; padding: 9px 12px; border-radius: 8px; background: var(--ink); color: #fff; font: 500 13px/1 var(--font-sans); display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+</style>
+</head>
+<body data-portal-kit="admin" data-portal-screen="dashboard">
+
+<main class="kit-stage">
+  <div class="device-desktop">
+    <div class="chrome">
+      <span class="d" style="background:#FF5F57"></span><span class="d" style="background:#FEBC2E"></span><span class="d" style="background:#28C840"></span>
+      <span class="url">https://admin.huchu.app / mukamba-group / dashboard</span>
+    </div>
+    <div class="screen">
+
+      <!-- Side rail -->
+      <aside class="ps-side">
+        <a class="brand"><span class="mark" data-icon="corelith"></span> Huchu Admin</a>
+        <nav>
+          <a href="dashboard.html" class="active"><span data-icon="dashboard"></span> Dashboard</a>
+          <a href="users.html"><span data-icon="user"></span> Users &amp; roles</a>
+          <a href="audit.html"><span data-icon="shield"></span> Audit log</a>
+          <a href="billing.html"><span data-icon="card"></span> Billing</a>
+          <a href="integrations.html"><span data-icon="plug"></span> Integrations</a>
+          <a href="#"><span data-icon="settings"></span> Settings</a>
+        </nav>
+        <div class="ps-section-h">Tenant</div>
+        <nav>
+          <a href="#"><span data-icon="building"></span> Mukamba Group</a>
+          <a href="#"><span data-icon="branch"></span> Switch tenant</a>
+        </nav>
+        <div class="ps-foot">
+          <span class="avatar">TN</span>
+          <div>
+            <div class="nm">Tendai Ncube</div>
+            <div class="sb">Platform admin</div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main content -->
+      <section class="ps-content" style="padding: 0;">
+        <div class="adm-top">
+          <span class="crumb">mukamba-group · t_8f24a1</span>
+          <h1>Control plane overview</h1>
+          <div class="spacer"></div>
+          <span class="pill brand">Production</span>
+          <span class="pill">Harare · af-south-1</span>
+        </div>
+
+        <div class="adm-body">
+          <!-- KPI strip -->
+          <div class="kpi-grid">
+            <div class="kpi">
+              <div class="lbl">Active users</div>
+              <div class="val">3,482</div>
+              <div class="delta up"><span data-icon="trending" data-icon-size="12"></span> +4.2% wow</div>
+            </div>
+            <div class="kpi">
+              <div class="lbl">MAU</div>
+              <div class="val">11,907</div>
+              <div class="delta up"><span data-icon="trending" data-icon-size="12"></span> +1.8% mom</div>
+            </div>
+            <div class="kpi">
+              <div class="lbl">API calls today</div>
+              <div class="val">2.41M</div>
+              <div class="delta flat">— in band</div>
+            </div>
+            <div class="kpi">
+              <div class="lbl">Storage used</div>
+              <div class="val">812 GB</div>
+              <div class="delta up"><span data-icon="trending" data-icon-size="12"></span> 81% of plan</div>
+            </div>
+            <div class="kpi">
+              <div class="lbl">Open incidents</div>
+              <div class="val" style="color: var(--tone-warn);">2</div>
+              <div class="delta down">1 high · 1 low</div>
+            </div>
+          </div>
+
+          <!-- System health -->
+          <div class="health">
+            <div class="item">
+              <div class="lb"><span class="dot"></span> Uptime · 30d</div>
+              <div class="vv">99.982%</div>
+            </div>
+            <div class="item">
+              <div class="lb"><span class="dot"></span> p95 latency · API</div>
+              <div class="vv">128 ms</div>
+            </div>
+            <div class="item">
+              <div class="lb"><span class="dot warn"></span> p95 latency · POS sync</div>
+              <div class="vv">412 ms</div>
+            </div>
+            <div class="item">
+              <div class="lb"><span class="dot"></span> Queue depth</div>
+              <div class="vv">38 jobs</div>
+            </div>
+          </div>
+
+          <!-- Tenant snapshot -->
+          <aside class="snap">
+            <div class="h">
+              <span class="ic"><span data-icon="building" data-icon-size="18"></span></span>
+              <div>
+                <div class="nm">Mukamba Group</div>
+                <div class="sb">t_8f24a1 · since Mar 2025</div>
+              </div>
+            </div>
+            <div class="seats">
+              <div class="top"><span>Seat usage</span><span>Growth tier</span></div>
+              <div class="bar"><i></i></div>
+              <div class="lab"><span>180 / 250 seats</span><span>72%</span></div>
+            </div>
+            <div class="row"><span class="k">Plan</span><span class="v">Growth · annual</span></div>
+            <div class="row"><span class="k">Renews</span><span class="v">14 Mar 2027</span></div>
+            <div class="row"><span class="k">MRR</span><span class="v">$ 1,840.00</span></div>
+            <div class="row"><span class="k">Branches</span><span class="v">7 sites</span></div>
+            <div class="row"><span class="k">Region</span><span class="v">ZW · af-south-1</span></div>
+            <button class="cta"><span data-icon="settings" data-icon-size="14"></span> Manage tenant</button>
+          </aside>
+
+          <!-- Recent audit events -->
+          <div class="audit-card">
+            <div class="h">
+              <h3>Recent audit events</h3>
+              <span class="sb">Last 10 · across all surfaces</span>
+              <div class="spacer"></div>
+              <a href="audit.html">Open full log →</a>
+            </div>
+            <div class="audit-row">
+              <span class="ts">09:42:18</span>
+              <span class="av">TN</span>
+              <span class="ev"><strong>Suspended user</strong> · <span class="who">Tendai Ncube → ruvimbo.m@mukamba.co.zw</span></span>
+              <span class="ip">196.43.118.12</span>
+              <span class="sev warn">warn</span>
+            </div>
+            <div class="audit-row">
+              <span class="ts">09:31:04</span>
+              <span class="av">SY</span>
+              <span class="ev"><strong>API key rotated</strong> · <span class="who">system → svc-pos-park-centre</span></span>
+              <span class="ip">10.0.4.21</span>
+              <span class="sev info">info</span>
+            </div>
+            <div class="audit-row">
+              <span class="ts">09:18:55</span>
+              <span class="av">FM</span>
+              <span class="ev"><strong>Branch created</strong> · <span class="who">Faith Moyo → "Westgate Till 03"</span></span>
+              <span class="ip">196.43.118.84</span>
+              <span class="sev info">info</span>
+            </div>
+            <div class="audit-row">
+              <span class="ts">08:54:11</span>
+              <span class="av">TN</span>
+              <span class="ev"><strong>Role changed</strong> · <span class="who">Tendai Ncube → kuda.c@mukamba.co.zw (operator → admin)</span></span>
+              <span class="ip">196.43.118.12</span>
+              <span class="sev high">high</span>
+            </div>
+            <div class="audit-row">
+              <span class="ts">08:41:33</span>
+              <span class="av">EC</span>
+              <span class="ev"><strong>Integration connected</strong> · <span class="who">Edmore Chiwara → EcoCash merchant API</span></span>
+              <span class="ip">196.43.118.61</span>
+              <span class="sev info">info</span>
+            </div>
+            <div class="audit-row">
+              <span class="ts">08:22:09</span>
+              <span class="av">SY</span>
+              <span class="ev"><strong>Failed sign-in × 5</strong> · <span class="who">system → unknown@(ip)</span></span>
+              <span class="ip">102.213.55.18</span>
+              <span class="sev warn">warn</span>
+            </div>
+            <div class="audit-row">
+              <span class="ts">07:58:47</span>
+              <span class="av">RM</span>
+              <span class="ev"><strong>Invoice exported</strong> · <span class="who">Rumbidzai Moyo → INV-2026-0418 (PDF)</span></span>
+              <span class="ip">196.43.118.45</span>
+              <span class="sev info">info</span>
+            </div>
+            <div class="audit-row">
+              <span class="ts">07:40:12</span>
+              <span class="av">TN</span>
+              <span class="ev"><strong>Webhook added</strong> · <span class="who">Tendai Ncube → NMB Bank settlement callback</span></span>
+              <span class="ip">196.43.118.12</span>
+              <span class="sev info">info</span>
+            </div>
+            <div class="audit-row">
+              <span class="ts">07:18:33</span>
+              <span class="av">SY</span>
+              <span class="ev"><strong>Backup completed</strong> · <span class="who">system → S3 backup · 812 GB · 14m32s</span></span>
+              <span class="ip">10.0.4.21</span>
+              <span class="sev info">info</span>
+            </div>
+            <div class="audit-row">
+              <span class="ts">06:55:02</span>
+              <span class="av">SY</span>
+              <span class="ev"><strong>Plan upgraded</strong> · <span class="who">system → Growth annual (was Growth monthly)</span></span>
+              <span class="ip">10.0.4.21</span>
+              <span class="sev info">info</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

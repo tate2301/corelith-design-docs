@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" /><title>Z-report · POS portal · Huchu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../portal-kit-nav.js" defer></script>
+<style>
+  body { background: var(--gray-100); margin: 0; padding: 24px; min-height: 100vh; display: grid; place-items: center; }
+  .desk-frame { width: 1400px; max-width: 100%; border-radius: 12px; background: #1A1D24; padding: 0; box-shadow: 0 30px 60px -20px rgba(22,24,29,0.25), 0 0 0 1px rgba(22,24,29,0.1); overflow: hidden; }
+  .desk-frame .chrome { height: 36px; display: flex; align-items: center; gap: 6px; padding: 0 14px; background: #1A1D24; }
+  .desk-frame .chrome .dot { width: 10px; height: 10px; border-radius: 50%; background: #444; }
+  .desk-frame .chrome .dot.r { background: #FF5F57; }
+  .desk-frame .chrome .dot.y { background: #FEBC2E; }
+  .desk-frame .chrome .dot.g { background: #28C840; }
+  .desk-frame .chrome .url { margin-left: 14px; padding: 4px 12px; background: rgba(255,255,255,0.06); border-radius: 4px; color: #aaa; font: 12px/1 var(--font-mono); }
+
+  .z-app { display: grid; grid-template-columns: 220px 1fr; height: 820px; background: var(--canvas); }
+
+  .z-nav { background: var(--canvas); border-right: 1px solid var(--border); padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .z-nav .brand { display: inline-flex; align-items: center; gap: 10px; padding: 6px 8px; font: 600 15px/1 var(--font-sans); color: var(--text-strong); margin-bottom: 12px; }
+  .z-nav .brand .mark { width: 22px; height: 22px; color: var(--brand); }
+  .z-nav nav { display: grid; gap: 2px; }
+  .z-nav nav a { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; font: 500 13.5px/1 var(--font-sans); color: var(--text-body); text-decoration: none; }
+  .z-nav nav a:hover { background: var(--surface-muted); }
+  .z-nav nav a.active { background: var(--brand-soft); color: var(--brand-strong); }
+  .z-nav nav a svg { width: 16px; height: 16px; color: var(--text-muted); }
+  .z-nav nav a.active svg { color: var(--brand); }
+  .z-nav .sh { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); padding: 16px 10px 8px; }
+  .z-nav .foot { margin-top: auto; padding: 12px 10px 4px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .z-nav .foot .av { width: 30px; height: 30px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 12px/1 var(--font-sans); }
+  .z-nav .foot .nm { font: 500 13px/1.3 var(--font-sans); color: var(--text-strong); }
+  .z-nav .foot .sb { font: 11px/1.2 var(--font-sans); color: var(--text-muted); }
+
+  .z-main { display: flex; flex-direction: column; min-width: 0; }
+
+  .z-header { padding: 18px 28px; display: flex; align-items: flex-start; gap: 18px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .z-header .title h1 { font: 600 22px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .z-header .title .sb { font: 13px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 4px; }
+  .z-header .meta { display: flex; gap: 16px; margin-left: auto; }
+  .z-header .meta .mc { padding: 8px 14px; border-left: 1px solid var(--border); }
+  .z-header .meta .mc .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); }
+  .z-header .meta .mc .v { font: 600 14px/1.3 var(--font-sans); color: var(--text-strong); margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .z-header .actions { display: flex; gap: 8px; margin-left: 12px; align-self: center; }
+
+  .z-body { flex: 1; overflow-y: auto; padding: 22px 28px 28px; display: flex; flex-direction: column; gap: 18px; }
+
+  .stat-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+  .stat-card .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); }
+  .stat-card .v { font: 700 28px/1 var(--font-sans); color: var(--text-strong); margin-top: 10px; font-variant-numeric: tabular-nums; }
+  .stat-card .sb { font: 12px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 6px; }
+  .stat-card .delta { font: 500 12px/1 var(--font-sans); margin-top: 6px; display: inline-flex; align-items: center; gap: 4px; }
+  .stat-card .delta.up { color: var(--tone-success); }
+  .stat-card .delta.dn { color: var(--tone-danger); }
+  .stat-card.b { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .stat-card.b .lbl { color: rgba(255,255,255,0.85); }
+  .stat-card.b .v { color: #fff; }
+  .stat-card.b .sb { color: rgba(255,255,255,0.85); }
+
+  .grid-2 { display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; align-items: start; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: clip; }
+  .panel-h { padding: 14px 18px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; }
+  .panel-h h2 { font: 600 15px/1.3 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .panel-h .ds { font: 12px/1 var(--font-sans); color: var(--text-muted); }
+
+  table.ztable { width: 100%; border-collapse: collapse; }
+  table.ztable th, table.ztable td { padding: 11px 18px; text-align: left; font: 13.5px/1.3 var(--font-sans); color: var(--text-strong); border-bottom: 1px solid var(--border-subtle); }
+  table.ztable th { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); background: var(--surface-muted); }
+  table.ztable td.num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  table.ztable td.muted { color: var(--text-muted); }
+  table.ztable tr:last-child td { border-bottom: 0; }
+  table.ztable tr.total td { font-weight: 600; background: var(--brand-soft); color: var(--brand-strong); }
+  table.ztable tr.total td.num { color: var(--brand-strong); }
+
+  .var-row { padding: 14px 18px; background: var(--tone-success-bg); border-top: 1px solid var(--border-subtle); display: grid; grid-template-columns: 1fr auto auto; gap: 14px; align-items: center; }
+  .var-row .nm { font: 600 14px/1.3 var(--font-sans); color: var(--tone-success); }
+  .var-row .sb { font: 12px/1.3 var(--font-sans); color: var(--tone-success); margin-top: 2px; opacity: 0.85; }
+  .var-row .v { font: 700 18px/1 var(--font-mono); color: var(--tone-success); font-variant-numeric: tabular-nums; }
+  .var-row .badge { padding: 4px 10px; border-radius: 9999px; background: rgba(22,101,52,0.12); color: var(--tone-success); font: 500 11px/1 var(--font-sans); }
+  .var-row.warn { background: var(--tone-warn-bg); }
+  .var-row.warn .nm, .var-row.warn .sb, .var-row.warn .v { color: var(--tone-warn); }
+  .var-row.warn .badge { background: rgba(180,83,9,0.12); color: var(--tone-warn); }
+
+  .rank-row { display: grid; grid-template-columns: 30px 1fr 80px 90px 90px; gap: 12px; padding: 11px 18px; border-bottom: 1px solid var(--border-subtle); align-items: center; }
+  .rank-row:last-child { border-bottom: 0; }
+  .rank-row .pos { width: 24px; height: 24px; border-radius: 50%; background: var(--surface-muted); color: var(--text-muted); display: grid; place-items: center; font: 600 11px/1 var(--font-mono); }
+  .rank-row.top .pos { background: var(--brand); color: #fff; }
+  .rank-row .nm { font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .rank-row .sb { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .rank-row .qty { font: 500 13px/1 var(--font-mono); color: var(--text-muted); text-align: right; }
+  .rank-row .rev { font: 600 13px/1 var(--font-mono); color: var(--text-strong); text-align: right; font-variant-numeric: tabular-nums; }
+  .rank-row .share { font: 500 12px/1 var(--font-sans); color: var(--text-muted); text-align: right; }
+</style>
+</head>
+<body data-portal-kit="pos" data-portal-screen="z-report">
+
+<div class="desk-frame">
+  <div class="chrome">
+    <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+    <span class="url">https://pos.huchu.app / Park Centre / Z-report S-2841</span>
+  </div>
+  <div class="z-app">
+
+    <!-- Side nav -->
+    <aside class="z-nav">
+      <a class="brand"><span class="mark" data-icon="corelith"></span> Huchu POS</a>
+      <nav>
+        <a href="counter.html"><span data-icon="receipt"></span> New sale</a>
+        <a href="cashup.html"><span data-icon="coin"></span> Cash-up</a>
+        <a href="#" class="active"><span data-icon="chart"></span> Z-report</a>
+        <a href="#"><span data-icon="list"></span> Receipts</a>
+        <a href="#"><span data-icon="bag"></span> Items</a>
+        <a href="customer.html"><span data-icon="user"></span> Customers</a>
+      </nav>
+      <div class="sh">Reports</div>
+      <nav>
+        <a href="#"><span data-icon="clock"></span> Shift history</a>
+        <a href="#"><span data-icon="download"></span> Exports</a>
+      </nav>
+      <div class="foot">
+        <span class="av">FM</span>
+        <div>
+          <div class="nm">Faith Moyo</div>
+          <div class="sb">Cashier · Till 02</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <section class="z-main">
+      <header class="z-header">
+        <div class="title">
+          <h1>End-of-day Z-report</h1>
+          <div class="sb">Generated 22 May 2026 · 19:14 · finalised &amp; sealed</div>
+        </div>
+        <div class="meta">
+          <div class="mc"><div class="lbl">Business day</div><div class="v">Thu 22 May 2026</div></div>
+          <div class="mc"><div class="lbl">Till</div><div class="v">02 · Park Centre</div></div>
+          <div class="mc"><div class="lbl">Cashier</div><div class="v">Faith Moyo</div></div>
+          <div class="mc"><div class="lbl">Shift</div><div class="v">S-2841 · 07:30 – 19:14</div></div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-quiet"><span data-icon="download" data-icon-size="14"></span> Export</button>
+          <button class="btn btn-primary"><span data-icon="print" data-icon-size="14"></span> Print Z-report</button>
+        </div>
+      </header>
+
+      <div class="z-body">
+        <!-- Top stat strip -->
+        <div class="stat-strip">
+          <div class="stat-card">
+            <div class="lbl">Gross sales</div>
+            <div class="v">$ 2,816.40</div>
+            <div class="delta up">▲ 8.4% vs last Thu</div>
+          </div>
+          <div class="stat-card">
+            <div class="lbl">Discounts</div>
+            <div class="v">– $ 112.50</div>
+            <div class="sb">12 receipts · loyalty + bulk</div>
+          </div>
+          <div class="stat-card">
+            <div class="lbl">VAT 14.5%</div>
+            <div class="v">$ 391.10</div>
+            <div class="sb">Standard rated · ZIMRA</div>
+          </div>
+          <div class="stat-card b">
+            <div class="lbl">Net sales</div>
+            <div class="v">$ 2,312.80</div>
+            <div class="sb">After discounts &amp; refunds</div>
+          </div>
+        </div>
+
+        <!-- Payment breakdown + top items -->
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-h">
+              <h2>Payment methods</h2>
+              <span class="ds">147 receipts</span>
+            </div>
+            <table class="ztable">
+              <thead>
+                <tr>
+                  <th>Tender</th>
+                  <th>Receipts</th>
+                  <th style="text-align: right;">Amount</th>
+                  <th style="text-align: right;">Share</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Cash · ZWG / USD</td>
+                  <td class="muted">96</td>
+                  <td class="num">$ 1,842.10</td>
+                  <td class="num muted">65.4%</td>
+                </tr>
+                <tr>
+                  <td>Card · POS terminal</td>
+                  <td class="muted">38</td>
+                  <td class="num">$ 624.80</td>
+                  <td class="num muted">22.2%</td>
+                </tr>
+                <tr>
+                  <td>EcoCash · USSD + app</td>
+                  <td class="muted">9</td>
+                  <td class="num">$ 142.00</td>
+                  <td class="num muted">5.0%</td>
+                </tr>
+                <tr>
+                  <td>InnBucks · QR</td>
+                  <td class="muted">4</td>
+                  <td class="num">$ 57.00</td>
+                  <td class="num muted">2.0%</td>
+                </tr>
+                <tr>
+                  <td>Store credit · loyalty</td>
+                  <td class="muted">2</td>
+                  <td class="num">$ 24.80</td>
+                  <td class="num muted">0.9%</td>
+                </tr>
+                <tr class="total">
+                  <td>Total tendered</td>
+                  <td>147</td>
+                  <td class="num">$ 2,690.70</td>
+                  <td class="num">100%</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="var-row">
+              <div>
+                <div class="nm">Drawer variance</div>
+                <div class="sb">Counted $ 1,950.00 · expected $ 1,942.10 · within $ 10 tolerance</div>
+              </div>
+              <span class="badge">Within tolerance</span>
+              <span class="v">+ $ 7.90</span>
+            </div>
+            <div class="var-row warn">
+              <div>
+                <div class="nm">Voids &amp; refunds</div>
+                <div class="sb">3 voids · 2 refunds · supervisor authorised by Tafadzwa N.</div>
+              </div>
+              <span class="badge">Review</span>
+              <span class="v">– $ 56.40</span>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-h">
+              <h2>Top items sold</h2>
+              <span class="ds">By revenue · top 7 of 184 SKUs</span>
+            </div>
+            <div class="rank-row top">
+              <span class="pos">1</span>
+              <div>
+                <div class="nm">Mealie meal 10kg</div>
+                <div class="sb">SKU-0001 · Groceries · Vendor: GMB</div>
+              </div>
+              <span class="qty">42 u</span>
+              <span class="rev">$ 344.40</span>
+              <span class="share">12.2%</span>
+            </div>
+            <div class="rank-row">
+              <span class="pos">2</span>
+              <div>
+                <div class="nm">Mazoe Orange Crush 2L</div>
+                <div class="sb">SKU-0421 · Beverages</div>
+              </div>
+              <span class="qty">58 u</span>
+              <span class="rev">$ 261.00</span>
+              <span class="share">9.3%</span>
+            </div>
+            <div class="rank-row">
+              <span class="pos">3</span>
+              <div>
+                <div class="nm">Rice 5kg jasmine</div>
+                <div class="sb">SKU-0712 · Groceries</div>
+              </div>
+              <span class="qty">22 u</span>
+              <span class="rev">$ 209.00</span>
+              <span class="share">7.4%</span>
+            </div>
+            <div class="rank-row">
+              <span class="pos">4</span>
+              <div>
+                <div class="nm">Cooking oil 750ml</div>
+                <div class="sb">SKU-1102 · Groceries</div>
+              </div>
+              <span class="qty">61 u</span>
+              <span class="rev">$ 195.20</span>
+              <span class="share">6.9%</span>
+            </div>
+            <div class="rank-row">
+              <span class="pos">5</span>
+              <div>
+                <div class="nm">Pro-bake bread loaf</div>
+                <div class="sb">SKU-0833 · Bakery</div>
+              </div>
+              <span class="qty">112 u</span>
+              <span class="rev">$ 168.00</span>
+              <span class="share">6.0%</span>
+            </div>
+            <div class="rank-row">
+              <span class="pos">6</span>
+              <div>
+                <div class="nm">Sugar 2kg</div>
+                <div class="sb">SKU-0945 · Groceries</div>
+              </div>
+              <span class="qty">38 u</span>
+              <span class="rev">$ 144.40</span>
+              <span class="share">5.1%</span>
+            </div>
+            <div class="rank-row">
+              <span class="pos">7</span>
+              <div>
+                <div class="nm">Tanganda tea 100s</div>
+                <div class="sb">SKU-0676 · Beverages</div>
+              </div>
+              <span class="qty">54 u</span>
+              <span class="rev">$ 118.80</span>
+              <span class="share">4.2%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+</body>
+</html>

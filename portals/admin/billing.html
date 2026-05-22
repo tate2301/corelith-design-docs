@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Billing · Admin portal · Huchu</title>
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../portal-kit-nav.js" defer></script>
+<style>
+  .adm-top { display: flex; align-items: center; gap: 14px; padding: 16px 28px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .adm-top h1 { font: 700 20px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; letter-spacing: -0.01em; }
+  .adm-top .crumb { font: 12px/1.3 var(--font-sans); color: var(--text-muted); }
+  .adm-top .spacer { flex: 1; }
+  .adm-top .pill { padding: 4px 10px; border-radius: 9999px; background: var(--surface-muted); font: 500 12px/1 var(--font-sans); color: var(--text-muted); }
+  .adm-top .pill.brand { background: var(--brand-soft); color: var(--brand-strong); }
+  .adm-top button.upg { padding: 8px 14px; border-radius: 8px; background: var(--brand); color: #fff; font: 500 13px/1 var(--font-sans); display: inline-flex; align-items: center; gap: 6px; }
+
+  .bill-body { padding: 22px 28px; flex: 1; overflow-y: auto; display: grid; gap: 18px; grid-template-columns: 1.5fr 1fr; grid-template-areas: "plan side" "invoices invoices"; align-content: start; }
+
+  /* Plan hero card */
+  .plan-card { grid-area: plan; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .plan-card .left .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); }
+  .plan-card .left h2 { font: 700 22px/1.2 var(--font-sans); color: var(--text-strong); margin: 6px 0 4px; letter-spacing: -0.01em; }
+  .plan-card .left .pr { font: 700 30px/1.05 var(--font-sans); color: var(--text-strong); margin-top: 12px; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .plan-card .left .pr .sub { font: 500 13px/1 var(--font-sans); color: var(--text-muted); margin-left: 6px; }
+  .plan-card .left .meta { display: flex; gap: 14px; margin-top: 10px; font: 12.5px/1.3 var(--font-sans); color: var(--text-muted); }
+  .plan-card .left .meta strong { color: var(--text-strong); font-weight: 500; }
+  .plan-card .left .feats { margin-top: 14px; display: grid; gap: 6px; }
+  .plan-card .left .feats li { display: flex; align-items: center; gap: 8px; font: 13px/1.3 var(--font-sans); color: var(--text-body); list-style: none; }
+  .plan-card .left .feats li .ck { width: 16px; height: 16px; border-radius: 50%; background: var(--tone-success-bg); color: var(--tone-success); display: grid; place-items: center; flex: none; }
+
+  .plan-card .right { display: flex; flex-direction: column; gap: 18px; }
+  .seat-card { background: var(--surface-muted); border-radius: 12px; padding: 16px 18px; }
+  .seat-card .top { display: flex; justify-content: space-between; align-items: baseline; }
+  .seat-card .top .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); }
+  .seat-card .top .lab { font: 600 13px/1 var(--font-sans); color: var(--text-strong); font-variant-numeric: tabular-nums; }
+  .seat-card .big { font: 700 26px/1.05 var(--font-sans); color: var(--text-strong); margin-top: 8px; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .seat-card .bar { height: 8px; background: var(--surface-sunken); border-radius: 6px; margin-top: 10px; overflow: hidden; }
+  .seat-card .bar > i { display: block; height: 100%; width: 72%; background: var(--brand); border-radius: 6px; }
+  .seat-card .sub { font: 12px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 8px; }
+
+  .estimate { background: linear-gradient(135deg, var(--brand) 0%, var(--brand-deeper) 100%); color: #fff; border-radius: 12px; padding: 16px 18px; position: relative; overflow: hidden; }
+  .estimate::after { content: ""; position: absolute; right: -30px; top: -30px; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%); }
+  .estimate .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
+  .estimate .big { font: 700 28px/1.05 var(--font-sans); margin-top: 8px; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .estimate .sb { font: 13px/1.4 var(--font-sans); opacity: 0.9; margin-top: 4px; }
+  .estimate .due { display: inline-flex; gap: 6px; align-items: center; margin-top: 10px; padding: 4px 10px; border-radius: 9999px; background: rgba(255,255,255,0.15); font: 500 12px/1 var(--font-sans); }
+
+  /* Side column: payment + credit */
+  .bill-side { grid-area: side; display: flex; flex-direction: column; gap: 14px; align-self: start; }
+  .side-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+  .side-card h3 { font: 600 14px/1.2 var(--font-sans); color: var(--text-strong); margin: 0 0 12px; }
+  .pm { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface-muted); border-radius: 10px; }
+  .pm .brnd { width: 40px; height: 28px; border-radius: 5px; background: linear-gradient(135deg, #1A1F71, #4A60E8); color: #fff; display: grid; place-items: center; font: 700 10px/1 var(--font-sans); letter-spacing: 0.04em; flex: none; }
+  .pm .num { font: 500 13px/1.2 var(--font-mono); color: var(--text-strong); }
+  .pm .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); }
+  .pm-alt { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .pm-alt .pill { padding: 5px 10px; border-radius: 9999px; background: var(--surface-muted); font: 500 11.5px/1 var(--font-sans); color: var(--text-body); display: inline-flex; gap: 6px; align-items: center; }
+  .pm-alt .pill .d { width: 6px; height: 6px; border-radius: 50%; background: var(--tone-success); }
+  .side-card .link { display: inline-flex; align-items: center; gap: 4px; margin-top: 12px; font: 500 12.5px/1 var(--font-sans); color: var(--brand-strong); text-decoration: none; }
+
+  .credit { display: flex; align-items: baseline; justify-content: space-between; }
+  .credit .v { font: 700 22px/1.05 var(--font-sans); color: var(--text-strong); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .credit .sub { font: 12px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 4px; }
+  .credit-bar { height: 6px; background: var(--surface-muted); border-radius: 4px; margin-top: 10px; }
+  .credit-bar > i { display: block; height: 100%; width: 38%; background: var(--tone-success); border-radius: 4px; }
+
+  /* Invoices table */
+  .inv-card { grid-area: invoices; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: clip; }
+  .inv-h { display: flex; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--border-subtle); }
+  .inv-h h3 { font: 600 14px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .inv-h .sb { font: 12px/1 var(--font-sans); color: var(--text-muted); margin-left: 10px; }
+  .inv-h .spacer { flex: 1; }
+  .inv-h .ic { width: 30px; height: 30px; border-radius: 7px; background: var(--surface-muted); color: var(--text-strong); display: inline-grid; place-items: center; }
+  .inv-row { display: grid; grid-template-columns: 130px 1fr 130px 110px 130px 110px; gap: 12px; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--border-subtle); font: 13px/1.3 var(--font-sans); }
+  .inv-row:last-child { border-bottom: 0; }
+  .inv-row .num { font: 500 13px/1.2 var(--font-mono); color: var(--text-strong); }
+  .inv-row .desc { color: var(--text-body); }
+  .inv-row .desc .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .inv-row .amt { font: 600 13.5px/1 var(--font-mono); color: var(--text-strong); font-variant-numeric: tabular-nums; }
+  .inv-row .stat { display: inline-flex; padding: 3px 9px; border-radius: 9999px; font: 500 11.5px/1 var(--font-sans); justify-self: start; }
+  .inv-row .stat.paid { background: var(--tone-success-bg); color: var(--tone-success); }
+  .inv-row .stat.pend { background: var(--tone-warn-bg); color: var(--tone-warn); }
+  .inv-row .stat.over { background: var(--tone-danger-bg); color: var(--tone-danger); }
+  .inv-row .stat.draft { background: var(--surface-muted); color: var(--text-muted); }
+  .inv-row .date { font: 12px/1.2 var(--font-mono); color: var(--text-muted); }
+  .inv-row .pdf { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 6px; background: var(--surface-muted); color: var(--text-strong); font: 500 12px/1 var(--font-sans); text-decoration: none; justify-self: end; }
+  .inv-row .pdf:hover { background: var(--surface-sunken); }
+</style>
+</head>
+<body data-portal-kit="admin" data-portal-screen="billing">
+
+<main class="kit-stage">
+  <div class="device-desktop">
+    <div class="chrome">
+      <span class="d" style="background:#FF5F57"></span><span class="d" style="background:#FEBC2E"></span><span class="d" style="background:#28C840"></span>
+      <span class="url">https://admin.huchu.app / mukamba-group / billing</span>
+    </div>
+    <div class="screen">
+
+      <aside class="ps-side">
+        <a class="brand"><span class="mark" data-icon="corelith"></span> Huchu Admin</a>
+        <nav>
+          <a href="dashboard.html"><span data-icon="dashboard"></span> Dashboard</a>
+          <a href="users.html"><span data-icon="user"></span> Users &amp; roles</a>
+          <a href="audit.html"><span data-icon="shield"></span> Audit log</a>
+          <a href="billing.html" class="active"><span data-icon="card"></span> Billing</a>
+          <a href="integrations.html"><span data-icon="plug"></span> Integrations</a>
+          <a href="#"><span data-icon="settings"></span> Settings</a>
+        </nav>
+        <div class="ps-section-h">Tenant</div>
+        <nav>
+          <a href="#"><span data-icon="building"></span> Mukamba Group</a>
+          <a href="#"><span data-icon="branch"></span> Switch tenant</a>
+        </nav>
+        <div class="ps-foot">
+          <span class="avatar">TN</span>
+          <div>
+            <div class="nm">Tendai Ncube</div>
+            <div class="sb">Platform admin</div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="ps-content" style="padding: 0; display: flex; flex-direction: column;">
+        <div class="adm-top">
+          <span class="crumb">mukamba-group · finance</span>
+          <h1>Billing &amp; invoices</h1>
+          <div class="spacer"></div>
+          <span class="pill brand">Growth · annual</span>
+          <button class="upg"><span data-icon="trending" data-icon-size="14"></span> Upgrade plan</button>
+        </div>
+
+        <div class="bill-body">
+
+          <!-- Plan + seats + estimate -->
+          <div class="plan-card">
+            <div class="left">
+              <div class="lbl">Current plan</div>
+              <h2>Growth · annual</h2>
+              <div class="pr">$ 1,840.00 <span class="sub">/ month · billed yearly</span></div>
+              <div class="meta">
+                <span>Started <strong>14 Mar 2026</strong></span>
+                <span>Renews <strong>14 Mar 2027</strong></span>
+                <span>Currency <strong>USD</strong></span>
+              </div>
+              <ul class="feats">
+                <li><span class="ck"><span data-icon="check" data-icon-size="10"></span></span> Up to 250 seats across all branches</li>
+                <li><span class="ck"><span data-icon="check" data-icon-size="10"></span></span> Unlimited POS terminals &amp; cash-up</li>
+                <li><span class="ck"><span data-icon="check" data-icon-size="10"></span></span> SSO + audit log retention 12 months</li>
+                <li><span class="ck"><span data-icon="check" data-icon-size="10"></span></span> EcoCash / OneMoney / NMB settlement</li>
+                <li><span class="ck"><span data-icon="check" data-icon-size="10"></span></span> Priority support · 2-hour business SLA</li>
+              </ul>
+            </div>
+            <div class="right">
+              <div class="seat-card">
+                <div class="top"><span class="lbl">Seat usage</span><span class="lab">180 / 250</span></div>
+                <div class="big">72%</div>
+                <div class="bar"><i></i></div>
+                <div class="sub">12 admins · 168 operators · 14 suspended seats are not counted</div>
+              </div>
+              <div class="estimate">
+                <div class="lbl">Next invoice estimate</div>
+                <div class="big">$ 1,840.00</div>
+                <div class="sb">USD · taxes calculated at issue · no seat overage</div>
+                <span class="due"><span data-icon="calendar" data-icon-size="12"></span> Due 14 Mar 2027</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Side: payment method + credit -->
+          <aside class="bill-side">
+            <div class="side-card">
+              <h3>Payment method on file</h3>
+              <div class="pm">
+                <span class="brnd">VISA</span>
+                <div>
+                  <div class="num">•••• •••• •••• 4218</div>
+                  <div class="sb">NMB Bank · expires 09 / 28 · Tendai Ncube</div>
+                </div>
+              </div>
+              <div class="pm-alt">
+                <span class="pill"><span class="d"></span> EcoCash · +263 77 482 ••11</span>
+                <span class="pill"><span class="d" style="background:var(--text-subtle)"></span> Bank transfer · backup</span>
+              </div>
+              <a class="link" href="#">Manage payment methods <span data-icon="arrow" data-icon-size="12"></span></a>
+            </div>
+
+            <div class="side-card">
+              <h3>Credit balance</h3>
+              <div class="credit">
+                <div>
+                  <div class="v">$ 142.30</div>
+                  <div class="sub">Available · auto-applied to next invoice</div>
+                </div>
+                <span class="pill brand" style="background:var(--brand-soft); color:var(--brand-strong); padding:4px 10px; border-radius:9999px; font:500 11.5px/1 var(--font-sans);">USD</span>
+              </div>
+              <div class="credit-bar"><i></i></div>
+              <a class="link" href="#">View credit history <span data-icon="arrow" data-icon-size="12"></span></a>
+            </div>
+          </aside>
+
+          <!-- Invoices -->
+          <div class="inv-card">
+            <div class="inv-h">
+              <h3>Recent invoices</h3>
+              <span class="sb">Last 8 · all branches</span>
+              <div class="spacer"></div>
+              <span class="ic" title="Filter"><span data-icon="filter" data-icon-size="13"></span></span>
+            </div>
+            <div class="inv-row">
+              <span class="num">INV-2026-0418</span>
+              <span class="desc">Growth · annual subscription<div class="sb">14 Mar 2026 — 14 Mar 2027 · 250 seats</div></span>
+              <span class="amt">$ 22,080.00</span>
+              <span class="stat paid">Paid</span>
+              <span class="date">14 Mar 2026</span>
+              <a class="pdf" href="#"><span data-icon="download" data-icon-size="12"></span> PDF</a>
+            </div>
+            <div class="inv-row">
+              <span class="num">INV-2026-0512</span>
+              <span class="desc">Seat overage · top-up 25 seats<div class="sb">Apr 2026 cycle · pro-rated</div></span>
+              <span class="amt">$ 184.00</span>
+              <span class="stat paid">Paid</span>
+              <span class="date">02 May 2026</span>
+              <a class="pdf" href="#"><span data-icon="download" data-icon-size="12"></span> PDF</a>
+            </div>
+            <div class="inv-row">
+              <span class="num">INV-2026-0601</span>
+              <span class="desc">EcoCash settlement fees · May 2026<div class="sb">ZWG · 1,248 transactions</div></span>
+              <span class="amt">ZWG 4,820.50</span>
+              <span class="stat paid">Paid</span>
+              <span class="date">01 Jun 2026</span>
+              <a class="pdf" href="#"><span data-icon="download" data-icon-size="12"></span> PDF</a>
+            </div>
+            <div class="inv-row">
+              <span class="num">INV-2026-0608</span>
+              <span class="desc">Datadog observability add-on<div class="sb">Jun 2026 cycle</div></span>
+              <span class="amt">$ 120.00</span>
+              <span class="stat pend">Pending</span>
+              <span class="date">Due 28 Jun 2026</span>
+              <a class="pdf" href="#"><span data-icon="download" data-icon-size="12"></span> PDF</a>
+            </div>
+            <div class="inv-row">
+              <span class="num">INV-2026-0612</span>
+              <span class="desc">S3 backup storage overage<div class="sb">812 GB · plan ceiling 750 GB</div></span>
+              <span class="amt">$ 18.60</span>
+              <span class="stat over">Overdue · 4d</span>
+              <span class="date">Due 18 Jun 2026</span>
+              <a class="pdf" href="#"><span data-icon="download" data-icon-size="12"></span> PDF</a>
+            </div>
+            <div class="inv-row">
+              <span class="num">INV-2026-0618</span>
+              <span class="desc">SMS notifications · Econet bulk<div class="sb">Jun 2026 · 14,820 messages</div></span>
+              <span class="amt">$ 88.92</span>
+              <span class="stat pend">Pending</span>
+              <span class="date">Due 02 Jul 2026</span>
+              <a class="pdf" href="#"><span data-icon="download" data-icon-size="12"></span> PDF</a>
+            </div>
+            <div class="inv-row">
+              <span class="num">INV-2026-0701</span>
+              <span class="desc">EcoCash settlement fees · Jun 2026<div class="sb">ZWG · 1,402 transactions · projected</div></span>
+              <span class="amt">ZWG 5,318.20</span>
+              <span class="stat draft">Draft</span>
+              <span class="date">Issues 01 Jul 2026</span>
+              <a class="pdf" href="#" style="opacity:0.5; pointer-events:none;"><span data-icon="download" data-icon-size="12"></span> PDF</a>
+            </div>
+            <div class="inv-row">
+              <span class="num">INV-2025-1214</span>
+              <span class="desc">Growth · monthly (prior plan)<div class="sb">Dec 2025 cycle · 180 seats</div></span>
+              <span class="amt">$ 2,160.00</span>
+              <span class="stat paid">Paid</span>
+              <span class="date">14 Dec 2025</span>
+              <a class="pdf" href="#"><span data-icon="download" data-icon-size="12"></span> PDF</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Users &amp; roles · Admin portal · Huchu</title>
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../portal-kit-nav.js" defer></script>
+<style>
+  .adm-top { display: flex; align-items: center; gap: 14px; padding: 16px 28px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .adm-top h1 { font: 700 20px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; letter-spacing: -0.01em; }
+  .adm-top .crumb { font: 12px/1.3 var(--font-sans); color: var(--text-muted); }
+  .adm-top .spacer { flex: 1; }
+  .adm-top .pill { padding: 4px 10px; border-radius: 9999px; background: var(--surface-muted); font: 500 12px/1 var(--font-sans); color: var(--text-muted); }
+  .adm-top .btn-pri { padding: 8px 14px; border-radius: 8px; background: var(--brand); color: #fff; font: 500 13px/1 var(--font-sans); display: inline-flex; align-items: center; gap: 6px; }
+  .adm-top .btn-pri:hover { background: var(--brand-strong); }
+
+  .filter-bar { display: flex; gap: 10px; padding: 12px 28px; border-bottom: 1px solid var(--border-subtle); background: var(--surface); align-items: center; }
+  .filter-bar .search { flex: 1; max-width: 380px; position: relative; }
+  .filter-bar .search input { width: 100%; height: 34px; padding: 0 12px 0 34px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); font: 13px var(--font-sans); outline: none; }
+  .filter-bar .search > [data-icon] { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-subtle); }
+  .filter-bar .chips { display: inline-flex; gap: 6px; }
+  .chip { padding: 6px 12px; border-radius: 9999px; background: var(--surface-muted); font: 500 12.5px/1 var(--font-sans); color: var(--text-muted); cursor: pointer; }
+  .chip.active { background: var(--brand-soft); color: var(--brand-strong); }
+  .chip .cn { margin-left: 4px; font-variant-numeric: tabular-nums; opacity: 0.8; }
+  .filter-bar .spacer { flex: 1; }
+  .filter-bar .icbtn { width: 32px; height: 32px; border-radius: 7px; background: var(--surface-muted); color: var(--text-strong); display: inline-grid; place-items: center; }
+
+  /* Bulk toolbar */
+  .bulk-bar { display: flex; align-items: center; gap: 10px; padding: 10px 28px; background: var(--ink); color: #fff; font: 13px/1 var(--font-sans); }
+  .bulk-bar .ct { font: 600 13px/1 var(--font-sans); }
+  .bulk-bar .spacer { flex: 1; }
+  .bulk-bar button { padding: 6px 12px; border-radius: 7px; background: rgba(255,255,255,0.10); color: #fff; font: 500 12.5px/1 var(--font-sans); display: inline-flex; align-items: center; gap: 6px; }
+  .bulk-bar button:hover { background: rgba(255,255,255,0.16); }
+  .bulk-bar button.danger { background: rgba(255, 90, 90, 0.18); color: #FF9C9C; }
+
+  /* Main split: table + drawer */
+  .users-split { flex: 1; display: grid; grid-template-columns: 1fr 380px; overflow: hidden; }
+  .table-wrap { overflow-y: auto; min-width: 0; }
+
+  table.ut { width: 100%; border-collapse: collapse; font: 13.5px/1.4 var(--font-sans); background: var(--surface); }
+  table.ut thead th { position: sticky; top: 0; background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 14px; text-align: left; font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); z-index: 1; }
+  table.ut td { padding: 10px 14px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; }
+  table.ut tr:hover td { background: var(--surface-muted); }
+  table.ut tr.sel td { background: var(--brand-50); }
+  table.ut .cb { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--border); background: var(--surface); display: inline-grid; place-items: center; vertical-align: middle; }
+  table.ut .cb.checked { background: var(--brand); border-color: var(--brand); color: #fff; }
+  table.ut .who { display: flex; align-items: center; gap: 10px; }
+  table.ut .av { width: 28px; height: 28px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 11px/1 var(--font-sans); flex: none; }
+  table.ut .nm { font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  table.ut .em { font: 12px/1.3 var(--font-mono); color: var(--text-muted); margin-top: 1px; }
+  table.ut .role { display: inline-flex; padding: 3px 8px; border-radius: 9999px; font: 500 11.5px/1 var(--font-sans); }
+  table.ut .role.admin { background: var(--brand-soft); color: var(--brand-strong); }
+  table.ut .role.op { background: var(--surface-muted); color: var(--text-body); }
+  table.ut .role.view { background: #EEF2FF; color: #3730A3; }
+  table.ut .role.owner { background: #FEF3C7; color: #92400E; }
+  table.ut .status { display: inline-flex; align-items: center; gap: 6px; font: 13px/1 var(--font-sans); color: var(--text-body); }
+  table.ut .status .d { width: 7px; height: 7px; border-radius: 50%; background: var(--tone-success); }
+  table.ut .status.sus .d { background: var(--text-subtle); }
+  table.ut .status.inv .d { background: var(--tone-warn); }
+  table.ut .last { font: 12.5px/1.3 var(--font-mono); color: var(--text-muted); }
+  table.ut .branch { font: 12.5px/1.3 var(--font-sans); color: var(--text-body); }
+
+  /* Drawer */
+  .drawer { background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; min-width: 0; }
+  .drawer .dh { padding: 16px 20px 12px; border-bottom: 1px solid var(--border); }
+  .drawer .dh .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); }
+  .drawer .dh h3 { font: 600 16px/1.2 var(--font-sans); color: var(--text-strong); margin: 6px 0 2px; }
+  .drawer .dh .sb { font: 12.5px/1.3 var(--font-sans); color: var(--text-muted); }
+  .drawer .db { padding: 16px 20px; flex: 1; overflow-y: auto; display: grid; gap: 12px; }
+  .drawer .field { display: grid; gap: 6px; }
+  .drawer .field label { font: 500 12px/1 var(--font-sans); color: var(--text-muted); }
+  .drawer .field input, .drawer .field select { height: 36px; border: 1px solid var(--border); border-radius: 8px; padding: 0 12px; background: var(--surface); font: 13px var(--font-sans); outline: none; color: var(--text-strong); }
+  .drawer .field input:focus, .drawer .field select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--focus-ring-soft); }
+  .drawer .roles { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .drawer .roles label { display: flex; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font: 13px/1.3 var(--font-sans); color: var(--text-body); cursor: pointer; }
+  .drawer .roles label.on { border-color: var(--brand); background: var(--brand-50); color: var(--brand-strong); }
+  .drawer .perm { font: 12px/1.5 var(--font-sans); color: var(--text-muted); background: var(--surface-muted); border-radius: 8px; padding: 10px 12px; }
+  .drawer .df { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+  .drawer .df .btn { flex: 1; padding: 9px 12px; border-radius: 8px; font: 500 13px/1 var(--font-sans); }
+  .drawer .df .btn.pri { background: var(--brand); color: #fff; }
+  .drawer .df .btn.sec { background: var(--surface-muted); color: var(--text-strong); }
+</style>
+</head>
+<body data-portal-kit="admin" data-portal-screen="users">
+
+<main class="kit-stage">
+  <div class="device-desktop">
+    <div class="chrome">
+      <span class="d" style="background:#FF5F57"></span><span class="d" style="background:#FEBC2E"></span><span class="d" style="background:#28C840"></span>
+      <span class="url">https://admin.huchu.app / mukamba-group / users</span>
+    </div>
+    <div class="screen">
+
+      <aside class="ps-side">
+        <a class="brand"><span class="mark" data-icon="corelith"></span> Huchu Admin</a>
+        <nav>
+          <a href="dashboard.html"><span data-icon="dashboard"></span> Dashboard</a>
+          <a href="users.html" class="active"><span data-icon="user"></span> Users &amp; roles</a>
+          <a href="audit.html"><span data-icon="shield"></span> Audit log</a>
+          <a href="billing.html"><span data-icon="card"></span> Billing</a>
+          <a href="integrations.html"><span data-icon="plug"></span> Integrations</a>
+          <a href="#"><span data-icon="settings"></span> Settings</a>
+        </nav>
+        <div class="ps-section-h">Tenant</div>
+        <nav>
+          <a href="#"><span data-icon="building"></span> Mukamba Group</a>
+          <a href="#"><span data-icon="branch"></span> Switch tenant</a>
+        </nav>
+        <div class="ps-foot">
+          <span class="avatar">TN</span>
+          <div>
+            <div class="nm">Tendai Ncube</div>
+            <div class="sb">Platform admin</div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="ps-content" style="padding: 0; display: flex; flex-direction: column;">
+        <div class="adm-top">
+          <span class="crumb">mukamba-group · 247 members</span>
+          <h1>Users &amp; roles</h1>
+          <div class="spacer"></div>
+          <button class="btn-pri"><span data-icon="plus" data-icon-size="14"></span> Invite user</button>
+        </div>
+
+        <div class="filter-bar">
+          <div class="search">
+            <span data-icon="search"></span>
+            <input placeholder="Search by name, email, or branch…" />
+          </div>
+          <div class="chips">
+            <span class="chip active">All <span class="cn">247</span></span>
+            <span class="chip">Admins <span class="cn">12</span></span>
+            <span class="chip">Operators <span class="cn">198</span></span>
+            <span class="chip">Suspended <span class="cn">14</span></span>
+            <span class="chip">Invited <span class="cn">23</span></span>
+          </div>
+          <div class="spacer"></div>
+          <span class="icbtn" title="Filter"><span data-icon="filter" data-icon-size="14"></span></span>
+          <span class="icbtn" title="Export"><span data-icon="download" data-icon-size="14"></span></span>
+        </div>
+
+        <div class="bulk-bar">
+          <span class="ct">3 selected</span>
+          <span style="opacity:0.6">·</span>
+          <span style="opacity:0.8">across All filter</span>
+          <div class="spacer"></div>
+          <button><span data-icon="lock" data-icon-size="13"></span> Reset password</button>
+          <button><span data-icon="settings" data-icon-size="13"></span> Change role</button>
+          <button class="danger"><span data-icon="x" data-icon-size="13"></span> Disable</button>
+        </div>
+
+        <div class="users-split">
+          <div class="table-wrap">
+            <table class="ut">
+              <thead>
+                <tr>
+                  <th style="width:28px"></th>
+                  <th>Member</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Last seen</th>
+                  <th>Branch</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="sel"><td><span class="cb checked"><span data-icon="check" data-icon-size="10"></span></span></td>
+                  <td><div class="who"><span class="av">TN</span><div><div class="nm">Tendai Ncube</div><div class="em">tendai.n@mukamba.co.zw</div></div></div></td>
+                  <td><span class="role admin">Platform admin</span></td>
+                  <td><span class="status"><span class="d"></span>Active</span></td>
+                  <td class="last">Just now</td>
+                  <td class="branch">All branches</td>
+                </tr>
+                <tr><td><span class="cb"></span></td>
+                  <td><div class="who"><span class="av">FM</span><div><div class="nm">Faith Moyo</div><div class="em">faith.m@mukamba.co.zw</div></div></div></td>
+                  <td><span class="role op">Operator · Cashier</span></td>
+                  <td><span class="status"><span class="d"></span>Active</span></td>
+                  <td class="last">2 min ago</td>
+                  <td class="branch">Park Centre · Till 02</td>
+                </tr>
+                <tr><td><span class="cb"></span></td>
+                  <td><div class="who"><span class="av">EC</span><div><div class="nm">Edmore Chiwara</div><div class="em">edmore.c@mukamba.co.zw</div></div></div></td>
+                  <td><span class="role admin">Branch admin</span></td>
+                  <td><span class="status"><span class="d"></span>Active</span></td>
+                  <td class="last">14 min ago</td>
+                  <td class="branch">Westgate</td>
+                </tr>
+                <tr class="sel"><td><span class="cb checked"><span data-icon="check" data-icon-size="10"></span></span></td>
+                  <td><div class="who"><span class="av">KM</span><div><div class="nm">Kuda Mlambo</div><div class="em">kuda.m@mukamba.co.zw</div></div></div></td>
+                  <td><span class="role op">Operator · Stock</span></td>
+                  <td><span class="status"><span class="d"></span>Active</span></td>
+                  <td class="last">1 hr ago</td>
+                  <td class="branch">Avondale</td>
+                </tr>
+                <tr><td><span class="cb"></span></td>
+                  <td><div class="who"><span class="av">RM</span><div><div class="nm">Rumbidzai Moyo</div><div class="em">rumbidzai.m@mukamba.co.zw</div></div></div></td>
+                  <td><span class="role view">Read-only · Finance</span></td>
+                  <td><span class="status"><span class="d"></span>Active</span></td>
+                  <td class="last">2 hr ago</td>
+                  <td class="branch">HQ</td>
+                </tr>
+                <tr class="sel"><td><span class="cb checked"><span data-icon="check" data-icon-size="10"></span></span></td>
+                  <td><div class="who"><span class="av">RV</span><div><div class="nm">Ruvimbo Mhlanga</div><div class="em">ruvimbo.m@mukamba.co.zw</div></div></div></td>
+                  <td><span class="role op">Operator · Cashier</span></td>
+                  <td><span class="status sus"><span class="d"></span>Suspended</span></td>
+                  <td class="last">12 Jun 2026</td>
+                  <td class="branch">Park Centre · Till 04</td>
+                </tr>
+                <tr><td><span class="cb"></span></td>
+                  <td><div class="who"><span class="av">CM</span><div><div class="nm">Charity Madziva</div><div class="em">charity.m@mukamba.co.zw</div></div></div></td>
+                  <td><span class="role admin">Branch admin</span></td>
+                  <td><span class="status"><span class="d"></span>Active</span></td>
+                  <td class="last">Today 08:14</td>
+                  <td class="branch">Bulawayo · Main</td>
+                </tr>
+                <tr><td><span class="cb"></span></td>
+                  <td><div class="who"><span class="av">TM</span><div><div class="nm">Tatenda Marongedza</div><div class="em">tatenda.m@mukamba.co.zw</div></div></div></td>
+                  <td><span class="role op">Operator · Cashier</span></td>
+                  <td><span class="status inv"><span class="d"></span>Invited · 2d</span></td>
+                  <td class="last">— never</td>
+                  <td class="branch">Westgate · Till 01</td>
+                </tr>
+                <tr><td><span class="cb"></span></td>
+                  <td><div class="who"><span class="av">SN</span><div><div class="nm">Simba Ndlovu</div><div class="em">simba.n@mukamba.co.zw</div></div></div></td>
+                  <td><span class="role owner">Owner</span></td>
+                  <td><span class="status"><span class="d"></span>Active</span></td>
+                  <td class="last">Yesterday</td>
+                  <td class="branch">All branches</td>
+                </tr>
+                <tr><td><span class="cb"></span></td>
+                  <td><div class="who"><span class="av">PJ</span><div><div class="nm">Precious Jera</div><div class="em">precious.j@mukamba.co.zw</div></div></div></td>
+                  <td><span class="role op">Operator · Stock</span></td>
+                  <td><span class="status"><span class="d"></span>Active</span></td>
+                  <td class="last">3 hr ago</td>
+                  <td class="branch">Mutare</td>
+                </tr>
+                <tr><td><span class="cb"></span></td>
+                  <td><div class="who"><span class="av">BC</span><div><div class="nm">Blessing Chitate</div><div class="em">blessing.c@mukamba.co.zw</div></div></div></td>
+                  <td><span class="role view">Read-only · Audit</span></td>
+                  <td><span class="status"><span class="d"></span>Active</span></td>
+                  <td class="last">4 hr ago</td>
+                  <td class="branch">HQ</td>
+                </tr>
+                <tr><td><span class="cb"></span></td>
+                  <td><div class="who"><span class="av">NM</span><div><div class="nm">Nyasha Mapfumo</div><div class="em">nyasha.m@mukamba.co.zw</div></div></div></td>
+                  <td><span class="role op">Operator · Cashier</span></td>
+                  <td><span class="status sus"><span class="d"></span>Suspended</span></td>
+                  <td class="last">28 May 2026</td>
+                  <td class="branch">Gweru</td>
+                </tr>
+                <tr><td><span class="cb"></span></td>
+                  <td><div class="who"><span class="av">LS</span><div><div class="nm">Lindiwe Sibanda</div><div class="em">lindiwe.s@mukamba.co.zw</div></div></div></td>
+                  <td><span class="role op">Operator · Cashier</span></td>
+                  <td><span class="status"><span class="d"></span>Active</span></td>
+                  <td class="last">5 hr ago</td>
+                  <td class="branch">Bulawayo · Main</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <aside class="drawer">
+            <div class="dh">
+              <div class="lbl">Invite user</div>
+              <h3>Add a new member</h3>
+              <div class="sb">They'll get an email link valid for 7 days.</div>
+            </div>
+            <div class="db">
+              <div class="field"><label>Full name</label><input placeholder="e.g. Tariro Chiwara" /></div>
+              <div class="field"><label>Email</label><input value="tariro.c@mukamba.co.zw" /></div>
+              <div class="field"><label>Branch</label>
+                <select>
+                  <option>All branches</option>
+                  <option selected>Park Centre</option>
+                  <option>Westgate</option>
+                  <option>Avondale</option>
+                  <option>Bulawayo · Main</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Role</label>
+                <div class="roles">
+                  <label class="on"><input type="radio" name="r" checked />Operator</label>
+                  <label><input type="radio" name="r" />Branch admin</label>
+                  <label><input type="radio" name="r" />Read-only</label>
+                  <label><input type="radio" name="r" />Platform admin</label>
+                </div>
+              </div>
+              <div class="perm">Operators can ring sales, accept payments, and run shift reports — but cannot edit pricing, items, or user accounts.</div>
+            </div>
+            <div class="df">
+              <button class="btn sec">Cancel</button>
+              <button class="btn pri">Send invite</button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

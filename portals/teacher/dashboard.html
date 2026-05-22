@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Dashboard · Teacher portal · Huchu</title>
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../portal-kit-nav.js" defer></script>
+<style>
+  body { background: var(--gray-100); margin: 0; padding: 24px; min-height: 100vh; display: grid; place-items: center; }
+  .device-tablet { width: 1024px; height: 768px; border-radius: 28px; background: #0F1115; padding: 14px; box-shadow: 0 30px 60px -20px rgba(22,24,29,0.25), 0 0 0 1px rgba(22,24,29,0.08); }
+  .device-tablet .screen { width: 100%; height: 100%; border-radius: 16px; overflow: hidden; background: var(--canvas); display: flex; }
+
+  .te-side { width: 240px; background: var(--canvas); border-right: 1px solid var(--border); padding: 18px 14px; display: flex; flex-direction: column; gap: 4px; flex: none; }
+  .te-side .brand { display: inline-flex; align-items: center; gap: 10px; padding: 6px 8px; font: 600 16px/1 var(--font-sans); color: var(--text-strong); margin-bottom: 14px; }
+  .te-side .brand .mark { width: 22px; height: 22px; color: #A78BFA; }
+  .te-side .who { padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+  .te-side .who .av { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #EDE0FF, #A78BFA); color: #4C1D95; display: grid; place-items: center; font: 600 13px/1 var(--font-sans); }
+  .te-side .who .nm { font: 600 13px/1.3 var(--font-sans); color: var(--text-strong); }
+  .te-side .who .sb { font: 11px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .te-side .sh { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); padding: 12px 10px 8px; }
+  .te-side nav a { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 7px; font: 500 13.5px/1 var(--font-sans); color: var(--text-body); text-decoration: none; }
+  .te-side nav a:hover { background: var(--surface-muted); }
+  .te-side nav a.active { background: #EDE0FF; color: #4C1D95; }
+  .te-side nav a svg { width: 16px; height: 16px; color: var(--text-muted); }
+  .te-side nav a.active svg { color: #A78BFA; }
+  .te-side nav a .cnt { margin-left: auto; font: 500 11px/1 var(--font-mono); color: var(--text-subtle); }
+  .te-side nav a.active .cnt { color: #4C1D95; }
+
+  .te-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .te-top { padding: 16px 28px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 18px; }
+  .te-top .meta { flex: 1; }
+  .te-top .crumbs { font: 500 12px/1 var(--font-sans); color: var(--text-muted); margin-bottom: 4px; }
+  .te-top h1 { font: 700 22px/1.2 var(--font-sans); letter-spacing: -0.015em; color: var(--text-strong); margin: 0; }
+
+  .te-tabs { padding: 0 28px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; gap: 2px; }
+  .te-tabs .tab { padding: 12px 14px; font: 500 13.5px/1 var(--font-sans); color: var(--text-muted); border-bottom: 2px solid transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .te-tabs .tab.active { color: #4C1D95; border-bottom-color: #A78BFA; }
+  .te-tabs .tab .bdg { padding: 1px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-muted); font: 500 11px/1.4 var(--font-mono); }
+  .te-tabs .tab.active .bdg { background: #EDE0FF; color: #4C1D95; }
+
+  .te-body { padding: 20px 28px 28px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 16px; }
+
+  .sched-strip { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .sched-strip-h { display: flex; align-items: center; gap: 10px; }
+  .sched-strip-h h3 { font: 600 14px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .sched-strip-h .ds { font: 12px/1 var(--font-sans); color: var(--text-muted); }
+  .sched-strip-h .spacer { flex: 1; }
+  .sched-strip-h .now { padding: 3px 9px; border-radius: 9999px; background: var(--tone-success-bg); color: var(--tone-success); font: 600 11px/1 var(--font-sans); }
+  .sched-rail { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .sched-cell { padding: 10px 11px; border-radius: 9px; background: var(--surface-muted); border: 1px solid transparent; min-height: 64px; display: flex; flex-direction: column; gap: 3px; }
+  .sched-cell .pd { font: 500 10px/1 var(--font-mono); color: var(--text-subtle); letter-spacing: 0.06em; text-transform: uppercase; }
+  .sched-cell .cls { font: 600 13px/1.2 var(--font-sans); color: var(--text-strong); margin-top: 2px; }
+  .sched-cell .rm { font: 11px/1 var(--font-mono); color: var(--text-muted); }
+  .sched-cell.current { background: #EDE0FF; border-color: #C4B5FD; }
+  .sched-cell.current .pd { color: #6D28D9; }
+  .sched-cell.current .cls { color: #4C1D95; }
+  .sched-cell.current .rm { color: #6D28D9; }
+  .sched-cell.free { opacity: 0.55; }
+  .sched-cell.free .cls { color: var(--text-muted); font-weight: 500; }
+
+  .grid-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .card-h { display: flex; align-items: center; gap: 8px; }
+  .card-h h3 { font: 600 14px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .card-h .spacer { flex: 1; }
+  .card-h .bdg { padding: 2px 8px; border-radius: 9999px; background: var(--surface-muted); font: 500 11px/1 var(--font-sans); color: var(--text-muted); }
+  .card-h .bdg.warn { background: var(--tone-warn-bg); color: var(--tone-warn); }
+  .card-h .bdg.brand { background: #EDE0FF; color: #4C1D95; }
+
+  .class-row { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-subtle); }
+  .class-row:last-child { border-bottom: 0; }
+  .class-row .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .class-row .nm { font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .class-row .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 1px; }
+  .class-row .pill { padding: 3px 9px; border-radius: 9999px; font: 500 11px/1 var(--font-sans); }
+  .class-row .pill.pending { background: var(--tone-warn-bg); color: var(--tone-warn); }
+  .class-row .pill.done { background: var(--tone-success-bg); color: var(--tone-success); }
+
+  .att-card { background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); color: #fff; border-radius: 12px; padding: 18px; display: flex; align-items: center; gap: 16px; }
+  .att-card .left { flex: 1; }
+  .att-card .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
+  .att-card h3 { font: 700 18px/1.2 var(--font-sans); margin: 6px 0 4px; }
+  .att-card .ds { font: 13px/1.4 var(--font-sans); opacity: 0.9; }
+  .att-card .go { padding: 10px 14px; border-radius: 9px; background: #fff; color: #4C1D95; font: 600 13px/1 var(--font-sans); display: inline-flex; align-items: center; gap: 6px; flex: none; }
+
+  .msg-row { display: grid; grid-template-columns: 36px 1fr auto; gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border-subtle); }
+  .msg-row:last-child { border-bottom: 0; }
+  .msg-row .av { width: 36px; height: 36px; border-radius: 50%; background: var(--surface-muted); color: var(--text-strong); display: grid; place-items: center; font: 600 12px/1 var(--font-sans); }
+  .msg-row .nm { font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .msg-row .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 1px; }
+  .msg-row .nd { padding: 2px 7px; border-radius: 9999px; background: #EDE0FF; color: #4C1D95; font: 600 10.5px/1 var(--font-mono); }
+
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .stat { padding: 12px 14px; background: var(--surface-muted); border-radius: 10px; }
+  .stat .lbl { font: 500 10.5px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+  .stat .v { font: 700 22px/1 var(--font-sans); color: var(--text-strong); margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .stat .ds { font: 11px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 4px; }
+</style>
+</head>
+<body data-portal-kit="teacher" data-portal-screen="dashboard">
+
+<main class="kit-stage">
+  <div class="device-tablet">
+    <div class="screen">
+
+      <aside class="te-side">
+        <a class="brand"><span class="mark" data-icon="corelith"></span> Huchu</a>
+        <div class="who">
+          <span class="av">TC</span>
+          <div>
+            <div class="nm">Mr Tendai Chari</div>
+            <div class="sb">Maths · Combined Sci</div>
+          </div>
+        </div>
+        <div class="sh">My classes</div>
+        <nav>
+          <a href="#" class="active"><span data-icon="grid"></span> Form 2A · Maths<span class="cnt">29</span></a>
+          <a href="#"><span data-icon="grid"></span> Form 2B · Maths<span class="cnt">31</span></a>
+          <a href="#"><span data-icon="grid"></span> Form 1A · Maths<span class="cnt">28</span></a>
+          <a href="#"><span data-icon="grid"></span> Form 3B · Comb Sci<span class="cnt">26</span></a>
+          <a href="#"><span data-icon="grid"></span> Form 4A · Comb Sci<span class="cnt">24</span></a>
+        </nav>
+        <div class="sh">Shortcuts</div>
+        <nav>
+          <a href="attendance-take.html"><span data-icon="check"></span> Take roll</a>
+          <a href="marks.html"><span data-icon="edit"></span> Marks entry</a>
+          <a href="schedule.html"><span data-icon="calendar"></span> Schedule</a>
+        </nav>
+      </aside>
+
+      <main class="te-main">
+        <header class="te-top">
+          <div class="meta">
+            <div class="crumbs">Thursday · 22 May 2026 · Term 2 Week 5</div>
+            <h1>Good morning, Mr Chari</h1>
+          </div>
+          <button class="btn btn-ghost"><span data-icon="bell" data-icon-size="14"></span></button>
+          <button class="btn btn-secondary"><span data-icon="plus" data-icon-size="14"></span> New assignment</button>
+        </header>
+
+        <div class="te-tabs">
+          <span class="tab active"><span data-icon="home" data-icon-size="14"></span> Today</span>
+          <span class="tab"><span data-icon="edit" data-icon-size="14"></span> Marks <span class="bdg">3</span></span>
+          <span class="tab"><span data-icon="chat" data-icon-size="14"></span> Comms <span class="bdg">7</span></span>
+        </div>
+
+        <div class="te-body">
+
+          <div class="sched-strip">
+            <div class="sched-strip-h">
+              <h3>Today's schedule</h3>
+              <span class="ds">6 periods · 1 free</span>
+              <span class="spacer"></span>
+              <span class="now">Now · Period 3</span>
+            </div>
+            <div class="sched-rail">
+              <div class="sched-cell"><div class="pd">P1 · 07:40</div><div class="cls">Form 1A</div><div class="rm">Maths · Rm 12</div></div>
+              <div class="sched-cell"><div class="pd">P2 · 08:30</div><div class="cls">Form 2B</div><div class="rm">Maths · Rm 12</div></div>
+              <div class="sched-cell current"><div class="pd">P3 · 09:20</div><div class="cls">Form 2A</div><div class="rm">Maths · Rm 12</div></div>
+              <div class="sched-cell free"><div class="pd">P4 · 10:30</div><div class="cls">Free</div><div class="rm">Staff room</div></div>
+              <div class="sched-cell"><div class="pd">P5 · 11:20</div><div class="cls">Form 4A</div><div class="rm">Comb Sci · Lab 2</div></div>
+              <div class="sched-cell"><div class="pd">P6 · 12:10</div><div class="cls">Form 3B</div><div class="rm">Comb Sci · Lab 2</div></div>
+            </div>
+          </div>
+
+          <div class="grid-cards">
+            <div class="card">
+              <div class="card-h">
+                <h3>Classes to mark</h3>
+                <span class="spacer"></span>
+                <span class="bdg warn">3 pending</span>
+              </div>
+              <div>
+                <div class="class-row">
+                  <span class="dot" style="background: #A78BFA;"></span>
+                  <div>
+                    <div class="nm">Form 2A · Maths · Quiz 3</div>
+                    <div class="sb">29 papers · submitted yesterday</div>
+                  </div>
+                  <span class="pill pending">Mark</span>
+                </div>
+                <div class="class-row">
+                  <span class="dot" style="background: #60A5FA;"></span>
+                  <div>
+                    <div class="nm">Form 3B · Comb Sci · Lab report</div>
+                    <div class="sb">26 papers · due Mon 26 May</div>
+                  </div>
+                  <span class="pill pending">Mark</span>
+                </div>
+                <div class="class-row">
+                  <span class="dot" style="background: #34D399;"></span>
+                  <div>
+                    <div class="nm">Form 1A · Maths · Test 2</div>
+                    <div class="sb">28 papers · 12 marked</div>
+                  </div>
+                  <span class="pill pending">Continue</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-h">
+                <h3>Parent messages</h3>
+                <span class="spacer"></span>
+                <span class="bdg brand">7 unread</span>
+              </div>
+              <div>
+                <div class="msg-row">
+                  <span class="av">MC</span>
+                  <div>
+                    <div class="nm">Mrs Chigumba</div>
+                    <div class="sb">re: Tanaka's homework · 8 min ago</div>
+                  </div>
+                  <span class="nd">2</span>
+                </div>
+                <div class="msg-row">
+                  <span class="av">RM</span>
+                  <div>
+                    <div class="nm">Mr Mutasa</div>
+                    <div class="sb">re: Permission slip · 42 min ago</div>
+                  </div>
+                  <span class="nd">1</span>
+                </div>
+                <div class="msg-row">
+                  <span class="av">PN</span>
+                  <div>
+                    <div class="nm">Mrs Ndlovu</div>
+                    <div class="sb">re: Tariro absent today · 1 h ago</div>
+                  </div>
+                  <span class="nd">1</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="att-card">
+            <div class="left">
+              <div class="lbl">Up next · Period 3 in 4 minutes</div>
+              <h3>Take attendance — Form 2A · Mathematics</h3>
+              <div class="ds">29 students on roll · Last marked Wednesday, 2 absentees flagged</div>
+            </div>
+            <a class="go" href="attendance-take.html">Take roll <span data-icon="chright" data-icon-size="14"></span></a>
+          </div>
+
+          <div class="card">
+            <div class="card-h">
+              <h3>This week</h3>
+              <span class="spacer"></span>
+              <span class="bdg">Week 5 · Term 2</span>
+            </div>
+            <div class="stats-grid">
+              <div class="stat">
+                <div class="lbl">Assignments out</div>
+                <div class="v">4</div>
+                <div class="ds">2 due Friday · 2 next week</div>
+              </div>
+              <div class="stat">
+                <div class="lbl">Papers to mark</div>
+                <div class="v">68</div>
+                <div class="ds">Across 3 classes</div>
+              </div>
+              <div class="stat">
+                <div class="lbl">Attendance rate</div>
+                <div class="v">94.2%</div>
+                <div class="ds">All classes · 5-day avg</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

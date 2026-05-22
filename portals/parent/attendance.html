@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Attendance &amp; marks · Parent portal · Huchu</title>
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../portal-kit-nav.js" defer></script>
+<style>
+  /* Child header */
+  .child-head { padding: 12px 16px 4px; display: flex; align-items: center; gap: 10px; }
+  .child-head .av { width: 38px; height: 38px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 13px/1 var(--font-sans); }
+  .child-head .nm { font: 600 15px/1.3 var(--font-sans); color: var(--text-strong); }
+  .child-head .sb { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+
+  /* Term tabs */
+  .term-tabs { display: flex; gap: 4px; padding: 6px 16px 4px; }
+  .term-tabs .t { flex: 1; text-align: center; padding: 8px 6px; border-radius: 9999px; font: 500 12px/1 var(--font-sans); color: var(--text-muted); background: var(--surface-muted); border: 1px solid transparent; cursor: pointer; }
+  .term-tabs .t.active { background: var(--brand-soft); color: var(--brand-strong); border-color: var(--brand-100); }
+
+  /* Attendance summary tonal card */
+  .att-card { margin: 12px 16px 6px; padding: 14px 16px; border-radius: 14px; background: linear-gradient(135deg, #166534, #14532D); color: #fff; }
+  .att-card .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
+  .att-card .val { font: 700 30px/1 var(--font-sans); margin-top: 8px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .att-card .val .pct { font-size: 16px; opacity: 0.85; margin-left: 4px; font-weight: 500; }
+  .att-card .ds { font: 13px/1.45 var(--font-sans); opacity: 0.88; margin-top: 6px; }
+  .att-card .legend { display: flex; gap: 10px; margin-top: 12px; font: 500 11px/1 var(--font-sans); opacity: 0.9; }
+  .att-card .legend .lg { display: inline-flex; align-items: center; gap: 5px; }
+  .att-card .legend .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+  /* Attendance dots grid */
+  .att-grid-wrap { margin: 6px 16px 4px; padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+  .att-grid-head { display: grid; grid-template-columns: 36px repeat(5, 1fr); gap: 4px; padding: 0 0 6px; }
+  .att-grid-head span { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); text-align: center; }
+  .att-row { display: grid; grid-template-columns: 36px repeat(5, 1fr); gap: 4px; align-items: center; padding: 3px 0; }
+  .att-row .wk { font: 500 11px/1 var(--font-mono); color: var(--text-subtle); }
+  .att-row .d { height: 18px; border-radius: 5px; background: var(--surface-muted); display: grid; place-items: center; }
+  .att-row .d.p { background: var(--tone-success-bg); }
+  .att-row .d.p::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--tone-success); }
+  .att-row .d.l { background: var(--tone-warn-bg); }
+  .att-row .d.l::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--tone-warn); }
+  .att-row .d.a { background: var(--tone-danger-bg); }
+  .att-row .d.a::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--tone-danger); }
+  .att-row .d.h { background: transparent; }
+
+  /* Subject scorecards */
+  .subj-row { display: grid; grid-template-columns: 38px 1fr auto; gap: 10px; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--border-subtle); }
+  .subj-row:last-child { border-bottom: 0; }
+  .subj-row .si { width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; background: var(--surface-muted); color: var(--text-strong); font: 600 13px/1 var(--font-sans); }
+  .subj-row .nm { font: 500 14px/1.3 var(--font-sans); color: var(--text-strong); }
+  .subj-row .sb { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .subj-row .score { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .subj-row .pct { font: 600 16px/1 var(--font-mono); color: var(--text-strong); font-variant-numeric: tabular-nums; }
+  .subj-row .grade { font: 600 10px/1 var(--font-sans); padding: 3px 6px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-muted); letter-spacing: 0.04em; }
+  .subj-row .grade.a { background: var(--tone-success-bg); color: var(--tone-success); }
+  .subj-row .grade.b { background: var(--brand-soft); color: var(--brand-strong); }
+  .subj-row .grade.c { background: var(--tone-warn-bg); color: var(--tone-warn); }
+
+  /* Term grade summary chip */
+  .term-grade { margin: 8px 16px 0; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); display: flex; align-items: center; gap: 12px; }
+  .term-grade .ring { width: 56px; height: 56px; border-radius: 50%; background: conic-gradient(var(--brand) 0 280deg, var(--border-subtle) 280deg 360deg); display: grid; place-items: center; }
+  .term-grade .ring .core { width: 44px; height: 44px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; font: 700 16px/1 var(--font-sans); color: var(--text-strong); }
+  .term-grade .nm { font: 600 14px/1.3 var(--font-sans); color: var(--text-strong); }
+  .term-grade .sb { font: 12px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 3px; }
+  .term-grade .chip { margin-left: auto; padding: 5px 9px; border-radius: 9999px; background: var(--tone-success-bg); color: var(--tone-success); font: 600 11px/1 var(--font-sans); letter-spacing: 0.04em; }
+</style>
+</head>
+<body data-portal-kit="parent" data-portal-screen="attendance">
+
+<main class="kit-stage phone-bg">
+  <div class="device-phone">
+    <div class="screen">
+      <div class="ps-screen">
+
+        <div class="ps-statusbar"><span>9:41</span><span class="right"><span data-icon="signal"></span><span data-icon="wifi"></span><span data-icon="battery"></span></span></div>
+
+        <div class="ps-appbar">
+          <button class="nav-btn" onclick="history.back()"><span data-icon="back" data-icon-size="20"></span></button>
+          <h1>Attendance &amp; marks</h1>
+          <div class="right">
+            <button class="nav-btn"><span data-icon="download" data-icon-size="18"></span></button>
+          </div>
+        </div>
+
+        <div class="ps-scroll">
+
+          <div class="child-head">
+            <span class="av">TM</span>
+            <div>
+              <div class="nm">Tanaka Mukamba</div>
+              <div class="sb">Form 2 Livingstone · St Faith&rsquo;s Park</div>
+            </div>
+          </div>
+
+          <div class="term-tabs">
+            <div class="t">Term 1</div>
+            <div class="t active">Term 2</div>
+            <div class="t">Term 3</div>
+          </div>
+
+          <div class="att-card">
+            <div class="lbl">Attendance · Term 2</div>
+            <div class="val">94<span class="pct">%</span></div>
+            <div class="ds">56 of 60 school days attended · 3 absences, 1 late. June 2026 · week 9.</div>
+            <div class="legend">
+              <span class="lg"><span class="dot" style="background: #4ADE80;"></span> Present</span>
+              <span class="lg"><span class="dot" style="background: #FBBF24;"></span> Late</span>
+              <span class="lg"><span class="dot" style="background: #F87171;"></span> Absent</span>
+            </div>
+          </div>
+
+          <div style="padding: 0 16px;"><div class="psh" style="padding: 14px 0 6px;">Weekly attendance · June 2026</div></div>
+
+          <div class="att-grid-wrap">
+            <div class="att-grid-head">
+              <span></span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span>
+            </div>
+            <div class="att-row"><span class="wk">W1</span><span class="d p"></span><span class="d p"></span><span class="d p"></span><span class="d p"></span><span class="d p"></span></div>
+            <div class="att-row"><span class="wk">W2</span><span class="d p"></span><span class="d l"></span><span class="d p"></span><span class="d p"></span><span class="d p"></span></div>
+            <div class="att-row"><span class="wk">W3</span><span class="d p"></span><span class="d p"></span><span class="d p"></span><span class="d p"></span><span class="d p"></span></div>
+            <div class="att-row"><span class="wk">W4</span><span class="d p"></span><span class="d p"></span><span class="d a"></span><span class="d p"></span><span class="d p"></span></div>
+            <div class="att-row"><span class="wk">W5</span><span class="d p"></span><span class="d p"></span><span class="d p"></span><span class="d p"></span><span class="d p"></span></div>
+            <div class="att-row"><span class="wk">W6</span><span class="d p"></span><span class="d p"></span><span class="d p"></span><span class="d a"></span><span class="d p"></span></div>
+            <div class="att-row"><span class="wk">W7</span><span class="d p"></span><span class="d p"></span><span class="d p"></span><span class="d p"></span><span class="d p"></span></div>
+            <div class="att-row"><span class="wk">W8</span><span class="d p"></span><span class="d p"></span><span class="d p"></span><span class="d p"></span><span class="d a"></span></div>
+            <div class="att-row"><span class="wk">W9</span><span class="d p"></span><span class="d p"></span><span class="d p"></span><span class="d h"></span><span class="d h"></span></div>
+            <div class="att-row"><span class="wk">W10</span><span class="d h"></span><span class="d h"></span><span class="d h"></span><span class="d h"></span><span class="d h"></span></div>
+            <div class="att-row"><span class="wk">W11</span><span class="d h"></span><span class="d h"></span><span class="d h"></span><span class="d h"></span><span class="d h"></span></div>
+            <div class="att-row"><span class="wk">W12</span><span class="d h"></span><span class="d h"></span><span class="d h"></span><span class="d h"></span><span class="d h"></span></div>
+          </div>
+
+          <div style="padding: 0 16px;"><div class="psh" style="padding: 14px 0 6px;">Subject marks · Term 2<a href="#">Full report</a></div></div>
+
+          <div class="pl" style="margin: 0 16px;">
+            <a class="subj-row" href="#" style="text-decoration: none; color: inherit;">
+              <span class="si" style="background: #DBEAFE; color: #1D4ED8;">Mt</span>
+              <div><div class="nm">Mathematics</div><div class="sb">Mrs Chari · 4 tests, 2 assignments</div></div>
+              <div class="score"><span class="pct">82%</span><span class="grade a">A</span></div>
+            </a>
+            <a class="subj-row" href="#" style="text-decoration: none; color: inherit;">
+              <span class="si" style="background: #FEE2E2; color: #B91C1C;">En</span>
+              <div><div class="nm">English Language</div><div class="sb">Mr Dube · 3 essays, 2 tests</div></div>
+              <div class="score"><span class="pct">76%</span><span class="grade b">B+</span></div>
+            </a>
+            <a class="subj-row" href="#" style="text-decoration: none; color: inherit;">
+              <span class="si" style="background: #DCFCE7; color: #166534;">Sh</span>
+              <div><div class="nm">Shona</div><div class="sb">Mrs Mawere · 3 tests</div></div>
+              <div class="score"><span class="pct">88%</span><span class="grade a">A</span></div>
+            </a>
+            <a class="subj-row" href="#" style="text-decoration: none; color: inherit;">
+              <span class="si" style="background: #FEF3C7; color: #B45309;">Sc</span>
+              <div><div class="nm">Combined Science</div><div class="sb">Mr Ncube · practicals + 3 tests</div></div>
+              <div class="score"><span class="pct">71%</span><span class="grade b">B</span></div>
+            </a>
+            <a class="subj-row" href="#" style="text-decoration: none; color: inherit;">
+              <span class="si" style="background: #EDE9FE; color: #6D28D9;">Hs</span>
+              <div><div class="nm">History</div><div class="sb">Mr Sibanda · 2 essays, 2 tests</div></div>
+              <div class="score"><span class="pct">68%</span><span class="grade c">C+</span></div>
+            </a>
+            <a class="subj-row" href="#" style="text-decoration: none; color: inherit;">
+              <span class="si" style="background: #FCE7F3; color: #BE185D;">Ag</span>
+              <div><div class="nm">Agriculture</div><div class="sb">Mr Moyo · field work + 2 tests</div></div>
+              <div class="score"><span class="pct">79%</span><span class="grade b">B+</span></div>
+            </a>
+          </div>
+
+          <div style="padding: 0 16px;"><div class="psh" style="padding: 14px 0 6px;">End-of-term grade</div></div>
+
+          <div class="term-grade">
+            <div class="ring"><div class="core">B+</div></div>
+            <div>
+              <div class="nm">Term 2 overall · 77.3%</div>
+              <div class="sb">Position 8 of 42 · improved from B last term</div>
+            </div>
+            <span class="chip">On track</span>
+          </div>
+
+          <div style="height: 28px;"></div>
+        </div>
+
+        <div class="ps-tabbar">
+          <a class="ps-tab" href="dashboard.html"><span data-icon="home"></span>Home</a>
+          <a class="ps-tab" href="fees.html"><span data-icon="card"></span>Fees</a>
+          <a class="ps-tab" href="#"><span data-icon="bell"></span>Notices</a>
+          <a class="ps-tab" href="profile.html"><span data-icon="user"></span>Profile</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

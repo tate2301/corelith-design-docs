@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Gradebook · Teacher portal · Huchu</title>
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../portal-kit-nav.js" defer></script>
+<style>
+  body { background: var(--gray-100); margin: 0; padding: 24px; min-height: 100vh; display: grid; place-items: center; }
+  .device-desktop { width: 1400px; max-width: 100%; border-radius: 12px; background: #1A1D24; padding: 0; box-shadow: 0 30px 60px -20px rgba(22,24,29,0.25), 0 0 0 1px rgba(22,24,29,0.1); overflow: hidden; }
+  .device-desktop .chrome { height: 36px; display: flex; align-items: center; gap: 6px; padding: 0 14px; background: #1A1D24; }
+  .device-desktop .chrome .dot { width: 10px; height: 10px; border-radius: 50%; background: #444; }
+  .device-desktop .chrome .dot.r { background: #FF5F57; }
+  .device-desktop .chrome .dot.y { background: #FEBC2E; }
+  .device-desktop .chrome .dot.g { background: #28C840; }
+  .device-desktop .chrome .url { margin-left: 14px; padding: 4px 12px; background: rgba(255,255,255,0.06); border-radius: 4px; color: #aaa; font: 12px/1 var(--font-mono); }
+  .device-desktop .screen { display: grid; grid-template-columns: 220px 1fr; height: 800px; background: var(--canvas); }
+
+  .gb-side { background: var(--canvas); border-right: 1px solid var(--border); padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .gb-side .brand { display: inline-flex; align-items: center; gap: 10px; padding: 6px 8px; font: 600 15px/1 var(--font-sans); color: var(--text-strong); margin-bottom: 12px; }
+  .gb-side .brand .mark { width: 22px; height: 22px; color: #A78BFA; }
+  .gb-side .who { padding: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; display: flex; align-items: center; gap: 9px; }
+  .gb-side .who .av { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #EDE0FF, #A78BFA); color: #4C1D95; display: grid; place-items: center; font: 600 11px/1 var(--font-sans); }
+  .gb-side .who .nm { font: 600 12.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .gb-side .who .sb { font: 10.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .gb-side .sh { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); padding: 12px 10px 8px; }
+  .gb-side nav a { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 7px; font: 500 13px/1 var(--font-sans); color: var(--text-body); text-decoration: none; }
+  .gb-side nav a:hover { background: var(--surface-muted); }
+  .gb-side nav a.active { background: #EDE0FF; color: #4C1D95; }
+  .gb-side nav a svg { width: 15px; height: 15px; color: var(--text-muted); }
+  .gb-side nav a.active svg { color: #A78BFA; }
+  .gb-side nav a .cnt { margin-left: auto; font: 500 10.5px/1 var(--font-mono); color: var(--text-subtle); }
+  .gb-side nav a.active .cnt { color: #4C1D95; }
+
+  .gb-main { display: flex; flex-direction: column; min-width: 0; }
+  .gb-top { padding: 14px 24px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; }
+  .gb-top .meta { flex: 1; }
+  .gb-top .crumbs { font: 500 12px/1 var(--font-sans); color: var(--text-muted); margin-bottom: 3px; }
+  .gb-top h1 { font: 700 20px/1.2 var(--font-sans); letter-spacing: -0.015em; color: var(--text-strong); margin: 0; }
+  .gb-top .h-pills { display: inline-flex; gap: 6px; margin-top: 5px; }
+  .gb-top .pill { padding: 3px 10px; border-radius: 9999px; background: var(--surface-muted); font: 500 11px/1 var(--font-sans); color: var(--text-muted); }
+  .gb-top .pill.brand { background: #EDE0FF; color: #4C1D95; }
+  .gb-top .actions { display: inline-flex; gap: 8px; align-items: center; }
+
+  .gb-tools { padding: 10px 24px; background: var(--surface); border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 10px; }
+  .gb-tools .chips { display: inline-flex; gap: 6px; }
+  .gb-tools .chip { padding: 5px 12px; border-radius: 9999px; background: var(--surface-muted); font: 500 12px/1 var(--font-sans); color: var(--text-muted); cursor: pointer; }
+  .gb-tools .chip.active { background: #4C1D95; color: #fff; }
+  .gb-tools .spacer { flex: 1; }
+  .gb-tools .stat { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 11px; background: var(--surface-muted); border-radius: 9999px; font: 500 11.5px/1 var(--font-sans); color: var(--text-muted); }
+  .gb-tools .stat b { font: 600 12.5px/1 var(--font-mono); color: var(--text-strong); }
+  .gb-tools select { height: 30px; padding: 0 28px 0 10px; border: 1px solid var(--border); background: var(--surface); border-radius: 6px; font: 500 12.5px/1 var(--font-sans); color: var(--text-strong); cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23565C69' stroke-width='2'><path d='m6 9 6 6 6-6'/></svg>"); background-repeat: no-repeat; background-position: right 8px center; }
+
+  .gb-wrap { flex: 1; overflow: auto; padding: 14px 24px 24px; }
+  .gb-table { width: 100%; min-width: 1080px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; border-collapse: separate; border-spacing: 0; font: var(--type-body-sm); }
+  .gb-table th, .gb-table td { padding: 9px 10px; border-bottom: 1px solid var(--border-subtle); border-right: 1px solid var(--border-subtle); text-align: center; vertical-align: middle; }
+  .gb-table th { background: var(--surface-muted); font: 500 11px/1.3 var(--font-sans); letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-subtle); position: sticky; top: 0; z-index: 2; white-space: nowrap; }
+  .gb-table th .sub { font: 400 10px/1 var(--font-mono); letter-spacing: 0; text-transform: none; color: var(--text-subtle); margin-top: 3px; display: block; }
+  .gb-table th .tag { display: inline-block; padding: 1px 6px; border-radius: 9999px; font: 500 9.5px/1.4 var(--font-sans); letter-spacing: 0.04em; margin-top: 4px; }
+  .gb-table th .tag.ca { background: #DDEAFE; color: #1E40AF; }
+  .gb-table th .tag.ex { background: #FEDCEA; color: #831843; }
+  .gb-table th.add { color: #4C1D95; background: #F5EEFF; cursor: pointer; min-width: 100px; }
+  .gb-table th.add:hover { background: #EDE0FF; }
+  .gb-table tr:last-child td { border-bottom: 0; }
+  .gb-table td:last-child, .gb-table th:last-child { border-right: 0; }
+  .gb-table .stu { text-align: left; min-width: 200px; position: sticky; left: 0; background: var(--surface); z-index: 1; }
+  .gb-table .stu .nm { font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .gb-table .stu .sb { font: 11px/1.3 var(--font-mono); color: var(--text-muted); margin-top: 1px; }
+  .gb-table .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 500; color: var(--text-strong); }
+  .gb-table .cell { padding: 6px 8px; }
+  .gb-table .cell .v { display: inline-block; min-width: 40px; padding: 4px 8px; border-radius: 6px; font: 600 12.5px/1 var(--font-mono); }
+  .gb-table .cell .v.a { background: var(--tone-success-bg); color: #14532D; }
+  .gb-table .cell .v.b { background: #FEF3C7; color: #92400E; }
+  .gb-table .cell .v.c { background: #FEE2E5; color: #B83A2A; }
+  .gb-table .cell .v.miss { background: var(--surface-muted); color: var(--text-subtle); }
+  .gb-table .avg { background: #F5EEFF; min-width: 100px; }
+  .gb-table .avg .v { color: #4C1D95; font: 700 14px/1 var(--font-mono); }
+  .gb-table .avg .grade { display: inline-block; padding: 1px 7px; border-radius: 9999px; font: 600 10px/1 var(--font-sans); margin-left: 5px; background: #4C1D95; color: #fff; }
+  .gb-table tr:hover td:not(.stu) { background: var(--surface-muted); }
+  .gb-table tr:hover td.avg { background: #EDE0FF; }
+  .gb-table tfoot td { background: var(--surface-muted); font: 600 12px/1.3 var(--font-mono); color: var(--text-strong); }
+  .gb-table tfoot td.stu { font: 500 12px/1 var(--font-sans); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+</style>
+</head>
+<body data-portal-kit="teacher" data-portal-screen="gradebook">
+
+<main class="kit-stage">
+  <div class="device-desktop">
+    <div class="chrome">
+      <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+      <span class="url">https://teacher.huchu.app / gradebook / Form 2A · Mathematics</span>
+    </div>
+    <div class="screen">
+
+      <aside class="gb-side">
+        <a class="brand"><span class="mark" data-icon="corelith"></span> Huchu Teacher</a>
+        <div class="who">
+          <span class="av">TC</span>
+          <div>
+            <div class="nm">Mr Tendai Chari</div>
+            <div class="sb">Maths · Combined Sci</div>
+          </div>
+        </div>
+
+        <div class="sh">Classes</div>
+        <nav>
+          <a href="#" class="active"><span data-icon="grid"></span> Form 2A · Maths<span class="cnt">29</span></a>
+          <a href="#"><span data-icon="grid"></span> Form 2B · Maths<span class="cnt">31</span></a>
+          <a href="#"><span data-icon="grid"></span> Form 1A · Maths<span class="cnt">28</span></a>
+          <a href="#"><span data-icon="grid"></span> Form 3B · Comb Sci<span class="cnt">26</span></a>
+          <a href="#"><span data-icon="grid"></span> Form 4A · Comb Sci<span class="cnt">24</span></a>
+        </nav>
+
+        <div class="sh">Subjects</div>
+        <nav>
+          <a href="#"><span data-icon="book"></span> Mathematics</a>
+          <a href="#"><span data-icon="book"></span> Combined Sciences</a>
+        </nav>
+
+        <div class="sh">Tools</div>
+        <nav>
+          <a href="../teacher/marks.html"><span data-icon="edit"></span> Marks entry</a>
+          <a href="#"><span data-icon="chart"></span> Class report</a>
+          <a href="#"><span data-icon="download"></span> Export gradebook</a>
+        </nav>
+      </aside>
+
+      <main class="gb-main">
+        <header class="gb-top">
+          <div class="meta">
+            <div class="crumbs">Form 2A · Mathematics · Term 2, 2026</div>
+            <h1>Gradebook</h1>
+            <div class="h-pills">
+              <span class="pill brand">29 students</span>
+              <span class="pill">6 assessments</span>
+              <span class="pill">Term 2 · Week 5</span>
+              <span class="pill">Last saved · 2 min ago</span>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-ghost"><span data-icon="filter" data-icon-size="14"></span> Filters</button>
+            <button class="btn btn-secondary"><span data-icon="download" data-icon-size="14"></span> Export CSV</button>
+            <button class="btn btn-primary" style="background: #6D28D9;"><span data-icon="plus" data-icon-size="14"></span> Add column</button>
+          </div>
+        </header>
+
+        <div class="gb-tools">
+          <div class="chips">
+            <span class="chip active">All</span>
+            <span class="chip">CA</span>
+            <span class="chip">Exam</span>
+            <span class="chip">Homework</span>
+          </div>
+          <select><option>Term 2 · 2026</option><option>Term 1 · 2026</option><option>Term 3 · 2025</option></select>
+          <select><option>All students</option><option>At risk only</option><option>Top quartile</option></select>
+          <div class="spacer"></div>
+          <span class="stat">Class avg <b>68.4</b></span>
+          <span class="stat">Highest <b>92</b></span>
+          <span class="stat">Lowest <b>38</b></span>
+          <span class="stat">Submitted <b>171 / 174</b></span>
+        </div>
+
+        <div class="gb-wrap">
+          <table class="gb-table">
+            <thead>
+              <tr>
+                <th class="stu" style="text-align: left;">Student</th>
+                <th>Quiz 1<span class="sub">/20</span><span class="tag ca">CA</span></th>
+                <th>HW 1<span class="sub">/10</span><span class="tag ca">CA</span></th>
+                <th>Quiz 2<span class="sub">/20</span><span class="tag ca">CA</span></th>
+                <th>Test 1<span class="sub">/50</span><span class="tag ca">CA</span></th>
+                <th>HW 2<span class="sub">/10</span><span class="tag ca">CA</span></th>
+                <th>Mid-term<span class="sub">/100</span><span class="tag ex">Exam</span></th>
+                <th class="avg">Average<span class="sub">/100</span></th>
+                <th class="add"><span data-icon="plus" data-icon-size="12"></span> Add column</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="stu"><div class="nm">Anesu Bhebhe</div><div class="sb">2A-001</div></td>
+                <td class="cell"><span class="v a">18</span></td>
+                <td class="cell"><span class="v a">9</span></td>
+                <td class="cell"><span class="v a">19</span></td>
+                <td class="cell"><span class="v a">44</span></td>
+                <td class="cell"><span class="v a">10</span></td>
+                <td class="cell"><span class="v a">88</span></td>
+                <td class="avg num"><span class="v">85.4</span><span class="grade">A</span></td>
+                <td class="cell"></td>
+              </tr>
+              <tr>
+                <td class="stu"><div class="nm">Blessing Chari</div><div class="sb">2A-002</div></td>
+                <td class="cell"><span class="v b">14</span></td>
+                <td class="cell"><span class="v b">7</span></td>
+                <td class="cell"><span class="v b">15</span></td>
+                <td class="cell"><span class="v b">36</span></td>
+                <td class="cell"><span class="v a">9</span></td>
+                <td class="cell"><span class="v b">72</span></td>
+                <td class="avg num"><span class="v">71.2</span><span class="grade" style="background:#92400E;">B</span></td>
+                <td class="cell"></td>
+              </tr>
+              <tr>
+                <td class="stu"><div class="nm">Chiedza Dube</div><div class="sb">2A-003</div></td>
+                <td class="cell"><span class="v a">20</span></td>
+                <td class="cell"><span class="v a">10</span></td>
+                <td class="cell"><span class="v a">19</span></td>
+                <td class="cell"><span class="v a">48</span></td>
+                <td class="cell"><span class="v a">10</span></td>
+                <td class="cell"><span class="v a">92</span></td>
+                <td class="avg num"><span class="v">91.8</span><span class="grade">A</span></td>
+                <td class="cell"></td>
+              </tr>
+              <tr>
+                <td class="stu"><div class="nm">Danai Mhike</div><div class="sb">2A-004</div></td>
+                <td class="cell"><span class="v c">11</span></td>
+                <td class="cell"><span class="v b">6</span></td>
+                <td class="cell"><span class="v c">10</span></td>
+                <td class="cell"><span class="v c">28</span></td>
+                <td class="cell"><span class="v c">5</span></td>
+                <td class="cell"><span class="v c">54</span></td>
+                <td class="avg num"><span class="v">52.6</span><span class="grade" style="background:#B83A2A;">C</span></td>
+                <td class="cell"></td>
+              </tr>
+              <tr>
+                <td class="stu"><div class="nm">Edmore Gomo</div><div class="sb">2A-005</div></td>
+                <td class="cell"><span class="v b">16</span></td>
+                <td class="cell"><span class="v b">8</span></td>
+                <td class="cell"><span class="v b">17</span></td>
+                <td class="cell"><span class="v b">39</span></td>
+                <td class="cell"><span class="v b">8</span></td>
+                <td class="cell"><span class="v b">76</span></td>
+                <td class="avg num"><span class="v">74.6</span><span class="grade" style="background:#92400E;">B</span></td>
+                <td class="cell"></td>
+              </tr>
+              <tr>
+                <td class="stu"><div class="nm">Farai Ncube</div><div class="sb">2A-006</div></td>
+                <td class="cell"><span class="v a">19</span></td>
+                <td class="cell"><span class="v a">9</span></td>
+                <td class="cell"><span class="v a">18</span></td>
+                <td class="cell"><span class="v a">45</span></td>
+                <td class="cell"><span class="v a">10</span></td>
+                <td class="cell"><span class="v a">86</span></td>
+                <td class="avg num"><span class="v">83.5</span><span class="grade">A</span></td>
+                <td class="cell"></td>
+              </tr>
+              <tr>
+                <td class="stu"><div class="nm">Gracious Sibanda</div><div class="sb">2A-007</div></td>
+                <td class="cell"><span class="v b">15</span></td>
+                <td class="cell"><span class="v a">9</span></td>
+                <td class="cell"><span class="v b">14</span></td>
+                <td class="cell"><span class="v b">37</span></td>
+                <td class="cell"><span class="v b">7</span></td>
+                <td class="cell"><span class="v b">68</span></td>
+                <td class="avg num"><span class="v">67.8</span><span class="grade" style="background:#92400E;">B</span></td>
+                <td class="cell"></td>
+              </tr>
+              <tr>
+                <td class="stu"><div class="nm">Hopewell Moyo</div><div class="sb">2A-008</div></td>
+                <td class="cell"><span class="v b">17</span></td>
+                <td class="cell"><span class="v b">7</span></td>
+                <td class="cell"><span class="v b">16</span></td>
+                <td class="cell"><span class="v b">40</span></td>
+                <td class="cell"><span class="v b">8</span></td>
+                <td class="cell"><span class="v b">74</span></td>
+                <td class="avg num"><span class="v">72.4</span><span class="grade" style="background:#92400E;">B</span></td>
+                <td class="cell"></td>
+              </tr>
+              <tr>
+                <td class="stu"><div class="nm">Innocent Nyathi</div><div class="sb">2A-009</div></td>
+                <td class="cell"><span class="v c">9</span></td>
+                <td class="cell"><span class="v miss">—</span></td>
+                <td class="cell"><span class="v c">11</span></td>
+                <td class="cell"><span class="v c">26</span></td>
+                <td class="cell"><span class="v c">4</span></td>
+                <td class="cell"><span class="v c">48</span></td>
+                <td class="avg num"><span class="v">46.8</span><span class="grade" style="background:#B83A2A;">D</span></td>
+                <td class="cell"></td>
+              </tr>
+              <tr>
+                <td class="stu"><div class="nm">Joyce Kufa</div><div class="sb">2A-010</div></td>
+                <td class="cell"><span class="v b">14</span></td>
+                <td class="cell"><span class="v b">7</span></td>
+                <td class="cell"><span class="v b">15</span></td>
+                <td class="cell"><span class="v b">34</span></td>
+                <td class="cell"><span class="v b">8</span></td>
+                <td class="cell"><span class="v b">66</span></td>
+                <td class="avg num"><span class="v">64.2</span><span class="grade" style="background:#92400E;">B</span></td>
+                <td class="cell"></td>
+              </tr>
+              <tr>
+                <td class="stu"><div class="nm">Kudzanai Mutasa</div><div class="sb">2A-011</div></td>
+                <td class="cell"><span class="v a">18</span></td>
+                <td class="cell"><span class="v a">9</span></td>
+                <td class="cell"><span class="v a">17</span></td>
+                <td class="cell"><span class="v a">42</span></td>
+                <td class="cell"><span class="v a">9</span></td>
+                <td class="cell"><span class="v a">80</span></td>
+                <td class="avg num"><span class="v">78.6</span><span class="grade">A</span></td>
+                <td class="cell"></td>
+              </tr>
+              <tr>
+                <td class="stu"><div class="nm">Lawrence Pikani</div><div class="sb">2A-012</div></td>
+                <td class="cell"><span class="v b">16</span></td>
+                <td class="cell"><span class="v b">8</span></td>
+                <td class="cell"><span class="v b">16</span></td>
+                <td class="cell"><span class="v b">38</span></td>
+                <td class="cell"><span class="v b">7</span></td>
+                <td class="cell"><span class="v b">70</span></td>
+                <td class="avg num"><span class="v">69.0</span><span class="grade" style="background:#92400E;">B</span></td>
+                <td class="cell"></td>
+              </tr>
+              <tr>
+                <td class="stu"><div class="nm">Memory Saka</div><div class="sb">2A-013</div></td>
+                <td class="cell"><span class="v a">19</span></td>
+                <td class="cell"><span class="v a">10</span></td>
+                <td class="cell"><span class="v a">18</span></td>
+                <td class="cell"><span class="v a">46</span></td>
+                <td class="cell"><span class="v a">10</span></td>
+                <td class="cell"><span class="v a">84</span></td>
+                <td class="avg num"><span class="v">82.4</span><span class="grade">A</span></td>
+                <td class="cell"></td>
+              </tr>
+              <tr>
+                <td class="stu"><div class="nm">Nyasha Mafuta</div><div class="sb">2A-014</div></td>
+                <td class="cell"><span class="v b">15</span></td>
+                <td class="cell"><span class="v b">7</span></td>
+                <td class="cell"><span class="v b">14</span></td>
+                <td class="cell"><span class="v b">36</span></td>
+                <td class="cell"><span class="v b">8</span></td>
+                <td class="cell"><span class="v b">64</span></td>
+                <td class="avg num"><span class="v">63.6</span><span class="grade" style="background:#92400E;">B</span></td>
+                <td class="cell"></td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td class="stu">Class average</td>
+                <td>16.0</td>
+                <td>8.0</td>
+                <td>15.6</td>
+                <td>38.5</td>
+                <td>8.1</td>
+                <td>73.0</td>
+                <td class="avg">71.6</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </main>
+
+    </div>
+  </div>
+</main>
+
+</body>
+</html>
