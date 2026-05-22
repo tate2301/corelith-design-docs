@@ -319,6 +319,15 @@
       wrap.appendChild(toolbar);
       wrap.appendChild(frame);
 
+      // Center the frame's horizontal scroll on the stage's center
+      // (specimens use justify-content: center, so this reveals the content).
+      const centerScroll = () => {
+        const sw = frame.scrollWidth;
+        const cw = frame.clientWidth;
+        if (sw > cw) frame.scrollLeft = (sw - cw) / 2;
+        else frame.scrollLeft = 0;
+      };
+
       // Wire viewport buttons
       toolbar.querySelectorAll('.ds-viewport-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -335,8 +344,14 @@
             wrap.style.setProperty('--ds-preview-w', '100%');
             toolbar.querySelector('.ds-viewport-meta').textContent = '100%';
           }
+          // Wait for width transition before re-centering scroll.
+          requestAnimationFrame(() => requestAnimationFrame(centerScroll));
+          setTimeout(centerScroll, 240);
         });
       });
+
+      // Center scroll on initial mount (e.g. phone defaults to Mobile @ 375).
+      requestAnimationFrame(centerScroll);
     });
   };
 
