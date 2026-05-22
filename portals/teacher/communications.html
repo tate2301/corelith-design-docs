@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Communications · Teacher portal · Huchu</title>
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../portal-kit-nav.js" defer></script>
+<style>
+  body { background: var(--gray-100); margin: 0; padding: 24px; min-height: 100vh; display: grid; place-items: center; }
+  .device-tablet { width: 1024px; height: 768px; border-radius: 28px; background: #0F1115; padding: 14px; box-shadow: 0 30px 60px -20px rgba(22,24,29,0.25), 0 0 0 1px rgba(22,24,29,0.08); }
+  .device-tablet .screen { width: 100%; height: 100%; border-radius: 16px; overflow: hidden; background: var(--canvas); display: flex; }
+
+  .cm-side { width: 320px; flex: none; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+  .cm-side-h { padding: 14px 16px 10px; border-bottom: 1px solid var(--border-subtle); }
+  .cm-side-h .row { display: flex; align-items: center; gap: 10px; }
+  .cm-side-h .row .brand { display: inline-flex; align-items: center; gap: 8px; font: 600 14px/1 var(--font-sans); color: var(--text-strong); }
+  .cm-side-h .row .brand .mark { width: 18px; height: 18px; color: #A78BFA; }
+  .cm-side-h .row .spacer { flex: 1; }
+  .cm-side-h h1 { font: 700 18px/1.2 var(--font-sans); color: var(--text-strong); margin: 12px 0 6px; display: flex; align-items: center; gap: 8px; }
+  .cm-side-h h1 .bdg { font: 600 11px/1 var(--font-sans); padding: 3px 8px; border-radius: 9999px; background: #EDE0FF; color: #4C1D95; }
+  .cm-side-h .ds { font: 12px/1 var(--font-sans); color: var(--text-muted); }
+  .cm-side-h .search { position: relative; margin-top: 10px; }
+  .cm-side-h .search input { width: 100%; height: 34px; padding: 0 12px 0 34px; border: 1px solid var(--border); border-radius: 8px; background: var(--canvas); font: var(--type-body-sm); outline: none; }
+  .cm-side-h .search input:focus { border-color: #A78BFA; box-shadow: 0 0 0 3px #EDE0FF; }
+  .cm-side-h .search > [data-icon] { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-subtle); }
+  .cm-side-tabs { display: flex; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--border-subtle); }
+  .cm-side-tabs .pill { padding: 5px 10px; border-radius: 9999px; background: var(--surface-muted); font: 500 11.5px/1 var(--font-sans); color: var(--text-muted); cursor: pointer; }
+  .cm-side-tabs .pill.active { background: #4C1D95; color: #fff; }
+
+  .cm-threads { flex: 1; overflow-y: auto; }
+  .cm-thread { display: grid; grid-template-columns: 38px 1fr auto; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--border-subtle); align-items: center; cursor: pointer; }
+  .cm-thread:hover { background: var(--surface-muted); }
+  .cm-thread.active { background: #EDE0FF; }
+  .cm-thread .av { width: 38px; height: 38px; border-radius: 50%; background: var(--surface-muted); color: var(--text-strong); display: grid; place-items: center; font: 600 12.5px/1 var(--font-sans); }
+  .cm-thread.active .av { background: #A78BFA; color: #fff; }
+  .cm-thread .nm { font: 600 13.5px/1.3 var(--font-sans); color: var(--text-strong); display: flex; align-items: center; gap: 6px; }
+  .cm-thread .nm .child { font: 500 11px/1 var(--font-sans); color: var(--text-muted); padding: 1px 6px; background: var(--surface-muted); border-radius: 9999px; }
+  .cm-thread.active .nm .child { background: rgba(255,255,255,0.6); color: #4C1D95; }
+  .cm-thread .sb { font: 12px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px; }
+  .cm-thread.unread .sb { color: var(--text-strong); font-weight: 500; }
+  .cm-thread .meta { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+  .cm-thread .tm { font: 500 10.5px/1 var(--font-mono); color: var(--text-muted); }
+  .cm-thread .nd { padding: 1px 7px; border-radius: 9999px; background: #6D28D9; color: #fff; font: 600 10px/1.4 var(--font-mono); }
+
+  .cm-side-foot { padding: 12px 14px; border-top: 1px solid var(--border); background: var(--canvas); }
+  .cm-side-foot .btn-cta { width: 100%; padding: 10px 12px; border-radius: 9px; background: #6D28D9; color: #fff; font: 600 13px/1 var(--font-sans); display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+
+  .cm-main { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--canvas); }
+  .cm-top { padding: 14px 22px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; }
+  .cm-top .av { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #EDE0FF, #A78BFA); color: #4C1D95; display: grid; place-items: center; font: 600 14px/1 var(--font-sans); flex: none; }
+  .cm-top .info { flex: 1; }
+  .cm-top h2 { font: 700 16px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .cm-top .sb { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 3px; }
+  .cm-top .actions { display: inline-flex; gap: 6px; align-items: center; }
+  .cm-top .pill { padding: 3px 9px; border-radius: 9999px; background: var(--tone-success-bg); color: var(--tone-success); font: 500 11px/1 var(--font-sans); }
+
+  .cm-stream { flex: 1; overflow-y: auto; padding: 18px 22px; display: flex; flex-direction: column; gap: 10px; }
+  .cm-day { text-align: center; font: 500 11px/1 var(--font-sans); color: var(--text-subtle); letter-spacing: 0.08em; text-transform: uppercase; margin: 6px 0; }
+  .cm-msg { max-width: 70%; padding: 10px 14px; border-radius: 14px; font: 14px/1.45 var(--font-sans); }
+  .cm-msg .ts { font: 500 10.5px/1 var(--font-mono); color: var(--text-subtle); margin-top: 4px; display: block; }
+  .cm-msg.parent { align-self: flex-start; background: var(--surface); border: 1px solid var(--border); color: var(--text-strong); border-bottom-left-radius: 4px; }
+  .cm-msg.teacher { align-self: flex-end; background: #6D28D9; color: #fff; border-bottom-right-radius: 4px; }
+  .cm-msg.teacher .ts { color: rgba(255,255,255,0.7); }
+  .cm-attachment { display: inline-flex; align-items: center; gap: 8px; padding: 7px 10px; margin-top: 6px; background: var(--surface-muted); border-radius: 8px; font: 500 12px/1 var(--font-sans); color: var(--text-strong); }
+  .cm-msg.teacher .cm-attachment { background: rgba(255,255,255,0.15); color: #fff; }
+
+  .cm-compose { padding: 12px 22px 16px; background: var(--surface); border-top: 1px solid var(--border); }
+  .cm-compose .row { display: flex; gap: 8px; align-items: flex-end; }
+  .cm-compose .field { flex: 1; background: var(--canvas); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; min-height: 56px; font: 14px/1.4 var(--font-sans); color: var(--text-strong); }
+  .cm-compose .field:focus-within { border-color: #A78BFA; box-shadow: 0 0 0 3px #EDE0FF; }
+  .cm-compose .ph { color: var(--text-subtle); }
+  .cm-compose .toolbar { display: flex; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-subtle); }
+  .cm-compose .toolbar button { padding: 5px 8px; border-radius: 6px; color: var(--text-muted); background: transparent; font: 500 12px/1 var(--font-sans); display: inline-flex; gap: 5px; align-items: center; }
+  .cm-compose .toolbar button:hover { background: var(--surface-muted); color: var(--text-strong); }
+  .cm-compose .send { width: 44px; height: 44px; border-radius: 12px; background: #6D28D9; color: #fff; display: grid; place-items: center; flex: none; }
+  .cm-compose .send:hover { background: #4C1D95; }
+</style>
+</head>
+<body data-portal-kit="teacher" data-portal-screen="communications">
+
+<main class="kit-stage">
+  <div class="device-tablet">
+    <div class="screen">
+
+      <aside class="cm-side">
+        <div class="cm-side-h">
+          <div class="row">
+            <span class="brand"><span class="mark" data-icon="corelith"></span> Huchu</span>
+            <span class="spacer"></span>
+            <button class="btn btn-ghost"><span data-icon="filter" data-icon-size="14"></span></button>
+          </div>
+          <h1>Comms <span class="bdg">7 unread</span></h1>
+          <div class="ds">Mr Chari · Form 2A homeroom + Maths classes</div>
+          <div class="search">
+            <span data-icon="search"></span>
+            <input placeholder="Search parents or students…" />
+          </div>
+        </div>
+
+        <div class="cm-side-tabs">
+          <span class="pill active">Inbox · 7</span>
+          <span class="pill">Sent</span>
+          <span class="pill">Announcements</span>
+        </div>
+
+        <div class="cm-threads">
+          <div class="cm-thread active">
+            <span class="av">MC</span>
+            <div>
+              <div class="nm">Mrs Chigumba <span class="child">Tanaka · 2A</span></div>
+              <div class="sb">Thank you for the update on his homework…</div>
+            </div>
+            <div class="meta"><span class="tm">09:12</span><span class="nd">2</span></div>
+          </div>
+          <div class="cm-thread unread">
+            <span class="av">RM</span>
+            <div>
+              <div class="nm">Mr Mutasa <span class="child">Kudzanai · 2A</span></div>
+              <div class="sb">I'll bring the permission slip tomorrow morning.</div>
+            </div>
+            <div class="meta"><span class="tm">08:40</span><span class="nd">1</span></div>
+          </div>
+          <div class="cm-thread unread">
+            <span class="av">PN</span>
+            <div>
+              <div class="nm">Mrs Ndlovu <span class="child">Tariro · 2B</span></div>
+              <div class="sb">Tariro is unwell, won't be in today.</div>
+            </div>
+            <div class="meta"><span class="tm">08:14</span><span class="nd">1</span></div>
+          </div>
+          <div class="cm-thread unread">
+            <span class="av">SM</span>
+            <div>
+              <div class="nm">Mr Sibanda <span class="child">Gracious · 2A</span></div>
+              <div class="sb">Could we discuss the Term 2 mid-term result?</div>
+            </div>
+            <div class="meta"><span class="tm">07:51</span><span class="nd">1</span></div>
+          </div>
+          <div class="cm-thread">
+            <span class="av">EM</span>
+            <div>
+              <div class="nm">Mrs Marowa <span class="child">Queen · 2A</span></div>
+              <div class="sb">Thanks Mr Chari. Will sort out the textbook.</div>
+            </div>
+            <div class="meta"><span class="tm">Yest</span></div>
+          </div>
+          <div class="cm-thread unread">
+            <span class="av">FN</span>
+            <div>
+              <div class="nm">Mr Ncube <span class="child">Farai · 2A</span></div>
+              <div class="sb">Re: extra maths tutoring on Wednesdays</div>
+            </div>
+            <div class="meta"><span class="tm">Yest</span><span class="nd">2</span></div>
+          </div>
+          <div class="cm-thread">
+            <span class="av">DB</span>
+            <div>
+              <div class="nm">Mrs Bhebhe <span class="child">Anesu · 2A</span></div>
+              <div class="sb">Anesu received the certificate, thank you!</div>
+            </div>
+            <div class="meta"><span class="tm">Mon</span></div>
+          </div>
+          <div class="cm-thread unread">
+            <span class="av">JK</span>
+            <div>
+              <div class="nm">Mr Kufa <span class="child">Joyce · 2A</span></div>
+              <div class="sb">Joyce mentioned the Friday quiz, is it…</div>
+            </div>
+            <div class="meta"><span class="tm">Mon</span><span class="nd">1</span></div>
+          </div>
+        </div>
+
+        <div class="cm-side-foot">
+          <button class="btn-cta"><span data-icon="bell" data-icon-size="14"></span> Send to whole class</button>
+        </div>
+      </aside>
+
+      <main class="cm-main">
+        <header class="cm-top">
+          <span class="av">MC</span>
+          <div class="info">
+            <h2>Mrs Memory Chigumba</h2>
+            <div class="sb">Parent of Tanaka Chigumba · Form 2A · +263 77 412 5530</div>
+          </div>
+          <div class="actions">
+            <span class="pill">Online · 2 min ago</span>
+            <button class="btn btn-ghost"><span data-icon="phone" data-icon-size="14"></span></button>
+            <button class="btn btn-ghost"><span data-icon="user" data-icon-size="14"></span> View student</button>
+          </div>
+        </header>
+
+        <div class="cm-stream">
+          <div class="cm-day">Wednesday · 21 May</div>
+
+          <div class="cm-msg parent">
+            Mhoroi Mr Chari, I noticed Tanaka has been struggling with the maths homework this week. He says he understands in class but at home he gets stuck on the word problems. Is there anything I can do to help him at home?
+            <span class="ts">14:24</span>
+          </div>
+
+          <div class="cm-msg teacher">
+            Mhoro Mrs Chigumba. Yes, I've noticed he sometimes hesitates with the word problems too. I'll send him home with a worked example sheet today — it shows the steps clearly, including how to underline the question.
+            <span class="ts">15:02</span>
+            <span class="cm-attachment"><span data-icon="folder" data-icon-size="14"></span> word-problems-walkthrough.pdf · 4 pages</span>
+          </div>
+
+          <div class="cm-msg parent">
+            Thank you so much! Will he get extra time on the Friday quiz if needed?
+            <span class="ts">15:18</span>
+          </div>
+
+          <div class="cm-msg teacher">
+            He's welcome to stay after school on Thursday — I run a 45-min clinic for any student that wants help, no booking needed. He should bring his exercise book.
+            <span class="ts">15:34</span>
+          </div>
+
+          <div class="cm-day">Today · Thursday 22 May</div>
+
+          <div class="cm-msg parent">
+            Thank you for the update on his homework, Mr Chari. He worked through the sheet last night and got most of them. He'll come to the clinic this afternoon.
+            <span class="ts">09:08</span>
+          </div>
+
+          <div class="cm-msg parent">
+            Also, just confirming — the parent-teacher evening is Tuesday 27 May at 17:00?
+            <span class="ts">09:12</span>
+          </div>
+        </div>
+
+        <div class="cm-compose">
+          <div class="row">
+            <div class="field">
+              <div>Yes — Tuesday 27 May, 17:00 to 19:00 in the school hall. Your slot is 17:30…</div>
+              <div class="toolbar">
+                <button><span data-icon="folder" data-icon-size="12"></span> Attach</button>
+                <button><span data-icon="calendar" data-icon-size="12"></span> Schedule</button>
+                <button><span data-icon="user" data-icon-size="12"></span> Quick reply</button>
+              </div>
+            </div>
+            <button class="send"><span data-icon="arrow" data-icon-size="18"></span></button>
+          </div>
+        </div>
+      </main>
+
+    </div>
+  </div>
+</main>
+
+</body>
+</html>

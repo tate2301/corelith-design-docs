@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Schedule · Teacher portal · Huchu</title>
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../portal-kit-nav.js" defer></script>
+<style>
+  body { background: var(--gray-100); margin: 0; padding: 24px; min-height: 100vh; display: grid; place-items: center; }
+  .device-tablet { width: 1024px; height: 768px; border-radius: 28px; background: #0F1115; padding: 14px; box-shadow: 0 30px 60px -20px rgba(22,24,29,0.25), 0 0 0 1px rgba(22,24,29,0.08); }
+  .device-tablet .screen { width: 100%; height: 100%; border-radius: 16px; overflow: hidden; background: var(--canvas); display: flex; }
+
+  .sc-side { width: 260px; background: var(--canvas); border-right: 1px solid var(--border); padding: 18px 14px; display: flex; flex-direction: column; gap: 4px; flex: none; overflow-y: auto; }
+  .sc-side .brand { display: inline-flex; align-items: center; gap: 10px; padding: 6px 8px; font: 600 16px/1 var(--font-sans); color: var(--text-strong); margin-bottom: 12px; }
+  .sc-side .brand .mark { width: 22px; height: 22px; color: #A78BFA; }
+
+  .sc-today { background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); color: #fff; border-radius: 12px; padding: 14px 14px 16px; margin-bottom: 16px; }
+  .sc-today .lbl { font: 500 10.5px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.85; }
+  .sc-today .dt { font: 700 22px/1.1 var(--font-sans); margin: 6px 0 2px; }
+  .sc-today .ds { font: 12px/1.3 var(--font-sans); opacity: 0.9; }
+  .sc-today .now { margin-top: 12px; padding: 10px 12px; background: rgba(255,255,255,0.18); border-radius: 9px; }
+  .sc-today .now .nl { font: 500 10.5px/1 var(--font-sans); opacity: 0.85; letter-spacing: 0.06em; text-transform: uppercase; }
+  .sc-today .now .nm { font: 600 14px/1.3 var(--font-sans); margin-top: 5px; }
+  .sc-today .now .rm { font: 11.5px/1.3 var(--font-mono); opacity: 0.85; margin-top: 3px; }
+
+  .sc-side .sh { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); padding: 4px 6px 10px; display: flex; align-items: center; justify-content: space-between; }
+  .sc-side .sh .cnt { padding: 1px 7px; border-radius: 9999px; background: var(--tone-warn-bg); color: var(--tone-warn); font: 600 10px/1.4 var(--font-mono); letter-spacing: 0; }
+
+  .sub-row { padding: 10px 12px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface); margin-bottom: 8px; }
+  .sub-row .when { font: 600 11.5px/1 var(--font-sans); color: var(--tone-warn); letter-spacing: 0.04em; text-transform: uppercase; }
+  .sub-row .what { font: 600 13.5px/1.3 var(--font-sans); color: var(--text-strong); margin-top: 5px; }
+  .sub-row .for { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 3px; }
+  .sub-row .accept { display: inline-flex; gap: 6px; margin-top: 8px; }
+  .sub-row .accept button { padding: 4px 10px; border-radius: 6px; font: 600 11px/1 var(--font-sans); }
+  .sub-row .accept .ok { background: var(--tone-success); color: #fff; }
+  .sub-row .accept .no { background: var(--surface-muted); color: var(--text-muted); }
+
+  .sc-legend { margin-top: 8px; padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+  .sc-legend .lh { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 8px; }
+  .sc-legend .row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font: 12.5px/1 var(--font-sans); color: var(--text-strong); }
+  .sc-legend .row .sw { width: 10px; height: 10px; border-radius: 3px; }
+
+  .sc-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .sc-top { padding: 14px 24px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; }
+  .sc-top .meta { flex: 1; }
+  .sc-top .crumbs { font: 500 12px/1 var(--font-sans); color: var(--text-muted); margin-bottom: 4px; }
+  .sc-top h1 { font: 700 20px/1.2 var(--font-sans); letter-spacing: -0.015em; color: var(--text-strong); margin: 0; }
+  .sc-top .pills { display: inline-flex; gap: 6px; margin-top: 5px; }
+  .sc-top .pill { padding: 3px 10px; border-radius: 9999px; background: var(--surface-muted); font: 500 11px/1 var(--font-sans); color: var(--text-muted); }
+  .sc-top .pill.brand { background: #EDE0FF; color: #4C1D95; }
+  .sc-top .wknav { display: inline-flex; align-items: center; gap: 4px; background: var(--canvas); border: 1px solid var(--border); border-radius: 8px; padding: 3px; }
+  .sc-top .wknav button { width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; color: var(--text-strong); background: transparent; }
+  .sc-top .wknav button:hover { background: var(--surface-muted); }
+  .sc-top .wknav .lbl { padding: 0 10px; font: 500 12.5px/1 var(--font-sans); color: var(--text-strong); }
+
+  .sc-grid { flex: 1; overflow: auto; padding: 14px 18px 18px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 60px repeat(5, 1fr);
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 6px;
+  }
+  .gh { padding: 8px 6px; font: 600 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); text-align: center; }
+  .gh.today { background: #EDE0FF; color: #4C1D95; border-radius: 7px; }
+  .gh .dn { display: block; font: 700 14px/1.2 var(--font-sans); color: var(--text-strong); margin-top: 3px; letter-spacing: 0; text-transform: none; }
+  .gh.today .dn { color: #4C1D95; }
+  .tm { padding: 6px 4px; font: 500 10.5px/1 var(--font-mono); color: var(--text-subtle); text-align: right; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; }
+  .tm .p { font: 600 10px/1 var(--font-sans); color: var(--text-muted); margin-bottom: 3px; letter-spacing: 0.04em; }
+
+  .cell {
+    padding: 7px 8px;
+    border-radius: 7px;
+    min-height: 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    border: 1px solid transparent;
+    position: relative;
+  }
+  .cell .cls { font: 600 12.5px/1.2 var(--font-sans); }
+  .cell .rm { font: 10.5px/1.2 var(--font-mono); opacity: 0.85; }
+  .cell .sub { font: 500 10px/1 var(--font-sans); letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.7; }
+
+  /* Subject color codes */
+  .cell.maths { background: #EDE0FF; color: #4C1D95; }
+  .cell.maths .sub { color: #6D28D9; }
+  .cell.science { background: #DDEAFE; color: #1E40AF; }
+  .cell.science .sub { color: #2563EB; }
+  .cell.english { background: #DCFCE7; color: #166534; }
+  .cell.english .sub { color: #15803D; }
+  .cell.shona { background: #FEF3C7; color: #92400E; }
+  .cell.shona .sub { color: #B45309; }
+  .cell.history { background: #FEE2E5; color: #9F1239; }
+  .cell.history .sub { color: #BE123C; }
+  .cell.free { background: repeating-linear-gradient(135deg, var(--surface-muted) 0 6px, transparent 6px 12px); color: var(--text-subtle); }
+  .cell.free .cls { color: var(--text-muted); font-weight: 500; }
+  .cell.free .rm { color: var(--text-subtle); }
+  .cell.today-col { box-shadow: inset 0 0 0 2px rgba(167,139,250,0.35); }
+  .cell.now { box-shadow: 0 0 0 2px #6D28D9; }
+  .cell.now::after { content: "NOW"; position: absolute; top: 4px; right: 6px; font: 700 8px/1 var(--font-sans); letter-spacing: 0.08em; color: #6D28D9; }
+  .cell.sub-cover { background: #FEEBC8; color: #7C2D12; border: 1px dashed #C2410C; }
+  .cell.sub-cover .sub { color: #C2410C; }
+</style>
+</head>
+<body data-portal-kit="teacher" data-portal-screen="schedule">
+
+<main class="kit-stage">
+  <div class="device-tablet">
+    <div class="screen">
+
+      <aside class="sc-side">
+        <a class="brand"><span class="mark" data-icon="corelith"></span> Huchu</a>
+
+        <div class="sc-today">
+          <div class="lbl">Today · Thursday</div>
+          <div class="dt">22 May 2026</div>
+          <div class="ds">Term 2 · Week 5 · 6 periods scheduled</div>
+          <div class="now">
+            <div class="nl">Now · Period 3</div>
+            <div class="nm">Form 2A · Mathematics</div>
+            <div class="rm">Room 12 · 09:20 – 10:20</div>
+          </div>
+        </div>
+
+        <div class="sh"><span>Substitutions</span><span class="cnt">2</span></div>
+
+        <div class="sub-row">
+          <div class="when">Tomorrow · Fri P5</div>
+          <div class="what">Cover for Mrs Mhike</div>
+          <div class="for">Form 3A · English · Rm 8 · 11:20–12:10</div>
+          <div class="accept">
+            <button class="ok"><span data-icon="check" data-icon-size="11"></span> Accept</button>
+            <button class="no">Decline</button>
+          </div>
+        </div>
+
+        <div class="sub-row">
+          <div class="when">Mon 26 · P2</div>
+          <div class="what">Cover for Mr Moyo</div>
+          <div class="for">Form 1B · History · Rm 5 · 08:30–09:20</div>
+          <div class="accept">
+            <button class="ok"><span data-icon="check" data-icon-size="11"></span> Accept</button>
+            <button class="no">Decline</button>
+          </div>
+        </div>
+
+        <div class="sc-legend">
+          <div class="lh">Subjects</div>
+          <div class="row"><span class="sw" style="background:#A78BFA;"></span> Mathematics</div>
+          <div class="row"><span class="sw" style="background:#60A5FA;"></span> Combined Sciences</div>
+          <div class="row"><span class="sw" style="background:#34D399;"></span> English</div>
+          <div class="row"><span class="sw" style="background:#FBBF24;"></span> ChiShona</div>
+          <div class="row"><span class="sw" style="background:#F87171;"></span> History</div>
+          <div class="row"><span class="sw" style="background:#C2410C;"></span> Substitution</div>
+        </div>
+      </aside>
+
+      <main class="sc-main">
+        <header class="sc-top">
+          <div class="meta">
+            <div class="crumbs">My timetable · Term 2 · 2026</div>
+            <h1>Weekly schedule</h1>
+            <div class="pills">
+              <span class="pill brand">Mr T. Chari</span>
+              <span class="pill">29 periods/week</span>
+              <span class="pill">5 free periods</span>
+            </div>
+          </div>
+          <div class="wknav">
+            <button><span data-icon="chleft" data-icon-size="14"></span></button>
+            <span class="lbl">Week 5 · 19–23 May</span>
+            <button><span data-icon="chright" data-icon-size="14"></span></button>
+          </div>
+          <button class="btn btn-secondary"><span data-icon="download" data-icon-size="14"></span> Export</button>
+          <button class="btn btn-primary" style="background: #6D28D9;"><span data-icon="calendar" data-icon-size="14"></span> Today</button>
+        </header>
+
+        <div class="sc-grid">
+          <div class="grid">
+
+            <div class="gh"></div>
+            <div class="gh"><span>Mon</span><span class="dn">19</span></div>
+            <div class="gh"><span>Tue</span><span class="dn">20</span></div>
+            <div class="gh"><span>Wed</span><span class="dn">21</span></div>
+            <div class="gh today"><span>Thu</span><span class="dn">22</span></div>
+            <div class="gh"><span>Fri</span><span class="dn">23</span></div>
+
+            <!-- Period 1 -->
+            <div class="tm"><span class="p">P1</span>07:40</div>
+            <div class="cell maths"><div class="sub">Maths</div><div class="cls">Form 2A</div><div class="rm">Rm 12</div></div>
+            <div class="cell science"><div class="sub">Comb Sci</div><div class="cls">Form 3B</div><div class="rm">Lab 2</div></div>
+            <div class="cell maths"><div class="sub">Maths</div><div class="cls">Form 2B</div><div class="rm">Rm 12</div></div>
+            <div class="cell maths today-col"><div class="sub">Maths</div><div class="cls">Form 1A</div><div class="rm">Rm 12</div></div>
+            <div class="cell free"><div class="sub">Free</div><div class="cls">Prep</div><div class="rm">Staff rm</div></div>
+
+            <!-- Period 2 -->
+            <div class="tm"><span class="p">P2</span>08:30</div>
+            <div class="cell maths"><div class="sub">Maths</div><div class="cls">Form 1A</div><div class="rm">Rm 12</div></div>
+            <div class="cell maths"><div class="sub">Maths</div><div class="cls">Form 2A</div><div class="rm">Rm 12</div></div>
+            <div class="cell science"><div class="sub">Comb Sci</div><div class="cls">Form 4A</div><div class="rm">Lab 2</div></div>
+            <div class="cell maths today-col"><div class="sub">Maths</div><div class="cls">Form 2B</div><div class="rm">Rm 12</div></div>
+            <div class="cell maths"><div class="sub">Maths</div><div class="cls">Form 1A</div><div class="rm">Rm 12</div></div>
+
+            <!-- Break row -->
+            <div class="tm"><span class="p">Brk</span>09:20</div>
+            <div class="cell free" style="grid-column: span 5; text-align: center; align-items: center; justify-content: center;"><div class="cls">Morning break · 09:20 – 09:40</div></div>
+
+            <!-- Period 3 -->
+            <div class="tm"><span class="p">P3</span>09:40</div>
+            <div class="cell free"><div class="sub">Free</div><div class="cls">Prep</div><div class="rm">Staff rm</div></div>
+            <div class="cell maths"><div class="sub">Maths</div><div class="cls">Form 2B</div><div class="rm">Rm 12</div></div>
+            <div class="cell science"><div class="sub">Comb Sci</div><div class="cls">Form 3B</div><div class="rm">Lab 2</div></div>
+            <div class="cell maths today-col now"><div class="sub">Maths</div><div class="cls">Form 2A</div><div class="rm">Rm 12</div></div>
+            <div class="cell science"><div class="sub">Comb Sci</div><div class="cls">Form 4A</div><div class="rm">Lab 2</div></div>
+
+            <!-- Period 4 -->
+            <div class="tm"><span class="p">P4</span>10:30</div>
+            <div class="cell science"><div class="sub">Comb Sci</div><div class="cls">Form 4A</div><div class="rm">Lab 2</div></div>
+            <div class="cell free"><div class="sub">Free</div><div class="cls">Free</div><div class="rm">Prep</div></div>
+            <div class="cell maths"><div class="sub">Maths</div><div class="cls">Form 1A</div><div class="rm">Rm 12</div></div>
+            <div class="cell free today-col"><div class="sub">Free</div><div class="cls">Free</div><div class="rm">Staff rm</div></div>
+            <div class="cell maths"><div class="sub">Maths</div><div class="cls">Form 2A</div><div class="rm">Rm 12</div></div>
+
+            <!-- Lunch row -->
+            <div class="tm"><span class="p">Lun</span>11:20</div>
+            <div class="cell free" style="grid-column: span 5; text-align: center; align-items: center; justify-content: center;"><div class="cls">Lunch · 11:20 – 12:00</div></div>
+
+            <!-- Period 5 -->
+            <div class="tm"><span class="p">P5</span>12:00</div>
+            <div class="cell maths"><div class="sub">Maths</div><div class="cls">Form 2B</div><div class="rm">Rm 12</div></div>
+            <div class="cell science"><div class="sub">Comb Sci</div><div class="cls">Form 4A</div><div class="rm">Lab 2</div></div>
+            <div class="cell maths"><div class="sub">Maths</div><div class="cls">Form 2A</div><div class="rm">Rm 12</div></div>
+            <div class="cell science today-col"><div class="sub">Comb Sci</div><div class="cls">Form 4A</div><div class="rm">Lab 2</div></div>
+            <div class="cell sub-cover"><div class="sub">Cover · Eng</div><div class="cls">Form 3A</div><div class="rm">Rm 8</div></div>
+
+            <!-- Period 6 -->
+            <div class="tm"><span class="p">P6</span>12:50</div>
+            <div class="cell science"><div class="sub">Comb Sci</div><div class="cls">Form 3B</div><div class="rm">Lab 2</div></div>
+            <div class="cell maths"><div class="sub">Maths</div><div class="cls">Form 1A</div><div class="rm">Rm 12</div></div>
+            <div class="cell free"><div class="sub">Free</div><div class="cls">Free</div><div class="rm">Marking</div></div>
+            <div class="cell science today-col"><div class="sub">Comb Sci</div><div class="cls">Form 3B</div><div class="rm">Lab 2</div></div>
+            <div class="cell maths"><div class="sub">Maths</div><div class="cls">Form 2B</div><div class="rm">Rm 12</div></div>
+
+          </div>
+        </div>
+      </main>
+
+    </div>
+  </div>
+</main>
+
+</body>
+</html>
