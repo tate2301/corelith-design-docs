@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" /><title>Marks entry · Teacher portal · Huchu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<style>
+  body { background: var(--gray-100); margin: 0; padding: 24px; min-height: 100vh; display: grid; place-items: center; }
+  .tab-frame { width: 1180px; height: 820px; border-radius: 28px; background: #0F1115; padding: 14px; box-shadow: 0 30px 60px -20px rgba(22,24,29,0.25), 0 0 0 1px rgba(22,24,29,0.08); }
+  .tab-frame .screen { width: 100%; height: 100%; border-radius: 16px; overflow: hidden; background: var(--canvas); display: flex; }
+
+  .te-side { width: 240px; background: var(--canvas); border-right: 1px solid var(--border); padding: 18px 14px; display: flex; flex-direction: column; gap: 4px; flex: none; }
+  .te-side .brand { display: inline-flex; align-items: center; gap: 10px; padding: 6px 8px; font: 600 16px/1 var(--font-sans); color: var(--text-strong); margin-bottom: 14px; }
+  .te-side .brand .mark { width: 22px; height: 22px; color: #A78BFA; }
+  .te-side .who { padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+  .te-side .who .av { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #EDE0FF, #A78BFA); color: #4C1D95; display: grid; place-items: center; font: 600 13px/1 var(--font-sans); }
+  .te-side .who .nm { font: 600 13px/1.3 var(--font-sans); color: var(--text-strong); }
+  .te-side .who .sb { font: 11px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .te-side .sh { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); padding: 12px 10px 8px; }
+  .te-side nav a { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 7px; font: 500 13.5px/1 var(--font-sans); color: var(--text-body); text-decoration: none; }
+  .te-side nav a:hover { background: var(--surface-muted); }
+  .te-side nav a.active { background: #EDE0FF; color: #4C1D95; }
+  .te-side nav a svg { width: 16px; height: 16px; color: var(--text-muted); }
+  .te-side nav a.active svg { color: #A78BFA; }
+  .te-side nav a .cnt { margin-left: auto; font: 500 11px/1 var(--font-mono); color: var(--text-subtle); }
+  .te-side nav a.active .cnt { color: #4C1D95; }
+
+  .te-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .te-top { padding: 16px 28px; display: flex; align-items: center; gap: 18px; background: var(--surface); border-bottom: 1px solid var(--border); }
+  .te-top .meta { flex: 1; }
+  .te-top .crumbs { font: 500 12px/1 var(--font-sans); color: var(--text-muted); margin-bottom: 4px; }
+  .te-top h1 { font: 700 22px/1.2 var(--font-sans); letter-spacing: -0.015em; color: var(--text-strong); margin: 0; }
+  .te-top .h-pills { display: inline-flex; gap: 6px; margin-top: 6px; }
+  .te-top .pill { padding: 3px 10px; border-radius: 9999px; background: var(--surface-muted); font: 500 11px/1 var(--font-sans); color: var(--text-muted); }
+  .te-top .pill.brand { background: var(--brand-soft); color: var(--brand-strong); }
+  .te-top .actions { display: inline-flex; gap: 8px; align-items: center; }
+  .te-top .save-state { font: 500 12px/1 var(--font-sans); color: var(--tone-success); display: inline-flex; gap: 6px; align-items: center; margin-right: 8px; }
+
+  .te-toolbar { padding: 12px 28px; border-bottom: 1px solid var(--border-subtle); background: var(--surface); display: flex; align-items: center; gap: 12px; }
+  .te-toolbar .lbl { font: 500 12px/1 var(--font-sans); color: var(--text-muted); }
+  .te-toolbar select { height: 30px; padding: 0 28px 0 10px; border: 1px solid var(--border); background: var(--surface); border-radius: 6px; font: 500 12.5px/1 var(--font-sans); color: var(--text-strong); cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23565C69' stroke-width='2'><path d='m6 9 6 6 6-6'/></svg>"); background-repeat: no-repeat; background-position: right 8px center; }
+  .te-toolbar .spacer { flex: 1; }
+  .te-toolbar .stat { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: var(--surface-muted); border-radius: 9999px; font: 500 12px/1 var(--font-sans); color: var(--text-muted); }
+  .te-toolbar .stat b { font: 600 13px/1 var(--font-mono); color: var(--text-strong); }
+
+  /* Marks grid */
+  .marks-wrap { flex: 1; overflow: auto; padding: 14px 28px 24px; }
+  .marks-table { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; border-collapse: separate; border-spacing: 0; font: var(--type-body-sm); table-layout: fixed; }
+  .marks-table th, .marks-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-subtle); border-right: 1px solid var(--border-subtle); text-align: center; vertical-align: middle; }
+  .marks-table th { background: var(--surface-muted); font: 500 11px/1.3 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); position: sticky; top: 0; z-index: 2; }
+  .marks-table th .sub { font: 400 10px/1 var(--font-mono); letter-spacing: 0; text-transform: none; color: var(--text-subtle); margin-top: 4px; display: block; }
+  .marks-table th .wt { font: 400 10px/1 var(--font-mono); letter-spacing: 0; text-transform: none; color: var(--brand-strong); margin-top: 4px; display: block; }
+  .marks-table tr:last-child td { border-bottom: 0; }
+  .marks-table td:last-child, .marks-table th:last-child { border-right: 0; }
+  .marks-table .stu { text-align: left; width: 200px; position: sticky; left: 0; background: var(--surface); z-index: 1; }
+  .marks-table .stu .nm { font: 500 14px/1.3 var(--font-sans); color: var(--text-strong); }
+  .marks-table .stu .sb { font: 11px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; font-family: var(--font-mono); }
+  .marks-table .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 500; color: var(--text-strong); }
+  .marks-table input.cell-input { width: 100%; height: 28px; text-align: center; border: 1px solid transparent; background: transparent; font: 500 14px/1 var(--font-mono); color: var(--text-strong); border-radius: 6px; }
+  .marks-table input.cell-input:hover { background: var(--brand-soft); }
+  .marks-table input.cell-input:focus { outline: none; border-color: var(--brand); background: #fff; box-shadow: 0 0 0 3px var(--focus-ring-soft); }
+  .marks-table .total { background: var(--brand-soft); }
+  .marks-table .total .num { color: var(--brand-strong); }
+  .marks-table .grade { display: inline-block; padding: 2px 8px; border-radius: 9999px; font: 600 11px/1 var(--font-sans); }
+  .marks-table .grade.A { background: var(--tone-success-bg); color: var(--tone-success); }
+  .marks-table .grade.B { background: #FEF3C7; color: #92400E; }
+  .marks-table .grade.C { background: #FEE2E5; color: #B83A2A; }
+  .marks-table tr:hover td:not(.stu) { background: var(--surface-muted); }
+  .marks-table .miss { color: var(--text-subtle); font-family: var(--font-mono); }
+
+  .te-foot { padding: 12px 28px; border-top: 1px solid var(--border); background: var(--surface); display: flex; align-items: center; gap: 12px; }
+  .te-foot .hint { font: var(--type-caption); color: var(--text-muted); display: inline-flex; align-items: center; gap: 4px; }
+  .te-foot .hint .kbd { padding: 2px 6px; background: var(--surface-muted); border-radius: 4px; font: 500 11px/1 var(--font-mono); color: var(--text-strong); }
+</style>
+</head>
+<body>
+
+<div class="tab-frame">
+<div class="screen">
+
+<aside class="te-side">
+  <a class="brand"><span class="mark" data-icon="corelith"></span> Huchu</a>
+  <div class="who">
+    <span class="av">SB</span>
+    <div>
+      <div class="nm">Ms Sibanda</div>
+      <div class="sb">Maths · Sciences</div>
+    </div>
+  </div>
+  <div class="sh">My classes</div>
+  <nav>
+    <a href="#" class="active"><span data-icon="grid"></span> Form 4 Faraday · Maths<span class="cnt">28</span></a>
+    <a href="#"><span data-icon="grid"></span> Form 4 Curie · Maths<span class="cnt">26</span></a>
+    <a href="#"><span data-icon="grid"></span> Form 3 Newton · Maths<span class="cnt">31</span></a>
+    <a href="#"><span data-icon="grid"></span> Form 2 Bohr · Maths<span class="cnt">29</span></a>
+  </nav>
+  <div class="sh">Today</div>
+  <nav>
+    <a href="#"><span data-icon="check"></span> Attendance roll</a>
+    <a href="#"><span data-icon="book"></span> Lesson plan</a>
+    <a href="#"><span data-icon="chat"></span> Notices</a>
+  </nav>
+</aside>
+
+<main class="te-main">
+  <header class="te-top">
+    <div class="meta">
+      <div class="crumbs">Form 4 Faraday · Mathematics · Spring term</div>
+      <h1>Marks entry</h1>
+      <div class="h-pills">
+        <span class="pill brand">28 students</span>
+        <span class="pill">Assessments: 4</span>
+        <span class="pill">Term weight: 60%</span>
+      </div>
+    </div>
+    <div class="actions">
+      <span class="save-state"><span data-icon="check" data-icon-size="12"></span> Saved 12 seconds ago</span>
+      <button class="btn btn-ghost"><span data-icon="upload" data-icon-size="14"></span> Bulk paste</button>
+      <button class="btn btn-secondary"><span data-icon="download" data-icon-size="14"></span> Export</button>
+      <button class="btn btn-primary">Publish marks</button>
+    </div>
+  </header>
+
+  <div class="te-toolbar">
+    <span class="lbl">Term</span>
+    <select><option>Spring 2026</option><option>Autumn 2025</option></select>
+    <span class="lbl">Period</span>
+    <select><option>Mid-term</option><option>End of term</option></select>
+    <div class="spacer"></div>
+    <span class="stat">Submitted <b>22 / 28</b></span>
+    <span class="stat">Class avg <b>71.4</b></span>
+    <span class="stat">Top <b>92</b></span>
+    <span class="stat">Lowest <b>41</b></span>
+  </div>
+
+  <div class="marks-wrap">
+    <table class="marks-table">
+      <thead>
+        <tr>
+          <th class="stu" style="text-align: left;">Student</th>
+          <th>Quiz 1<span class="sub">/20</span><span class="wt">10%</span></th>
+          <th>Quiz 2<span class="sub">/20</span><span class="wt">10%</span></th>
+          <th>Test<span class="sub">/50</span><span class="wt">25%</span></th>
+          <th>Assignment<span class="sub">/30</span><span class="wt">15%</span></th>
+          <th>Mid-term<span class="sub">/100</span><span class="wt">40%</span></th>
+          <th>Weighted<span class="sub">/100</span></th>
+          <th>Grade</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="stu"><div class="nm">Akudzwe Bere</div><div class="sb">FAR-2026-001</div></td>
+          <td><input class="cell-input" value="18" /></td>
+          <td><input class="cell-input" value="17" /></td>
+          <td><input class="cell-input" value="42" /></td>
+          <td><input class="cell-input" value="26" /></td>
+          <td><input class="cell-input" value="84" /></td>
+          <td class="total num">81.5</td>
+          <td><span class="grade A">A</span></td>
+        </tr>
+        <tr>
+          <td class="stu"><div class="nm">Bethel Chirwa</div><div class="sb">FAR-2026-002</div></td>
+          <td><input class="cell-input" value="14" /></td>
+          <td><input class="cell-input" value="16" /></td>
+          <td><input class="cell-input" value="38" /></td>
+          <td><input class="cell-input" value="24" /></td>
+          <td><input class="cell-input" value="72" /></td>
+          <td class="total num">68.2</td>
+          <td><span class="grade B">B</span></td>
+        </tr>
+        <tr>
+          <td class="stu"><div class="nm">Chiwoniso Dube</div><div class="sb">FAR-2026-003</div></td>
+          <td><input class="cell-input" value="20" /></td>
+          <td><input class="cell-input" value="19" /></td>
+          <td><input class="cell-input" value="48" /></td>
+          <td><input class="cell-input" value="29" /></td>
+          <td><input class="cell-input" value="92" /></td>
+          <td class="total num">91.2</td>
+          <td><span class="grade A">A</span></td>
+        </tr>
+        <tr>
+          <td class="stu"><div class="nm">Dakarayi Gondo</div><div class="sb">FAR-2026-004</div></td>
+          <td><input class="cell-input" value="12" /></td>
+          <td><input class="cell-input" value="14" /></td>
+          <td><input class="cell-input" value="32" /></td>
+          <td><input class="cell-input" value="22" /></td>
+          <td><input class="cell-input" value="58" /></td>
+          <td class="total num">55.6</td>
+          <td><span class="grade C">C</span></td>
+        </tr>
+        <tr>
+          <td class="stu"><div class="nm">Edwin Hove</div><div class="sb">FAR-2026-005</div></td>
+          <td><input class="cell-input" value="16" /></td>
+          <td><input class="cell-input" value="15" /></td>
+          <td><input class="cell-input" value="40" /></td>
+          <td><input class="cell-input" value="25" /></td>
+          <td><input class="cell-input" value="76" /></td>
+          <td class="total num">72.8</td>
+          <td><span class="grade B">B</span></td>
+        </tr>
+        <tr>
+          <td class="stu"><div class="nm">Farai Jiri</div><div class="sb">FAR-2026-006</div></td>
+          <td><input class="cell-input" value="19" /></td>
+          <td><input class="cell-input" value="18" /></td>
+          <td><input class="cell-input" value="46" /></td>
+          <td><input class="cell-input" value="28" /></td>
+          <td><input class="cell-input" value="88" /></td>
+          <td class="total num">86.4</td>
+          <td><span class="grade A">A</span></td>
+        </tr>
+        <tr style="background: var(--tone-warn-bg);">
+          <td class="stu" style="background: var(--tone-warn-bg);"><div class="nm">Gracious Kufa</div><div class="sb">FAR-2026-007 · absent</div></td>
+          <td class="miss">—</td>
+          <td><input class="cell-input" value="13" /></td>
+          <td class="miss">—</td>
+          <td><input class="cell-input" value="20" /></td>
+          <td><input class="cell-input" value="" placeholder="—" /></td>
+          <td class="total num">—</td>
+          <td><span class="grade C">·</span></td>
+        </tr>
+        <tr>
+          <td class="stu"><div class="nm">Hopewell Mafuta</div><div class="sb">FAR-2026-008</div></td>
+          <td><input class="cell-input" value="15" /></td>
+          <td><input class="cell-input" value="16" /></td>
+          <td><input class="cell-input" value="36" /></td>
+          <td><input class="cell-input" value="23" /></td>
+          <td><input class="cell-input" value="64" /></td>
+          <td class="total num">62.4</td>
+          <td><span class="grade B">B</span></td>
+        </tr>
+        <tr>
+          <td class="stu"><div class="nm">Innocent Ndoro</div><div class="sb">FAR-2026-009</div></td>
+          <td><input class="cell-input" value="17" /></td>
+          <td><input class="cell-input" value="18" /></td>
+          <td><input class="cell-input" value="44" /></td>
+          <td><input class="cell-input" value="27" /></td>
+          <td><input class="cell-input" value="82" /></td>
+          <td class="total num">79.6</td>
+          <td><span class="grade A">A</span></td>
+        </tr>
+        <tr>
+          <td class="stu"><div class="nm">Joyce Mukamba</div><div class="sb">FAR-2026-010</div></td>
+          <td><input class="cell-input" value="13" /></td>
+          <td><input class="cell-input" value="15" /></td>
+          <td><input class="cell-input" value="34" /></td>
+          <td><input class="cell-input" value="21" /></td>
+          <td><input class="cell-input" value="62" /></td>
+          <td class="total num">59.5</td>
+          <td><span class="grade C">C</span></td>
+        </tr>
+        <tr>
+          <td class="stu"><div class="nm">Kudzanai Pikani</div><div class="sb">FAR-2026-011</div></td>
+          <td><input class="cell-input" value="18" /></td>
+          <td><input class="cell-input" value="17" /></td>
+          <td><input class="cell-input" value="40" /></td>
+          <td><input class="cell-input" value="26" /></td>
+          <td><input class="cell-input" value="78" /></td>
+          <td class="total num">75.7</td>
+          <td><span class="grade B">B</span></td>
+        </tr>
+        <tr>
+          <td class="stu"><div class="nm">Lawrence Ranga</div><div class="sb">FAR-2026-012</div></td>
+          <td><input class="cell-input" value="16" /></td>
+          <td><input class="cell-input" value="17" /></td>
+          <td><input class="cell-input" value="42" /></td>
+          <td><input class="cell-input" value="25" /></td>
+          <td><input class="cell-input" value="74" /></td>
+          <td class="total num">72.1</td>
+          <td><span class="grade B">B</span></td>
+        </tr>
+        <tr>
+          <td class="stu"><div class="nm">Memory Saka</div><div class="sb">FAR-2026-013</div></td>
+          <td><input class="cell-input" value="19" /></td>
+          <td><input class="cell-input" value="18" /></td>
+          <td><input class="cell-input" value="45" /></td>
+          <td><input class="cell-input" value="28" /></td>
+          <td><input class="cell-input" value="86" /></td>
+          <td class="total num">84.0</td>
+          <td><span class="grade A">A</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer class="te-foot">
+    <span class="hint"><span class="kbd">Tab</span> Next student</span>
+    <span class="hint"><span class="kbd">Enter</span> Next assessment</span>
+    <span class="hint"><span class="kbd">⌘V</span> Bulk paste from spreadsheet</span>
+    <span style="flex: 1;"></span>
+    <span style="font: var(--type-caption); color: var(--text-muted);">All changes save automatically</span>
+  </footer>
+</main>
+
+</div>
+</div>
+
+</body>
+</html>

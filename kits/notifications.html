@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Corelith — Notifications kit</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<script src="../icons.js" defer></script>
+<script src="../kit-nav.js" defer></script>
+<style>
+  body { background: var(--canvas); padding: 24px; }
+  .wrap { max-width: 1480px; margin: 0 auto; display: grid; gap: 16px; }
+  .section-label { display: flex; align-items: baseline; gap: 12px; padding: 16px 4px 0; }
+  .section-label h2 { font: var(--type-section-title); margin: 0; }
+  .section-label .num { font: var(--type-mono); color: var(--text-subtle); }
+  .section-label .note { color: var(--text-muted); font: var(--type-caption); margin-left: auto; }
+  .frame { border: 1px solid var(--border); border-radius: 14px; overflow: clip; background: var(--canvas); }
+
+  /* Popover demo container */
+  .popover-stage {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 24px;
+    min-height: 720px;
+    overflow: visible;
+  }
+  .popover-stage .header-bar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+  }
+  .popover-stage .header-bar .spacer { flex: 1; }
+  .popover-stage .anchor { position: relative; }
+
+  /* Notification popover */
+  .notif-pop {
+    position: absolute; right: 0; top: calc(100% + 8px);
+    width: 420px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-popover);
+    overflow: clip;
+    z-index: 10;
+  }
+  .notif-pop .np-h {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .notif-pop .np-h .ti { font: var(--type-section-title); color: var(--text-strong); }
+  .notif-pop .np-h .ti .count { color: var(--text-muted); font-weight: 400; margin-left: 4px; }
+  .notif-pop .np-h .actions { display: flex; gap: 4px; }
+  .notif-pop .np-tabs { display: flex; gap: 24px; padding: 0 16px; border-bottom: 1px solid var(--border); }
+  .notif-pop .np-tabs button {
+    padding: 10px 0; border: none; background: transparent;
+    font: 500 13px/1 var(--font-sans);
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    cursor: pointer;
+  }
+  .notif-pop .np-tabs button:hover { color: var(--text-strong); }
+  .notif-pop .np-tabs button.active { color: var(--text-strong); border-bottom-color: var(--brand); }
+  .notif-pop .np-tabs button .pill { margin-left: 4px; background: var(--surface-muted); color: var(--text-subtle); padding: 1px 6px; border-radius: 9999px; font: 500 11px/1 var(--font-sans); }
+  .notif-pop .np-tabs button.active .pill { background: var(--brand); color: #fff; }
+  .notif-pop .np-body { max-height: 520px; overflow-y: auto; }
+  .notif-pop .np-foot { padding: 10px 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .notif-pop .np-foot a { color: var(--brand-strong); font: 500 13px/1 var(--font-sans); }
+  .notif-pop .np-foot .pref { color: var(--text-muted); font: var(--type-body-sm); display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+
+  /* Notification row (reused from components.css .notif but tweaked) */
+
+  /* Toast stack */
+  .toast-stage {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    min-height: 380px;
+    overflow: hidden;
+  }
+  .toast-stack {
+    position: absolute; bottom: 24px; right: 24px;
+    display: grid; gap: 8px; width: 380px;
+  }
+
+  /* Inbox layout */
+  .inbox-shell {
+    display: grid;
+    grid-template-columns: 260px 1fr 320px;
+    min-height: 720px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: clip;
+  }
+  .inbox-rail {
+    background: var(--canvas);
+    border-right: 1px solid var(--border);
+    padding: 18px 12px;
+    display: grid; gap: 1px; align-content: start;
+  }
+  .inbox-rail .ri-h { font: var(--type-caption); color: var(--text-subtle); padding: 8px 12px 4px; }
+  .inbox-rail .ri {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    border-radius: 7px;
+    font: 500 13.5px/1 var(--font-sans);
+    color: var(--text-body); cursor: pointer;
+    border: none; background: transparent; text-align: left;
+  }
+  .inbox-rail .ri:hover { background: var(--surface-muted); }
+  .inbox-rail .ri.active { background: var(--brand-soft); color: var(--brand-strong); }
+  .inbox-rail .ri svg { width: 14px; height: 14px; color: var(--text-muted); }
+  .inbox-rail .ri.active svg { color: var(--brand); }
+  .inbox-rail .ri .ct { margin-left: auto; font: 500 11px/1 var(--font-mono); color: var(--text-subtle); padding: 2px 7px; background: var(--surface-muted); border-radius: 9999px; }
+  .inbox-rail .ri.active .ct { background: var(--brand); color: #fff; }
+
+  .inbox-list { display: flex; flex-direction: column; min-width: 0; }
+  .inbox-list-h {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  .inbox-list-h .l { display: flex; align-items: baseline; gap: 12px; }
+  .inbox-list-h .l h2 { font: var(--type-page-title); font-size: 18px; margin: 0; }
+  .inbox-list-h .l .ct { font: var(--type-body-sm); color: var(--text-muted); }
+  .inbox-list-h .r { display: flex; gap: 6px; align-items: center; }
+
+  .inbox-toolbar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 22px;
+    border-bottom: 1px solid var(--border-subtle);
+    font: var(--type-body-sm); color: var(--text-muted);
+  }
+  .inbox-toolbar .spacer { flex: 1; }
+
+  .inbox-rows { flex: 1; overflow-y: auto; }
+  .inbox-row {
+    display: grid;
+    grid-template-columns: 22px 36px 1fr auto 12px;
+    gap: 12px;
+    align-items: start;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--border-subtle);
+    cursor: pointer;
+  }
+  .inbox-row:hover { background: var(--surface-muted); }
+  .inbox-row.unread { background: var(--brand-soft); }
+  .inbox-row.unread:hover { background: var(--brand-soft); filter: brightness(0.97); }
+  .inbox-row.selected { background: var(--brand-soft); border-left: 2px solid var(--brand); padding-left: 20px; }
+  .inbox-row .checkbox { padding-top: 2px; }
+  .inbox-row .av { width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; font: 600 13px/1 var(--font-sans); }
+  .inbox-row .av.brand { background: var(--brand-soft); color: var(--brand-strong); }
+  .inbox-row .av.success { background: var(--tone-success-bg); color: var(--tone-success); }
+  .inbox-row .av.warn { background: var(--tone-warn-bg); color: var(--tone-warn); }
+  .inbox-row .av.danger { background: var(--tone-danger-bg); color: var(--tone-danger); }
+  .inbox-row .av.neutral { background: var(--surface-muted); color: var(--text-strong); }
+  .inbox-row .ttl { font: var(--type-label); color: var(--text-strong); }
+  .inbox-row .desc { font: var(--type-body-sm); color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+  .inbox-row .ctx { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .inbox-row .time { font: var(--type-caption); color: var(--text-subtle); white-space: nowrap; padding-top: 1px; }
+  .inbox-row .unread-dot { width: 8px; height: 8px; background: var(--brand); border-radius: 50%; margin-top: 8px; }
+
+  /* Detail rail */
+  .notif-detail {
+    background: var(--canvas);
+    border-left: 1px solid var(--border);
+    padding: 22px 22px;
+    overflow-y: auto;
+  }
+  .notif-detail .d-h { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .notif-detail .d-h .av { width: 36px; height: 36px; border-radius: 8px; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 13px/1 var(--font-sans); }
+  .notif-detail .d-h .who { font: var(--type-label); color: var(--text-strong); }
+  .notif-detail .d-h .when { font: var(--type-caption); color: var(--text-muted); margin-top: 2px; }
+  .notif-detail h3 { font: var(--type-section-title); margin: 4px 0 8px; }
+  .notif-detail p { font: var(--type-body-sm); color: var(--text-body); line-height: 1.6; margin: 0 0 12px; }
+  .notif-detail .field-list { display: grid; gap: 14px; padding: 14px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 16px 0; }
+  .notif-detail .field-list .row { display: grid; grid-template-columns: 110px 1fr; gap: 14px; font: var(--type-body-sm); }
+  .notif-detail .field-list .row .k { color: var(--text-muted); }
+  .notif-detail .field-list .row .v { color: var(--text-strong); font-family: var(--font-mono); }
+  .notif-detail .actions { display: flex; gap: 8px; }
+  .notif-detail .actions .btn { flex: 1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ N.01 · Notification popover ============ -->
+  <div class="section-label"><span class="num">N.01</span><h2>Notification popover</h2><span class="note">Bell-icon trigger · tabs · row list · footer link</span></div>
+
+  <div class="popover-stage">
+    <div class="header-bar">
+      <span class="t-section">Page header preview</span>
+      <div class="spacer"></div>
+      <div class="anchor">
+        <button class="ic-btn has-dot" data-icon="bell" aria-label="Notifications" style="position: relative;"></button>
+        <div class="notif-pop">
+          <div class="np-h">
+            <div class="ti">Notifications <span class="count">· 14 new</span></div>
+            <div class="actions">
+              <button class="ic-btn" data-icon="check" aria-label="Mark all read"></button>
+              <button class="ic-btn" data-icon="settings" aria-label="Settings"></button>
+            </div>
+          </div>
+          <div class="np-tabs">
+            <button class="active">All <span class="pill">14</span></button>
+            <button>Mentions <span class="pill">3</span></button>
+            <button>Approvals <span class="pill">4</span></button>
+            <button>System</button>
+          </div>
+          <div class="np-body">
+            <div class="notif unread">
+              <span class="n-av warn">!</span>
+              <div>
+                <div class="n-body"><strong>ledger_v3.csv</strong> finished mapping with <strong>90 anomalies</strong>. Review before committing.</div>
+              </div>
+              <div class="n-time">2m</div>
+              <span class="n-dot"></span>
+            </div>
+            <div class="notif unread">
+              <span class="n-av brand">JN</span>
+              <div>
+                <div class="n-body"><strong>Juma Nkosi</strong> requested your approval on journal <strong>JE-10927</strong> · $11,640.00</div>
+              </div>
+              <div class="n-time">8m</div>
+              <span class="n-dot"></span>
+            </div>
+            <div class="notif unread">
+              <span class="n-av success">✓</span>
+              <div>
+                <div class="n-body">Posting batch <strong>POST-0419</strong> committed · 198 events processed</div>
+              </div>
+              <div class="n-time">14m</div>
+              <span class="n-dot"></span>
+            </div>
+            <div class="notif">
+              <span class="n-av danger">×</span>
+              <div>
+                <div class="n-body"><strong>BAR-0123</strong> reconciliation failed: bank feed mismatch <strong>+$11,640.00</strong> at site 14.</div>
+              </div>
+              <div class="n-time">1h</div>
+            </div>
+            <div class="notif">
+              <span class="n-av neutral" style="background: var(--surface-muted); color: var(--text-strong);">AO</span>
+              <div>
+                <div class="n-body"><strong>Amara Obi</strong> mentioned you in <strong>JE-10920</strong> · "Can you confirm the FX rate before close?"</div>
+              </div>
+              <div class="n-time">2h</div>
+            </div>
+            <div class="notif">
+              <span class="n-av brand">CM</span>
+              <div>
+                <div class="n-body"><strong>Christopher Mutemeri</strong> was assigned 80.35 g for the week ending May 14.</div>
+              </div>
+              <div class="n-time">3h</div>
+            </div>
+          </div>
+          <div class="np-foot">
+            <a>View all in inbox →</a>
+            <span class="pref"><span data-icon="settings"></span>Notification settings</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="t-caption" style="padding: 16px 0; max-width: 60ch;">The popover opens beneath the bell icon. Unread items use the brand-tinted background; a small dot trails. Mark-all and settings live at the top right of the popover. The footer ferries the user to the full inbox or to per-channel preferences.</p>
+  </div>
+
+  <!-- ============ N.02 · Toast stack ============ -->
+  <div class="section-label"><span class="num">N.02</span><h2>Toast stack</h2><span class="note">Action confirmations — bottom-right, auto-dismiss</span></div>
+
+  <div class="toast-stage">
+    <p class="t-caption" style="max-width: 60ch;">Toasts sit in the bottom-right of the viewport, stack vertically (newest on top), and auto-dismiss after 5 seconds — except for danger toasts which stay until acknowledged.</p>
+
+    <div class="toast-stack">
+      <div class="toast success">
+        <span data-icon="check"></span>
+        <div>
+          <div class="t-title">Mappings confirmed</div>
+          <div class="t-body">All 17 leaders mapped. The batch is ready to commit.</div>
+        </div>
+        <button class="x" data-icon="x" aria-label="Dismiss"></button>
+      </div>
+      <div class="toast">
+        <span data-icon="info"></span>
+        <div>
+          <div class="t-title">Saved as draft</div>
+          <div class="t-body">JE-10927 will appear under My drafts until submitted.</div>
+        </div>
+        <button class="x" data-icon="x" aria-label="Dismiss"></button>
+      </div>
+      <div class="toast danger">
+        <span data-icon="x"></span>
+        <div>
+          <div class="t-title">Reconciliation failed</div>
+          <div class="t-body">Bank feed mismatch at site 14. <strong>Open incident →</strong></div>
+        </div>
+        <button class="x" data-icon="x" aria-label="Dismiss"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ N.03 · Inbox / Notification centre ============ -->
+  <div class="section-label"><span class="num">N.03</span><h2>Notification centre — inbox</h2><span class="note">Three-pane · category rail · list · detail</span></div>
+
+  <div class="inbox-shell">
+    <!-- Rail -->
+    <aside class="inbox-rail">
+      <div class="ri-h">Inbox</div>
+      <button class="ri active"><span data-icon="bell"></span>All <span class="ct">14</span></button>
+      <button class="ri"><span data-icon="user"></span>Mentions <span class="ct">3</span></button>
+      <button class="ri"><span data-icon="check"></span>Approvals <span class="ct">4</span></button>
+      <button class="ri"><span data-icon="info"></span>System <span class="ct">7</span></button>
+
+      <div class="ri-h" style="margin-top: 12px;">Channels</div>
+      <button class="ri"><span data-icon="receipt"></span>Journals</button>
+      <button class="ri"><span data-icon="upload"></span>Imports</button>
+      <button class="ri"><span data-icon="coins"></span>Reconciliation</button>
+      <button class="ri"><span data-icon="warehouse"></span>Production</button>
+      <button class="ri"><span data-icon="user"></span>People</button>
+
+      <div class="ri-h" style="margin-top: 12px;">Filters</div>
+      <button class="ri"><span data-icon="eye"></span>Unread only</button>
+      <button class="ri"><span data-icon="check"></span>Following</button>
+      <button class="ri"><span data-icon="lock"></span>Archived</button>
+    </aside>
+
+    <!-- List -->
+    <div class="inbox-list">
+      <div class="inbox-list-h">
+        <div class="l">
+          <h2>All</h2>
+          <span class="ct">14 new · 86 total</span>
+        </div>
+        <div class="r">
+          <button class="btn btn-ghost btn-sm"><span data-icon="check"></span>Mark all read</button>
+          <button class="btn btn-secondary btn-sm">Filter <span data-icon="chevron"></span></button>
+        </div>
+      </div>
+      <div class="inbox-toolbar">
+        <span>Showing today + yesterday ·</span>
+        <button class="fchip active" style="height: 24px; padding: 0 10px; font-size: 11px;">Today</button>
+        <button class="fchip" style="height: 24px; padding: 0 10px; font-size: 11px;">This week</button>
+        <button class="fchip" style="height: 24px; padding: 0 10px; font-size: 11px;">All time</button>
+        <div class="spacer"></div>
+        <span class="t-caption">Sort: newest first</span>
+      </div>
+
+      <div class="inbox-rows">
+        <div class="inbox-row unread selected">
+          <span class="checkbox"><input type="checkbox" class="check"></span>
+          <span class="av warn">!</span>
+          <div>
+            <div class="ttl">ledger_v3.csv finished mapping with 90 anomalies</div>
+            <div class="desc">The import is ready for review. Most flagged rows have missing diesel values or unmapped leaders. Commit after resolving.</div>
+            <div class="ctx">
+              <span class="badge badge-neutral">Imports</span>
+              <span class="badge badge-info">Gokwe</span>
+              <span class="t-caption" style="color: var(--text-muted);">·</span>
+              <span class="t-caption" style="color: var(--text-muted);">ledger_v3.csv</span>
+            </div>
+          </div>
+          <div class="time">2m ago</div>
+          <span class="unread-dot"></span>
+        </div>
+
+        <div class="inbox-row unread">
+          <span class="checkbox"><input type="checkbox" class="check"></span>
+          <span class="av brand">JN</span>
+          <div>
+            <div class="ttl">Juma Nkosi requested your approval on JE-10927</div>
+            <div class="desc">Adjusting entry to clear site-14 cash variance. DR 1010 · CR 2990 · $11,640.00.</div>
+            <div class="ctx">
+              <span class="badge badge-neutral">Approvals</span>
+              <span class="badge badge-clay">JE-10927</span>
+              <span class="t-caption" style="color: var(--text-muted);">·</span>
+              <span class="t-caption" style="color: var(--text-muted);">$11,640.00</span>
+            </div>
+          </div>
+          <div class="time">8m ago</div>
+          <span class="unread-dot"></span>
+        </div>
+
+        <div class="inbox-row unread">
+          <span class="checkbox"><input type="checkbox" class="check"></span>
+          <span class="av success">✓</span>
+          <div>
+            <div class="ttl">Posting batch POST-0419 committed · 198 events processed</div>
+            <div class="desc">All Gold Shift Expense and Worker Share events replayed successfully. Zero failures.</div>
+            <div class="ctx">
+              <span class="badge badge-neutral">Posting</span>
+              <span class="badge badge-success">198 / 198</span>
+            </div>
+          </div>
+          <div class="time">14m ago</div>
+          <span class="unread-dot"></span>
+        </div>
+
+        <div class="inbox-row unread">
+          <span class="checkbox"><input type="checkbox" class="check"></span>
+          <span class="av danger">×</span>
+          <div>
+            <div class="ttl">Reconciliation failed — site 14 bank feed mismatch</div>
+            <div class="desc">Cash over by +$11,640.00 between POS daily total and bank feed. Tolerance ±0.25% exceeded.</div>
+            <div class="ctx">
+              <span class="badge badge-danger">High severity</span>
+              <span class="badge badge-info">Site 14</span>
+              <span class="t-caption" style="color: var(--text-muted);">·</span>
+              <span class="t-caption" style="color: var(--text-muted);">SLA 2h 40m left</span>
+            </div>
+          </div>
+          <div class="time">1h ago</div>
+          <span class="unread-dot"></span>
+        </div>
+
+        <div class="inbox-row">
+          <span class="checkbox"><input type="checkbox" class="check"></span>
+          <span class="av neutral">AO</span>
+          <div>
+            <div class="ttl">Amara Obi mentioned you in JE-10920</div>
+            <div class="desc">"Can you confirm the FX rate before close? The bank feed shows 1.18 — our posting used 1.17."</div>
+            <div class="ctx">
+              <span class="badge badge-neutral">Mention</span>
+              <span class="badge badge-clay">JE-10920</span>
+            </div>
+          </div>
+          <div class="time">2h ago</div>
+        </div>
+
+        <div class="inbox-row">
+          <span class="checkbox"><input type="checkbox" class="check"></span>
+          <span class="av brand">CM</span>
+          <div>
+            <div class="ttl">Christopher Mutemeri was assigned 80.35 g for the week ending May 14</div>
+            <div class="desc">Allocation finalised after shift close. Worker share: $6,428.00.</div>
+            <div class="ctx">
+              <span class="badge badge-neutral">Production</span>
+              <span class="badge badge-success">Finalised</span>
+            </div>
+          </div>
+          <div class="time">3h ago</div>
+        </div>
+
+        <div class="inbox-row">
+          <span class="checkbox"><input type="checkbox" class="check"></span>
+          <span class="av neutral">SU</span>
+          <div>
+            <div class="ttl">Superuser Developer rotated the platform API key</div>
+            <div class="desc">All existing API tokens remain valid. New integrations should use the rotated key.</div>
+            <div class="ctx"><span class="badge badge-neutral">System</span></div>
+          </div>
+          <div class="time">5h ago</div>
+        </div>
+
+        <div class="inbox-row">
+          <span class="checkbox"><input type="checkbox" class="check"></span>
+          <span class="av warn">!</span>
+          <div>
+            <div class="ttl">Cutoff enforcement in 1h 18m</div>
+            <div class="desc">All operator entries must be posted by 10:00 local. 4 open, 2 assigned.</div>
+            <div class="ctx"><span class="badge badge-warn">Deadline</span></div>
+          </div>
+          <div class="time">Yesterday</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail rail -->
+    <aside class="notif-detail">
+      <div class="d-h">
+        <span class="av">CL</span>
+        <div>
+          <div class="who">Corelith</div>
+          <div class="when">15 May 2026 · 02:23 UTC</div>
+        </div>
+      </div>
+      <h3>ledger_v3.csv finished mapping with 90 anomalies</h3>
+      <p>The import has finished mapping rows against the leader directory and the chart of accounts. 12 rows posted cleanly; 90 are flagged for review. None failed outright.</p>
+      <p>Most flagged rows have either missing diesel values or unmapped leaders. The mapping rail in the import detail shows which leader needs attention. Commit the batch after you've resolved the flags or marked them as expected.</p>
+
+      <div class="field-list">
+        <div class="row"><span class="k">Import</span><span class="v">ledger_v3.csv</span></div>
+        <div class="row"><span class="k">Site</span><span class="v">GOKWE_MAIN_SITE</span></div>
+        <div class="row"><span class="k">Rows</span><span class="v">94 (12 / 90 / 0)</span></div>
+        <div class="row"><span class="k">Owner</span><span class="v">Superuser Developer</span></div>
+        <div class="row"><span class="k">Started</span><span class="v">23:31:54 UTC</span></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary btn-block" style="flex: 1;">Open import</button>
+        <button class="btn btn-secondary btn-icon" aria-label="Snooze"><span data-icon="clock"></span></button>
+        <button class="btn btn-secondary btn-icon" aria-label="Archive"><span data-icon="lock"></span></button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ============ N.04 · Notification settings ============ -->
+  <div class="section-label"><span class="num">N.04</span><h2>Notification preferences</h2><span class="note">Per-channel switches · digest cadence</span></div>
+
+  <div class="frame" style="background: var(--surface);">
+    <div style="padding: 28px 32px; display: grid; gap: 24px; max-width: 880px;">
+      <div>
+        <h2 style="font: var(--type-section-title); margin: 0 0 4px;">Notification preferences</h2>
+        <p class="t-body-sm t-muted" style="margin: 0;">Choose where each kind of notification reaches you. In-app is always on.</p>
+      </div>
+
+      <table class="dtable">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th style="text-align: center;">In-app</th>
+            <th style="text-align: center;">Email</th>
+            <th style="text-align: center;">Push</th>
+            <th style="text-align: center;">Slack</th>
+            <th style="text-align: center;">Digest</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong style="color: var(--text-strong);">Approvals requested of you</strong><div class="t-caption">Journal entries, batches, payouts</div></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch" checked disabled></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch" checked></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch" checked></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch"></td>
+            <td style="text-align: center;"><select class="select" style="height: 28px; padding: 0 8px;"><option>Off</option><option>Daily</option></select></td>
+          </tr>
+          <tr>
+            <td><strong style="color: var(--text-strong);">Mentions</strong><div class="t-caption">When someone @s you in a comment</div></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch" checked disabled></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch" checked></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch"></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch" checked></td>
+            <td style="text-align: center;"><select class="select" style="height: 28px; padding: 0 8px;"><option>Off</option></select></td>
+          </tr>
+          <tr>
+            <td><strong style="color: var(--text-strong);">Reconciliation exceptions</strong><div class="t-caption">Variances exceeding policy tolerance</div></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch" checked disabled></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch" checked></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch" checked></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch" checked></td>
+            <td style="text-align: center;"><select class="select" style="height: 28px; padding: 0 8px;"><option>Real-time</option></select></td>
+          </tr>
+          <tr>
+            <td><strong style="color: var(--text-strong);">Import results</strong><div class="t-caption">CSV uploads, posting batches</div></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch" checked disabled></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch"></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch"></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch"></td>
+            <td style="text-align: center;"><select class="select" style="height: 28px; padding: 0 8px;"><option>Daily</option></select></td>
+          </tr>
+          <tr>
+            <td><strong style="color: var(--text-strong);">Production milestones</strong><div class="t-caption">Shift outputs, allocations, top earners</div></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch" checked disabled></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch"></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch"></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch"></td>
+            <td style="text-align: center;"><select class="select" style="height: 28px; padding: 0 8px;"><option>Weekly</option></select></td>
+          </tr>
+          <tr>
+            <td><strong style="color: var(--text-strong);">System &amp; security</strong><div class="t-caption">Logins, key rotations, downtime</div></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch" checked disabled></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch" checked></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch"></td>
+            <td style="text-align: center;"><input type="checkbox" class="switch"></td>
+            <td style="text-align: center;"><select class="select" style="height: 28px; padding: 0 8px;"><option>Off</option></select></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

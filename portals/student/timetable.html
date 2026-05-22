@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" /><title>Timetable · Student portal · Huchu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<style>
+  body { background: var(--gray-100); margin: 0; padding: 24px; min-height: 100vh; display: grid; place-items: center; }
+  .tab-frame { width: 1180px; height: 820px; border-radius: 28px; background: #0F1115; padding: 14px; box-shadow: 0 30px 60px -20px rgba(22,24,29,0.25), 0 0 0 1px rgba(22,24,29,0.08); }
+  .tab-frame .screen { width: 100%; height: 100%; border-radius: 16px; overflow: hidden; background: var(--canvas); display: flex; }
+
+  .stu-side { width: 240px; background: var(--canvas); border-right: 1px solid var(--border); padding: 18px 14px; display: flex; flex-direction: column; gap: 4px; flex: none; }
+  .stu-side .brand { display: inline-flex; align-items: center; gap: 10px; padding: 6px 8px; font: 600 16px/1 var(--font-sans); color: var(--text-strong); margin-bottom: 14px; }
+  .stu-side .brand .mark { width: 22px; height: 22px; color: #FB923C; }
+  .stu-side .ident { padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 14px; display: flex; align-items: center; gap: 12px; }
+  .stu-side .ident .av { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #FFE4D3, #FB923C); color: #7C2D12; display: grid; place-items: center; font: 600 14px/1 var(--font-sans); }
+  .stu-side .ident .nm { font: 600 14px/1.3 var(--font-sans); color: var(--text-strong); }
+  .stu-side .ident .sb { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .stu-side nav a { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 7px; font: 500 13.5px/1 var(--font-sans); color: var(--text-body); text-decoration: none; }
+  .stu-side nav a:hover { background: var(--surface-muted); }
+  .stu-side nav a.active { background: #FFE4D3; color: #7C2D12; }
+  .stu-side nav a svg { width: 16px; height: 16px; color: var(--text-muted); }
+  .stu-side nav a.active svg { color: #FB923C; }
+  .stu-side .sh { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); padding: 14px 10px 8px; }
+  .stu-side .term { margin-top: auto; padding: 12px 10px 0; border-top: 1px solid var(--border); }
+  .stu-side .term .lbl { font: 11px/1 var(--font-sans); color: var(--text-subtle); letter-spacing: 0.08em; text-transform: uppercase; }
+  .stu-side .term .nm { font: 500 13px/1.3 var(--font-sans); color: var(--text-strong); margin-top: 4px; }
+  .stu-side .term .progress { height: 6px; background: var(--surface-muted); border-radius: 9999px; margin-top: 8px; overflow: hidden; }
+  .stu-side .term .progress > span { display: block; height: 100%; background: #FB923C; border-radius: inherit; }
+
+  .stu-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .stu-top { padding: 18px 28px 14px; display: flex; align-items: center; gap: 16px; background: var(--surface); border-bottom: 1px solid var(--border); }
+  .stu-top h1 { font: 700 22px/1.2 var(--font-sans); letter-spacing: -0.015em; color: var(--text-strong); margin: 0; flex: 1; }
+  .stu-top .week-nav { display: inline-flex; align-items: center; gap: 8px; padding: 4px 6px; background: var(--surface-muted); border-radius: 8px; }
+  .stu-top .week-nav button { width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; color: var(--text-strong); }
+  .stu-top .week-nav button:hover { background: var(--surface); }
+  .stu-top .week-nav .lbl { font: 500 13px/1 var(--font-sans); color: var(--text-strong); padding: 0 8px; }
+  .stu-top .actions { display: inline-flex; gap: 8px; }
+
+  .tt-grid { flex: 1; overflow: auto; padding: 18px 28px; }
+  .tt { display: grid; grid-template-columns: 64px repeat(5, 1fr); gap: 0; min-width: 700px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  .tt-head { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .tt-head.time { background: var(--surface-muted); }
+  .tt-head .day { font: 600 14px/1 var(--font-sans); color: var(--text-strong); }
+  .tt-head .date { font: 12px/1 var(--font-mono); color: var(--text-muted); }
+  .tt-head .today { font: 500 10px/1 var(--font-sans); color: var(--brand); margin-top: 4px; }
+
+  .tt-time { padding: 8px 8px 8px 12px; background: var(--surface-muted); border-right: 1px solid var(--border); font: 500 11px/1 var(--font-mono); color: var(--text-muted); display: flex; align-items: flex-start; padding-top: 12px; }
+  .tt-cell { padding: 8px; border-right: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); min-height: 80px; }
+  .tt-cell:nth-child(5n+1) { border-right: 1px solid var(--border-subtle); }
+  .tt-cell.today { background: var(--brand-50); }
+  .tt-cell.break { background: var(--surface-muted); }
+  .tt-cell.break .lesson { background: transparent; border: 1px dashed var(--border-strong); }
+  .tt-cell.break .lesson .nm { color: var(--text-muted); font-weight: 500; }
+
+  .lesson { height: 100%; padding: 8px 10px; border-radius: 8px; border-left: 3px solid var(--brand); background: var(--brand-soft); display: flex; flex-direction: column; gap: 4px; }
+  .lesson .nm { font: 600 13px/1.3 var(--font-sans); color: var(--text-strong); }
+  .lesson .sb { font: 11px/1.3 var(--font-sans); color: var(--text-muted); }
+  .lesson .room { font: 500 11px/1 var(--font-mono); color: var(--text-subtle); margin-top: auto; }
+  .lesson.s-maths   { border-color: #0B5DF0; background: #DDEAFE; }
+  .lesson.s-english { border-color: #C026D3; background: #FAE8FF; }
+  .lesson.s-science { border-color: #16A34A; background: #DCFCE7; }
+  .lesson.s-history { border-color: #EA580C; background: #FFEDD5; }
+  .lesson.s-shona   { border-color: #DC2626; background: #FEE2E2; }
+  .lesson.s-art     { border-color: #DB2777; background: #FCE7F3; }
+  .lesson.s-sport   { border-color: #0891B2; background: #CFFAFE; }
+  .lesson.s-comp    { border-color: #4338CA; background: #E0E7FF; }
+  .lesson.s-bus     { border-color: #65A30D; background: #ECFCCB; }
+
+  .lesson .test { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; background: #fff; border-radius: 9999px; font: 500 10px/1 var(--font-sans); color: var(--tone-danger); margin-top: 2px; align-self: flex-start; }
+
+  /* Below grid */
+  .next-up { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 18px; margin-top: 18px; display: flex; align-items: center; gap: 16px; }
+  .next-up .ic { width: 36px; height: 36px; border-radius: 8px; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; }
+  .next-up .nm { font: 600 14px/1.3 var(--font-sans); color: var(--text-strong); }
+  .next-up .sb { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .next-up .arrow { margin-left: auto; color: var(--text-subtle); }
+</style>
+</head>
+<body>
+
+<div class="tab-frame">
+<div class="screen">
+
+<aside class="stu-side">
+  <a class="brand"><span class="mark" data-icon="corelith"></span> Huchu</a>
+  <div class="ident">
+    <span class="av">TM</span>
+    <div>
+      <div class="nm">Tariro Moyo</div>
+      <div class="sb">Form 4 Faraday</div>
+    </div>
+  </div>
+  <nav>
+    <a href="#" class="active"><span data-icon="calendar"></span> Timetable</a>
+    <a href="#"><span data-icon="chart"></span> Results &amp; marks</a>
+    <a href="#"><span data-icon="check"></span> Attendance</a>
+    <a href="#"><span data-icon="bell"></span> Notices</a>
+    <a href="#"><span data-icon="book"></span> Library</a>
+  </nav>
+  <div class="sh">Clubs</div>
+  <nav>
+    <a href="#"><span data-icon="target"></span> Athletics team</a>
+    <a href="#"><span data-icon="star"></span> Drama society</a>
+  </nav>
+  <div class="term">
+    <div class="lbl">Spring term · Week 6 of 13</div>
+    <div class="nm">02 May → 30 July 2026</div>
+    <div class="progress"><span style="width: 46%;"></span></div>
+  </div>
+</aside>
+
+<main class="stu-main">
+  <header class="stu-top">
+    <h1>My timetable</h1>
+    <div class="week-nav">
+      <button><span data-icon="chleft" data-icon-size="14"></span></button>
+      <span class="lbl">Week 6 · 1 – 5 June</span>
+      <button><span data-icon="chright" data-icon-size="14"></span></button>
+    </div>
+    <div class="actions">
+      <button class="btn btn-ghost"><span data-icon="print" data-icon-size="14"></span> Print</button>
+      <button class="btn btn-secondary"><span data-icon="download" data-icon-size="14"></span> Subscribe (.ics)</button>
+    </div>
+  </header>
+
+  <div class="tt-grid">
+    <div class="tt">
+      <div class="tt-head time"></div>
+      <div class="tt-head"><div class="day">Mon</div><div class="date">01 Jun</div></div>
+      <div class="tt-head"><div class="day">Tue</div><div class="date">02 Jun</div></div>
+      <div class="tt-head" style="background: var(--brand-50);"><div class="day" style="color: var(--brand-strong);">Wed</div><div class="date" style="color: var(--brand-strong);">03 Jun</div><div class="today">Today</div></div>
+      <div class="tt-head"><div class="day">Thu</div><div class="date">04 Jun</div></div>
+      <div class="tt-head"><div class="day">Fri</div><div class="date">05 Jun</div></div>
+
+      <!-- Period 1 -->
+      <div class="tt-time">07:30<br>—<br>08:25</div>
+      <div class="tt-cell"><div class="lesson s-maths"><div class="nm">Mathematics</div><div class="sb">Ms Sibanda</div><div class="room">Room A12</div></div></div>
+      <div class="tt-cell"><div class="lesson s-english"><div class="nm">English</div><div class="sb">Mr Ndlovu</div><div class="room">Room B04</div></div></div>
+      <div class="tt-cell today"><div class="lesson s-science"><div class="nm">Biology</div><div class="sb">Dr Mawere</div><div class="room">Lab 3</div><span class="test">Quiz today</span></div></div>
+      <div class="tt-cell"><div class="lesson s-history"><div class="nm">History</div><div class="sb">Mr Chigumira</div><div class="room">Room A04</div></div></div>
+      <div class="tt-cell"><div class="lesson s-maths"><div class="nm">Mathematics</div><div class="sb">Ms Sibanda</div><div class="room">Room A12</div></div></div>
+
+      <!-- Period 2 -->
+      <div class="tt-time">08:30<br>—<br>09:25</div>
+      <div class="tt-cell"><div class="lesson s-english"><div class="nm">English</div><div class="sb">Mr Ndlovu</div><div class="room">Room B04</div></div></div>
+      <div class="tt-cell"><div class="lesson s-maths"><div class="nm">Mathematics</div><div class="sb">Ms Sibanda</div><div class="room">Room A12</div></div></div>
+      <div class="tt-cell today"><div class="lesson s-shona"><div class="nm">Shona</div><div class="sb">Mrs Mlilo</div><div class="room">Room A07</div></div></div>
+      <div class="tt-cell"><div class="lesson s-bus"><div class="nm">Business</div><div class="sb">Mr Phiri</div><div class="room">Room C02</div></div></div>
+      <div class="tt-cell"><div class="lesson s-comp"><div class="nm">Computer Science</div><div class="sb">Mrs Mahaka</div><div class="room">IT Lab</div></div></div>
+
+      <!-- Break -->
+      <div class="tt-time" style="color: var(--text-subtle);">09:25<br>—<br>09:45</div>
+      <div class="tt-cell break"><div class="lesson"><div class="nm">Break</div><div class="room">20 min</div></div></div>
+      <div class="tt-cell break"><div class="lesson"><div class="nm">Break</div><div class="room">20 min</div></div></div>
+      <div class="tt-cell break today"><div class="lesson"><div class="nm">Break</div><div class="room">20 min</div></div></div>
+      <div class="tt-cell break"><div class="lesson"><div class="nm">Break</div><div class="room">20 min</div></div></div>
+      <div class="tt-cell break"><div class="lesson"><div class="nm">Break</div><div class="room">20 min</div></div></div>
+
+      <!-- Period 3 -->
+      <div class="tt-time">09:45<br>—<br>10:40</div>
+      <div class="tt-cell"><div class="lesson s-science"><div class="nm">Physics</div><div class="sb">Dr Mawere</div><div class="room">Lab 1</div></div></div>
+      <div class="tt-cell"><div class="lesson s-history"><div class="nm">History</div><div class="sb">Mr Chigumira</div><div class="room">Room A04</div></div></div>
+      <div class="tt-cell today"><div class="lesson s-maths"><div class="nm">Mathematics</div><div class="sb">Ms Sibanda</div><div class="room">Room A12</div></div></div>
+      <div class="tt-cell"><div class="lesson s-english"><div class="nm">English</div><div class="sb">Mr Ndlovu</div><div class="room">Room B04</div></div></div>
+      <div class="tt-cell"><div class="lesson s-shona"><div class="nm">Shona</div><div class="sb">Mrs Mlilo</div><div class="room">Room A07</div></div></div>
+
+      <!-- Period 4 -->
+      <div class="tt-time">10:45<br>—<br>11:40</div>
+      <div class="tt-cell"><div class="lesson s-art"><div class="nm">Art</div><div class="sb">Mrs Chivasa</div><div class="room">Studio</div></div></div>
+      <div class="tt-cell"><div class="lesson s-comp"><div class="nm">Computer Science</div><div class="sb">Mrs Mahaka</div><div class="room">IT Lab</div></div></div>
+      <div class="tt-cell today"><div class="lesson s-english"><div class="nm">English</div><div class="sb">Mr Ndlovu</div><div class="room">Room B04</div></div></div>
+      <div class="tt-cell"><div class="lesson s-maths"><div class="nm">Mathematics</div><div class="sb">Ms Sibanda</div><div class="room">Room A12</div></div></div>
+      <div class="tt-cell"><div class="lesson s-art"><div class="nm">Art</div><div class="sb">Mrs Chivasa</div><div class="room">Studio</div></div></div>
+
+      <!-- Lunch -->
+      <div class="tt-time" style="color: var(--text-subtle);">11:40<br>—<br>12:30</div>
+      <div class="tt-cell break"><div class="lesson"><div class="nm">Lunch</div><div class="room">50 min</div></div></div>
+      <div class="tt-cell break"><div class="lesson"><div class="nm">Lunch</div><div class="room">50 min</div></div></div>
+      <div class="tt-cell break today"><div class="lesson"><div class="nm">Lunch</div><div class="room">50 min</div></div></div>
+      <div class="tt-cell break"><div class="lesson"><div class="nm">Lunch</div><div class="room">50 min</div></div></div>
+      <div class="tt-cell break"><div class="lesson"><div class="nm">Lunch</div><div class="room">50 min</div></div></div>
+
+      <!-- Period 5 -->
+      <div class="tt-time">12:30<br>—<br>13:25</div>
+      <div class="tt-cell"><div class="lesson s-sport"><div class="nm">Sport — athletics</div><div class="sb">Coach Banda</div><div class="room">Track</div></div></div>
+      <div class="tt-cell"><div class="lesson s-bus"><div class="nm">Business</div><div class="sb">Mr Phiri</div><div class="room">Room C02</div></div></div>
+      <div class="tt-cell today"><div class="lesson s-sport"><div class="nm">Sport — athletics</div><div class="sb">Coach Banda</div><div class="room">Track</div></div></div>
+      <div class="tt-cell"><div class="lesson s-comp"><div class="nm">Computer Science</div><div class="sb">Mrs Mahaka</div><div class="room">IT Lab</div></div></div>
+      <div class="tt-cell"><div class="lesson s-history"><div class="nm">History</div><div class="sb">Mr Chigumira</div><div class="room">Room A04</div></div></div>
+
+      <!-- Period 6 -->
+      <div class="tt-time">13:30<br>—<br>14:25</div>
+      <div class="tt-cell"><div class="lesson s-shona"><div class="nm">Shona</div><div class="sb">Mrs Mlilo</div><div class="room">Room A07</div></div></div>
+      <div class="tt-cell"><div class="lesson s-science"><div class="nm">Chemistry</div><div class="sb">Mr Tafara</div><div class="room">Lab 2</div></div></div>
+      <div class="tt-cell today"><div class="lesson s-bus"><div class="nm">Business</div><div class="sb">Mr Phiri</div><div class="room">Room C02</div></div></div>
+      <div class="tt-cell"><div class="lesson s-science"><div class="nm">Chemistry</div><div class="sb">Mr Tafara</div><div class="room">Lab 2</div></div></div>
+      <div class="tt-cell"><div class="lesson s-english"><div class="nm">English</div><div class="sb">Mr Ndlovu</div><div class="room">Room B04</div></div></div>
+    </div>
+
+    <div class="next-up">
+      <span class="ic"><span data-icon="clock" data-icon-size="18"></span></span>
+      <div>
+        <div class="nm">Up next · Biology with Dr Mawere</div>
+        <div class="sb">Wednesday · period 1 · Lab 3 · quiz on cell respiration · in 14 minutes</div>
+      </div>
+      <span class="arrow" data-icon="chright"></span>
+    </div>
+  </div>
+</main>
+
+</div>
+</div>
+
+</body>
+</html>

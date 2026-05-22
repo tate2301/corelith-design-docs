@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Corelith — Posting Studio kit</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<script src="../icons.js" defer></script>
+<script src="../kit-nav.js" defer></script>
+<style>
+  body { background: var(--canvas); padding: 24px; }
+  .wrap { max-width: 1480px; margin: 0 auto; display: grid; gap: 16px; }
+  .kit-head { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px 32px; margin-bottom: 12px; }
+  .kit-head h1 { font: var(--type-page-title); margin: 6px 0 8px; }
+  .kit-head p { color: var(--text-muted); font: var(--type-body); margin: 0; max-width: 70ch; }
+
+  .section-label { display: flex; align-items: baseline; gap: 12px; padding: 16px 4px 8px; }
+  .section-label h2 { font: var(--type-section-title); margin: 0; }
+  .section-label .num { font: var(--type-mono); color: var(--text-subtle); }
+  .section-label .note { color: var(--text-muted); font: var(--type-caption); margin-left: auto; }
+
+  .frame { border: 1px solid var(--border); border-radius: 14px; overflow: clip; background: var(--canvas); }
+
+  /* ===== App shell shared ===== */
+  .erp-shell { display: grid; grid-template-columns: 252px 1fr; min-height: 920px; }
+  .erp-sidebar { background: var(--canvas); border-right: 1px solid var(--border); padding: 16px 12px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .erp-org-switcher { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+  .erp-org-switcher .mark { width: 26px; height: 26px; background: var(--ink); color: #fff; border-radius: 6px; display: grid; place-items: center; }
+  .erp-org-switcher .mark svg { width: 16px; height: 16px; color: var(--brand-300); }
+  .erp-org-switcher .name { font: 600 14px/1 var(--font-sans); color: var(--text-strong); flex: 1; }
+  .erp-org-switcher .chev { color: var(--text-subtle); }
+  .erp-section-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 10px 8px; font: var(--type-caption); color: var(--text-subtle); }
+  .erp-nav { display: grid; gap: 1px; }
+  .erp-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; font: 500 13.5px/1 var(--font-sans); color: var(--text-body); cursor: pointer; border: none; background: transparent; text-align: left; }
+  .erp-item:hover { background: var(--surface-muted); }
+  .erp-item.active { background: var(--brand-soft); color: var(--brand-strong); }
+  .erp-item svg { width: 16px; height: 16px; color: var(--text-muted); flex: none; }
+  .erp-item.active svg { color: var(--brand); }
+  .erp-item.has-children::after { content: ""; width: 6px; height: 6px; border-right: 1.5px solid var(--text-subtle); border-bottom: 1.5px solid var(--text-subtle); transform: rotate(-45deg); margin-left: auto; }
+  .erp-item.expanded.has-children::after { transform: rotate(45deg); }
+  .erp-sub { padding-left: 26px; display: grid; gap: 1px; }
+  .erp-sub .erp-item { font-size: 13px; padding: 6px 10px; }
+  .erp-sub .erp-item.active { background: var(--brand-soft); color: var(--brand-strong); }
+
+  .erp-main { display: flex; flex-direction: column; min-width: 0; }
+  .clean-toolbar { display: flex; align-items: center; gap: 10px; padding: 12px 24px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .clean-toolbar .breadcrumb { display: inline-flex; align-items: center; gap: 8px; font: var(--type-body); color: var(--text-muted); }
+  .clean-toolbar .breadcrumb a { color: inherit; text-decoration: none; }
+  .clean-toolbar .breadcrumb a:last-child { color: var(--text-strong); font-weight: 500; }
+  .clean-toolbar .breadcrumb .sep { color: var(--text-subtle); display: inline-flex; }
+  .clean-toolbar .spacer { flex: 1; }
+  .clean-toolbar .ic-btn { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); border-radius: 6px; background: transparent; border: none; cursor: pointer; position: relative; }
+  .clean-toolbar .ic-btn:hover { background: var(--surface-muted); color: var(--text-strong); }
+  .clean-toolbar .ic-btn.has-dot::after { content: ""; position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--brand); border: 1.5px solid var(--surface); }
+
+  .erp-page { padding: 24px 32px 40px; display: grid; gap: 20px; min-width: 0; }
+  .erp-page-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+  .erp-page-h h1 { font: var(--type-display-sm); font-size: 28px; margin: 0; }
+  .erp-page-h p { font: var(--type-body); color: var(--text-muted); margin: 6px 0 0; max-width: 60ch; }
+
+  /* ===== Posting Studio shell ===== */
+  .studio { display: grid; grid-template-columns: 220px 220px 1fr; gap: 24px; padding: 4px 0; align-items: flex-start; }
+  .studio-rail { display: grid; gap: 1px; align-content: start; }
+  .studio-rail .ri { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; font: 500 13px/1 var(--font-sans); color: var(--text-body); cursor: pointer; border: none; background: transparent; text-align: left; }
+  .studio-rail .ri:hover { background: var(--surface-muted); }
+  .studio-rail .ri.active { background: var(--brand-soft); color: var(--brand-strong); }
+  .studio-rail .ri svg { width: 14px; height: 14px; color: var(--text-muted); }
+  .studio-rail .ri.active svg { color: var(--brand); }
+  .studio-rail .ri .ct { margin-left: auto; font: 500 11px/1 var(--font-mono); color: var(--text-subtle); padding: 2px 7px; background: var(--surface-muted); border-radius: 9999px; }
+  .studio-rail .ri.danger .ct { background: var(--tone-danger-bg); color: var(--tone-danger); }
+  .studio-views-label { font: var(--type-caption); color: var(--text-subtle); padding: 6px 12px 8px; }
+
+  .studio-content { min-width: 0; }
+  .studio-content-h { display: flex; align-items: flex-start; justify-content: space-between; padding: 0 0 16px; gap: 16px; }
+  .studio-content-h .ti { font: var(--type-section-title); }
+  .studio-content-h .sub { font: var(--type-body-sm); color: var(--text-muted); margin-top: 4px; max-width: 60ch; }
+
+  /* Rule library — rule cards */
+  .rule-list { display: grid; gap: 12px; }
+  .rule-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 20px;
+    display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: start;
+  }
+  .rule-card .rl { display: grid; gap: 8px; min-width: 0; }
+  .rule-card .rl .h { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .rule-card .rl .h .nm { font: var(--type-label); color: var(--text-strong); }
+  .rule-card .rl .h .id { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+  .rule-card .formula {
+    background: var(--surface-muted); border: 1px solid var(--border-subtle);
+    border-radius: 8px; padding: 10px 12px;
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-strong);
+    overflow-x: auto; white-space: nowrap;
+  }
+  .rule-card .formula .k { color: var(--brand-strong); font-weight: 500; }
+  .rule-card .formula .n { color: var(--tone-success); }
+  .rule-card .formula .s { color: var(--text-muted); }
+  .rule-card .rr { display: grid; gap: 8px; justify-items: end; }
+  .rule-card .meta { font: var(--type-caption); color: var(--text-muted); display: flex; gap: 12px; align-items: center; }
+  .rule-card .meta .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--text-subtle); }
+
+  /* Simulation panel */
+  .sim-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 24px; }
+  .sim-input {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+  }
+  .sim-input h3 { font: var(--type-section-title); margin: 0 0 12px; }
+  .sim-output {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+  }
+  .sim-output h3 { font: var(--type-section-title); margin: 0 0 4px; }
+  .sim-output .sub { font: var(--type-caption); color: var(--text-muted); margin: 0 0 14px; }
+  .sim-output .preview {
+    background: var(--surface-muted);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .sim-output .preview-h { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .sim-output .preview-h .ti { font: var(--type-label); color: var(--text-strong); }
+  .sim-output .preview-h .id { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+  .sim-output .je-line { display: grid; grid-template-columns: 100px 1fr auto auto; gap: 12px; padding: 6px 0; font-family: var(--font-mono); font-size: 12px; border-bottom: 1px dashed var(--border-strong); }
+  .sim-output .je-line:last-of-type { border-bottom: 2px solid var(--border-strong); }
+  .sim-output .je-line .acc { color: var(--text-strong); }
+  .sim-output .je-line .desc { color: var(--text-muted); font-family: var(--font-sans); }
+  .sim-output .je-line .dr, .sim-output .je-line .cr { font-variant-numeric: tabular-nums; min-width: 80px; text-align: right; }
+  .sim-output .je-foot { display: grid; grid-template-columns: 100px 1fr auto auto; gap: 12px; padding: 8px 0 0; font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--text-strong); }
+
+  /* Failures table — borrows dtable */
+  .failures-h {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 12px;
+  }
+  .failures-h .actions { display: flex; gap: 8px; }
+  .failures-summary {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  /* Seed & readiness checklist */
+  .checklist {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; overflow: clip;
+  }
+  .check-item {
+    display: grid;
+    grid-template-columns: 24px 1fr auto;
+    gap: 14px; align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .check-item:last-child { border-bottom: none; }
+  .check-item.done .nm { color: var(--text-muted); text-decoration: line-through; }
+  .check-item .ic { width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center; }
+  .check-item.done .ic { background: var(--tone-success-bg); color: var(--tone-success); }
+  .check-item.todo .ic { background: var(--surface-muted); color: var(--text-subtle); border: 1.5px dashed var(--border-strong); }
+  .check-item.warn .ic { background: var(--tone-warn-bg); color: var(--tone-warn); }
+  .check-item .nm { font: var(--type-label); color: var(--text-strong); }
+  .check-item .sb { font: var(--type-caption); color: var(--text-muted); margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="kit-head">
+    <span class="t-eyebrow">Posting Studio</span>
+    <h1>Define the rules. Watch them post. Replay the failures.</h1>
+    <p>The studio is the seam between operations (a pour, a shift, a sale) and the general ledger. Each rule maps a source event to a journal entry. Five views: an Overview dashboard, a Rule Library to author them, Simulation to dry-run, Failures &amp; Replay to recover, and Seed &amp; Readiness to bootstrap a new tenant.</p>
+  </header>
+
+  <!-- ============ P.01 · Overview ============ -->
+  <div class="section-label"><span class="num">P.01</span><h2>Posting Studio — overview</h2><span class="note">Stat row · recent batches · health</span></div>
+
+  <div class="frame">
+    <div class="erp-shell">
+      <aside class="erp-sidebar">
+        <div class="erp-org-switcher"><span class="mark" data-icon="corelith" data-icon-size="16"></span><span class="name">Gold Operations</span><span class="chev" data-icon="chevron"></span></div>
+        <nav class="erp-nav" style="margin-top: 12px;">
+          <button class="erp-item"><span data-icon="home"></span>Overview</button>
+          <button class="erp-item"><span data-icon="add"></span>Create</button>
+        </nav>
+        <div class="erp-section-head"><span>Gold Operations</span></div>
+        <nav class="erp-nav">
+          <button class="erp-item has-children"><span data-icon="warehouse"></span>Production</button>
+          <button class="erp-item has-children"><span data-icon="car"></span>Movement &amp; Settlement</button>
+          <button class="erp-item has-children"><span data-icon="trending"></span>Insights</button>
+          <button class="erp-item has-children"><span data-icon="user"></span>Human Resources</button>
+          <button class="erp-item expanded has-children parent-active"><span data-icon="list"></span>Accounting Master</button>
+          <div class="erp-sub">
+            <button class="erp-item">Overview</button>
+            <button class="erp-item">Receivables</button>
+            <button class="erp-item">Sales</button>
+            <button class="erp-item">Payables</button>
+            <button class="erp-item">Periods</button>
+            <button class="erp-item">Journals</button>
+            <button class="erp-item active">Posting Rules</button>
+          </div>
+          <button class="erp-item has-children"><span data-icon="settings"></span>Management</button>
+        </nav>
+      </aside>
+
+      <main class="erp-main">
+        <div class="clean-toolbar">
+          <nav class="breadcrumb">
+            <a>Home</a><span class="sep" data-icon="chright"></span>
+            <a>Accounting</a><span class="sep" data-icon="chright"></span>
+            <a>Posting Rules</a>
+          </nav>
+          <div class="spacer"></div>
+          <button class="ic-btn has-dot" data-icon="bell"></button>
+          <button class="btn btn-primary btn-sm"><span data-icon="plus"></span>New rule</button>
+          <button class="btn btn-secondary btn-sm">More <span data-icon="chevron"></span></button>
+        </div>
+
+        <div class="erp-page">
+          <div class="erp-page-h">
+            <div>
+              <h1>Posting Studio</h1>
+              <p>Every operation that hits the ledger goes through here.</p>
+            </div>
+          </div>
+
+          <div class="iconstrip">
+            <button class="iconstrip-tab"><span data-icon="list"></span>Chart of Accounts</button>
+            <button class="iconstrip-tab"><span data-icon="receipt"></span>Journals</button>
+            <button class="iconstrip-tab"><span data-icon="calendar"></span>Periods</button>
+            <button class="iconstrip-tab active"><span data-icon="settings"></span>Posting Rules</button>
+          </div>
+
+          <div class="studio">
+            <nav class="studio-rail">
+              <button class="ri active"><span data-icon="home"></span>Overview</button>
+              <button class="ri"><span data-icon="list"></span>Rule library <span class="ct">31</span></button>
+              <button class="ri"><span data-icon="settings"></span>Simulation</button>
+              <button class="ri danger"><span data-icon="info"></span>Failures &amp; replay <span class="ct">98</span></button>
+              <button class="ri"><span data-icon="check"></span>Seed &amp; readiness</button>
+            </nav>
+
+            <nav class="studio-rail">
+              <div class="studio-views-label">QUICK VIEWS</div>
+              <button class="ri">All rules</button>
+              <button class="ri">Gold ops</button>
+              <button class="ri">Retail</button>
+              <button class="ri">HR &amp; payroll</button>
+              <button class="ri">Custom views</button>
+            </nav>
+
+            <div class="studio-content">
+              <div class="studio-content-h">
+                <div>
+                  <div class="ti">This week</div>
+                  <div class="sub">198 events arrived from operations; 100 posted cleanly; 98 are pending or failed.</div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <button class="btn btn-secondary btn-sm" aria-label="Refresh"><span data-icon="refresh"></span></button>
+                  <button class="btn btn-primary btn-sm"><span data-icon="refresh"></span>Replay 98</button>
+                </div>
+              </div>
+
+              <div class="failures-summary">
+                <div class="stat-tile"><div class="lbl">Events this week</div><div class="val">198</div><div class="delta up">▲ 24 vs last</div></div>
+                <div class="stat-tile"><div class="lbl">Posted</div><div class="val success">100</div><div class="delta">50.5% clean</div></div>
+                <div class="stat-tile"><div class="lbl">Pending</div><div class="val warn">98</div><div class="delta">retryable</div></div>
+                <div class="stat-tile"><div class="lbl">Failed</div><div class="val">0</div><div class="delta">none unrecoverable</div></div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px;">
+                <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: clip;">
+                  <div style="padding: 16px 20px 8px;">
+                    <div class="ti">Recent batches</div>
+                  </div>
+                  <table class="dtable" style="border-top: none;">
+                    <thead><tr><th>Batch</th><th>Source</th><th>Events</th><th>Status</th><th>Posted</th></tr></thead>
+                    <tbody>
+                      <tr><td><a class="id-link">POST-0419</a></td><td>Gold Shift Expense</td><td class="num">198</td><td><span class="erp-pill committed with-dot">Committed</span></td><td>02:23 today</td></tr>
+                      <tr><td><a class="id-link">POST-0418</a></td><td>Gold Shift — Worker Share</td><td class="num">84</td><td><span class="erp-pill committed with-dot">Committed</span></td><td>yesterday</td></tr>
+                      <tr><td><a class="id-link">POST-0417</a></td><td>Settlement</td><td class="num">12</td><td><span class="erp-pill pending with-dot">Pending</span></td><td>yesterday</td></tr>
+                      <tr><td><a class="id-link">POST-0416</a></td><td>Bank receipts</td><td class="num">48</td><td><span class="erp-pill committed with-dot">Committed</span></td><td>May 13</td></tr>
+                      <tr><td><a class="id-link">POST-0415</a></td><td>Settlement</td><td class="num">9</td><td><span class="erp-pill failed with-dot">Failed</span></td><td>May 12</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px;">
+                  <div class="ti" style="margin-bottom: 14px;">Top failing rules</div>
+                  <div style="display: grid; gap: 12px;">
+                    <div style="display: grid; grid-template-columns: 1fr auto; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border-subtle);">
+                      <div><div class="t-label">Gold Shift Expense — Diesel</div><div class="t-caption">Missing diesel rate for sites without contract</div></div>
+                      <span class="erp-pill failed">42</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr auto; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border-subtle);">
+                      <div><div class="t-label">Worker Share (Boys)</div><div class="t-caption">Unmapped leader name</div></div>
+                      <span class="erp-pill pending">32</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr auto; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border-subtle);">
+                      <div><div class="t-label">Shoots — allocation</div><div class="t-caption">Zero gross weight</div></div>
+                      <span class="erp-pill pending">14</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr auto; gap: 10px;">
+                      <div><div class="t-label">LCD — allocation</div><div class="t-caption">Site policy mismatch</div></div>
+                      <span class="erp-pill pending">10</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ============ P.02 · Rule Library ============ -->
+  <div class="section-label"><span class="num">P.02</span><h2>Rule Library</h2><span class="note">Rules expressed as formulas · enable / version / fork</span></div>
+
+  <div class="frame">
+    <div class="erp-shell">
+      <aside class="erp-sidebar">
+        <div class="erp-org-switcher"><span class="mark" data-icon="corelith" data-icon-size="16"></span><span class="name">Gold Operations</span><span class="chev" data-icon="chevron"></span></div>
+        <nav class="erp-nav" style="margin-top: 12px;">
+          <button class="erp-item"><span data-icon="home"></span>Overview</button>
+          <button class="erp-item"><span data-icon="add"></span>Create</button>
+        </nav>
+        <div class="erp-section-head"><span>Gold Operations</span></div>
+        <nav class="erp-nav">
+          <button class="erp-item expanded has-children parent-active"><span data-icon="list"></span>Accounting Master</button>
+          <div class="erp-sub">
+            <button class="erp-item active">Posting Rules</button>
+          </div>
+        </nav>
+      </aside>
+
+      <main class="erp-main">
+        <div class="clean-toolbar">
+          <nav class="breadcrumb">
+            <a>Home</a><span class="sep" data-icon="chright"></span>
+            <a>Accounting</a><span class="sep" data-icon="chright"></span>
+            <a>Posting Rules</a><span class="sep" data-icon="chright"></span>
+            <a>Library</a>
+          </nav>
+          <div class="spacer"></div>
+          <button class="ic-btn" data-icon="bell"></button>
+          <button class="btn btn-primary btn-sm"><span data-icon="plus"></span>New rule</button>
+        </div>
+
+        <div class="erp-page">
+          <div class="erp-page-h"><div><h1>Posting Studio</h1></div></div>
+
+          <div class="iconstrip">
+            <button class="iconstrip-tab"><span data-icon="list"></span>Chart of Accounts</button>
+            <button class="iconstrip-tab"><span data-icon="receipt"></span>Journals</button>
+            <button class="iconstrip-tab"><span data-icon="calendar"></span>Periods</button>
+            <button class="iconstrip-tab active"><span data-icon="settings"></span>Posting Rules</button>
+          </div>
+
+          <div class="studio">
+            <nav class="studio-rail">
+              <button class="ri"><span data-icon="home"></span>Overview</button>
+              <button class="ri active"><span data-icon="list"></span>Rule library <span class="ct">31</span></button>
+              <button class="ri"><span data-icon="settings"></span>Simulation</button>
+              <button class="ri danger"><span data-icon="info"></span>Failures &amp; replay <span class="ct">98</span></button>
+              <button class="ri"><span data-icon="check"></span>Seed &amp; readiness</button>
+            </nav>
+
+            <nav class="studio-rail">
+              <div class="studio-views-label">FILTER</div>
+              <button class="ri active">All rules</button>
+              <button class="ri">Enabled <span class="ct">27</span></button>
+              <button class="ri">Disabled <span class="ct">4</span></button>
+              <button class="ri">Mine <span class="ct">3</span></button>
+              <div class="studio-views-label" style="margin-top: 8px;">DOMAIN</div>
+              <button class="ri">Gold operations</button>
+              <button class="ri">Retail</button>
+              <button class="ri">HR &amp; payroll</button>
+            </nav>
+
+            <div class="studio-content">
+              <div class="data-toolbar" style="padding: 0 0 16px;">
+                <div class="search-input">
+                  <span data-icon="search"></span>
+                  <input placeholder="Search rules by name, source, or account…" />
+                </div>
+                <button class="fchip active">Enabled</button>
+                <button class="fchip">v2+</button>
+                <div class="spacer"></div>
+                <button class="btn btn-secondary btn-sm">Sort: name <span data-icon="chevron"></span></button>
+              </div>
+
+              <div class="rule-list">
+                <div class="rule-card">
+                  <div class="rl">
+                    <div class="h">
+                      <span class="nm">Gold Shift Expense — Diesel</span>
+                      <span class="id">RULE-031</span>
+                      <span class="erp-pill on-site">Enabled</span>
+                      <span class="badge badge-neutral">v3</span>
+                    </div>
+                    <div class="formula"><span class="k">when</span> source = <span class="s">"shift.diesel.allocated"</span> <span class="k">then</span> DR <span class="n">6810</span> <span class="s">"Diesel"</span>, CR <span class="n">1010</span> <span class="s">"Cash"</span> · amount = <span class="s">qty × site.dieselRate</span></div>
+                    <div class="meta">
+                      <span>Owner · Tatenda</span><span class="dot"></span>
+                      <span>Last edited 2 days ago</span><span class="dot"></span>
+                      <span>Triggers ~ 42 / wk</span>
+                    </div>
+                  </div>
+                  <div class="rr">
+                    <input type="checkbox" class="switch" checked>
+                    <button class="btn btn-secondary btn-sm">Edit</button>
+                  </div>
+                </div>
+
+                <div class="rule-card">
+                  <div class="rl">
+                    <div class="h">
+                      <span class="nm">Gold Shift — Worker Share (Boys)</span>
+                      <span class="id">RULE-022</span>
+                      <span class="erp-pill on-site">Enabled</span>
+                      <span class="badge badge-neutral">v2</span>
+                    </div>
+                    <div class="formula"><span class="k">when</span> source = <span class="s">"shift.workerShare"</span> <span class="k">and</span> leader.group = <span class="s">"Boys"</span> <span class="k">then</span> DR <span class="n">2100</span> <span class="s">"Worker payable"</span>, CR <span class="n">1500</span> <span class="s">"Gold in vault"</span></div>
+                    <div class="meta">
+                      <span>Owner · Amara Obi</span><span class="dot"></span>
+                      <span>Last edited yesterday</span><span class="dot"></span>
+                      <span>Triggers ~ 32 / wk</span>
+                    </div>
+                  </div>
+                  <div class="rr">
+                    <input type="checkbox" class="switch" checked>
+                    <button class="btn btn-secondary btn-sm">Edit</button>
+                  </div>
+                </div>
+
+                <div class="rule-card">
+                  <div class="rl">
+                    <div class="h">
+                      <span class="nm">Settlement — Bank Payout</span>
+                      <span class="id">RULE-014</span>
+                      <span class="erp-pill on-site">Enabled</span>
+                      <span class="badge badge-neutral">v4</span>
+                    </div>
+                    <div class="formula"><span class="k">when</span> source = <span class="s">"sale.bankSettled"</span> <span class="k">then</span> DR <span class="n">1020</span> <span class="s">"Bank · Highbank"</span>, CR <span class="n">1500</span> <span class="s">"Gold in vault"</span> · fee = <span class="n">0.4%</span> → <span class="n">6802</span></div>
+                    <div class="meta">
+                      <span>Owner · Tatenda</span><span class="dot"></span>
+                      <span>Last edited 1 wk ago</span><span class="dot"></span>
+                      <span>Triggers ~ 48 / wk</span>
+                    </div>
+                  </div>
+                  <div class="rr">
+                    <input type="checkbox" class="switch" checked>
+                    <button class="btn btn-secondary btn-sm">Edit</button>
+                  </div>
+                </div>
+
+                <div class="rule-card">
+                  <div class="rl">
+                    <div class="h">
+                      <span class="nm">Shoots — allocation</span>
+                      <span class="id">RULE-008</span>
+                      <span class="badge badge-neutral">Disabled</span>
+                      <span class="badge badge-neutral">v1</span>
+                    </div>
+                    <div class="formula"><span class="k">when</span> source = <span class="s">"shift.shoots"</span> <span class="k">then</span> DR <span class="n">6820</span> <span class="s">"Shoots"</span>, CR <span class="n">1010</span></div>
+                    <div class="meta">
+                      <span>Owner · Juma Nkosi</span><span class="dot"></span>
+                      <span>Last edited 3 wks ago</span><span class="dot"></span>
+                      <span style="color: var(--tone-warn);">Currently failing — needs site policy</span>
+                    </div>
+                  </div>
+                  <div class="rr">
+                    <input type="checkbox" class="switch">
+                    <button class="btn btn-secondary btn-sm">Edit</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ============ P.03 · Simulation ============ -->
+  <div class="section-label"><span class="num">P.03</span><h2>Simulation</h2><span class="note">Author a sample event · preview the journal · dry-run</span></div>
+
+  <div class="frame">
+    <div class="erp-shell">
+      <aside class="erp-sidebar">
+        <div class="erp-org-switcher"><span class="mark" data-icon="corelith" data-icon-size="16"></span><span class="name">Gold Operations</span><span class="chev" data-icon="chevron"></span></div>
+        <nav class="erp-nav" style="margin-top: 12px;">
+          <button class="erp-item"><span data-icon="home"></span>Overview</button>
+          <button class="erp-item"><span data-icon="add"></span>Create</button>
+        </nav>
+        <div class="erp-section-head"><span>Gold Operations</span></div>
+        <nav class="erp-nav">
+          <button class="erp-item expanded has-children parent-active"><span data-icon="list"></span>Accounting Master</button>
+          <div class="erp-sub">
+            <button class="erp-item active">Posting Rules</button>
+          </div>
+        </nav>
+      </aside>
+
+      <main class="erp-main">
+        <div class="clean-toolbar">
+          <nav class="breadcrumb">
+            <a>Home</a><span class="sep" data-icon="chright"></span>
+            <a>Accounting</a><span class="sep" data-icon="chright"></span>
+            <a>Posting Rules</a><span class="sep" data-icon="chright"></span>
+            <a>Simulation</a>
+          </nav>
+          <div class="spacer"></div>
+          <button class="ic-btn" data-icon="bell"></button>
+        </div>
+
+        <div class="erp-page">
+          <div class="erp-page-h"><div><h1>Posting Studio</h1></div></div>
+
+          <div class="iconstrip">
+            <button class="iconstrip-tab"><span data-icon="list"></span>Chart of Accounts</button>
+            <button class="iconstrip-tab"><span data-icon="receipt"></span>Journals</button>
+            <button class="iconstrip-tab"><span data-icon="calendar"></span>Periods</button>
+            <button class="iconstrip-tab active"><span data-icon="settings"></span>Posting Rules</button>
+          </div>
+
+          <div class="studio" style="grid-template-columns: 220px 1fr;">
+            <nav class="studio-rail">
+              <button class="ri"><span data-icon="home"></span>Overview</button>
+              <button class="ri"><span data-icon="list"></span>Rule library <span class="ct">31</span></button>
+              <button class="ri active"><span data-icon="settings"></span>Simulation</button>
+              <button class="ri danger"><span data-icon="info"></span>Failures &amp; replay <span class="ct">98</span></button>
+              <button class="ri"><span data-icon="check"></span>Seed &amp; readiness</button>
+            </nav>
+
+            <div class="studio-content">
+              <div class="studio-content-h">
+                <div>
+                  <div class="ti">Dry-run a posting</div>
+                  <div class="sub">Pick a source event, fill in sample inputs, and see what journal would be produced. Nothing is committed.</div>
+                </div>
+                <button class="btn btn-secondary btn-sm">Load real event…</button>
+              </div>
+
+              <div class="sim-grid">
+                <div class="sim-input">
+                  <h3>Source event</h3>
+                  <div class="field" style="margin-bottom: 12px;">
+                    <label class="field-label">Event type</label>
+                    <select class="select"><option>shift.diesel.allocated</option><option>shift.workerShare</option><option>sale.bankSettled</option></select>
+                  </div>
+                  <div class="field" style="margin-bottom: 12px;">
+                    <label class="field-label">Site</label>
+                    <select class="select"><option>GOKWE_MAIN_SITE — Gokwe</option></select>
+                  </div>
+                  <div class="field" style="margin-bottom: 12px;">
+                    <label class="field-label">Leader / group</label>
+                    <select class="select"><option>Christopher Mutemeri (Boys)</option></select>
+                  </div>
+                  <div class="field" style="margin-bottom: 12px;">
+                    <label class="field-label">Quantity (litres)</label>
+                    <input class="input" value="40">
+                  </div>
+                  <div class="field" style="margin-bottom: 16px;">
+                    <label class="field-label">Date</label>
+                    <input class="input" value="2026-05-15">
+                  </div>
+                  <button class="btn btn-primary btn-block" style="width: 100%;"><span data-icon="refresh"></span>Run simulation</button>
+                </div>
+
+                <div class="sim-output">
+                  <h3>Preview · journal entry</h3>
+                  <div class="sub">RULE-031 · Gold Shift Expense — Diesel (v3) matched.</div>
+                  <div class="preview">
+                    <div class="preview-h">
+                      <div class="ti">JE-PREVIEW</div>
+                      <div class="id">DR 80.00 · CR 80.00 · balanced</div>
+                    </div>
+                    <div class="je-line">
+                      <span class="acc">6810</span><span class="desc">Diesel — site GOKWE</span><span class="dr" style="color: var(--tone-success);">80.00</span><span class="cr">—</span>
+                    </div>
+                    <div class="je-line">
+                      <span class="acc">1010</span><span class="desc">Operating cash · USD</span><span class="dr">—</span><span class="cr" style="color: var(--tone-success);">80.00</span>
+                    </div>
+                    <div class="je-foot">
+                      <span></span><span>Total</span><span>80.00</span><span>80.00</span>
+                    </div>
+                  </div>
+                  <div class="alert info" style="margin-top: 14px;">
+                    <span data-icon="info"></span>
+                    <div>
+                      <div class="alert-title">Dry-run only</div>
+                      <div class="alert-body">No journal is posted. Use "Commit simulation as draft" to materialize a journal entry that needs approval.</div>
+                    </div>
+                  </div>
+                  <div style="display: flex; gap: 8px; margin-top: 12px;">
+                    <button class="btn btn-secondary btn-sm">Commit as draft</button>
+                    <button class="btn btn-ghost btn-sm">Copy preview JSON</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ============ P.04 · Seed & Readiness ============ -->
+  <div class="section-label"><span class="num">P.04</span><h2>Seed &amp; Readiness</h2><span class="note">Bootstrap checklist for a new tenant</span></div>
+
+  <div class="frame">
+    <div class="erp-shell">
+      <aside class="erp-sidebar">
+        <div class="erp-org-switcher"><span class="mark" data-icon="corelith" data-icon-size="16"></span><span class="name">Gold Operations</span><span class="chev" data-icon="chevron"></span></div>
+        <nav class="erp-nav" style="margin-top: 12px;">
+          <button class="erp-item"><span data-icon="home"></span>Overview</button>
+          <button class="erp-item"><span data-icon="add"></span>Create</button>
+        </nav>
+        <div class="erp-section-head"><span>Gold Operations</span></div>
+        <nav class="erp-nav">
+          <button class="erp-item expanded has-children parent-active"><span data-icon="list"></span>Accounting Master</button>
+          <div class="erp-sub">
+            <button class="erp-item active">Posting Rules</button>
+          </div>
+        </nav>
+      </aside>
+
+      <main class="erp-main">
+        <div class="clean-toolbar">
+          <nav class="breadcrumb">
+            <a>Home</a><span class="sep" data-icon="chright"></span>
+            <a>Accounting</a><span class="sep" data-icon="chright"></span>
+            <a>Posting Rules</a><span class="sep" data-icon="chright"></span>
+            <a>Seed &amp; readiness</a>
+          </nav>
+          <div class="spacer"></div>
+          <button class="ic-btn" data-icon="bell"></button>
+        </div>
+
+        <div class="erp-page">
+          <div class="erp-page-h"><div><h1>Posting Studio</h1></div></div>
+
+          <div class="iconstrip">
+            <button class="iconstrip-tab"><span data-icon="list"></span>Chart of Accounts</button>
+            <button class="iconstrip-tab"><span data-icon="receipt"></span>Journals</button>
+            <button class="iconstrip-tab"><span data-icon="calendar"></span>Periods</button>
+            <button class="iconstrip-tab active"><span data-icon="settings"></span>Posting Rules</button>
+          </div>
+
+          <div class="studio" style="grid-template-columns: 220px 1fr;">
+            <nav class="studio-rail">
+              <button class="ri"><span data-icon="home"></span>Overview</button>
+              <button class="ri"><span data-icon="list"></span>Rule library <span class="ct">31</span></button>
+              <button class="ri"><span data-icon="settings"></span>Simulation</button>
+              <button class="ri danger"><span data-icon="info"></span>Failures &amp; replay <span class="ct">98</span></button>
+              <button class="ri active"><span data-icon="check"></span>Seed &amp; readiness</button>
+            </nav>
+
+            <div class="studio-content">
+              <div class="studio-content-h">
+                <div>
+                  <div class="ti">Bootstrap checklist</div>
+                  <div class="sub">A new tenant is ready to post once these are complete. Run "Apply foundation pack" to populate sensible defaults.</div>
+                </div>
+                <button class="btn btn-primary btn-sm">Apply foundation pack</button>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start;">
+                <div class="checklist">
+                  <div class="check-item done">
+                    <span class="ic" data-icon="check"></span>
+                    <div>
+                      <div class="nm">Chart of accounts initialised</div>
+                      <div class="sb">31 accounts seeded · last touched yesterday</div>
+                    </div>
+                    <button class="btn btn-ghost btn-sm">Review</button>
+                  </div>
+                  <div class="check-item done">
+                    <span class="ic" data-icon="check"></span>
+                    <div>
+                      <div class="nm">Periods opened</div>
+                      <div class="sb">3 open periods · May 2026, Apr 2026, Mar 2026</div>
+                    </div>
+                    <button class="btn btn-ghost btn-sm">Review</button>
+                  </div>
+                  <div class="check-item done">
+                    <span class="ic" data-icon="check"></span>
+                    <div>
+                      <div class="nm">Default site assignment</div>
+                      <div class="sb">GOKWE_MAIN_SITE set as the receiver of unattributed events</div>
+                    </div>
+                    <button class="btn btn-ghost btn-sm">Review</button>
+                  </div>
+                  <div class="check-item warn">
+                    <span class="ic" data-icon="info"></span>
+                    <div>
+                      <div class="nm">Site policies for diesel &amp; LCD</div>
+                      <div class="sb">2 of 3 sites have a diesel rate. Kadoma is missing a rate, so RULE-031 fails for it.</div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm">Configure</button>
+                  </div>
+                  <div class="check-item warn">
+                    <span class="ic" data-icon="info"></span>
+                    <div>
+                      <div class="nm">Leader directory</div>
+                      <div class="sb">17 / 19 leaders mapped to staff records. 2 unmapped: T., Widzen.</div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm">Map</button>
+                  </div>
+                  <div class="check-item todo">
+                    <span class="ic" data-icon="plus"></span>
+                    <div>
+                      <div class="nm">FX rate source</div>
+                      <div class="sb">Pick a feed for USD ↔ ZWL conversions. Recommended: Highbank daily fix.</div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm">Connect</button>
+                  </div>
+                  <div class="check-item todo">
+                    <span class="ic" data-icon="plus"></span>
+                    <div>
+                      <div class="nm">Cutoff &amp; approval policy</div>
+                      <div class="sb">Defaults to 10:00 local cutoff and four-eyes &gt; $10,000. Confirm or adjust.</div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm">Configure</button>
+                  </div>
+                </div>
+
+                <div style="display: grid; gap: 16px;">
+                  <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px;">
+                      <div class="ti">Readiness</div>
+                      <span class="t-mono" style="color: var(--text-strong); font-weight: 600;">5 / 7</span>
+                    </div>
+                    <div class="progress" style="height: 8px;"><span style="width: 72%;"></span></div>
+                    <p class="t-caption" style="margin: 10px 0 0;">2 items need attention before this tenant can post to live periods.</p>
+                  </div>
+
+                  <div class="alert info">
+                    <span data-icon="info"></span>
+                    <div>
+                      <div class="alert-title">What's "foundation pack"?</div>
+                      <div class="alert-body">A bundle of the 14 rules we recommend for gold operations. Applying it doesn't overwrite anything you've already authored.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

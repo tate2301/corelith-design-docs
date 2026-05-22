@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Corelith — Overview page kit</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<script src="../icons.js" defer></script>
+<script src="../kit-nav.js" defer></script>
+<style>
+  body { background: var(--canvas); padding: 24px; }
+  .frame { max-width: 1480px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: clip; box-shadow: var(--shadow-rest); }
+
+  /* ====== App shell ====== */
+  .erp-shell { display: grid; grid-template-columns: 252px 1fr; min-height: 920px; }
+  .erp-sidebar { background: var(--canvas); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 16px 12px 12px; gap: 4px; }
+  .erp-org-switcher { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); cursor: pointer; }
+  .erp-org-switcher:hover { background: var(--surface-muted); }
+  .erp-org-switcher .mark { width: 26px; height: 26px; background: var(--ink); color: var(--canvas); border-radius: 6px; display: grid; place-items: center; }
+  .erp-org-switcher .mark svg { width: 16px; height: 16px; color: var(--brand-300); }
+  .erp-org-switcher .name { font: 600 14px/1 var(--font-sans); color: var(--text-strong); flex: 1; }
+  .erp-org-switcher .chev { color: var(--text-subtle); }
+
+  .erp-section-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 10px 8px; font: var(--type-caption); color: var(--text-subtle); cursor: pointer; }
+  .erp-section-head svg { color: var(--text-subtle); }
+  .erp-nav { display: grid; gap: 1px; }
+  .erp-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; font: 500 13.5px/1 var(--font-sans); color: var(--text-body); cursor: pointer; border: none; background: transparent; text-align: left; }
+  .erp-item:hover { background: var(--surface-muted); }
+  .erp-item.active { background: var(--brand-soft); color: var(--brand-strong); font-weight: 500; }
+  .erp-item svg { width: 16px; height: 16px; color: var(--text-muted); flex: none; }
+  .erp-item.active svg { color: var(--brand); }
+  .erp-item.has-children::after { content: ""; width: 6px; height: 6px; border-right: 1.5px solid var(--text-subtle); border-bottom: 1.5px solid var(--text-subtle); transform: rotate(-45deg); margin-left: auto; }
+  .erp-item.primary { background: var(--brand); color: #fff; }
+  .erp-item.primary svg { color: #fff; }
+  .erp-sub { padding-left: 26px; display: grid; gap: 1px; }
+  .erp-sub .erp-item { font-size: 13px; padding: 6px 10px; }
+
+  /* ====== Content ====== */
+  .erp-main { display: flex; flex-direction: column; min-width: 0; }
+  .erp-topbar { display: flex; align-items: center; gap: 10px; padding: 14px 24px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .erp-topbar .ic-btn { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); border-radius: 6px; background: transparent; border: none; cursor: pointer; }
+  .erp-topbar .ic-btn:hover { background: var(--surface-muted); color: var(--text-strong); }
+  .erp-topbar .breadcrumb { display: inline-flex; align-items: center; gap: 8px; font: var(--type-body); color: var(--text-muted); }
+  .erp-topbar .breadcrumb a { color: inherit; text-decoration: none; }
+  .erp-topbar .breadcrumb a:last-child { color: var(--text-strong); font-weight: 500; }
+  .erp-topbar .breadcrumb .sep { color: var(--text-subtle); display: inline-flex; }
+  .erp-topbar .spacer { flex: 1; }
+  .erp-topbar .actions { display: flex; align-items: center; gap: 6px; }
+
+  .erp-page { padding: 28px 32px 48px; display: grid; gap: 24px; min-width: 0; }
+  .erp-page-h { display: flex; align-items: baseline; justify-content: space-between; }
+  .erp-page-h h1 { font: var(--type-display-sm); font-size: 28px; margin: 0; color: var(--text-strong); }
+  .erp-page-h .price { font: var(--type-body-sm); color: var(--text-muted); margin-top: 4px; }
+  .erp-page-h .price b { color: var(--text-strong); font-weight: 600; }
+
+  /* Icon strip tabs (Overview / Pours / Purchases …) */
+  .iconstrip { display: flex; gap: 2px; padding: 6px; background: var(--surface-muted); border-radius: 10px; overflow-x: auto; }
+  .iconstrip-tab { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 7px; background: transparent; border: none; color: var(--text-muted); font: 500 13px/1 var(--font-sans); cursor: pointer; white-space: nowrap; }
+  .iconstrip-tab:hover { color: var(--text-strong); }
+  .iconstrip-tab.active { background: var(--surface); color: var(--text-strong); box-shadow: 0 1px 2px rgba(42,38,34,0.06), 0 0 0 1px var(--border); }
+  .iconstrip-tab svg { width: 16px; height: 16px; color: var(--text-muted); }
+  .iconstrip-tab.active svg { color: var(--brand); }
+
+  /* Stat row */
+  .stat-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .stat-tile { padding: 18px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-radius); }
+  .stat-tile .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+  .stat-tile .val { font-family: var(--font-serif); font-weight: 600; font-size: 34px; letter-spacing: -0.02em; color: var(--text-strong); margin-top: 14px; line-height: 1; font-variant-numeric: tabular-nums; }
+  .stat-tile .val .u { font-size: 14px; color: var(--text-muted); font-weight: 500; margin-left: 4px; font-family: var(--font-sans); }
+  .stat-tile .delta { font: var(--type-body-sm); margin-top: 8px; }
+  .stat-tile .delta.up { color: var(--tone-success); }
+  .stat-tile .delta.dn { color: var(--tone-danger); }
+
+  /* Two-column row */
+  .two-col { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+  .two-col-sales { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* Card chrome */
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-radius); overflow: clip; }
+  .panel-h { display: flex; align-items: flex-start; justify-content: space-between; padding: 18px 22px 8px; gap: 16px; }
+  .panel-h .ti { font: var(--type-section-title); color: var(--text-strong); }
+  .panel-h .sub { font: var(--type-body-sm); color: var(--text-muted); margin-top: 2px; }
+  .panel-h .right { font: var(--type-body-sm); color: var(--text-muted); display: inline-flex; align-items: center; gap: 6px; }
+  .panel-h .right a { color: var(--brand-strong); font-weight: 500; }
+
+  /* Chart */
+  .chart-area { height: 280px; padding: 8px 16px 16px; position: relative; }
+  .chart-axis { position: absolute; left: 0; top: 8px; bottom: 28px; width: 36px; display: grid; grid-template-rows: repeat(5, 1fr); font: 11px/1 var(--font-mono); color: var(--text-subtle); }
+  .chart-axis div { transform: translateY(-6px); text-align: right; padding-right: 8px; }
+  .chart-x { position: absolute; left: 48px; right: 16px; bottom: 0; display: flex; justify-content: space-between; font: 11px/1 var(--font-mono); color: var(--text-subtle); }
+  .chart-area svg { position: absolute; left: 44px; right: 16px; top: 8px; bottom: 28px; width: calc(100% - 60px); height: calc(100% - 36px); }
+
+  /* Site progress */
+  .sites { padding: 0 22px 20px; display: grid; gap: 16px; }
+  .site-row { display: grid; gap: 6px; }
+  .site-row-h { display: flex; justify-content: space-between; font: var(--type-label); color: var(--text-strong); }
+  .site-row-h .right { color: var(--text-muted); font-weight: 400; }
+  .site-bar { height: 10px; background: var(--surface-muted); border-radius: 9999px; overflow: clip; }
+  .site-bar > span { display: block; height: 100%; background: var(--brand); border-radius: inherit; }
+
+  /* Recent rows */
+  .recent-rows { padding: 0 22px 20px; display: grid; gap: 0; }
+  .recent-row { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 14px 0; border-top: 1px solid var(--border-subtle); align-items: center; }
+  .recent-row:first-of-type { border-top: none; }
+  .recent-row .who { font: var(--type-label); color: var(--text-strong); }
+  .recent-row .sub { font: var(--type-caption); color: var(--text-muted); margin-top: 2px; }
+  .recent-row .amt { font-family: var(--font-mono); font-weight: 600; color: var(--text-strong); font-variant-numeric: tabular-nums; }
+  .recent-row .date { font: var(--type-caption); color: var(--text-muted); margin-top: 2px; text-align: right; }
+
+  /* Online pill */
+  .online-pill { position: absolute; bottom: 24px; right: 32px; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 9999px; font: 500 12px/1 var(--font-sans); color: var(--tone-success); }
+  .online-pill::before { content: ""; width: 6px; height: 6px; background: var(--tone-success); border-radius: 50%; }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="erp-shell">
+
+    <!-- ===== Sidebar ===== -->
+    <aside class="erp-sidebar">
+      <div class="erp-org-switcher">
+        <span class="mark" data-icon="corelith" data-icon-size="16"></span>
+        <span class="name">Gold Operations</span>
+        <span class="chev" data-icon="chevron"></span>
+      </div>
+      <nav class="erp-nav" style="margin-top: 12px;">
+        <button class="erp-item active"><span data-icon="home"></span>Overview</button>
+        <button class="erp-item"><span data-icon="add"></span>Create</button>
+      </nav>
+
+      <div class="erp-section-head"><span>Gold Operations</span><span data-icon="chevron" data-icon-size="14"></span></div>
+      <nav class="erp-nav">
+        <button class="erp-item has-children"><span data-icon="warehouse"></span>Production</button>
+        <button class="erp-item has-children"><span data-icon="car"></span>Movement &amp; Settlement</button>
+        <button class="erp-item has-children"><span data-icon="trending"></span>Insights</button>
+        <button class="erp-item has-children"><span data-icon="user"></span>Human Resources</button>
+        <button class="erp-item has-children"><span data-icon="list"></span>Accounting Master</button>
+        <button class="erp-item has-children"><span data-icon="settings"></span>Management</button>
+      </nav>
+
+      <div class="erp-section-head"><span>More</span><span data-icon="chevron" data-icon-size="14"></span></div>
+      <nav class="erp-nav">
+        <button class="erp-item has-children"><span data-icon="box"></span>Stores &amp; Inventory</button>
+        <button class="erp-item has-children"><span data-icon="settings"></span>Maintenance &amp; Assets</button>
+        <button class="erp-item has-children"><span data-icon="camera"></span>CCTV</button>
+      </nav>
+
+      <div style="flex: 1;"></div>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; color: var(--text-subtle); font: var(--type-caption);">
+        <span style="width: 8px; height: 8px; background: var(--tone-success); border-radius: 50%; box-shadow: 0 0 0 3px var(--tone-success-bg);"></span>
+        Connected · v2.14.3
+      </div>
+    </aside>
+
+    <!-- ===== Main ===== -->
+    <main class="erp-main">
+      <div class="erp-topbar">
+        <button class="ic-btn" data-icon="sidebar" aria-label="Toggle sidebar"></button>
+        <nav class="breadcrumb">
+          <a>Home</a><span class="sep" data-icon="chright"></span>
+          <a>Gold Control</a>
+        </nav>
+        <div class="spacer"></div>
+        <button class="ic-btn has-dot" data-icon="bell" aria-label="Notifications"></button>
+        <button class="btn btn-primary btn-sm"><span data-icon="plus"></span>Record shift output</button>
+        <div style="position: relative;">
+          <button class="btn btn-secondary btn-sm">Quick actions <span data-icon="chevron"></span></button>
+        </div>
+      </div>
+
+      <div class="erp-page">
+        <div class="erp-page-h">
+          <div>
+            <h1>Overview</h1>
+            <div class="iconstrip" style="margin-top: 16px;">
+              <button class="iconstrip-tab active"><span data-icon="home"></span>Overview</button>
+              <button class="iconstrip-tab"><span data-icon="box"></span>Pours</button>
+              <button class="iconstrip-tab"><span data-icon="coins"></span>Purchases</button>
+              <button class="iconstrip-tab"><span data-icon="car"></span>Dispatches</button>
+              <button class="iconstrip-tab"><span data-icon="check"></span>Receipts</button>
+              <button class="iconstrip-tab"><span data-icon="card"></span>Pricing</button>
+              <button class="iconstrip-tab"><span data-icon="receipt"></span>Payouts</button>
+              <button class="iconstrip-tab"><span data-icon="info"></span>Exceptions</button>
+              <button class="iconstrip-tab"><span data-icon="list"></span>Reports</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px;">
+            <div>
+              <h2 style="font: var(--type-section-title); font-size: 18px; margin: 0; color: var(--text-strong);">This week at a glance</h2>
+              <p class="t-body-sm t-muted" style="margin: 4px 0 0;">Today's gold price: <strong style="color: var(--text-strong); font-weight: 600;">$80.00</strong> per gram</p>
+            </div>
+          </div>
+          <div class="stat-row">
+            <div class="stat-tile"><div class="lbl">Gold on hand</div><div class="val">363.9<span class="u">g</span></div><div class="delta dn">▼ 100 vs last wk</div></div>
+            <div class="stat-tile"><div class="lbl">Cash received</div><div class="val">$ 0</div><div class="delta dn">▼ 100</div></div>
+            <div class="stat-tile"><div class="lbl">Owed to workers</div><div class="val">$ 0</div></div>
+            <div class="stat-tile"><div class="lbl">Awaiting sale</div><div class="val">50<span class="u">K</span></div></div>
+            <div class="stat-tile"><div class="lbl">Gold produced</div><div class="val">0<span class="u">g</span></div><div class="delta dn">▼ 100</div></div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-h">
+              <div>
+                <div class="ti">Last 30 days production</div>
+                <div class="sub">Grams of gold per day</div>
+              </div>
+              <div class="right"><b style="color: var(--text-strong); font-weight: 600;">641.80 g</b> total</div>
+            </div>
+            <div class="chart-area">
+              <div class="chart-axis"><div>50</div><div>40</div><div>30</div><div>20</div><div>0</div></div>
+              <svg viewBox="0 0 700 220" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="grad-prod" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#0B5DF0" stop-opacity="0.18"/>
+                    <stop offset="100%" stop-color="#0B5DF0" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                <!-- 4 dashed grid lines -->
+                <line x1="0" y1="44"  x2="700" y2="44"  stroke="#E5E0D2" stroke-dasharray="4 6"/>
+                <line x1="0" y1="88"  x2="700" y2="88"  stroke="#E5E0D2" stroke-dasharray="4 6"/>
+                <line x1="0" y1="132" x2="700" y2="132" stroke="#E5E0D2" stroke-dasharray="4 6"/>
+                <line x1="0" y1="176" x2="700" y2="176" stroke="#E5E0D2" stroke-dasharray="4 6"/>
+                <!-- Production path -->
+                <path d="M0 90 L24 60 L48 30 L72 78 L96 120 L120 140 L144 155 L168 130 L192 145 L216 160 L240 170 L264 172 L288 168 L312 175 L336 168 L360 172 L384 165 L408 175 L432 170 L456 172 L480 168 L504 178 L528 170 L552 168 L576 178 L600 175 L624 178 L648 172 L672 200 L700 200" fill="none" stroke="#0B5DF0" stroke-width="2" stroke-linejoin="round"/>
+                <path d="M0 90 L24 60 L48 30 L72 78 L96 120 L120 140 L144 155 L168 130 L192 145 L216 160 L240 170 L264 172 L288 168 L312 175 L336 168 L360 172 L384 165 L408 175 L432 170 L456 172 L480 168 L504 178 L528 170 L552 168 L576 178 L600 175 L624 178 L648 172 L672 200 L700 200 L700 220 L0 220 Z" fill="url(#grad-prod)"/>
+                <circle cx="48" cy="30" r="4" fill="#0B5DF0"/>
+              </svg>
+              <div class="chart-x"><span>Apr 15</span><span>Apr 22</span><span>Apr 29</span><span>May 6</span><span>May 13</span></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-h">
+              <div>
+                <div class="ti">By site (last 30 days)</div>
+                <div class="sub">Where the gold came from</div>
+              </div>
+            </div>
+            <div class="sites">
+              <div class="site-row">
+                <div class="site-row-h"><span>Gokwe</span><span class="right t-mono">641.80 g · 100%</span></div>
+                <div class="site-bar"><span style="width: 100%;"></span></div>
+              </div>
+              <div class="site-row">
+                <div class="site-row-h"><span>Kadoma</span><span class="right t-mono">0 g · 0%</span></div>
+                <div class="site-bar"><span style="width: 0;"></span></div>
+              </div>
+              <div class="site-row">
+                <div class="site-row-h"><span>Mutare</span><span class="right t-mono">0 g · 0%</span></div>
+                <div class="site-bar"><span style="width: 0;"></span></div>
+              </div>
+            </div>
+
+            <div style="padding: 0 22px 20px;">
+              <div class="alert info" style="padding: 12px 14px;">
+                <span class="icon" data-icon="info"></span>
+                <div>
+                  <div class="alert-title">Only Gokwe is reporting this period</div>
+                  <div class="alert-body">Other sites have no shift outputs recorded since Apr 18.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="two-col-sales">
+          <div class="panel">
+            <div class="panel-h">
+              <div>
+                <div class="ti">Recent sales</div>
+                <div class="sub">Latest 5 buyer payments</div>
+              </div>
+              <div class="right"><a>See all</a></div>
+            </div>
+            <div class="recent-rows">
+              <div class="recent-row">
+                <div><div class="who t-mono">BAR-0123</div><div class="sub">Gokwe · cash</div></div>
+                <div style="text-align: right;"><div class="amt">$4,000.00</div><div class="date">5/9/2026</div></div>
+              </div>
+              <div class="recent-row">
+                <div><div class="who t-mono">BATCH-20260414-025830-902</div><div class="sub">Gokwe · cash</div></div>
+                <div style="text-align: right;"><div class="amt">$408.00</div><div class="date">5/8/2026</div></div>
+              </div>
+              <div class="recent-row">
+                <div><div class="who t-mono">BATCH-20260414-025433-977</div><div class="sub">Gokwe · cash</div></div>
+                <div style="text-align: right;"><div class="amt">$288.00</div><div class="date">5/8/2026</div></div>
+              </div>
+              <div class="recent-row">
+                <div><div class="who t-mono">BAR-0122</div><div class="sub">Gokwe · bank transfer</div></div>
+                <div style="text-align: right;"><div class="amt">$328.00</div><div class="date">5/7/2026</div></div>
+              </div>
+              <div class="recent-row">
+                <div><div class="who t-mono">BAR-0121</div><div class="sub">Gokwe · cash</div></div>
+                <div style="text-align: right;"><div class="amt">$160.00</div><div class="date">5/6/2026</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-h">
+              <div>
+                <div class="ti">Top earners (last 30 days)</div>
+                <div class="sub">Workers with the highest share</div>
+              </div>
+            </div>
+            <div class="recent-rows">
+              <div class="recent-row">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span class="avatar" style="background: var(--brand-soft); color: var(--brand-strong);">CM</span>
+                  <div><div class="who">Christopher Mutemeri</div><div class="sub t-mono">EMP-0013</div></div>
+                </div>
+                <div style="text-align: right;"><div class="amt">$6,428.00</div><div class="date">80.35 g</div></div>
+              </div>
+              <div class="recent-row">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span class="avatar">NM</span>
+                  <div><div class="who">Nkosilati Mphofu</div><div class="sub t-mono">EMP-0028</div></div>
+                </div>
+                <div style="text-align: right;"><div class="amt">$5,760.00</div><div class="date">72.00 g</div></div>
+              </div>
+              <div class="recent-row">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span class="avatar">VN</span>
+                  <div><div class="who">Velapi Nyanyire</div><div class="sub t-mono">EMP-0064</div></div>
+                </div>
+                <div style="text-align: right;"><div class="amt">$4,296.00</div><div class="date">53.70 g</div></div>
+              </div>
+              <div class="recent-row">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span class="avatar">WM</span>
+                  <div><div class="who">Willy Majoni</div><div class="sub t-mono">EMP-0041</div></div>
+                </div>
+                <div style="text-align: right;"><div class="amt">$3,544.00</div><div class="date">44.30 g</div></div>
+              </div>
+              <div class="recent-row">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span class="avatar">SC</span>
+                  <div><div class="who">Simbarashe Chinji</div><div class="sub t-mono">EMP-0072</div></div>
+                </div>
+                <div style="text-align: right;"><div class="amt">$2,920.00</div><div class="date">36.50 g</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+  <div style="position: relative;"><span class="online-pill">Online</span></div>
+</div>
+</body>
+</html>
