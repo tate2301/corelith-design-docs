@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Dashboard · Staff portal · Huchu</title>
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../portal-kit-nav.js" defer></script>
+<style>
+  body { background: var(--gray-100); margin: 0; padding: 24px; min-height: 100vh; display: grid; place-items: center; }
+  .device-desktop { width: 1280px; max-width: 100%; border-radius: 12px; background: #1A1D24; padding: 0; box-shadow: 0 30px 60px -20px rgba(22,24,29,0.25), 0 0 0 1px rgba(22,24,29,0.1); overflow: hidden; }
+  .chrome { height: 36px; display: flex; align-items: center; gap: 6px; padding: 0 14px; background: #1A1D24; }
+  .chrome .dot { width: 10px; height: 10px; border-radius: 50%; background: #444; }
+  .chrome .dot.r { background: #FF5F57; }
+  .chrome .dot.y { background: #FEBC2E; }
+  .chrome .dot.g { background: #28C840; }
+  .chrome .url { margin-left: 14px; padding: 4px 12px; background: rgba(255,255,255,0.06); border-radius: 4px; color: #aaa; font: 12px/1 var(--font-mono); }
+
+  .st-app { display: grid; grid-template-columns: 240px 1fr; height: 760px; background: var(--canvas); }
+  .st-nav { background: var(--canvas); border-right: 1px solid var(--border); padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .st-nav .brand { display: inline-flex; align-items: center; gap: 10px; padding: 6px 8px; font: 600 15px/1 var(--font-sans); color: var(--text-strong); margin-bottom: 12px; }
+  .st-nav .brand .mark { width: 22px; height: 22px; color: var(--brand); }
+  .st-nav nav { display: grid; gap: 2px; }
+  .st-nav nav a { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; font: 500 13.5px/1 var(--font-sans); color: var(--text-body); text-decoration: none; }
+  .st-nav nav a:hover { background: var(--surface-muted); }
+  .st-nav nav a.active { background: var(--brand-soft); color: var(--brand-strong); }
+  .st-nav nav a svg { width: 16px; height: 16px; color: var(--text-muted); flex: none; }
+  .st-nav nav a.active svg { color: var(--brand); }
+  .st-nav .sh { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); padding: 16px 10px 8px; }
+  .st-nav .foot { margin-top: auto; padding: 12px 10px 4px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .st-nav .foot .av { width: 30px; height: 30px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 12px/1 var(--font-sans); }
+  .st-nav .foot .nm { font: 500 13px/1.3 var(--font-sans); color: var(--text-strong); }
+  .st-nav .foot .sb { font: 11px/1.2 var(--font-sans); color: var(--text-muted); }
+
+  .st-main { min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+  .st-top { padding: 16px 28px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; }
+  .st-top .crumbs { font: 500 12px/1 var(--font-sans); color: var(--text-muted); margin-bottom: 4px; }
+  .st-top h1 { font: 700 22px/1.2 var(--font-sans); letter-spacing: -0.015em; color: var(--text-strong); margin: 0; }
+  .st-top .meta { flex: 1; }
+  .st-top .actions { display: inline-flex; gap: 8px; }
+
+  .st-body { flex: 1; overflow-y: auto; padding: 22px 28px 28px; display: flex; flex-direction: column; gap: 22px; }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+  .stat .lb { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); display: inline-flex; align-items: center; gap: 6px; }
+  .stat .vl { font: 700 24px/1 var(--font-sans); font-variant-numeric: tabular-nums; color: var(--text-strong); letter-spacing: -0.01em; }
+  .stat .sb { font: 12px/1.3 var(--font-sans); color: var(--text-muted); }
+  .stat.brand { background: var(--brand-soft); border-color: var(--brand-100); }
+  .stat.brand .lb, .stat.brand .vl, .stat.brand .sb { color: var(--brand-strong); }
+
+  .grid-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .panel-h { padding: 14px 18px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 10px; }
+  .panel-h h2 { font: 600 14px/1 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .panel-h .sp { flex: 1; }
+  .panel-h a { font: 500 12px/1 var(--font-sans); color: var(--brand-strong); text-decoration: none; }
+  .panel-body { padding: 6px 0; }
+
+  .feed-row { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--border-subtle); }
+  .feed-row:last-child { border-bottom: 0; }
+  .feed-row .ic { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; background: var(--surface-muted); color: var(--text-strong); }
+  .feed-row .ic.success { background: var(--tone-success-bg); color: var(--tone-success); }
+  .feed-row .ic.brand { background: var(--brand-soft); color: var(--brand-strong); }
+  .feed-row .ic.warn { background: var(--tone-warn-bg); color: var(--tone-warn); }
+  .feed-row .nm { font: 500 14px/1.3 var(--font-sans); color: var(--text-strong); }
+  .feed-row .sb { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .feed-row .tm { font: 500 12px/1 var(--font-mono); color: var(--text-subtle); white-space: nowrap; }
+
+  .hol-row { display: grid; grid-template-columns: 64px 1fr auto; gap: 14px; align-items: center; padding: 12px 18px; border-bottom: 1px solid var(--border-subtle); }
+  .hol-row:last-child { border-bottom: 0; }
+  .hol-row .dt { background: var(--brand-soft); color: var(--brand-strong); border-radius: 8px; padding: 6px 0; text-align: center; }
+  .hol-row .dt .d { font: 700 18px/1 var(--font-sans); }
+  .hol-row .dt .m { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 4px; }
+  .hol-row .nm { font: 500 14px/1.3 var(--font-sans); color: var(--text-strong); }
+  .hol-row .sb { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .hol-row .pill { padding: 3px 9px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-muted); font: 500 11px/1 var(--font-sans); }
+</style>
+</head>
+<body data-portal-kit="staff" data-portal-screen="dashboard">
+
+<div class="device-desktop">
+  <div class="chrome">
+    <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+    <span class="url">https://staff.huchu.app / Park Centre / Self-service</span>
+  </div>
+
+  <div class="st-app">
+
+    <!-- Side rail -->
+    <aside class="st-nav">
+      <a class="brand"><span class="mark" data-icon="corelith"></span> Huchu Staff</a>
+      <nav>
+        <a href="dashboard.html" class="active"><span data-icon="home"></span> Home</a>
+        <a href="payslip.html"><span data-icon="card"></span> My pay</a>
+        <a href="leave.html"><span data-icon="calendar"></span> Leave</a>
+        <a href="time-clock.html"><span data-icon="clock"></span> Time</a>
+        <a href="directory.html"><span data-icon="user"></span> Directory</a>
+        <a href="#"><span data-icon="settings"></span> Profile</a>
+      </nav>
+      <div class="sh">Quick actions</div>
+      <nav>
+        <a href="leave.html"><span data-icon="plus"></span> Request leave</a>
+        <a href="payslip.html"><span data-icon="download"></span> Latest payslip</a>
+        <a href="#"><span data-icon="chat"></span> Contact HR</a>
+      </nav>
+      <div class="foot">
+        <span class="av">CM</span>
+        <div>
+          <div class="nm">Chipo Mutasa</div>
+          <div class="sb">Branch supervisor · Park Centre</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <section class="st-main">
+      <header class="st-top">
+        <div class="meta">
+          <div class="crumbs">Staff · Self-service · Home</div>
+          <h1>Good morning, Chipo</h1>
+        </div>
+        <div class="actions">
+          <button class="btn btn-ghost"><span data-icon="bell" data-icon-size="14"></span> 3</button>
+          <button class="btn btn-secondary"><span data-icon="search" data-icon-size="14"></span> Quick find</button>
+          <button class="btn btn-primary"><span data-icon="plus" data-icon-size="14"></span> Request leave</button>
+        </div>
+      </header>
+
+      <div class="st-body">
+
+        <!-- Quick stats -->
+        <div class="stat-grid">
+          <div class="stat brand">
+            <div class="lb"><span data-icon="card" data-icon-size="12"></span> Next payslip</div>
+            <div class="vl">$ 1,840.00</div>
+            <div class="sb">Pays Friday 29 May · period May 2026</div>
+          </div>
+          <div class="stat">
+            <div class="lb"><span data-icon="calendar" data-icon-size="12"></span> Leave balance</div>
+            <div class="vl">12 days</div>
+            <div class="sb">Annual · 5 sick · 3 compassionate</div>
+          </div>
+          <div class="stat">
+            <div class="lb"><span data-icon="clock" data-icon-size="12"></span> Hours this period</div>
+            <div class="vl">86h 40m</div>
+            <div class="sb">Target 96h · 4 days remaining</div>
+          </div>
+          <div class="stat">
+            <div class="lb"><span data-icon="star" data-icon-size="12"></span> Anniversary</div>
+            <div class="vl">3 years</div>
+            <div class="sb">Joined 14 August 2023</div>
+          </div>
+        </div>
+
+        <!-- Two-column -->
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-h">
+              <h2>Recent activity</h2>
+              <div class="sp"></div>
+              <a href="#">View all</a>
+            </div>
+            <div class="panel-body">
+              <div class="feed-row">
+                <span class="ic success"><span data-icon="check" data-icon-size="16"></span></span>
+                <div>
+                  <div class="nm">Leave approved · 3 days annual</div>
+                  <div class="sb">Tendai Moyo (manager) approved 25–27 Jun for Victoria Falls trip</div>
+                </div>
+                <span class="tm">2h ago</span>
+              </div>
+              <div class="feed-row">
+                <span class="ic brand"><span data-icon="card" data-icon-size="16"></span></span>
+                <div>
+                  <div class="nm">Payslip issued · April 2026</div>
+                  <div class="sb">$ 1,815.42 paid into CBZ Bank · stub available for download</div>
+                </div>
+                <span class="tm">28 Apr</span>
+              </div>
+              <div class="feed-row">
+                <span class="ic"><span data-icon="clock" data-icon-size="16"></span></span>
+                <div>
+                  <div class="nm">Clocked in at Park Centre</div>
+                  <div class="sb">07:42 · 8 minutes early · within geo-fence</div>
+                </div>
+                <span class="tm">Today</span>
+              </div>
+              <div class="feed-row">
+                <span class="ic warn"><span data-icon="info" data-icon-size="16"></span></span>
+                <div>
+                  <div class="nm">Time-sheet awaiting your sign-off</div>
+                  <div class="sb">Fortnight ending 24 May · review before Tuesday close</div>
+                </div>
+                <span class="tm">24 May</span>
+              </div>
+              <div class="feed-row">
+                <span class="ic brand"><span data-icon="book" data-icon-size="16"></span></span>
+                <div>
+                  <div class="nm">Policy update · Travel claims</div>
+                  <div class="sb">New per-diem rates for inter-branch travel effective 1 June</div>
+                </div>
+                <span class="tm">21 May</span>
+              </div>
+              <div class="feed-row">
+                <span class="ic success"><span data-icon="check" data-icon-size="16"></span></span>
+                <div>
+                  <div class="nm">NSSA registration confirmed</div>
+                  <div class="sb">HR uploaded updated reference number to your profile</div>
+                </div>
+                <span class="tm">14 May</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-h">
+              <h2>Upcoming holidays</h2>
+              <div class="sp"></div>
+              <a href="#">2026 calendar</a>
+            </div>
+            <div class="panel-body">
+              <div class="hol-row">
+                <div class="dt"><div class="d">25</div><div class="m">May</div></div>
+                <div>
+                  <div class="nm">Africa Day</div>
+                  <div class="sb">Public holiday · stores closed</div>
+                </div>
+                <span class="pill">Mon</span>
+              </div>
+              <div class="hol-row">
+                <div class="dt"><div class="d">11</div><div class="m">Aug</div></div>
+                <div>
+                  <div class="nm">Heroes' Day</div>
+                  <div class="sb">Public holiday</div>
+                </div>
+                <span class="pill">Tue</span>
+              </div>
+              <div class="hol-row">
+                <div class="dt"><div class="d">12</div><div class="m">Aug</div></div>
+                <div>
+                  <div class="nm">Defence Forces Day</div>
+                  <div class="sb">Public holiday · double-time roster</div>
+                </div>
+                <span class="pill">Wed</span>
+              </div>
+              <div class="hol-row">
+                <div class="dt"><div class="d">22</div><div class="m">Dec</div></div>
+                <div>
+                  <div class="nm">Unity Day</div>
+                  <div class="sb">Public holiday</div>
+                </div>
+                <span class="pill">Mon</span>
+              </div>
+              <div class="hol-row">
+                <div class="dt"><div class="d">25</div><div class="m">Dec</div></div>
+                <div>
+                  <div class="nm">Christmas Day</div>
+                  <div class="sb">Public holiday · branches closed</div>
+                </div>
+                <span class="pill">Thu</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+</div>
+
+</body>
+</html>
