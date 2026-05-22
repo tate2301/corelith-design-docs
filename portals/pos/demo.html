@@ -32,6 +32,23 @@
   .pd-bar .cashier { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); }
   .pd-bar .cashier .av { width: 26px; height: 26px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 11px/1 var(--font-sans); }
 
+  .pd-bar .bar-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 10px; border-radius: 7px;
+    background: var(--surface-muted); color: var(--text-strong);
+    border: 0; cursor: pointer;
+    font: 500 12px/1 var(--font-sans);
+  }
+  .pd-bar .bar-btn:hover { background: var(--surface-sunken); }
+  .pd-bar .bar-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+  /* === Fullscreen preview mode === */
+  body.is-fullscreen .pk-nav { display: none !important; }
+  body.is-fullscreen { background: var(--ink); }
+  body.is-fullscreen .pd-app {
+    height: 100vh; height: 100dvh;
+  }
+
   .pd-side { grid-area: side; background: var(--ink); color: rgba(255,255,255,0.85); padding: 14px 10px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .pd-side .pd-brand { display: inline-flex; align-items: center; gap: 8px; padding: 4px 8px 14px; font: 600 14px/1 var(--font-sans); color: #fff; }
   .pd-side .pd-brand .m { color: #fff; }
@@ -178,7 +195,7 @@
   .cart .charge .v { font: 700 19px/1 var(--font-mono); font-variant-numeric: tabular-nums; }
 
   /* === Tender === */
-  .tender { width: 100%; padding: 28px; display: grid; place-items: center; overflow-y: auto; }
+  .tender { width: 100%; padding: 28px; display: flex; flex-direction: column; align-items: center; overflow-y: auto; min-height: 0; }
   .tender-wrap { width: 100%; max-width: 900px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
   .tender .due {
     grid-column: 1 / -1;
@@ -501,6 +518,8 @@
     .pd-bar .cashier { gap: 4px; }
     .pd-bar > .sep { display: none; }
     .pd-bar > span:not(.br):not(.pill):not(.cashier):not(.spacer) { display: none; } /* hide "Till 02 · Shift S-2841" */
+    .pd-bar .bar-btn-label { display: none; }
+    .pd-bar .bar-btn { padding: 6px 8px; }
 
     /* Bottom tab bar */
     .pd-tabs {
@@ -561,28 +580,25 @@
     .view-cart-bar .meta { font: 500 12px/1.2 var(--font-sans); opacity: 0.85; margin-top: 2px; }
     .view-cart-bar .v { font: 700 16px/1 var(--font-mono); font-variant-numeric: tabular-nums; }
 
-    /* Cart becomes a slide-up sheet */
+    /* Cart becomes a slide-up sheet covering full viewport (above tab bar) */
     .cart {
       position: fixed;
-      left: 0; right: 0; bottom: 0;
-      top: 18%;
+      left: 0; right: 0; top: 0; bottom: 0;
       z-index: 70;
       border-left: 0;
-      border-top-left-radius: 16px;
-      border-top-right-radius: 16px;
+      border-radius: 0;
       box-shadow: 0 -20px 40px -10px rgba(0,0,0,0.25);
       transform: translateY(100%);
       transition: transform 280ms cubic-bezier(0.2, 0, 0.1, 1);
       display: flex;
     }
     .cart.open { transform: translateY(0); }
-    .cart::before {
-      content: ""; position: absolute; top: 8px; left: 50%;
-      transform: translateX(-50%);
-      width: 40px; height: 4px; border-radius: 2px;
-      background: var(--border-strong);
-    }
-    .cart .ch { padding-top: 22px; }
+    .cart .ch { padding-top: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+    .cart .lines { padding: 0; }
+    .cart .line { padding: 12px 16px; }
+    .cart .totals { padding-top: 14px; }
+    .cart .charge { margin-bottom: calc(14px + env(safe-area-inset-bottom)); padding: 18px; font-size: 18px; }
+    .cart .acts button { padding: 12px; font-size: 13.5px; }
     .cart .ch #close-sheet {
       display: grid !important;
       width: 30px; height: 30px; border-radius: 8px;
@@ -591,23 +607,48 @@
       color: var(--text-strong); cursor: pointer;
     }
 
-    /* Tender single column */
-    .tender { padding: 14px; }
-    .tender-wrap { gap: 12px; }
-    .tender .due { padding: 18px; }
-    .tender .due .am { font-size: 42px; }
-    .tender .due .am .c { font-size: 22px; }
-    .tender .methods { padding: 14px; }
-    .tender .methods h3 { margin-bottom: 10px; }
-    .tender .mgrid { gap: 6px; }
-    .tender .mbtn { padding: 12px 10px; gap: 4px; }
-    .tender .mbtn .ic-tile { width: 28px; height: 28px; }
-    .tender .mbtn .nm { font-size: 12.5px; }
-    .tender .mbtn .sb { font-size: 11px; }
-    .tender .work { padding: 14px; }
-    .tender .keypad button { height: 40px; font-size: 15px; }
-    .tender .confirm { flex-direction: column-reverse; gap: 6px; }
-    .tender .confirm button { padding: 13px; }
+    /* Tender single column — compact for phone */
+    .tender { padding: 12px 12px 80px; align-items: stretch; }
+    .tender-wrap { gap: 10px; max-width: 100%; }
+    .tender .due { padding: 14px; }
+    .tender .due .lbl { font-size: 11px; }
+    .tender .due .am { font-size: 36px; margin: 6px 0 2px; }
+    .tender .due .am .c { font-size: 20px; }
+    .tender .due .lines-info { font-size: 12px; }
+    .tender .methods { padding: 12px; }
+    .tender .methods h3 { margin-bottom: 8px; font-size: 13px; }
+    /* Compact horizontal method picker on phone */
+    .tender .mgrid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .tender .mbtn { padding: 10px; gap: 2px; flex-direction: row; align-items: center; }
+    .tender .mbtn .ic-tile { width: 28px; height: 28px; flex: none; }
+    .tender .mbtn > div, .tender .mbtn .nm, .tender .mbtn .sb { font-size: 11.5px; }
+    .tender .mbtn .nm { font-size: 13px; font-weight: 600; }
+    .tender .mbtn .sb { display: none; } /* drop subtitle on phone */
+    /* Make split tender span full row */
+    .tender .mbtn[data-m="split"] { grid-column: 1 / -1; }
+    .tender .work { padding: 12px; gap: 10px; }
+    .tender .recv { gap: 6px; }
+    .tender .recv .cell { padding: 8px 10px; }
+    .tender .recv .cell .v { font-size: 16px; margin-top: 4px; }
+    .tender .quicks { gap: 4px; }
+    .tender .quicks .q { padding: 7px 10px; font-size: 12.5px; }
+    .tender .keypad { gap: 5px; }
+    .tender .keypad button { height: 44px; font-size: 16px; }
+    /* Confirm bar: sticky at bottom so it's always reachable */
+    .tender .confirm {
+      position: sticky; bottom: 0;
+      flex-direction: row; gap: 6px;
+      padding: 10px 12px;
+      margin: 0 -12px -12px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      grid-column: 1 / -1;
+      z-index: 5;
+    }
+    .tender .confirm button { padding: 12px; font-size: 13.5px; flex: 1; }
+    .tender .confirm .cancel { flex: 0 0 auto; padding: 12px 14px; }
+    .tender .confirm .cancel { font-size: 12.5px; }
+    .tender .sim { padding: 12px; font-size: 12.5px; }
 
     /* Receipt page */
     .receipt-page { padding: 14px; }
@@ -1070,6 +1111,7 @@ function renderSide() {
 
 function renderBar() {
   const cust = state.cart.customerId ? CUSTOMERS.find(c => c.id === state.cart.customerId) : null;
+  const isFs = !!document.fullscreenElement || document.body.classList.contains('is-fullscreen');
   return `
     <header class="pd-bar">
       <span class="br">Park Centre</span>
@@ -1080,6 +1122,10 @@ function renderBar() {
       <span class="pill live"><span class="dot"></span> Online</span>
       ${cust ? `<span class="pill" style="background: var(--brand-soft); color: var(--brand-strong);"><span data-icon="user" data-icon-size="11"></span> ${escapeHtml(cust.name)}</span>` : ''}
       <span class="spacer"></span>
+      <button class="bar-btn" id="fs-toggle" title="${isFs ? 'Exit fullscreen' : 'Fullscreen preview'}" aria-label="${isFs ? 'Exit fullscreen' : 'Fullscreen preview'}">
+        <span data-icon="${isFs ? 'x' : 'grid'}" data-icon-size="14"></span>
+        <span class="bar-btn-label">${isFs ? 'Exit' : 'Fullscreen'}</span>
+      </button>
       <span class="cashier">
         <span>Faith Moyo · cashier</span>
         <span class="av">FM</span>
@@ -1087,6 +1133,31 @@ function renderBar() {
     </header>
   `;
 }
+
+function toggleFullscreen() {
+  const isFs = !!document.fullscreenElement;
+  if (isFs) {
+    document.exitFullscreen().catch(() => {});
+    document.body.classList.remove('is-fullscreen');
+  } else {
+    document.body.classList.add('is-fullscreen');
+    document.documentElement.requestFullscreen?.().catch(() => {
+      // Fullscreen API blocked (cross-origin iframe etc.) — class-based fullscreen still works
+    });
+  }
+  // Re-render to update the icon
+  render();
+}
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) document.body.classList.remove('is-fullscreen');
+  render();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.body.classList.contains('is-fullscreen') && !document.fullscreenElement) {
+    document.body.classList.remove('is-fullscreen');
+    render();
+  }
+});
 
 function renderRoute() {
   switch (state.route) {
@@ -1934,6 +2005,7 @@ function wireRoute() {
   $$('[data-go]').forEach(b => {
     if (!b._goWired) { b.addEventListener('click', (e) => { e.preventDefault(); go(b.dataset.go); }); b._goWired = true; }
   });
+  const fs = $('#fs-toggle'); if (fs) fs.addEventListener('click', toggleFullscreen);
   switch (state.route) {
     case 'sale':     wireSale(); break;
     case 'tender':   wireTender(); break;
@@ -1948,6 +2020,10 @@ function wireRoute() {
 
 /* === Init === */
 function init() {
+  // Honor ?fullscreen=1 query param
+  if (/[?&]fullscreen=1/.test(location.search)) {
+    document.body.classList.add('is-fullscreen');
+  }
   const r = (location.hash.replace(/^#\/?/, '') || 'sale');
   state.route = r;
   // Pre-seed cart with a starter so the demo isn't empty
