@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Library · Student portal · Huchu</title>
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../portal-kit-nav.js" defer></script>
+<style>
+  .lib-search { display: flex; align-items: center; gap: 8px; margin: 12px 16px 6px; padding: 10px 12px; background: var(--surface-muted); border-radius: 12px; }
+  .lib-search input { flex: 1; border: 0; background: transparent; outline: 0; font: 500 14px/1 var(--font-sans); color: var(--text-strong); }
+  .lib-search input::placeholder { color: var(--text-subtle); }
+  .lib-search .ic { color: var(--text-muted); }
+
+  .fines-pill { display: flex; align-items: center; gap: 10px; margin: 8px 16px; padding: 10px 12px; background: #FEE2E2; border: 1px solid #FCA5A5; border-radius: 12px; }
+  .fines-pill .ic { width: 32px; height: 32px; border-radius: 8px; background: #fff; color: var(--tone-danger); display: grid; place-items: center; }
+  .fines-pill .nm { font: 600 13.5px/1.3 var(--font-sans); color: #7F1D1D; }
+  .fines-pill .sb { font: 11.5px/1.3 var(--font-sans); color: #991B1B; margin-top: 2px; }
+  .fines-pill .val { margin-left: auto; font: 700 14px/1 var(--font-mono); color: #7F1D1D; }
+
+  .borrow-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin: 0 16px 10px; display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center; }
+  .book-cover { width: 56px; height: 78px; border-radius: 6px; background: linear-gradient(135deg, #C2410C, #7C2D12); color: #fff; display: flex; flex-direction: column; justify-content: flex-end; padding: 8px 6px; font: 700 9px/1.1 var(--font-sans); position: relative; overflow: hidden; }
+  .book-cover::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: rgba(0,0,0,0.2); }
+  .book-cover.green { background: linear-gradient(135deg, #166534, #14532D); }
+  .book-cover.blue { background: linear-gradient(135deg, #0B5DF0, #1E40AF); }
+  .book-cover.purple { background: linear-gradient(135deg, #6B21A8, #4C1D95); }
+  .book-cover.pink { background: linear-gradient(135deg, #DB2777, #831843); }
+  .book-cover.amber { background: linear-gradient(135deg, #D97706, #78350F); }
+  .borrow-card .nm { font: 600 14px/1.3 var(--font-sans); color: var(--text-strong); }
+  .borrow-card .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 3px; }
+  .borrow-card .due { font: 500 11px/1 var(--font-mono); color: var(--text-muted); margin-top: 6px; display: inline-flex; align-items: center; gap: 4px; }
+  .borrow-card .due.urgent { color: var(--tone-danger); }
+  .borrow-card .due.overdue { color: var(--tone-danger); font-weight: 700; }
+  .borrow-card .renew { padding: 6px 10px; border-radius: 8px; background: var(--surface-muted); font: 600 11px/1 var(--font-sans); color: var(--text-strong); border: 0; }
+
+  .scan-cta { margin: 8px 16px 10px; padding: 14px 16px; background: var(--ink); color: #fff; border-radius: 14px; display: flex; align-items: center; gap: 14px; position: relative; overflow: clip; }
+  .scan-cta::before { content: ""; position: absolute; right: -30px; top: -30px; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, rgba(251,146,60,0.32), transparent 70%); }
+  .scan-cta .qr { width: 44px; height: 44px; border-radius: 10px; background: rgba(255,255,255,0.12); color: #FCD34D; display: grid; place-items: center; flex: none; }
+  .scan-cta .nm { font: 600 14.5px/1.3 var(--font-sans); }
+  .scan-cta .sb { font: 12px/1.4 var(--font-sans); opacity: 0.78; margin-top: 3px; }
+  .scan-cta .arrow { margin-left: auto; opacity: 0.7; }
+
+  .carousel { padding: 4px 16px 0; display: flex; gap: 12px; overflow-x: auto; }
+  .carousel::-webkit-scrollbar { display: none; }
+  .rec-card { flex: 0 0 132px; }
+  .rec-card .book-cover { width: 132px; height: 184px; padding: 12px 10px; font: 700 12px/1.2 var(--font-sans); }
+  .rec-card .meta { padding-top: 8px; }
+  .rec-card .nm { font: 600 13px/1.3 var(--font-sans); color: var(--text-strong); }
+  .rec-card .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .rec-card .rt { font: 500 11px/1 var(--font-mono); color: #FB923C; margin-top: 4px; display: inline-flex; align-items: center; gap: 3px; }
+
+  .rlist .pl-row .ic-tile { background: var(--surface-muted); }
+</style>
+</head>
+<body data-portal-kit="student" data-portal-screen="library">
+
+<main class="kit-stage phone-bg">
+  <div class="device-phone">
+    <div class="screen">
+      <div class="ps-screen">
+
+        <div class="ps-statusbar"><span>9:41</span><span class="right"><span data-icon="signal"></span><span data-icon="wifi"></span><span data-icon="battery"></span></span></div>
+
+        <div class="ps-appbar">
+          <button class="nav-btn" onclick="history.back()"><span data-icon="back" data-icon-size="20"></span></button>
+          <h1>Library</h1>
+          <div class="right">
+            <button class="nav-btn"><span data-icon="heart" data-icon-size="18"></span></button>
+          </div>
+        </div>
+
+        <div class="ps-scroll">
+          <div class="lib-search">
+            <span class="ic" data-icon="search" data-icon-size="16"></span>
+            <input placeholder="Search title, author or ISBN" />
+            <span class="ic" data-icon="qr" data-icon-size="16"></span>
+          </div>
+
+          <div class="fines-pill">
+            <span class="ic"><span data-icon="info" data-icon-size="16"></span></span>
+            <div>
+              <div class="nm">Outstanding fine</div>
+              <div class="sb">1 book returned late · "Tsumo na Madimikira"</div>
+            </div>
+            <span class="val">$ 2.50</span>
+          </div>
+
+          <a class="scan-cta" href="#">
+            <span class="qr"><span data-icon="qr" data-icon-size="22"></span></span>
+            <div>
+              <div class="nm">Scan to return</div>
+              <div class="sb">Point camera at the barcode inside the front cover</div>
+            </div>
+            <span class="arrow" data-icon="chright"></span>
+          </a>
+
+          <div style="padding: 0 16px;">
+            <div class="psh">Currently borrowed · 3<a href="#">History</a></div>
+          </div>
+
+          <div class="borrow-card">
+            <div class="book-cover">NERVOUS<br>CONDITIONS</div>
+            <div>
+              <div class="nm">Nervous Conditions</div>
+              <div class="sb">Tsitsi Dangarembga · Form 4 set text</div>
+              <div class="due urgent"><span data-icon="clock" data-icon-size="11"></span> Due in 2 days · 24 May</div>
+            </div>
+            <button class="renew">Renew</button>
+          </div>
+
+          <div class="borrow-card">
+            <div class="book-cover green">FEZA</div>
+            <div>
+              <div class="nm">Feso</div>
+              <div class="sb">Solomon Mutswairo · ChiShona literature</div>
+              <div class="due"><span data-icon="clock" data-icon-size="11"></span> Due 31 May · 11 days</div>
+            </div>
+            <button class="renew">Renew</button>
+          </div>
+
+          <div class="borrow-card">
+            <div class="book-cover blue">MATHS<br>F4</div>
+            <div>
+              <div class="nm">New General Mathematics · Book 4</div>
+              <div class="sb">JB Channon · textbook loan</div>
+              <div class="due overdue"><span data-icon="clock" data-icon-size="11"></span> Overdue · 4 days late</div>
+            </div>
+            <button class="renew" style="background: var(--tone-danger-bg); color: var(--tone-danger);">Return</button>
+          </div>
+
+          <div style="padding: 0 16px;">
+            <div class="psh">Recommended for you<a href="#">More</a></div>
+          </div>
+          <div class="carousel" style="padding-bottom: 4px;">
+            <div class="rec-card">
+              <div class="book-cover purple">HOUSE OF<br>HUNGER</div>
+              <div class="meta">
+                <div class="nm">House of Hunger</div>
+                <div class="sb">Dambudzo Marechera</div>
+                <span class="rt"><span data-icon="star" data-icon-size="11"></span> 4.6 · 142 reviews</span>
+              </div>
+            </div>
+            <div class="rec-card">
+              <div class="book-cover amber">THINGS<br>FALL<br>APART</div>
+              <div class="meta">
+                <div class="nm">Things Fall Apart</div>
+                <div class="sb">Chinua Achebe</div>
+                <span class="rt"><span data-icon="star" data-icon-size="11"></span> 4.8 · 980 reviews</span>
+              </div>
+            </div>
+            <div class="rec-card">
+              <div class="book-cover pink">BONES</div>
+              <div class="meta">
+                <div class="nm">Bones</div>
+                <div class="sb">Chenjerai Hove</div>
+                <span class="rt"><span data-icon="star" data-icon-size="11"></span> 4.4 · 88 reviews</span>
+              </div>
+            </div>
+            <div class="rec-card">
+              <div class="book-cover green">WAITING<br>FOR THE<br>RAIN</div>
+              <div class="meta">
+                <div class="nm">Waiting for the Rain</div>
+                <div class="sb">Charles Mungoshi</div>
+                <span class="rt"><span data-icon="star" data-icon-size="11"></span> 4.3 · 64 reviews</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="padding: 0 16px;">
+            <div class="psh">My reading list · 5<a href="#">Edit</a></div>
+            <div class="pl rlist">
+              <div class="pl-row">
+                <span class="ic-tile"><span data-icon="book" data-icon-size="18"></span></span>
+                <div><div class="nm">Mhuri Yamutemai</div><div class="sb">Patrick Chakaipa · ChiShona</div></div>
+                <span data-icon="bell" style="color: var(--text-subtle);"></span>
+              </div>
+              <div class="pl-row">
+                <span class="ic-tile"><span data-icon="book" data-icon-size="18"></span></span>
+                <div><div class="nm">Harvest of Thorns</div><div class="sb">Shimmer Chinodya · English literature</div></div>
+                <span data-icon="bell" style="color: var(--text-subtle);"></span>
+              </div>
+              <div class="pl-row">
+                <span class="ic-tile"><span data-icon="book" data-icon-size="18"></span></span>
+                <div><div class="nm">A Grain of Wheat</div><div class="sb">Ngũgĩ wa Thiong'o · post-colonial</div></div>
+                <span data-icon="bell" style="color: var(--text-subtle);"></span>
+              </div>
+              <div class="pl-row">
+                <span class="ic-tile"><span data-icon="book" data-icon-size="18"></span></span>
+                <div><div class="nm">Black Sunlight</div><div class="sb">Dambudzo Marechera · modernist</div></div>
+                <span data-icon="bell" style="color: var(--text-subtle);"></span>
+              </div>
+              <div class="pl-row">
+                <span class="ic-tile"><span data-icon="book" data-icon-size="18"></span></span>
+                <div><div class="nm">Pawns</div><div class="sb">Edmund Chipamaunga · history novel</div></div>
+                <span data-icon="bell" style="color: var(--text-subtle);"></span>
+              </div>
+            </div>
+          </div>
+
+          <div style="height: 24px;"></div>
+        </div>
+
+        <div class="ps-tabbar">
+          <a class="ps-tab" href="dashboard.html"><span data-icon="home"></span>Home</a>
+          <a class="ps-tab" href="timetable.html"><span data-icon="calendar"></span>Timetable</a>
+          <a class="ps-tab" href="marks.html"><span data-icon="chart"></span>Marks</a>
+          <a class="ps-tab" href="profile.html"><span data-icon="user"></span>Profile</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+</body>
+</html>
