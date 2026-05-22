@@ -442,6 +442,30 @@
   .toast.out { animation: toastOut 240ms ease forwards; }
   @keyframes toastOut { to { opacity: 0; transform: translateX(20px); } }
 
+  /* Hidden by default (only used in mobile drill-in) */
+  .back-list {
+    display: none;
+    align-items: center; gap: 6px;
+    padding: 7px 10px; margin: -4px -4px 10px;
+    background: var(--surface-muted); border-radius: 6px;
+    font: 500 12.5px/1 var(--font-sans); color: var(--brand-strong);
+    cursor: pointer; border: 0; width: fit-content;
+  }
+
+  /* === Mobile bottom tab bar (shown <=720px) === */
+  .pd-tabs { display: none; }
+
+  /* === Mobile cart sheet === */
+  .cart-sheet-scrim {
+    display: none;
+    position: fixed; inset: 0; background: rgba(22,24,29,0.55);
+    z-index: 60; animation: scrimIn 160ms ease;
+  }
+  .cart-sheet-scrim.open { display: block; }
+
+  /* === Mobile "view cart" sticky bar === */
+  .view-cart-bar { display: none; }
+
   /* === Responsive === */
   @media (max-width: 1000px) {
     .pd-app { grid-template-columns: 64px 1fr; }
@@ -454,13 +478,215 @@
     .tender-wrap { grid-template-columns: 1fr; }
     .splitp { grid-template-columns: 1fr; }
     .cashup-grid { grid-template-columns: 1fr; }
+    .zrep .kpis { grid-template-columns: 1fr 1fr; }
   }
+
+  /* Phone */
   @media (max-width: 720px) {
-    .pd-app { grid-template-columns: 1fr; grid-template-areas: "bar" "main"; height: calc(100dvh - 47px); }
+    .pd-app {
+      grid-template-columns: 1fr;
+      grid-template-rows: 44px 1fr 60px;
+      grid-template-areas: "bar" "main" "tabs";
+      height: calc(100dvh - 47px); /* minus pk-nav */
+      min-height: 0;
+    }
     .pd-side { display: none; }
-    .sale { grid-template-columns: 1fr; }
-    .cart { display: none; }
-    .sale.with-cart .cart { display: flex; position: fixed; inset: 0; top: 99px; z-index: 40; }
+
+    /* Top bar compresses */
+    .pd-bar { padding: 0 12px; gap: 6px; font-size: 12px; height: 44px; }
+    .pd-bar .br { font-weight: 600; }
+    .pd-bar .cashier > span:not(.av) { display: none; }
+    .pd-bar .pill { padding: 3px 7px; font-size: 10.5px; }
+    .pd-bar .pill > span:not(.dot) { display: none; }
+    .pd-bar .cashier { gap: 4px; }
+    .pd-bar > .sep { display: none; }
+    .pd-bar > span:not(.br):not(.pill):not(.cashier):not(.spacer) { display: none; } /* hide "Till 02 · Shift S-2841" */
+
+    /* Bottom tab bar */
+    .pd-tabs {
+      grid-area: tabs;
+      display: flex;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 0 4px env(safe-area-inset-bottom, 4px);
+    }
+    .pd-tabs .t {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; padding: 6px 2px;
+      color: var(--text-subtle); background: transparent; cursor: pointer;
+      font: 500 10px/1 var(--font-sans); border: 0;
+      position: relative;
+    }
+    .pd-tabs .t .ic { width: 22px; height: 22px; display: grid; place-items: center; }
+    .pd-tabs .t.active { color: var(--brand); }
+    .pd-tabs .t .badge {
+      position: absolute; top: 4px; right: 28%;
+      min-width: 16px; height: 16px; padding: 0 4px;
+      background: var(--brand); color: #fff;
+      border-radius: 9999px;
+      font: 600 10px/16px var(--font-mono); text-align: center;
+    }
+
+    /* Sale: full-width catalog */
+    .sale {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto 1fr auto;
+      position: relative;
+    }
+    .sale .cat-bar { padding: 10px 12px; }
+    .sale .chips { padding: 8px 12px; }
+    .sale .grid {
+      padding: 10px 12px 80px; /* bottom space for view-cart bar */
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .sale .tile { padding: 8px; gap: 4px; }
+    .sale .tile .sw { height: 60px; font-size: 18px; }
+    .sale .tile .nm { font-size: 12px; }
+    .sale .tile .pr { font-size: 12px; }
+
+    /* View cart sticky bar */
+    .view-cart-bar {
+      display: flex; align-items: center; gap: 10px;
+      position: absolute; left: 8px; right: 8px; bottom: 8px;
+      background: var(--brand); color: #fff;
+      padding: 12px 14px; border-radius: 12px;
+      box-shadow: 0 10px 24px -6px rgba(11,93,240,0.4);
+      cursor: pointer; z-index: 5;
+      animation: barIn 240ms ease;
+    }
+    @keyframes barIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .view-cart-bar .ic-bg { width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.18); display: grid; place-items: center; flex: none; }
+    .view-cart-bar .lbl { font: 600 14px/1.2 var(--font-sans); flex: 1; }
+    .view-cart-bar .meta { font: 500 12px/1.2 var(--font-sans); opacity: 0.85; margin-top: 2px; }
+    .view-cart-bar .v { font: 700 16px/1 var(--font-mono); font-variant-numeric: tabular-nums; }
+
+    /* Cart becomes a slide-up sheet */
+    .cart {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      top: 18%;
+      z-index: 70;
+      border-left: 0;
+      border-top-left-radius: 16px;
+      border-top-right-radius: 16px;
+      box-shadow: 0 -20px 40px -10px rgba(0,0,0,0.25);
+      transform: translateY(100%);
+      transition: transform 280ms cubic-bezier(0.2, 0, 0.1, 1);
+      display: flex;
+    }
+    .cart.open { transform: translateY(0); }
+    .cart::before {
+      content: ""; position: absolute; top: 8px; left: 50%;
+      transform: translateX(-50%);
+      width: 40px; height: 4px; border-radius: 2px;
+      background: var(--border-strong);
+    }
+    .cart .ch { padding-top: 22px; }
+    .cart .ch #close-sheet {
+      display: grid !important;
+      width: 30px; height: 30px; border-radius: 8px;
+      background: var(--surface-muted);
+      place-items: center;
+      color: var(--text-strong); cursor: pointer;
+    }
+
+    /* Tender single column */
+    .tender { padding: 14px; }
+    .tender-wrap { gap: 12px; }
+    .tender .due { padding: 18px; }
+    .tender .due .am { font-size: 42px; }
+    .tender .due .am .c { font-size: 22px; }
+    .tender .methods { padding: 14px; }
+    .tender .methods h3 { margin-bottom: 10px; }
+    .tender .mgrid { gap: 6px; }
+    .tender .mbtn { padding: 12px 10px; gap: 4px; }
+    .tender .mbtn .ic-tile { width: 28px; height: 28px; }
+    .tender .mbtn .nm { font-size: 12.5px; }
+    .tender .mbtn .sb { font-size: 11px; }
+    .tender .work { padding: 14px; }
+    .tender .keypad button { height: 40px; font-size: 15px; }
+    .tender .confirm { flex-direction: column-reverse; gap: 6px; }
+    .tender .confirm button { padding: 13px; }
+
+    /* Receipt page */
+    .receipt-page { padding: 14px; }
+    .receipt-card { padding: 20px 16px; }
+    .receipt-card h2 { font-size: 16px; }
+    .receipt-card .acts { grid-template-columns: 1fr 1fr; gap: 6px; }
+    .receipt-card .acts .btn.primary { grid-column: 1 / -1; padding: 13px; }
+
+    /* Generic pages */
+    .page { padding: 14px; }
+    .page-h { gap: 10px; margin-bottom: 12px; }
+    .page-h h2 { font-size: 19px; }
+    .page-h .lede { font-size: 13px; }
+    .splitp { gap: 10px; }
+    .splitp .pane { padding: 12px; }
+
+    /* Customer/refund/item: stack with drill-in navigation */
+    .splitp.has-detail { grid-template-rows: auto; }
+    /* When a row is selected, hide the list (drill-in style) */
+    .splitp.has-selection > .pane:first-child { display: none; }
+    .splitp.has-selection .back-list {
+      display: flex !important;
+    }
+    .splitp.has-detail .back-list { display: none; }
+
+    /* Cash-up: tighter */
+    .cashup { padding: 14px; }
+    .cashup .pane { padding: 14px; }
+    .cashup .den { grid-template-columns: 56px 1fr 76px; gap: 6px; padding: 6px 0; }
+    .cashup .den .ctrl button { width: 26px; height: 26px; }
+    .cashup .den .ctrl input { width: 44px; height: 26px; }
+    .cashup .den .ln { font-size: 12.5px; }
+    .cashup .den .dn { font-size: 12.5px; }
+    .cashup .variance { padding: 12px 14px; gap: 10px; }
+    .cashup .variance .v { font-size: 18px; }
+    .cashup .submit button { padding: 12px 14px; font-size: 13px; }
+
+    /* Z-report */
+    .zrep { padding: 14px; }
+    .zrep-card { padding: 18px 14px; }
+    .zrep .kpis { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .zrep .k { padding: 10px; }
+    .zrep .k .v { font-size: 18px; }
+    .zrep .tbl { font-size: 11.5px; }
+    .zrep .tbl th, .zrep .tbl td { padding: 6px; }
+    .zrep .sec { margin-top: 16px; }
+    .zrep .ftr { flex-direction: column; }
+    .zrep .ftr button { width: 100%; padding: 11px; }
+    /* Tables scroll horizontally if needed */
+    .zrep .sec .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    /* Modals as bottom sheets */
+    .modal-scrim { padding: 0; align-items: flex-end; }
+    .modal {
+      max-width: 100%;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      animation: sheetIn 260ms cubic-bezier(0.2, 0, 0.1, 1);
+      padding-bottom: calc(22px + env(safe-area-inset-bottom));
+    }
+    @keyframes sheetIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal .pin { gap: 6px; }
+    .modal .pin .d { width: 36px; height: 44px; font-size: 20px; }
+    .modal .pin-pad button { height: 52px; font-size: 19px; }
+
+    /* Toast: shift below pk-nav */
+    .toast-host { top: 64px; right: 12px; left: 12px; }
+    .toast { font-size: 12.5px; padding: 9px 12px; }
+
+    /* Hide nav badge on side rail since side is gone */
+    .pd-nav-item .tag { display: none; }
+  }
+
+  @media (max-width: 380px) {
+    .sale .grid { grid-template-columns: repeat(2, 1fr); }
+    .sale .tile .sw { height: 52px; }
+    .tender .due .am { font-size: 36px; }
+    .tender .mgrid { grid-template-columns: 1fr; }
+    .tender .keypad button { height: 38px; font-size: 14px; }
   }
 </style>
 </head>
@@ -565,6 +791,8 @@ const state = {
   cart: { lines: [], customerId: null, discount: null },     // discount: {type:'pct'|'amt', value:Number}
   category: 'all',
   search: '',
+  // mobile: cart sheet open
+  cartOpen: false,
   // tender substate
   tender: { method: 'cash', received: 0, processing: false },
   // refund
@@ -586,6 +814,8 @@ const state = {
   // pending receipt (from completed sale)
   lastReceipt: null,
 };
+
+function isMobile() { return window.innerWidth <= 720; }
 
 const NAV = [
   { route: 'sale',     label: 'New sale',      icon: 'plus' },
@@ -759,6 +989,7 @@ function openDiscountModal() {
 /* === Router === */
 function go(route) {
   state.route = route;
+  state.cartOpen = false; // close mobile cart sheet on navigation
   history.replaceState(null, '', '#/' + route);
   render();
   window.scrollTo(0, 0);
@@ -775,10 +1006,46 @@ function render() {
       ${renderSide()}
       ${renderBar()}
       <div class="pd-main">${renderRoute()}</div>
+      ${renderTabs()}
     </div>
+    ${state.cartOpen ? '<div class="cart-sheet-scrim open" id="cart-scrim"></div>' : ''}
   `;
   if (window.Icons) window.Icons.render($('#app'));
   wireRoute();
+  wireTabs();
+  wireCartSheet();
+}
+
+const MOBILE_TABS = [
+  { route: 'sale', label: 'Sale', icon: 'plus' },
+  { route: 'item', label: 'Items', icon: 'search' },
+  { route: 'customer', label: 'Customers', icon: 'user' },
+  { route: 'refund', label: 'Refund', icon: 'forward' },
+  { route: 'cashup', label: 'Shift', icon: 'wallet' },
+];
+function renderTabs() {
+  return `
+    <nav class="pd-tabs">
+      ${MOBILE_TABS.map(t => `
+        <button class="t ${state.route === t.route ? 'active' : ''}" data-go="${t.route}">
+          <span class="ic" data-icon="${t.icon}" data-icon-size="20"></span>
+          <span>${t.label}</span>
+          ${t.route === 'sale' && cartCount() > 0 ? `<span class="badge">${cartCount()}</span>` : ''}
+        </button>
+      `).join('')}
+    </nav>
+  `;
+}
+function wireTabs() {
+  $$('.pd-tabs [data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+}
+function wireCartSheet() {
+  const scrim = $('#cart-scrim');
+  if (scrim) scrim.addEventListener('click', () => { state.cartOpen = false; render(); });
+  const closeBtn = $('#close-sheet');
+  if (closeBtn) closeBtn.addEventListener('click', () => { state.cartOpen = false; render(); });
+  const vcb = $('#view-cart-bar');
+  if (vcb) vcb.addEventListener('click', () => { state.cartOpen = true; render(); });
 }
 
 function renderSide() {
@@ -870,11 +1137,22 @@ function renderSale() {
           `).join('') : '<div style="grid-column: 1/-1; padding: 60px; text-align: center; color: var(--text-muted); font: 14px var(--font-sans);">No items match.</div>'}
         </div>
       </section>
-      <aside class="cart">
+      ${lines.length > 0 ? `
+        <div class="view-cart-bar" id="view-cart-bar">
+          <div class="ic-bg"><span data-icon="bag" data-icon-size="16"></span></div>
+          <div style="flex:1;">
+            <div class="lbl">View cart</div>
+            <div class="meta">${cartCount()} ${cartCount() === 1 ? 'item' : 'items'}${state.cart.customerId ? ' · ' + CUSTOMERS.find(c=>c.id===state.cart.customerId).name.split(' ')[0] : ''}</div>
+          </div>
+          <span class="v">${money(total)}</span>
+        </div>
+      ` : ''}
+      <aside class="cart ${state.cartOpen ? 'open' : ''}">
         <div class="ch">
           <h3>Cart</h3>
           <span class="cnt">${cartCount()} ${cartCount() === 1 ? 'item' : 'items'}</span>
           <button id="cart-clear" title="Clear cart" ${lines.length === 0 ? 'disabled' : ''}><span data-icon="x" data-icon-size="14"></span></button>
+          <button class="close-sheet" id="close-sheet" title="Close" style="display: none;"><span data-icon="x" data-icon-size="14"></span></button>
         </div>
         <div class="cust" id="cust-link">
           ${cust ? `
@@ -1224,6 +1502,9 @@ function renderRefund() {
     const reasons = ['Wrong item', 'Damaged', 'Customer changed mind', 'Other'];
     detail = `
       <div class="pane refund-pane">
+        <button class="back-list" data-back="refund">
+          <span data-icon="back" data-icon-size="13"></span> Back to list
+        </button>
         <div class="h">${sel.id} · ${money(sel.total)} · ${methodLabel(sel.method)} · ${sel.ts}</div>
         <div class="receipt-lines">
           ${sel.items.map(it => `
@@ -1265,7 +1546,7 @@ function renderRefund() {
           <p class="lede">Find the original transaction, choose lines to refund, and authorize with a supervisor PIN.</p>
         </div>
       </div>
-      <div class="splitp">
+      <div class="splitp has-detail ${state.refund.receiptId ? 'has-selection' : ''}" id="splitp-refund">
         <div class="pane">
           <div class="h">Recent receipts</div>
           <div class="input" style="margin-bottom: 10px;">
@@ -1291,6 +1572,7 @@ function renderRefund() {
   `;
 }
 function wireRefund() {
+  const back = $('[data-back="refund"]'); if (back) back.addEventListener('click', () => { state.refund.receiptId = null; render(); });
   const inp = $('#rfd-search'); if (inp) inp.addEventListener('input', (e) => { state.refund.search = e.target.value; render(); setTimeout(() => { const i = $('#rfd-search'); if (i) { i.focus(); i.setSelectionRange(state.refund.search.length, state.refund.search.length); } }, 0); });
   $$('[data-r]').forEach(b => b.addEventListener('click', () => {
     state.refund.receiptId = b.dataset.r;
@@ -1330,7 +1612,7 @@ function renderCustomer() {
         </div>
         ${state.cart.lines.length > 0 ? `<button class="btn-secondary" data-go="sale"><span data-icon="back" data-icon-size="13"></span> Back to sale</button>` : ''}
       </div>
-      <div class="splitp">
+      <div class="splitp has-detail ${state.customerSel ? 'has-selection' : ''}" id="splitp-cust">
         <div class="pane">
           <div class="h">Search</div>
           <div class="input" style="margin-bottom: 10px;">
@@ -1352,6 +1634,9 @@ function renderCustomer() {
           </div>
         </div>
         <div class="pane">
+          ${sel ? `<button class="back-list" data-back="customer">
+            <span data-icon="back" data-icon-size="13"></span> Back to list
+          </button>` : ''}
           <div class="h">Profile</div>
           ${sel ? `
             <div class="cust-prof">
@@ -1391,6 +1676,7 @@ function renderCustomer() {
   `;
 }
 function wireCustomer() {
+  const back = $('[data-back="customer"]'); if (back) back.addEventListener('click', () => { state.customerSel = null; render(); });
   const inp = $('#cust-search'); if (inp) inp.addEventListener('input', (e) => { state.customerSearch = e.target.value; render(); setTimeout(() => { const i = $('#cust-search'); if (i) { i.focus(); i.setSelectionRange(state.customerSearch.length, state.customerSearch.length); } }, 0); });
   $$('[data-c]').forEach(b => b.addEventListener('click', () => { state.customerSel = b.dataset.c; render(); }));
   const use = $('#cust-use'); if (use) use.addEventListener('click', () => {
