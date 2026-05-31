@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" /><title>Stock receiving · Retail · Huchu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../dash.css" />
+<script src="../../icons.js" defer></script>
+<style>
+  .step-row { display: flex; gap: 0; padding: 16px 20px; border-bottom: 1px solid var(--border-subtle); align-items: center; }
+  .step-row .step { display: flex; align-items: center; gap: 10px; padding: 0 18px; position: relative; }
+  .step-row .step .n { width: 22px; height: 22px; border-radius: 50%; background: var(--surface-muted); color: var(--text-muted); display: grid; place-items: center; font: 600 11px/1 var(--font-mono); }
+  .step-row .step .lbl { font: 500 13px/1 var(--font-sans); color: var(--text-muted); }
+  .step-row .step.done .n { background: var(--tone-success); color: #fff; }
+  .step-row .step.done .lbl { color: var(--text-strong); }
+  .step-row .step.active .n { background: var(--brand); color: #fff; }
+  .step-row .step.active .lbl { color: var(--text-strong); font-weight: 600; }
+  .step-row .sep { flex: 1; height: 1px; background: var(--border); margin: 0 6px; }
+  .grn-head { padding: 18px 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; border-bottom: 1px solid var(--border-subtle); }
+  .grn-head .col .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px; }
+  .grn-head .col .v { font: 600 14px/1.3 var(--font-sans); color: var(--text-strong); }
+  .grn-head .col .sub { font: 12px/1.3 var(--font-mono); color: var(--text-muted); margin-top: 3px; }
+  .qty-edit { display: inline-flex; align-items: center; gap: 0; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--surface); }
+  .qty-edit input { width: 50px; height: 26px; border: 0; text-align: center; font: 600 13px/1 var(--font-mono); color: var(--text-strong); background: transparent; outline: none; }
+  .qty-edit button { width: 22px; height: 26px; background: var(--surface-muted); color: var(--text-muted); border: 0; cursor: pointer; font: 600 14px/1 var(--font-sans); }
+  .qty-edit button:hover { background: var(--surface-sunken); }
+  .var-pill { display: inline-block; padding: 2px 7px; border-radius: 4px; font: 500 11px/1 var(--font-mono); }
+  .var-pill.ok { background: var(--tone-success-bg); color: var(--tone-success); }
+  .var-pill.warn { background: var(--tone-warn-bg); color: var(--tone-warn); }
+  .var-pill.danger { background: var(--tone-danger-bg); color: var(--tone-danger); }
+  .totals { padding: 16px 20px; display: grid; grid-template-columns: 1fr 280px; gap: 24px; align-items: flex-start; border-top: 1px solid var(--border-subtle); background: var(--surface-muted); }
+  .totals .notes { font: 13px/1.5 var(--font-sans); color: var(--text-muted); }
+  .totals .notes textarea { width: 100%; min-height: 64px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font: 13px/1.4 var(--font-sans); resize: vertical; margin-top: 8px; }
+  .totals .sum .row { display: flex; justify-content: space-between; padding: 5px 0; font: 13px/1.3 var(--font-sans); color: var(--text-muted); }
+  .totals .sum .row.gr { border-top: 1px solid var(--border); padding-top: 10px; margin-top: 4px; font: 600 14px/1.3 var(--font-sans); color: var(--text-strong); }
+  .totals .sum .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-strong); }
+</style>
+</head>
+<body class="dash-body">
+<div class="dash-frame">
+  <div class="chrome">
+    <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+    <span class="url">https://app.huchu.com / retail/stock/grn-2026-0184</span>
+    <span class="actions"><a href="../../index.html">← Design system</a></span>
+  </div>
+  <div class="dash-app">
+    <aside class="dash-side">
+      <div class="org-switcher">
+        <span class="mark" data-icon="corelith" data-icon-size="16"></span>
+        <div style="flex: 1; min-width: 0;"><div class="name">Mukamba Group</div><div class="sub">5 sites · Owner</div></div>
+        <span class="chev" data-icon="chevron" data-icon-size="14"></span>
+      </div>
+      <a class="new-action" href="#"><span data-icon="plus" data-icon-size="14"></span> Quick action<span class="kbd">⌘N</span></a>
+      <div class="sh">Retail<span data-icon="chevron"></span></div>
+      <nav>
+        <a href="dashboard.html"><span data-icon="dashboard"></span> Overview</a>
+        <a href="products.html"><span data-icon="bag"></span> Products<span class="cnt">2.4k</span></a>
+        <a href="stock-receiving.html" class="active"><span data-icon="warehouse"></span> Stock control</a>
+        <a href="#"><span data-icon="clock"></span> Shifts<span class="cnt">3</span></a>
+        <a href="#"><span data-icon="truck"></span> Purchasing</a>
+        <a href="z-report.html"><span data-icon="receipt"></span> Z-report</a>
+        <a href="promotions.html"><span data-icon="tag"></span> Promotions</a>
+        <a href="#"><span data-icon="chart"></span> Reporting</a>
+      </nav>
+      <div class="sh">Shared<span data-icon="chevron"></span></div>
+      <nav>
+        <a href="#"><span data-icon="user"></span> HR &amp; payroll</a>
+        <a href="#"><span data-icon="coin"></span> Accounting</a>
+      </nav>
+      <div class="footer">
+        <span class="avatar">RM</span>
+        <div><div class="nm">Robert Mukamba</div><div class="sb">Owner</div></div>
+        <span class="arrow" data-icon="chup" data-icon-size="14"></span>
+      </div>
+    </aside>
+    <main class="dash-main">
+      <header class="dash-topbar">
+        <div class="crumbs"><a href="#">Mukamba Group</a><span class="sep">/</span><a href="#">Park Centre</a><span class="sep">/</span><a href="#">Stock</a><span class="sep">/</span><span class="current">GRN-2026-0184</span></div>
+        <div class="spacer"></div>
+        <div class="search"><span data-icon="search"></span><input placeholder="Scan or search SKU…" /><span class="kbd-hint">⌘K</span></div>
+        <button class="ic-btn"><span data-icon="bell" data-icon-size="16"></span></button>
+        <button class="ic-btn" style="background: var(--brand); color: #fff;"><span data-icon="user" data-icon-size="16"></span></button>
+      </header>
+
+      <div class="dash-page" style="padding-bottom: 0;">
+        <div class="dash-page-h">
+          <div class="meta">
+            <h1>Receive GRN-2026-0184</h1>
+            <p class="lede">Goods received note against PO-2026-0411 · Dairibord Zimbabwe · delivered 14:02 by driver T. Mavhinga.</p>
+            <div class="h-pills">
+              <span class="p b">Park Centre</span>
+              <span class="p">PO-2026-0411 · USD 4,820</span>
+              <span class="p" style="background: var(--tone-warn-bg); color: var(--tone-warn);">●  3 discrepancies</span>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-quiet"><span data-icon="x" data-icon-size="14"></span> Reject delivery</button>
+            <button class="btn btn-secondary"><span data-icon="print" data-icon-size="14"></span> Print GRN</button>
+            <button class="btn btn-primary"><span data-icon="check" data-icon-size="14"></span> Accept &amp; post to stock</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding: 8px 32px 24px; display: grid; gap: 16px;">
+        <div class="dash-card">
+          <div class="step-row">
+            <div class="step done"><span class="n"><span data-icon="check" data-icon-size="10"></span></span><span class="lbl">PO sent</span></div>
+            <div class="sep"></div>
+            <div class="step done"><span class="n"><span data-icon="check" data-icon-size="10"></span></span><span class="lbl">Acknowledged</span></div>
+            <div class="sep"></div>
+            <div class="step done"><span class="n"><span data-icon="check" data-icon-size="10"></span></span><span class="lbl">In transit</span></div>
+            <div class="sep"></div>
+            <div class="step active"><span class="n">4</span><span class="lbl">Receiving</span></div>
+            <div class="sep"></div>
+            <div class="step"><span class="n">5</span><span class="lbl">Post to stock</span></div>
+            <div class="sep"></div>
+            <div class="step"><span class="n">6</span><span class="lbl">Invoice match</span></div>
+          </div>
+          <div class="grn-head">
+            <div class="col">
+              <div class="lbl">Supplier</div>
+              <div class="v">Dairibord Zimbabwe</div>
+              <div class="sub">SUP-0024 · Acc-mgr P. Chikwava</div>
+            </div>
+            <div class="col">
+              <div class="lbl">Purchase order</div>
+              <div class="v">PO-2026-0411</div>
+              <div class="sub">Raised 28 May · USD 4,820.00</div>
+            </div>
+            <div class="col">
+              <div class="lbl">Delivery</div>
+              <div class="v">Today · 14:02</div>
+              <div class="sub">Truck ZIM-4188 · driver T. Mavhinga</div>
+            </div>
+            <div class="col">
+              <div class="lbl">Received by</div>
+              <div class="v">Faith Moyo</div>
+              <div class="sub">Stock controller · station 2</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-card">
+          <div class="dash-card-h">
+            <div><h2>Line items · 12 SKUs</h2><div class="sub">Scan each carton or enter received qty manually · variances flagged automatically</div></div>
+            <div class="filter-bar"><span class="f active">All · 12</span><span class="f">Variance · 3</span><span class="f">Damaged · 1</span></div>
+          </div>
+          <table class="dt">
+            <thead><tr>
+              <th>SKU</th><th>Description</th>
+              <th style="text-align: right;">Ordered</th>
+              <th style="text-align: right;">Received</th>
+              <th style="text-align: right;">Variance</th>
+              <th style="text-align: right;">Unit cost</th>
+              <th>Batch / expiry</th>
+              <th>Status</th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td class="num">SKU-0598</td>
+                <td><span class="nm">Long-life milk 1L</span><div class="sb">UHT · case of 12</div></td>
+                <td class="num" style="text-align: right;">120</td>
+                <td style="text-align: right;"><span class="qty-edit"><button>−</button><input value="120" /><button>+</button></span></td>
+                <td style="text-align: right;"><span class="var-pill ok">0</span></td>
+                <td class="num" style="text-align: right;">$ 0.95</td>
+                <td class="num">DBZ-0418 · 14 Sep 2026</td>
+                <td><span class="badge ok"><span class="dot"></span> Matched</span></td>
+              </tr>
+              <tr>
+                <td class="num">SKU-0042</td>
+                <td><span class="nm">Cascade yoghurt 175g</span><div class="sb">Strawberry · case of 24</div></td>
+                <td class="num" style="text-align: right;">96</td>
+                <td style="text-align: right;"><span class="qty-edit"><button>−</button><input value="84" /><button>+</button></span></td>
+                <td style="text-align: right;"><span class="var-pill warn">−12</span></td>
+                <td class="num" style="text-align: right;">$ 0.60</td>
+                <td class="num">DBZ-0419 · 22 Jun 2026</td>
+                <td><span class="badge warn"><span class="dot"></span> Short delivery</span></td>
+              </tr>
+              <tr>
+                <td class="num">SKU-0287</td>
+                <td><span class="nm">Steri milk 500ml</span><div class="sb">Full cream · case of 18</div></td>
+                <td class="num" style="text-align: right;">72</td>
+                <td style="text-align: right;"><span class="qty-edit"><button>−</button><input value="72" /><button>+</button></span></td>
+                <td style="text-align: right;"><span class="var-pill ok">0</span></td>
+                <td class="num" style="text-align: right;">$ 0.62</td>
+                <td class="num">DBZ-0420 · 02 Aug 2026</td>
+                <td><span class="badge ok"><span class="dot"></span> Matched</span></td>
+              </tr>
+              <tr>
+                <td class="num">SKU-0511</td>
+                <td><span class="nm">Cheddar cheese 500g</span><div class="sb">Block · case of 8</div></td>
+                <td class="num" style="text-align: right;">24</td>
+                <td style="text-align: right;"><span class="qty-edit"><button>−</button><input value="24" /><button>+</button></span></td>
+                <td style="text-align: right;"><span class="var-pill ok">0</span></td>
+                <td class="num" style="text-align: right;">$ 3.40</td>
+                <td class="num">DBZ-0421 · 18 Sep 2026</td>
+                <td><span class="badge ok"><span class="dot"></span> Matched</span></td>
+              </tr>
+              <tr>
+                <td class="num">SKU-0822</td>
+                <td><span class="nm">Butter 250g salted</span><div class="sb">Lobel's · case of 20</div></td>
+                <td class="num" style="text-align: right;">40</td>
+                <td style="text-align: right;"><span class="qty-edit"><button>−</button><input value="40" /><button>+</button></span></td>
+                <td style="text-align: right;"><span class="var-pill ok">0</span></td>
+                <td class="num" style="text-align: right;">$ 1.85</td>
+                <td class="num">DBZ-0422 · 12 Oct 2026</td>
+                <td><span class="badge ok"><span class="dot"></span> Matched</span></td>
+              </tr>
+              <tr>
+                <td class="num">SKU-0144</td>
+                <td><span class="nm">Ice cream 2L vanilla</span><div class="sb">Dairibord premium · loose</div></td>
+                <td class="num" style="text-align: right;">36</td>
+                <td style="text-align: right;"><span class="qty-edit"><button>−</button><input value="32" /><button>+</button></span></td>
+                <td style="text-align: right;"><span class="var-pill danger">−4 · damaged</span></td>
+                <td class="num" style="text-align: right;">$ 4.20</td>
+                <td class="num">DBZ-0423 · 20 Nov 2026</td>
+                <td><span class="badge danger"><span class="dot"></span> Damaged tubs</span></td>
+              </tr>
+              <tr>
+                <td class="num">SKU-0676</td>
+                <td><span class="nm">Cream 250ml fresh</span><div class="sb">Whipping · case of 24</div></td>
+                <td class="num" style="text-align: right;">48</td>
+                <td style="text-align: right;"><span class="qty-edit"><button>−</button><input value="48" /><button>+</button></span></td>
+                <td style="text-align: right;"><span class="var-pill ok">0</span></td>
+                <td class="num" style="text-align: right;">$ 1.20</td>
+                <td class="num">DBZ-0424 · 18 Jun 2026</td>
+                <td><span class="badge ok"><span class="dot"></span> Matched</span></td>
+              </tr>
+              <tr>
+                <td class="num">SKU-1102</td>
+                <td><span class="nm">Cheese slices 200g</span><div class="sb">Processed · case of 12</div></td>
+                <td class="num" style="text-align: right;">36</td>
+                <td style="text-align: right;"><span class="qty-edit"><button>−</button><input value="48" /><button>+</button></span></td>
+                <td style="text-align: right;"><span class="var-pill warn">+12 · over</span></td>
+                <td class="num" style="text-align: right;">$ 2.10</td>
+                <td class="num">DBZ-0425 · 04 Aug 2026</td>
+                <td><span class="badge warn"><span class="dot"></span> Over-delivery</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="totals">
+            <div class="notes">
+              <div style="font: 500 12px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase;">Notes for supplier</div>
+              <textarea>4 tubs ice cream damaged in transit — accepted at 0% credit, credit note requested. 12 short on yoghurt — chase batch DBZ-0419. Over-supply on cheese slices accepted at PO price.</textarea>
+            </div>
+            <div class="sum">
+              <div class="row"><span>Subtotal received</span><span class="num">$ 4,613.20</span></div>
+              <div class="row"><span>Variance (under)</span><span class="num" style="color: var(--tone-danger);">– $ 24.00</span></div>
+              <div class="row"><span>Variance (over)</span><span class="num" style="color: var(--tone-warn);">+ $ 25.20</span></div>
+              <div class="row"><span>VAT 14.5%</span><span class="num">$ 668.91</span></div>
+              <div class="row gr"><span>To post</span><span class="num">$ 5,283.31</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+</body>
+</html>
