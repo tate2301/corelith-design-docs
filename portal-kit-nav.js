@@ -64,6 +64,7 @@
       label: 'Staff portal',
       home: 'index.html',
       screens: [
+        ['demo',       'Interactive', 'Desktop'],
         ['dashboard',  'Dashboard',  'Desktop'],
         ['leave',      'Leave',      'Desktop'],
         ['payslip',    'Payslip',    'Desktop'],

@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>How to compose a new page · Huchu DS</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+</head>
+<body class="ds-doc">
+  <main class="ds-content">
+    <div class="ds-doc-layout">
+
+      <article>
+        <header class="ds-page-head anim-fade-up">
+          <div class="crumbs">
+            <a href="../index.html">Home</a>
+            <span class="sep">/</span>
+            <a href="guides.html">Guides</a>
+            <span class="sep">/</span>
+            <span>Compose a page</span>
+          </div>
+          <h1>How to compose a new page</h1>
+          <p class="lede">A repeatable six-step recipe for assembling a product page out of existing shells, blocks, and components — no new CSS required for 90% of cases.</p>
+          <div class="meta">
+            <span class="meta-pill"><span data-icon="check" data-icon-size="12"></span>Guide</span>
+            <span class="meta-pill">6 steps</span>
+            <span class="meta-pill">Worked example included</span>
+          </div>
+        </header>
+
+        <!-- INTRO -->
+        <section id="intro">
+          <h2 class="ds-h2">When to use this</h2>
+          <p class="ds-h2-sub">You have a new screen to build and the kits and verticals already cover the patterns you need.</p>
+          <p>The Huchu DS is opinionated about page construction. Every product page is built from four layers: a <strong>shell</strong> (frames the chrome), a <strong>page header</strong> (announces the surface), a <strong>body block</strong> (the working content), and <strong>state surfaces</strong> (empty, loading, error, saved). If you compose those four layers in order, you get a page that looks and behaves like the rest of the system without any per-page CSS.</p>
+          <p>If the recipe below doesn't fit, you probably have a candidate <a href="guide-compose-pattern.html">new pattern</a>, not a new page.</p>
+        </section>
+
+        <!-- THE RECIPE -->
+        <section id="recipe">
+          <h2 class="ds-h2">The six-step recipe</h2>
+          <p class="ds-h2-sub">Each step has exactly one answer. If a step has more than one, the page is doing two jobs — split it.</p>
+
+          <h3 class="ds-h3">1 — Pick a shell</h3>
+          <p>Choose the outer container that determines navigation, header position, and width. Most product pages live in <a href="x-app-shell.html">App shell</a> (sidebar + topbar). A multi-section reference editor uses <a href="x-settings.html">Settings shell</a>. A keyboard-only kiosk surface uses the relevant portal shell from <code class="inline">portal-shell.css</code>.</p>
+
+          <h3 class="ds-h3">2 — Drop in a page header</h3>
+          <p>Every page opens with one — and exactly one — <a href="b-page-header.html">Page header</a>. Title, lede, meta pills, up to three actions on the right (one primary). If the page has tabs, use the <em>with-tabs</em> variant. If it's a detail page, use the <em>compact</em> variant with a back arrow.</p>
+
+          <h3 class="ds-h3">3 — Choose the body block</h3>
+          <p>Pick one body shape and stick to it. Each maps to one block:</p>
+          <table class="ds-props">
+            <thead><tr><th>If the page is…</th><th>Use</th><th>Anatomy</th></tr></thead>
+            <tbody>
+              <tr><td>A list of records</td><td><a href="b-list-page-shell.html">List page shell</a></td><td>Header + <a href="b-data-toolbar.html">Data toolbar</a> + <a href="x-data-table.html">Data table</a> + pagination</td></tr>
+              <tr><td>A single record</td><td><a href="b-detail-page-shell.html">Detail page shell</a></td><td><a href="b-detail-hero.html">Detail hero</a> + 1.4fr + 1fr body</td></tr>
+              <tr><td>An edit / create form</td><td><a href="b-form-shell.html">Form shell</a></td><td>Header + sections + sticky action bar</td></tr>
+              <tr><td>An executive overview</td><td><a href="b-kpi-grid.html">KPI grid</a> + <a href="b-module-matrix.html">Module matrix</a></td><td>KPI row + module status grid + <a href="b-highlights.html">Highlights</a></td></tr>
+              <tr><td>A reference editor</td><td><a href="b-master-data-shell.html">Master data shell</a></td><td>List on the left, editor on the right</td></tr>
+            </tbody>
+          </table>
+
+          <h3 class="ds-h3">4 — Add state surfaces</h3>
+          <p>Every body block has three states the operator <em>will</em> see: empty, loading, error. Wire them all before shipping. Use <a href="b-empty-state.html">Empty state</a> inside the card for first-time / no-results; use <a href="b-status-state.html">Status state</a> for whole-area loading or blocked surfaces; show a <a href="b-record-saved-banner.html">Record saved banner</a> on inline confirmation.</p>
+
+          <h3 class="ds-h3">5 — Add action affordances</h3>
+          <p>Affordances live in one of three places: header (page-level actions, one primary), toolbar (row-level filters and bulk actions, see <a href="b-data-toolbar.html">Data toolbar</a>), and row (per-record menus via <a href="p-dropdown-menu.html">Dropdown menu</a>). Never duplicate an action across two places — pick the most specific scope.</p>
+
+          <h3 class="ds-h3">6 — Wire keyboard and a11y</h3>
+          <p>Three minimums: every interactive element is reachable by tab order; <code class="inline">⌘K</code> opens the <a href="x-command-palette.html">Command palette</a> with the current page's primary actions surfaced; every icon-only button has an <code class="inline">aria-label</code>. Run the <a href="guide-mobile-adaptation.html">mobile checklist</a> before merging.</p>
+        </section>
+
+        <!-- WORKED EXAMPLE -->
+        <section id="example">
+          <h2 class="ds-h2">Worked example — building an Invoices page</h2>
+          <p class="ds-h2-sub">Step by step, choosing one block per step and assembling them in order.</p>
+
+          <h3 class="ds-h3">Step 1 · Shell</h3>
+          <p>Invoices lives inside the standing operations dashboard. It uses the standard <a href="x-app-shell.html">App shell</a> — sidebar on the left, topbar, content area in the centre.</p>
+          <pre class="ds-code"><span class="c">&lt;!-- Outer: app shell already provided by the kit --&gt;</span>
+&lt;<span class="k">div</span> <span class="v">class</span>=<span class="s">"dash-app"</span>&gt;
+  &lt;<span class="k">aside</span> <span class="v">class</span>=<span class="s">"dash-sidebar"</span>&gt; … &lt;/<span class="k">aside</span>&gt;
+  &lt;<span class="k">main</span> <span class="v">class</span>=<span class="s">"dash-main"</span>&gt;
+    <span class="c">&lt;!-- page goes here --&gt;</span>
+  &lt;/<span class="k">main</span>&gt;
+&lt;/<span class="k">div</span>&gt;</pre>
+
+          <h3 class="ds-h3">Step 2 · Page header</h3>
+          <p>Title "Invoices", lede with current filter state, and three actions. "New invoice" is primary; "Export" and "Print" are secondary.</p>
+          <pre class="ds-code">&lt;<span class="k">header</span> <span class="v">class</span>=<span class="s">"dash-page-h"</span>&gt;
+  &lt;<span class="k">div</span>&gt;
+    &lt;<span class="k">h1</span>&gt;Invoices&lt;/<span class="k">h1</span>&gt;
+    &lt;<span class="k">p</span> <span class="v">class</span>=<span class="s">"lede"</span>&gt;142 open · ZWG 184,290 outstanding&lt;/<span class="k">p</span>&gt;
+  &lt;/<span class="k">div</span>&gt;
+  &lt;<span class="k">div</span> <span class="v">class</span>=<span class="s">"actions"</span>&gt;
+    &lt;<span class="k">button</span> <span class="v">class</span>=<span class="s">"btn btn-quiet"</span>&gt;Export&lt;/<span class="k">button</span>&gt;
+    &lt;<span class="k">button</span> <span class="v">class</span>=<span class="s">"btn btn-secondary"</span>&gt;Print&lt;/<span class="k">button</span>&gt;
+    &lt;<span class="k">button</span> <span class="v">class</span>=<span class="s">"btn btn-primary"</span>&gt;New invoice&lt;/<span class="k">button</span>&gt;
+  &lt;/<span class="k">div</span>&gt;
+&lt;/<span class="k">header</span>&gt;</pre>
+
+          <h3 class="ds-h3">Step 3 · Body block (data table)</h3>
+          <p>A list of records → <a href="b-list-page-shell.html">List page shell</a>. That gives us a <a href="b-data-toolbar.html">Data toolbar</a> with search + filter chips, the <a href="x-data-table.html">Data table</a> itself, and pagination.</p>
+          <pre class="ds-code">&lt;<span class="k">div</span> <span class="v">class</span>=<span class="s">"dash-toolbar"</span>&gt;
+  &lt;<span class="k">input</span> <span class="v">class</span>=<span class="s">"toolbar-search"</span> <span class="v">placeholder</span>=<span class="s">"Search invoice #"</span> /&gt;
+  &lt;<span class="k">div</span> <span class="v">class</span>=<span class="s">"chip-row"</span>&gt;
+    &lt;<span class="k">button</span> <span class="v">class</span>=<span class="s">"chip active"</span>&gt;Open · 142&lt;/<span class="k">button</span>&gt;
+    &lt;<span class="k">button</span> <span class="v">class</span>=<span class="s">"chip"</span>&gt;Overdue · 23&lt;/<span class="k">button</span>&gt;
+    &lt;<span class="k">button</span> <span class="v">class</span>=<span class="s">"chip"</span>&gt;Draft · 8&lt;/<span class="k">button</span>&gt;
+  &lt;/<span class="k">div</span>&gt;
+&lt;/<span class="k">div</span>&gt;
+&lt;<span class="k">table</span> <span class="v">class</span>=<span class="s">"dash-table"</span>&gt; … &lt;/<span class="k">table</span>&gt;</pre>
+
+          <h3 class="ds-h3">Step 4 · State surfaces</h3>
+          <p>Three states wired up front, not after the bug report:</p>
+          <ul>
+            <li><strong>Empty</strong> · "No invoices yet" — <a href="b-empty-state.html">Empty state</a> inside the table card, with a "Create your first" primary action.</li>
+            <li><strong>Loading</strong> · 8 row skeletons in the table; toolbar stays interactive.</li>
+            <li><strong>Error</strong> · <a href="b-status-state.html">Status state</a> in the table region with a "Try again" button.</li>
+          </ul>
+
+          <h3 class="ds-h3">Step 5 · Action affordances</h3>
+          <ul>
+            <li><strong>Page-level</strong> · "New invoice", "Export", "Print" — in the header.</li>
+            <li><strong>Filter-level</strong> · chips and search — in the toolbar.</li>
+            <li><strong>Row-level</strong> · "Send", "Mark paid", "Void" — in a per-row <a href="p-dropdown-menu.html">Dropdown menu</a>. The single most common action ("Open") fires on row click.</li>
+            <li><strong>Multi-row</strong> · selecting rows swaps the toolbar to <a href="x-bulk-edit.html">Bulk edit</a> mode.</li>
+          </ul>
+
+          <h3 class="ds-h3">Step 6 · Keyboard and a11y</h3>
+          <ul>
+            <li>Tab order: search → chips → table → pagination → header actions.</li>
+            <li><code class="inline">/</code> focuses search; <code class="inline">⌘K</code> opens command palette pre-filtered to "Invoice".</li>
+            <li>Row click opens detail; <code class="inline">Enter</code> on a focused row does the same. <code class="inline">Esc</code> clears selection.</li>
+            <li>Every chip has an <code class="inline">aria-pressed</code> state.</li>
+          </ul>
+        </section>
+
+        <!-- ANATOMY OF EACH BLOCK -->
+        <section id="anatomy-links">
+          <h2 class="ds-h2">Anatomy of each composed block</h2>
+          <p class="ds-h2-sub">Click into each one for full specs, do/don'ts, and HTML.</p>
+          <div class="ds-cards cols-3" style="margin-top: 20px;">
+            <a class="ds-card" href="x-app-shell.html"><div class="ds-card-icon" data-icon="sidebar" data-icon-size="18"></div><div><h3>App shell</h3><p>Sidebar + topbar chrome.</p></div><div class="ds-card-foot"><span>Shell</span><span class="arrow">→</span></div></a>
+            <a class="ds-card" href="b-page-header.html"><div class="ds-card-icon" data-icon="layers" data-icon-size="18"></div><div><h3>Page header</h3><p>Title, lede, actions.</p></div><div class="ds-card-foot"><span>Block</span><span class="arrow">→</span></div></a>
+            <a class="ds-card" href="b-data-toolbar.html"><div class="ds-card-icon" data-icon="filter" data-icon-size="18"></div><div><h3>Data toolbar</h3><p>Search, chips, count.</p></div><div class="ds-card-foot"><span>Block</span><span class="arrow">→</span></div></a>
+            <a class="ds-card" href="x-data-table.html"><div class="ds-card-icon" data-icon="list" data-icon-size="18"></div><div><h3>Data table</h3><p>Workhorse table pattern.</p></div><div class="ds-card-foot"><span>Pattern</span><span class="arrow">→</span></div></a>
+            <a class="ds-card" href="b-empty-state.html"><div class="ds-card-icon" data-icon="inbox" data-icon-size="18"></div><div><h3>Empty state</h3><p>First-time / no-results.</p></div><div class="ds-card-foot"><span>Block</span><span class="arrow">→</span></div></a>
+            <a class="ds-card" href="b-status-state.html"><div class="ds-card-icon" data-icon="gauge" data-icon-size="18"></div><div><h3>Status state</h3><p>Loading / error / blocked.</p></div><div class="ds-card-foot"><span>Block</span><span class="arrow">→</span></div></a>
+          </div>
+        </section>
+
+        <!-- DO / DON'T -->
+        <section id="rules">
+          <h2 class="ds-h2">Do &amp; don't</h2>
+          <div class="ds-rules">
+            <div class="rule do"><span class="tag">Do</span><p>Build the page top-down in the recipe order. Skipping straight to the body block produces pages with missing empty states.</p></div>
+            <div class="rule dont"><span class="tag">Don't</span><p>Write per-page CSS to "tweak" a block. If a block doesn't fit, file an issue on the block — don't fork it.</p></div>
+            <div class="rule do"><span class="tag">Do</span><p>Wire empty, loading, and error states in the first PR. Operators will see all three within the first week.</p></div>
+            <div class="rule dont"><span class="tag">Don't</span><p>Add two primary buttons to the header. Pick the single most important next action.</p></div>
+            <div class="rule do"><span class="tag">Do</span><p>Surface the page's primary actions in the <a href="x-command-palette.html">command palette</a> so keyboard users can reach them without aiming.</p></div>
+            <div class="rule dont"><span class="tag">Don't</span><p>Duplicate the same action across header, toolbar, and row menu. Pick the most specific scope.</p></div>
+          </div>
+        </section>
+
+        <!-- CALLOUT -->
+        <div class="ds-callout">
+          <span class="ic" data-icon="info" data-icon-size="18"></span>
+          <div>
+            <h4>What's next</h4>
+            <p>Composed a page and noticed two other pages would use the same structure? You've found a new pattern — read <a href="guide-compose-pattern.html">How to compose a new pattern</a> next.</p>
+          </div>
+        </div>
+
+        <!-- PAGER -->
+        <nav class="ds-pager">
+          <a href="guides.html">
+            <div class="pager-label">← Back to</div>
+            <div class="pager-title">Guides</div>
+          </a>
+          <a href="guide-compose-pattern.html" class="next">
+            <div class="pager-label">Next →</div>
+            <div class="pager-title">Compose a pattern</div>
+          </a>
+        </nav>
+      </article>
+
+      <!-- TOC -->
+      <aside class="ds-toc">
+        <div class="toc-label">On this page</div>
+        <ul>
+          <li><a href="#intro" class="current">When to use this</a></li>
+          <li><a href="#recipe">The six-step recipe</a></li>
+          <li><a href="#example">Worked example</a></li>
+          <li><a href="#anatomy-links">Anatomy of each block</a></li>
+          <li><a href="#rules">Do &amp; don't</a></li>
+        </ul>
+      </aside>
+
+    </div>
+  </main>
+</body>
+</html>
