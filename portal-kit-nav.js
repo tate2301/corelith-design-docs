@@ -57,6 +57,7 @@
         ['gradebook',        'Gradebook',     'Desktop'],
         ['communications',   'Comms',         'Tablet'],
         ['schedule',         'Schedule',      'Tablet'],
+        ['lesson-planner',   'Lessons',       'Tablet'],
       ],
     },
     staff: {
