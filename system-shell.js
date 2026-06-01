@@ -49,13 +49,103 @@
     main.appendChild(footer);
   }
 
-  // ── 3. Viewport preview switcher ─────────────────────────────────────
+  // ── 3. Viewport preview switcher (+ Preview/Code tab) ────────────────
   const VIEWPORTS = [
     { id: 'mobile',  label: 'Mobile',  width: 375,  icon: 'phone' },
     { id: 'tablet',  label: 'Tablet',  width: 768,  icon: 'tablet' },
     { id: 'desktop', label: 'Desktop', width: 1280, icon: 'desktop' },
     { id: 'full',    label: 'Full',    width: null, icon: 'grid' },
   ];
+
+  // ---------- Code-tab helpers ----------
+  const escHtml = (s) => String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Strip a common leading-whitespace indent; drop leading/trailing blank lines.
+  function dedent(raw) {
+    if (!raw) return '';
+    let text = String(raw).replace(/\r\n?/g, '\n');
+    text = text.replace(/^\n+/, '').replace(/\s+$/, '');
+    const lines = text.split('\n');
+    let minIndent = Infinity;
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const m = line.match(/^[ \t]*/);
+      const len = m ? m[0].length : 0;
+      if (len < minIndent) minIndent = len;
+    }
+    if (!isFinite(minIndent) || minIndent === 0) return text;
+    return lines.map((l) => l.slice(minIndent)).join('\n');
+  }
+
+  // Light HTML/JSX/Vue highlighter. Operates on already-escaped HTML so the
+  // span wrappers can be inserted safely.
+  function highlight(code, framework) {
+    let s = escHtml(code);
+    if (framework === 'html' || framework === 'vue' || framework === 'react') {
+      // <!-- comments -->
+      s = s.replace(/&lt;!--[\s\S]*?--&gt;/g, (m) => `<span class="c">${m}</span>`);
+      // Attribute strings: ="..." or ='...'
+      s = s.replace(/(=)(&quot;|&#39;)([^&<>\n]*?)(\2)/g,
+        (_, eq, q1, val, q2) => `${eq}<span class="s">${q1}${val}${q2}</span>`);
+      // Tag names: <tag or </tag
+      s = s.replace(/(&lt;\/?)([a-zA-Z][\w-]*)/g,
+        (_, lt, name) => `${lt}<span class="k">${name}</span>`);
+      // Attribute names: whitespace then name=
+      s = s.replace(/(\s)([a-zA-Z-:][\w\-:]*)(=)/g,
+        (_, sp, name, eq) => `${sp}<span class="v">${name}</span>${eq}`);
+    }
+    return s;
+  }
+
+  function renderCodeBlock(codeRaw, framework) {
+    const code = dedent(codeRaw);
+    const hi = highlight(code, framework);
+    const lines = hi.split('\n');
+    const gutter = lines.map((_, i) => `<span>${i + 1}</span>`).join('\n');
+    const body = lines.map((l) => l.length ? l : '​').join('\n');
+    return `<div class="ds-code-block"><pre class="ds-code-gutter" aria-hidden="true">${gutter}</pre><pre class="ds-code-body"><code>${body}</code></pre></div>`;
+  }
+
+  let _toastHost = null;
+  function showToast(msg) {
+    if (!_toastHost) {
+      _toastHost = document.createElement('div');
+      _toastHost.className = 'ds-toast-host';
+      document.body.appendChild(_toastHost);
+    }
+    const el = document.createElement('div');
+    el.className = 'ds-toast';
+    el.innerHTML = `<span data-icon="check" data-icon-size="14"></span><span>${escHtml(msg)}</span>`;
+    _toastHost.appendChild(el);
+    if (window.Icons && window.Icons.render) window.Icons.render(el);
+    setTimeout(() => {
+      el.classList.add('out');
+      setTimeout(() => el.remove(), 220);
+    }, 1800);
+  }
+
+  async function copyText(text) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (_) { /* fall through */ }
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      return ok;
+    } catch (_) { return false; }
+  }
 
   function enhancePreviews(scope) {
     const targets = [];
@@ -76,6 +166,7 @@
       const wrap = document.createElement('div');
       wrap.className = 'ds-preview';
       wrap.dataset.viewport = initialVp;
+      wrap.dataset.tab = 'preview';
       const initialW = VIEWPORTS.find(v => v.id === initialVp).width;
       wrap.style.setProperty('--ds-preview-w', initialW ? initialW + 'px' : '100%');
 
@@ -84,10 +175,32 @@
       if (bar) titleText = bar.textContent.trim();
       if (!titleText) titleText = kind === 'grid' ? 'Variants' : 'Preview';
 
+      // Collect code samples from data-code-* attributes on the specimen.
+      // The browser decodes HTML entities for attribute values automatically,
+      // so dataset.codeHtml / codeReact / codeVue returns the raw string.
+      const codeSources = [];
+      if (kind === 'specimen') {
+        if (el.dataset.codeHtml)  codeSources.push({ id: 'html',  label: 'HTML',  raw: el.dataset.codeHtml });
+        if (el.dataset.codeReact) codeSources.push({ id: 'react', label: 'React', raw: el.dataset.codeReact });
+        if (el.dataset.codeVue)   codeSources.push({ id: 'vue',   label: 'Vue',   raw: el.dataset.codeVue });
+      }
+      const hasCode = codeSources.length > 0;
+      if (hasCode) wrap.classList.add('has-code');
+
       const toolbar = document.createElement('div');
       toolbar.className = 'ds-preview-toolbar';
       toolbar.innerHTML = `
         <span class="label">${titleText}</span>
+        ${hasCode ? `
+          <div class="ds-tab-group" role="tablist" aria-label="Preview or code">
+            <button type="button" class="ds-tab-btn" data-tab="preview" aria-pressed="true">
+              <span data-icon="grid" data-icon-size="13"></span><span class="lbl">Preview</span>
+            </button>
+            <button type="button" class="ds-tab-btn" data-tab="code" aria-pressed="false">
+              <span data-icon="code" data-icon-size="13"></span><span class="lbl">Code</span>
+            </button>
+          </div>
+        ` : ''}
         <span class="spacer"></span>
         <div class="ds-viewport-group" role="group" aria-label="Preview viewport">
           ${VIEWPORTS.map(v => `
@@ -102,6 +215,11 @@
           `).join('')}
         </div>
         <span class="ds-viewport-meta">${initialW ? initialW + 'px' : '100%'}</span>
+        ${hasCode ? `
+          <button type="button" class="ds-copy-btn" title="Copy code">
+            <span data-icon="copy" data-icon-size="13"></span><span class="lbl">Copy code</span>
+          </button>
+        ` : ''}
       `;
 
       const frame = document.createElement('div');
@@ -114,6 +232,52 @@
       frame.appendChild(stage);
       wrap.appendChild(toolbar);
       wrap.appendChild(frame);
+
+      // ---- Code panel ----
+      let codePanel = null;
+      let activeFw = codeSources[0]?.id || null;
+      if (hasCode) {
+        codePanel = document.createElement('div');
+        codePanel.className = 'ds-code-panel';
+        codePanel.hidden = true;
+
+        const fwTabs = codeSources.length > 1
+          ? `<div class="ds-code-fw" role="tablist" aria-label="Framework">
+              ${codeSources.map((c) => `
+                <button type="button" class="ds-code-fw-btn" data-fw="${c.id}" aria-pressed="${c.id === activeFw ? 'true' : 'false'}">${c.label}</button>
+              `).join('')}
+            </div>`
+          : `<div class="ds-code-fw single"><span class="ds-code-fw-btn" aria-pressed="true">${codeSources[0].label}</span></div>`;
+
+        codePanel.innerHTML = `
+          <div class="ds-code-header">
+            ${fwTabs}
+            <span class="spacer"></span>
+            <span class="ds-code-filename"></span>
+          </div>
+          <div class="ds-code-body-wrap" data-fw-render></div>
+        `;
+        wrap.appendChild(codePanel);
+
+        const filenameFor = (id) => id === 'react' ? 'Example.jsx' : id === 'vue' ? 'Example.vue' : 'index.html';
+        const renderActive = () => {
+          const src = codeSources.find((c) => c.id === activeFw) || codeSources[0];
+          codePanel.querySelector('[data-fw-render]').innerHTML = renderCodeBlock(src.raw, src.id);
+          const fnEl = codePanel.querySelector('.ds-code-filename');
+          if (fnEl) fnEl.textContent = filenameFor(src.id);
+        };
+        renderActive();
+
+        codePanel.querySelectorAll('.ds-code-fw-btn[data-fw]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            activeFw = btn.dataset.fw;
+            codePanel.querySelectorAll('.ds-code-fw-btn').forEach((b) => {
+              b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+            });
+            renderActive();
+          });
+        });
+      }
 
       const centerScroll = () => {
         const sw = frame.scrollWidth;
@@ -141,6 +305,31 @@
           setTimeout(centerScroll, 240);
         });
       });
+
+      if (hasCode) {
+        toolbar.querySelectorAll('.ds-tab-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+            wrap.dataset.tab = tab;
+            toolbar.querySelectorAll('.ds-tab-btn').forEach((b) => {
+              b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+            });
+            const showCode = tab === 'code';
+            frame.hidden = showCode;
+            if (codePanel) codePanel.hidden = !showCode;
+            if (!showCode) requestAnimationFrame(centerScroll);
+          });
+        });
+
+        const copyBtn = toolbar.querySelector('.ds-copy-btn');
+        if (copyBtn) {
+          copyBtn.addEventListener('click', async () => {
+            const src = codeSources.find((c) => c.id === activeFw) || codeSources[0];
+            const ok = await copyText(dedent(src.raw));
+            showToast(ok ? 'Copied!' : 'Copy failed');
+          });
+        }
+      }
 
       requestAnimationFrame(centerScroll);
     });
