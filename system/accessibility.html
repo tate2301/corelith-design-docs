@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Accessibility · Corelith DS</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<style>
+  .a11y-pair { display: flex; align-items: center; gap: 10px; }
+  .a11y-pair .chip {
+    display: inline-block;
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .a11y-target-row { display: flex; align-items: center; gap: 20px; padding: 14px 0; }
+  .a11y-target-row + .a11y-target-row { border-top: 1px solid var(--border-subtle); }
+  .a11y-target-row .box { display: inline-grid; place-items: center; background: var(--brand); color: #fff; border-radius: 8px; font: 500 12px/1 var(--font-mono); }
+  .a11y-target-row .meta { font: var(--type-body-sm); color: var(--text-muted); }
+  .a11y-target-row .meta strong { color: var(--text-strong); display: block; margin-bottom: 2px; }
+
+  .a11y-state-row { display: flex; gap: 14px; align-items: center; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+  .a11y-state-row + .a11y-state-row { margin-top: 10px; }
+  .a11y-state-row .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .a11y-state-row .lbl { font: var(--type-label-sm); color: var(--text-strong); }
+  .a11y-state-row .icon-wrap { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; font: var(--type-body-sm); color: var(--text-muted); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs"><a href="../index.html">Home</a><span class="sep">/</span><a href="foundations.html">Foundations</a><span class="sep">/</span><span>Accessibility</span></div>
+    <h1>Accessibility</h1>
+    <p class="lede">Operators work this product all day. The system has to be usable by keyboard, by screen reader, at low contrast, at low motion. These are the rules every component obeys — measured, not asserted.</p>
+    <div class="meta">
+      <span class="meta-pill">WCAG 2.2 AA target</span>
+      <span class="meta-pill">Measured contrast</span>
+      <span class="meta-pill"><span data-icon="check" data-icon-size="12"></span>prefers-reduced-motion</span>
+    </div>
+  </header>
+
+  <section id="keyboard">
+    <h2 class="ds-h2">Keyboard navigation</h2>
+    <p class="ds-h2-sub">Every interactive element is reachable and operable with the keyboard alone. Patterns follow WAI-ARIA Authoring Practices.</p>
+
+    <table class="ds-kbd-table">
+      <thead><tr><th>Key</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><kbd>Tab</kbd></td><td>Move focus to the next focusable element in document order.</td></tr>
+        <tr><td><kbd>Shift</kbd> + <kbd>Tab</kbd></td><td>Move focus to the previous focusable element.</td></tr>
+        <tr><td><kbd>Enter</kbd></td><td>Activate the focused button, link, or default action (e.g. submit a form).</td></tr>
+        <tr><td><kbd>Space</kbd></td><td>Activate the focused button, toggle a checkbox or switch, scroll a region.</td></tr>
+        <tr><td><kbd>Esc</kbd></td><td>Close the topmost overlay — popover, modal, sheet, dropdown, command palette.</td></tr>
+        <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Move within a composite widget: dropdown menu, listbox, combobox, segmented control (vertical), radio group.</td></tr>
+        <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Move within tabs, horizontal segmented control, calendar grid (day-by-day), date picker.</td></tr>
+        <tr><td><kbd>Home</kbd> / <kbd>End</kbd></td><td>Jump to the first / last option in a listbox, menu, or calendar row.</td></tr>
+        <tr><td><kbd>PageUp</kbd> / <kbd>PageDown</kbd></td><td>Move by month in calendars; by viewport in long lists.</td></tr>
+        <tr><td>Type-ahead</td><td>In menus, listboxes, and selects, typing a letter jumps to the first matching option.</td></tr>
+      </tbody>
+    </table>
+
+    <p>Every component page has its own keyboard table covering its specific shortcuts. If a key is documented there, it is wired.</p>
+  </section>
+
+  <section id="focus">
+    <h2 class="ds-h2">Focus management</h2>
+    <p class="ds-h2-sub">Focus is never invisible. It moves predictably, returns predictably, and never traps the operator anywhere they didn't ask to be.</p>
+
+    <ul>
+      <li><strong>:focus-visible.</strong> Focus rings render only on keyboard focus — never on mouse click. The ring is a 2&nbsp;px solid <code class="inline">--brand</code> outline with a 3&nbsp;px <code class="inline">--focus-ring-soft</code> halo.</li>
+      <li><strong>Programmatic focus on overlays.</strong> Opening a modal, sheet, or alert dialog moves focus to the first focusable control inside. Closing it returns focus to the trigger.</li>
+      <li><strong>Focus trap inside dialogs.</strong> While a modal is open, Tab cycles within it. Esc closes and restores focus.</li>
+      <li><strong>Roving tabindex.</strong> Composite widgets (tabs, menus, listboxes, segmented control) expose exactly one tab stop; arrow keys move focus within.</li>
+      <li><strong>Skip links.</strong> Page shells expose a "Skip to content" link as the first focusable element.</li>
+    </ul>
+
+    <div class="ds-callout">
+      <span class="ic" data-icon="info" data-icon-size="18"></span>
+      <div>
+        <h4>Don't suppress the outline</h4>
+        <p><code style="background: transparent; color: inherit;">outline: none</code> without an equivalent <code style="background: transparent; color: inherit;">:focus-visible</code> replacement is a release blocker. Audit lints will fail.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-reader">
+    <h2 class="ds-h2">Screen-reader patterns</h2>
+    <p class="ds-h2-sub">Status, name, role, and value reach AT users. Visual-only state is a bug.</p>
+
+    <h3 class="ds-h3">Live regions</h3>
+    <p>Asynchronous updates announce themselves through <code class="inline">aria-live</code>:</p>
+    <ul>
+      <li><code class="inline">aria-live="polite"</code> — toasts, saved confirmations, sync results, validation that doesn't block.</li>
+      <li><code class="inline">aria-live="assertive"</code> — destructive errors, connection loss, permission denial. Reserve for moments the operator must hear immediately.</li>
+      <li><code class="inline">role="status"</code> — implicit polite region for progress and "Saved" messages.</li>
+      <li><code class="inline">role="alert"</code> — implicit assertive region for error banners.</li>
+    </ul>
+
+    <h3 class="ds-h3">Hidden vs visible text</h3>
+    <ul>
+      <li><strong>Visually hidden, screen-reader accessible</strong> — use <code class="inline">.sr-only</code> for labels that are obvious visually but need a name for AT (e.g. icon-only buttons).</li>
+      <li><strong>Hidden from everyone</strong> — use <code class="inline">hidden</code> or <code class="inline">display: none</code>.</li>
+      <li><strong>Decorative</strong> — apply <code class="inline">aria-hidden="true"</code> to elements that add no information (decorative icons, the chevron next to a label).</li>
+    </ul>
+
+    <h3 class="ds-h3">Naming and grouping</h3>
+    <p>Form controls always have a <code class="inline">&lt;label for&gt;</code> or <code class="inline">aria-labelledby</code>. Sections use <code class="inline">aria-labelledby</code> pointing at their heading. Buttons that only contain an icon use <code class="inline">aria-label</code>.</p>
+  </section>
+
+  <section id="contrast">
+    <h2 class="ds-h2">Contrast ratios</h2>
+    <p class="ds-h2-sub">Measured against WCAG 2.2. AA requires 4.5:1 for body text, 3:1 for large (18&nbsp;pt+ or 14&nbsp;pt bold) and UI components. AAA requires 7:1 / 4.5:1.</p>
+
+    <table class="ds-contrast-table">
+      <thead><tr><th>Foreground</th><th>Background</th><th>Pair</th><th>Ratio</th><th>WCAG</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="a11y-pair"><span class="chip" style="background: #16181D;"></span><span>--text-strong</span></span></td>
+          <td><span class="a11y-pair"><span class="chip" style="background: #F7F8FA;"></span><span>--canvas</span></span></td>
+          <td class="pair">Headings on page</td>
+          <td class="ratio">16.71 : 1</td>
+          <td><span class="grade aaa">AAA</span></td>
+        </tr>
+        <tr>
+          <td><span class="a11y-pair"><span class="chip" style="background: #16181D;"></span><span>--text-strong</span></span></td>
+          <td><span class="a11y-pair"><span class="chip" style="background: #FFFFFF;"></span><span>--surface</span></span></td>
+          <td class="pair">Headings on cards</td>
+          <td class="ratio">17.76 : 1</td>
+          <td><span class="grade aaa">AAA</span></td>
+        </tr>
+        <tr>
+          <td><span class="a11y-pair"><span class="chip" style="background: #262A33;"></span><span>--text-body</span></span></td>
+          <td><span class="a11y-pair"><span class="chip" style="background: #F7F8FA;"></span><span>--canvas</span></span></td>
+          <td class="pair">Body text on page</td>
+          <td class="ratio">13.52 : 1</td>
+          <td><span class="grade aaa">AAA</span></td>
+        </tr>
+        <tr>
+          <td><span class="a11y-pair"><span class="chip" style="background: #262A33;"></span><span>--text-body</span></span></td>
+          <td><span class="a11y-pair"><span class="chip" style="background: #FFFFFF;"></span><span>--surface</span></span></td>
+          <td class="pair">Body text on cards</td>
+          <td class="ratio">14.37 : 1</td>
+          <td><span class="grade aaa">AAA</span></td>
+        </tr>
+        <tr>
+          <td><span class="a11y-pair"><span class="chip" style="background: #565C69;"></span><span>--text-muted</span></span></td>
+          <td><span class="a11y-pair"><span class="chip" style="background: #F7F8FA;"></span><span>--canvas</span></span></td>
+          <td class="pair">Descriptions, helpers</td>
+          <td class="ratio">6.31 : 1</td>
+          <td><span class="grade aa">AA</span></td>
+        </tr>
+        <tr>
+          <td><span class="a11y-pair"><span class="chip" style="background: #565C69;"></span><span>--text-muted</span></span></td>
+          <td><span class="a11y-pair"><span class="chip" style="background: #FFFFFF;"></span><span>--surface</span></span></td>
+          <td class="pair">Descriptions on cards</td>
+          <td class="ratio">6.71 : 1</td>
+          <td><span class="grade aa">AA</span></td>
+        </tr>
+        <tr>
+          <td><span class="a11y-pair"><span class="chip" style="background: #8A91A0;"></span><span>--text-subtle</span></span></td>
+          <td><span class="a11y-pair"><span class="chip" style="background: #FFFFFF;"></span><span>--surface</span></span></td>
+          <td class="pair">Metadata, timestamps</td>
+          <td class="ratio">3.16 : 1</td>
+          <td><span class="grade aa-large">AA Large only</span></td>
+        </tr>
+        <tr>
+          <td><span class="a11y-pair"><span class="chip" style="background: #0944C2;"></span><span>--brand-strong / --text-link</span></span></td>
+          <td><span class="a11y-pair"><span class="chip" style="background: #FFFFFF;"></span><span>--surface</span></span></td>
+          <td class="pair">Links, current nav</td>
+          <td class="ratio">8.02 : 1</td>
+          <td><span class="grade aaa">AAA</span></td>
+        </tr>
+        <tr>
+          <td><span class="a11y-pair"><span class="chip" style="background: #0944C2;"></span><span>--brand-strong</span></span></td>
+          <td><span class="a11y-pair"><span class="chip" style="background: #E8EFFE;"></span><span>--brand-soft</span></span></td>
+          <td class="pair">Active sidebar item</td>
+          <td class="ratio">6.96 : 1</td>
+          <td><span class="grade aa">AA</span></td>
+        </tr>
+        <tr>
+          <td><span class="a11y-pair"><span class="chip" style="background: #FFFFFF;"></span><span>#FFFFFF</span></span></td>
+          <td><span class="a11y-pair"><span class="chip" style="background: #0B5DF0;"></span><span>--brand</span></span></td>
+          <td class="pair">Primary button text</td>
+          <td class="ratio">5.47 : 1</td>
+          <td><span class="grade aa">AA</span></td>
+        </tr>
+        <tr>
+          <td><span class="a11y-pair"><span class="chip" style="background: #FFFFFF;"></span><span>#FFFFFF</span></span></td>
+          <td><span class="a11y-pair"><span class="chip" style="background: #B83A2A;"></span><span>--tone-danger</span></span></td>
+          <td class="pair">Destructive button</td>
+          <td class="ratio">5.71 : 1</td>
+          <td><span class="grade aa">AA</span></td>
+        </tr>
+        <tr>
+          <td><span class="a11y-pair"><span class="chip" style="background: #5E8E54;"></span><span>--tone-success</span></span></td>
+          <td><span class="a11y-pair"><span class="chip" style="background: #FFFFFF;"></span><span>--surface</span></span></td>
+          <td class="pair">Success badge text</td>
+          <td class="ratio">3.84 : 1</td>
+          <td><span class="grade aa-large">AA Large / UI</span></td>
+        </tr>
+        <tr>
+          <td><span class="a11y-pair"><span class="chip" style="background: #B07626;"></span><span>--tone-warn</span></span></td>
+          <td><span class="a11y-pair"><span class="chip" style="background: #FFFFFF;"></span><span>--surface</span></span></td>
+          <td class="pair">Warn badge text</td>
+          <td class="ratio">3.84 : 1</td>
+          <td><span class="grade aa-large">AA Large / UI</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p><strong>Known limitations:</strong> <code class="inline">--text-subtle</code> on <code class="inline">--canvas</code> falls just under 3:1 (2.98:1) and is reserved for timestamps and metadata at 14&nbsp;px+ on white only. Success and warn tones meet UI-component contrast (3:1) but should never be the sole indicator of state — pair with an icon.</p>
+  </section>
+
+  <section id="reduced-motion">
+    <h2 class="ds-h2">Reduced motion</h2>
+    <p class="ds-h2-sub">When the OS reports <code class="inline">prefers-reduced-motion: reduce</code>, the system suppresses non-essential animation globally.</p>
+
+    <p>The token sheet (<code class="inline">tokens.css</code>) ships this rule unconditionally:</p>
+    <div class="ds-code"><span class="k">@media</span> (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}</div>
+
+    <p>What this means in practice:</p>
+    <ul>
+      <li>Entrance animations (<code class="inline">.anim-fade-up</code>, <code class="inline">.anim-scale-in</code>) snap to their final frame.</li>
+      <li>State transitions (hover, focus, popover open) become instantaneous.</li>
+      <li>Auto-scroll behaviour (e.g. anchor jumps) becomes a hard jump.</li>
+      <li>The pulse / spinner indicators still rotate — they communicate liveness — but at a single tick rather than a continuous loop.</li>
+    </ul>
+
+    <p>Do not author bespoke <code class="inline">@keyframes</code> animation without an equivalent reduced-motion fallback. If the animation conveys meaning (e.g. a progress bar filling), provide a static alternative such as a numeric percentage.</p>
+  </section>
+
+  <section id="target-size">
+    <h2 class="ds-h2">Target sizes</h2>
+    <p class="ds-h2-sub">WCAG 2.2 SC 2.5.5 (AA) requires interactive targets to be at least 24×24 CSS pixels, with exemptions for inline targets and equivalents.</p>
+
+    <div class="ds-specimen"><div class="ds-specimen-stage plain padded stack">
+      <div class="a11y-target-row">
+        <span class="box" style="width: 44px; height: 44px;">44</span>
+        <div class="meta"><strong>--h-control-lg · 44 px</strong>Primary mobile target. Meets WCAG, Apple HIG (44), and Material (48 with surrounding space).</div>
+      </div>
+      <div class="a11y-target-row">
+        <span class="box" style="width: 36px; height: 36px;">36</span>
+        <div class="meta"><strong>--h-control-md · 36 px (default)</strong>Default control height. Comfortably above WCAG 2.5.5 (24 px). Used for desktop buttons, inputs, dropdown rows.</div>
+      </div>
+      <div class="a11y-target-row">
+        <span class="box" style="width: 30px; height: 30px;">30</span>
+        <div class="meta"><strong>--h-control-sm · 30 px</strong>Dense desktop tables and toolbars. Still above the 24 px floor.</div>
+      </div>
+      <div class="a11y-target-row">
+        <span class="box" style="width: 24px; height: 24px;">24</span>
+        <div class="meta"><strong>--h-control-xs · 24 px</strong>Floor. Reserved for icon-only chip buttons inside data tables. Must have at least 4 px of clear space around the target.</div>
+      </div>
+    </div></div>
+
+    <p>The default <strong>36 px</strong> control height is a deliberate choice for a dense ERP context — every operator screen carries dozens of controls, and 44 px everywhere would cost a meaningful amount of vertical density. The system meets WCAG 2.5.5 (24 px AA floor) at every size and exceeds the Material 3 recommendation (40 px target, 48 px with spacing) at <code class="inline">--h-control-lg</code>, which mobile-first surfaces use.</p>
+  </section>
+
+  <section id="color-not-label">
+    <h2 class="ds-h2">Color is not a label</h2>
+    <p class="ds-h2-sub">Never rely on color alone to communicate state. Pair every tonal signal with an icon, text, or shape.</p>
+
+    <div class="ds-specimen"><div class="ds-specimen-stage plain padded stack">
+      <div class="a11y-state-row">
+        <span class="dot" style="background: var(--tone-success);"></span>
+        <span class="lbl">Posted</span>
+        <span class="icon-wrap"><span data-icon="check" data-icon-size="14"></span> Completed 2 min ago</span>
+      </div>
+      <div class="a11y-state-row">
+        <span class="dot" style="background: var(--tone-warn);"></span>
+        <span class="lbl">Needs input</span>
+        <span class="icon-wrap"><span data-icon="alert" data-icon-size="14"></span> 3 fields outstanding</span>
+      </div>
+      <div class="a11y-state-row">
+        <span class="dot" style="background: var(--tone-danger);"></span>
+        <span class="lbl">Failed</span>
+        <span class="icon-wrap"><span data-icon="x" data-icon-size="14"></span> Connection refused</span>
+      </div>
+    </div></div>
+
+    <div class="ds-rules">
+      <div class="rule do"><span class="tag">Do</span><p>Pair the success tone with a check icon and the word "Posted". Three reinforcing signals.</p></div>
+      <div class="rule dont"><span class="tag">Don't</span><p>Show a green dot alone. A red-green colorblind operator sees no difference between "Posted" and "Failed".</p></div>
+    </div>
+  </section>
+
+  <section id="icons">
+    <h2 class="ds-h2">Decorative vs semantic icons</h2>
+    <p class="ds-h2-sub">If an icon adds information, name it. If it decorates a label, hide it.</p>
+
+    <table class="ds-props">
+      <thead><tr><th>Case</th><th>Markup</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Icon next to a text label</td>
+          <td><code class="inline">&lt;span data-icon="check" aria-hidden="true"&gt;</code></td>
+          <td>The label already names the action; the icon is decoration.</td>
+        </tr>
+        <tr>
+          <td>Icon-only button</td>
+          <td><code class="inline">&lt;button aria-label="Close"&gt;&lt;span data-icon="x" aria-hidden="true"&gt;&lt;/button&gt;</code></td>
+          <td>The button needs a name; the icon itself stays hidden from AT to avoid a duplicate announcement.</td>
+        </tr>
+        <tr>
+          <td>Status icon (e.g. "verified")</td>
+          <td><code class="inline">&lt;span data-icon="check" role="img" aria-label="Verified"&gt;</code></td>
+          <td>The icon carries information that no nearby text duplicates.</td>
+        </tr>
+        <tr>
+          <td>Dotted state indicator</td>
+          <td><code class="inline">&lt;span class="dot" aria-hidden="true"&gt;&lt;/span&gt; Posted</code></td>
+          <td>The visible word names the state; the dot is decoration.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p class="t-muted">The rule: a screen reader user must hear exactly one name per control. Never zero, never two.</p>
+  </section>
+
+  <section id="rules">
+    <h2 class="ds-h2">Do &amp; don't</h2>
+    <div class="ds-rules">
+      <div class="rule do"><span class="tag">Do</span><p>Wire every interactive element to the keyboard before it ships. The keyboard table on each component page is the contract.</p></div>
+      <div class="rule dont"><span class="tag">Don't</span><p>Trap focus accidentally. Always provide Esc and a visible close affordance for any overlay.</p></div>
+      <div class="rule do"><span class="tag">Do</span><p>Pair every color-coded state with an icon and a word.</p></div>
+      <div class="rule dont"><span class="tag">Don't</span><p>Assert "WCAG AA" without measurement. Use the contrast table above as proof.</p></div>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="voice.html"><div class="pager-label">← Previous</div><div class="pager-title">Voice &amp; writing</div></a>
+    <a href="foundations.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Back to Foundations</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#keyboard" class="current">Keyboard navigation</a></li>
+    <li><a href="#focus">Focus management</a></li>
+    <li><a href="#screen-reader">Screen-reader patterns</a></li>
+    <li><a href="#contrast">Contrast ratios</a></li>
+    <li><a href="#reduced-motion">Reduced motion</a></li>
+    <li><a href="#target-size">Target sizes</a></li>
+    <li><a href="#color-not-label">Color is not a label</a></li>
+    <li><a href="#icons">Decorative vs semantic icons</a></li>
+    <li><a href="#rules">Do &amp; don't</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body></html>

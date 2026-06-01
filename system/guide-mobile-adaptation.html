@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mobile adaptation · Huchu DS</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../portal-shell.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<style>
+  /* Local helpers for before/after layout */
+  .ga-pair {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+    align-items: start; margin: 20px 0 28px;
+  }
+  @media (max-width: 900px) { .ga-pair { grid-template-columns: 1fr; } }
+  .ga-pair > .ga-side {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px;
+    display: grid; gap: 10px;
+  }
+  .ga-side > h4 {
+    margin: 0; font: 600 13px/1 var(--font-sans);
+    color: var(--text-strong); text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .ga-side > p { margin: 0; font: 400 13.5px/1.5 var(--font-sans); color: var(--text-muted); }
+  .ga-frame {
+    background: var(--surface-muted); border-radius: 10px;
+    padding: 12px; display: grid; place-items: center;
+    min-height: 220px;
+  }
+  /* Scale device frames inside the guide */
+  .ga-frame .device-phone {
+    transform: scale(0.4); transform-origin: center center;
+    margin: -260px -120px;
+  }
+  .ga-frame .device-desktop {
+    width: 600px; height: 360px;
+    transform: scale(0.62); transform-origin: center center;
+    margin: -70px -120px;
+  }
+  /* Tiny mock content inside the frames */
+  .mk { padding: 12px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; background: var(--canvas); }
+  .mk-bar { height: 32px; background: var(--surface); border-radius: 6px; border: 1px solid var(--border); display: flex; align-items: center; padding: 0 10px; gap: 8px; font: 500 11px/1 var(--font-sans); color: var(--text-strong); }
+  .mk-chip-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .mk-chip { padding: 4px 8px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 10px/1 var(--font-sans); color: var(--text-muted); }
+  .mk-chip.active { background: var(--brand-soft); color: var(--brand-strong); border-color: transparent; }
+  .mk-card { padding: 10px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); display: grid; gap: 4px; }
+  .mk-card .t { font: 600 12px/1.2 var(--font-sans); color: var(--text-strong); }
+  .mk-card .s { font: 400 10.5px/1.3 var(--font-sans); color: var(--text-muted); }
+  .mk-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; border-radius: 6px; background: var(--surface); border: 1px solid var(--border); font: 500 11px/1 var(--font-sans); }
+  .mk-bottom-nav { margin-top: auto; height: 44px; border-top: 1px solid var(--border); display: flex; justify-content: space-around; align-items: center; padding-top: 6px; }
+  .mk-bottom-nav span { width: 36px; height: 28px; border-radius: 6px; background: var(--surface-muted); }
+  .mk-bottom-nav span.active { background: var(--brand-soft); }
+  .mk-segment { display: inline-flex; padding: 3px; background: var(--surface-muted); border-radius: 8px; gap: 2px; }
+  .mk-segment span { padding: 5px 10px; border-radius: 6px; font: 500 10.5px/1 var(--font-sans); color: var(--text-muted); }
+  .mk-segment span.active { background: var(--surface); color: var(--text-strong); box-shadow: 0 0 0 1px var(--border); }
+  .mk-sheet { margin-top: auto; padding: 12px; background: var(--surface); border-top: 1px solid var(--border); border-radius: 14px 14px 0 0; box-shadow: 0 -4px 12px rgba(22,24,29,0.06); display: grid; gap: 6px; }
+  .mk-side { display: grid; grid-template-columns: 80px 1fr; gap: 8px; height: 100%; }
+  .mk-side .rail { background: var(--surface); border-right: 1px solid var(--border); padding: 6px; display: grid; gap: 4px; }
+  .mk-side .rail span { padding: 4px; font: 500 10px/1 var(--font-sans); color: var(--text-muted); border-radius: 4px; }
+  .mk-side .rail span.active { background: var(--brand-soft); color: var(--brand-strong); }
+  .mk-select { padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; font: 500 11px/1 var(--font-sans); color: var(--text-strong); display: flex; justify-content: space-between; align-items: center; }
+  .mk-bp-table th, .mk-bp-table td { text-align: left; }
+</style>
+</head>
+<body class="ds-doc">
+  <main class="ds-content">
+    <div class="ds-doc-layout">
+
+      <article>
+        <header class="ds-page-head anim-fade-up">
+          <div class="crumbs">
+            <a href="../index.html">Home</a>
+            <span class="sep">/</span>
+            <a href="guides.html">Guides</a>
+            <span class="sep">/</span>
+            <span>Mobile adaptation</span>
+          </div>
+          <h1>Adapting blocks and patterns for mobile</h1>
+          <p class="lede">Four breakpoints, deterministic transforms, no per-page media queries. Once you know the rule for each block, the page falls out automatically.</p>
+          <div class="meta">
+            <span class="meta-pill"><span data-icon="phone" data-icon-size="12"></span>Guide</span>
+            <span class="meta-pill">4 breakpoints</span>
+            <span class="meta-pill">Before / after examples</span>
+          </div>
+        </header>
+
+        <!-- BREAKPOINTS -->
+        <section id="breakpoints">
+          <h2 class="ds-h2">Breakpoint conventions</h2>
+          <p class="ds-h2-sub">Four named breakpoints, each with one job. Don't introduce new ones.</p>
+
+          <table class="ds-props mk-bp-table">
+            <thead><tr><th>Token</th><th>Width</th><th>What happens</th></tr></thead>
+            <tbody>
+              <tr><td><code class="inline">--bp-toc</code></td><td>1280px</td><td>TOC sidebar hides. Article goes full width. The first thing to go on smaller laptops.</td></tr>
+              <tr><td><code class="inline">--bp-nav</code></td><td>1100px</td><td>Top nav collapses into the brand row. Search shrinks to an icon.</td></tr>
+              <tr><td><code class="inline">--bp-drawer</code></td><td>900px</td><td>Sidebar becomes a drawer behind a menu toggle. Two-column layouts stack.</td></tr>
+              <tr><td><code class="inline">--bp-phone</code></td><td>720px</td><td>Full phone treatment — bottom nav, bottom sheets, card-list tables, segmented controls become selects.</td></tr>
+            </tbody>
+          </table>
+
+          <p>The pattern: <strong>each block declares its own rule at each breakpoint</strong>. The page never adds media queries — only blocks do. If your page needs a media query, the underlying block is missing one.</p>
+        </section>
+
+        <!-- BLOCK RULES -->
+        <section id="block-rules">
+          <h2 class="ds-h2">Block-by-block adaptation rules</h2>
+          <p class="ds-h2-sub">What each block does at <code class="inline">&lt; 720px</code>. The full responsive plan lives on each block's own doc; this is the cheat sheet.</p>
+
+          <table class="ds-props">
+            <thead><tr><th>Block</th><th>Phone treatment</th></tr></thead>
+            <tbody>
+              <tr><td><a href="b-page-header.html">Page header</a></td><td>Title, lede, and actions stack vertically. Primary action moves below the lede; secondary actions collapse into a "⋯" menu.</td></tr>
+              <tr><td><a href="b-data-toolbar.html">Data toolbar</a></td><td>Search row on top. Filter chips become a horizontally scrolling row with momentum scroll — no wrapping.</td></tr>
+              <tr><td><a href="x-data-table.html">Data table</a></td><td>Becomes a card list. Each row is a <a href="p-mobile-list.html">mobile list</a> item with the most important 2–3 columns; the rest are revealed on tap.</td></tr>
+              <tr><td><a href="x-settings.html">Settings shell</a></td><td>240px section rail becomes a top-level select with all section names; chosen section renders below.</td></tr>
+              <tr><td><a href="x-modal.html">Modal</a></td><td>Centered modal becomes a bottom sheet with a drag handle. Backdrop fades; sheet swipes to dismiss.</td></tr>
+              <tr><td><a href="b-kpi-grid.html">KPI grid</a></td><td>4-up grid becomes 2-up at 900px and 1-up at phone. Cards keep their full content; no truncation.</td></tr>
+              <tr><td><a href="b-form-shell.html">Form shell</a></td><td>Sticky action bar becomes a bottom-anchored <a href="p-mobile-action-bar.html">Mobile action bar</a> with the primary action filling the width.</td></tr>
+              <tr><td><a href="b-detail-hero.html">Detail hero</a></td><td>Two-column hero stacks. Primary action becomes a sticky bottom button. Secondary facts collapse to a "More" expander.</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- PATTERN RULES -->
+        <section id="pattern-rules">
+          <h2 class="ds-h2">Pattern-level rules</h2>
+          <p class="ds-h2-sub">Patterns own larger transitions — whole navigation models change.</p>
+
+          <table class="ds-props">
+            <thead><tr><th>Pattern</th><th>Phone treatment</th></tr></thead>
+            <tbody>
+              <tr><td><a href="x-app-shell.html">App shell</a></td><td>Sidebar disappears entirely. Up to 5 top-level destinations live in a bottom nav (see <a href="../portal-shell.css">portal-shell.css</a> <code class="inline">.ps-tabbar</code>).</td></tr>
+              <tr><td><a href="x-detail-tabs.html">Detail + tabs</a></td><td>Tab strip becomes a segmented control if 2–4 tabs, or a select if 5+. Active tab body fills the rest of the screen.</td></tr>
+              <tr><td><a href="x-detail-view.html">Detail view</a></td><td>Two-column hero + summary rail becomes a single column with the summary collapsed below a "Details" header.</td></tr>
+              <tr><td><a href="x-command-palette.html">Command palette</a></td><td>Full-screen modal with on-screen keyboard awareness. <code class="inline">⌘K</code> shortcut hidden; surface is reachable from a search icon in the app bar.</td></tr>
+              <tr><td><a href="x-bulk-edit.html">Bulk edit</a></td><td>Bulk action bar moves from sticky-top to sticky-bottom — thumb-reachable.</td></tr>
+              <tr><td><a href="x-import-wizard.html">Import wizard</a></td><td>Steps collapse from horizontal stepper to a single "Step 2 of 4" indicator above the active step content.</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- BEFORE / AFTER -->
+        <section id="examples">
+          <h2 class="ds-h2">Before / after — four components</h2>
+          <p class="ds-h2-sub">Each pair shows the desktop arrangement on the left and the phone treatment on the right.</p>
+
+          <!-- 1: App shell -->
+          <h3 class="ds-h3">1 · App shell → bottom nav</h3>
+          <div class="ga-pair">
+            <div class="ga-side">
+              <h4>Desktop · ≥ 900px</h4>
+              <div class="ga-frame">
+                <div class="device-desktop">
+                  <div class="chrome"><span class="d"></span><span class="d"></span><span class="d"></span><span class="url">huchu.app/retail</span></div>
+                  <div class="screen">
+                    <div class="mk-side" style="width:100%;">
+                      <div class="rail">
+                        <span class="active">Home</span>
+                        <span>Orders</span>
+                        <span>Returns</span>
+                        <span>Customers</span>
+                        <span>Reports</span>
+                      </div>
+                      <div class="mk">
+                        <div class="mk-bar">Park Centre · today</div>
+                        <div class="mk-card"><div class="t">Sales</div><div class="s">ZWG 18,290 · 142 orders</div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p>Sidebar lists every destination. Topbar carries breadcrumb and global actions.</p>
+            </div>
+            <div class="ga-side">
+              <h4>Phone · &lt; 720px</h4>
+              <div class="ga-frame">
+                <div class="device-phone">
+                  <div class="screen">
+                    <div class="mk">
+                      <div class="mk-bar">Retail</div>
+                      <div class="mk-card"><div class="t">Sales</div><div class="s">ZWG 18,290</div></div>
+                      <div class="mk-card"><div class="t">Orders</div><div class="s">142 today</div></div>
+                      <div class="mk-bottom-nav">
+                        <span class="active"></span><span></span><span></span><span></span><span></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p>Sidebar gone. Five top-level destinations sit in a thumb-reachable bottom nav.</p>
+            </div>
+          </div>
+
+          <!-- 2: Data table -->
+          <h3 class="ds-h3">2 · Data table → card list</h3>
+          <div class="ga-pair">
+            <div class="ga-side">
+              <h4>Desktop · ≥ 900px</h4>
+              <div class="ga-frame">
+                <div class="device-desktop">
+                  <div class="chrome"><span class="d"></span><span class="d"></span><span class="d"></span><span class="url">huchu.app/orders</span></div>
+                  <div class="screen">
+                    <div class="mk">
+                      <div class="mk-bar">Orders · 142</div>
+                      <div class="mk-chip-row">
+                        <span class="mk-chip active">Open</span>
+                        <span class="mk-chip">Overdue</span>
+                        <span class="mk-chip">Draft</span>
+                      </div>
+                      <div class="mk-row"><span>ORD-1042</span><span>Mai Tendai</span><span>ZWG 240</span><span>Open</span></div>
+                      <div class="mk-row"><span>ORD-1041</span><span>NetOne LTD</span><span>ZWG 1,820</span><span>Open</span></div>
+                      <div class="mk-row"><span>ORD-1040</span><span>Park Centre</span><span>ZWG 90</span><span>Paid</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p>Full table with sortable columns, sticky header, and inline status.</p>
+            </div>
+            <div class="ga-side">
+              <h4>Phone · &lt; 720px</h4>
+              <div class="ga-frame">
+                <div class="device-phone">
+                  <div class="screen">
+                    <div class="mk">
+                      <div class="mk-bar">Orders</div>
+                      <div class="mk-chip-row">
+                        <span class="mk-chip active">Open</span>
+                        <span class="mk-chip">Overdue</span>
+                        <span class="mk-chip">Draft</span>
+                      </div>
+                      <div class="mk-card"><div class="t">ORD-1042 · ZWG 240</div><div class="s">Mai Tendai · Open</div></div>
+                      <div class="mk-card"><div class="t">ORD-1041 · ZWG 1,820</div><div class="s">NetOne LTD · Open</div></div>
+                      <div class="mk-card"><div class="t">ORD-1040 · ZWG 90</div><div class="s">Park Centre · Paid</div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p>Each row becomes a card. Two most-important columns in title; the rest in the subtitle. Tap reveals more.</p>
+            </div>
+          </div>
+
+          <!-- 3: Modal -->
+          <h3 class="ds-h3">3 · Modal → bottom sheet</h3>
+          <div class="ga-pair">
+            <div class="ga-side">
+              <h4>Desktop · ≥ 900px</h4>
+              <div class="ga-frame">
+                <div class="device-desktop">
+                  <div class="chrome"><span class="d"></span><span class="d"></span><span class="d"></span><span class="url">huchu.app/refund</span></div>
+                  <div class="screen">
+                    <div class="mk" style="position:relative; align-items:center; justify-content:center;">
+                      <div class="mk-card" style="width: 320px; padding: 16px;">
+                        <div class="t">Issue refund</div>
+                        <div class="s">ZWG 240 to original payment method.</div>
+                        <div style="display:flex; gap:6px; justify-content:flex-end; margin-top:8px;">
+                          <span class="mk-chip">Cancel</span>
+                          <span class="mk-chip active">Refund</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p>Centered modal with backdrop. Focus trapped, Esc closes, return-focus on dismiss.</p>
+            </div>
+            <div class="ga-side">
+              <h4>Phone · &lt; 720px</h4>
+              <div class="ga-frame">
+                <div class="device-phone">
+                  <div class="screen">
+                    <div class="mk">
+                      <div class="mk-bar">Order ORD-1042</div>
+                      <div class="mk-card"><div class="t">Line items</div><div class="s">3 lines · ZWG 240</div></div>
+                      <div class="mk-sheet">
+                        <div style="width: 36px; height: 4px; border-radius: 9999px; background: var(--border); margin: 0 auto 6px;"></div>
+                        <div class="t" style="font: 600 13px/1.2 var(--font-sans); color: var(--text-strong);">Issue refund</div>
+                        <div class="s" style="font: 400 11.5px/1.3 var(--font-sans); color: var(--text-muted);">ZWG 240 to original method.</div>
+                        <div style="display:flex; gap:6px; margin-top:6px;">
+                          <span class="mk-chip" style="flex:1; text-align:center;">Cancel</span>
+                          <span class="mk-chip active" style="flex:1; text-align:center;">Refund</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p>Sheet rises from the bottom with a drag handle. Swipe-down dismisses. Primary action sits at thumb height.</p>
+            </div>
+          </div>
+
+          <!-- 4: Settings rail -->
+          <h3 class="ds-h3">4 · Settings rail → top select</h3>
+          <div class="ga-pair">
+            <div class="ga-side">
+              <h4>Desktop · ≥ 900px</h4>
+              <div class="ga-frame">
+                <div class="device-desktop">
+                  <div class="chrome"><span class="d"></span><span class="d"></span><span class="d"></span><span class="url">huchu.app/settings</span></div>
+                  <div class="screen">
+                    <div class="mk-side" style="width: 100%;">
+                      <div class="rail">
+                        <span>Profile</span>
+                        <span class="active">Notifications</span>
+                        <span>Branches</span>
+                        <span>Integrations</span>
+                        <span>Billing</span>
+                      </div>
+                      <div class="mk">
+                        <div class="mk-bar">Notifications</div>
+                        <div class="mk-card"><div class="t">Email digest</div><div class="s">Daily at 7am</div></div>
+                        <div class="mk-card"><div class="t">SMS alerts</div><div class="s">For overdue invoices only</div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p>240px rail of sections on the left; scroll-spy highlights the active one.</p>
+            </div>
+            <div class="ga-side">
+              <h4>Phone · &lt; 720px</h4>
+              <div class="ga-frame">
+                <div class="device-phone">
+                  <div class="screen">
+                    <div class="mk">
+                      <div class="mk-bar">Settings</div>
+                      <div class="mk-select">Notifications <span>▾</span></div>
+                      <div class="mk-card"><div class="t">Email digest</div><div class="s">Daily at 7am</div></div>
+                      <div class="mk-card"><div class="t">SMS alerts</div><div class="s">For overdue invoices only</div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p>Rail collapses into a top-level select; chosen section renders below. No horizontal split on phone.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- BONUS: Detail tabs -->
+        <section id="detail-tabs">
+          <h2 class="ds-h2">Bonus · Detail tabs → segmented control</h2>
+          <p class="ds-h2-sub">Tab strips above 4 tabs become a select; 2–4 stay as segmented controls.</p>
+
+          <div class="ga-pair">
+            <div class="ga-side">
+              <h4>Desktop · ≥ 900px</h4>
+              <div class="ga-frame">
+                <div class="device-desktop">
+                  <div class="chrome"><span class="d"></span><span class="d"></span><span class="d"></span><span class="url">huchu.app/cus_8a32</span></div>
+                  <div class="screen">
+                    <div class="mk">
+                      <div class="mk-bar">Mai Tendai · cus_8a32</div>
+                      <div style="display:inline-flex; gap: 14px; padding: 4px 0; border-bottom: 1px solid var(--border);">
+                        <span style="font: 500 11px/1 var(--font-sans); color: var(--text-strong); padding-bottom: 6px; border-bottom: 2px solid var(--brand);">Overview</span>
+                        <span style="font: 500 11px/1 var(--font-sans); color: var(--text-muted);">Orders</span>
+                        <span style="font: 500 11px/1 var(--font-sans); color: var(--text-muted);">Payments</span>
+                        <span style="font: 500 11px/1 var(--font-sans); color: var(--text-muted);">Activity</span>
+                      </div>
+                      <div class="mk-card"><div class="t">Last order</div><div class="s">ORD-1042 · 3 days ago</div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p>Tabs are an underlined strip — full names visible.</p>
+            </div>
+            <div class="ga-side">
+              <h4>Phone · &lt; 720px</h4>
+              <div class="ga-frame">
+                <div class="device-phone">
+                  <div class="screen">
+                    <div class="mk">
+                      <div class="mk-bar">Mai Tendai</div>
+                      <div class="mk-segment">
+                        <span class="active">Overview</span><span>Orders</span><span>Payments</span><span>Activity</span>
+                      </div>
+                      <div class="mk-card"><div class="t">Last order</div><div class="s">ORD-1042 · 3 days ago</div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p>Strip becomes a <a href="p-segmented-control.html">segmented control</a>. At 5+ tabs, it becomes a select instead.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- PHONE CHECKLIST -->
+        <section id="checklist">
+          <h2 class="ds-h2">"Test on a phone" checklist</h2>
+          <p class="ds-h2-sub">Run through this before merging anything that touches a product surface.</p>
+
+          <ul>
+            <li>Open the page on a real phone (or DevTools at 375×812). Don't trust the responsive preview in your IDE.</li>
+            <li>Every primary action is reachable with one thumb without scrolling.</li>
+            <li>No horizontal scroll anywhere except the explicitly-scrollable filter chip row.</li>
+            <li>Tap targets are at least 44×44px. Stack adjacent buttons rather than crowding them.</li>
+            <li>Bottom nav is visible if the page is part of a portal. Page header doesn't hide behind it.</li>
+            <li>Forms: the keyboard doesn't cover the active input. Sticky action bar sits above the keyboard.</li>
+            <li>Modals are bottom sheets with a drag handle. Backdrop tap dismisses; Esc dismisses on hardware keyboard.</li>
+            <li>Tables render as card lists. The "most important two" columns are in the card title; the rest are revealed on tap.</li>
+            <li>Loading and empty states render correctly on phone too — check both.</li>
+            <li>Pinch-zoom works (never set <code class="inline">user-scalable=no</code>). Long-press shows the system context menu on text.</li>
+          </ul>
+        </section>
+
+        <!-- DO / DON'T -->
+        <section id="rules">
+          <h2 class="ds-h2">Do &amp; don't</h2>
+          <div class="ds-rules">
+            <div class="rule do"><span class="tag">Do</span><p>Put media queries inside blocks, never on pages. The page just composes blocks and inherits their responsive behavior.</p></div>
+            <div class="rule dont"><span class="tag">Don't</span><p>Add a new breakpoint to fix one page. Adapt the misbehaving block at an existing breakpoint instead.</p></div>
+            <div class="rule do"><span class="tag">Do</span><p>Test on a real phone before merging. Browser DevTools lie about touch behavior, sheet gestures, and on-screen keyboards.</p></div>
+            <div class="rule dont"><span class="tag">Don't</span><p>Hide secondary actions behind a "⋯" menu on desktop. Reserve overflow menus for phone.</p></div>
+            <div class="rule do"><span class="tag">Do</span><p>Make the primary action thumb-reachable on phone — bottom-anchored, full-width if necessary.</p></div>
+            <div class="rule dont"><span class="tag">Don't</span><p>Disable pinch-zoom. Operators rely on it to read small numbers and codes; the system supports it everywhere.</p></div>
+          </div>
+        </section>
+
+        <!-- CALLOUT -->
+        <div class="ds-callout">
+          <span class="ic" data-icon="info" data-icon-size="18"></span>
+          <div>
+            <h4>What's next</h4>
+            <p>For the full mobile component catalogue, see <a href="p-mobile-list.html">Mobile list</a>, <a href="p-mobile-action-bar.html">Mobile action bar</a>, and the portal shells in <code class="inline">portal-shell.css</code>.</p>
+          </div>
+        </div>
+
+        <!-- PAGER -->
+        <nav class="ds-pager">
+          <a href="guide-block-vs-pattern.html">
+            <div class="pager-label">← Back to</div>
+            <div class="pager-title">Block vs Pattern vs Page</div>
+          </a>
+          <a href="guides.html" class="next">
+            <div class="pager-label">All →</div>
+            <div class="pager-title">Guides</div>
+          </a>
+        </nav>
+      </article>
+
+      <!-- TOC -->
+      <aside class="ds-toc">
+        <div class="toc-label">On this page</div>
+        <ul>
+          <li><a href="#breakpoints" class="current">Breakpoint conventions</a></li>
+          <li><a href="#block-rules">Block adaptation rules</a></li>
+          <li><a href="#pattern-rules">Pattern-level rules</a></li>
+          <li><a href="#examples">Before / after</a></li>
+          <li><a href="#detail-tabs">Detail tabs example</a></li>
+          <li><a href="#checklist">Phone checklist</a></li>
+          <li><a href="#rules">Do &amp; don't</a></li>
+        </ul>
+      </aside>
+
+    </div>
+  </main>
+</body>
+</html>

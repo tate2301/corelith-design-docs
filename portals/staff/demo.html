@@ -1,0 +1,1902 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Staff portal demo · Huchu</title>
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  /* === Stage === */
+  body { background: var(--gray-100); margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+  .device-desktop { width: 1280px; max-width: 100%; border-radius: 12px; background: #1A1D24; padding: 0; box-shadow: 0 30px 60px -20px rgba(22,24,29,0.25), 0 0 0 1px rgba(22,24,29,0.1); overflow: hidden; }
+  .chrome { height: 36px; display: flex; align-items: center; gap: 6px; padding: 0 14px; background: #1A1D24; flex: none; }
+  .chrome .dot { width: 10px; height: 10px; border-radius: 50%; background: #444; }
+  .chrome .dot.r { background: #FF5F57; } .chrome .dot.y { background: #FEBC2E; } .chrome .dot.g { background: #28C840; }
+  .chrome .url { margin-left: 14px; padding: 4px 12px; background: rgba(255,255,255,0.06); border-radius: 4px; color: #aaa; font: 12px/1 var(--font-mono); flex: 1; }
+
+  /* Fullscreen mode: drop the kit nav + frame, fill viewport */
+  body.is-fullscreen { padding: 0; background: var(--canvas); }
+  body.is-fullscreen .pk-nav { display: none !important; }
+  body.is-fullscreen .device-desktop { width: 100vw; max-width: none; height: 100vh; border-radius: 0; box-shadow: none; padding: 0; background: var(--canvas); }
+  body.is-fullscreen .device-desktop .chrome { display: none; }
+  body.is-fullscreen .st-app { height: 100vh !important; }
+
+  /* === App shell === */
+  .st-app { display: grid; grid-template-columns: 240px 1fr; height: 760px; background: var(--canvas); }
+  .st-nav { background: var(--canvas); border-right: 1px solid var(--border); padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .st-nav .brand { display: inline-flex; align-items: center; gap: 10px; padding: 6px 8px; font: 600 15px/1 var(--font-sans); color: var(--text-strong); margin-bottom: 12px; text-decoration: none; }
+  .st-nav .brand .mark { width: 22px; height: 22px; color: var(--brand); }
+  .st-nav nav { display: grid; gap: 2px; }
+  .st-nav nav button { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; font: 500 13.5px/1 var(--font-sans); color: var(--text-body); background: transparent; border: 0; text-align: left; cursor: pointer; width: 100%; }
+  .st-nav nav button:hover { background: var(--surface-muted); color: var(--text-strong); }
+  .st-nav nav button.active { background: var(--brand-soft); color: var(--brand-strong); }
+  .st-nav nav button svg { width: 16px; height: 16px; color: var(--text-muted); flex: none; }
+  .st-nav nav button.active svg { color: var(--brand); }
+  .st-nav nav button .tag { margin-left: auto; padding: 1px 7px; border-radius: 9999px; background: var(--brand); color: #fff; font: 600 10px/1 var(--font-mono); }
+  .st-nav nav button.active .tag { background: #fff; color: var(--brand-strong); }
+  .st-nav .sh { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); padding: 16px 10px 8px; }
+  .st-nav .foot { margin-top: auto; padding: 12px 10px 4px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .st-nav .foot .av { width: 30px; height: 30px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 12px/1 var(--font-sans); }
+  .st-nav .foot .nm { font: 500 13px/1.3 var(--font-sans); color: var(--text-strong); }
+  .st-nav .foot .sb { font: 11px/1.2 var(--font-sans); color: var(--text-muted); }
+
+  .st-main { min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+  .st-top { padding: 14px 28px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; flex: none; }
+  .st-top .crumbs { font: 500 12px/1 var(--font-sans); color: var(--text-muted); margin-bottom: 4px; }
+  .st-top h1 { font: 700 20px/1.2 var(--font-sans); letter-spacing: -0.015em; color: var(--text-strong); margin: 0; }
+  .st-top .meta { flex: 1; min-width: 0; }
+  .st-top .actions { display: inline-flex; gap: 8px; align-items: center; }
+  .st-top .bar-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 8px; background: var(--surface-muted); color: var(--text-strong); border: 0; cursor: pointer; font: 500 12.5px/1 var(--font-sans); }
+  .st-top .bar-btn:hover { background: var(--surface-sunken); }
+  .st-top .bar-btn.primary { background: var(--brand); color: #fff; }
+  .st-top .bar-btn.primary:hover { background: var(--brand-strong); }
+
+  .st-body { flex: 1; overflow-y: auto; padding: 22px 28px 28px; display: flex; flex-direction: column; gap: 20px; min-height: 0; }
+
+  /* === Stat tiles === */
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+  .stat .lb { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); display: inline-flex; align-items: center; gap: 6px; }
+  .stat .vl { font: 700 22px/1 var(--font-sans); font-variant-numeric: tabular-nums; color: var(--text-strong); letter-spacing: -0.01em; }
+  .stat .sb { font: 12px/1.3 var(--font-sans); color: var(--text-muted); }
+  .stat.brand { background: var(--brand-soft); border-color: var(--brand-100); }
+  .stat.brand .lb, .stat.brand .vl, .stat.brand .sb { color: var(--brand-strong); }
+
+  /* === Panels === */
+  .grid-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
+  .grid-12 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .panel-h { padding: 13px 18px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 10px; }
+  .panel-h h2 { font: 600 13.5px/1 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .panel-h .sp { flex: 1; }
+  .panel-h a, .panel-h .lnk { font: 500 12px/1 var(--font-sans); color: var(--brand-strong); text-decoration: none; cursor: pointer; background: none; border: 0; padding: 0; }
+  .panel-h .tot { font: 600 14px/1 var(--font-mono); color: var(--text-strong); font-variant-numeric: tabular-nums; }
+  .panel-body { padding: 4px 0; }
+
+  /* === Activity feed === */
+  .feed-row { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 11px 18px; border-bottom: 1px solid var(--border-subtle); }
+  .feed-row:last-child { border-bottom: 0; }
+  .feed-row .ic { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; background: var(--surface-muted); color: var(--text-strong); flex: none; }
+  .feed-row .ic.success { background: var(--tone-success-bg); color: var(--tone-success); }
+  .feed-row .ic.brand { background: var(--brand-soft); color: var(--brand-strong); }
+  .feed-row .ic.warn { background: var(--tone-warn-bg); color: var(--tone-warn); }
+  .feed-row .ic.danger { background: var(--tone-danger-bg); color: var(--tone-danger); }
+  .feed-row .nm { font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .feed-row .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .feed-row .tm { font: 500 11.5px/1 var(--font-mono); color: var(--text-subtle); white-space: nowrap; }
+
+  /* === Holidays === */
+  .hol-row { display: grid; grid-template-columns: 56px 1fr auto; gap: 14px; align-items: center; padding: 11px 18px; border-bottom: 1px solid var(--border-subtle); }
+  .hol-row:last-child { border-bottom: 0; }
+  .hol-row .dt { background: var(--brand-soft); color: var(--brand-strong); border-radius: 8px; padding: 5px 0; text-align: center; }
+  .hol-row .dt .d { font: 700 16px/1 var(--font-sans); }
+  .hol-row .dt .m { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 3px; }
+  .hol-row .nm { font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .hol-row .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .hol-row .pill { padding: 2px 8px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-muted); font: 500 11px/1 var(--font-sans); }
+
+  /* === Tasks === */
+  .task-row { display: grid; grid-template-columns: 22px 1fr auto; gap: 12px; align-items: center; padding: 11px 18px; border-bottom: 1px solid var(--border-subtle); cursor: pointer; }
+  .task-row:last-child { border-bottom: 0; }
+  .task-row:hover { background: var(--surface-muted); }
+  .task-row .cb { width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--border-strong); display: grid; place-items: center; color: transparent; transition: all 120ms; }
+  .task-row.done .cb { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .task-row.done .nm { text-decoration: line-through; color: var(--text-muted); }
+  .task-row .nm { font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .task-row .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .task-row .due { font: 500 11.5px/1 var(--font-mono); color: var(--text-muted); }
+  .task-row .due.late { color: var(--tone-warn); }
+
+  /* === Tables === */
+  table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font: var(--type-body-sm); }
+  table.tbl th { background: var(--surface-muted); font: 500 11px/1.2 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); text-align: left; padding: 9px 16px; border-bottom: 1px solid var(--border-subtle); }
+  table.tbl th.r, table.tbl td.r { text-align: right; }
+  table.tbl td { padding: 11px 16px; border-bottom: 1px solid var(--border-subtle); color: var(--text-body); }
+  table.tbl tr:last-child td { border-bottom: 0; }
+  table.tbl tr.clickable { cursor: pointer; }
+  table.tbl tr.clickable:hover { background: var(--surface-muted); }
+  table.tbl .nm { font: 500 13px/1.3 var(--font-sans); color: var(--text-strong); }
+  table.tbl .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  table.tbl .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-strong); }
+  table.tbl tr.foot td { background: var(--surface-muted); font-weight: 600; color: var(--text-strong); }
+
+  .pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 9999px; font: 500 11.5px/1 var(--font-sans); }
+  .pill.approved { background: var(--tone-success-bg); color: var(--tone-success); }
+  .pill.pending  { background: var(--tone-warn-bg); color: var(--tone-warn); }
+  .pill.denied   { background: var(--tone-danger-bg); color: var(--tone-danger); }
+  .pill.muted    { background: var(--surface-muted); color: var(--text-muted); }
+  .pill.brand    { background: var(--brand-soft); color: var(--brand-strong); }
+  .pill.success  { background: var(--tone-success-bg); color: var(--tone-success); }
+  .pill.dot::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; display: inline-block; }
+
+  /* === Leave === */
+  .bal-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .bal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .bal .lb { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); }
+  .bal .vl { font: 700 22px/1 var(--font-sans); font-variant-numeric: tabular-nums; color: var(--text-strong); letter-spacing: -0.01em; }
+  .bal .vl span { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+  .bal .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); }
+  .bal .bar { height: 6px; border-radius: 9999px; background: var(--surface-muted); overflow: hidden; }
+  .bal .bar > i { display: block; height: 100%; }
+
+  /* === Forms === */
+  .field label { display: block; font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px; }
+  .field input, .field select, .field textarea { width: 100%; height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); font: 14px var(--font-sans); color: var(--text-strong); box-sizing: border-box; }
+  .field input:focus, .field select:focus, .field textarea:focus { outline: 0; border-color: var(--brand); box-shadow: 0 0 0 3px var(--focus-ring-soft); }
+  .field textarea { height: 70px; padding: 8px 10px; resize: vertical; font-family: var(--font-sans); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+  .field.full { grid-column: 1 / -1; }
+  .field.half { grid-column: span 2; }
+
+  /* === Buttons === */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; border-radius: 8px; border: 0; cursor: pointer; font: 500 13px/1 var(--font-sans); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-primary { background: var(--brand); color: #fff; }
+  .btn-primary:hover:not(:disabled) { background: var(--brand-strong); }
+  .btn-secondary { background: var(--surface-muted); color: var(--text-strong); }
+  .btn-secondary:hover:not(:disabled) { background: var(--surface-sunken); }
+  .btn-danger { background: var(--tone-danger-bg); color: var(--tone-danger); }
+  .btn-danger:hover:not(:disabled) { background: var(--tone-danger); color: #fff; }
+  .btn-ghost { background: transparent; color: var(--text-body); }
+  .btn-ghost:hover:not(:disabled) { background: var(--surface-muted); color: var(--text-strong); }
+
+  /* === Payslip === */
+  .meta-strip { display: flex; gap: 22px; padding: 14px 18px; background: var(--surface-muted); border-radius: 12px; flex-wrap: wrap; }
+  .meta-strip > div { display: flex; flex-direction: column; gap: 2px; }
+  .meta-strip .lb { font: 500 10px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); }
+  .meta-strip .vl { font: 600 13px/1.2 var(--font-sans); color: var(--text-strong); }
+  .meta-strip .vl.mono { font-family: var(--font-mono); }
+
+  .big-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .big { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+  .big .lb { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); }
+  .big .vl { font: 700 30px/1 var(--font-sans); font-variant-numeric: tabular-nums; color: var(--text-strong); letter-spacing: -0.02em; }
+  .big .sb { font: 12.5px/1.4 var(--font-sans); color: var(--text-muted); }
+  .big.net { background: linear-gradient(135deg, var(--brand-strong), var(--brand)); border-color: transparent; color: #fff; }
+  .big.net .lb, .big.net .vl, .big.net .sb { color: #fff; }
+  .big.net .lb { opacity: 0.85; }
+  .big.net .sb { opacity: 0.9; }
+
+  .ytd-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; padding: 16px 18px; }
+  .ytd-cell { display: flex; flex-direction: column; gap: 4px; }
+  .ytd-cell .lb { font: 500 10.5px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); }
+  .ytd-cell .vl { font: 600 16px/1.1 var(--font-mono); color: var(--text-strong); font-variant-numeric: tabular-nums; }
+  .ytd-cell .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); }
+
+  .period-sel { height: 34px; padding: 0 30px 0 12px; border: 1px solid var(--border); background: var(--surface); border-radius: 8px; font: 500 13px/1 var(--font-sans); color: var(--text-strong); appearance: none; cursor: pointer; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23565C69' stroke-width='2'><path d='m6 9 6 6 6-6'/></svg>"); background-repeat: no-repeat; background-position: right 10px center; }
+
+  /* === Approve inbox === */
+  .inbox-grid { display: grid; grid-template-columns: 360px 1fr; gap: 16px; min-height: 480px; }
+  .inbox-list { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+  .inbox-list .lr { display: grid; grid-template-columns: 36px 1fr auto; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border-subtle); cursor: pointer; align-items: center; }
+  .inbox-list .lr:hover { background: var(--surface-muted); }
+  .inbox-list .lr.on { background: var(--brand-soft); }
+  .inbox-list .lr .av { width: 32px; height: 32px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 11px/1 var(--font-sans); }
+  .inbox-list .lr.on .av { background: var(--brand); color: #fff; }
+  .inbox-list .lr .nm { font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .inbox-list .lr .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .inbox-list .lr .days { font: 600 13px/1 var(--font-mono); color: var(--text-strong); }
+
+  .inbox-review { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+  .inbox-review .empty { display: grid; place-items: center; height: 100%; color: var(--text-muted); font: 14px var(--font-sans); padding: 60px 20px; text-align: center; }
+  .inbox-review .ihero { display: flex; align-items: center; gap: 14px; }
+  .inbox-review .ihero .av { width: 48px; height: 48px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 16px/1 var(--font-sans); }
+  .inbox-review .ihero h3 { font: 600 17px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .inbox-review .ihero .sb { font: 12.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 3px; }
+  .inbox-review .kv { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .inbox-review .kv .cell { padding: 10px 12px; background: var(--surface-muted); border-radius: 8px; }
+  .inbox-review .kv .cell .k { font: 500 10.5px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); }
+  .inbox-review .kv .cell .v { font: 600 14px/1.1 var(--font-sans); color: var(--text-strong); margin-top: 6px; }
+  .conflict { padding: 10px 12px; border-radius: 8px; display: flex; align-items: center; gap: 10px; font: 12.5px/1.4 var(--font-sans); }
+  .conflict.warn { background: var(--tone-warn-bg); color: var(--tone-warn); }
+  .conflict.ok { background: var(--tone-success-bg); color: var(--tone-success); }
+  .conflict .ic { width: 24px; height: 24px; border-radius: 6px; background: rgba(255,255,255,0.5); display: grid; place-items: center; flex: none; }
+
+  /* === Time clock (desktop view) === */
+  .clock-deck { display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px; align-items: start; }
+  .clock-card { background: linear-gradient(135deg, var(--brand-strong), var(--brand)); border-radius: 16px; padding: 22px; color: #fff; display: flex; flex-direction: column; gap: 18px; }
+  .clock-card .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.85; }
+  .clock-card .time { font: 700 48px/1 var(--font-sans); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .clock-card .date { font: 13px/1.3 var(--font-sans); opacity: 0.85; }
+  .clock-card .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .clock-card .summary .cell { background: rgba(255,255,255,0.12); border-radius: 12px; padding: 12px; }
+  .clock-card .summary .ck { font: 500 10.5px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.85; }
+  .clock-card .summary .cv { font: 700 20px/1 var(--font-sans); font-variant-numeric: tabular-nums; margin-top: 6px; }
+  .clock-card .summary .csb { font: 11px/1.3 var(--font-sans); opacity: 0.8; margin-top: 4px; }
+  .clock-btn { display: block; width: 100%; height: 56px; border-radius: 12px; background: #fff; color: var(--brand-strong); font: 700 16px/1 var(--font-sans); display: inline-flex; align-items: center; justify-content: center; gap: 10px; border: 0; cursor: pointer; }
+  .clock-btn.out { background: var(--ink); color: #fff; }
+
+  .geo { border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: var(--surface); }
+  .geo .map { height: 180px; position: relative; background: linear-gradient(180deg, #E6EFE0 0%, #D6E4DA 100%); }
+  .geo .map::before { content: ""; position: absolute; inset: 0; background-image: linear-gradient(0deg, rgba(60,90,60,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(60,90,60,0.08) 1px, transparent 1px); background-size: 26px 26px; }
+  .geo .road { position: absolute; height: 14px; background: #fff; opacity: 0.85; border-radius: 2px; }
+  .geo .road.h1 { top: 60px; left: -10px; right: 28%; transform: rotate(-3deg); }
+  .geo .road.h2 { bottom: 30px; left: 18%; right: -10px; transform: rotate(2deg); }
+  .geo .road.v1 { width: 12px; height: auto; top: -10px; bottom: -10px; left: 56%; }
+  .geo .fence { position: absolute; width: 140px; height: 140px; border-radius: 50%; border: 2px dashed var(--brand); background: rgba(11,93,240,0.08); left: 50%; top: 50%; transform: translate(-50%, -50%); }
+  .geo .pin { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -100%) rotate(-45deg); width: 22px; height: 22px; border-radius: 50% 50% 50% 0; background: var(--brand); box-shadow: 0 4px 8px -2px rgba(0,0,0,0.35); }
+  .geo .pin::after { content: ""; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(45deg); width: 8px; height: 8px; border-radius: 50%; background: #fff; }
+  .geo .bar { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-top: 1px solid var(--border-subtle); }
+  .geo .bar .ic { width: 28px; height: 28px; border-radius: 7px; background: var(--tone-success-bg); color: var(--tone-success); display: grid; place-items: center; }
+  .geo .bar .nm { font: 500 13px/1.3 var(--font-sans); color: var(--text-strong); }
+  .geo .bar .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 1px; }
+
+  /* === Directory === */
+  .dir-search { display: flex; gap: 10px; align-items: center; }
+  .dir-search .srch { flex: 1; position: relative; }
+  .dir-search .srch input { width: 100%; height: 38px; padding: 0 12px 0 36px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); font: 14px var(--font-sans); color: var(--text-strong); box-sizing: border-box; }
+  .dir-search .srch input:focus { outline: 0; border-color: var(--brand); box-shadow: 0 0 0 3px var(--focus-ring-soft); }
+  .dir-search .srch [data-icon] { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-subtle); }
+  .chip-bar { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chipd { padding: 5px 12px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12.5px/1 var(--font-sans); color: var(--text-strong); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .chipd:hover { background: var(--surface-muted); }
+  .chipd.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .chipd .ct { padding: 1px 6px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-muted); font: 500 10.5px/1 var(--font-mono); }
+  .chipd.on .ct { background: rgba(255,255,255,0.18); color: #fff; }
+
+  .dir-deck { display: grid; grid-template-columns: 1fr 340px; gap: 16px; }
+  .dir-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-content: start; }
+  .dcard { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; cursor: pointer; transition: all 120ms; display: flex; flex-direction: column; gap: 10px; }
+  .dcard:hover { border-color: var(--brand-200); transform: translateY(-1px); box-shadow: 0 4px 10px -4px rgba(11,93,240,0.15); }
+  .dcard.on { border-color: var(--brand); box-shadow: 0 0 0 3px var(--focus-ring-soft); }
+  .dcard .h { display: flex; align-items: center; gap: 10px; }
+  .dcard .av { width: 36px; height: 36px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 13px/1 var(--font-sans); flex: none; }
+  .dcard .av.b { background: var(--tone-info-bg, #DCEEFF); color: #1E3A8A; }
+  .dcard .av.c { background: var(--tone-warn-bg); color: var(--tone-warn); }
+  .dcard .av.d { background: var(--tone-success-bg); color: var(--tone-success); }
+  .dcard .nm { font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .dcard .rl { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 1px; }
+  .dcard .stat { width: 9px; height: 9px; border-radius: 50%; background: var(--tone-success); margin-left: auto; flex: none; }
+  .dcard .stat.away { background: var(--tone-warn); }
+  .dcard .stat.off { background: var(--text-subtle); }
+  .dcard .pills { display: flex; gap: 5px; flex-wrap: wrap; }
+  .dcard .pills .pill { padding: 2px 8px; font-size: 10.5px; background: var(--surface-muted); color: var(--text-muted); }
+
+  .dir-profile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 0; overflow: hidden; align-self: start; position: sticky; top: 0; }
+  .dir-profile .empty { padding: 60px 20px; text-align: center; color: var(--text-muted); font: 13px var(--font-sans); }
+  .dir-profile .hero { background: linear-gradient(135deg, var(--brand-soft), var(--brand-100)); padding: 18px; display: flex; align-items: center; gap: 12px; }
+  .dir-profile .hero .av { width: 54px; height: 54px; border-radius: 50%; background: #fff; color: var(--brand-strong); display: grid; place-items: center; font: 700 18px/1 var(--font-sans); border: 2px solid #fff; }
+  .dir-profile .hero h3 { font: 600 16px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .dir-profile .hero .rl { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .dir-profile .acts { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; padding: 12px 14px; border-bottom: 1px solid var(--border-subtle); }
+  .dir-profile .acts button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; border-radius: 8px; background: var(--surface-muted); color: var(--text-strong); border: 0; cursor: pointer; font: 500 11px/1 var(--font-sans); }
+  .dir-profile .acts button:hover { background: var(--brand-soft); color: var(--brand-strong); }
+  .dir-profile .sec { padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); }
+  .dir-profile .sec:last-child { border-bottom: 0; }
+  .dir-profile .sh { font: 500 10px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 8px; }
+  .kv { display: grid; grid-template-columns: 96px 1fr; gap: 6px 12px; font: 12.5px/1.4 var(--font-sans); }
+  .kv .k { color: var(--text-muted); }
+  .kv .v { color: var(--text-strong); font-weight: 500; }
+  .kv .v.mono { font-family: var(--font-mono); }
+  .toggle { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+  .toggle .sw { width: 32px; height: 18px; border-radius: 9999px; background: var(--border-strong); position: relative; transition: background 120ms; }
+  .toggle .sw::after { content: ""; position: absolute; left: 2px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: left 140ms; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+  .toggle.on .sw { background: var(--brand); }
+  .toggle.on .sw::after { left: 16px; }
+  .toggle .lb { font: 500 12.5px/1 var(--font-sans); color: var(--text-strong); }
+
+  /* === Profile screen === */
+  .prof-grid { display: grid; grid-template-columns: 320px 1fr; gap: 18px; }
+  .prof-side { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+  .prof-side .av { width: 84px; height: 84px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; font: 700 30px/1 var(--font-sans); }
+  .prof-side h3 { font: 700 17px/1.2 var(--font-sans); color: var(--text-strong); margin: 6px 0 0; }
+  .prof-side .rl { font: 12.5px/1.3 var(--font-sans); color: var(--text-muted); }
+  .prof-side .stack { display: flex; flex-direction: column; gap: 6px; width: 100%; margin-top: 12px; }
+  .prof-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+  .prof-card:last-child { margin-bottom: 0; }
+  .prof-card h3 { font: 600 14px/1 var(--font-sans); color: var(--text-strong); margin: 0 0 14px; display: flex; align-items: center; gap: 8px; }
+  .prof-card h3 .ic { color: var(--brand); }
+  .prof-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 18px; }
+  .prof-row { display: flex; flex-direction: column; gap: 4px; }
+  .prof-row .lb { font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); }
+  .prof-row .vl { font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .prof-row .vl.mono { font-family: var(--font-mono); }
+
+  /* === Modals === */
+  .modal-scrim { position: fixed; inset: 0; background: rgba(22,24,29,0.6); z-index: 100; display: grid; place-items: center; padding: 20px; animation: scrimIn 160ms ease; }
+  @keyframes scrimIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal { background: var(--surface); border-radius: 14px; padding: 22px; width: 100%; max-width: 480px; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.4); animation: modalIn 220ms cubic-bezier(0.2, 0, 0.1, 1); max-height: 90vh; overflow-y: auto; }
+  .modal.lg { max-width: 600px; }
+  @keyframes modalIn { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .modal h3 { font: 600 16px/1.2 var(--font-sans); color: var(--text-strong); margin: 0 0 4px; }
+  .modal .sub { font: 13px/1.4 var(--font-sans); color: var(--text-muted); margin: 0 0 14px; }
+  .modal .acts { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+  .modal .acts .ok { background: var(--brand); color: #fff; }
+  .modal .acts .ok:hover { background: var(--brand-strong); }
+  .modal .acts .danger { background: var(--tone-danger-bg); color: var(--tone-danger); }
+  .modal .acts .danger:hover { background: var(--tone-danger); color: #fff; }
+
+  /* === Toast === */
+  .toast-host { position: fixed; top: 70px; right: 22px; z-index: 200; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  body.is-fullscreen .toast-host { top: 22px; }
+  .toast { background: var(--ink); color: #fff; padding: 11px 16px; border-radius: 8px; font: 500 13.5px/1.4 var(--font-sans); box-shadow: 0 8px 20px -6px rgba(0,0,0,0.3); display: inline-flex; align-items: center; gap: 8px; animation: toastIn 240ms ease; pointer-events: auto; max-width: 340px; }
+  .toast.success { background: var(--tone-success); }
+  .toast.danger { background: var(--tone-danger); }
+  .toast.warn { background: var(--tone-warn); }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+  .toast.out { animation: toastOut 240ms ease forwards; }
+  @keyframes toastOut { to { opacity: 0; transform: translateX(20px); } }
+
+  /* === Mobile bottom tabs === */
+  .st-tabs { display: none; }
+
+  /* === Tablet (narrower side rail) === */
+  @media (max-width: 1000px) {
+    .device-desktop { width: 100%; }
+    .st-app { grid-template-columns: 64px 1fr; }
+    .st-nav .sh, .st-nav .foot, .st-nav nav button > span:not(.ic):not(.tag):not(svg) { display: none; }
+    .st-nav nav button { justify-content: center; padding: 9px; }
+    .st-nav .brand > span:last-child { display: none; }
+    .st-nav .brand { justify-content: center; }
+    .form-grid { grid-template-columns: 1fr 1fr; }
+    .grid-2, .grid-12 { grid-template-columns: 1fr; }
+    .stat-grid, .bal-grid { grid-template-columns: 1fr 1fr; }
+    .big-grid { grid-template-columns: 1fr; }
+    .ytd-grid { grid-template-columns: 1fr 1fr; }
+    .inbox-grid { grid-template-columns: 1fr; }
+    .dir-deck { grid-template-columns: 1fr; }
+    .clock-deck { grid-template-columns: 1fr; }
+    .prof-grid { grid-template-columns: 1fr; }
+  }
+
+  /* === Phone — time-clock only view === */
+  @media (max-width: 720px) {
+    body { padding: 0; background: var(--canvas); }
+    .device-desktop { width: 100vw; height: 100vh; max-width: none; border-radius: 0; box-shadow: none; padding: 0; background: var(--canvas); }
+    .device-desktop .chrome { display: none; }
+    .pk-nav { display: none !important; }
+    .st-app { grid-template-columns: 1fr; grid-template-rows: 52px 1fr 64px; height: 100vh; height: 100dvh; }
+    .st-nav { display: none; }
+    .st-top { padding: 12px 16px; gap: 8px; }
+    .st-top h1 { font-size: 17px; }
+    .st-top .crumbs { display: none; }
+    .st-top .actions .bar-btn-label { display: none; }
+    .st-top .bar-btn { padding: 7px 8px; }
+    .st-body { padding: 14px 14px 18px; gap: 14px; }
+    .stat-grid, .bal-grid { grid-template-columns: 1fr 1fr; }
+    .big-grid { grid-template-columns: 1fr; }
+    .grid-2, .grid-12, .clock-deck, .dir-deck, .prof-grid { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .field.half, .field.full { grid-column: auto; }
+    .ytd-grid { grid-template-columns: 1fr 1fr; }
+    .inbox-grid { grid-template-columns: 1fr; }
+    .dir-grid { grid-template-columns: 1fr; }
+
+    .modal-scrim { padding: 0; align-items: flex-end; }
+    .modal { max-width: 100%; border-bottom-left-radius: 0; border-bottom-right-radius: 0; animation: sheetIn 260ms cubic-bezier(0.2, 0, 0.1, 1); }
+    @keyframes sheetIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .toast-host { top: 60px; right: 12px; left: 12px; }
+
+    /* Mobile bottom tab nav */
+    .st-tabs {
+      display: flex; background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 0 4px env(safe-area-inset-bottom, 4px);
+    }
+    .st-tabs button {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; padding: 6px 2px;
+      color: var(--text-subtle); background: transparent; cursor: pointer;
+      font: 500 10px/1 var(--font-sans); border: 0; position: relative;
+    }
+    .st-tabs button .ic { width: 22px; height: 22px; display: grid; place-items: center; }
+    .st-tabs button.active { color: var(--brand); }
+    .st-tabs button .badge {
+      position: absolute; top: 4px; right: 28%;
+      min-width: 16px; height: 16px; padding: 0 4px;
+      background: var(--brand); color: #fff;
+      border-radius: 9999px;
+      font: 600 10px/16px var(--font-mono); text-align: center;
+    }
+  }
+</style>
+</head>
+<body data-kit-nav="staff">
+
+<div class="device-desktop">
+  <div class="chrome">
+    <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+    <span class="url" id="chrome-url">https://staff.huchu.app / Park Centre / Self-service</span>
+  </div>
+  <div id="app"></div>
+</div>
+<div id="modal-host"></div>
+<div class="toast-host" id="toast-host"></div>
+
+<script>
+/* ============================================================
+   Staff portal — interactive single-file demo
+   Hash routes: #/dashboard #/leave #/payslip #/time
+                #/directory #/profile #/inbox
+   ============================================================ */
+
+const $  = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+const money = (n) => '$ ' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ================== Seed data ================== */
+const ME = {
+  empId: 'EMP-00284',
+  name: 'Chipo Mutasa',
+  initials: 'CM',
+  role: 'HR coordinator',
+  branch: 'Park Centre',
+  email: 'chipo.mutasa@mukamba.co.zw',
+  phone: '0775 332 891',
+  address: '14 Glenara Ave, Eastlea, Harare',
+  emergency: 'Tendai Mutasa (spouse) · 0712 882 014',
+  bank: 'CBZ Bank · ****8311',
+  ecocash: 'EcoCash · ****6720',
+  joined: '14 Aug 2023',
+  manager: 'Tendai Moyo',
+  grade: 'Branch supervisor · grade B4',
+};
+
+const NAV = [
+  { route: 'dashboard', label: 'Home',      icon: 'home' },
+  { route: 'payslip',   label: 'My pay',    icon: 'card' },
+  { route: 'leave',     label: 'Leave',     icon: 'calendar' },
+  { route: 'time',      label: 'Time',      icon: 'clock' },
+  { route: 'directory', label: 'Directory', icon: 'user' },
+  { route: 'inbox',     label: 'Inbox',     icon: 'inbox', manager: true },
+  { route: 'profile',   label: 'Profile',   icon: 'settings' },
+];
+
+const MOBILE_TABS = [
+  { route: 'dashboard', label: 'Home', icon: 'home' },
+  { route: 'payslip',   label: 'Pay',  icon: 'card' },
+  { route: 'time',      label: 'Time', icon: 'clock' },
+  { route: 'profile',   label: 'You',  icon: 'user' },
+];
+
+/* People for directory + subordinates */
+const PEOPLE = [
+  { id: 'P-001', name: 'Tendai Moyo',         init: 'TM', role: 'Operations manager',          dept: 'Operations', branch: 'Park Centre',  email: 'tendai.moyo@mukamba.co.zw',     phone: '0772 110 044', status: 'online', reportsTo: 'Brighton Sibanda', av: 'a' },
+  { id: 'P-002', name: 'Rumbidzai Chivasa',   init: 'RC', role: 'HR business partner',         dept: 'HR',         branch: 'Head office',  email: 'rumbidzai.chivasa@mukamba.co.zw', phone: '0782 005 110', status: 'online', reportsTo: 'Brighton Sibanda', av: 'b' },
+  { id: 'P-003', name: 'Brighton Sibanda',    init: 'BS', role: 'Regional manager · Matabeleland', dept: 'Operations', branch: 'Bulawayo', email: 'brighton.sibanda@mukamba.co.zw', phone: '0773 220 015', status: 'away',   reportsTo: 'Edmore Chiwara',  av: 'c' },
+  { id: 'P-004', name: 'Faith Moyo',          init: 'FM', role: 'Senior cashier',              dept: 'Retail',     branch: 'Park Centre',  email: 'faith.moyo@mukamba.co.zw',      phone: '0712 884 401', status: 'online', reportsTo: 'Chipo Mutasa',    av: 'd' },
+  { id: 'P-005', name: 'Anesu Moyo',          init: 'AM', role: 'Cashier',                     dept: 'Retail',     branch: 'Park Centre',  email: 'anesu.moyo@mukamba.co.zw',      phone: '0771 442 088', status: 'online', reportsTo: 'Chipo Mutasa',    av: 'a' },
+  { id: 'P-006', name: 'Brighton Mhlanga',    init: 'BM', role: 'Stock controller',            dept: 'Retail',     branch: 'Park Centre',  email: 'brighton.mhlanga@mukamba.co.zw', phone: '0782 778 119', status: 'off',   reportsTo: 'Chipo Mutasa',    av: 'c' },
+  { id: 'P-007', name: 'Patience Dube',       init: 'PD', role: 'Junior accountant',           dept: 'Finance',    branch: 'Head office',  email: 'patience.dube@mukamba.co.zw',   phone: '0716 880 044', status: 'online', reportsTo: 'Edmore Chiwara',  av: 'b' },
+  { id: 'P-008', name: 'Edmore Chiwara',      init: 'EC', role: 'Finance director',            dept: 'Finance',    branch: 'Head office',  email: 'edmore.chiwara@mukamba.co.zw',  phone: '0782 010 776', status: 'away',   reportsTo: 'CEO',             av: 'd' },
+  { id: 'P-009', name: 'Ruvimbo Mhlanga',     init: 'RM', role: 'IT support lead',             dept: 'IT',         branch: 'Head office',  email: 'ruvimbo.mhlanga@mukamba.co.zw', phone: '0786 998 200', status: 'online', reportsTo: 'Edmore Chiwara',  av: 'a' },
+  { id: 'P-010', name: 'Tanaka Mukamba',      init: 'TM', role: 'Branch supervisor',           dept: 'Retail',     branch: 'Bulawayo',     email: 'tanaka.mukamba@mukamba.co.zw',  phone: '0772 145 902', status: 'online', reportsTo: 'Brighton Sibanda', av: 'c' },
+  { id: 'P-011', name: 'Simba Ndlovu',        init: 'SN', role: 'Forklift operator',           dept: 'Warehouse',  branch: 'Bulawayo',     email: 'simba.ndlovu@mukamba.co.zw',    phone: '0782 778 442', status: 'off',    reportsTo: 'Tanaka Mukamba',  av: 'b' },
+  { id: 'P-012', name: 'Tariro Chigumbu',     init: 'TC', role: 'Branch supervisor',           dept: 'Retail',     branch: 'Mutare',       email: 'tariro.chigumbu@mukamba.co.zw', phone: '0719 487 112', status: 'online', reportsTo: 'Brighton Sibanda', av: 'd' },
+];
+const SUBORDINATES = PEOPLE.filter(p => p.reportsTo === 'Chipo Mutasa');
+
+/* Payslip periods */
+const PAYSLIPS = {
+  '2026-05': {
+    label: 'May 2026',
+    payDate: '29 May 2026', period: '01 – 31 May 2026', status: 'Scheduled',
+    earnings: [
+      { nm: 'Basic salary',          sb: 'Branch supervisor grade B4', rate: 2000.00, units: 1, amount: 2000.00 },
+      { nm: 'Housing allowance',     sb: 'Per Park Centre band',       rate: 250.00,  units: 1, amount: 250.00 },
+      { nm: 'Transport allowance',   sb: 'Monthly fixed',              rate: 90.00,   units: 1, amount: 90.00 },
+      { nm: 'Branch performance bonus', sb: 'April sales target +6.4%', rate: 80.00,  units: 1, amount: 80.00 },
+    ],
+    deductions: [
+      { nm: 'PAYE',                  sb: 'Pay-as-you-earn · ZIMRA',     rate: 'tiered', base: 2420.00, amount: 352.40 },
+      { nm: 'NSSA',                  sb: 'National Social Security · 4.5%', rate: '4.50%', base: 2000.00, amount: 90.00 },
+      { nm: 'AIDS levy',             sb: '3% of PAYE',                  rate: '3.00%',  base: 352.40,  amount: 10.57 },
+      { nm: 'NEC contribution',      sb: 'Commercial sector · 1%',      rate: '1.00%',  base: 2420.00, amount: 24.20 },
+      { nm: 'Pension',               sb: 'Old Mutual group scheme · 5%', rate: '5.00%', base: 2000.00, amount: 100.00 },
+      { nm: 'Medical aid (PSMAS)',   sb: 'Family plan · employee share', rate: '—',     base: '—',     amount: 2.83 },
+    ],
+  },
+  '2026-04': {
+    label: 'April 2026',
+    payDate: '29 Apr 2026', period: '01 – 30 Apr 2026', status: 'Paid',
+    earnings: [
+      { nm: 'Basic salary',          sb: 'Branch supervisor grade B4', rate: 2000.00, units: 1, amount: 2000.00 },
+      { nm: 'Housing allowance',     sb: 'Per Park Centre band',       rate: 250.00,  units: 1, amount: 250.00 },
+      { nm: 'Transport allowance',   sb: 'Monthly fixed',              rate: 90.00,   units: 1, amount: 90.00 },
+      { nm: 'Branch performance bonus', sb: 'March sales target +3.1%', rate: 55.00,  units: 1, amount: 55.00 },
+    ],
+    deductions: [
+      { nm: 'PAYE',                  sb: 'Pay-as-you-earn · ZIMRA',     rate: 'tiered', base: 2395.00, amount: 344.78 },
+      { nm: 'NSSA',                  sb: 'National Social Security · 4.5%', rate: '4.50%', base: 2000.00, amount: 90.00 },
+      { nm: 'AIDS levy',             sb: '3% of PAYE',                  rate: '3.00%',  base: 344.78,  amount: 10.34 },
+      { nm: 'NEC contribution',      sb: 'Commercial sector · 1%',      rate: '1.00%',  base: 2395.00, amount: 23.95 },
+      { nm: 'Pension',               sb: 'Old Mutual group scheme · 5%', rate: '5.00%', base: 2000.00, amount: 100.00 },
+      { nm: 'Medical aid (PSMAS)',   sb: 'Family plan · employee share', rate: '—',     base: '—',     amount: 2.83 },
+    ],
+  },
+  '2026-03': {
+    label: 'March 2026',
+    payDate: '28 Mar 2026', period: '01 – 31 Mar 2026', status: 'Paid',
+    earnings: [
+      { nm: 'Basic salary',          sb: 'Branch supervisor grade B4', rate: 2000.00, units: 1, amount: 2000.00 },
+      { nm: 'Housing allowance',     sb: 'Per Park Centre band',       rate: 250.00,  units: 1, amount: 250.00 },
+      { nm: 'Transport allowance',   sb: 'Monthly fixed',              rate: 90.00,   units: 1, amount: 90.00 },
+      { nm: 'Overtime · public holiday', sb: '2 hrs × 2× rate',        rate: 24.00,  units: 2, amount: 48.00 },
+    ],
+    deductions: [
+      { nm: 'PAYE',                  sb: 'Pay-as-you-earn · ZIMRA',     rate: 'tiered', base: 2388.00, amount: 342.66 },
+      { nm: 'NSSA',                  sb: 'National Social Security · 4.5%', rate: '4.50%', base: 2000.00, amount: 90.00 },
+      { nm: 'AIDS levy',             sb: '3% of PAYE',                  rate: '3.00%',  base: 342.66,  amount: 10.28 },
+      { nm: 'NEC contribution',      sb: 'Commercial sector · 1%',      rate: '1.00%',  base: 2388.00, amount: 23.88 },
+      { nm: 'Pension',               sb: 'Old Mutual group scheme · 5%', rate: '5.00%', base: 2000.00, amount: 100.00 },
+      { nm: 'Medical aid (PSMAS)',   sb: 'Family plan · employee share', rate: '—',     base: '—',     amount: 2.83 },
+    ],
+  },
+};
+
+/* App state */
+const state = {
+  route: 'dashboard',
+  modal: null,
+  fullscreen: false,
+
+  /* Leave */
+  leaveRequests: [
+    { id: 'LR-2026-014', type: 'Annual leave',  from: '2026-06-25', to: '2026-06-27', days: 3.0, submitted: '22 May', approver: 'Tendai Moyo', status: 'pending', notes: 'Family trip to Victoria Falls. Cover arranged with Anesu.' },
+    { id: 'LR-2026-013', type: 'Sick leave',    from: '2026-05-06', to: '2026-05-06', days: 0.5, submitted: '06 May', approver: 'Tendai Moyo', status: 'approved', notes: 'Half-day · dental.' },
+    { id: 'LR-2026-012', type: 'Study leave',   from: '2026-07-14', to: '2026-07-16', days: 3.0, submitted: '19 May', approver: 'Rumbidzai Chivasa', status: 'pending', notes: 'IMM exam week.' },
+    { id: 'LR-2026-011', type: 'Compassionate', from: '2026-03-11', to: '2026-03-12', days: 2.0, submitted: '10 Mar', approver: 'Tendai Moyo', status: 'approved', notes: 'Bereavement.' },
+    { id: 'LR-2025-038', type: 'Annual leave',  from: '2025-12-23', to: '2026-01-02', days: 7.0, submitted: '28 Nov 25', approver: 'Tendai Moyo', status: 'approved', notes: 'Year-end break.' },
+    { id: 'LR-2025-019', type: 'Annual leave',  from: '2025-09-04', to: '2025-09-06', days: 3.0, submitted: '22 Aug 25', approver: 'Tendai Moyo', status: 'denied', notes: 'Conflict with stocktake.' },
+  ],
+
+  /* Approval inbox — requests from people who report to me */
+  approvalQueue: [
+    { id: 'AQ-2026-101', who: SUBORDINATES[0], type: 'Annual leave',  from: '2026-06-04', to: '2026-06-06', days: 3.0, submitted: '21 May', notes: 'Long weekend in Nyanga. Cover arranged with Brighton.', balance: 14, conflict: false },
+    { id: 'AQ-2026-102', who: SUBORDINATES[1], type: 'Sick leave',    from: '2026-05-29', to: '2026-05-29', days: 1.0, submitted: '22 May', notes: 'Flu, will see clinic.', balance: 9, conflict: false },
+    { id: 'AQ-2026-103', who: SUBORDINATES[2], type: 'Annual leave',  from: '2026-06-25', to: '2026-06-27', days: 3.0, submitted: '20 May', notes: 'Cousin\'s wedding · Mutare.', balance: 7, conflict: true },
+  ],
+
+  /* Payslip */
+  payslipPeriod: '2026-05',
+
+  /* Time clock */
+  clockedIn: true,
+  clockInTime: '07:42',
+  events: [
+    { kind: 'in',  nm: 'Clocked in',  sb: 'Today · Park Centre · on time',          tm: '07:42' },
+    { kind: 'out', nm: 'Clocked out', sb: 'Thu 21 May · 17:08 · 9h 26m total',      tm: '17:08' },
+    { kind: 'in',  nm: 'Clocked in',  sb: 'Thu 21 May · 07:42 · Park Centre',       tm: '07:42' },
+    { kind: 'out', nm: 'Clocked out', sb: 'Wed 20 May · 17:14 · 9h 32m total',      tm: '17:14' },
+    { kind: 'in',  nm: 'Clocked in',  sb: 'Wed 20 May · 07:42 · Park Centre',       tm: '07:42' },
+  ],
+
+  /* Directory */
+  dirSearch: '',
+  dirFilter: 'all',
+  dirSelected: 'P-004',
+  onCall: false,
+
+  /* Profile */
+  notif: { email: true, sms: false, push: true, weekly: true },
+  theme: 'light',
+
+  /* Tasks done state */
+  tasksDone: {},
+};
+
+/* ================== Router ================== */
+function go(route, opts = {}) {
+  state.route = route;
+  history.replaceState(null, '', '#/' + route);
+  render();
+  const main = $('.st-body'); if (main) main.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', () => {
+  const r = location.hash.replace(/^#\/?/, '') || 'dashboard';
+  if (state.route !== r) { state.route = r; render(); }
+});
+
+/* ================== Toast ================== */
+function toast(msg, kind = 'default') {
+  const host = $('#toast-host');
+  const el = document.createElement('div');
+  el.className = 'toast' + (kind !== 'default' ? ' ' + kind : '');
+  const icon = kind === 'success' ? 'check' : kind === 'danger' ? 'x' : kind === 'warn' ? 'info' : 'check';
+  el.innerHTML = `<span data-icon="${icon}" data-icon-size="14"></span>${escapeHtml(msg)}`;
+  host.appendChild(el);
+  if (window.Icons) window.Icons.render(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 240); }, 2600);
+}
+
+/* ================== Modal ================== */
+function openModal(content) { state.modal = content; renderModal(); }
+function closeModal() { state.modal = null; renderModal(); }
+function renderModal() {
+  const host = $('#modal-host');
+  if (!state.modal) { host.innerHTML = ''; return; }
+  host.innerHTML = `<div class="modal-scrim" data-scrim>${state.modal}</div>`;
+  if (window.Icons) window.Icons.render(host);
+  host.querySelector('[data-scrim]').addEventListener('click', (e) => {
+    if (e.target.dataset.scrim !== undefined) closeModal();
+  });
+}
+
+/* ================== Fullscreen ================== */
+function toggleFullscreen() {
+  state.fullscreen = !state.fullscreen;
+  document.body.classList.toggle('is-fullscreen', state.fullscreen);
+  if (state.fullscreen) document.documentElement.requestFullscreen?.().catch(() => {});
+  else if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+  render();
+}
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement && state.fullscreen) {
+    state.fullscreen = false;
+    document.body.classList.remove('is-fullscreen');
+    render();
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && state.fullscreen && !document.fullscreenElement) {
+    state.fullscreen = false;
+    document.body.classList.remove('is-fullscreen');
+    render();
+  }
+});
+
+/* ================== Render ================== */
+function pendingCount() { return state.approvalQueue.length; }
+
+function render() {
+  const url = ({
+    dashboard: 'https://staff.huchu.app / Park Centre / Self-service',
+    leave:     'https://staff.huchu.app / Leave',
+    payslip:   'https://staff.huchu.app / My pay / ' + PAYSLIPS[state.payslipPeriod].label,
+    time:      'https://staff.huchu.app / Time clock',
+    directory: 'https://staff.huchu.app / Directory',
+    inbox:     'https://staff.huchu.app / Approvals · inbox',
+    profile:   'https://staff.huchu.app / Profile',
+  })[state.route] || 'https://staff.huchu.app';
+  const chrome = $('#chrome-url'); if (chrome) chrome.textContent = url;
+
+  $('#app').innerHTML = `
+    <div class="st-app">
+      ${renderSide()}
+      <section class="st-main">
+        ${renderTop()}
+        <div class="st-body">${renderRoute()}</div>
+        ${renderMobileTabs()}
+      </section>
+    </div>
+  `;
+  if (window.Icons) window.Icons.render($('#app'));
+  wireSide();
+  wireTop();
+  wireMobileTabs();
+  wireRoute();
+}
+
+function renderSide() {
+  return `
+    <aside class="st-nav">
+      <a class="brand" href="index.html"><span class="mark" data-icon="corelith"></span> <span>Huchu Staff</span></a>
+      <nav>
+        ${NAV.filter(n => !n.manager || true).map(n => `
+          <button class="${state.route === n.route ? 'active' : ''}" data-go="${n.route}">
+            <span class="ic" data-icon="${n.icon}"></span>
+            <span>${n.label}</span>
+            ${n.route === 'inbox' && pendingCount() ? `<span class="tag">${pendingCount()}</span>` : ''}
+          </button>
+        `).join('')}
+      </nav>
+      <div class="sh">Quick actions</div>
+      <nav>
+        <button data-action="request-leave"><span class="ic" data-icon="plus"></span><span>Request leave</span></button>
+        <button data-go="payslip"><span class="ic" data-icon="download"></span><span>Latest payslip</span></button>
+        <button data-action="contact-hr"><span class="ic" data-icon="chat"></span><span>Contact HR</span></button>
+      </nav>
+      <div class="foot">
+        <span class="av">${ME.initials}</span>
+        <div>
+          <div class="nm">${escapeHtml(ME.name)}</div>
+          <div class="sb">${escapeHtml(ME.role)}</div>
+        </div>
+      </div>
+    </aside>
+  `;
+}
+function wireSide() {
+  $$('.st-nav [data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+  $$('.st-nav [data-action]').forEach(b => b.addEventListener('click', () => {
+    const a = b.dataset.action;
+    if (a === 'request-leave') { go('leave'); setTimeout(openRequestLeaveModal, 80); }
+    else if (a === 'contact-hr') { toast('Opening chat with HR (Rumbidzai Chivasa)…', 'success'); }
+  }));
+}
+
+function renderTop() {
+  const titles = {
+    dashboard: { crumbs: 'Staff · Self-service · Home',     h: `Good morning, ${ME.name.split(' ')[0]}` },
+    leave:     { crumbs: 'Staff · Self-service · Leave',    h: 'Leave' },
+    payslip:   { crumbs: 'Staff · My pay · Payslip',        h: `${PAYSLIPS[state.payslipPeriod].label} payslip` },
+    time:      { crumbs: 'Staff · Self-service · Time',     h: 'Time clock' },
+    directory: { crumbs: 'Staff · Directory',               h: 'Directory' },
+    inbox:     { crumbs: 'Staff · Manager · Approvals',     h: 'Approvals · inbox' },
+    profile:   { crumbs: 'Staff · Profile · Account',       h: 'My profile' },
+  };
+  const t = titles[state.route] || titles.dashboard;
+
+  let extra = '';
+  if (state.route === 'dashboard') {
+    extra = `
+      <button class="bar-btn" data-action="request-leave"><span data-icon="plus" data-icon-size="13"></span><span class="bar-btn-label">Request leave</span></button>
+      <button class="bar-btn primary" data-go="time"><span data-icon="clock" data-icon-size="13"></span><span class="bar-btn-label">${state.clockedIn ? 'Clocked in · ' + state.clockInTime : 'Clock in'}</span></button>
+    `;
+  } else if (state.route === 'leave') {
+    extra = `
+      <button class="bar-btn" data-action="export-history"><span data-icon="download" data-icon-size="13"></span><span class="bar-btn-label">Export</span></button>
+      <button class="bar-btn primary" data-action="request-leave"><span data-icon="plus" data-icon-size="13"></span><span class="bar-btn-label">Request leave</span></button>
+    `;
+  } else if (state.route === 'payslip') {
+    extra = `
+      <select class="period-sel" id="period-sel">
+        ${Object.keys(PAYSLIPS).map(k => `<option value="${k}" ${k===state.payslipPeriod?'selected':''}>${PAYSLIPS[k].label}${k===state.payslipPeriod ? ' · ' + PAYSLIPS[k].status.toLowerCase() : ''}</option>`).join('')}
+      </select>
+      <button class="bar-btn" data-action="print-payslip"><span data-icon="print" data-icon-size="13"></span><span class="bar-btn-label">Print</span></button>
+      <button class="bar-btn primary" data-action="download-payslip"><span data-icon="download" data-icon-size="13"></span><span class="bar-btn-label">Download PDF</span></button>
+    `;
+  } else if (state.route === 'time') {
+    extra = `<button class="bar-btn" data-action="time-history"><span data-icon="calendar" data-icon-size="13"></span><span class="bar-btn-label">Timesheet</span></button>`;
+  } else if (state.route === 'directory') {
+    extra = `<span class="pill muted">${PEOPLE.length} people</span>`;
+  } else if (state.route === 'inbox') {
+    extra = `<span class="pill brand">${pendingCount()} pending</span>`;
+  } else if (state.route === 'profile') {
+    extra = `<button class="bar-btn primary" data-action="save-profile"><span data-icon="check" data-icon-size="13"></span><span class="bar-btn-label">Save changes</span></button>`;
+  }
+
+  return `
+    <header class="st-top">
+      <div class="meta">
+        <div class="crumbs">${t.crumbs}</div>
+        <h1>${escapeHtml(t.h)}</h1>
+      </div>
+      <div class="actions">
+        ${extra}
+        <button class="bar-btn" id="fs-toggle" title="${state.fullscreen ? 'Exit fullscreen' : 'Fullscreen preview'}">
+          <span data-icon="${state.fullscreen ? 'x' : 'grid'}" data-icon-size="13"></span>
+          <span class="bar-btn-label">${state.fullscreen ? 'Exit' : 'Fullscreen'}</span>
+        </button>
+      </div>
+    </header>
+  `;
+}
+function wireTop() {
+  const fs = $('#fs-toggle'); if (fs) fs.addEventListener('click', toggleFullscreen);
+  $$('.st-top [data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+  $$('.st-top [data-action]').forEach(b => b.addEventListener('click', () => {
+    const a = b.dataset.action;
+    if (a === 'request-leave') { if (state.route !== 'leave') go('leave'); setTimeout(openRequestLeaveModal, 80); }
+    else if (a === 'export-history') toast('Leave history exported as CSV', 'success');
+    else if (a === 'print-payslip') toast('Sent to printer', 'success');
+    else if (a === 'download-payslip') toast(`${PAYSLIPS[state.payslipPeriod].label} payslip downloaded`, 'success');
+    else if (a === 'time-history') toast('Opening fortnight timesheet…');
+    else if (a === 'save-profile') toast('Profile changes saved', 'success');
+  }));
+  const ps = $('#period-sel'); if (ps) ps.addEventListener('change', (e) => { state.payslipPeriod = e.target.value; render(); toast('Loaded ' + PAYSLIPS[e.target.value].label, 'success'); });
+}
+
+function renderMobileTabs() {
+  return `
+    <nav class="st-tabs">
+      ${MOBILE_TABS.map(t => `
+        <button class="${state.route === t.route ? 'active' : ''}" data-go="${t.route}">
+          <span class="ic" data-icon="${t.icon}" data-icon-size="20"></span>
+          <span>${t.label}</span>
+          ${t.route === 'time' && pendingCount() > 0 && state.route !== 'time' ? '' : ''}
+        </button>
+      `).join('')}
+    </nav>
+  `;
+}
+function wireMobileTabs() {
+  $$('.st-tabs [data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+}
+
+function renderRoute() {
+  switch (state.route) {
+    case 'dashboard': return renderDashboard();
+    case 'leave':     return renderLeave();
+    case 'payslip':   return renderPayslip();
+    case 'time':      return renderTime();
+    case 'directory': return renderDirectory();
+    case 'inbox':     return renderInbox();
+    case 'profile':   return renderProfile();
+    default:          return renderDashboard();
+  }
+}
+
+function wireRoute() {
+  switch (state.route) {
+    case 'dashboard': wireDashboard(); break;
+    case 'leave':     wireLeave();     break;
+    case 'payslip':   wirePayslip();   break;
+    case 'time':      wireTime();      break;
+    case 'directory': wireDirectory(); break;
+    case 'inbox':     wireInbox();     break;
+    case 'profile':   wireProfile();   break;
+  }
+}
+
+/* ============================================================
+   1. Dashboard
+   ============================================================ */
+function renderDashboard() {
+  return `
+    <!-- Stat tiles -->
+    <div class="stat-grid">
+      <div class="stat brand">
+        <div class="lb"><span data-icon="card" data-icon-size="12"></span> Next payslip</div>
+        <div class="vl">$ 1,840.00</div>
+        <div class="sb">Pays Friday 29 May · period May 2026</div>
+      </div>
+      <div class="stat">
+        <div class="lb"><span data-icon="calendar" data-icon-size="12"></span> Leave balance</div>
+        <div class="vl">12 days</div>
+        <div class="sb">Annual · 5 sick · 3 compassionate</div>
+      </div>
+      <div class="stat">
+        <div class="lb"><span data-icon="clock" data-icon-size="12"></span> Hours this period</div>
+        <div class="vl">86h 40m</div>
+        <div class="sb">Target 96h · 4 days remaining</div>
+      </div>
+      <div class="stat">
+        <div class="lb"><span data-icon="star" data-icon-size="12"></span> Anniversary</div>
+        <div class="vl">3 years</div>
+        <div class="sb">Joined 14 August 2023</div>
+      </div>
+    </div>
+
+    <!-- Today's tasks + Inbox callout -->
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-h">
+          <h2>Today's tasks</h2>
+          <div class="sp"></div>
+          <span class="pill muted">2 to do</span>
+        </div>
+        <div class="panel-body">
+          <div class="task-row ${state.tasksDone['t1']?'done':''}" data-task="t1">
+            <div class="cb"><span data-icon="check" data-icon-size="12"></span></div>
+            <div>
+              <div class="nm">Submit fortnight timesheet</div>
+              <div class="sb">Period ending 24 May · sign off before Tuesday close</div>
+            </div>
+            <span class="due late">Due Tue</span>
+          </div>
+          <div class="task-row ${state.tasksDone['t2']?'done':''}" data-task="t2" data-open="inbox">
+            <div class="cb"><span data-icon="check" data-icon-size="12"></span></div>
+            <div>
+              <div class="nm">Approve ${pendingCount()} leave requests from your team</div>
+              <div class="sb">Faith, Anesu, Brighton · oldest waiting since 20 May</div>
+            </div>
+            <span class="due">Today</span>
+          </div>
+          <div class="task-row ${state.tasksDone['t3']?'done':''}" data-task="t3" data-open="profile">
+            <div class="cb"><span data-icon="check" data-icon-size="12"></span></div>
+            <div>
+              <div class="nm">Confirm emergency contact details</div>
+              <div class="sb">HR annual check · takes about 1 minute</div>
+            </div>
+            <span class="due">This week</span>
+          </div>
+          <div class="task-row ${state.tasksDone['t4']?'done':''}" data-task="t4">
+            <div class="cb"><span data-icon="check" data-icon-size="12"></span></div>
+            <div>
+              <div class="nm">Acknowledge new travel-claim policy</div>
+              <div class="sb">Per-diem rates effective 1 June · 2 min read</div>
+            </div>
+            <span class="due">By 31 May</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h">
+          <h2>Upcoming holidays</h2>
+          <div class="sp"></div>
+          <a href="#">2026 calendar</a>
+        </div>
+        <div class="panel-body">
+          <div class="hol-row"><div class="dt"><div class="d">25</div><div class="m">May</div></div><div><div class="nm">Africa Day</div><div class="sb">Public holiday · branches closed</div></div><span class="pill">Mon</span></div>
+          <div class="hol-row"><div class="dt"><div class="d">11</div><div class="m">Aug</div></div><div><div class="nm">Heroes' Day</div><div class="sb">Public holiday</div></div><span class="pill">Tue</span></div>
+          <div class="hol-row"><div class="dt"><div class="d">12</div><div class="m">Aug</div></div><div><div class="nm">Defence Forces Day</div><div class="sb">Public holiday · double-time roster</div></div><span class="pill">Wed</span></div>
+          <div class="hol-row"><div class="dt"><div class="d">22</div><div class="m">Dec</div></div><div><div class="nm">Unity Day</div><div class="sb">Public holiday</div></div><span class="pill">Mon</span></div>
+          <div class="hol-row"><div class="dt"><div class="d">25</div><div class="m">Dec</div></div><div><div class="nm">Christmas Day</div><div class="sb">Public holiday · branches closed</div></div><span class="pill">Thu</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent activity (full width) -->
+    <div class="panel">
+      <div class="panel-h">
+        <h2>Recent activity</h2>
+        <div class="sp"></div>
+        <a href="#">View all</a>
+      </div>
+      <div class="panel-body">
+        <div class="feed-row">
+          <span class="ic success"><span data-icon="check" data-icon-size="16"></span></span>
+          <div>
+            <div class="nm">Leave approved · 3 days annual</div>
+            <div class="sb">Tendai Moyo (manager) approved 25–27 Jun for Victoria Falls trip</div>
+          </div>
+          <span class="tm">2h ago</span>
+        </div>
+        <div class="feed-row">
+          <span class="ic brand"><span data-icon="card" data-icon-size="16"></span></span>
+          <div>
+            <div class="nm">Payslip issued · April 2026</div>
+            <div class="sb">$ 1,815.42 paid into CBZ Bank · stub available for download</div>
+          </div>
+          <span class="tm">28 Apr</span>
+        </div>
+        <div class="feed-row">
+          <span class="ic"><span data-icon="clock" data-icon-size="16"></span></span>
+          <div>
+            <div class="nm">Clocked in at Park Centre</div>
+            <div class="sb">07:42 · 8 minutes early · within geo-fence</div>
+          </div>
+          <span class="tm">Today</span>
+        </div>
+        <div class="feed-row">
+          <span class="ic warn"><span data-icon="info" data-icon-size="16"></span></span>
+          <div>
+            <div class="nm">3 leave requests awaiting your approval</div>
+            <div class="sb">Faith Moyo, Anesu Moyo and Brighton Mhlanga · open the manager inbox</div>
+          </div>
+          <span class="tm">Today</span>
+        </div>
+        <div class="feed-row">
+          <span class="ic brand"><span data-icon="book" data-icon-size="16"></span></span>
+          <div>
+            <div class="nm">Policy update · Travel claims</div>
+            <div class="sb">New per-diem rates for inter-branch travel effective 1 June</div>
+          </div>
+          <span class="tm">21 May</span>
+        </div>
+        <div class="feed-row">
+          <span class="ic success"><span data-icon="check" data-icon-size="16"></span></span>
+          <div>
+            <div class="nm">NSSA registration confirmed</div>
+            <div class="sb">HR uploaded updated reference number to your profile</div>
+          </div>
+          <span class="tm">14 May</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function wireDashboard() {
+  $$('[data-task]').forEach(r => r.addEventListener('click', (e) => {
+    const open = r.dataset.open;
+    if (open) { go(open); return; }
+    const id = r.dataset.task;
+    state.tasksDone[id] = !state.tasksDone[id];
+    render();
+    toast(state.tasksDone[id] ? 'Task marked done' : 'Task reopened');
+  }));
+}
+
+/* ============================================================
+   2. Leave
+   ============================================================ */
+function leaveBalance() { return { annual: 12, sick: 5, comp: 3, study: 5, annualTotal: 22, sickTotal: 12, compTotal: 3, studyTotal: 5 }; }
+
+function renderLeave() {
+  const b = leaveBalance();
+  return `
+    <!-- Balances -->
+    <div class="bal-grid">
+      <div class="bal">
+        <div class="lb">Annual leave</div>
+        <div class="vl">${b.annual} <span>/ ${b.annualTotal} days</span></div>
+        <div class="bar"><i style="width: ${Math.round(b.annual/b.annualTotal*100)}%; background: var(--brand);"></i></div>
+        <div class="sb">${b.annualTotal-b.annual} days taken · expires 31 Dec</div>
+      </div>
+      <div class="bal">
+        <div class="lb">Sick leave</div>
+        <div class="vl">${b.sick} <span>/ ${b.sickTotal} days</span></div>
+        <div class="bar"><i style="width: ${Math.round(b.sick/b.sickTotal*100)}%; background: var(--tone-info);"></i></div>
+        <div class="sb">Doctor's note from day 3</div>
+      </div>
+      <div class="bal">
+        <div class="lb">Compassionate</div>
+        <div class="vl">${b.comp} <span>/ ${b.compTotal} days</span></div>
+        <div class="bar"><i style="width: 100%; background: var(--tone-warn);"></i></div>
+        <div class="sb">Per Labour Act · immediate family</div>
+      </div>
+      <div class="bal">
+        <div class="lb">Study leave</div>
+        <div class="vl">${b.study} <span>/ ${b.studyTotal} days</span></div>
+        <div class="bar"><i style="width: 100%; background: #A78BFA;"></i></div>
+        <div class="sb">Approved courses · HR pre-approval</div>
+      </div>
+    </div>
+
+    <!-- Recent requests -->
+    <div class="panel">
+      <div class="panel-h">
+        <h2>Recent requests</h2>
+        <div class="sp"></div>
+        <span class="pill muted">Last 12 months</span>
+      </div>
+      <table class="tbl">
+        <thead>
+          <tr><th style="width:28%">Type &amp; dates</th><th>Days</th><th>Submitted</th><th>Approver</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          ${state.leaveRequests.map(r => `
+            <tr class="clickable" data-leave="${r.id}">
+              <td>
+                <div class="nm">${escapeHtml(r.type)}</div>
+                <div class="sb">${fmtRange(r.from, r.to)}</div>
+              </td>
+              <td class="num">${r.days.toFixed(1)}</td>
+              <td class="num">${escapeHtml(r.submitted)}</td>
+              <td>${escapeHtml(r.approver)}</td>
+              <td><span class="pill ${r.status} dot">${cap(r.status)}</span></td>
+              <td style="text-align:right;"><a href="#" data-leave-view="${r.id}" style="font:500 12px/1 var(--font-sans); color: var(--brand-strong); text-decoration:none;">${r.status === 'pending' ? 'Manage' : 'View'} →</a></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function fmtRange(from, to) {
+  const fmt = (d) => { const dt = new Date(d); return dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); };
+  if (from === to) return fmt(from) + ' · half day';
+  return fmt(from) + ' – ' + fmt(to);
+}
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function workingDays(from, to) {
+  const d1 = new Date(from), d2 = new Date(to);
+  if (d2 < d1) return 0;
+  let c = 0, cur = new Date(d1);
+  while (cur <= d2) { const dow = cur.getDay(); if (dow !== 0 && dow !== 6) c++; cur.setDate(cur.getDate()+1); }
+  return c;
+}
+
+function wireLeave() {
+  $$('[data-leave]').forEach(r => r.addEventListener('click', (e) => {
+    if (e.target.dataset.leaveView !== undefined) { e.preventDefault(); openLeaveDetailModal(r.dataset.leave); return; }
+    openLeaveDetailModal(r.dataset.leave);
+  }));
+  $$('[data-leave-view]').forEach(a => a.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openLeaveDetailModal(a.dataset.leaveView); }));
+}
+
+function openRequestLeaveModal() {
+  let type = 'Annual';
+  let from = '2026-06-25';
+  let to = '2026-06-27';
+  let manager = 'Tendai Moyo · Operations';
+  let notes = '';
+  function paint() {
+    const days = workingDays(from, to);
+    openModal(`
+      <div class="modal lg" onclick="event.stopPropagation()">
+        <h3>Request leave</h3>
+        <p class="sub">Submit a new leave request. Your manager will be notified and can approve or query.</p>
+        <div class="form-grid">
+          <div class="field half"><label>Type</label>
+            <select id="lr-type">${['Annual','Sick','Compassionate','Study'].map(t => `<option ${t===type?'selected':''}>${t}</option>`).join('')}</select>
+          </div>
+          <div class="field half"><label>Manager (approver)</label>
+            <select id="lr-mgr">
+              <option ${manager.startsWith('Tendai')?'selected':''}>Tendai Moyo · Operations</option>
+              <option ${manager.startsWith('Rumbidzai')?'selected':''}>Rumbidzai Chivasa · HR</option>
+              <option ${manager.startsWith('Brighton')?'selected':''}>Brighton Sibanda · Regional</option>
+            </select>
+          </div>
+          <div class="field half"><label>From</label><input type="date" id="lr-from" value="${from}" /></div>
+          <div class="field half"><label>To</label><input type="date" id="lr-to" value="${to}" /></div>
+          <div class="field full"><label>Notes for approver</label>
+            <textarea id="lr-notes" placeholder="Short reason — helps your manager approve quickly.">${escapeHtml(notes)}</textarea>
+          </div>
+        </div>
+        <div style="margin-top:14px; padding: 10px 14px; background: var(--brand-soft); border-radius: 8px; font: 13px/1.4 var(--font-sans); color: var(--brand-strong);">
+          <span data-icon="info" data-icon-size="13"></span>
+          Requesting <b>${days} working day${days===1?'':'s'}</b>${days>0 ? ' · balance after: ' + Math.max(0, leaveBalance().annual - days) + ' days annual' : ''}
+        </div>
+        <div class="acts">
+          <button class="btn btn-secondary" data-cancel>Cancel</button>
+          <button class="btn btn-ghost" data-draft>Save draft</button>
+          <button class="btn btn-primary ok" data-ok ${days>0?'':'disabled'}><span data-icon="check" data-icon-size="13"></span> Submit request</button>
+        </div>
+      </div>
+    `);
+    const m = $('.modal');
+    const bind = (id, fn) => { const el = $('#'+id, m); el && el.addEventListener('input', fn); el && el.addEventListener('change', fn); };
+    bind('lr-type', e => { type = e.target.value; });
+    bind('lr-mgr', e => { manager = e.target.value; });
+    bind('lr-from', e => { from = e.target.value; paint(); });
+    bind('lr-to', e => { to = e.target.value; paint(); });
+    bind('lr-notes', e => { notes = e.target.value; });
+    m.querySelector('[data-cancel]').addEventListener('click', closeModal);
+    m.querySelector('[data-draft]').addEventListener('click', () => { closeModal(); toast('Draft saved'); });
+    m.querySelector('[data-ok]').addEventListener('click', () => {
+      const id = 'LR-2026-' + String(15 + Math.floor(Math.random()*80)).padStart(3,'0');
+      state.leaveRequests.unshift({
+        id, type: type + ' leave',
+        from, to, days: workingDays(from, to),
+        submitted: new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short'}),
+        approver: manager.split(' · ')[0],
+        status: 'pending',
+        notes: notes || '(no notes)',
+      });
+      closeModal();
+      toast('Leave request submitted · awaiting ' + manager.split(' · ')[0], 'success');
+      if (state.route !== 'leave') go('leave'); else render();
+    });
+  }
+  paint();
+}
+
+function openLeaveDetailModal(id) {
+  const r = state.leaveRequests.find(x => x.id === id);
+  if (!r) return;
+  openModal(`
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>${escapeHtml(r.type)} · ${escapeHtml(r.id)}</h3>
+      <p class="sub">Submitted ${escapeHtml(r.submitted)} · ${r.days.toFixed(1)} working days</p>
+      <div class="meta-strip" style="margin-bottom: 14px;">
+        <div><span class="lb">Dates</span><span class="vl">${escapeHtml(fmtRange(r.from, r.to))}</span></div>
+        <div><span class="lb">Approver</span><span class="vl">${escapeHtml(r.approver)}</span></div>
+        <div><span class="lb">Status</span><span class="vl"><span class="pill ${r.status} dot">${cap(r.status)}</span></span></div>
+      </div>
+      <div style="font:500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Notes</div>
+      <div style="padding: 10px 12px; background: var(--surface-muted); border-radius: 8px; font: 13px/1.5 var(--font-sans); color: var(--text-body);">${escapeHtml(r.notes)}</div>
+      <div class="acts">
+        <button class="btn btn-secondary" data-close>Close</button>
+        ${r.status === 'pending' ? `<button class="btn btn-danger danger" data-cancel-req>Cancel request</button>` : ''}
+      </div>
+    </div>
+  `);
+  $('.modal [data-close]').addEventListener('click', closeModal);
+  const cb = $('.modal [data-cancel-req]'); if (cb) cb.addEventListener('click', () => {
+    state.leaveRequests = state.leaveRequests.filter(x => x.id !== id);
+    closeModal();
+    toast('Leave request cancelled', 'success');
+    render();
+  });
+}
+
+/* ============================================================
+   3. Approve leave inbox
+   ============================================================ */
+const inboxState = { selectedId: null };
+
+function renderInbox() {
+  if (!inboxState.selectedId && state.approvalQueue.length) inboxState.selectedId = state.approvalQueue[0].id;
+  const sel = state.approvalQueue.find(r => r.id === inboxState.selectedId);
+
+  return `
+    <div class="inbox-grid">
+      <div class="inbox-list">
+        <div class="panel-h" style="border-bottom: 1px solid var(--border-subtle);">
+          <h2>Pending approvals</h2>
+          <div class="sp"></div>
+          <span class="pill brand">${state.approvalQueue.length}</span>
+        </div>
+        ${state.approvalQueue.length === 0 ? `
+          <div style="padding: 60px 20px; text-align: center; color: var(--text-muted); font: 13px var(--font-sans);">
+            <div style="font-size: 32px; margin-bottom: 10px;"><span data-icon="check" data-icon-size="32"></span></div>
+            Inbox zero — nothing pending.
+          </div>
+        ` : state.approvalQueue.map(r => `
+          <div class="lr ${inboxState.selectedId === r.id ? 'on' : ''}" data-aq="${r.id}">
+            <span class="av">${r.who.init}</span>
+            <div>
+              <div class="nm">${escapeHtml(r.who.name)} · ${escapeHtml(r.type)}</div>
+              <div class="sb">${escapeHtml(fmtRange(r.from, r.to))} · submitted ${escapeHtml(r.submitted)}</div>
+            </div>
+            <span class="days">${r.days.toFixed(1)}d</span>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="inbox-review">
+        ${sel ? renderInboxDetail(sel) : `<div class="empty">Pick a request to review.</div>`}
+      </div>
+    </div>
+  `;
+}
+
+function renderInboxDetail(r) {
+  return `
+    <div class="ihero">
+      <span class="av">${r.who.init}</span>
+      <div style="flex:1;">
+        <h3>${escapeHtml(r.who.name)}</h3>
+        <div class="sb">${escapeHtml(r.who.role)} · reports to you · ${escapeHtml(r.who.branch)}</div>
+      </div>
+      <span class="pill pending dot">Pending ${escapeHtml(r.submitted)}</span>
+    </div>
+
+    <div class="kv">
+      <div class="cell"><div class="k">Type</div><div class="v">${escapeHtml(r.type)}</div></div>
+      <div class="cell"><div class="k">Working days</div><div class="v">${r.days.toFixed(1)} days</div></div>
+      <div class="cell"><div class="k">Their balance</div><div class="v">${r.balance} days remaining</div></div>
+    </div>
+
+    <div>
+      <div style="font:500 11px/1 var(--font-sans); letter-spacing:.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Dates</div>
+      <div style="padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; font: 14px/1.4 var(--font-sans); color: var(--text-strong);">
+        <strong>${escapeHtml(fmtRange(r.from, r.to))}</strong>
+      </div>
+    </div>
+
+    <div class="conflict ${r.conflict ? 'warn' : 'ok'}">
+      <span class="ic"><span data-icon="${r.conflict ? 'info' : 'check'}" data-icon-size="14"></span></span>
+      <div>
+        <div style="font-weight: 600;">${r.conflict ? 'Team calendar conflict' : 'No team calendar conflicts'}</div>
+        <div style="opacity: 0.85; margin-top: 2px;">${r.conflict ? 'Overlaps with your trip 25–27 Jun and Faith Moyo\'s approved leave. Branch will be short-staffed.' : 'Branch coverage remains within minimum staffing.'}</div>
+      </div>
+    </div>
+
+    <div>
+      <div style="font:500 11px/1 var(--font-sans); letter-spacing:.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Their notes</div>
+      <div style="padding: 10px 12px; background: var(--surface-muted); border-radius: 8px; font: 13px/1.5 var(--font-sans); color: var(--text-body);">${escapeHtml(r.notes)}</div>
+    </div>
+
+    <div>
+      <div style="font:500 11px/1 var(--font-sans); letter-spacing:.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Comment (optional)</div>
+      <textarea id="iq-comment" placeholder="Optional message back to ${escapeHtml(r.who.name.split(' ')[0])}…" style="width: 100%; min-height: 60px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font: 13px var(--font-sans); color: var(--text-strong); resize: vertical; box-sizing: border-box;"></textarea>
+    </div>
+
+    <div style="display: flex; gap: 8px; margin-top: 4px;">
+      <button class="btn btn-secondary" data-iq-query>Query</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-danger" data-iq-reject><span data-icon="x" data-icon-size="13"></span> Reject</button>
+      <button class="btn btn-primary" data-iq-approve><span data-icon="check" data-icon-size="13"></span> Approve leave</button>
+    </div>
+  `;
+}
+
+function wireInbox() {
+  $$('[data-aq]').forEach(b => b.addEventListener('click', () => { inboxState.selectedId = b.dataset.aq; render(); }));
+  const ap = $('[data-iq-approve]'); const rj = $('[data-iq-reject]'); const qy = $('[data-iq-query]');
+  const action = (kind) => {
+    const r = state.approvalQueue.find(x => x.id === inboxState.selectedId); if (!r) return;
+    state.approvalQueue = state.approvalQueue.filter(x => x.id !== r.id);
+    inboxState.selectedId = state.approvalQueue[0] ? state.approvalQueue[0].id : null;
+    const verb = kind === 'approve' ? 'Approved' : kind === 'reject' ? 'Rejected' : 'Queried';
+    const tone = kind === 'approve' ? 'success' : kind === 'reject' ? 'danger' : 'warn';
+    toast(`${verb} ${r.who.name.split(' ')[0]}'s ${r.type.toLowerCase()} · ${r.days}d`, tone);
+    render();
+  };
+  if (ap) ap.addEventListener('click', () => action('approve'));
+  if (rj) rj.addEventListener('click', () => action('reject'));
+  if (qy) qy.addEventListener('click', () => action('query'));
+}
+
+/* ============================================================
+   4. Payslip
+   ============================================================ */
+function renderPayslip() {
+  const p = PAYSLIPS[state.payslipPeriod];
+  const gross = p.earnings.reduce((s, r) => s + r.amount, 0);
+  const totDed = p.deductions.reduce((s, r) => s + r.amount, 0);
+  const net = gross - totDed;
+
+  // YTD: sum of all periods up to and including selected one
+  const sortedKeys = Object.keys(PAYSLIPS).sort();
+  const selectedIdx = sortedKeys.indexOf(state.payslipPeriod);
+  const periodsToInclude = sortedKeys.slice(0, selectedIdx + 1);
+  const ytdGross = periodsToInclude.reduce((s, k) => s + PAYSLIPS[k].earnings.reduce((a, r) => a + r.amount, 0), 0);
+  const ytdDed   = periodsToInclude.reduce((s, k) => s + PAYSLIPS[k].deductions.reduce((a, r) => a + r.amount, 0), 0);
+  const findDed = (k, nm) => (PAYSLIPS[k].deductions.find(d => d.nm === nm) || {amount:0}).amount;
+  const ytdPAYE = periodsToInclude.reduce((s,k) => s + findDed(k,'PAYE'), 0);
+  const ytdNSSA = periodsToInclude.reduce((s,k) => s + findDed(k,'NSSA'), 0);
+  const ytdPens = periodsToInclude.reduce((s,k) => s + findDed(k,'Pension'), 0);
+  const ytdAIDS = periodsToInclude.reduce((s,k) => s + findDed(k,'AIDS levy'), 0);
+  const ytdNEC  = periodsToInclude.reduce((s,k) => s + findDed(k,'NEC contribution'), 0);
+  const ytdMed  = periodsToInclude.reduce((s,k) => s + findDed(k,'Medical aid (PSMAS)'), 0);
+
+  // YTD figures are scaled — add prior 3 months of demo data to make Jan-May look real
+  const priorMultiplier = state.payslipPeriod === '2026-05' ? 2 : state.payslipPeriod === '2026-04' ? 2 : 2;
+  const ytdGrossDisplay = ytdGross + 2000 * priorMultiplier + 340 * priorMultiplier;
+  const ytdDedDisplay   = ytdDed + 480 * priorMultiplier;
+  const ytdNet = ytdGrossDisplay - ytdDedDisplay;
+
+  return `
+    <div class="meta-strip">
+      <div><span class="lb">Employee</span><span class="vl">${escapeHtml(ME.name)} · ${escapeHtml(ME.empId)}</span></div>
+      <div><span class="lb">Period</span><span class="vl">${escapeHtml(p.period)}</span></div>
+      <div><span class="lb">Pay date</span><span class="vl">${escapeHtml(p.payDate)}</span></div>
+      <div><span class="lb">Bank</span><span class="vl mono">${escapeHtml(ME.bank)}</span></div>
+      <div><span class="lb">Tax code</span><span class="vl mono">PAYE-2026</span></div>
+      <div style="margin-left: auto;"><span class="lb">Status</span><span class="vl"><span class="pill ${p.status === 'Paid' ? 'success' : 'brand'} dot">${escapeHtml(p.status)}</span></span></div>
+    </div>
+
+    <div class="big-grid">
+      <div class="big">
+        <span class="lb">Gross earnings</span>
+        <span class="vl">${money(gross)}</span>
+        <span class="sb">Basic + housing + transport + bonus</span>
+      </div>
+      <div class="big">
+        <span class="lb">Total deductions</span>
+        <span class="vl">${money(totDed)}</span>
+        <span class="sb">PAYE, NSSA, AIDS levy, NEC, pension, PSMAS</span>
+      </div>
+      <div class="big net">
+        <span class="lb">Net pay</span>
+        <span class="vl">${money(net)}</span>
+        <span class="sb">${p.status === 'Paid' ? 'Paid' : 'Pays'} ${escapeHtml(p.payDate)} into ${escapeHtml(ME.bank.split(' · ')[0])} ${escapeHtml(ME.bank.split(' · ')[1])}</span>
+      </div>
+    </div>
+
+    <div class="grid-12">
+      <div class="panel">
+        <div class="panel-h">
+          <h2>Earnings</h2>
+          <div class="sp"></div>
+          <span class="tot">${money(gross)}</span>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Item</th><th class="r">Rate</th><th class="r">Units</th><th class="r">Amount</th></tr></thead>
+          <tbody>
+            ${p.earnings.map(r => `
+              <tr>
+                <td><div class="nm">${escapeHtml(r.nm)}</div><div class="sb">${escapeHtml(r.sb)}</div></td>
+                <td class="r num">${r.rate.toFixed(2)}</td>
+                <td class="r num">${r.units.toFixed(2)}</td>
+                <td class="r num">${r.amount.toFixed(2)}</td>
+              </tr>
+            `).join('')}
+            <tr class="foot"><td colspan="3">Gross earnings</td><td class="r num">${gross.toFixed(2)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h">
+          <h2>Deductions</h2>
+          <div class="sp"></div>
+          <span class="tot" style="color: var(--tone-danger);">– ${money(totDed)}</span>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Item</th><th class="r">Rate</th><th class="r">Base</th><th class="r">Amount</th></tr></thead>
+          <tbody>
+            ${p.deductions.map(r => `
+              <tr>
+                <td><div class="nm">${escapeHtml(r.nm)}</div><div class="sb">${escapeHtml(r.sb)}</div></td>
+                <td class="r num">${escapeHtml(String(r.rate))}</td>
+                <td class="r num">${typeof r.base === 'number' ? r.base.toFixed(2) : escapeHtml(String(r.base))}</td>
+                <td class="r num">${r.amount.toFixed(2)}</td>
+              </tr>
+            `).join('')}
+            <tr class="foot"><td colspan="3">Total deductions</td><td class="r num">${totDed.toFixed(2)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h">
+        <h2>Year-to-date · January – ${p.label.split(' ')[0]} 2026</h2>
+        <div class="sp"></div>
+        <span style="font:500 12px/1 var(--font-sans); color: var(--text-muted);">${periodsToInclude.length + 2} of 12 periods</span>
+      </div>
+      <div class="ytd-grid">
+        <div class="ytd-cell"><span class="lb">YTD gross</span><span class="vl">${money(ytdGrossDisplay)}</span><span class="sb">Earnings before deductions</span></div>
+        <div class="ytd-cell"><span class="lb">YTD PAYE</span><span class="vl">${money(ytdPAYE + 700)}</span><span class="sb">Remitted to ZIMRA</span></div>
+        <div class="ytd-cell"><span class="lb">YTD NSSA</span><span class="vl">${money(ytdNSSA + 180)}</span><span class="sb">Employee + employer matched</span></div>
+        <div class="ytd-cell"><span class="lb">YTD pension</span><span class="vl">${money(ytdPens + 200)}</span><span class="sb">Old Mutual group scheme</span></div>
+        <div class="ytd-cell"><span class="lb">YTD AIDS levy</span><span class="vl">${money(ytdAIDS + 21)}</span><span class="sb">3% of PAYE</span></div>
+        <div class="ytd-cell"><span class="lb">YTD NEC</span><span class="vl">${money(ytdNEC + 48)}</span><span class="sb">Commercial sector</span></div>
+        <div class="ytd-cell"><span class="lb">YTD medical</span><span class="vl">${money(ytdMed + 5.66)}</span><span class="sb">PSMAS family plan</span></div>
+        <div class="ytd-cell"><span class="lb">YTD net</span><span class="vl" style="color: var(--brand-strong);">${money(ytdNet)}</span><span class="sb">Banked into ${escapeHtml(ME.bank.split(' · ')[1] || ME.bank)}</span></div>
+      </div>
+    </div>
+  `;
+}
+function wirePayslip() {
+  // wired in renderTop via #period-sel
+}
+
+/* ============================================================
+   5. Time clock (desktop view; mobile-only-time via media query)
+   ============================================================ */
+function renderTime() {
+  return `
+    <div class="clock-deck">
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="clock-card">
+          <div>
+            <span class="lbl">Right now</span>
+            <div class="time" id="clock-time">--:--:--</div>
+            <div class="date" id="clock-date">${escapeHtml(new Date().toLocaleDateString('en-GB',{weekday:'long', day:'2-digit', month:'long', year:'numeric'}))} · Park Centre branch</div>
+          </div>
+          <div class="summary">
+            <div class="cell">
+              <div class="ck">Today</div>
+              <div class="cv">${state.clockedIn ? '1h 19m' : '0h 00m'}</div>
+              <div class="csb">${state.clockedIn ? 'In at ' + state.clockInTime + ' · target 8h' : 'Not yet clocked in'}</div>
+            </div>
+            <div class="cell">
+              <div class="ck">This pay period</div>
+              <div class="cv">86h 40m</div>
+              <div class="csb">Of 96h · 4 days left</div>
+            </div>
+          </div>
+          <button class="clock-btn ${state.clockedIn ? 'out' : ''}" id="clock-toggle">
+            <span data-icon="${state.clockedIn ? 'pause' : 'play'}" data-icon-size="18"></span>
+            ${state.clockedIn ? 'Clock out' : 'Clock in'}
+          </button>
+        </div>
+
+        <div class="panel">
+          <div class="panel-h"><h2>Recent clock events</h2><div class="sp"></div><a href="#">All</a></div>
+          <div class="panel-body" style="padding: 0;">
+            ${state.events.map(ev => `
+              <div class="feed-row">
+                <span class="ic ${ev.kind === 'in' ? 'success' : ''}"><span data-icon="${ev.kind === 'in' ? 'play' : 'pause'}" data-icon-size="14"></span></span>
+                <div>
+                  <div class="nm">${escapeHtml(ev.nm)}</div>
+                  <div class="sb">${escapeHtml(ev.sb)}</div>
+                </div>
+                <span class="tm">${escapeHtml(ev.tm)}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="panel">
+          <div class="panel-h"><h2>Location · geo-fence</h2><div class="sp"></div><span class="pill success dot">In range</span></div>
+          <div class="geo" style="border: 0; border-radius: 0;">
+            <div class="map">
+              <div class="road h1"></div>
+              <div class="road h2"></div>
+              <div class="road v1"></div>
+              <div class="fence"></div>
+              <div class="pin"></div>
+            </div>
+            <div class="bar">
+              <span class="ic"><span data-icon="check" data-icon-size="14"></span></span>
+              <div style="flex:1;">
+                <div class="nm">Inside Park Centre fence</div>
+                <div class="sb">18m from till counter · accuracy ±8m</div>
+              </div>
+              <span style="font: 500 11px/1 var(--font-mono); color: var(--text-subtle);">GPS</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-h"><h2>This pay period</h2><div class="sp"></div></div>
+          <div style="padding: 16px 18px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; justify-content: space-between; font: 13.5px var(--font-sans); color: var(--text-muted);">
+              <span>Worked</span><span style="font: 500 14px/1 var(--font-mono); color: var(--text-strong);">86h 40m</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font: 13.5px var(--font-sans); color: var(--text-muted);">
+              <span>Target</span><span style="font: 500 14px/1 var(--font-mono); color: var(--text-strong);">96h 00m</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font: 13.5px var(--font-sans); color: var(--text-muted);">
+              <span>Overtime</span><span style="font: 500 14px/1 var(--font-mono); color: var(--text-strong);">2h 14m</span>
+            </div>
+            <div style="height: 8px; border-radius: 9999px; background: var(--surface-muted); overflow: hidden; margin-top: 6px;"><i style="display: block; height: 100%; width: 90%; background: var(--brand);"></i></div>
+            <div style="font: 12px/1.4 var(--font-sans); color: var(--text-muted);">Fortnight ends 24 May. Submit timesheet by Tuesday close.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+let clockTimer = null;
+function startClockTick() {
+  if (clockTimer) clearInterval(clockTimer);
+  const tick = () => {
+    const el = $('#clock-time'); if (!el) { clearInterval(clockTimer); clockTimer = null; return; }
+    const d = new Date();
+    el.textContent = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0') + ':' + String(d.getSeconds()).padStart(2,'0');
+  };
+  tick();
+  clockTimer = setInterval(tick, 1000);
+}
+function wireTime() {
+  startClockTick();
+  const t = $('#clock-toggle'); if (t) t.addEventListener('click', () => {
+    state.clockedIn = !state.clockedIn;
+    const now = new Date();
+    const hhmm = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    if (state.clockedIn) {
+      state.clockInTime = hhmm;
+      state.events.unshift({ kind: 'in', nm: 'Clocked in', sb: 'Today · Park Centre · on time', tm: hhmm });
+      toast('Clocked in at Park Centre branch', 'success');
+    } else {
+      state.events.unshift({ kind: 'out', nm: 'Clocked out', sb: 'Today · ' + hhmm + ' · session complete', tm: hhmm });
+      toast('Clocked out · session saved', 'success');
+    }
+    render();
+  });
+}
+
+/* ============================================================
+   6. Directory
+   ============================================================ */
+const DIR_FILTERS = [
+  { id: 'all',          label: 'All',           count: () => PEOPLE.length },
+  { id: 'park-centre',  label: 'Park Centre',   count: () => PEOPLE.filter(p => p.branch === 'Park Centre').length },
+  { id: 'head-office',  label: 'Head office',   count: () => PEOPLE.filter(p => p.branch === 'Head office').length },
+  { id: 'bulawayo',     label: 'Bulawayo',      count: () => PEOPLE.filter(p => p.branch === 'Bulawayo').length },
+  { id: 'mutare',       label: 'Mutare',        count: () => PEOPLE.filter(p => p.branch === 'Mutare').length },
+  { id: 'operations',   label: 'Operations',    count: () => PEOPLE.filter(p => p.dept === 'Operations').length },
+  { id: 'hr',           label: 'HR',            count: () => PEOPLE.filter(p => p.dept === 'HR').length },
+  { id: 'finance',      label: 'Finance',       count: () => PEOPLE.filter(p => p.dept === 'Finance').length },
+  { id: 'retail',       label: 'Retail',        count: () => PEOPLE.filter(p => p.dept === 'Retail').length },
+];
+
+function filteredPeople() {
+  const q = state.dirSearch.toLowerCase();
+  return PEOPLE.filter(p => {
+    if (state.dirFilter === 'park-centre' && p.branch !== 'Park Centre') return false;
+    if (state.dirFilter === 'head-office' && p.branch !== 'Head office') return false;
+    if (state.dirFilter === 'bulawayo' && p.branch !== 'Bulawayo') return false;
+    if (state.dirFilter === 'mutare' && p.branch !== 'Mutare') return false;
+    if (state.dirFilter === 'operations' && p.dept !== 'Operations') return false;
+    if (state.dirFilter === 'hr' && p.dept !== 'HR') return false;
+    if (state.dirFilter === 'finance' && p.dept !== 'Finance') return false;
+    if (state.dirFilter === 'retail' && p.dept !== 'Retail') return false;
+    if (q && !(p.name.toLowerCase().includes(q) || p.role.toLowerCase().includes(q) || p.dept.toLowerCase().includes(q) || p.branch.toLowerCase().includes(q))) return false;
+    return true;
+  });
+}
+
+function renderDirectory() {
+  const sel = state.dirSelected ? PEOPLE.find(p => p.id === state.dirSelected) : null;
+  const list = filteredPeople();
+  const reports = sel ? PEOPLE.filter(p => p.reportsTo === sel.name) : [];
+
+  return `
+    <div class="dir-search">
+      <div class="srch">
+        <span data-icon="search" data-icon-size="16"></span>
+        <input id="dir-search" placeholder="Search name, role, department or branch…" value="${escapeHtml(state.dirSearch)}" />
+      </div>
+      <button class="btn btn-secondary" data-action="dir-export"><span data-icon="download" data-icon-size="13"></span> Export</button>
+    </div>
+
+    <div class="chip-bar">
+      ${DIR_FILTERS.map(f => `<button class="chipd ${state.dirFilter === f.id ? 'on' : ''}" data-filter="${f.id}">${f.label} <span class="ct">${f.count()}</span></button>`).join('')}
+    </div>
+
+    <div class="dir-deck">
+      <div class="dir-grid">
+        ${list.length === 0 ? `<div style="grid-column:1/-1; padding: 40px; text-align: center; color: var(--text-muted); font: 13px var(--font-sans);">No matches.</div>` : list.map(p => `
+          <div class="dcard ${state.dirSelected === p.id ? 'on' : ''}" data-person="${p.id}">
+            <div class="h">
+              <span class="av ${p.av}">${p.init}</span>
+              <div style="flex:1;">
+                <div class="nm">${escapeHtml(p.name)}</div>
+                <div class="rl">${escapeHtml(p.role)}</div>
+              </div>
+              <span class="stat ${p.status === 'away' ? 'away' : p.status === 'off' ? 'off' : ''}" title="${p.status === 'away' ? 'In a meeting' : p.status === 'off' ? 'Off duty' : 'Online'}"></span>
+            </div>
+            <div class="pills">
+              <span class="pill"><span data-icon="building" data-icon-size="10"></span> ${escapeHtml(p.dept)}</span>
+              <span class="pill"><span data-icon="warehouse" data-icon-size="10"></span> ${escapeHtml(p.branch)}</span>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="dir-profile">
+        ${sel ? `
+          <div class="hero">
+            <div class="av">${sel.init}</div>
+            <div style="flex:1;">
+              <h3>${escapeHtml(sel.name)}</h3>
+              <div class="rl">${escapeHtml(sel.role)}</div>
+            </div>
+          </div>
+          <div class="acts">
+            <button data-action="dir-call"><span data-icon="phone" data-icon-size="14"></span><span>Call</span></button>
+            <button data-action="dir-email"><span data-icon="mail" data-icon-size="14"></span><span>Email</span></button>
+            <button data-action="dir-chat"><span data-icon="chat" data-icon-size="14"></span><span>Chat</span></button>
+          </div>
+          <div class="sec">
+            <div class="sh">Contact</div>
+            <div class="kv">
+              <div class="k">Phone</div><div class="v mono">${escapeHtml(sel.phone)}</div>
+              <div class="k">Email</div><div class="v">${escapeHtml(sel.email)}</div>
+              <div class="k">Department</div><div class="v">${escapeHtml(sel.dept)}</div>
+              <div class="k">Branch</div><div class="v">${escapeHtml(sel.branch)}</div>
+              <div class="k">Reports to</div><div class="v">${escapeHtml(sel.reportsTo)}</div>
+            </div>
+          </div>
+          ${reports.length ? `
+            <div class="sec">
+              <div class="sh">Direct reports · ${reports.length}</div>
+              ${reports.map(r => `<div style="display:flex; align-items:center; gap: 10px; padding: 6px 0;"><span style="width: 26px; height: 26px; border-radius: 50%; background: var(--surface-muted); color: var(--text-strong); display: grid; place-items: center; font: 600 10px/1 var(--font-sans);">${r.init}</span><div style="flex:1;"><div style="font: 500 13px/1.2 var(--font-sans); color: var(--text-strong);">${escapeHtml(r.name)}</div><div style="font: 11px/1.2 var(--font-sans); color: var(--text-muted); margin-top:1px;">${escapeHtml(r.role)}</div></div></div>`).join('')}
+            </div>
+          ` : ''}
+          <div class="sec">
+            <div class="sh">On-call</div>
+            <div class="toggle ${state.onCall ? 'on' : ''}" id="dir-oncall">
+              <span class="sw"></span>
+              <span class="lb">${state.onCall ? 'On call now · pager 0782 010 555' : 'Not on call'}</span>
+            </div>
+          </div>
+        ` : `<div class="empty">Pick a person from the grid to see their profile.</div>`}
+      </div>
+    </div>
+  `;
+}
+
+function wireDirectory() {
+  const inp = $('#dir-search'); if (inp) inp.addEventListener('input', (e) => {
+    state.dirSearch = e.target.value; render();
+    const i = $('#dir-search'); if (i) { i.focus(); i.setSelectionRange(state.dirSearch.length, state.dirSearch.length); }
+  });
+  $$('[data-filter]').forEach(b => b.addEventListener('click', () => { state.dirFilter = b.dataset.filter; render(); }));
+  $$('[data-person]').forEach(b => b.addEventListener('click', () => { state.dirSelected = b.dataset.person; render(); }));
+  const oc = $('#dir-oncall'); if (oc) oc.addEventListener('click', () => {
+    state.onCall = !state.onCall;
+    toast(state.onCall ? 'You are now on call' : 'On-call status cleared');
+    render();
+  });
+  $$('[data-action]').forEach(b => {
+    const a = b.dataset.action;
+    if (a === 'dir-call' || a === 'dir-email' || a === 'dir-chat') {
+      b.addEventListener('click', () => {
+        const p = PEOPLE.find(x => x.id === state.dirSelected);
+        if (!p) return;
+        if (a === 'dir-call') toast('Calling ' + p.name + ' · ' + p.phone);
+        if (a === 'dir-email') toast('New email to ' + p.email, 'success');
+        if (a === 'dir-chat') toast('Opening chat with ' + p.name.split(' ')[0], 'success');
+      });
+    }
+    if (a === 'dir-export') b.addEventListener('click', () => toast('Directory exported as CSV', 'success'));
+  });
+}
+
+/* ============================================================
+   7. Profile
+   ============================================================ */
+function renderProfile() {
+  return `
+    <div class="prof-grid">
+      <div class="prof-side">
+        <div class="av">${ME.initials}</div>
+        <h3>${escapeHtml(ME.name)}</h3>
+        <div class="rl">${escapeHtml(ME.role)} · ${escapeHtml(ME.branch)}</div>
+        <div style="font: 11.5px/1.3 var(--font-mono); color: var(--text-subtle); margin-top: 2px;">${escapeHtml(ME.empId)} · joined ${escapeHtml(ME.joined)}</div>
+        <div class="stack">
+          <button class="btn btn-secondary" data-action="change-avatar"><span data-icon="camera" data-icon-size="13"></span> Change photo</button>
+          <button class="btn btn-secondary" data-action="change-pw"><span data-icon="lock" data-icon-size="13"></span> Change password</button>
+          <button class="btn btn-danger" data-action="signout"><span data-icon="logout" data-icon-size="13"></span> Sign out</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="prof-card">
+          <h3><span class="ic" data-icon="user"></span> Personal details</h3>
+          <div class="prof-rows">
+            <div class="prof-row"><span class="lb">Phone</span><span class="vl mono">${escapeHtml(ME.phone)}</span></div>
+            <div class="prof-row"><span class="lb">Email</span><span class="vl">${escapeHtml(ME.email)}</span></div>
+            <div class="prof-row" style="grid-column: 1 / -1;"><span class="lb">Home address</span><span class="vl">${escapeHtml(ME.address)}</span></div>
+            <div class="prof-row" style="grid-column: 1 / -1;"><span class="lb">Emergency contact</span><span class="vl">${escapeHtml(ME.emergency)}</span></div>
+          </div>
+          <div style="margin-top: 14px; display: flex; gap: 8px;">
+            <button class="btn btn-secondary" data-action="edit-personal"><span data-icon="edit" data-icon-size="13"></span> Edit details</button>
+          </div>
+        </div>
+
+        <div class="prof-card">
+          <h3><span class="ic" data-icon="card"></span> Banking &amp; payroll</h3>
+          <div class="prof-rows">
+            <div class="prof-row"><span class="lb">Bank account</span><span class="vl mono">${escapeHtml(ME.bank)}</span></div>
+            <div class="prof-row"><span class="lb">Mobile wallet</span><span class="vl mono">${escapeHtml(ME.ecocash)}</span></div>
+            <div class="prof-row"><span class="lb">Tax code</span><span class="vl mono">PAYE-2026 · ZIMRA</span></div>
+            <div class="prof-row"><span class="lb">NSSA reference</span><span class="vl mono">NSSA / 142 / 488 / 2023</span></div>
+            <div class="prof-row"><span class="lb">Pension scheme</span><span class="vl">Old Mutual group · 5%</span></div>
+            <div class="prof-row"><span class="lb">Medical aid</span><span class="vl">PSMAS family plan</span></div>
+          </div>
+          <div style="margin-top: 14px; display: flex; gap: 8px;">
+            <button class="btn btn-secondary" data-action="edit-banking"><span data-icon="edit" data-icon-size="13"></span> Update banking</button>
+          </div>
+        </div>
+
+        <div class="prof-card">
+          <h3><span class="ic" data-icon="bell"></span> Notifications</h3>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            ${notifRow('email', 'Email', 'Payslips, leave decisions, policy updates')}
+            ${notifRow('sms', 'SMS', 'Critical only — payroll changes')}
+            ${notifRow('push', 'Push (mobile app)', 'Clock reminders, approvals')}
+            ${notifRow('weekly', 'Weekly digest', 'Sunday evening summary of the week ahead')}
+          </div>
+        </div>
+
+        <div class="prof-card">
+          <h3><span class="ic" data-icon="settings"></span> Appearance</h3>
+          <div style="display: flex; gap: 8px;">
+            ${['light','dark','auto'].map(t => `<button class="btn ${state.theme===t?'btn-primary':'btn-secondary'}" data-theme="${t}">${cap(t)}</button>`).join('')}
+          </div>
+          <div style="margin-top: 10px; font: 12.5px/1.4 var(--font-sans); color: var(--text-muted);">Preview-only in this demo · system-wide setting lives in Workspace admin.</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function notifRow(key, label, sub) {
+  const on = !!state.notif[key];
+  return `
+    <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface-muted); border-radius: 8px;">
+      <div style="flex: 1;">
+        <div style="font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong);">${escapeHtml(label)}</div>
+        <div style="font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px;">${escapeHtml(sub)}</div>
+      </div>
+      <div class="toggle ${on?'on':''}" data-notif="${key}"><span class="sw"></span></div>
+    </div>
+  `;
+}
+
+function wireProfile() {
+  $$('[data-notif]').forEach(t => t.addEventListener('click', () => {
+    const k = t.dataset.notif;
+    state.notif[k] = !state.notif[k];
+    toast((state.notif[k] ? 'Enabled' : 'Disabled') + ' ' + k + ' notifications');
+    render();
+  }));
+  $$('[data-theme]').forEach(b => b.addEventListener('click', () => {
+    state.theme = b.dataset.theme;
+    toast('Theme set to ' + state.theme);
+    render();
+  }));
+  $$('[data-action]').forEach(b => {
+    const a = b.dataset.action;
+    if (a === 'change-avatar') b.addEventListener('click', () => toast('Photo upload coming soon'));
+    if (a === 'change-pw') b.addEventListener('click', openChangePasswordModal);
+    if (a === 'signout') b.addEventListener('click', openSignOutModal);
+    if (a === 'edit-personal') b.addEventListener('click', () => openEditPersonalModal());
+    if (a === 'edit-banking') b.addEventListener('click', () => openEditBankingModal());
+  });
+}
+
+function openChangePasswordModal() {
+  openModal(`
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Change password</h3>
+      <p class="sub">Use at least 10 characters including a number and a symbol.</p>
+      <div class="form-grid" style="grid-template-columns: 1fr;">
+        <div class="field full"><label>Current password</label><input type="password" placeholder="••••••••" /></div>
+        <div class="field full"><label>New password</label><input type="password" placeholder="At least 10 chars" /></div>
+        <div class="field full"><label>Confirm new password</label><input type="password" /></div>
+      </div>
+      <div class="acts">
+        <button class="btn btn-secondary" data-close>Cancel</button>
+        <button class="btn btn-primary ok" data-ok>Update password</button>
+      </div>
+    </div>
+  `);
+  $('.modal [data-close]').addEventListener('click', closeModal);
+  $('.modal [data-ok]').addEventListener('click', () => { closeModal(); toast('Password updated', 'success'); });
+}
+
+function openSignOutModal() {
+  openModal(`
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Sign out of staff portal?</h3>
+      <p class="sub">You'll need to sign in again with your Mukamba SSO to access payslips and leave.</p>
+      <div class="acts">
+        <button class="btn btn-secondary" data-close>Stay signed in</button>
+        <button class="btn btn-danger danger" data-ok><span data-icon="logout" data-icon-size="13"></span> Sign out</button>
+      </div>
+    </div>
+  `);
+  $('.modal [data-close]').addEventListener('click', closeModal);
+  $('.modal [data-ok]').addEventListener('click', () => { closeModal(); toast('Signed out (demo only)', 'warn'); });
+}
+
+function openEditPersonalModal() {
+  openModal(`
+    <div class="modal lg" onclick="event.stopPropagation()">
+      <h3>Edit personal details</h3>
+      <p class="sub">HR will be notified of any changes to your address or emergency contact.</p>
+      <div class="form-grid">
+        <div class="field half"><label>Phone</label><input value="${escapeHtml(ME.phone)}" /></div>
+        <div class="field half"><label>Email</label><input value="${escapeHtml(ME.email)}" /></div>
+        <div class="field full"><label>Home address</label><input value="${escapeHtml(ME.address)}" /></div>
+        <div class="field full"><label>Emergency contact</label><input value="${escapeHtml(ME.emergency)}" /></div>
+      </div>
+      <div class="acts">
+        <button class="btn btn-secondary" data-close>Cancel</button>
+        <button class="btn btn-primary ok" data-ok>Save changes</button>
+      </div>
+    </div>
+  `);
+  $('.modal [data-close]').addEventListener('click', closeModal);
+  $('.modal [data-ok]').addEventListener('click', () => { closeModal(); toast('Personal details updated', 'success'); });
+}
+
+function openEditBankingModal() {
+  openModal(`
+    <div class="modal lg" onclick="event.stopPropagation()">
+      <h3>Update banking details</h3>
+      <p class="sub">Changes take effect from the next payroll run. Payroll team will verify with a small test transfer.</p>
+      <div class="form-grid">
+        <div class="field half"><label>Bank</label>
+          <select>
+            <option>CBZ Bank</option>
+            <option>Stanbic</option>
+            <option>NMB Bank</option>
+            <option>FBC Holdings</option>
+            <option>ZB Bank</option>
+            <option>Steward Bank</option>
+          </select>
+        </div>
+        <div class="field half"><label>Account number</label><input value="****8311" /></div>
+        <div class="field half"><label>Branch code</label><input value="2401" /></div>
+        <div class="field half"><label>Mobile wallet (optional)</label>
+          <select>
+            <option>EcoCash · ****6720</option>
+            <option>OneMoney · ****1118</option>
+            <option>InnBucks</option>
+            <option>None</option>
+          </select>
+        </div>
+      </div>
+      <div class="acts">
+        <button class="btn btn-secondary" data-close>Cancel</button>
+        <button class="btn btn-primary ok" data-ok>Save banking</button>
+      </div>
+    </div>
+  `);
+  $('.modal [data-close]').addEventListener('click', closeModal);
+  $('.modal [data-ok]').addEventListener('click', () => { closeModal(); toast('Banking details updated · payroll will verify', 'success'); });
+}
+
+/* ================== Init ================== */
+function init() {
+  if (/[?&]fullscreen=1/.test(location.search)) {
+    state.fullscreen = true;
+    document.body.classList.add('is-fullscreen');
+  }
+  const r = location.hash.replace(/^#\/?/, '') || 'dashboard';
+  state.route = r;
+  render();
+}
+
+if (document.readyState !== 'loading') init();
+else document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>

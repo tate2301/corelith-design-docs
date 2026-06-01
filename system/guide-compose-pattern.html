@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>How to compose a new pattern · Huchu DS</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+</head>
+<body class="ds-doc">
+  <main class="ds-content">
+    <div class="ds-doc-layout">
+
+      <article>
+        <header class="ds-page-head anim-fade-up">
+          <div class="crumbs">
+            <a href="../index.html">Home</a>
+            <span class="sep">/</span>
+            <a href="guides.html">Guides</a>
+            <span class="sep">/</span>
+            <span>Compose a pattern</span>
+          </div>
+          <h1>How to compose a new pattern</h1>
+          <p class="lede">Patterns are whole-surface assemblies that the system guarantees. They cost more than blocks — promote one only when the same composition shows up twice.</p>
+          <div class="meta">
+            <span class="meta-pill"><span data-icon="layers" data-icon-size="12"></span>Guide</span>
+            <span class="meta-pill">Two-pages rule</span>
+            <span class="meta-pill">State machine + URL</span>
+          </div>
+        </header>
+
+        <!-- WHEN -->
+        <section id="when">
+          <h2 class="ds-h2">When to make a pattern</h2>
+          <p class="ds-h2-sub">The "two pages or more" rule — and a short list of exceptions.</p>
+          <p>A <strong>pattern</strong> is more than a composition of blocks. It carries behavior the system promises across all uses: a state machine, keyboard contract, URL convention, and a responsive plan. That promise is expensive to maintain, so we wait for proof.</p>
+          <p>Promote to a pattern when:</p>
+          <ul>
+            <li>The same composition has been built on <strong>two or more pages</strong> — once is a coincidence, twice is a pattern.</li>
+            <li>The behavior is non-trivial: focus management, URL hash, optimistic update, undo, conflict resolution.</li>
+            <li>Multiple teams are about to build the same thing independently this quarter.</li>
+          </ul>
+          <p>Don't promote to a pattern when:</p>
+          <ul>
+            <li>It's a single block with new content (it's still that block — see <a href="guide-block-vs-pattern.html">Block vs Pattern vs Page</a>).</li>
+            <li>The shape is right but the behavior varies per page — that's a <a href="guide-compose-page.html">page composition</a>.</li>
+            <li>It only lives on a marketing surface — patterns are for product chrome.</li>
+          </ul>
+        </section>
+
+        <!-- ANATOMY -->
+        <section id="anatomy">
+          <h2 class="ds-h2">Pattern anatomy</h2>
+          <p class="ds-h2-sub">A pattern doc declares four things. If any are missing the pattern is incomplete.</p>
+
+          <h3 class="ds-h3">1 — Block composition</h3>
+          <p>The exact list of blocks and components used, in render order. Each item links to its anatomy doc. A pattern with one block is probably just that block — re-read <a href="guide-block-vs-pattern.html">block vs pattern</a>.</p>
+
+          <h3 class="ds-h3">2 — State machine</h3>
+          <p>The named states the pattern can be in and the transitions between them. Most patterns have between three and seven states. For <a href="x-data-table.html">Data table</a>: <code class="inline">empty · loading · loaded · selecting · bulk-action · error</code>. Draw the machine before writing the markup.</p>
+
+          <h3 class="ds-h3">3 — URL convention</h3>
+          <p>What in the pattern is reflected in the URL? Hash for ephemeral state (open tab, selected row). Query string for filter state that should be shareable. Path for navigation. A pattern with no URL story breaks browser back, deep links, and bookmarking.</p>
+
+          <h3 class="ds-h3">4 — Responsive plan</h3>
+          <p>One sentence per breakpoint describing how the pattern degrades. Use the breakpoint conventions from <a href="guide-mobile-adaptation.html">Mobile adaptation</a>. A pattern with no mobile plan is a desktop-only feature — document that explicitly.</p>
+        </section>
+
+        <!-- WORKED EXAMPLE -->
+        <section id="example">
+          <h2 class="ds-h2">Worked example — Detail + tabs</h2>
+          <p class="ds-h2-sub">A multi-aspect record page, used by Customer detail, Invoice detail, Product detail. Three pages → pattern.</p>
+
+          <h3 class="ds-h3">Block composition</h3>
+          <p>The pattern is the assembly, in order, of:</p>
+          <ul>
+            <li><a href="b-page-header.html">Page header</a> · compact variant, breadcrumb + back arrow + 1–2 actions.</li>
+            <li><a href="b-detail-hero.html">Detail hero</a> · key identifying facts and the primary action ("Issue invoice", "Refund order").</li>
+            <li><a href="p-segmented-control.html">Segmented control</a> · the tab strip — 3 to 6 tabs.</li>
+            <li><strong>Tab body</strong> · a single visible region that swaps content based on the active tab. Each tab's content is composed from blocks like any other page (see <a href="guide-compose-page.html">Compose a page</a>).</li>
+          </ul>
+
+          <h3 class="ds-h3">State machine</h3>
+          <pre class="ds-code"><span class="c">// 5 states, 6 transitions</span>
+loading        → loaded        <span class="c">// data arrived</span>
+loading        → error         <span class="c">// fetch failed</span>
+error          → loading       <span class="c">// retry pressed</span>
+loaded         → tab-switching <span class="c">// tab clicked, new tab loading</span>
+tab-switching  → loaded        <span class="c">// new tab data arrived</span>
+loaded         → stale         <span class="c">// websocket says record changed</span></pre>
+          <p>The pattern guarantees: the hero never blanks during a tab switch (only the body region replaces). The <code class="inline">stale</code> state shows a non-blocking "Refresh" affordance — never a blocking dialog.</p>
+
+          <h3 class="ds-h3">URL convention</h3>
+          <table class="ds-props">
+            <thead><tr><th>Segment</th><th>Holds</th><th>Example</th></tr></thead>
+            <tbody>
+              <tr><td>Path</td><td>Record identity</td><td><code class="inline">/customers/cus_8a32</code></td></tr>
+              <tr><td>Hash</td><td>Active tab</td><td><code class="inline">#activity</code></td></tr>
+              <tr><td>Query</td><td>Tab-scoped filters</td><td><code class="inline">?from=2026-04-01</code></td></tr>
+            </tbody>
+          </table>
+          <p>The browser back button moves between tabs <em>within</em> a record. Closing the tab and re-opening the URL lands you exactly where you were.</p>
+
+          <h3 class="ds-h3">Responsive plan</h3>
+          <table class="ds-props">
+            <thead><tr><th>Breakpoint</th><th>Behavior</th></tr></thead>
+            <tbody>
+              <tr><td>≥ 1100px</td><td>Hero left, summary rail right, tabs span both columns.</td></tr>
+              <tr><td>900–1099px</td><td>Summary rail collapses below the tab body.</td></tr>
+              <tr><td>720–899px</td><td>Hero stacks vertically. Tabs remain a segmented control.</td></tr>
+              <tr><td>&lt; 720px</td><td>Segmented control becomes a select. Hero shows only title + primary action; the rest collapses into the first tab.</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- WHAT THE PATTERN GUARANTEES -->
+        <section id="guarantees">
+          <h2 class="ds-h2">Document what your pattern guarantees</h2>
+          <p class="ds-h2-sub">A pattern is a contract. Write the contract down so consumers know what they get for free.</p>
+          <p>Every pattern doc should list, near the top, the explicit guarantees. For Detail + tabs:</p>
+          <ul>
+            <li>Tab switch never refetches the hero data.</li>
+            <li>Active tab is reflected in the URL hash and restored on reload.</li>
+            <li>Keyboard: <code class="inline">←</code>/<code class="inline">→</code> on the tab strip moves focus; <code class="inline">Enter</code> activates; tab strip is in the page tab order between hero and body.</li>
+            <li>Stale-data refresh is non-blocking — never interrupts an in-progress edit.</li>
+            <li>At &lt;720px the segmented control swaps to a select; no horizontal scroll.</li>
+          </ul>
+          <p>If you can't keep one of these promises, omit it from the contract — or fix it before promoting.</p>
+        </section>
+
+        <!-- NAMING & SCOPE -->
+        <section id="naming">
+          <h2 class="ds-h2">Naming and scope</h2>
+          <p class="ds-h2-sub">A pattern's filename and label shape the way teams talk about it for years.</p>
+          <ul>
+            <li><strong>File prefix</strong>: <code class="inline">x-</code> (e.g. <code class="inline">x-detail-tabs.html</code>). Blocks are <code class="inline">b-</code>, components are <code class="inline">p-</code>, pages are <code class="inline">pg-</code>.</li>
+            <li><strong>Label</strong>: short noun phrase that names the user-visible shape, not the internals. "Detail tabs" — not "TabbedRecordContainer".</li>
+            <li><strong>Scope</strong>: one pattern does one thing. A "Detail + tabs + activity feed + comments" pattern is three patterns: <em>Detail + tabs</em>, <em>Activity feed</em>, <em>Comment thread</em>. Compose, don't combine.</li>
+            <li><strong>Sidebar group</strong>: drop the entry into the <em>Patterns</em> group in <code class="inline">system-shell.js</code> next to its siblings.</li>
+          </ul>
+        </section>
+
+        <!-- DO / DON'T -->
+        <section id="rules">
+          <h2 class="ds-h2">Do &amp; don't</h2>
+          <div class="ds-rules">
+            <div class="rule do"><span class="tag">Do</span><p>Wait for the second use case before promoting. Premature patterns get retrofitted painfully when the third use case disagrees.</p></div>
+            <div class="rule dont"><span class="tag">Don't</span><p>Promote a single-page composition to a pattern "just in case." The block list and a worked example on the page are enough.</p></div>
+            <div class="rule do"><span class="tag">Do</span><p>Draw the state machine on paper before writing markup. It will catch missing states.</p></div>
+            <div class="rule dont"><span class="tag">Don't</span><p>Ship a pattern without a URL convention. Browser back, deep linking, and bookmarking are not optional in an ERP.</p></div>
+            <div class="rule do"><span class="tag">Do</span><p>Make the pattern doc list explicit guarantees. Consumers cite them in PR reviews.</p></div>
+            <div class="rule dont"><span class="tag">Don't</span><p>Combine two patterns into one. "Detail + tabs + activity" is three patterns composed by a page.</p></div>
+          </div>
+        </section>
+
+        <!-- CALLOUT -->
+        <div class="ds-callout">
+          <span class="ic" data-icon="info" data-icon-size="18"></span>
+          <div>
+            <h4>What's next</h4>
+            <p>If you found yourself wanting to compose a whole new <em>module</em> (multiple pages, sidebar entry, IA decisions), read <a href="guide-new-feature.html">Adding a new feature module</a>.</p>
+          </div>
+        </div>
+
+        <!-- PAGER -->
+        <nav class="ds-pager">
+          <a href="guide-compose-page.html">
+            <div class="pager-label">← Back to</div>
+            <div class="pager-title">Compose a page</div>
+          </a>
+          <a href="guide-new-feature.html" class="next">
+            <div class="pager-label">Next →</div>
+            <div class="pager-title">Adding a feature module</div>
+          </a>
+        </nav>
+      </article>
+
+      <!-- TOC -->
+      <aside class="ds-toc">
+        <div class="toc-label">On this page</div>
+        <ul>
+          <li><a href="#when" class="current">When to make a pattern</a></li>
+          <li><a href="#anatomy">Pattern anatomy</a></li>
+          <li><a href="#example">Worked example</a></li>
+          <li><a href="#guarantees">What it guarantees</a></li>
+          <li><a href="#naming">Naming and scope</a></li>
+          <li><a href="#rules">Do &amp; don't</a></li>
+        </ul>
+      </aside>
+
+    </div>
+  </main>
+</body>
+</html>

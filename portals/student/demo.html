@@ -1,0 +1,1808 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Student portal demo · Huchu</title>
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  body { background: var(--gray-100); margin: 0; }
+
+  /* === Outer stage (desktop wraps in a phone device frame) === */
+  .sd-stage {
+    min-height: calc(100vh - 47px); /* minus pk-nav */
+    display: grid; place-items: center;
+    padding: 32px 24px;
+  }
+  .sd-frame {
+    width: 390px; height: 780px; border-radius: 48px;
+    background: #0F1115; padding: 12px;
+    box-shadow: 0 30px 60px -20px rgba(22,24,29,0.25), 0 0 0 1px rgba(22,24,29,0.08);
+    position: relative; flex: none;
+  }
+  .sd-frame::before {
+    content: ""; position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+    width: 110px; height: 30px; background: #0F1115; border-radius: 0 0 18px 18px; z-index: 20;
+  }
+  .sd-frame .screen {
+    width: 100%; height: 100%; border-radius: 36px;
+    overflow: hidden; background: var(--canvas);
+    position: relative; display: flex; flex-direction: column;
+  }
+
+  /* Fullscreen mode — drop the chrome and the device frame, fill viewport */
+  body.is-fullscreen { background: var(--ink); }
+  body.is-fullscreen .pk-nav { display: none !important; }
+  body.is-fullscreen .sd-stage { padding: 0; min-height: 100vh; min-height: 100dvh; }
+  body.is-fullscreen .sd-frame { width: 100vw; height: 100vh; height: 100dvh; border-radius: 0; padding: 0; }
+  body.is-fullscreen .sd-frame::before { display: none; }
+  body.is-fullscreen .sd-frame .screen { border-radius: 0; }
+
+  /* On true phones, also drop the device frame */
+  @media (max-width: 720px) {
+    .sd-stage { padding: 0; min-height: calc(100dvh - 47px); }
+    .sd-frame { width: 100%; height: calc(100dvh - 47px); border-radius: 0; padding: 0; }
+    .sd-frame::before { display: none; }
+    .sd-frame .screen { border-radius: 0; }
+  }
+
+  /* Floating fullscreen toggle (sits on top of frame) */
+  .fs-toggle {
+    position: fixed; top: 60px; right: 16px; z-index: 80;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 11px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-strong); cursor: pointer;
+    font: 500 12px/1 var(--font-sans);
+    box-shadow: 0 6px 14px -4px rgba(0,0,0,0.16);
+  }
+  .fs-toggle:hover { background: var(--surface-muted); }
+  body.is-fullscreen .fs-toggle {
+    top: 12px; right: 12px;
+    background: rgba(255,255,255,0.95);
+  }
+
+  /* === Reusable in-screen widgets === */
+  .greet { padding: 18px 16px 6px; }
+  .greet .hi { font: 500 13px/1.3 var(--font-sans); color: var(--text-muted); }
+  .greet h1 { font: 700 24px/1.15 var(--font-sans); letter-spacing: -0.02em; color: var(--text-strong); margin: 4px 0 0; }
+  .greet .meta { font: 500 12px/1.3 var(--font-sans); color: var(--text-subtle); margin-top: 6px; }
+
+  .next-class { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center; cursor: pointer; transition: border-color 120ms; }
+  .next-class:active { border-color: var(--brand-200); }
+  .next-class .badge { width: 56px; height: 56px; border-radius: 12px; background: #DDEAFE; color: #0B5DF0; display: grid; place-items: center; }
+  .next-class .badge .col { display: grid; gap: 3px; place-items: center; }
+  .next-class .badge .t { font: 700 14px/1 var(--font-mono); }
+  .next-class .badge .d { font: 500 9px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
+  .next-class .nm { font: 600 15px/1.3 var(--font-sans); color: var(--text-strong); }
+  .next-class .sb { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 3px; }
+  .next-class .meta { font: 500 11px/1 var(--font-mono); color: var(--text-subtle); margin-top: 6px; display: inline-flex; gap: 10px; }
+
+  .week-glance { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; }
+  .week-glance .h { font: 600 13px/1 var(--font-sans); color: var(--text-strong); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: baseline; }
+  .week-glance .h .sb { font: 500 11px/1 var(--font-mono); color: var(--text-muted); }
+  .week-glance .days { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+  .week-glance .day { padding: 6px 2px; border-radius: 6px; text-align: center; background: var(--surface-muted); display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .week-glance .day.today { background: var(--brand-soft); }
+  .week-glance .day .lbl { font: 600 10px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+  .week-glance .day.today .lbl { color: var(--brand-strong); }
+  .week-glance .day .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text-strong); }
+  .week-glance .day .dots { display: inline-flex; gap: 2px; }
+
+  .kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
+  .kpi .l { font: 500 10.5px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); }
+  .kpi .v { font: 700 22px/1 var(--font-sans); color: var(--text-strong); margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .kpi .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 4px; }
+  .kpi.brand { background: var(--ink); color: #fff; border-color: transparent; }
+  .kpi.brand .l { color: rgba(255,255,255,0.65); }
+  .kpi.brand .v { color: #fff; }
+  .kpi.brand .sb { color: rgba(255,255,255,0.75); }
+  .kpi .delta { font: 500 11px/1 var(--font-sans); color: var(--tone-success); margin-left: 6px; }
+  .kpi .delta.down { color: var(--tone-danger); }
+
+  .grade-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+  .grade-card .top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .grade-card .top .lbl { font: 600 13px/1 var(--font-sans); color: var(--text-strong); }
+  .grade-card .top .delta { font: 500 12px/1 var(--font-sans); color: var(--tone-success); }
+  .spark { display: block; width: 100%; height: 52px; }
+  .grade-card .legend { display: flex; justify-content: space-between; font: 500 10.5px/1 var(--font-mono); color: var(--text-muted); margin-top: 6px; }
+  .grade-card .recent { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+  .grade-card .recent .pill { font: 500 11px/1 var(--font-sans); padding: 5px 9px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-strong); }
+  .grade-card .recent .pill b { font-weight: 700; margin-left: 4px; color: var(--brand-strong); }
+
+  /* === Timetable === */
+  .tt-wk-nav { display: flex; align-items: center; gap: 8px; padding: 12px 16px 4px; }
+  .tt-wk-nav .arr { width: 32px; height: 32px; border-radius: 8px; background: var(--surface-muted); color: var(--text-strong); display: grid; place-items: center; cursor: pointer; }
+  .tt-wk-nav .arr:hover { background: var(--surface-sunken); }
+  .tt-wk-nav .lbl { flex: 1; text-align: center; font: 600 13px/1.3 var(--font-sans); color: var(--text-strong); }
+  .tt-wk-nav .lbl .sb { font: 11px/1.3 var(--font-mono); color: var(--text-muted); margin-top: 2px; display: block; }
+
+  .tt-grid { padding: 4px 12px 12px; }
+  .tt-grid .ttbl { display: grid; grid-template-columns: 36px repeat(5, 1fr); gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 6px; }
+  .tt-grid .hd { font: 600 10px/1 var(--font-sans); color: var(--text-strong); text-align: center; padding: 6px 0 4px; }
+  .tt-grid .hd.today { color: var(--brand-strong); }
+  .tt-grid .tm { font: 500 9px/1.2 var(--font-mono); color: var(--text-subtle); text-align: right; padding: 6px 4px 0 0; }
+  .tt-grid .cell { padding: 0; min-height: 42px; }
+  .tt-grid .pd { background: var(--surface-muted); border-radius: 6px; padding: 5px 5px; height: 100%; min-height: 42px; display: flex; flex-direction: column; gap: 2px; cursor: pointer; transition: transform 100ms; border-left: 3px solid var(--brand); }
+  .tt-grid .pd:active { transform: scale(0.97); }
+  .tt-grid .pd .nm { font: 600 10px/1.1 var(--font-sans); color: var(--text-strong); }
+  .tt-grid .pd .rm { font: 500 9px/1 var(--font-mono); color: var(--text-muted); margin-top: auto; }
+  .tt-grid .pd.s-maths   { background: #DDEAFE; border-color: #0B5DF0; }
+  .tt-grid .pd.s-english { background: #FAE8FF; border-color: #C026D3; }
+  .tt-grid .pd.s-shona   { background: #FEE2E2; border-color: #DC2626; }
+  .tt-grid .pd.s-history { background: #FFEDD5; border-color: #EA580C; }
+  .tt-grid .pd.s-science { background: #DCFCE7; border-color: #16A34A; }
+  .tt-grid .pd.s-rs      { background: #ECFCCB; border-color: #65A30D; }
+  .tt-grid .pd.s-geo     { background: #CFFAFE; border-color: #0891B2; }
+  .tt-grid .pd.brk { background: transparent; border: 1px dashed var(--border-strong); justify-content: center; }
+  .tt-grid .pd.brk .nm { color: var(--text-subtle); font-weight: 500; }
+  .tt-grid .pd .test { width: 5px; height: 5px; border-radius: 50%; background: var(--tone-danger); position: absolute; }
+
+  .tt-grid .cell.today .pd { box-shadow: 0 0 0 2px rgba(11,93,240,0.18); }
+
+  .tt-summary { padding: 0 16px; }
+  .tt-summary .h { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); padding: 14px 4px 8px; }
+
+  /* === Marks === */
+  .term-tabs { display: inline-flex; padding: 4px; background: var(--surface-muted); border-radius: 10px; gap: 2px; }
+  .term-tabs button { padding: 7px 14px; border-radius: 8px; font: 500 13px/1 var(--font-sans); color: var(--text-muted); background: transparent; border: 0; cursor: pointer; }
+  .term-tabs button.on { background: var(--surface); color: var(--text-strong); box-shadow: 0 1px 2px rgba(0,0,0,0.06); font-weight: 600; }
+
+  .stats-card { background: var(--ink); color: #fff; border-radius: 14px; padding: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; position: relative; overflow: clip; }
+  .stats-card::before { content: ""; position: absolute; right: -40px; top: -40px; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, rgba(251,146,60,0.32), transparent 70%); }
+  .stats-card .col .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; }
+  .stats-card .col .val { font: 700 30px/1.05 var(--font-sans); letter-spacing: -0.02em; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .stats-card .col .sb { font: 12px/1.3 var(--font-sans); opacity: 0.8; margin-top: 4px; }
+  .stats-card .col .val .u { font-size: 14px; opacity: 0.7; margin-left: 4px; }
+  .stats-card .pos-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; background: rgba(251,146,60,0.22); color: #FCD34D; border-radius: 9999px; font: 600 11px/1 var(--font-sans); margin-top: 8px; }
+
+  .subj-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; transition: transform 100ms, border-color 120ms; }
+  .subj-card:active { transform: scale(0.99); border-color: var(--brand-200); }
+  .subj-card .head { display: grid; grid-template-columns: 8px 1fr auto; gap: 12px; align-items: center; }
+  .subj-card .head .tag { width: 8px; height: 36px; border-radius: 4px; }
+  .subj-card .head .nm { font: 600 14px/1.3 var(--font-sans); color: var(--text-strong); }
+  .subj-card .head .sb { font: 11px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .subj-card .head .pct { font: 700 20px/1 var(--font-sans); color: var(--text-strong); font-variant-numeric: tabular-nums; }
+  .subj-card .head .pct .of { font: 500 11px/1 var(--font-sans); color: var(--text-subtle); }
+  .subj-card .bar { height: 6px; background: var(--surface-muted); border-radius: 9999px; margin: 10px 0 0 20px; overflow: hidden; }
+  .subj-card .bar > span { display: block; height: 100%; border-radius: inherit; }
+
+  /* Sheet: marks subject detail */
+  .ca-list { display: grid; gap: 4px; margin-top: 8px; }
+  .ca-list .row { display: grid; grid-template-columns: 1fr auto; padding: 8px 12px; background: var(--surface-muted); border-radius: 8px; font: 500 13px var(--font-sans); color: var(--text-body); }
+  .ca-list .row .v { font-family: var(--font-mono); color: var(--text-strong); font-weight: 600; }
+  .histogram { display: flex; align-items: flex-end; gap: 4px; height: 80px; padding: 8px 0; }
+  .histogram .b { flex: 1; background: var(--surface-muted); border-radius: 4px 4px 0 0; position: relative; }
+  .histogram .b.me { background: var(--brand); }
+  .histogram .b .lbl { position: absolute; left: 0; right: 0; bottom: -16px; text-align: center; font: 500 9px/1 var(--font-mono); color: var(--text-subtle); }
+
+  /* === Assignments === */
+  .filter-chips { display: flex; gap: 8px; padding: 12px 16px 4px; overflow-x: auto; scrollbar-width: none; }
+  .filter-chips::-webkit-scrollbar { display: none; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 9999px; font: 500 12.5px/1 var(--font-sans); color: var(--text-strong); white-space: nowrap; cursor: pointer; }
+  .chip .ct { font: 600 11px/1 var(--font-sans); padding: 2px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-muted); }
+  .chip.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .chip.on .ct { background: rgba(255,255,255,0.22); color: #fff; }
+
+  .as-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin: 0 16px 10px; display: grid; grid-template-columns: 6px 1fr; gap: 12px; cursor: pointer; transition: border-color 120ms, transform 100ms; }
+  .as-card:active { transform: scale(0.99); border-color: var(--brand-200); }
+  .as-card .tag { width: 6px; border-radius: 3px; align-self: stretch; }
+  .as-card .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .as-card .subj { font: 500 10.5px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); }
+  .as-card .nm { font: 600 14.5px/1.35 var(--font-sans); color: var(--text-strong); margin-top: 4px; }
+  .as-card .sb { font: 12px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 4px; }
+  .as-card .meta { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .as-card .due { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-strong); font: 500 11px/1 var(--font-sans); }
+  .as-card .due.urgent { background: var(--tone-warn-bg); color: var(--tone-warn); }
+  .as-card .due.overdue { background: var(--tone-danger); color: #fff; }
+  .as-card .due.done { background: var(--tone-success-bg); color: var(--tone-success); }
+  .as-card .due.graded { background: var(--brand-soft); color: var(--brand-strong); }
+
+  /* === Library === */
+  .lib-search { display: flex; align-items: center; gap: 8px; margin: 12px 16px 6px; padding: 10px 12px; background: var(--surface-muted); border-radius: 12px; }
+  .lib-search input { flex: 1; border: 0; background: transparent; outline: 0; font: 500 14px/1 var(--font-sans); color: var(--text-strong); }
+  .lib-search input::placeholder { color: var(--text-subtle); }
+  .lib-search .ic { color: var(--text-muted); cursor: pointer; }
+
+  .fines-pill { display: flex; align-items: center; gap: 10px; margin: 8px 16px; padding: 10px 12px; background: #FEE2E2; border: 1px solid #FCA5A5; border-radius: 12px; }
+  .fines-pill .ic { width: 32px; height: 32px; border-radius: 8px; background: #fff; color: var(--tone-danger); display: grid; place-items: center; }
+  .fines-pill .nm { font: 600 13.5px/1.3 var(--font-sans); color: #7F1D1D; }
+  .fines-pill .sb { font: 11.5px/1.3 var(--font-sans); color: #991B1B; margin-top: 2px; }
+  .fines-pill .val { margin-left: auto; font: 700 14px/1 var(--font-mono); color: #7F1D1D; }
+  .fines-pill button { font: 600 11px var(--font-sans); padding: 6px 10px; border-radius: 8px; background: #fff; color: #7F1D1D; cursor: pointer; }
+
+  .borrow-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px; margin: 0 16px 10px; display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center; }
+  .book-cover { width: 56px; height: 78px; border-radius: 6px; background: linear-gradient(135deg, #C2410C, #7C2D12); color: #fff; display: flex; flex-direction: column; justify-content: flex-end; padding: 6px 5px; font: 700 8.5px/1.1 var(--font-sans); position: relative; overflow: hidden; }
+  .book-cover::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: rgba(0,0,0,0.2); }
+  .book-cover.green { background: linear-gradient(135deg, #166534, #14532D); }
+  .book-cover.blue { background: linear-gradient(135deg, #0B5DF0, #1E40AF); }
+  .book-cover.purple { background: linear-gradient(135deg, #6B21A8, #4C1D95); }
+  .book-cover.pink { background: linear-gradient(135deg, #DB2777, #831843); }
+  .book-cover.amber { background: linear-gradient(135deg, #D97706, #78350F); }
+  .borrow-card .nm { font: 600 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .borrow-card .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 3px; }
+  .borrow-card .due { font: 500 11px/1 var(--font-mono); color: var(--text-muted); margin-top: 6px; display: inline-flex; align-items: center; gap: 4px; }
+  .borrow-card .due.urgent { color: var(--tone-warn); }
+  .borrow-card .due.overdue { color: var(--tone-danger); font-weight: 700; }
+  .borrow-card .renew { padding: 6px 10px; border-radius: 8px; background: var(--surface-muted); font: 600 11px/1 var(--font-sans); color: var(--text-strong); border: 0; cursor: pointer; }
+  .borrow-card .renew:hover { background: var(--surface-sunken); }
+
+  .scan-cta { margin: 8px 16px 10px; padding: 14px 16px; background: var(--ink); color: #fff; border-radius: 14px; display: flex; align-items: center; gap: 14px; position: relative; overflow: clip; cursor: pointer; }
+  .scan-cta::before { content: ""; position: absolute; right: -30px; top: -30px; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, rgba(251,146,60,0.32), transparent 70%); }
+  .scan-cta .qr { width: 44px; height: 44px; border-radius: 10px; background: rgba(255,255,255,0.12); color: #FCD34D; display: grid; place-items: center; flex: none; }
+  .scan-cta .nm { font: 600 14px/1.3 var(--font-sans); }
+  .scan-cta .sb { font: 12px/1.4 var(--font-sans); opacity: 0.78; margin-top: 3px; }
+  .scan-cta .arrow { margin-left: auto; opacity: 0.7; }
+
+  .catalog-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin: 0 16px 8px; display: grid; grid-template-columns: 42px 1fr auto; gap: 10px; align-items: center; cursor: pointer; }
+  .catalog-card .cv { width: 42px; height: 58px; }
+  .catalog-card .nm { font: 600 13px/1.3 var(--font-sans); color: var(--text-strong); }
+  .catalog-card .sb { font: 11px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .catalog-card .borrow { font: 600 11px var(--font-sans); padding: 6px 10px; border-radius: 8px; background: var(--brand-soft); color: var(--brand-strong); cursor: pointer; border: 0; }
+  .catalog-card .out { font: 500 11px var(--font-sans); padding: 6px 10px; border-radius: 8px; background: var(--surface-muted); color: var(--text-muted); }
+
+  /* === Profile === */
+  .id-card { background: linear-gradient(135deg, #7C2D12, #C2410C); color: #fff; border-radius: 16px; padding: 16px; margin: 12px 16px 8px; position: relative; overflow: clip; }
+  .id-card::before { content: ""; position: absolute; right: -50px; bottom: -50px; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%); }
+  .id-card .top { display: flex; align-items: center; gap: 14px; }
+  .id-card .avatar { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #FFE4D3, #FB923C); color: #7C2D12; display: grid; place-items: center; font: 700 22px/1 var(--font-sans); flex: none; }
+  .id-card .nm { font: 700 17px/1.2 var(--font-sans); letter-spacing: -0.01em; }
+  .id-card .sb { font: 12.5px/1.4 var(--font-sans); opacity: 0.85; margin-top: 3px; }
+  .id-card .ids { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+  .id-card .ids .pill { font: 500 11px/1 var(--font-mono); padding: 4px 9px; border-radius: 9999px; background: rgba(255,255,255,0.18); }
+  .id-card .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.18); }
+  .id-card .stats .s .l { font: 500 10px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.75; }
+  .id-card .stats .s .v { font: 700 17px/1 var(--font-sans); margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .id-card .stats .s .v .u { font: 500 11px/1 var(--font-sans); opacity: 0.7; margin-left: 2px; }
+
+  .toggle { width: 38px; height: 22px; background: var(--brand); border-radius: 9999px; padding: 2px; position: relative; cursor: pointer; transition: background 120ms; }
+  .toggle::after { content: ""; width: 18px; height: 18px; background: #fff; border-radius: 50%; position: absolute; top: 2px; right: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); transition: all 120ms; }
+  .toggle.off { background: var(--surface-sunken); }
+  .toggle.off::after { right: auto; left: 2px; }
+
+  .seg { display: inline-flex; padding: 2px; background: var(--surface-muted); border-radius: 8px; }
+  .seg button { padding: 6px 12px; border-radius: 6px; font: 500 12px var(--font-sans); color: var(--text-muted); background: transparent; cursor: pointer; border: 0; }
+  .seg button.on { background: var(--surface); color: var(--text-strong); box-shadow: 0 1px 2px rgba(0,0,0,0.06); font-weight: 600; }
+
+  .sign-out { margin: 14px 16px 0; padding: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; font: 600 14px/1 var(--font-sans); color: var(--tone-danger); cursor: pointer; }
+  .sign-out:hover { background: var(--tone-danger-bg); }
+
+  /* === Sheets, modals, toasts === */
+  .sheet-scrim {
+    position: fixed; inset: 0; background: rgba(22,24,29,0.55);
+    z-index: 100;
+    display: flex; align-items: flex-end; justify-content: center;
+    animation: scrimIn 160ms ease;
+  }
+  @keyframes scrimIn { from { opacity: 0; } to { opacity: 1; } }
+  .sheet {
+    background: var(--surface); border-top-left-radius: 18px; border-top-right-radius: 18px;
+    width: 100%; max-width: 460px;
+    max-height: 86%;
+    display: flex; flex-direction: column;
+    box-shadow: 0 -20px 40px -10px rgba(0,0,0,0.3);
+    animation: sheetIn 260ms cubic-bezier(0.2, 0, 0.1, 1);
+    overflow: hidden;
+  }
+  @keyframes sheetIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .sheet .grab { width: 36px; height: 4px; border-radius: 4px; background: var(--border-strong); margin: 8px auto 0; flex: none; }
+  .sheet .sh-head { display: flex; align-items: center; gap: 10px; padding: 10px 18px 6px; flex: none; }
+  .sheet .sh-head h2 { font: 600 16px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; flex: 1; }
+  .sheet .sh-head .close { width: 32px; height: 32px; border-radius: 8px; background: var(--surface-muted); display: grid; place-items: center; cursor: pointer; color: var(--text-strong); }
+  .sheet .sh-body { padding: 6px 18px 18px; overflow-y: auto; flex: 1; }
+  .sheet .sh-foot { padding: 12px 16px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border-subtle); display: flex; gap: 8px; flex: none; }
+  .sheet .sh-foot button { flex: 1; padding: 12px; border-radius: 10px; font: 600 13.5px/1 var(--font-sans); cursor: pointer; border: 0; }
+  .sheet .sh-foot button.primary { background: var(--brand); color: #fff; }
+  .sheet .sh-foot button.primary:hover { background: var(--brand-strong); }
+  .sheet .sh-foot button.alt { background: var(--surface-muted); color: var(--text-strong); }
+
+  /* Inside sheet contents */
+  .key-fact { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+  .key-fact .kf { padding: 10px 12px; background: var(--surface-muted); border-radius: 8px; }
+  .key-fact .kf .l { font: 500 10.5px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); }
+  .key-fact .kf .v { font: 600 14px/1.2 var(--font-mono); color: var(--text-strong); margin-top: 5px; }
+  .desc { font: 13.5px/1.55 var(--font-sans); color: var(--text-body); margin: 10px 0; }
+  .file-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--surface-muted); border-radius: 8px; margin-bottom: 6px; }
+  .file-row .ic { width: 32px; height: 32px; border-radius: 6px; background: var(--surface); color: var(--text-strong); display: grid; place-items: center; }
+  .file-row .nm { font: 500 13px/1.3 var(--font-sans); color: var(--text-strong); }
+  .file-row .sz { font: 11px/1.3 var(--font-mono); color: var(--text-muted); margin-top: 2px; }
+  .ssh { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); margin: 14px 0 8px; }
+
+  /* Confirm modal (centered) */
+  .modal-scrim {
+    position: fixed; inset: 0; background: rgba(22,24,29,0.6);
+    z-index: 120; display: grid; place-items: center; padding: 24px;
+    animation: scrimIn 160ms ease;
+  }
+  .modal {
+    background: var(--surface); border-radius: 14px; padding: 20px;
+    width: 100%; max-width: 340px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.4);
+    animation: modalIn 220ms cubic-bezier(0.2, 0, 0.1, 1);
+  }
+  @keyframes modalIn { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .modal h3 { font: 600 16px/1.2 var(--font-sans); color: var(--text-strong); margin: 0 0 6px; }
+  .modal .sub { font: 13px/1.4 var(--font-sans); color: var(--text-muted); margin: 0 0 14px; }
+  .modal .acts { display: flex; gap: 6px; }
+  .modal .acts button { flex: 1; padding: 11px; border-radius: 8px; font: 600 13px var(--font-sans); cursor: pointer; border: 0; }
+  .modal .acts .ok { background: var(--tone-danger); color: #fff; }
+  .modal .acts .ok.brand { background: var(--brand); color: #fff; }
+  .modal .acts .alt { background: var(--surface-muted); color: var(--text-strong); }
+
+  /* Toast */
+  .toast-host { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); z-index: 200; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .toast {
+    background: var(--ink); color: #fff; padding: 10px 16px;
+    border-radius: 9999px; font: 500 13px/1.3 var(--font-sans);
+    box-shadow: 0 8px 20px -6px rgba(0,0,0,0.3);
+    display: inline-flex; align-items: center; gap: 8px;
+    animation: toastIn 240ms ease; pointer-events: auto;
+  }
+  .toast.success { background: var(--tone-success); }
+  .toast.danger { background: var(--tone-danger); }
+  .toast.warn { background: var(--tone-warn); }
+  @keyframes toastIn { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+  .toast.out { animation: toastOut 240ms ease forwards; }
+  @keyframes toastOut { to { opacity: 0; transform: translate(-50%, -10px); } }
+
+  /* Sign-out confirmation success splash */
+  .signed-out { display: grid; place-items: center; height: 100%; text-align: center; padding: 40px 24px; }
+  .signed-out .ico { width: 60px; height: 60px; border-radius: 50%; background: var(--tone-success-bg); color: var(--tone-success); display: grid; place-items: center; margin-bottom: 16px; }
+  .signed-out h2 { font: 700 22px/1.2 var(--font-sans); color: var(--text-strong); margin: 0 0 6px; }
+  .signed-out p { font: 13.5px/1.55 var(--font-sans); color: var(--text-muted); margin: 0 0 20px; max-width: 280px; }
+  .signed-out button { padding: 11px 18px; border-radius: 9px; background: var(--brand); color: #fff; font: 600 13.5px var(--font-sans); cursor: pointer; border: 0; }
+
+  /* Lightweight psh inside the demo */
+  .demo-psh { padding: 14px 4px 8px; font: 500 11.5px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); display: flex; align-items: center; justify-content: space-between; }
+  .demo-psh a { font: 500 12px/1 var(--font-sans); color: var(--brand-strong); text-decoration: none; letter-spacing: 0; text-transform: none; cursor: pointer; }
+
+  /* Empty state */
+  .empty-state { padding: 40px 24px; text-align: center; color: var(--text-muted); font: 13px/1.5 var(--font-sans); }
+  .empty-state .lg { color: var(--text-subtle); margin-bottom: 10px; display: inline-block; }
+</style>
+</head>
+<body data-kit-nav="student">
+
+<button class="fs-toggle" id="fs-toggle" title="Fullscreen preview">
+  <span data-icon="grid" data-icon-size="14"></span><span id="fs-label">Fullscreen</span>
+</button>
+
+<div class="sd-stage">
+  <div class="sd-frame">
+    <div class="screen" id="app"></div>
+  </div>
+</div>
+
+<div id="sheet-host"></div>
+<div id="modal-host"></div>
+<div class="toast-host" id="toast-host"></div>
+
+<script>
+/* ============================================================
+   Student portal interactive demo — single-file vanilla JS.
+   Hash routes: #/home, #/timetable, #/marks, #/assignments,
+                #/library, #/profile
+   ============================================================ */
+
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* === Student identity === */
+const STUDENT = {
+  name: 'Anesu Moyo',
+  short: 'Anesu',
+  initials: 'AM',
+  form: 'Form 3 Bohlale',
+  formShort: 'Form 3B',
+  school: 'St Faith\'s Park',
+  id: 'SFP-2026-0418',
+  status: 'Boarder',
+  email: 'anesu.moyo@stfaiths.ac.zw',
+  phone: '+263 77 412 8806',
+  guardian: 'Mrs Tendai Moyo',
+  address: 'House 14, Greendale · Harare',
+  attendance: 96,
+  position: 7,
+  formSize: 42,
+  gpa: 3.42,
+};
+
+/* === Seed: subjects === */
+const SUBJECTS = [
+  { id: 'maths',   name: 'Mathematics',       short: 'Maths',  teacher: 'Ms Sibanda',   colour: '#0B5DF0', cls: 's-maths',   room: 'Room A12' },
+  { id: 'english', name: 'English Language',  short: 'English',teacher: 'Mrs Mlilo',    colour: '#C026D3', cls: 's-english', room: 'Room B04' },
+  { id: 'shona',   name: 'ChiShona',          short: 'Shona',  teacher: 'Mrs Mlilo',    colour: '#DC2626', cls: 's-shona',   room: 'Room A07' },
+  { id: 'history', name: 'History',           short: 'History',teacher: 'Mr Chari',     colour: '#EA580C', cls: 's-history', room: 'Room A04' },
+  { id: 'science', name: 'Combined Science',  short: 'Science',teacher: 'Mr Chari',     colour: '#16A34A', cls: 's-science', room: 'Lab 2' },
+  { id: 'rs',      name: 'Religious Studies', short: 'R.S.',   teacher: 'Mrs Mlilo',    colour: '#65A30D', cls: 's-rs',      room: 'Room C01' },
+  { id: 'geo',     name: 'Geography',         short: 'Geog',   teacher: 'Ms Sibanda',   colour: '#0891B2', cls: 's-geo',     room: 'Room B11' },
+];
+const SUBJ = Object.fromEntries(SUBJECTS.map(s => [s.id, s]));
+
+/* === Seed: timetable (5 days × 6 periods incl. break) === */
+const PERIODS = [
+  { id: 'p1', time: '07:30', range: '07:30 – 08:25' },
+  { id: 'p2', time: '08:30', range: '08:30 – 09:25' },
+  { id: 'br', time: '09:25', range: '09:25 – 09:45', brk: 'Break' },
+  { id: 'p3', time: '09:45', range: '09:45 – 10:40' },
+  { id: 'p4', time: '10:45', range: '10:45 – 11:40' },
+  { id: 'p5', time: '12:30', range: '12:30 – 13:25' },
+];
+// classByDay[day][periodIdx] = subjectId or 'break'
+const CLASS_GRID = [
+  /* Mon */ ['maths', 'english', 'break', 'science', 'shona',   'rs'],
+  /* Tue */ ['english','maths',  'break', 'history', 'science', 'geo'],
+  /* Wed */ ['science','shona',  'break', 'maths',   'english', 'history'],
+  /* Thu */ ['history','geo',    'break', 'maths',   'english', 'shona'],
+  /* Fri */ ['maths',  'shona',  'break', 'english', 'rs',      'science'],
+];
+const DAYS = [
+  { lbl: 'Mon', date: '01 Jun' },
+  { lbl: 'Tue', date: '02 Jun' },
+  { lbl: 'Wed', date: '03 Jun' },
+  { lbl: 'Thu', date: '04 Jun' },
+  { lbl: 'Fri', date: '05 Jun' },
+];
+const TODAY_IDX = 2; // Wednesday
+
+/* === Seed: marks per term === */
+const TERM_MARKS = {
+  T1: { gpa: 3.18, pos: 9, subjects: { maths: 76, english: 70, shona: 84, history: 65, science: 64, rs: 75, geo: 70 } },
+  T2: { gpa: 3.42, pos: 7, subjects: { maths: 82, english: 76, shona: 88, history: 71, science: 68, rs: 79, geo: 74 } },
+  T3: { gpa: 3.55, pos: 5, subjects: { maths: 85, english: 79, shona: 90, history: 74, science: 72, rs: 81, geo: 77 } },
+};
+// per-subject CA/exam breakdown for T2 (the showcase term)
+const MARK_DETAILS = {
+  maths:   { ca: [{ n:'Quiz 1', s:8, m:10 },{ n:'Quiz 2', s:9, m:10 },{ n:'Mid-term test', s:9, m:10 }], examScore: 56, examMax: 70, rank: 4, comment: 'Excellent grasp of quadratics. Continue practising worded problems — that will lift you above 90%.', dist: [2, 3, 6, 11, 12, 8, 0] },
+  english: { ca: [{ n:'Comprehension', s:7, m:10 },{ n:'Composition', s:8, m:10 },{ n:'Oral', s:8, m:10 }], examScore: 53, examMax: 70, rank: 11, comment: 'Strong arguments. Vary your sentence openings to reach the next band.', dist: [1, 4, 9, 14, 9, 4, 1] },
+  shona:   { ca: [{ n:'Tsumo na madimikira', s:9, m:10 },{ n:'Upangiri', s:9, m:10 },{ n:'Rondedzero', s:9, m:10 }], examScore: 61, examMax: 70, rank: 2, comment: 'Mufundi anonyora chiShona zvakanaka. Wedzera kushandisa mienzaniso yakajeka.', dist: [0, 1, 4, 9, 12, 13, 3] },
+  history: { ca: [{ n:'Source quiz', s:7, m:10 },{ n:'Essay', s:7, m:10 },{ n:'Mid-term test', s:7, m:10 }], examScore: 50, examMax: 70, rank: 14, comment: 'Good chronology. Use more direct quotes from your sources.', dist: [3, 6, 11, 12, 8, 2, 0] },
+  science: { ca: [{ n:'Lab 1', s:6, m:10 },{ n:'Lab 2', s:7, m:10 },{ n:'Quiz', s:7, m:10 }], examScore: 48, examMax: 70, rank: 17, comment: 'Practical work is steady; revise multiple-choice technique for paper 1.', dist: [4, 7, 13, 11, 5, 2, 0] },
+  rs:      { ca: [{ n:'Reflection', s:8, m:10 },{ n:'Mid-term', s:8, m:10 }], examScore: 55, examMax: 70, rank: 8, comment: 'Thoughtful reflections. Cite scripture references precisely.', dist: [1, 3, 7, 13, 11, 5, 2] },
+  geo:     { ca: [{ n:'Map work', s:7, m:10 },{ n:'Fieldwork', s:8, m:10 },{ n:'Quiz', s:7, m:10 }], examScore: 52, examMax: 70, rank: 12, comment: 'Map work is improving. Practise drawing climate graphs from raw data.', dist: [2, 5, 10, 12, 8, 4, 1] },
+};
+
+/* === Seed: assignments === */
+const ASSIGNMENTS = [
+  { id: 'a-shona-rond', subject: 'shona', title: 'Tsika dzedu — rondedzero', sub: '800 words minimum',
+    desc: 'Nyora rondedzero ine mazwi anosvika 800 pamusoro pe tsika dzedu dzechiShona dzava kushaikwa muzvizvarwa zveuno. Shandisa mienzaniso miviri kana mitatu yakajeka.',
+    due: 'Today · 14:00', dueLabel: 'Overdue · 4h ago', status: 'overdue',
+    files: [{ n: 'rondedzero-brief.pdf', s: 'PDF · 184 KB' }, { n: 'rubric-marking.pdf', s: 'PDF · 92 KB' }] },
+  { id: 'a-maths-12b', subject: 'maths', title: 'Exercise 12B — Quadratic factorisation', sub: 'Textbook pp. 188–190 · show working',
+    desc: 'Complete every question in Exercise 12B. Show full working — answers without method earn no marks. Bring the book to class tomorrow.',
+    due: 'Today · 17:00', dueLabel: 'Due today', status: 'upcoming',
+    files: [{ n: 'ex-12b-questions.pdf', s: 'PDF · 211 KB' }] },
+  { id: 'a-sci-lab', subject: 'science', title: 'Photosynthesis lab report', sub: 'Use template · graph required',
+    desc: 'Submit a full lab report on the starch-test practical conducted on Friday. Use the school report template; include a labelled graph of light intensity vs starch concentration.',
+    due: 'Wed 03 Jun', dueLabel: 'In 2 days', status: 'upcoming',
+    files: [{ n: 'lab-template.docx', s: 'DOCX · 64 KB' }, { n: 'reading-photosynthesis.pdf', s: 'PDF · 1.1 MB' }] },
+  { id: 'a-hist-wwi', subject: 'history', title: 'WWI primary source analysis', sub: 'Two sources · context · content · conclusion',
+    desc: 'Pick two of the three provided primary sources from the WWI archive. For each, write 250 words on context, content and reliability.',
+    due: 'Thu 04 Jun', dueLabel: 'In 3 days', status: 'upcoming',
+    files: [{ n: 'wwi-sources-pack.pdf', s: 'PDF · 2.4 MB' }] },
+  { id: 'a-eng-review', subject: 'english', title: '"Nervous Conditions" book review', sub: '500 words · cite at least 3 passages',
+    desc: 'Write a 500-word review of Tsitsi Dangarembga\'s "Nervous Conditions". Discuss theme and voice; cite three specific passages with page numbers.',
+    due: 'Fri 05 Jun', dueLabel: 'In 4 days', status: 'upcoming',
+    files: [{ n: 'review-rubric.pdf', s: 'PDF · 76 KB' }] },
+  { id: 'a-rs-reflect', subject: 'rs', title: 'Parable of the talents — reflection', sub: '1 page · personal application',
+    desc: 'A one-page reflection on the parable of the talents (Matthew 25:14-30). Apply it to a real situation from your life this term.',
+    due: 'Submitted 02 Jun · 16:42', dueLabel: 'Submitted', status: 'submitted',
+    files: [{ n: 'my-reflection.docx', s: 'DOCX · 18 KB · uploaded' }] },
+  { id: 'a-geo-map', subject: 'geo', title: 'Zimbabwe physical map sketch', sub: 'Hand-drawn · scanned',
+    desc: 'Sketch a physical map of Zimbabwe showing the main rivers, highveld, middleveld and lowveld. Scan or photograph the final sketch.',
+    due: 'Graded · 78/100', dueLabel: 'Graded', status: 'graded',
+    grade: '78%', files: [{ n: 'map-sketch.jpg', s: 'JPG · 2.0 MB · graded' }] },
+  { id: 'a-maths-mt', subject: 'maths', title: 'Mid-term mental maths', sub: '20 questions · 25 minutes',
+    desc: 'Twenty-question mental maths test under timed conditions. No calculators.',
+    due: 'Graded · 18/20', dueLabel: 'Graded', status: 'graded',
+    grade: '90%', files: [] },
+  { id: 'a-eng-poetry', subject: 'english', title: 'Poetry recital recording', sub: 'Audio file · 2-3 minutes',
+    desc: 'Record yourself reciting one of the prescribed poems. Upload the audio file. Mark for clarity, pace and feeling.',
+    due: 'Submitted 28 May', dueLabel: 'Submitted', status: 'submitted',
+    files: [{ n: 'recital.m4a', s: 'Audio · 1.4 MB · uploaded' }] },
+];
+
+/* === Seed: library catalog === */
+const BOOKS = [
+  { id: 'b1', title: 'Nervous Conditions', author: 'Tsitsi Dangarembga', series: 'African Writers Series', cls: '',       avail: 0,  borrowed: true, dueIn: 2,  due: '24 May', urgent: true },
+  { id: 'b2', title: 'Feso',               author: 'Solomon Mutswairo',  series: 'ChiShona literature',    cls: 'green',  avail: 0,  borrowed: true, dueIn: 11, due: '31 May' },
+  { id: 'b3', title: 'New General Mathematics · Book 4', author: 'JB Channon', series: 'ZIMSEC textbook loan', cls: 'blue', avail: 0, borrowed: true, dueIn: -4, due: 'Overdue · 4 days late', overdue: true },
+  { id: 'b4', title: 'House of Hunger',    author: 'Dambudzo Marechera', series: 'African Writers Series', cls: 'purple', avail: 3 },
+  { id: 'b5', title: 'Things Fall Apart',  author: 'Chinua Achebe',      series: 'African Writers Series', cls: 'amber',  avail: 2 },
+  { id: 'b6', title: 'Waiting for the Rain',author:'Charles Mungoshi',   series: 'African Writers Series', cls: 'green',  avail: 1 },
+  { id: 'b7', title: 'Bones',              author: 'Chenjerai Hove',     series: 'African Writers Series', cls: 'pink',   avail: 4 },
+  { id: 'b8', title: 'Harvest of Thorns',  author: 'Shimmer Chinodya',   series: 'ZIMSEC set book',        cls: 'amber',  avail: 0 },
+  { id: 'b9', title: 'Mhuri Yamutemai',    author: 'Patrick Chakaipa',   series: 'ZIMSEC ChiShona set',    cls: '',       avail: 2 },
+  { id: 'b10',title: 'Tsumo Namadimikira', author: 'Aaron C Hodza',      series: 'ChiShona reference',     cls: 'green',  avail: 5 },
+  { id: 'b11',title: 'A Grain of Wheat',   author: 'Ngũgĩ wa Thiong\'o', series: 'African Writers Series', cls: 'pink',   avail: 1 },
+  { id: 'b12',title: 'Pawns',              author: 'Edmund Chipamaunga', series: 'Historical novel',       cls: 'blue',   avail: 2 },
+];
+const READING_LIST = ['b4', 'b8', 'b9', 'b11', 'b12']; // wishlist book ids
+
+/* === Live app state === */
+const state = {
+  route: 'home',
+  term: 'T2',
+  weekOffset: 0,
+  // assignment filters & detail
+  asFilter: 'upcoming',
+  asOpen: null,        // assignment id
+  asSubmitted: {},     // id -> true (newly submitted in session)
+  asUploadedFile: {},  // id -> filename
+  // marks
+  marksOpen: null,     // subject id
+  // timetable
+  ttOpen: null,        // {dayIdx, perIdx}
+  ttPrepared: {},      // 'd-p' -> 'prepared' | 'help'
+  // library
+  libQuery: '',
+  libOpen: null,       // book id
+  libBorrowed: {},     // additional borrows in session
+  libRenewed: {},      // id -> true
+  libReturned: {},     // id -> true
+  finePaid: false,
+  // profile
+  prefs: { push: true, email: false, theme: 'auto' },
+  signedOut: false,
+  // sheet/modal
+  sheet: null,
+  modal: null,
+};
+
+/* === Toast === */
+function toast(msg, kind = 'default') {
+  const host = $('#toast-host');
+  const el = document.createElement('div');
+  el.className = 'toast' + (kind !== 'default' ? ' ' + kind : '');
+  const icon = kind === 'success' ? 'check' : kind === 'danger' ? 'x' : kind === 'warn' ? 'info' : 'check';
+  el.innerHTML = `<span data-icon="${icon}" data-icon-size="14"></span>${esc(msg)}`;
+  host.appendChild(el);
+  if (window.Icons) window.Icons.render(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 240); }, 2200);
+}
+
+/* === Sheet === */
+function openSheet(html) { state.sheet = html; renderSheet(); }
+function closeSheet() { state.sheet = null; renderSheet(); }
+function renderSheet() {
+  const host = $('#sheet-host');
+  if (!state.sheet) { host.innerHTML = ''; return; }
+  host.innerHTML = `<div class="sheet-scrim" data-scrim>${state.sheet}</div>`;
+  if (window.Icons) window.Icons.render(host);
+  host.querySelector('[data-scrim]').addEventListener('click', (e) => {
+    if (e.target.dataset.scrim !== undefined) closeSheet();
+  });
+  host.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeSheet));
+  // Re-wire any in-sheet hooks the caller registered
+  if (state.sheetWire) state.sheetWire();
+}
+
+/* === Modal === */
+function openModal(html, wireFn) {
+  state.modal = html;
+  state.modalWire = wireFn || null;
+  renderModal();
+}
+function closeModal() { state.modal = null; state.modalWire = null; renderModal(); }
+function renderModal() {
+  const host = $('#modal-host');
+  if (!state.modal) { host.innerHTML = ''; return; }
+  host.innerHTML = `<div class="modal-scrim" data-mscrim>${state.modal}</div>`;
+  if (window.Icons) window.Icons.render(host);
+  host.querySelector('[data-mscrim]').addEventListener('click', (e) => {
+    if (e.target.dataset.mscrim !== undefined) closeModal();
+  });
+  if (state.modalWire) state.modalWire();
+}
+
+/* === Routing === */
+function go(route) {
+  state.route = route;
+  history.replaceState(null, '', '#/' + route);
+  render();
+  // Scroll the inner screen up
+  const scr = $('.ps-scroll');
+  if (scr) scr.scrollTop = 0;
+}
+window.addEventListener('hashchange', () => {
+  const r = (location.hash.replace(/^#\/?/, '') || 'home');
+  if (state.route !== r) { state.route = r; render(); }
+});
+
+/* === Top-level render === */
+function render() {
+  $('#app').innerHTML = `
+    <div class="ps-screen" style="position:relative;">
+      ${state.signedOut ? renderSignedOut() : renderRoute()}
+    </div>
+  `;
+  if (window.Icons) window.Icons.render($('#app'));
+  if (!state.signedOut) wireRoute();
+}
+
+function renderRoute() {
+  let body;
+  switch (state.route) {
+    case 'home':        body = renderHome(); break;
+    case 'timetable':   body = renderTimetable(); break;
+    case 'marks':       body = renderMarks(); break;
+    case 'assignments': body = renderAssignments(); break;
+    case 'library':     body = renderLibrary(); break;
+    case 'profile':     body = renderProfile(); break;
+    default:            body = renderHome();
+  }
+  return body + renderTabbar();
+}
+
+function renderTabbar() {
+  const tabs = [
+    { route: 'home',        label: 'Home',      icon: 'home' },
+    { route: 'timetable',   label: 'Timetable', icon: 'calendar' },
+    { route: 'marks',       label: 'Marks',     icon: 'chart' },
+    { route: 'profile',     label: 'Profile',   icon: 'user' },
+  ];
+  return `
+    <div class="ps-tabbar">
+      ${tabs.map(t => `
+        <a class="ps-tab ${state.route === t.route ? 'active' : ''}" data-go="${t.route}">
+          <span data-icon="${t.icon}"></span>${t.label}
+        </a>
+      `).join('')}
+    </div>
+  `;
+}
+
+/* === Status bar (reusable) === */
+function renderStatusBar(opts = {}) {
+  return `<div class="ps-statusbar ${opts.invert ? 'invert' : ''}"><span>7:14</span><span class="right"><span data-icon="signal"></span><span data-icon="wifi"></span><span data-icon="battery"></span></span></div>`;
+}
+
+/* === Appbar === */
+function renderAppbar(title, opts = {}) {
+  return `
+    <div class="ps-appbar ${opts.transparent ? 'transparent' : ''}">
+      ${opts.back ? `<button class="nav-btn" data-back><span data-icon="back" data-icon-size="20"></span></button>` : ''}
+      <h1>${esc(title)}</h1>
+      <div class="right">
+        ${opts.actions || `
+          <button class="nav-btn" data-act="bell"><span data-icon="bell" data-icon-size="18"></span></button>
+          <button class="nav-btn" data-go="profile"><span data-icon="user" data-icon-size="18"></span></button>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   HOME / DASHBOARD
+   ============================================================ */
+function renderHome() {
+  const todayClasses = CLASS_GRID[TODAY_IDX];
+  // Find next non-break class (treat current period as p1)
+  const nextPerIdx = 0;
+  const nextSubject = SUBJ[todayClasses[nextPerIdx]];
+  const upcomingCount = ASSIGNMENTS.filter(a => a.status === 'upcoming' || a.status === 'overdue').length;
+  const overdueCount  = ASSIGNMENTS.filter(a => a.status === 'overdue').length;
+  const t = TERM_MARKS[state.term];
+  const lastSubject = SUBJ.shona;
+  const lastMark = t.subjects.shona;
+
+  // Compute weekly classes per day for the week glance
+  const dotCounts = DAYS.map((_, di) => CLASS_GRID[di].filter(s => s !== 'break').length);
+
+  return `
+    ${renderStatusBar()}
+    ${renderAppbar('Hi, ' + STUDENT.short, { transparent: true })}
+    <div class="ps-scroll">
+      <div class="greet">
+        <div class="hi">${STUDENT.school} · ${STUDENT.formShort} · Spring term · Week 6</div>
+      </div>
+
+      <div style="padding: 0 16px;">
+        <div class="demo-psh">Next class<a data-go="timetable">Full timetable</a></div>
+        <div class="next-class" data-open-class="${TODAY_IDX}-${nextPerIdx}">
+          <div class="badge"><div class="col"><div class="t">${PERIODS[nextPerIdx].time}</div><div class="d">Per 1</div></div></div>
+          <div>
+            <div class="nm">${nextSubject.name}</div>
+            <div class="sb">${nextSubject.teacher} · ${nextSubject.id === 'maths' ? 'Algebra II — quadratics' : 'topic for today'}</div>
+            <div class="meta"><span><span data-icon="pin" data-icon-size="11"></span> ${nextSubject.room}</span><span>in 16 min</span></div>
+          </div>
+          <span data-icon="chright" style="color: var(--text-subtle);"></span>
+        </div>
+
+        <div class="demo-psh">Week at a glance<a data-go="timetable">Open</a></div>
+        <div class="week-glance">
+          <div class="h"><span>Mon – Fri · 1 – 5 June</span><span class="sb">${dotCounts.reduce((a,b)=>a+b,0)} lessons</span></div>
+          <div class="days">
+            ${DAYS.map((d, di) => `
+              <div class="day ${di === TODAY_IDX ? 'today' : ''}">
+                <div class="lbl">${d.lbl}</div>
+                <div class="dots">${Array.from({length: Math.min(dotCounts[di], 5)}).map(() => '<span class="dot"></span>').join('')}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="demo-psh">This week<a data-go="assignments">All</a></div>
+        <div class="kpi-row">
+          <div class="kpi" data-go="assignments" style="cursor:pointer;">
+            <div class="l">Assignments due</div>
+            <div class="v">${upcomingCount}<span class="delta down">${overdueCount} overdue</span></div>
+            <div class="sb">3 before Friday · 2 today</div>
+          </div>
+          <div class="kpi brand" data-go="marks" style="cursor:pointer;">
+            <div class="l">Recent grade</div>
+            <div class="v">${lastMark}%<span class="delta">▲ 6%</span></div>
+            <div class="sb">${lastSubject.name} · trending up</div>
+          </div>
+        </div>
+
+        <div class="demo-psh">Recent grades<a data-go="marks">Marks</a></div>
+        <div class="grade-card" data-go="marks" style="cursor:pointer;">
+          <div class="top">
+            <span class="lbl">Last 8 assessments</span>
+            <span class="delta">▲ 6.4% trend</span>
+          </div>
+          <svg class="spark" viewBox="0 0 200 56" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="sparkfill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stop-color="#FB923C" stop-opacity="0.32"/>
+                <stop offset="100%" stop-color="#FB923C" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,42 L28,36 L56,40 L84,28 L112,32 L140,18 L168,22 L200,10 L200,56 L0,56 Z" fill="url(#sparkfill)"/>
+            <path d="M0,42 L28,36 L56,40 L84,28 L112,32 L140,18 L168,22 L200,10" fill="none" stroke="#FB923C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="200" cy="10" r="3" fill="#FB923C"/>
+          </svg>
+          <div class="legend"><span>62%</span><span>Average · 74%</span><span>88%</span></div>
+          <div class="recent">
+            <span class="pill">Maths <b>${t.subjects.maths}%</b></span>
+            <span class="pill">English <b>${t.subjects.english}%</b></span>
+            <span class="pill">Science <b>${t.subjects.science}%</b></span>
+            <span class="pill">Shona <b>${t.subjects.shona}%</b></span>
+          </div>
+        </div>
+
+        <div class="demo-psh">Quick links</div>
+        <div class="kpi-row">
+          <div class="kpi" data-go="library" style="cursor:pointer;">
+            <div class="l">Library</div>
+            <div class="v" style="font-size: 16px; font-weight: 600;">3 borrowed</div>
+            <div class="sb">1 overdue · $ 2.50 fine</div>
+          </div>
+          <div class="kpi" data-go="assignments" style="cursor:pointer;">
+            <div class="l">Assignments</div>
+            <div class="v" style="font-size: 16px; font-weight: 600;">${ASSIGNMENTS.length} total</div>
+            <div class="sb">Filter & submit</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height: 24px;"></div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   TIMETABLE
+   ============================================================ */
+function renderTimetable() {
+  const wkLabel = `Week 6 · 1 – 5 June`;
+  const wkSub = state.weekOffset === 0 ? 'This week' : (state.weekOffset > 0 ? `Next +${state.weekOffset}` : `${Math.abs(state.weekOffset)} ago`);
+
+  return `
+    ${renderStatusBar()}
+    ${renderAppbar('My timetable', { actions: `
+      <button class="nav-btn" data-act="download"><span data-icon="download" data-icon-size="18"></span></button>
+    `})}
+    <div class="ps-scroll">
+      <div class="tt-wk-nav">
+        <button class="arr" data-week="-1"><span data-icon="chleft" data-icon-size="14"></span></button>
+        <div class="lbl">${wkLabel}<span class="sb">${wkSub}</span></div>
+        <button class="arr" data-week="1"><span data-icon="chright" data-icon-size="14"></span></button>
+      </div>
+
+      <div class="tt-grid" id="tt-grid">
+        <div class="ttbl">
+          <div class="hd"></div>
+          ${DAYS.map((d, di) => `<div class="hd ${di===TODAY_IDX?'today':''}">${d.lbl}</div>`).join('')}
+          ${PERIODS.map((p, pi) => `
+            <div class="tm">${p.time}</div>
+            ${DAYS.map((d, di) => {
+              const sid = CLASS_GRID[di][pi];
+              if (sid === 'break') {
+                return `<div class="cell ${di===TODAY_IDX?'today':''}"><div class="pd brk"><div class="nm">${p.brk || 'Break'}</div></div></div>`;
+              }
+              const sub = SUBJ[sid];
+              const prep = state.ttPrepared[`${di}-${pi}`];
+              return `<div class="cell ${di===TODAY_IDX?'today':''}">
+                <div class="pd ${sub.cls}" data-open-class="${di}-${pi}" title="${esc(sub.name)} · ${esc(sub.room)}">
+                  <div class="nm">${sub.short}</div>
+                  <div class="rm">${sub.room.replace('Room ', '')}</div>
+                  ${prep === 'prepared' ? '<span style="position:absolute; top:2px; right:2px; width:6px; height:6px; border-radius:50%; background: var(--tone-success);"></span>' : ''}
+                  ${prep === 'help' ? '<span style="position:absolute; top:2px; right:2px; width:6px; height:6px; border-radius:50%; background: var(--tone-warn);"></span>' : ''}
+                </div>
+              </div>`;
+            }).join('')}
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="tt-summary">
+        <div class="h">Today · Wednesday</div>
+        <div class="pl">
+          ${CLASS_GRID[TODAY_IDX].map((sid, pi) => {
+            if (sid === 'break') return '';
+            const s = SUBJ[sid];
+            return `<div class="pl-row" data-open-class="${TODAY_IDX}-${pi}" style="cursor:pointer;">
+              <span class="ic-tile" style="background: ${s.colour}22; color: ${s.colour};"><span data-icon="book" data-icon-size="16"></span></span>
+              <div>
+                <div class="nm">${s.name}</div>
+                <div class="sb">${PERIODS[pi].range} · ${s.teacher} · ${s.room}</div>
+              </div>
+              <span data-icon="chright" style="color: var(--text-subtle);"></span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+
+      <div style="height: 24px;"></div>
+    </div>
+  `;
+}
+
+function openClassSheet(dayIdx, perIdx) {
+  const sid = CLASS_GRID[dayIdx][perIdx];
+  if (sid === 'break') return;
+  const s = SUBJ[sid];
+  const p = PERIODS[perIdx];
+  const key = `${dayIdx}-${perIdx}`;
+  const prep = state.ttPrepared[key];
+  const topicsByDay = {
+    maths: 'Algebra II — quadratic factorisation',
+    english: 'Comprehension passage · "Things Fall Apart" ch. 4',
+    shona: 'Tsumo namadimikira — kushandiswa kwawo',
+    history: 'WWI causes — alliances and mobilisation',
+    science: 'Photosynthesis — light-dependent reactions',
+    rs: 'Parable of the talents · personal application',
+    geo: 'Climate of Zimbabwe — three regions',
+  };
+  const materialsByDay = {
+    maths: ['Textbook ch. 12', 'Scientific calculator', 'Exercise book'],
+    english: ['Set text · "Things Fall Apart"', 'Vocab journal'],
+    shona: ['Tsumo na madimikira reference', 'Pen + notebook'],
+    history: ['Source pack (printed)', 'Highlighter', 'Notes'],
+    science: ['Lab coat', 'Practical book', 'Pencil + ruler'],
+    rs: ['Bible · NIV', 'Reflection journal'],
+    geo: ['Atlas', 'Coloured pencils', 'Notebook'],
+  };
+  const html = `
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div class="grab"></div>
+      <div class="sh-head">
+        <span class="ic-tile" style="background: ${s.colour}22; color: ${s.colour}; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 8px;"><span data-icon="book" data-icon-size="16"></span></span>
+        <h2>${esc(s.name)}</h2>
+        <span class="close" data-close><span data-icon="x" data-icon-size="16"></span></span>
+      </div>
+      <div class="sh-body">
+        <div class="key-fact">
+          <div class="kf"><div class="l">When</div><div class="v">${DAYS[dayIdx].lbl} · ${p.range}</div></div>
+          <div class="kf"><div class="l">Where</div><div class="v">${s.room}</div></div>
+          <div class="kf"><div class="l">Teacher</div><div class="v" style="font-family: var(--font-sans); font-size: 13px;">${s.teacher}</div></div>
+          <div class="kf"><div class="l">Period</div><div class="v">${perIdx + 1} of 6</div></div>
+        </div>
+        <div class="ssh">Topic</div>
+        <div class="desc" style="margin-top: 4px;">${esc(topicsByDay[s.id] || 'See teacher for today\'s topic.')}</div>
+        <div class="ssh">Materials to bring</div>
+        ${(materialsByDay[s.id] || []).map(m => `
+          <div class="file-row">
+            <span class="ic"><span data-icon="check" data-icon-size="14"></span></span>
+            <div style="flex:1;"><div class="nm">${esc(m)}</div></div>
+          </div>
+        `).join('')}
+        ${prep ? `<div class="ssh">Your status</div>
+          <div style="padding: 10px 12px; background: ${prep==='prepared' ? 'var(--tone-success-bg)' : 'var(--tone-warn-bg)'}; color: ${prep==='prepared' ? 'var(--tone-success)' : 'var(--tone-warn)'}; border-radius: 8px; font: 500 13px var(--font-sans);">
+            ${prep === 'prepared' ? '✓ Marked as prepared' : '⚠ You asked for help with this class'}
+          </div>` : ''}
+      </div>
+      <div class="sh-foot">
+        <button class="alt" data-prep="help">${prep === 'help' ? '✓ Help requested' : 'Need help'}</button>
+        <button class="primary" data-prep="prepared">${prep === 'prepared' ? '✓ Prepared' : 'I\'ve prepared'}</button>
+      </div>
+    </div>
+  `;
+  state.sheetWire = () => {
+    $$('.sheet [data-prep]').forEach(b => b.addEventListener('click', () => {
+      const v = b.dataset.prep;
+      state.ttPrepared[key] = v;
+      closeSheet();
+      render();
+      toast(v === 'prepared' ? `Marked prepared for ${s.short}` : `Help noted — ${s.teacher} will see this`, v === 'prepared' ? 'success' : 'warn');
+    }));
+  };
+  openSheet(html);
+}
+
+/* ============================================================
+   MARKS
+   ============================================================ */
+function renderMarks() {
+  const t = TERM_MARKS[state.term];
+  const prev = state.term === 'T2' ? TERM_MARKS.T1.gpa : (state.term === 'T3' ? TERM_MARKS.T2.gpa : null);
+  const delta = prev !== null ? (t.gpa - prev).toFixed(2) : null;
+
+  return `
+    ${renderStatusBar()}
+    ${renderAppbar('Marks', { actions: `
+      <button class="nav-btn" data-act="download"><span data-icon="download" data-icon-size="18"></span></button>
+    `})}
+    <div class="ps-scroll">
+      <div style="padding: 14px 16px 4px; display: flex; align-items: center; justify-content: space-between;">
+        <div class="term-tabs">
+          ${['T1','T2','T3'].map(tm => `<button class="${state.term===tm?'on':''}" data-term="${tm}">${tm}</button>`).join('')}
+        </div>
+        <span style="font: 500 12px/1 var(--font-sans); color: var(--text-muted);">2026</span>
+      </div>
+
+      <div style="padding: 10px 16px 4px;">
+        <div class="stats-card">
+          <div class="col">
+            <div class="lbl">GPA · Term ${state.term.slice(1)}</div>
+            <div class="val">${t.gpa.toFixed(2)}<span class="u">/ 4.0</span></div>
+            <div class="sb">${delta !== null ? (delta >= 0 ? 'Up' : 'Down') + ' ' + Math.abs(delta) + ' from ' + (state.term === 'T2' ? 'T1' : 'T2') : 'First term'}</div>
+          </div>
+          <div class="col">
+            <div class="lbl">Position</div>
+            <div class="val">${t.pos}<span class="u">/ ${STUDENT.formSize}</span></div>
+            <span class="pos-pill"><span data-icon="trending" data-icon-size="11"></span> Top ${Math.round(t.pos/STUDENT.formSize*100)}% in form</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="padding: 6px 16px 0;">
+        <div class="demo-psh">Subjects · ${SUBJECTS.length}</div>
+        ${SUBJECTS.map(s => {
+          const pct = t.subjects[s.id];
+          return `
+            <div class="subj-card" data-marks="${s.id}">
+              <div class="head">
+                <span class="tag" style="background: ${s.colour};"></span>
+                <div><div class="nm">${esc(s.name)}</div><div class="sb">${esc(s.teacher)} · tap for breakdown</div></div>
+                <div class="pct">${pct}<span class="of">/100</span></div>
+              </div>
+              <div class="bar"><span style="width: ${pct}%; background: ${s.colour};"></span></div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+
+      <div style="height: 24px;"></div>
+    </div>
+  `;
+}
+
+function openMarksSheet(sid) {
+  const s = SUBJ[sid];
+  const t = TERM_MARKS[state.term];
+  const pct = t.subjects[sid];
+  const d = MARK_DETAILS[sid];
+  const caTotal = d.ca.reduce((a, c) => a + c.s, 0);
+  const caMax = d.ca.reduce((a, c) => a + c.m, 0);
+  const maxBin = Math.max(...d.dist);
+  // Determine which band the student falls into
+  const bandIdx = Math.min(Math.floor(pct / 10) - 4, d.dist.length - 1);
+
+  const html = `
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div class="grab"></div>
+      <div class="sh-head">
+        <span class="ic-tile" style="background: ${s.colour}22; color: ${s.colour}; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 8px;"><span data-icon="chart" data-icon-size="16"></span></span>
+        <h2>${esc(s.name)}</h2>
+        <span class="close" data-close><span data-icon="x" data-icon-size="16"></span></span>
+      </div>
+      <div class="sh-body">
+        <div class="key-fact">
+          <div class="kf"><div class="l">Overall</div><div class="v">${pct}%</div></div>
+          <div class="kf"><div class="l">Rank in form</div><div class="v">${d.rank}/${STUDENT.formSize}</div></div>
+          <div class="kf"><div class="l">CA · 30%</div><div class="v">${caTotal}/${caMax}</div></div>
+          <div class="kf"><div class="l">Exam · 70%</div><div class="v">${d.examScore}/${d.examMax}</div></div>
+        </div>
+
+        <div class="ssh">Continuous assessment</div>
+        <div class="ca-list">
+          ${d.ca.map(c => `<div class="row"><span>${esc(c.n)}</span><span class="v">${c.s}/${c.m}</span></div>`).join('')}
+        </div>
+
+        <div class="ssh">Class distribution</div>
+        <div style="background: var(--surface-muted); padding: 14px 12px 24px; border-radius: 10px;">
+          <div class="histogram">
+            ${d.dist.map((v, i) => {
+              const h = (v / maxBin * 100) || 4;
+              const lbl = ['<50','50s','60s','70s','80s','90s','100'][i];
+              return `<div class="b ${i === bandIdx ? 'me' : ''}" style="height: ${h}%;"><span class="lbl">${lbl}</span></div>`;
+            }).join('')}
+          </div>
+          <div style="font: 11px/1.3 var(--font-mono); color: var(--text-subtle); margin-top: 18px; text-align: center;">Your band highlighted · ${STUDENT.formSize} students</div>
+        </div>
+
+        <div class="ssh">Teacher comment</div>
+        <div style="padding: 12px 14px; background: #FFF7ED; border-radius: 10px; font: 13px/1.5 var(--font-sans); color: #7C2D12; border-left: 3px solid #FB923C;">
+          ${esc(d.comment)}
+          <div style="font: 500 11px/1 var(--font-mono); color: #C2410C; margin-top: 8px;">— ${esc(s.teacher)}</div>
+        </div>
+      </div>
+      <div class="sh-foot">
+        <button class="alt" data-close>Close</button>
+        <button class="primary" data-act="ask">Ask ${s.teacher.split(' ').slice(-1)[0]} a question</button>
+      </div>
+    </div>
+  `;
+  state.sheetWire = () => {
+    $$('.sheet [data-act="ask"]').forEach(b => b.addEventListener('click', () => {
+      closeSheet();
+      toast('Message draft opened with ' + s.teacher, 'success');
+    }));
+  };
+  openSheet(html);
+}
+
+/* ============================================================
+   ASSIGNMENTS
+   ============================================================ */
+function renderAssignments() {
+  const counts = {
+    upcoming: ASSIGNMENTS.filter(a => a.status === 'upcoming' && !state.asSubmitted[a.id]).length,
+    overdue:  ASSIGNMENTS.filter(a => a.status === 'overdue'  && !state.asSubmitted[a.id]).length,
+    submitted: ASSIGNMENTS.filter(a => a.status === 'submitted' || state.asSubmitted[a.id]).length,
+    graded:   ASSIGNMENTS.filter(a => a.status === 'graded').length,
+  };
+  const filt = state.asFilter;
+  const filtered = ASSIGNMENTS.filter(a => {
+    const submittedNow = state.asSubmitted[a.id];
+    if (filt === 'upcoming')  return a.status === 'upcoming' && !submittedNow;
+    if (filt === 'overdue')   return a.status === 'overdue' && !submittedNow;
+    if (filt === 'submitted') return a.status === 'submitted' || submittedNow;
+    if (filt === 'graded')    return a.status === 'graded';
+    return true;
+  });
+
+  return `
+    ${renderStatusBar()}
+    ${renderAppbar('Assignments', { actions: `
+      <button class="nav-btn" data-act="search"><span data-icon="search" data-icon-size="18"></span></button>
+      <button class="nav-btn" data-act="filter"><span data-icon="filter" data-icon-size="18"></span></button>
+    `})}
+    <div class="ps-scroll">
+      <div class="filter-chips">
+        ${[
+          ['upcoming','Upcoming', counts.upcoming],
+          ['overdue', 'Overdue',  counts.overdue],
+          ['submitted','Submitted',counts.submitted],
+          ['graded',  'Graded',   counts.graded],
+        ].map(([id, lbl, c]) => `
+          <button class="chip ${filt === id ? 'on' : ''}" data-filter="${id}">${lbl} <span class="ct">${c}</span></button>
+        `).join('')}
+      </div>
+
+      <div style="padding: 8px 0 0;">
+        ${filtered.length === 0 ? `
+          <div class="empty-state">
+            <span class="lg" data-icon="check" data-icon-size="32"></span>
+            <div>Nothing in this list.</div>
+            <div style="margin-top: 4px; font-size: 12px;">Check another filter above.</div>
+          </div>
+        ` : filtered.map(a => {
+          const s = SUBJ[a.subject];
+          const submittedNow = state.asSubmitted[a.id];
+          const status = submittedNow ? 'submitted' : a.status;
+          const dueLabel = submittedNow ? 'Submitted just now' : a.dueLabel;
+          return `
+            <div class="as-card" data-as="${a.id}">
+              <div class="tag" style="background: ${s.colour};"></div>
+              <div>
+                <div class="top">
+                  <div>
+                    <div class="subj">${esc(s.name)}</div>
+                    <div class="nm">${esc(a.title)}</div>
+                    <div class="sb">${esc(s.teacher)} · ${esc(a.sub)}</div>
+                  </div>
+                </div>
+                <div class="meta">
+                  <span class="due ${status}">
+                    <span data-icon="${status === 'graded' ? 'check' : status === 'submitted' ? 'check' : 'clock'}" data-icon-size="11"></span>
+                    ${esc(dueLabel)}
+                  </span>
+                  ${a.grade ? `<span style="font: 600 12px var(--font-mono); color: var(--brand-strong);">${esc(a.grade)}</span>` : ''}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+
+      <div style="height: 24px;"></div>
+    </div>
+  `;
+}
+
+function openAssignmentSheet(id) {
+  const a = ASSIGNMENTS.find(x => x.id === id);
+  if (!a) return;
+  const s = SUBJ[a.subject];
+  const submittedNow = state.asSubmitted[id];
+  const status = submittedNow ? 'submitted' : a.status;
+  const uploaded = state.asUploadedFile[id];
+
+  const html = `
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div class="grab"></div>
+      <div class="sh-head">
+        <span class="ic-tile" style="background: ${s.colour}22; color: ${s.colour}; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 8px;"><span data-icon="book" data-icon-size="16"></span></span>
+        <h2>${esc(s.name)}</h2>
+        <span class="close" data-close><span data-icon="x" data-icon-size="16"></span></span>
+      </div>
+      <div class="sh-body">
+        <div style="font: 600 17px/1.3 var(--font-sans); color: var(--text-strong); letter-spacing: -0.01em;">${esc(a.title)}</div>
+        <div style="font: 13px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 4px;">${esc(s.teacher)} · ${esc(a.sub)}</div>
+        <div style="display:inline-flex; align-items:center; gap: 6px; padding: 5px 10px; background: ${status==='overdue'?'var(--tone-danger)':status==='upcoming'?'var(--tone-warn-bg)':status==='submitted'?'var(--tone-success-bg)':'var(--brand-soft)'}; color: ${status==='overdue'?'#fff':status==='upcoming'?'var(--tone-warn)':status==='submitted'?'var(--tone-success)':'var(--brand-strong)'}; border-radius: 9999px; font: 600 12px/1 var(--font-sans); margin-top: 10px;">
+          <span data-icon="clock" data-icon-size="11"></span> ${esc(submittedNow ? 'Submitted just now' : a.dueLabel)}
+        </div>
+
+        <div class="ssh">Brief</div>
+        <p class="desc" style="margin-top: 0;">${esc(a.desc)}</p>
+
+        ${a.files.length > 0 ? `
+          <div class="ssh">Attachments · ${a.files.length}</div>
+          ${a.files.map(f => `
+            <div class="file-row">
+              <span class="ic"><span data-icon="folder" data-icon-size="14"></span></span>
+              <div style="flex:1;"><div class="nm">${esc(f.n)}</div><div class="sz">${esc(f.s)}</div></div>
+              <span data-icon="download" data-icon-size="14" style="color: var(--text-subtle);"></span>
+            </div>
+          `).join('')}
+        ` : ''}
+
+        <div class="ssh">Your submission</div>
+        ${uploaded ? `
+          <div class="file-row" style="background: var(--tone-success-bg);">
+            <span class="ic" style="background: #fff; color: var(--tone-success);"><span data-icon="check" data-icon-size="14"></span></span>
+            <div style="flex:1;"><div class="nm">${esc(uploaded)}</div><div class="sz">Ready to submit</div></div>
+            <button data-clear-upload style="background: transparent; color: var(--text-muted); padding: 4px 8px; font: 500 11px var(--font-sans); border-radius: 4px; cursor: pointer;">Remove</button>
+          </div>
+        ` : status === 'submitted' ? `
+          <div class="file-row" style="background: var(--tone-success-bg);">
+            <span class="ic" style="background: #fff; color: var(--tone-success);"><span data-icon="check" data-icon-size="14"></span></span>
+            <div style="flex:1;"><div class="nm">Submitted</div><div class="sz">Awaiting teacher</div></div>
+          </div>
+        ` : status === 'graded' ? `
+          <div class="file-row" style="background: var(--brand-soft);">
+            <span class="ic" style="background: #fff; color: var(--brand-strong);"><span data-icon="chart" data-icon-size="14"></span></span>
+            <div style="flex:1;"><div class="nm">Graded · ${esc(a.grade || '')}</div><div class="sz">Returned by ${esc(s.teacher)}</div></div>
+          </div>
+        ` : `
+          <div style="padding: 14px; border: 2px dashed var(--border-strong); border-radius: 10px; text-align: center; color: var(--text-muted); font: 13px var(--font-sans);">
+            <div style="margin-bottom: 6px; color: var(--text-subtle);" data-icon="upload" data-icon-size="20"></div>
+            No file uploaded yet · tap below to pick one
+          </div>
+        `}
+      </div>
+      <div class="sh-foot">
+        ${status === 'graded' || (status === 'submitted' && !uploaded) ? `
+          <button class="alt" data-close>Close</button>
+        ` : `
+          <button class="alt" data-pick>${uploaded ? 'Replace file' : 'Pick file'}</button>
+          <button class="primary" data-submit ${uploaded ? '' : 'disabled style="opacity:0.55; cursor:not-allowed;"'}>${status === 'overdue' ? 'Submit late' : 'Submit'}</button>
+        `}
+      </div>
+    </div>
+  `;
+  state.sheetWire = () => {
+    const pick = $('.sheet [data-pick]');
+    if (pick) pick.addEventListener('click', () => {
+      // Mock file picker: choose a plausible filename based on subject
+      const names = {
+        maths: ['ex-12b-anesu.pdf','workings-quad.jpg','quadratic-attempt.pdf'],
+        english: ['nervous-conditions-review.docx','book-review-draft.docx'],
+        shona: ['tsika-dzedu-anesu.docx','rondedzero-final.pdf'],
+        history: ['wwi-source-analysis.pdf','sources-essay.docx'],
+        science: ['photo-lab-report.pdf','graph-light.png','lab-anesu.docx'],
+        rs: ['talents-reflection.docx'],
+        geo: ['zw-map.jpg','map-sketch-final.jpg'],
+      }[a.subject] || ['my-submission.pdf'];
+      const fname = names[Math.floor(Math.random()*names.length)];
+      state.asUploadedFile[id] = fname;
+      openAssignmentSheet(id);
+      toast('File attached: ' + fname, 'success');
+    });
+    const submit = $('.sheet [data-submit]');
+    if (submit) submit.addEventListener('click', () => {
+      if (submit.hasAttribute('disabled')) return;
+      state.asSubmitted[id] = true;
+      delete state.asUploadedFile[id];
+      closeSheet();
+      render();
+      toast(`Submitted: ${a.title}`, 'success');
+    });
+    const clear = $('.sheet [data-clear-upload]');
+    if (clear) clear.addEventListener('click', () => {
+      delete state.asUploadedFile[id];
+      openAssignmentSheet(id);
+    });
+  };
+  openSheet(html);
+}
+
+/* ============================================================
+   LIBRARY
+   ============================================================ */
+function renderLibrary() {
+  const q = state.libQuery.trim().toLowerCase();
+  const borrowedBooks = BOOKS.filter(b => b.borrowed && !state.libReturned[b.id]);
+  const catalogResults = q ? BOOKS.filter(b => !b.borrowed && (b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q) || b.series.toLowerCase().includes(q))) : [];
+  const readingList = READING_LIST.map(id => BOOKS.find(b => b.id === id)).filter(Boolean);
+  const finePaid = state.finePaid;
+
+  return `
+    ${renderStatusBar()}
+    ${renderAppbar('Library', { back: true, actions: `
+      <button class="nav-btn" data-act="heart"><span data-icon="heart" data-icon-size="18"></span></button>
+    `})}
+    <div class="ps-scroll">
+      <div class="lib-search">
+        <span class="ic" data-icon="search" data-icon-size="16"></span>
+        <input id="lib-search" placeholder="Search title, author or ISBN…" value="${esc(state.libQuery)}" />
+        <span class="ic" data-icon="qr" data-icon-size="16" id="lib-scan-search" title="Scan a book"></span>
+      </div>
+
+      ${!finePaid ? `
+        <div class="fines-pill">
+          <span class="ic"><span data-icon="info" data-icon-size="16"></span></span>
+          <div>
+            <div class="nm">Outstanding fine</div>
+            <div class="sb">1 book returned late · "Tsumo na Madimikira"</div>
+          </div>
+          <span class="val">$ 2.50</span>
+          <button id="lib-pay">Pay</button>
+        </div>
+      ` : ''}
+
+      <div class="scan-cta" id="lib-scan">
+        <span class="qr"><span data-icon="qr" data-icon-size="22"></span></span>
+        <div>
+          <div class="nm">Scan to return</div>
+          <div class="sb">Point camera at the barcode inside the front cover</div>
+        </div>
+        <span class="arrow" data-icon="chright"></span>
+      </div>
+
+      ${q && catalogResults.length > 0 ? `
+        <div style="padding: 0 16px;">
+          <div class="demo-psh">Results · ${catalogResults.length}</div>
+        </div>
+        ${catalogResults.map(b => `
+          <div class="catalog-card" data-book="${b.id}">
+            <div class="book-cover ${b.cls} cv">${esc(b.title.split(' ').slice(0,2).join(' ').toUpperCase())}</div>
+            <div>
+              <div class="nm">${esc(b.title)}</div>
+              <div class="sb">${esc(b.author)} · ${esc(b.series)}</div>
+            </div>
+            ${b.avail > 0 ? `<button class="borrow" data-borrow="${b.id}">Borrow</button>` : '<span class="out">Out</span>'}
+          </div>
+        `).join('')}
+      ` : ''}
+      ${q && catalogResults.length === 0 ? `
+        <div class="empty-state"><span class="lg" data-icon="search" data-icon-size="28"></span><div>No matches for "${esc(state.libQuery)}".</div></div>
+      ` : ''}
+
+      ${!q ? `
+        <div style="padding: 0 16px;">
+          <div class="demo-psh">Currently borrowed · ${borrowedBooks.length}<a data-act="history">History</a></div>
+        </div>
+        ${borrowedBooks.map(b => `
+          <div class="borrow-card" data-book="${b.id}">
+            <div class="book-cover ${b.cls}">${esc(b.title.split(' ').slice(0,2).join(' ').toUpperCase())}</div>
+            <div>
+              <div class="nm">${esc(b.title)}</div>
+              <div class="sb">${esc(b.author)} · ${esc(b.series)}</div>
+              <div class="due ${b.overdue ? 'overdue' : b.urgent ? 'urgent' : ''}"><span data-icon="clock" data-icon-size="11"></span>
+                ${state.libRenewed[b.id] ? 'Renewed · due in 14 days' : esc(b.overdue ? b.due : (b.urgent ? 'Due in ' + b.dueIn + ' days · ' + b.due : 'Due ' + b.due + ' · ' + b.dueIn + ' days'))}
+              </div>
+            </div>
+            ${b.overdue && !state.libRenewed[b.id] ? `<button class="renew" data-return="${b.id}" style="background: var(--tone-danger-bg); color: var(--tone-danger);">Return</button>` :
+              `<button class="renew" data-renew="${b.id}">${state.libRenewed[b.id] ? '✓' : 'Renew'}</button>`}
+          </div>
+        `).join('')}
+
+        ${Object.keys(state.libBorrowed).length > 0 ? `
+          <div style="padding: 0 16px;">
+            <div class="demo-psh">New borrows · this session</div>
+          </div>
+          ${Object.keys(state.libBorrowed).map(bid => {
+            const b = BOOKS.find(x => x.id === bid);
+            return `
+              <div class="borrow-card">
+                <div class="book-cover ${b.cls}">${esc(b.title.split(' ').slice(0,2).join(' ').toUpperCase())}</div>
+                <div>
+                  <div class="nm">${esc(b.title)}</div>
+                  <div class="sb">${esc(b.author)}</div>
+                  <div class="due"><span data-icon="check" data-icon-size="11"></span> Just borrowed · due in 14 days</div>
+                </div>
+                <span style="padding: 4px 10px; background: var(--tone-success-bg); color: var(--tone-success); border-radius: 9999px; font: 600 11px/1 var(--font-sans);">New</span>
+              </div>
+            `;
+          }).join('')}
+        ` : ''}
+
+        <div style="padding: 0 16px;">
+          <div class="demo-psh">My reading list · ${readingList.length}<a data-act="edit-list">Edit</a></div>
+          <div class="pl">
+            ${readingList.map(b => `
+              <div class="pl-row" data-book="${b.id}" style="cursor:pointer;">
+                <span class="ic-tile"><span data-icon="book" data-icon-size="16"></span></span>
+                <div><div class="nm">${esc(b.title)}</div><div class="sb">${esc(b.author)} · ${esc(b.series)}</div></div>
+                ${b.avail > 0 ? `<button class="renew" data-borrow="${b.id}" style="padding: 6px 10px;">Borrow</button>` : `<span style="font: 11px var(--font-mono); color: var(--text-muted);">${b.avail === 0 ? 'Waitlist' : ''}</span>`}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      <div style="height: 24px;"></div>
+    </div>
+  `;
+}
+
+function openBookSheet(bookId) {
+  const b = BOOKS.find(x => x.id === bookId);
+  if (!b) return;
+  const isBorrowed = (b.borrowed && !state.libReturned[b.id]) || state.libBorrowed[b.id];
+  const html = `
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div class="grab"></div>
+      <div class="sh-head">
+        <h2>${esc(b.title)}</h2>
+        <span class="close" data-close><span data-icon="x" data-icon-size="16"></span></span>
+      </div>
+      <div class="sh-body">
+        <div style="display: flex; gap: 14px; align-items: flex-start;">
+          <div class="book-cover ${b.cls}" style="width: 76px; height: 110px; font-size: 12px;">${esc(b.title.split(' ').slice(0,2).join(' ').toUpperCase())}</div>
+          <div style="flex:1;">
+            <div style="font: 600 16px/1.25 var(--font-sans); color: var(--text-strong);">${esc(b.title)}</div>
+            <div style="font: 13px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 3px;">${esc(b.author)}</div>
+            <div style="display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; background: var(--surface-muted); color: var(--text-strong); border-radius: 9999px; font: 500 11.5px/1 var(--font-sans); margin-top: 8px;">${esc(b.series)}</div>
+          </div>
+        </div>
+        <div class="key-fact">
+          <div class="kf"><div class="l">Availability</div><div class="v">${isBorrowed ? 'On loan to you' : (b.avail > 0 ? b.avail + ' copies' : 'None at branch')}</div></div>
+          <div class="kf"><div class="l">Loan period</div><div class="v">14 days</div></div>
+        </div>
+        <p class="desc">A core text in the ZIMSEC curriculum. Borrow takes effect immediately; you can renew once if no one else has reserved a copy.</p>
+      </div>
+      <div class="sh-foot">
+        <button class="alt" data-close>Close</button>
+        ${isBorrowed ? `
+          <button class="primary" data-return-now="${b.id}">Return now</button>
+        ` : b.avail > 0 ? `
+          <button class="primary" data-borrow-confirm="${b.id}">Borrow ${esc(b.title.split(' ')[0])}</button>
+        ` : `
+          <button class="primary" data-reserve="${b.id}">Reserve · join waitlist</button>
+        `}
+      </div>
+    </div>
+  `;
+  state.sheetWire = () => {
+    const br = $('.sheet [data-borrow-confirm]'); if (br) br.addEventListener('click', () => {
+      state.libBorrowed[b.id] = true;
+      closeSheet(); render();
+      toast('Borrowed · ' + b.title.split(' ').slice(0,2).join(' '), 'success');
+    });
+    const rt = $('.sheet [data-return-now]'); if (rt) rt.addEventListener('click', () => {
+      state.libReturned[b.id] = true;
+      delete state.libBorrowed[b.id];
+      closeSheet(); render();
+      toast('Returned · thank you', 'success');
+    });
+    const rsv = $('.sheet [data-reserve]'); if (rsv) rsv.addEventListener('click', () => {
+      closeSheet();
+      toast('Added to waitlist · we will message you', 'warn');
+    });
+  };
+  openSheet(html);
+}
+
+function openScanReturn() {
+  // Simulate a QR scan: pick the overdue borrowed book first if any
+  const borrowed = BOOKS.filter(b => b.borrowed && !state.libReturned[b.id]);
+  const target = borrowed.find(b => b.overdue) || borrowed[0];
+  if (!target) {
+    toast('No borrowed books to return', 'warn');
+    return;
+  }
+  const html = `
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div class="grab"></div>
+      <div class="sh-head">
+        <h2>Scan to return</h2>
+        <span class="close" data-close><span data-icon="x" data-icon-size="16"></span></span>
+      </div>
+      <div class="sh-body">
+        <div style="background: var(--ink); border-radius: 14px; padding: 32px 16px; text-align: center; color: rgba(255,255,255,0.85); position: relative; overflow: hidden;">
+          <div style="display: inline-grid; place-items: center; width: 100px; height: 100px; border: 3px dashed rgba(252,211,77,0.5); border-radius: 14px; margin-bottom: 16px;">
+            <span data-icon="qr" data-icon-size="44" style="color: #FCD34D;"></span>
+          </div>
+          <div style="font: 600 14px var(--font-sans); color: #fff;">Aim at the barcode inside the front cover</div>
+          <div style="font: 12px var(--font-sans); margin-top: 6px; opacity: 0.7;">Or tap below to simulate a scan</div>
+        </div>
+        <div style="text-align: center; padding: 18px 0 4px; font: 500 12px var(--font-sans); color: var(--text-muted);">Detected:</div>
+        <div class="borrow-card" style="margin: 0;">
+          <div class="book-cover ${target.cls}">${esc(target.title.split(' ').slice(0,2).join(' ').toUpperCase())}</div>
+          <div>
+            <div class="nm">${esc(target.title)}</div>
+            <div class="sb">${esc(target.author)}</div>
+            <div class="due ${target.overdue ? 'overdue' : ''}"><span data-icon="clock" data-icon-size="11"></span> ${esc(target.overdue ? target.due : 'Due ' + target.due)}</div>
+          </div>
+        </div>
+      </div>
+      <div class="sh-foot">
+        <button class="alt" data-close>Cancel</button>
+        <button class="primary" data-do-return="${target.id}">Confirm return</button>
+      </div>
+    </div>
+  `;
+  state.sheetWire = () => {
+    const btn = $('.sheet [data-do-return]'); if (btn) btn.addEventListener('click', () => {
+      state.libReturned[target.id] = true;
+      closeSheet(); render();
+      toast('Returned · ' + target.title.split(' ').slice(0,2).join(' '), 'success');
+    });
+  };
+  openSheet(html);
+}
+
+/* ============================================================
+   PROFILE
+   ============================================================ */
+function renderProfile() {
+  const themeOpts = [['light','Light'],['dark','Dark'],['auto','Auto']];
+  return `
+    ${renderStatusBar()}
+    ${renderAppbar('Profile', { back: true, actions: `
+      <button class="nav-btn" data-act="edit-profile"><span data-icon="edit" data-icon-size="18"></span></button>
+    `})}
+    <div class="ps-scroll">
+      <div class="id-card">
+        <div class="top">
+          <div class="avatar">${STUDENT.initials}</div>
+          <div>
+            <div class="nm">${esc(STUDENT.name)}</div>
+            <div class="sb">${esc(STUDENT.school)} · ${esc(STUDENT.form)}</div>
+            <div class="ids">
+              <span class="pill">${esc(STUDENT.id)}</span>
+              <span class="pill">${esc(STUDENT.status)}</span>
+            </div>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="s"><div class="l">Attendance</div><div class="v">${STUDENT.attendance}<span class="u">%</span></div></div>
+          <div class="s"><div class="l">Position</div><div class="v">${STUDENT.position}<span class="u">/${STUDENT.formSize}</span></div></div>
+          <div class="s"><div class="l">GPA · T2</div><div class="v">${STUDENT.gpa.toFixed(2)}</div></div>
+        </div>
+      </div>
+
+      <div style="padding: 0 16px;">
+        <div class="demo-psh">Contact</div>
+        <div class="pl">
+          <div class="pl-row">
+            <span class="ic-tile"><span data-icon="mail" data-icon-size="18"></span></span>
+            <div><div class="nm">${esc(STUDENT.email)}</div><div class="sb">School email · verified</div></div>
+            <span data-icon="check" style="color: var(--tone-success);"></span>
+          </div>
+          <div class="pl-row">
+            <span class="ic-tile"><span data-icon="phone" data-icon-size="18"></span></span>
+            <div><div class="nm">${esc(STUDENT.phone)}</div><div class="sb">Mobile · WhatsApp</div></div>
+            <span data-icon="chright" style="color: var(--text-subtle);"></span>
+          </div>
+          <div class="pl-row">
+            <span class="ic-tile"><span data-icon="user" data-icon-size="18"></span></span>
+            <div><div class="nm">${esc(STUDENT.guardian)}</div><div class="sb">Guardian · primary contact</div></div>
+            <span data-icon="chright" style="color: var(--text-subtle);"></span>
+          </div>
+          <div class="pl-row">
+            <span class="ic-tile"><span data-icon="building" data-icon-size="18"></span></span>
+            <div><div class="nm">${esc(STUDENT.address)}</div><div class="sb">Harare · ZW</div></div>
+            <span data-icon="chright" style="color: var(--text-subtle);"></span>
+          </div>
+        </div>
+
+        <div class="demo-psh">Appearance</div>
+        <div class="pl">
+          <div class="pl-row">
+            <span class="ic-tile"><span data-icon="settings" data-icon-size="18"></span></span>
+            <div><div class="nm">Theme</div><div class="sb">${state.prefs.theme === 'auto' ? 'Match system appearance' : 'Manual selection'}</div></div>
+            <div class="seg">
+              ${themeOpts.map(([id, lbl]) => `<button class="${state.prefs.theme === id ? 'on' : ''}" data-theme="${id}">${lbl}</button>`).join('')}
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-psh">Notifications</div>
+        <div class="pl">
+          <div class="pl-row" data-toggle="push" style="cursor:pointer;">
+            <span class="ic-tile"><span data-icon="bell" data-icon-size="18"></span></span>
+            <div><div class="nm">Push notifications</div><div class="sb">Marks, assignments, notices</div></div>
+            <span class="toggle ${state.prefs.push ? '' : 'off'}"></span>
+          </div>
+          <div class="pl-row" data-toggle="email" style="cursor:pointer;">
+            <span class="ic-tile"><span data-icon="mail" data-icon-size="18"></span></span>
+            <div><div class="nm">Email digests</div><div class="sb">Weekly summary on Friday</div></div>
+            <span class="toggle ${state.prefs.email ? '' : 'off'}"></span>
+          </div>
+        </div>
+
+        <div class="demo-psh">Security</div>
+        <div class="pl">
+          <div class="pl-row" data-act="password" style="cursor:pointer;">
+            <span class="ic-tile"><span data-icon="lock" data-icon-size="18"></span></span>
+            <div><div class="nm">Change password</div><div class="sb">Last changed 04 March 2026</div></div>
+            <span data-icon="chright" style="color: var(--text-subtle);"></span>
+          </div>
+          <div class="pl-row" data-act="privacy" style="cursor:pointer;">
+            <span class="ic-tile"><span data-icon="shield" data-icon-size="18"></span></span>
+            <div><div class="nm">Privacy &amp; data</div><div class="sb">Manage who can see your profile</div></div>
+            <span data-icon="chright" style="color: var(--text-subtle);"></span>
+          </div>
+        </div>
+
+        <div class="sign-out" id="sign-out"><span data-icon="logout" data-icon-size="16"></span> Sign out</div>
+
+        <div style="text-align: center; padding: 14px 0 8px; font: 500 11px/1.4 var(--font-mono); color: var(--text-subtle);">
+          Huchu · Student portal demo · v0.5<br>build 2026.05.31
+        </div>
+      </div>
+
+      <div style="height: 24px;"></div>
+    </div>
+  `;
+}
+
+function renderSignedOut() {
+  return `
+    ${renderStatusBar()}
+    <div class="signed-out">
+      <div class="ico"><span data-icon="check" data-icon-size="28"></span></div>
+      <h2>Signed out</h2>
+      <p>You have been signed out of the Student portal. Your data is safe — sign back in to continue.</p>
+      <button id="back-in">Sign back in</button>
+    </div>
+  `;
+}
+
+/* ============================================================
+   WIRING
+   ============================================================ */
+function wireRoute() {
+  // Generic
+  $$('[data-go]').forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); go(b.dataset.go); }));
+  $$('[data-back]').forEach(b => b.addEventListener('click', () => go('home')));
+  $$('[data-act]').forEach(b => b.addEventListener('click', () => {
+    const a = b.dataset.act;
+    const messages = {
+      bell: 'No new notifications',
+      search: 'Search opens here',
+      filter: 'Filter sheet opens here',
+      download: 'Exporting…',
+      heart: 'Saved to favourites',
+      history: 'Loan history opens here',
+      'edit-list': 'Reading list editor opens here',
+      'edit-profile': 'Edit profile opens here',
+      password: 'Password change opens here',
+      privacy: 'Privacy settings open here',
+    };
+    if (messages[a]) toast(messages[a]);
+  }));
+
+  // Sign-back-in if signed out
+  const bi = $('#back-in'); if (bi) bi.addEventListener('click', () => { state.signedOut = false; go('home'); });
+
+  switch (state.route) {
+    case 'home':        wireHome(); break;
+    case 'timetable':   wireTimetable(); break;
+    case 'marks':       wireMarks(); break;
+    case 'assignments': wireAssignments(); break;
+    case 'library':     wireLibrary(); break;
+    case 'profile':     wireProfile(); break;
+  }
+}
+
+function wireHome() {
+  $$('[data-open-class]').forEach(b => b.addEventListener('click', () => {
+    const [d, p] = b.dataset.openClass.split('-').map(Number);
+    openClassSheet(d, p);
+  }));
+}
+
+let swipeStartX = null;
+function wireTimetable() {
+  $$('[data-open-class]').forEach(b => b.addEventListener('click', () => {
+    const [d, p] = b.dataset.openClass.split('-').map(Number);
+    openClassSheet(d, p);
+  }));
+  $$('[data-week]').forEach(b => b.addEventListener('click', () => {
+    state.weekOffset += parseInt(b.dataset.week, 10);
+    render();
+    toast(state.weekOffset === 0 ? 'This week' : (state.weekOffset > 0 ? `Week +${state.weekOffset}` : `Week ${state.weekOffset}`));
+  }));
+  // Swipe between weeks on the timetable grid
+  const grid = $('#tt-grid');
+  if (grid) {
+    grid.addEventListener('touchstart', (e) => { swipeStartX = e.touches[0].clientX; }, { passive: true });
+    grid.addEventListener('touchend', (e) => {
+      if (swipeStartX === null) return;
+      const dx = e.changedTouches[0].clientX - swipeStartX;
+      swipeStartX = null;
+      if (Math.abs(dx) > 60) {
+        state.weekOffset += dx < 0 ? 1 : -1;
+        render();
+        toast(state.weekOffset === 0 ? 'This week' : (state.weekOffset > 0 ? `Week +${state.weekOffset}` : `Week ${state.weekOffset}`));
+      }
+    });
+  }
+}
+
+function wireMarks() {
+  $$('[data-term]').forEach(b => b.addEventListener('click', () => { state.term = b.dataset.term; render(); }));
+  $$('[data-marks]').forEach(b => b.addEventListener('click', () => openMarksSheet(b.dataset.marks)));
+}
+
+function wireAssignments() {
+  $$('[data-filter]').forEach(b => b.addEventListener('click', () => { state.asFilter = b.dataset.filter; render(); }));
+  $$('[data-as]').forEach(b => b.addEventListener('click', () => openAssignmentSheet(b.dataset.as)));
+}
+
+function wireLibrary() {
+  const inp = $('#lib-search');
+  if (inp) inp.addEventListener('input', (e) => {
+    state.libQuery = e.target.value;
+    render();
+    setTimeout(() => { const i = $('#lib-search'); if (i) { i.focus(); i.setSelectionRange(state.libQuery.length, state.libQuery.length); } }, 0);
+  });
+  const scanS = $('#lib-scan-search'); if (scanS) scanS.addEventListener('click', () => {
+    // Simulate scan-to-find: pick a book and surface as search query
+    const b = BOOKS.filter(x => !x.borrowed)[Math.floor(Math.random() * BOOKS.filter(x => !x.borrowed).length)];
+    state.libQuery = b.title.split(' ')[0];
+    render(); toast('Scanned ISBN · ' + b.title, 'success');
+  });
+  const scan = $('#lib-scan'); if (scan) scan.addEventListener('click', openScanReturn);
+  $$('[data-book]').forEach(b => b.addEventListener('click', (e) => {
+    // Don't open sheet if a button was clicked (renew/borrow/return)
+    if (e.target.closest('button')) return;
+    openBookSheet(b.dataset.book);
+  }));
+  $$('[data-borrow]').forEach(b => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const id = b.dataset.borrow;
+    state.libBorrowed[id] = true;
+    render();
+    const bk = BOOKS.find(x => x.id === id);
+    toast('Borrowed · ' + bk.title.split(' ').slice(0,2).join(' '), 'success');
+  }));
+  $$('[data-renew]').forEach(b => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    state.libRenewed[b.dataset.renew] = true;
+    render();
+    toast('Renewed · 14 more days', 'success');
+  }));
+  $$('[data-return]').forEach(b => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    state.libReturned[b.dataset.return] = true;
+    render();
+    toast('Returned', 'success');
+  }));
+  const pay = $('#lib-pay'); if (pay) pay.addEventListener('click', () => {
+    openModal(`
+      <div class="modal" onclick="event.stopPropagation()">
+        <h3>Pay library fine?</h3>
+        <p class="sub">$ 2.50 will be charged to your boarder account. This will clear your overdue notice.</p>
+        <div class="acts">
+          <button class="alt" data-cancel>Cancel</button>
+          <button class="ok brand" data-ok>Pay $ 2.50</button>
+        </div>
+      </div>
+    `, () => {
+      $('[data-cancel]').addEventListener('click', closeModal);
+      $('[data-ok]').addEventListener('click', () => {
+        state.finePaid = true;
+        closeModal(); render();
+        toast('Fine paid · receipt sent to email', 'success');
+      });
+    });
+  });
+}
+
+function wireProfile() {
+  $$('[data-toggle]').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.toggle;
+    state.prefs[k] = !state.prefs[k];
+    render();
+    toast(state.prefs[k] ? 'Enabled' : 'Disabled');
+  }));
+  $$('[data-theme]').forEach(b => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    state.prefs.theme = b.dataset.theme;
+    render();
+    toast('Theme: ' + b.dataset.theme);
+  }));
+  const so = $('#sign-out'); if (so) so.addEventListener('click', () => {
+    openModal(`
+      <div class="modal" onclick="event.stopPropagation()">
+        <h3>Sign out of Huchu?</h3>
+        <p class="sub">You will need to enter your password to sign back in. Local drafts will be saved.</p>
+        <div class="acts">
+          <button class="alt" data-cancel>Cancel</button>
+          <button class="ok" data-ok>Sign out</button>
+        </div>
+      </div>
+    `, () => {
+      $('[data-cancel]').addEventListener('click', closeModal);
+      $('[data-ok]').addEventListener('click', () => {
+        closeModal();
+        state.signedOut = true;
+        render();
+      });
+    });
+  });
+}
+
+/* ============================================================
+   FULLSCREEN
+   ============================================================ */
+function setFullscreen(on) {
+  document.body.classList.toggle('is-fullscreen', on);
+  const lbl = $('#fs-label');
+  if (lbl) lbl.textContent = on ? 'Exit' : 'Fullscreen';
+  const ic = $('#fs-toggle [data-icon]');
+  if (ic) {
+    ic.dataset.icon = on ? 'x' : 'grid';
+    if (window.Icons) window.Icons.render($('#fs-toggle'));
+  }
+}
+$('#fs-toggle').addEventListener('click', () => {
+  const on = !document.body.classList.contains('is-fullscreen');
+  setFullscreen(on);
+  if (on) {
+    document.documentElement.requestFullscreen?.().catch(() => {});
+  } else if (document.fullscreenElement) {
+    document.exitFullscreen().catch(() => {});
+  }
+});
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) setFullscreen(document.body.classList.contains('is-fullscreen'));
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.body.classList.contains('is-fullscreen') && !document.fullscreenElement) {
+    setFullscreen(false);
+  }
+});
+
+/* === Init === */
+function init() {
+  if (/[?&]fullscreen=1/.test(location.search)) setFullscreen(true);
+  const r = (location.hash.replace(/^#\/?/, '') || 'home');
+  state.route = r;
+  render();
+}
+
+if (document.readyState !== 'loading') init();
+else document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>

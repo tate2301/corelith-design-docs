@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" /><title>Bale opening · Thrift · Huchu</title>
+<meta name="viewport" content="width=1440" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../dash.css" />
+<script src="../../icons.js" defer></script>
+<style>
+  .dash-side nav a.active { background: #F5E2EE; color: #82265D; }
+  .dash-side nav a.active svg { color: #C25C9E; }
+  .dash-side .org-switcher .mark { background: #C25C9E; }
+  .bale-grid { display: grid; grid-template-columns: 320px 1fr; gap: 16px; padding: 4px 32px 28px; align-items: start; }
+  .bale-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+  .bale-card .h { padding: 16px 18px; border-bottom: 1px solid var(--border-subtle); }
+  .bale-card .h .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+  .bale-card .h h2 { margin: 6px 0 0; font: 700 22px/1.2 var(--font-sans); color: var(--text-strong); letter-spacing: -0.015em; }
+  .bale-card .h .sub { font: 12px/1.3 var(--font-mono); color: var(--text-muted); margin-top: 6px; }
+  .bale-card .meta { padding: 12px 18px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .bale-card .meta .it .l { font: 500 10px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+  .bale-card .meta .it .v { font: 600 14px/1.2 var(--font-sans); color: var(--text-strong); margin-top: 4px; }
+  .bale-card .photo { aspect-ratio: 4/3; margin: 12px 18px; background: linear-gradient(135deg, #C25C9E, #82265D); border-radius: 8px; display: grid; place-items: center; color: #fff; }
+  .bale-card .photo .glyph { width: 84px; height: 84px; }
+  .weight-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-top: 16px; }
+  .weight-bar { display: flex; height: 28px; border-radius: 6px; overflow: hidden; margin: 12px 0 8px; }
+  .weight-bar > div { display: grid; place-items: center; font: 600 12px/1 var(--font-mono); color: #fff; }
+  .weight-bar .a { background: #2E9966; }
+  .weight-bar .b { background: #E2A458; color: #3A2410; }
+  .weight-bar .c { background: #8E8E8E; }
+  .weight-bar .loss { background: #D04848; }
+  .weight-leg { display: flex; gap: 14px; font: 500 11px/1 var(--font-mono); color: var(--text-muted); flex-wrap: wrap; }
+  .weight-leg .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+  .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: clip; }
+  .form-h { padding: 16px 20px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 12px; }
+  .form-h h2 { margin: 0; font: 600 15px/1.3 var(--font-sans); color: var(--text-strong); }
+  .grade-grid { padding: 18px 20px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .grade-col { background: var(--surface-muted); border-radius: 10px; padding: 12px 14px; }
+  .grade-col h3 { margin: 0; font: 700 14px/1.3 var(--font-sans); color: var(--text-strong); display: flex; align-items: center; gap: 8px; }
+  .grade-col h3 .badge { padding: 2px 8px; border-radius: 9999px; font: 600 11px/1 var(--font-mono); }
+  .grade-col.a h3 .badge { background: var(--tone-success-bg); color: var(--tone-success); }
+  .grade-col.b h3 .badge { background: var(--tone-warn-bg); color: var(--tone-warn); }
+  .grade-col.c h3 .badge { background: var(--surface); color: var(--text-muted); }
+  .grade-col .total { font: 700 22px/1 var(--font-sans); color: var(--text-strong); margin: 10px 0 4px; font-variant-numeric: tabular-nums; }
+  .grade-col .total .u { font: 500 13px/1 var(--font-mono); color: var(--text-muted); margin-left: 4px; }
+  .grade-col .lines { display: grid; gap: 6px; margin-top: 10px; }
+  .grade-col .ln { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--surface); border-radius: 6px; font: var(--type-body-sm); }
+  .grade-col .ln .nm { color: var(--text-strong); font-weight: 500; flex: 1; }
+  .grade-col .ln input { width: 56px; padding: 3px 6px; border: 1px solid var(--border); border-radius: 4px; font: 500 12px/1 var(--font-mono); text-align: right; }
+  .grade-col .ln .u { font: 500 11px/1 var(--font-mono); color: var(--text-muted); width: 22px; }
+</style>
+</head>
+<body class="dash-body">
+<div class="dash-frame">
+  <div class="chrome">
+    <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+    <span class="url">https://app.huchu.com / thrift/bale/BALE-2418</span>
+    <span class="actions"><a href="../../index.html">← Design system</a></span>
+  </div>
+  <div class="dash-app">
+    <aside class="dash-side">
+      <div class="org-switcher">
+        <span class="mark" data-icon="corelith" data-icon-size="16"></span>
+        <div style="flex: 1; min-width: 0;"><div class="name">Heritage Thrift</div><div class="sub">Mbare warehouse · 2 shops</div></div>
+        <span class="chev" data-icon="chevron" data-icon-size="14"></span>
+      </div>
+      <a class="new-action" href="#"><span data-icon="plus" data-icon-size="14"></span> New bale<span class="kbd">⌘N</span></a>
+      <div class="sh">Thrift &amp; secondhand<span data-icon="chevron"></span></div>
+      <nav>
+        <a href="overview.html"><span data-icon="dashboard"></span> Overview</a>
+        <a href="#" class="active"><span data-icon="box"></span> Bale intake<span class="cnt">14</span></a>
+        <a href="#"><span data-icon="layers"></span> Grading &amp; sorting</a>
+        <a href="lot.html"><span data-icon="bag"></span> Lot inventory<span class="cnt">86</span></a>
+        <a href="#"><span data-icon="receipt"></span> Sales tracking</a>
+        <a href="#"><span data-icon="user"></span> Suppliers</a>
+        <a href="#"><span data-icon="chart"></span> Reporting</a>
+      </nav>
+      <div class="sh">Shared</div>
+      <nav>
+        <a href="#"><span data-icon="coin"></span> Accounting</a>
+        <a href="#"><span data-icon="shield"></span> Compliance</a>
+      </nav>
+      <div class="footer">
+        <span class="avatar" style="background: #F5E2EE; color: #82265D;">RM</span>
+        <div><div class="nm">Rufaro Mawire</div><div class="sb">Operations lead</div></div>
+        <span class="arrow" data-icon="chup" data-icon-size="14"></span>
+      </div>
+    </aside>
+    <main class="dash-main">
+      <header class="dash-topbar">
+        <div class="crumbs"><a href="#">Heritage Thrift</a><span class="sep">/</span><a href="overview.html">Mbare warehouse</a><span class="sep">/</span><a href="#">Bales</a><span class="sep">/</span><span class="current">BALE-2418</span></div>
+        <div class="spacer"></div>
+        <div class="search"><span data-icon="search"></span><input placeholder="Search bale, supplier…" /><span class="kbd-hint">⌘K</span></div>
+        <button class="ic-btn"><span data-icon="bell" data-icon-size="16"></span></button>
+        <button class="ic-btn" style="background: var(--brand); color: #fff;"><span data-icon="user" data-icon-size="16"></span></button>
+      </header>
+
+      <div class="dash-page" style="padding-bottom: 12px;">
+        <div class="dash-page-h">
+          <div class="meta">
+            <h1>Open bale · BALE-2418</h1>
+            <p class="lede">Ladies wear from Lake View Imports, UK · grade A. Cut open 14:20. Grading into A/B/C lots — weight to allocate vs starting 102 kg.</p>
+            <div class="h-pills"><span class="p b">BALE-2418</span><span class="p">Lake View · UK · grade A</span><span class="p">Ladies wear · 102 kg</span><span class="p s">●  Grading in progress</span></div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-quiet"><span data-icon="qr" data-icon-size="14"></span> Print bale tag</button>
+            <button class="btn btn-secondary"><span data-icon="x" data-icon-size="14"></span> Cancel</button>
+            <button class="btn btn-primary"><span data-icon="check" data-icon-size="14"></span> Close bale &amp; create lots</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="bale-grid">
+        <div>
+          <div class="bale-card">
+            <div class="h">
+              <span class="lbl">Bale</span>
+              <h2>BALE-2418</h2>
+              <div class="sub">Received Tue 3 Jun · 14:18</div>
+            </div>
+            <div class="photo">
+              <span class="glyph" data-icon="box" data-icon-size="84"></span>
+            </div>
+            <div class="meta">
+              <div class="it"><div class="l">Supplier</div><div class="v">Lake View</div></div>
+              <div class="it"><div class="l">Origin</div><div class="v">UK</div></div>
+              <div class="it"><div class="l">Category</div><div class="v">Ladies wear</div></div>
+              <div class="it"><div class="l">Grade in</div><div class="v">A</div></div>
+              <div class="it"><div class="l">Start weight</div><div class="v">102 kg</div></div>
+              <div class="it"><div class="l">Cost</div><div class="v">$ 168</div></div>
+              <div class="it"><div class="l">$ / kg in</div><div class="v">$ 1.65</div></div>
+              <div class="it"><div class="l">Container</div><div class="v">MSCU-481072</div></div>
+            </div>
+          </div>
+
+          <div class="weight-card">
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);">Weight allocation</span>
+              <span style="margin-left: auto; font: 600 14px/1 var(--font-mono); color: var(--text-strong);">98.4 / 102.0 kg</span>
+            </div>
+            <div class="weight-bar">
+              <div class="a" style="flex: 0 0 42%;">A · 42.8 kg</div>
+              <div class="b" style="flex: 0 0 28%;">B · 28.6 kg</div>
+              <div class="c" style="flex: 0 0 18%;">C · 18.4 kg</div>
+              <div class="loss" style="flex: 0 0 8%;">Loss · 8.6 kg</div>
+              <div style="flex: 1; background: var(--surface-muted);"></div>
+            </div>
+            <div class="weight-leg">
+              <span><span class="sw" style="background: #2E9966;"></span>Grade A</span>
+              <span><span class="sw" style="background: #E2A458;"></span>Grade B</span>
+              <span><span class="sw" style="background: #8E8E8E;"></span>Grade C</span>
+              <span><span class="sw" style="background: #D04848;"></span>Loss / rags</span>
+              <span style="color: var(--text-strong);">3.6 kg unallocated</span>
+            </div>
+          </div>
+
+          <div class="bale-card" style="margin-top: 16px;">
+            <div class="h"><span class="lbl">Cost per piece (forecast)</span><h2 style="font: 700 18px/1.2 var(--font-sans);">$ 0.42 avg</h2><div class="sub">236 pieces forecast · 8.6 kg loss</div></div>
+            <table class="dt">
+              <tbody>
+                <tr><td><span class="nm">Bale cost</span></td><td class="num" style="text-align: right;">$ 168.00</td></tr>
+                <tr><td><span class="nm">Forecast pieces</span></td><td class="num" style="text-align: right;">236</td></tr>
+                <tr><td><span class="nm">Expected revenue · A+B+C</span></td><td class="num" style="text-align: right;">$ 982.00</td></tr>
+                <tr><td><span class="nm">Forecast margin</span></td><td class="num" style="text-align: right; color: var(--tone-success);">$ 814 · 83%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <div class="form-card">
+            <div class="form-h"><div><h2>Grade output</h2><div style="font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 3px;">Sort contents into A/B/C lots. Enter both piece count and weight as you grade.</div></div></div>
+            <div class="grade-grid">
+              <div class="grade-col a">
+                <h3>Grade A <span class="badge">premium</span></h3>
+                <div class="total">42.8<span class="u">kg · 108 pcs</span></div>
+                <div class="lines">
+                  <div class="ln"><span class="nm">Dresses</span><input value="38" /><span class="u">pcs</span><input value="14.4" /><span class="u">kg</span></div>
+                  <div class="ln"><span class="nm">Tops &amp; blouses</span><input value="42" /><span class="u">pcs</span><input value="12.6" /><span class="u">kg</span></div>
+                  <div class="ln"><span class="nm">Skirts</span><input value="18" /><span class="u">pcs</span><input value="8.8" /><span class="u">kg</span></div>
+                  <div class="ln"><span class="nm">Jackets · light</span><input value="10" /><span class="u">pcs</span><input value="7.0" /><span class="u">kg</span></div>
+                </div>
+              </div>
+
+              <div class="grade-col b">
+                <h3>Grade B <span class="badge">standard</span></h3>
+                <div class="total">28.6<span class="u">kg · 84 pcs</span></div>
+                <div class="lines">
+                  <div class="ln"><span class="nm">Tops &amp; blouses</span><input value="28" /><span class="u">pcs</span><input value="8.4" /><span class="u">kg</span></div>
+                  <div class="ln"><span class="nm">Dresses</span><input value="22" /><span class="u">pcs</span><input value="9.2" /><span class="u">kg</span></div>
+                  <div class="ln"><span class="nm">Skirts</span><input value="20" /><span class="u">pcs</span><input value="6.8" /><span class="u">kg</span></div>
+                  <div class="ln"><span class="nm">Scarves &amp; shawls</span><input value="14" /><span class="u">pcs</span><input value="4.2" /><span class="u">kg</span></div>
+                </div>
+              </div>
+
+              <div class="grade-col c">
+                <h3>Grade C <span class="badge">value</span></h3>
+                <div class="total">18.4<span class="u">kg · 44 pcs</span></div>
+                <div class="lines">
+                  <div class="ln"><span class="nm">Mixed tops</span><input value="20" /><span class="u">pcs</span><input value="8.0" /><span class="u">kg</span></div>
+                  <div class="ln"><span class="nm">Dresses · damaged</span><input value="12" /><span class="u">pcs</span><input value="6.4" /><span class="u">kg</span></div>
+                  <div class="ln"><span class="nm">Bundles · 1 kg</span><input value="12" /><span class="u">pcs</span><input value="4.0" /><span class="u">kg</span></div>
+                </div>
+              </div>
+            </div>
+            <div style="padding: 14px 20px; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 12px;">
+              <div style="font: 500 12px/1 var(--font-sans); color: var(--text-muted);">236 pieces forecast · 89.8 kg graded · 8.6 kg loss · 3.6 kg unallocated</div>
+              <span style="flex: 1;"></span>
+              <button class="btn btn-quiet"><span data-icon="plus" data-icon-size="14"></span> Add category</button>
+            </div>
+          </div>
+
+          <div class="form-card" style="margin-top: 16px;">
+            <div class="form-h">
+              <div><h2>Lots to be created</h2><div style="font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 3px;">Auto-generated from grading above. Set opening price ladder before closing.</div></div>
+              <span style="margin-left: auto;" class="badge brand"><span class="dot"></span> Draft · 11 lots</span>
+            </div>
+            <table class="dt">
+              <thead><tr><th>Lot #</th><th>Category</th><th>Grade</th><th style="text-align: right;">Pieces</th><th style="text-align: right;">Week 1</th><th style="text-align: right;">Week 3</th><th>Bin</th></tr></thead>
+              <tbody>
+                <tr><td><span class="nm">LOT-0418</span></td><td>Dresses</td><td><span class="badge ok"><span class="dot"></span> A</span></td><td class="num" style="text-align: right;">38</td><td class="num" style="text-align: right;">$ 12</td><td class="num" style="text-align: right;">$ 8</td><td class="num">M-08</td></tr>
+                <tr><td><span class="nm">LOT-0419</span></td><td>Tops &amp; blouses</td><td><span class="badge ok"><span class="dot"></span> A</span></td><td class="num" style="text-align: right;">42</td><td class="num" style="text-align: right;">$ 6</td><td class="num" style="text-align: right;">$ 4</td><td class="num">M-09</td></tr>
+                <tr><td><span class="nm">LOT-0420</span></td><td>Skirts</td><td><span class="badge ok"><span class="dot"></span> A</span></td><td class="num" style="text-align: right;">18</td><td class="num" style="text-align: right;">$ 8</td><td class="num" style="text-align: right;">$ 5</td><td class="num">M-09</td></tr>
+                <tr><td><span class="nm">LOT-0421</span></td><td>Jackets · light</td><td><span class="badge ok"><span class="dot"></span> A</span></td><td class="num" style="text-align: right;">10</td><td class="num" style="text-align: right;">$ 14</td><td class="num" style="text-align: right;">$ 10</td><td class="num">M-10</td></tr>
+                <tr><td><span class="nm">LOT-0422</span></td><td>Tops &amp; blouses</td><td><span class="badge warn"><span class="dot"></span> B</span></td><td class="num" style="text-align: right;">28</td><td class="num" style="text-align: right;">$ 3</td><td class="num" style="text-align: right;">$ 2</td><td class="num">M-11</td></tr>
+                <tr><td><span class="nm">LOT-0423</span></td><td>Dresses</td><td><span class="badge warn"><span class="dot"></span> B</span></td><td class="num" style="text-align: right;">22</td><td class="num" style="text-align: right;">$ 6</td><td class="num" style="text-align: right;">$ 4</td><td class="num">M-11</td></tr>
+                <tr><td><span class="nm">LOT-0424</span></td><td>Skirts</td><td><span class="badge warn"><span class="dot"></span> B</span></td><td class="num" style="text-align: right;">20</td><td class="num" style="text-align: right;">$ 4</td><td class="num" style="text-align: right;">$ 2</td><td class="num">M-12</td></tr>
+                <tr><td><span class="nm">LOT-0425</span></td><td>Scarves &amp; shawls</td><td><span class="badge warn"><span class="dot"></span> B</span></td><td class="num" style="text-align: right;">14</td><td class="num" style="text-align: right;">$ 2</td><td class="num" style="text-align: right;">$ 1</td><td class="num">M-12</td></tr>
+                <tr><td><span class="nm">LOT-0426</span></td><td>Mixed tops</td><td><span class="badge neutral"><span class="dot"></span> C</span></td><td class="num" style="text-align: right;">20</td><td class="num" style="text-align: right;">$ 1.50</td><td class="num" style="text-align: right;">$ 1</td><td class="num">M-14</td></tr>
+                <tr><td><span class="nm">LOT-0427</span></td><td>Dresses · damaged</td><td><span class="badge neutral"><span class="dot"></span> C</span></td><td class="num" style="text-align: right;">12</td><td class="num" style="text-align: right;">$ 2</td><td class="num" style="text-align: right;">$ 1</td><td class="num">M-14</td></tr>
+                <tr><td><span class="nm">LOT-0428</span></td><td>Bundles · 1 kg</td><td><span class="badge neutral"><span class="dot"></span> C</span></td><td class="num" style="text-align: right;">12</td><td class="num" style="text-align: right;">$ 3</td><td class="num" style="text-align: right;">$ 2</td><td class="num">M-15</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+</body></html>

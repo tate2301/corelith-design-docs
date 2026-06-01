@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Adding a new feature module · Huchu DS</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+</head>
+<body class="ds-doc">
+  <main class="ds-content">
+    <div class="ds-doc-layout">
+
+      <article>
+        <header class="ds-page-head anim-fade-up">
+          <div class="crumbs">
+            <a href="../index.html">Home</a>
+            <span class="sep">/</span>
+            <a href="guides.html">Guides</a>
+            <span class="sep">/</span>
+            <span>New feature module</span>
+          </div>
+          <h1>Adding a new feature module</h1>
+          <p class="lede">A feature module is a top-level navigable area — its own sidebar entry, several pages, and a clear owner. Setting one up cleanly takes about an hour and avoids weeks of rework.</p>
+          <div class="meta">
+            <span class="meta-pill"><span data-icon="layers" data-icon-size="12"></span>Guide</span>
+            <span class="meta-pill">IA + scaffold</span>
+            <span class="meta-pill">Returns worked example</span>
+          </div>
+        </header>
+
+        <!-- IA -->
+        <section id="ia">
+          <h2 class="ds-h2">Information architecture decisions</h2>
+          <p class="ds-h2-sub">Four questions to answer before you create the first HTML file.</p>
+
+          <h3 class="ds-h3">1 — Where does it live?</h3>
+          <p>Three valid homes, in order of preference:</p>
+          <ul>
+            <li><strong>Inside an existing vertical</strong> (Retail, Education, Mining): the module is specific to that line of business. Lives in <code class="inline">verticals/&lt;vertical&gt;/</code>, appears in that vertical's sidebar.</li>
+            <li><strong>Inside an existing portal</strong> (POS, Parent, Student, Teacher): the module is mobile-first and consumer-facing. Lives in <code class="inline">portals/&lt;portal&gt;/</code> with the portal shell.</li>
+            <li><strong>Shared across all verticals</strong> (Reporting, Audit, Settings): the module is generic ERP plumbing. Lives in <code class="inline">kits/</code> and appears in every vertical sidebar.</li>
+          </ul>
+          <p>If two verticals need a near-identical module, build it shared and let each vertical override copy. Forking is more expensive than refactoring later.</p>
+
+          <h3 class="ds-h3">2 — How many pages?</h3>
+          <p>A module typically has 3–5 pages and exactly one is the landing. Fewer than 3 → the module is probably a page in another module. More than 5 → the module is probably two modules.</p>
+
+          <h3 class="ds-h3">3 — What's the primary record?</h3>
+          <p>Every module has one. For Customers it's the customer; for Invoices it's the invoice. Every other page in the module either lists, edits, or supports that primary record. Naming the primary record clarifies which pages belong.</p>
+
+          <h3 class="ds-h3">4 — Who reads it, who writes it?</h3>
+          <p>The roles that consume vs the roles that author shape both the navigation entry (do cashiers see it?) and the permission gate (see <a href="x-role-gate.html">Role gate</a>). Document both in the module's overview page.</p>
+        </section>
+
+        <!-- SCAFFOLD -->
+        <section id="scaffold">
+          <h2 class="ds-h2">Scaffold a new module</h2>
+          <p class="ds-h2-sub">The standard skeleton, copy-paste ready.</p>
+
+          <h3 class="ds-h3">Files to create</h3>
+          <pre class="ds-code">verticals/retail/returns/
+├── index.html              <span class="c">// landing — KPI grid + recent returns</span>
+├── list.html               <span class="c">// all returns — data table</span>
+├── new.html                <span class="c">// create return — form shell</span>
+├── detail.html             <span class="c">// single return — detail + tabs</span>
+└── settings.html           <span class="c">// return policies — settings shell</span></pre>
+
+          <h3 class="ds-h3">Blocks each page composes</h3>
+          <table class="ds-props">
+            <thead><tr><th>Page</th><th>Shell</th><th>Body blocks</th></tr></thead>
+            <tbody>
+              <tr><td>Landing</td><td><a href="x-app-shell.html">App shell</a></td><td><a href="b-page-header.html">Page header</a> + <a href="b-kpi-grid.html">KPI grid</a> + <a href="b-highlights.html">Highlights</a> + <a href="b-quick-links.html">Quick links</a></td></tr>
+              <tr><td>List</td><td>App shell</td><td>Page header + <a href="b-list-page-shell.html">List page shell</a> + <a href="b-data-toolbar.html">Data toolbar</a> + <a href="x-data-table.html">Data table</a></td></tr>
+              <tr><td>New</td><td>App shell</td><td>Page header (compact) + <a href="b-form-shell.html">Form shell</a></td></tr>
+              <tr><td>Detail</td><td>App shell</td><td>Page header (compact) + <a href="b-detail-hero.html">Detail hero</a> + <a href="x-detail-tabs.html">Detail tabs</a> + <a href="b-activity.html">Activity feed</a></td></tr>
+              <tr><td>Settings</td><td><a href="x-settings.html">Settings shell</a></td><td><a href="b-form-shell.html">Form shell</a> (per section)</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- CONVENTIONS -->
+        <section id="conventions">
+          <h2 class="ds-h2">Naming, URL, and sidebar conventions</h2>
+
+          <h3 class="ds-h3">File and folder naming</h3>
+          <ul>
+            <li>Module folder is a lowercase plural noun: <code class="inline">returns/</code>, not <code class="inline">return/</code> or <code class="inline">returnsModule/</code>.</li>
+            <li>Page files use the conventional names above: <code class="inline">index</code>, <code class="inline">list</code>, <code class="inline">new</code>, <code class="inline">detail</code>, <code class="inline">settings</code>. Diverge only with a real reason.</li>
+            <li>System docs use prefixes: <code class="inline">p-</code> components, <code class="inline">b-</code> blocks, <code class="inline">x-</code> patterns, <code class="inline">pg-</code> pages.</li>
+          </ul>
+
+          <h3 class="ds-h3">URL conventions</h3>
+          <ul>
+            <li>Module root: <code class="inline">/returns/</code> — lands on the dashboard.</li>
+            <li>List: <code class="inline">/returns/list?status=open&amp;branch=harare</code> — filters in query string.</li>
+            <li>Detail: <code class="inline">/returns/RET-2026-0142#timeline</code> — record ID in path, tab in hash.</li>
+            <li>Create: <code class="inline">/returns/new?from=inv_8a32</code> — pre-fill via query string.</li>
+            <li>Settings: <code class="inline">/returns/settings</code>.</li>
+          </ul>
+
+          <h3 class="ds-h3">Sidebar entry</h3>
+          <p>Add the module to the vertical's sidebar group with an icon from <a href="iconography.html">Iconography</a>, a label in sentence case, and an optional "New" tag for the first month after release. Order modules by frequency of use, not alphabetically.</p>
+        </section>
+
+        <!-- WORKED EXAMPLE -->
+        <section id="example">
+          <h2 class="ds-h2">Worked example — adding "Returns" to Retail</h2>
+          <p class="ds-h2-sub">A new module in the Retail vertical. Walk through the IA decisions and the page wiring.</p>
+
+          <h3 class="ds-h3">IA answers</h3>
+          <table class="ds-props">
+            <thead><tr><th>Question</th><th>Answer</th></tr></thead>
+            <tbody>
+              <tr><td>Where does it live?</td><td>Retail vertical — returns are POS-driven and refund flows differ per vertical.</td></tr>
+              <tr><td>How many pages?</td><td>Five: landing, list, new, detail, settings.</td></tr>
+              <tr><td>Primary record?</td><td>Return (RET-YYYY-NNNN). Linked to an Order and one or more Line items.</td></tr>
+              <tr><td>Who reads / writes?</td><td>Cashiers create on POS terminal; supervisors approve in dashboard; finance reads in audit. Three roles, two surfaces.</td></tr>
+            </tbody>
+          </table>
+
+          <h3 class="ds-h3">Page wiring</h3>
+          <table class="ds-props">
+            <thead><tr><th>Page</th><th>What's on it</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>Landing</td><td>Today's returns count · refund total · top reason chip · 8 recent returns table</td><td>Uses <a href="b-kpi-grid.html">KPI grid</a> · <a href="b-highlights.html">Highlights</a></td></tr>
+              <tr><td>List</td><td>All returns with status / branch / reason filters · row click opens detail</td><td>Standard <a href="b-list-page-shell.html">List page shell</a></td></tr>
+              <tr><td>New</td><td>Step 1: scan invoice. Step 2: pick lines. Step 3: refund method. Sticky bar.</td><td>Three-section <a href="b-form-shell.html">Form shell</a></td></tr>
+              <tr><td>Detail</td><td>Hero with refund amount + status. Tabs: Lines, Timeline, Refund, Comments.</td><td><a href="x-detail-tabs.html">Detail tabs</a> + <a href="b-comment.html">Comment thread</a></td></tr>
+              <tr><td>Settings</td><td>Return window (days), restocking fee, manager-approval threshold.</td><td><a href="x-settings.html">Settings shell</a> with one section</td></tr>
+            </tbody>
+          </table>
+
+          <h3 class="ds-h3">Sidebar entry</h3>
+          <p>Inserted into the Retail sidebar between <em>Orders</em> and <em>Customers</em> — the place a cashier looks when handing back money. <code class="inline">refund</code> icon, label "Returns", "New" tag for 30 days.</p>
+
+          <h3 class="ds-h3">Permission gate</h3>
+          <p>The module wraps in <a href="x-role-gate.html">Role gate</a> with <code class="inline">retail.returns.read</code> required for any view; create requires <code class="inline">retail.returns.write</code>; refunds above ZWG 500 trigger <a href="x-approval-flow.html">Approval flow</a>.</p>
+        </section>
+
+        <!-- DO / DON'T -->
+        <section id="rules">
+          <h2 class="ds-h2">Do &amp; don't</h2>
+          <div class="ds-rules">
+            <div class="rule do"><span class="tag">Do</span><p>Answer the four IA questions before creating files. They take ten minutes and prevent two-week rewrites.</p></div>
+            <div class="rule dont"><span class="tag">Don't</span><p>Build a module in <code class="inline">kits/</code> "for now" and migrate later. The migration never happens; the wrong sidebar entry persists.</p></div>
+            <div class="rule do"><span class="tag">Do</span><p>Use the standard page set (index, list, new, detail, settings). Future authors find what they expect.</p></div>
+            <div class="rule dont"><span class="tag">Don't</span><p>Invent new file prefixes. The system uses exactly four: <code class="inline">p-</code>, <code class="inline">b-</code>, <code class="inline">x-</code>, <code class="inline">pg-</code>.</p></div>
+            <div class="rule do"><span class="tag">Do</span><p>Put filters in query string, tabs in hash. Operators bookmark filtered views; deep links must work.</p></div>
+            <div class="rule dont"><span class="tag">Don't</span><p>Mix two primary records in one module. "Returns and refunds" is two modules — split them.</p></div>
+          </div>
+        </section>
+
+        <!-- CALLOUT -->
+        <div class="ds-callout">
+          <span class="ic" data-icon="info" data-icon-size="18"></span>
+          <div>
+            <h4>What's next</h4>
+            <p>Each page in your module needs an empty / loading / error state and a mobile plan. See <a href="guide-compose-page.html">Compose a page</a> and <a href="guide-mobile-adaptation.html">Mobile adaptation</a>.</p>
+          </div>
+        </div>
+
+        <!-- PAGER -->
+        <nav class="ds-pager">
+          <a href="guide-compose-pattern.html">
+            <div class="pager-label">← Back to</div>
+            <div class="pager-title">Compose a pattern</div>
+          </a>
+          <a href="guide-block-vs-pattern.html" class="next">
+            <div class="pager-label">Next →</div>
+            <div class="pager-title">Block vs Pattern vs Page</div>
+          </a>
+        </nav>
+      </article>
+
+      <!-- TOC -->
+      <aside class="ds-toc">
+        <div class="toc-label">On this page</div>
+        <ul>
+          <li><a href="#ia" class="current">IA decisions</a></li>
+          <li><a href="#scaffold">Scaffold a module</a></li>
+          <li><a href="#conventions">Naming and URL</a></li>
+          <li><a href="#example">Returns worked example</a></li>
+          <li><a href="#rules">Do &amp; don't</a></li>
+        </ul>
+      </aside>
+
+    </div>
+  </main>
+</body>
+</html>

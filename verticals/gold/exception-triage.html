@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" /><title>Exception triage · Gold operations · Huchu</title>
+<meta name="viewport" content="width=1440" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../dash.css" />
+<script src="../../icons.js" defer></script>
+<style>
+  .dash-side nav a.active { background: #FEF4DA; color: #6B5119; }
+  .dash-side nav a.active svg { color: #D4A641; }
+  .dash-side .org-switcher .mark { background: #D4A641; }
+  .exc { display: grid; grid-template-columns: 60px 1fr auto; gap: 16px; padding: 16px 20px; border-bottom: 1px solid var(--border-subtle); align-items: flex-start; }
+  .exc:last-child { border-bottom: 0; }
+  .exc:hover { background: var(--surface-muted); }
+  .exc .sev { width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; }
+  .exc .sev.crit { background: var(--tone-danger-bg); color: var(--tone-danger); }
+  .exc .sev.warn { background: var(--tone-warn-bg); color: var(--tone-warn); }
+  .exc .sev.info { background: var(--tone-info-bg); color: var(--tone-info); }
+  .exc .ttl { font: 600 14.5px/1.3 var(--font-sans); color: var(--text-strong); margin-bottom: 4px; }
+  .exc .ds { font: 13px/1.5 var(--font-sans); color: var(--text-muted); margin-bottom: 8px; }
+  .exc .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .exc .tag { padding: 3px 9px; border-radius: 9999px; background: var(--surface-muted); font: 500 11px/1.3 var(--font-mono); color: var(--text-muted); }
+  .exc .acts { display: flex; flex-direction: column; gap: 6px; min-width: 120px; }
+  .exc .acts .age { font: 11px/1.3 var(--font-mono); color: var(--text-subtle); text-align: right; margin-bottom: 4px; }
+  .col-list { display: flex; flex-direction: column; gap: 4px; }
+  .col-list .item { display: grid; grid-template-columns: 1fr auto; padding: 10px 16px; border-radius: 8px; align-items: center; gap: 8px; }
+  .col-list .item:hover { background: var(--surface-muted); }
+  .col-list .item .nm { font: 500 13px/1.3 var(--font-sans); color: var(--text-strong); }
+  .col-list .item .sb { font: 11.5px/1.3 var(--font-mono); color: var(--text-muted); margin-top: 2px; }
+  .col-list .item .v { font: 600 13px/1 var(--font-mono); color: var(--text-strong); }
+</style>
+</head>
+<body class="dash-body">
+<div class="dash-frame">
+  <div class="chrome">
+    <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+    <span class="url">https://app.huchu.com / gold/exceptions</span>
+    <span class="actions"><a href="../../index.html">← Design system</a></span>
+  </div>
+  <div class="dash-app">
+    <aside class="dash-side">
+      <div class="org-switcher">
+        <span class="mark" data-icon="corelith" data-icon-size="16"></span>
+        <div style="flex: 1; min-width: 0;"><div class="name">Mazowe Gold</div><div class="sub">2 plants · Operator</div></div>
+        <span class="chev" data-icon="chevron" data-icon-size="14"></span>
+      </div>
+      <a class="new-action" href="#"><span data-icon="plus" data-icon-size="14"></span> Log pour<span class="kbd">⌘N</span></a>
+      <div class="sh">Gold operations<span data-icon="chevron"></span></div>
+      <nav>
+        <a href="pours.html"><span data-icon="dashboard"></span> Operations overview</a>
+        <a href="pours-register.html"><span data-icon="gem"></span> Pours register</a>
+        <a href="#"><span data-icon="truck"></span> Dispatches</a>
+        <a href="settlement-detail.html"><span data-icon="coin"></span> Settlements</a>
+        <a href="exception-triage.html" class="active"><span data-icon="info"></span> Exceptions<span class="cnt" style="background: var(--tone-danger); color: #fff;">7</span></a>
+        <a href="pricing-history.html"><span data-icon="chart"></span> Pricing history</a>
+        <a href="audit-export.html"><span data-icon="shield"></span> ZIMRA &amp; audit</a>
+      </nav>
+      <div class="sh">Shared</div>
+      <nav>
+        <a href="#"><span data-icon="user"></span> HR</a>
+        <a href="#"><span data-icon="camera"></span> CCTV</a>
+        <a href="#"><span data-icon="settings"></span> Maintenance</a>
+      </nav>
+      <div class="footer">
+        <span class="avatar" style="background: #FEF4DA; color: #6B5119;">SK</span>
+        <div><div class="nm">Stanford Kuda</div><div class="sb">Plant manager</div></div>
+        <span class="arrow" data-icon="chup" data-icon-size="14"></span>
+      </div>
+    </aside>
+    <main class="dash-main">
+      <header class="dash-topbar">
+        <div class="crumbs"><a href="#">Mazowe Gold</a><span class="sep">/</span><span class="current">Exceptions</span></div>
+        <div class="spacer"></div>
+        <div class="search"><span data-icon="search"></span><input placeholder="Search exceptions…" /><span class="kbd-hint">⌘K</span></div>
+        <button class="ic-btn"><span data-icon="bell" data-icon-size="16"></span></button>
+        <button class="ic-btn" style="background: var(--brand); color: #fff;"><span data-icon="user" data-icon-size="16"></span></button>
+      </header>
+
+<div class="dash-page" style="padding-bottom: 0;">
+  <div class="dash-page-h">
+    <div class="meta">
+      <h1>Exception triage</h1>
+      <p class="lede">Every variance, late settlement, missing chain-of-custody or fineness shortfall. Resolve from this view; the reconciliation engine reposts automatically.</p>
+      <div class="h-pills"><span class="p" style="background: var(--tone-danger-bg); color: var(--tone-danger);">3 critical</span><span class="p" style="background: var(--tone-warn-bg); color: var(--tone-warn);">4 warnings</span><span class="p">7 open · 12 closed this week</span></div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-quiet"><span data-icon="filter" data-icon-size="14"></span> Saved filters</button>
+      <button class="btn btn-secondary"><span data-icon="download" data-icon-size="14"></span> Export</button>
+      <button class="btn btn-primary"><span data-icon="check" data-icon-size="14"></span> Bulk resolve</button>
+    </div>
+  </div>
+  <div class="dash-tabs">
+    <button class="tab active"><span data-icon="info"></span> Open<span class="cnt">7</span></button>
+    <button class="tab"><span data-icon="clock"></span> In progress<span class="cnt">2</span></button>
+    <button class="tab"><span data-icon="check"></span> Resolved<span class="cnt">12</span></button>
+    <button class="tab"><span data-icon="shield"></span> Escalated to ZIMRA<span class="cnt">1</span></button>
+  </div>
+</div>
+
+<div style="padding: 8px 32px 24px;">
+  <div class="cols-2">
+    <div class="dash-card">
+      <div class="dash-card-h"><div><h2>Open exceptions · 7</h2><div class="sub">Newest first · resolve in order of severity</div></div><a class="more" href="#">Filter →</a></div>
+
+      <div class="exc">
+        <div class="sev crit"><span data-icon="info" data-icon-size="20"></span></div>
+        <div>
+          <div class="ttl">SH-2839 · settlement overdue 4 days</div>
+          <div class="ds">Rand Refinery hasn't returned assay for the 0.82 kg dispatched 24 May. Expected settlement 30 May. Account manager L Marais notified twice. ZIMRA 30-day window expires 23 Jun.</div>
+          <div class="tags"><span class="tag">CRIT-001</span><span class="tag">Late settlement</span><span class="tag">Rand Refinery</span><span class="tag">SH-2839</span></div>
+        </div>
+        <div class="acts">
+          <span class="age">Opened 4d ago</span>
+          <button class="btn btn-primary btn-sm" style="height: 28px; padding: 0 12px; font-size: 12px;">Investigate</button>
+          <button class="btn btn-quiet" style="padding: 0 10px; height: 26px; font-size: 12px;">Snooze 24h</button>
+        </div>
+      </div>
+
+      <div class="exc">
+        <div class="sev crit"><span data-icon="info" data-icon-size="20"></span></div>
+        <div>
+          <div class="ttl">P-2840 · fineness shortfall –1.2pp</div>
+          <div class="ds">Declared 95.0% from in-house fire assay; refinery returned 93.8%. 31 g unaccounted fine across 2.604 kg crude. Recommend resample retained portion and recalculate dispatch SH-2840.</div>
+          <div class="tags"><span class="tag">CRIT-002</span><span class="tag">Fineness variance</span><span class="tag">P-2840</span><span class="tag">T Marufu · Night</span></div>
+        </div>
+        <div class="acts">
+          <span class="age">Opened 1d ago</span>
+          <button class="btn btn-primary btn-sm" style="height: 28px; padding: 0 12px; font-size: 12px;">Reconcile</button>
+          <button class="btn btn-quiet" style="padding: 0 10px; height: 26px; font-size: 12px;">Resample</button>
+        </div>
+      </div>
+
+      <div class="exc">
+        <div class="sev crit"><span data-icon="info" data-icon-size="20"></span></div>
+        <div>
+          <div class="ttl">D-1188 · missing driver KYC</div>
+          <div class="ds">Dispatch 0.860 kg fine to assay lab Harare; driver Tarisai Mwale logged but no national ID copy or police clearance on file. Chain-of-custody incomplete; cannot close ZIMRA pack until resolved.</div>
+          <div class="tags"><span class="tag">CRIT-003</span><span class="tag">Chain of custody</span><span class="tag">D-1188</span><span class="tag">KYC missing</span></div>
+        </div>
+        <div class="acts">
+          <span class="age">Opened 6h ago</span>
+          <button class="btn btn-primary btn-sm" style="height: 28px; padding: 0 12px; font-size: 12px;">Upload docs</button>
+          <button class="btn btn-quiet" style="padding: 0 10px; height: 26px; font-size: 12px;">Flag driver</button>
+        </div>
+      </div>
+
+      <div class="exc">
+        <div class="sev warn"><span data-icon="info" data-icon-size="20"></span></div>
+        <div>
+          <div class="ttl">P-2837 · melt loss above tolerance (2.04%)</div>
+          <div class="ds">Limit 1.8%. Night-shift crucible cooled too rapidly per furnace log. Trend across last 4 night pours suggests crucible #3 retempering due.</div>
+          <div class="tags"><span class="tag">WARN-014</span><span class="tag">Process variance</span><span class="tag">Crucible-03</span></div>
+        </div>
+        <div class="acts">
+          <span class="age">Opened 2d ago</span>
+          <button class="btn btn-secondary btn-sm" style="height: 28px; padding: 0 12px; font-size: 12px;">Open ticket</button>
+          <button class="btn btn-quiet" style="padding: 0 10px; height: 26px; font-size: 12px;">Acknowledge</button>
+        </div>
+      </div>
+
+      <div class="exc">
+        <div class="sev warn"><span data-icon="info" data-icon-size="20"></span></div>
+        <div>
+          <div class="ttl">SH-2837 · price-on-day mismatch</div>
+          <div class="ds">Booked at $ 74.20/g (PM fix 27 May); refinery applied $ 73.92/g (AM fix 28 May). Difference $ 868 short across 3.100 kg fine. Within contract tolerance but flagged for review.</div>
+          <div class="tags"><span class="tag">WARN-015</span><span class="tag">Pricing</span><span class="tag">SH-2837</span></div>
+        </div>
+        <div class="acts">
+          <span class="age">Opened 3d ago</span>
+          <button class="btn btn-secondary btn-sm" style="height: 28px; padding: 0 12px; font-size: 12px;">Accept</button>
+          <button class="btn btn-quiet" style="padding: 0 10px; height: 26px; font-size: 12px;">Dispute</button>
+        </div>
+      </div>
+
+      <div class="exc">
+        <div class="sev warn"><span data-icon="info" data-icon-size="20"></span></div>
+        <div>
+          <div class="ttl">B-0414 batch · no second-signatory</div>
+          <div class="ds">Pour P-2838 sealed by Stanford Kuda only; SOP requires plant-manager + shift-supervisor co-sign. Brian Mhuri on leave — assign cover.</div>
+          <div class="tags"><span class="tag">WARN-016</span><span class="tag">SOP gap</span><span class="tag">B-0414</span></div>
+        </div>
+        <div class="acts">
+          <span class="age">Opened 1d ago</span>
+          <button class="btn btn-secondary btn-sm" style="height: 28px; padding: 0 12px; font-size: 12px;">Assign signer</button>
+          <button class="btn btn-quiet" style="padding: 0 10px; height: 26px; font-size: 12px;">Waive</button>
+        </div>
+      </div>
+
+      <div class="exc">
+        <div class="sev info"><span data-icon="info" data-icon-size="20"></span></div>
+        <div>
+          <div class="ttl">M-02 weighbridge calibration due</div>
+          <div class="ds">Last cert from Standards Association of Zimbabwe issued 04 Dec — 6-month re-cert window expires 04 Jun. Book SAZ technician this week.</div>
+          <div class="tags"><span class="tag">INFO-008</span><span class="tag">Calibration</span><span class="tag">M-02</span></div>
+        </div>
+        <div class="acts">
+          <span class="age">Opened 5d ago</span>
+          <button class="btn btn-secondary btn-sm" style="height: 28px; padding: 0 12px; font-size: 12px;">Book SAZ</button>
+          <button class="btn btn-quiet" style="padding: 0 10px; height: 26px; font-size: 12px;">Snooze</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div class="dash-card">
+        <div class="dash-card-h"><div><h2>By category</h2><div class="sub">Last 30 days</div></div></div>
+        <div class="col-list" style="padding: 8px;">
+          <div class="item"><div><div class="nm">Late settlement</div><div class="sb">Refinery turnaround &gt; 5 days</div></div><span class="v">4</span></div>
+          <div class="item"><div><div class="nm">Fineness shortfall</div><div class="sb">Refinery &lt; declared assay</div></div><span class="v">3</span></div>
+          <div class="item"><div><div class="nm">Missing chain-of-custody</div><div class="sb">KYC, seal, escort docs</div></div><span class="v">2</span></div>
+          <div class="item"><div><div class="nm">Process variance</div><div class="sb">Melt loss, fuel use</div></div><span class="v">5</span></div>
+          <div class="item"><div><div class="nm">Pricing dispute</div><div class="sb">LBMA fix application</div></div><span class="v">2</span></div>
+          <div class="item"><div><div class="nm">SOP gap</div><div class="sb">Signatory, dual-control</div></div><span class="v">3</span></div>
+        </div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-card-h"><div><h2>Resolution playbooks</h2><div class="sub">Click to apply</div></div></div>
+        <div class="col-list" style="padding: 8px;">
+          <div class="item"><div><div class="nm">→ Refinery escalation letter</div><div class="sb">PDF · pre-filled to Rand Refinery account manager</div></div><span data-icon="external" data-icon-size="14" style="color: var(--text-muted);"></span></div>
+          <div class="item"><div><div class="nm">→ Resample &amp; re-assay request</div><div class="sb">Generates lab ticket · 24h turnaround</div></div><span data-icon="external" data-icon-size="14" style="color: var(--text-muted);"></span></div>
+          <div class="item"><div><div class="nm">→ ZIMRA late-settlement filing</div><div class="sb">Stat-form 14B · electronic submission</div></div><span data-icon="external" data-icon-size="14" style="color: var(--text-muted);"></span></div>
+          <div class="item"><div><div class="nm">→ Driver KYC capture</div><div class="sb">Photo + ID + clearance via mobile</div></div><span data-icon="external" data-icon-size="14" style="color: var(--text-muted);"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    </main>
+  </div>
+</div>
+</body></html>

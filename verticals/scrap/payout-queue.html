@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" /><title>Payout queue · Scrap · Huchu</title>
+<meta name="viewport" content="width=1440" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../dash.css" />
+<script src="../../icons.js" defer></script>
+<style>
+  .dash-side nav a.active { background: #FFE5C8; color: #6B3F19; }
+  .dash-side nav a.active svg { color: #E2A458; }
+  .dash-side .org-switcher .mark { background: #E2A458; }
+  .method-row { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .method-row:last-child { border-bottom: 0; }
+  .method-row .head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .method-row .glyph { width: 36px; height: 36px; border-radius: 8px; display: grid; place-items: center; color: #fff; flex: none; }
+  .method-row .glyph.ec { background: #C8102E; }
+  .method-row .glyph.om { background: #C28F2C; }
+  .method-row .glyph.eft { background: #1A4DA1; }
+  .method-row .glyph.cash { background: #4F9A4F; }
+  .method-row .glyph.zipit { background: #6B3F19; }
+  .method-row .nm { font: 600 14.5px/1 var(--font-sans); color: var(--text-strong); }
+  .method-row .sb { font: 12px/1.3 var(--font-mono); color: var(--text-muted); margin-top: 3px; }
+  .method-row .count-tag { margin-left: auto; padding: 4px 10px; border-radius: 9999px; background: var(--surface-muted); font: 600 12px/1 var(--font-mono); color: var(--text-strong); }
+  .method-row .pay-item { display: grid; grid-template-columns: 32px 1fr 140px 140px auto; gap: 14px; padding: 10px 0 10px 48px; align-items: center; border-bottom: 1px dashed var(--border-subtle); }
+  .method-row .pay-item:last-child { border-bottom: 0; }
+  .method-row .pay-item .chk { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--border-strong); background: var(--surface); display: grid; place-items: center; }
+  .method-row .pay-item.on .chk { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .method-row .pay-item.on .chk svg { width: 11px; height: 11px; }
+  .method-row .pay-item .sup { font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .method-row .pay-item .ref { font: 11.5px/1.3 var(--font-mono); color: var(--text-muted); margin-top: 2px; }
+  .method-row .pay-item .ec-num { font: 500 12px/1 var(--font-mono); color: var(--text-muted); }
+  .method-row .pay-item .amt { font: 600 14px/1 var(--font-mono); color: var(--text-strong); text-align: right; font-variant-numeric: tabular-nums; }
+  .summary-bar { background: #FFF4E6; border: 1px solid #FFE5C8; border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 22px; margin-bottom: 16px; }
+  .summary-bar .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: #6B3F19; }
+  .summary-bar .v { font: 700 22px/1 var(--font-sans); color: #6B3F19; margin-top: 6px; }
+  .summary-bar .sb { font: 12px/1.3 var(--font-mono); color: #6B3F19; opacity: 0.7; margin-top: 4px; }
+  .summary-bar .div { width: 1px; background: #FFE5C8; align-self: stretch; }
+</style>
+</head>
+<body class="dash-body">
+<div class="dash-frame">
+  <div class="chrome">
+    <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+    <span class="url">https://app.huchu.com / scrap/payouts</span>
+    <span class="actions"><a href="../../index.html">← Design system</a></span>
+  </div>
+  <div class="dash-app">
+    <aside class="dash-side">
+      <div class="org-switcher">
+        <span class="mark" data-icon="corelith" data-icon-size="16"></span>
+        <div style="flex: 1; min-width: 0;"><div class="name">Bolt Metals</div><div class="sub">3 yards · Owner</div></div>
+        <span class="chev" data-icon="chevron" data-icon-size="14"></span>
+      </div>
+      <a class="new-action" href="#"><span data-icon="plus" data-icon-size="14"></span> New intake<span class="kbd">⌘N</span></a>
+      <div class="sh">Scrap &amp; recycling<span data-icon="chevron"></span></div>
+      <nav>
+        <a href="intake.html"><span data-icon="dashboard"></span> Yard overview</a>
+        <a href="intake.html"><span data-icon="truck"></span> Gate intake</a>
+        <a href="stockpile-detail.html"><span data-icon="warehouse"></span> Yard stock</a>
+        <a href="#"><span data-icon="chart"></span> Pricing history</a>
+        <a href="bulk-sale-dispatch.html"><span data-icon="receipt"></span> Bulk sales</a>
+        <a href="supplier-ledger.html"><span data-icon="user"></span> Suppliers</a>
+        <a href="payout-queue.html" class="active"><span data-icon="coin"></span> Payouts<span class="cnt" style="background: #E2A458; color: #fff;">14</span></a>
+      </nav>
+      <div class="sh">Shared</div>
+      <nav>
+        <a href="#"><span data-icon="user"></span> HR</a>
+        <a href="#"><span data-icon="shield"></span> Compliance</a>
+      </nav>
+      <div class="footer">
+        <span class="avatar" style="background: #FFE5C8; color: #6B3F19;">BC</span>
+        <div><div class="nm">Brian Chivasa</div><div class="sb">Yard manager</div></div>
+        <span class="arrow" data-icon="chup" data-icon-size="14"></span>
+      </div>
+    </aside>
+    <main class="dash-main">
+      <header class="dash-topbar">
+        <div class="crumbs"><a href="#">Bolt Metals</a><span class="sep">/</span><span class="current">Payout queue</span></div>
+        <div class="spacer"></div>
+        <div class="search"><span data-icon="search"></span><input placeholder="Search supplier, ref…" /><span class="kbd-hint">⌘K</span></div>
+        <button class="ic-btn"><span data-icon="bell" data-icon-size="16"></span></button>
+        <button class="ic-btn" style="background: var(--brand); color: #fff;"><span data-icon="user" data-icon-size="16"></span></button>
+      </header>
+
+<div class="dash-page" style="padding-bottom: 0;">
+  <div class="dash-page-h">
+    <div class="meta">
+      <h1>Payout queue</h1>
+      <p class="lede">Every pending payment to suppliers, grouped by method. Approve in bulk, sign with your treasury PIN, dispatch to EcoCash, OneMoney, EFT or cash desk.</p>
+      <div class="h-pills"><span class="p b">14 pending</span><span class="p">$ 18,488 across 5 methods</span><span class="p s">●  Treasury balance $ 124,800</span></div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-quiet"><span data-icon="filter" data-icon-size="14"></span> By yard</button>
+      <button class="btn btn-secondary"><span data-icon="download" data-icon-size="14"></span> Export run</button>
+      <button class="btn btn-primary"><span data-icon="check" data-icon-size="14"></span> Sign &amp; release ($ 14,820)</button>
+    </div>
+  </div>
+  <div class="stat-row">
+    <div class="stat-tile"><div class="lbl">Selected to release</div><div class="v">$ 14,820</div><div class="delta" style="color: var(--text-muted);">8 of 14 payouts</div></div>
+    <div class="stat-tile"><div class="lbl">On hold</div><div class="v">$ 3,668</div><div class="delta dn"><span class="arr"></span> 6 KYC pending</div></div>
+    <div class="stat-tile"><div class="lbl">Released today</div><div class="v">$ 22,140</div><div class="delta up"><span class="arr"></span> 18 payouts cleared</div></div>
+    <div class="stat-tile"><div class="lbl">Treasury balance</div><div class="v">$ 124,800</div><div class="delta" style="color: var(--text-muted);">USD nostro · Stanbic</div></div>
+  </div>
+</div>
+
+<div style="padding: 8px 32px 24px;">
+  <div class="summary-bar">
+    <div><div class="lbl">Run window</div><div class="v">14:00 – 16:00</div><div class="sb">EcoCash &amp; OneMoney close at 16:30 daily</div></div>
+    <div class="div"></div>
+    <div><div class="lbl">Co-signer</div><div class="v">Brian Chivasa</div><div class="sb">Treasury PIN required at release</div></div>
+    <div class="div"></div>
+    <div><div class="lbl">Pre-flight</div><div class="v" style="color: var(--tone-success);">8 ready</div><div class="sb">6 awaiting KYC refresh</div></div>
+    <div style="margin-left: auto;"><button class="btn btn-secondary"><span data-icon="refresh" data-icon-size="14"></span> Refresh balances</button></div>
+  </div>
+
+  <div class="cols-2">
+    <div class="dash-card" style="padding: 0;">
+      <div class="dash-card-h"><div><h2>Pending payouts · 14</h2><div class="sub">Grouped by method · select to release</div></div></div>
+
+      <div class="method-row">
+        <div class="head">
+          <div class="glyph ec"><span data-icon="phone" data-icon-size="18"></span></div>
+          <div><div class="nm">EcoCash</div><div class="sb">Mobile money · Econet · instant</div></div>
+          <span class="count-tag">5 · $ 6,184</span>
+        </div>
+        <div class="pay-item on">
+          <div class="chk"><span data-icon="check"></span></div>
+          <div><div class="sup">Tendai Mining (Pvt) Ltd</div><div class="ref">PO-02184 · intake 03 Jun · 8,640 kg</div></div>
+          <div class="ec-num">077 412 8821</div>
+          <div class="ec-num">SUP-0184</div>
+          <div class="amt">$ 3,540.80</div>
+        </div>
+        <div class="pay-item on">
+          <div class="chk"><span data-icon="check"></span></div>
+          <div><div class="sup">Sipho Moyo</div><div class="ref">PO-02185 · intake 03 Jun · 418 kg AL</div></div>
+          <div class="ec-num">077 882 4188</div>
+          <div class="ec-num">SUP-0421</div>
+          <div class="amt">$ 502.00</div>
+        </div>
+        <div class="pay-item on">
+          <div class="chk"><span data-icon="check"></span></div>
+          <div><div class="sup">Mhondoro Welding</div><div class="ref">PO-02186 · intake 03 Jun · 62 kg Cu</div></div>
+          <div class="ec-num">077 218 4982</div>
+          <div class="ec-num">SUP-0388</div>
+          <div class="amt">$ 360.00</div>
+        </div>
+        <div class="pay-item on">
+          <div class="chk"><span data-icon="check"></span></div>
+          <div><div class="sup">Walter Banda</div><div class="ref">PO-02187 · intake 03 Jun · 840 kg tin</div></div>
+          <div class="ec-num">077 401 2284</div>
+          <div class="ec-num">SUP-0512</div>
+          <div class="amt">$ 151.00</div>
+        </div>
+        <div class="pay-item">
+          <div class="chk"></div>
+          <div><div class="sup">Joseph Ranga</div><div class="ref">PO-02188 · KYC document refresh pending</div></div>
+          <div class="ec-num">077 188 4421</div>
+          <div class="ec-num">SUP-0612</div>
+          <div class="amt" style="color: var(--clay-strong);">$ 1,630.20</div>
+        </div>
+      </div>
+
+      <div class="method-row">
+        <div class="head">
+          <div class="glyph om"><span data-icon="phone" data-icon-size="18"></span></div>
+          <div><div class="nm">OneMoney</div><div class="sb">Mobile money · NetOne · instant</div></div>
+          <span class="count-tag">2 · $ 884</span>
+        </div>
+        <div class="pay-item on">
+          <div class="chk"><span data-icon="check"></span></div>
+          <div><div class="sup">Glen Park Spares</div><div class="ref">PO-02189 · intake 03 Jun · 96 kg brass</div></div>
+          <div class="ec-num">071 488 2218</div>
+          <div class="ec-num">SUP-0288</div>
+          <div class="amt">$ 307.00</div>
+        </div>
+        <div class="pay-item on">
+          <div class="chk"><span data-icon="check"></span></div>
+          <div><div class="sup">Bulawayo Spares</div><div class="ref">PO-02190 · intake 02 Jun · 1,420 kg steel B</div></div>
+          <div class="ec-num">071 244 1188</div>
+          <div class="ec-num">SUP-0312</div>
+          <div class="amt">$ 577.00</div>
+        </div>
+      </div>
+
+      <div class="method-row">
+        <div class="head">
+          <div class="glyph eft"><span data-icon="card" data-icon-size="18"></span></div>
+          <div><div class="nm">EFT · bank transfer</div><div class="sb">RTGS / nostro · 2 hr clearing</div></div>
+          <span class="count-tag">3 · $ 9,478</span>
+        </div>
+        <div class="pay-item on">
+          <div class="chk"><span data-icon="check"></span></div>
+          <div><div class="sup">Greenline Logistics (Pvt)</div><div class="ref">PO-02191 · intake 03 Jun · 5,200 kg steel A</div></div>
+          <div class="ec-num">Stanbic 9100-188421</div>
+          <div class="ec-num">SUP-0188</div>
+          <div class="amt">$ 2,184.00</div>
+        </div>
+        <div class="pay-item on">
+          <div class="chk"><span data-icon="check"></span></div>
+          <div><div class="sup">MetalCo Holdings (Pvt)</div><div class="ref">PO-02192 · intake 03 Jun · 3,640 kg iron B</div></div>
+          <div class="ec-num">CABS 4188-219802</div>
+          <div class="ec-num">SUP-0421</div>
+          <div class="amt">$ 1,310.40</div>
+        </div>
+        <div class="pay-item">
+          <div class="chk"></div>
+          <div><div class="sup">Hwange Colliery Company</div><div class="ref">PO-02193 · weekly run · KYC due</div></div>
+          <div class="ec-num">Steward 0188-204188</div>
+          <div class="ec-num">SUP-0042</div>
+          <div class="amt" style="color: var(--clay-strong);">$ 5,984.00</div>
+        </div>
+      </div>
+
+      <div class="method-row">
+        <div class="head">
+          <div class="glyph zipit"><span data-icon="zap" data-icon-size="18"></span></div>
+          <div><div class="nm">ZIPIT</div><div class="sb">Inter-bank instant · ZW only</div></div>
+          <span class="count-tag">1 · $ 942</span>
+        </div>
+        <div class="pay-item on">
+          <div class="chk"><span data-icon="check"></span></div>
+          <div><div class="sup">Park Auto Spares</div><div class="ref">PO-02194 · intake 03 Jun · 1,620 kg iron B</div></div>
+          <div class="ec-num">FBC 8841-188-22</div>
+          <div class="ec-num">SUP-0301</div>
+          <div class="amt">$ 942.00</div>
+        </div>
+      </div>
+
+      <div class="method-row">
+        <div class="head">
+          <div class="glyph cash"><span data-icon="wallet" data-icon-size="18"></span></div>
+          <div><div class="nm">Cash · counter desk</div><div class="sb">Daily cap $ 1,000 per supplier (RBZ)</div></div>
+          <span class="count-tag">3 · $ 1,000</span>
+        </div>
+        <div class="pay-item">
+          <div class="chk"></div>
+          <div><div class="sup">Anonymous walk-in #88</div><div class="ref">PO-02195 · KYC required &gt; $ 200</div></div>
+          <div class="ec-num">Desk · Greendale</div>
+          <div class="ec-num">—</div>
+          <div class="amt" style="color: var(--clay-strong);">$ 184.00</div>
+        </div>
+        <div class="pay-item">
+          <div class="chk"></div>
+          <div><div class="sup">Anonymous walk-in #89</div><div class="ref">PO-02196 · NRC photo required</div></div>
+          <div class="ec-num">Desk · Mutare</div>
+          <div class="ec-num">—</div>
+          <div class="amt" style="color: var(--clay-strong);">$ 412.00</div>
+        </div>
+        <div class="pay-item">
+          <div class="chk"></div>
+          <div><div class="sup">Petros Chakawa</div><div class="ref">PO-02197 · KYC document refresh pending</div></div>
+          <div class="ec-num">Desk · Workington</div>
+          <div class="ec-num">SUP-0844</div>
+          <div class="amt" style="color: var(--clay-strong);">$ 404.00</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div class="dash-card">
+        <div class="dash-card-h"><div><h2>Release pipeline</h2><div class="sub">Next 3 hours</div></div></div>
+        <table class="dt">
+          <tbody>
+            <tr><td><span class="badge brand"><span class="dot"></span> 15:00</span></td><td><span class="nm">EcoCash batch · 4 payouts</span><div class="sb">Auto-release after PIN</div></td><td class="num" style="text-align: right;">$ 4,553</td></tr>
+            <tr><td><span class="badge brand"><span class="dot"></span> 15:00</span></td><td><span class="nm">OneMoney batch · 2 payouts</span><div class="sb">Auto-release after PIN</div></td><td class="num" style="text-align: right;">$ 884</td></tr>
+            <tr><td><span class="badge brand"><span class="dot"></span> 15:30</span></td><td><span class="nm">EFT batch · 2 payouts</span><div class="sb">RTGS cut-off 16:00</div></td><td class="num" style="text-align: right;">$ 3,494</td></tr>
+            <tr><td><span class="badge brand"><span class="dot"></span> 15:30</span></td><td><span class="nm">ZIPIT · 1 payout</span><div class="sb">Inter-bank instant</div></td><td class="num" style="text-align: right;">$ 942</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-card-h"><div><h2>Today's released</h2><div class="sub">18 payouts · cleared</div></div><a class="more" href="#">Reconciliation →</a></div>
+        <table class="dt">
+          <tbody>
+            <tr><td><span class="badge ok"><span class="dot"></span> 13:42</span></td><td><span class="nm">Tendai Nyathi · EcoCash</span><div class="sb">Ref EC-04188-218</div></td><td class="num" style="text-align: right;">$ 1,193</td></tr>
+            <tr><td><span class="badge ok"><span class="dot"></span> 13:18</span></td><td><span class="nm">Park Auto Spares · EFT</span><div class="sb">Ref RTGS-9188-04</div></td><td class="num" style="text-align: right;">$ 583</td></tr>
+            <tr><td><span class="badge ok"><span class="dot"></span> 12:40</span></td><td><span class="nm">Sipho Moyo · EcoCash</span><div class="sb">Ref EC-04188-217</div></td><td class="num" style="text-align: right;">$ 502</td></tr>
+            <tr><td><span class="badge ok"><span class="dot"></span> 11:55</span></td><td><span class="nm">Tendai Mining · EcoCash</span><div class="sb">Ref EC-04188-216</div></td><td class="num" style="text-align: right;">$ 3,205</td></tr>
+            <tr><td><span class="badge ok"><span class="dot"></span> 11:18</span></td><td><span class="nm">Greenline Logistics · EFT</span><div class="sb">Ref RTGS-9188-03</div></td><td class="num" style="text-align: right;">$ 2,184</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-card-h"><div><h2>Held for KYC · 6</h2><div class="sub">Refresh required before release</div></div></div>
+        <table class="dt">
+          <tbody>
+            <tr><td><span class="nm">Joseph Ranga</span><div class="sb">NRC expired Mar · re-capture at gate</div></td><td><button class="btn btn-quiet" style="padding: 0 8px; height: 26px; font-size: 12px;">Capture</button></td></tr>
+            <tr><td><span class="nm">Hwange Colliery</span><div class="sb">ITF 263 expired · request from supplier</div></td><td><button class="btn btn-quiet" style="padding: 0 8px; height: 26px; font-size: 12px;">Email</button></td></tr>
+            <tr><td><span class="nm">Petros Chakawa</span><div class="sb">NRC photo blurred · re-take</div></td><td><button class="btn btn-quiet" style="padding: 0 8px; height: 26px; font-size: 12px;">Capture</button></td></tr>
+            <tr><td><span class="nm">Anonymous #88</span><div class="sb">Walk-in &gt; $ 100 · ID required</div></td><td><button class="btn btn-quiet" style="padding: 0 8px; height: 26px; font-size: 12px;">Capture</button></td></tr>
+            <tr><td><span class="nm">Anonymous #89</span><div class="sb">Walk-in &gt; $ 100 · ID required</div></td><td><button class="btn btn-quiet" style="padding: 0 8px; height: 26px; font-size: 12px;">Capture</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+    </main>
+  </div>
+</div>
+</body></html>

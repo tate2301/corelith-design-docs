@@ -1,252 +1,55 @@
-/* Corelith DS — Shell injector
- * Each system/ page declares <body class="ds-doc" data-page="p-button"> and a
- * <main class="ds-content"> with the actual content. This script injects the
- * top nav, sidebar, and footer using path-aware links.
+/* Huchu DS — system page enhancement
  *
- * Add to head:
- *   <script src="../system-shell.js" defer></script>
+ * Originally this file injected a topbar + sidebar + footer. That chrome is
+ * now produced by the unified huchu-nav.js. This file is now responsible for:
+ *
+ *   1. Loading huchu-nav.css / huchu-nav.js on system/* pages so authors
+ *      don't have to add the tags by hand.
+ *   2. The viewport preview switcher around .ds-specimen / .ds-variant-grid
+ *      (Tailwind-UI style frame with mobile/tablet/desktop/full toggles).
+ *   3. Light footer at the end of the content column.
+ *
+ * Authoring contract is unchanged:
+ *   <body class="ds-doc" data-page="p-button">
+ *   <main class="ds-content"> … </main>
  */
 (function () {
-  // Are we in /system/ or root?
   const inSystem = /\/system\//.test(location.pathname);
   const root = inSystem ? '../' : '';
   const sys  = inSystem ? '' : 'system/';
 
-  const current = (location.pathname.split('/').pop() || '').replace('.html', '');
+  // ── 1. Ensure unified nav is present on every system page ────────────
+  function ensureNavAssets() {
+    if (!document.querySelector('link[data-huchu-nav]')) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = root + 'huchu-nav.css';
+      link.setAttribute('data-huchu-nav', '');
+      document.head.appendChild(link);
+    }
+    if (!document.querySelector('script[data-huchu-nav]')) {
+      const s = document.createElement('script');
+      s.src = root + 'huchu-nav.js';
+      s.defer = true;
+      s.setAttribute('data-huchu-nav', '');
+      document.head.appendChild(s);
+    }
+  }
+  ensureNavAssets();
 
-  // SIDEBAR STRUCTURE
-  const sidebarGroups = [
-    { label: 'Get started', items: [
-      ['Overview',  inSystem ? '../index.html' : 'index.html', 'index'],
-      ['Principles', sys + 'principles.html', 'principles'],
-      ['Install',    sys + 'install.html', 'install'],
-      ['Changelog',  sys + 'changelog.html', 'changelog', 'v0.3'],
-    ]},
-    { label: 'Foundations', items: [
-      ['Colors',         sys + 'colors.html', 'colors'],
-      ['Typography',     sys + 'typography.html', 'typography'],
-      ['Spacing & layout', sys + 'spacing.html', 'spacing'],
-      ['Elevation',      sys + 'elevation.html', 'elevation'],
-      ['Motion',         sys + 'motion.html', 'motion'],
-      ['Iconography',    sys + 'iconography.html', 'iconography'],
-      ['Voice & writing', sys + 'voice.html', 'voice'],
-    ]},
-    { label: 'Components', items: [
-      ['Button',           sys + 'p-button.html', 'p-button'],
-      ['Button group',     sys + 'p-button-group.html', 'p-button-group'],
-      ['Segmented control', sys + 'p-segmented-control.html', 'p-segmented-control'],
-      ['Input & field',    sys + 'p-input.html', 'p-input'],
-      ['Input group',      sys + 'p-input-group.html', 'p-input-group'],
-      ['Input OTP',        sys + 'p-input-otp.html', 'p-input-otp'],
-      ['Select & combobox', sys + 'p-select.html', 'p-select'],
-      ['Combobox',         sys + 'p-combobox.html', 'p-combobox'],
-      ['Date picker',      sys + 'p-date-picker.html', 'p-date-picker'],
-      ['Calendar',         sys + 'p-calendar.html', 'p-calendar'],
-      ['Checkbox & radio', sys + 'p-checkbox.html', 'p-checkbox'],
-      ['Switch & toggle',  sys + 'p-switch.html', 'p-switch'],
-      ['Accordion',        sys + 'p-accordion.html', 'p-accordion'],
-      ['Badge & pill',     sys + 'p-badge.html', 'p-badge'],
-      ['Status indicator', sys + 'p-status.html', 'p-status'],
-      ['Avatar',           sys + 'p-avatar.html', 'p-avatar'],
-      ['Chip & tag',       sys + 'p-chip.html', 'p-chip'],
-      ['Tooltip',          sys + 'p-tooltip.html', 'p-tooltip'],
-      ['Kbd',              sys + 'p-kbd.html', 'p-kbd'],
-      ['Alert',            sys + 'p-alert.html', 'p-alert'],
-      ['Alert dialog',     sys + 'p-alert-dialog.html', 'p-alert-dialog'],
-      ['Dropdown menu',    sys + 'p-dropdown-menu.html', 'p-dropdown-menu'],
-      ['Popover',          sys + 'p-popover.html', 'p-popover'],
-      ['Hover card',       sys + 'p-hover-card.html', 'p-hover-card'],
-      ['Command palette',  sys + 'p-command.html', 'p-command'],
-      ['Progress & meter', sys + 'p-progress.html', 'p-progress'],
-      ['Spinner & skeleton', sys + 'p-spinner.html', 'p-spinner'],
-      ['Mobile list',      sys + 'p-mobile-list.html', 'p-mobile-list'],
-      ['Mobile action bar', sys + 'p-mobile-action-bar.html', 'p-mobile-action-bar'],
-      ['Scroll container', sys + 'p-scroll-container.html', 'p-scroll-container'],
-      ['Page section',     sys + 'p-page-section.html', 'p-page-section'],
-      ['Attachment center', sys + 'p-attachment-center.html', 'p-attachment-center'],
-      ['Export menu',      sys + 'p-export-menu.html', 'p-export-menu'],
-      ['Numeric cell',     sys + 'p-numeric-cell.html', 'p-numeric-cell'],
-      ['Item row',         sys + 'p-item.html', 'p-item'],
-    ]},
-    { label: 'Blocks', items: [
-      ['Page header',      sys + 'b-page-header.html', 'b-page-header'],
-      ['Page intro',       sys + 'b-page-intro.html', 'b-page-intro'],
-      ['Stat card',        sys + 'b-stat-card.html', 'b-stat-card'],
-      ['KPI grid',         sys + 'b-kpi-grid.html', 'b-kpi-grid'],
-      ['Module matrix',    sys + 'b-module-matrix.html', 'b-module-matrix'],
-      ['Summary bar',      sys + 'b-summary-bar.html', 'b-summary-bar'],
-      ['Critical strip',   sys + 'b-critical-strip.html', 'b-critical-strip'],
-      ['Quick links',      sys + 'b-quick-links.html', 'b-quick-links'],
-      ['Highlights',       sys + 'b-highlights.html', 'b-highlights'],
-      ['Card & panel',     sys + 'b-card.html', 'b-card'],
-      ['Detail hero',      sys + 'b-detail-hero.html', 'b-detail-hero'],
-      ['List page shell',  sys + 'b-list-page-shell.html', 'b-list-page-shell'],
-      ['Detail page shell', sys + 'b-detail-page-shell.html', 'b-detail-page-shell'],
-      ['Form shell',       sys + 'b-form-shell.html', 'b-form-shell'],
-      ['Master data shell', sys + 'b-master-data-shell.html', 'b-master-data-shell'],
-      ['Data toolbar',     sys + 'b-data-toolbar.html', 'b-data-toolbar'],
-      ['Activity feed',    sys + 'b-activity.html', 'b-activity'],
-      ['Comment thread',   sys + 'b-comment.html', 'b-comment'],
-      ['Callout',          sys + 'b-callout.html', 'b-callout'],
-      ['Empty state',      sys + 'b-empty-state.html', 'b-empty-state'],
-      ['Status state',     sys + 'b-status-state.html', 'b-status-state'],
-      ['Offline banner',   sys + 'b-offline-banner.html', 'b-offline-banner'],
-      ['Sync panel',       sys + 'b-sync-panel.html', 'b-sync-panel'],
-      ['Conflict dialog',  sys + 'b-conflict-dialog.html', 'b-conflict-dialog'],
-      ['Record saved banner', sys + 'b-record-saved-banner.html', 'b-record-saved-banner'],
-      ['Export bar',       sys + 'b-export-bar.html', 'b-export-bar'],
-    ]},
-    { label: 'Patterns', items: [
-      ['App shell',        sys + 'x-app-shell.html', 'x-app-shell'],
-      ['Settings',         sys + 'x-settings.html', 'x-settings'],
-      ['Data table',       sys + 'x-data-table.html', 'x-data-table'],
-      ['Detail view',      sys + 'x-detail-view.html', 'x-detail-view'],
-      ['Detail tabs',      sys + 'x-detail-tabs.html', 'x-detail-tabs'],
-      ['Modal & sheet',    sys + 'x-modal.html', 'x-modal'],
-      ['Notifications',    sys + 'x-notifications.html', 'x-notifications'],
-      ['Auth flow',        sys + 'x-auth.html', 'x-auth'],
-      ['Executive dashboard', sys + 'x-executive-dashboard.html', 'x-executive-dashboard'],
-      ['Command palette',  sys + 'x-command-palette.html', 'x-command-palette'],
-      ['Offline runtime',  sys + 'x-offline-runtime.html', 'x-offline-runtime'],
-      ['Onboarding',       sys + 'x-onboarding.html', 'x-onboarding'],
-      ['Role gate',        sys + 'x-role-gate.html', 'x-role-gate'],
-      ['Master data',      sys + 'x-master-data.html', 'x-master-data'],
-      ['Import wizard',    sys + 'x-import-wizard.html', 'x-import-wizard'],
-      ['Audit view',       sys + 'x-audit-view.html', 'x-audit-view'],
-      ['Approval flow',    sys + 'x-approval-flow.html', 'x-approval-flow'],
-      ['Bulk edit',        sys + 'x-bulk-edit.html', 'x-bulk-edit'],
-      ['Help center',      sys + 'x-help-center.html', 'x-help-center'],
-    ]},
-    { label: 'Shells', items: [
-      ['All shells',       sys + 'shells.html', 'shells'],
-      ['Dashboard',        inSystem ? '../kits/overview.html' : 'kits/overview.html', '__'],
-      ['Settings',         inSystem ? '../kits/settings.html' : 'kits/settings.html', '__'],
-      ['POS portal',       inSystem ? '../portals/pos/index.html' : 'portals/pos/index.html', '__'],
-      ['Parent portal',    inSystem ? '../portals/parent/index.html' : 'portals/parent/index.html', '__'],
-      ['Student portal',   inSystem ? '../portals/student/index.html' : 'portals/student/index.html', '__'],
-      ['Teacher portal',   inSystem ? '../portals/teacher/index.html' : 'portals/teacher/index.html', '__'],
-    ]},
-    { label: 'Pages', items: [
-      ['Overview dashboard', sys + 'pg-overview.html', 'pg-overview'],
-      ['Data tables',      sys + 'pg-data.html', 'pg-data'],
-      ['Detail pages',     sys + 'pg-detail.html', 'pg-detail'],
-      ['Import & ETL',     sys + 'pg-import.html', 'pg-import'],
-      ['Posting Studio',   sys + 'pg-posting.html', 'pg-posting'],
-      ['Retail / POS',     sys + 'pg-retail.html', 'pg-retail', 'New'],
-      ['POS terminal',     sys + 'pg-pos.html', 'pg-pos'],
-      ['Product catalog',  sys + 'pg-products.html', 'pg-products'],
-      ['Inventory',        sys + 'pg-inventory.html', 'pg-inventory'],
-      ['Customers',        sys + 'pg-customers.html', 'pg-customers'],
-      ['Sign-in',          sys + 'pg-signin.html', 'pg-signin'],
-    ]},
-  ];
+  // ── 2. Footer (slim, content-area only) ──────────────────────────────
+  function appendFooter(main) {
+    if (!main || main.querySelector('.ds-footer')) return;
+    const footer = document.createElement('footer');
+    footer.className = 'ds-footer';
+    footer.innerHTML = `
+      <span>© 2026 Huchu Enterprises · Design System v0.5</span>
+      <span><a href="${sys}changelog.html">Changelog</a> · <a href="${sys}install.html">Install</a> · <a href="${root}kits/overview.html">Demo</a></span>
+    `;
+    main.appendChild(footer);
+  }
 
-  // TOP NAV
-  const topNav = [
-    ['Overview',    inSystem ? '../index.html' : 'index.html', ['index']],
-    ['Foundations', sys + 'foundations.html', ['foundations','colors','typography','spacing','elevation','motion','iconography','voice','principles']],
-    ['Components',  sys + 'primitives.html',  ['primitives','p-button','p-button-group','p-segmented-control','p-input','p-input-group','p-input-otp','p-select','p-combobox','p-date-picker','p-calendar','p-checkbox','p-switch','p-accordion','p-badge','p-status','p-avatar','p-chip','p-tooltip','p-kbd','p-alert','p-alert-dialog','p-dropdown-menu','p-popover','p-hover-card','p-command','p-progress','p-spinner','p-mobile-list','p-mobile-action-bar','p-scroll-container','p-page-section','p-attachment-center','p-export-menu','p-numeric-cell','p-item']],
-    ['Blocks',      sys + 'blocks.html',      ['blocks','b-page-header','b-page-intro','b-stat-card','b-kpi-grid','b-module-matrix','b-summary-bar','b-critical-strip','b-quick-links','b-highlights','b-card','b-detail-hero','b-list-page-shell','b-detail-page-shell','b-form-shell','b-master-data-shell','b-data-toolbar','b-activity','b-comment','b-callout','b-empty-state','b-status-state','b-offline-banner','b-sync-panel','b-conflict-dialog','b-record-saved-banner','b-export-bar']],
-    ['Patterns',    sys + 'patterns.html',    ['patterns','x-app-shell','x-settings','x-data-table','x-detail-view','x-detail-tabs','x-modal','x-notifications','x-auth','x-executive-dashboard','x-command-palette','x-offline-runtime','x-onboarding','x-role-gate','x-master-data','x-import-wizard','x-audit-view','x-approval-flow','x-bulk-edit','x-help-center']],
-    ['Shells',      sys + 'shells.html',      ['shells']],
-    ['Kits',        inSystem ? '../index.html#kits' : 'index.html#kits', []],
-    ['Portals',     inSystem ? '../index.html#portals' : 'index.html#portals', []],
-  ];
-
-  // BUILD
-  const layout = document.createElement('div');
-  layout.className = 'ds-layout';
-
-  // Top bar
-  const topbar = document.createElement('header');
-  topbar.className = 'ds-topbar';
-  topbar.innerHTML = `
-    <button class="ds-menu-toggle" aria-label="Open menu" aria-expanded="false">
-      <span data-icon="menu" data-icon-size="18"></span>
-    </button>
-    <a class="ds-brand" href="${inSystem ? '../index.html' : 'index.html'}">
-      <span class="mark" data-icon="corelith" data-icon-size="22"></span>
-      Huchu
-      <span class="ds-badge">DS · 0.5</span>
-    </a>
-    <nav class="ds-nav">
-      ${topNav.map(([label, href, keys]) => {
-        const isCurrent = keys.includes(current);
-        return `<a href="${href}" class="${isCurrent ? 'current' : ''}">${label}</a>`;
-      }).join('')}
-    </nav>
-    <div class="ds-search">
-      <span data-icon="search"></span>
-      <input placeholder="Search…" />
-      <span class="kbd-hint">⌘K</span>
-    </div>
-    <div class="ds-actions">
-      <a href="${root}kits/overview.html">Live demo →</a>
-    </div>
-  `;
-  layout.appendChild(topbar);
-
-  // Sidebar
-  const sidebar = document.createElement('aside');
-  sidebar.className = 'ds-sidebar';
-  sidebar.innerHTML = sidebarGroups.map(g => `
-    <h4>${g.label}</h4>
-    ${g.items.map(([label, href, key, tag]) => {
-      const isCurrent = key === current;
-      return `<a href="${href}" class="${isCurrent ? 'current' : ''}">${label}${tag ? `<span class="tag" ${tag === 'New' ? 'style="background: var(--tone-success-bg); color: var(--tone-success);"' : ''}>${tag}</span>` : ''}</a>`;
-    }).join('')}
-  `).join('');
-  layout.appendChild(sidebar);
-
-  // Existing <main> content (move into the layout)
-  const main = document.querySelector('main.ds-content');
-  if (main) layout.appendChild(main);
-
-  // Footer
-  const footer = document.createElement('footer');
-  footer.className = 'ds-footer';
-  footer.innerHTML = `
-    <span>© 2026 Huchu Enterprises · Design System v0.5</span>
-    <span><a href="${sys}changelog.html">Changelog</a> · <a href="${sys}install.html">Install</a> · <a href="${root}kits/overview.html">Demo</a></span>
-  `;
-  layout.appendChild(footer);
-
-  // Sidebar scrim (mobile)
-  const scrim = document.createElement('div');
-  scrim.className = 'ds-sidebar-scrim';
-  layout.appendChild(scrim);
-
-  // === Mobile menu wiring ===
-  const wireMobileMenu = () => {
-    const toggle = topbar.querySelector('.ds-menu-toggle');
-    if (!toggle) return;
-    const openMenu = () => {
-      sidebar.classList.add('open');
-      scrim.classList.add('open');
-      toggle.setAttribute('aria-expanded', 'true');
-    };
-    const closeMenu = () => {
-      sidebar.classList.remove('open');
-      scrim.classList.remove('open');
-      toggle.setAttribute('aria-expanded', 'false');
-    };
-    toggle.addEventListener('click', () => {
-      if (sidebar.classList.contains('open')) closeMenu(); else openMenu();
-    });
-    scrim.addEventListener('click', closeMenu);
-    // Close on link click within sidebar
-    sidebar.addEventListener('click', (e) => {
-      if (e.target.closest('a')) closeMenu();
-    });
-    // Close on Escape
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && sidebar.classList.contains('open')) closeMenu();
-    });
-  };
-
-  // === Viewport preview switcher ===
-  // Wraps each .ds-specimen and top-level .ds-variant-grid with a toolbar
-  // that lets you toggle the stage between mobile/tablet/desktop/full widths.
+  // ── 3. Viewport preview switcher (+ Preview/Code tab) ────────────────
   const VIEWPORTS = [
     { id: 'mobile',  label: 'Mobile',  width: 375,  icon: 'phone' },
     { id: 'tablet',  label: 'Tablet',  width: 768,  icon: 'tablet' },
@@ -254,42 +57,230 @@
     { id: 'full',    label: 'Full',    width: null, icon: 'grid' },
   ];
 
-  const enhancePreviews = (root) => {
+  // ---------- Code-tab helpers ----------
+  const escHtml = (s) => String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Strip a common leading-whitespace indent; drop leading/trailing blank lines.
+  function dedent(raw) {
+    if (!raw) return '';
+    let text = String(raw).replace(/\r\n?/g, '\n');
+    text = text.replace(/^\n+/, '').replace(/\s+$/, '');
+    const lines = text.split('\n');
+    let minIndent = Infinity;
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const m = line.match(/^[ \t]*/);
+      const len = m ? m[0].length : 0;
+      if (len < minIndent) minIndent = len;
+    }
+    if (!isFinite(minIndent) || minIndent === 0) return text;
+    return lines.map((l) => l.slice(minIndent)).join('\n');
+  }
+
+  // Light HTML/JSX/Vue highlighter. We process raw (unescaped) source so the
+  // tag-vs-text regions are unambiguous, escape inside each region, then emit
+  // syntax spans. This avoids the chicken-and-egg of re-matching our own
+  // injected spans.
+  function highlight(code, framework) {
+    if (!(framework === 'html' || framework === 'vue' || framework === 'react')) {
+      return escHtml(code);
+    }
+    let out = '';
+    let i = 0;
+    const N = code.length;
+    while (i < N) {
+      // Comment block
+      if (code.startsWith('<!--', i)) {
+        const end = code.indexOf('-->', i + 4);
+        const stop = end === -1 ? N : end + 3;
+        out += `<span class="c">${escHtml(code.slice(i, stop))}</span>`;
+        i = stop;
+        continue;
+      }
+      // Tag region
+      if (code[i] === '<' && /[a-zA-Z\/]/.test(code[i + 1] || '')) {
+        // Find matching '>' (ignoring those inside quoted attribute values)
+        let j = i + 1;
+        let inQ = null;
+        while (j < N) {
+          const ch = code[j];
+          if (inQ) {
+            if (ch === inQ) inQ = null;
+          } else if (ch === '"' || ch === "'") {
+            inQ = ch;
+          } else if (ch === '>') {
+            break;
+          }
+          j++;
+        }
+        const tagSrc = code.slice(i, j + 1);
+        out += highlightTag(tagSrc);
+        i = j + 1;
+        continue;
+      }
+      // Plain text — just escape
+      // Find next interesting char
+      let j = i;
+      while (j < N && code[j] !== '<') j++;
+      out += escHtml(code.slice(i, j));
+      i = j;
+    }
+    return out;
+  }
+
+  // Highlight one tag, e.g. `<button class="btn">` or `</button>`.
+  function highlightTag(tag) {
+    // tag begins with < and ends with >
+    const lead = tag.startsWith('</') ? '&lt;/' : '&lt;';
+    let rest = tag.slice(lead === '&lt;/' ? 2 : 1, -1); // strip < / and >
+    // Pull out tag name
+    const nameMatch = rest.match(/^([a-zA-Z][\w-]*)/);
+    if (!nameMatch) return escHtml(tag);
+    const tagName = nameMatch[1];
+    rest = rest.slice(tagName.length);
+
+    // Inside the attribute area: highlight name="value" pairs and bare attrs.
+    // We scan character by character.
+    let attrs = '';
+    let k = 0;
+    while (k < rest.length) {
+      const ch = rest[k];
+      if (/\s/.test(ch)) { attrs += escHtml(ch); k++; continue; }
+      if (ch === '/') { attrs += escHtml(ch); k++; continue; }
+      // Attribute name
+      const am = rest.slice(k).match(/^([a-zA-Z@:][\w\-:.]*)/);
+      if (!am) { attrs += escHtml(ch); k++; continue; }
+      const attrName = am[1];
+      k += attrName.length;
+      attrs += `<span class="v">${escHtml(attrName)}</span>`;
+      if (rest[k] === '=') {
+        attrs += '=';
+        k++;
+        const q = rest[k];
+        if (q === '"' || q === "'") {
+          // Find closing quote
+          let end = rest.indexOf(q, k + 1);
+          if (end === -1) end = rest.length;
+          const valWithQuotes = rest.slice(k, end + 1);
+          attrs += `<span class="s">${escHtml(valWithQuotes)}</span>`;
+          k = end + 1;
+        } else {
+          // Unquoted value
+          const um = rest.slice(k).match(/^[^\s>]+/);
+          if (um) {
+            attrs += `<span class="s">${escHtml(um[0])}</span>`;
+            k += um[0].length;
+          }
+        }
+      }
+    }
+    return `${lead}<span class="k">${escHtml(tagName)}</span>${attrs}&gt;`;
+  }
+
+  function renderCodeBlock(codeRaw, framework) {
+    const code = dedent(codeRaw);
+    const hi = highlight(code, framework);
+    const lines = hi.split('\n');
+    const gutter = lines.map((_, i) => `<span>${i + 1}</span>`).join('\n');
+    const body = lines.map((l) => l.length ? l : '​').join('\n');
+    return `<div class="ds-code-block"><pre class="ds-code-gutter" aria-hidden="true">${gutter}</pre><pre class="ds-code-body"><code>${body}</code></pre></div>`;
+  }
+
+  let _toastHost = null;
+  function showToast(msg) {
+    if (!_toastHost) {
+      _toastHost = document.createElement('div');
+      _toastHost.className = 'ds-toast-host';
+      document.body.appendChild(_toastHost);
+    }
+    const el = document.createElement('div');
+    el.className = 'ds-toast';
+    el.innerHTML = `<span data-icon="check" data-icon-size="14"></span><span>${escHtml(msg)}</span>`;
+    _toastHost.appendChild(el);
+    if (window.Icons && window.Icons.render) window.Icons.render(el);
+    setTimeout(() => {
+      el.classList.add('out');
+      setTimeout(() => el.remove(), 220);
+    }, 1800);
+  }
+
+  async function copyText(text) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (_) { /* fall through */ }
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      return ok;
+    } catch (_) { return false; }
+  }
+
+  function enhancePreviews(scope) {
     const targets = [];
-    // Wrap each .ds-specimen as a preview
-    root.querySelectorAll('.ds-specimen').forEach((el) => {
+    scope.querySelectorAll('.ds-specimen').forEach((el) => {
       if (el.closest('.ds-preview')) return;
-      // Skip if inside a variant grid (handled at grid level)
       if (el.closest('.ds-variant-grid')) return;
       targets.push({ el, kind: 'specimen' });
     });
-    // Wrap top-level .ds-variant-grid (not nested ones inside specimens)
-    root.querySelectorAll('.ds-variant-grid').forEach((el) => {
+    scope.querySelectorAll('.ds-variant-grid').forEach((el) => {
       if (el.closest('.ds-preview')) return;
       if (el.closest('.ds-specimen')) return;
       targets.push({ el, kind: 'grid' });
     });
 
-    // On small screens default to mobile viewport so specimens render usefully
     const initialVp = window.innerWidth <= 720 ? 'mobile' : 'full';
 
-    targets.forEach(({ el, kind }, idx) => {
+    targets.forEach(({ el, kind }) => {
       const wrap = document.createElement('div');
       wrap.className = 'ds-preview';
       wrap.dataset.viewport = initialVp;
+      wrap.dataset.tab = 'preview';
       const initialW = VIEWPORTS.find(v => v.id === initialVp).width;
       wrap.style.setProperty('--ds-preview-w', initialW ? initialW + 'px' : '100%');
 
-      // Extract label from specimen-bar if present
       let titleText = '';
       const bar = el.querySelector(':scope > .ds-specimen-bar .label');
       if (bar) titleText = bar.textContent.trim();
       if (!titleText) titleText = kind === 'grid' ? 'Variants' : 'Preview';
 
+      // Collect code samples from data-code-* attributes on the specimen.
+      // The browser decodes HTML entities for attribute values automatically,
+      // so dataset.codeHtml / codeReact / codeVue returns the raw string.
+      const codeSources = [];
+      if (kind === 'specimen') {
+        if (el.dataset.codeHtml)  codeSources.push({ id: 'html',  label: 'HTML',  raw: el.dataset.codeHtml });
+        if (el.dataset.codeReact) codeSources.push({ id: 'react', label: 'React', raw: el.dataset.codeReact });
+        if (el.dataset.codeVue)   codeSources.push({ id: 'vue',   label: 'Vue',   raw: el.dataset.codeVue });
+      }
+      const hasCode = codeSources.length > 0;
+      if (hasCode) wrap.classList.add('has-code');
+
       const toolbar = document.createElement('div');
       toolbar.className = 'ds-preview-toolbar';
       toolbar.innerHTML = `
         <span class="label">${titleText}</span>
+        ${hasCode ? `
+          <div class="ds-tab-group" role="tablist" aria-label="Preview or code">
+            <button type="button" class="ds-tab-btn" data-tab="preview" aria-pressed="true">
+              <span data-icon="grid" data-icon-size="13"></span><span class="lbl">Preview</span>
+            </button>
+            <button type="button" class="ds-tab-btn" data-tab="code" aria-pressed="false">
+              <span data-icon="code" data-icon-size="13"></span><span class="lbl">Code</span>
+            </button>
+          </div>
+        ` : ''}
         <span class="spacer"></span>
         <div class="ds-viewport-group" role="group" aria-label="Preview viewport">
           ${VIEWPORTS.map(v => `
@@ -304,23 +295,70 @@
           `).join('')}
         </div>
         <span class="ds-viewport-meta">${initialW ? initialW + 'px' : '100%'}</span>
+        ${hasCode ? `
+          <button type="button" class="ds-copy-btn" title="Copy code">
+            <span data-icon="copy" data-icon-size="13"></span><span class="lbl">Copy code</span>
+          </button>
+        ` : ''}
       `;
 
       const frame = document.createElement('div');
       frame.className = 'ds-preview-frame' + (kind === 'grid' ? ' flush' : '');
-
       const stage = document.createElement('div');
       stage.className = 'ds-preview-stage';
 
-      // Move the element into the stage
       el.parentNode.insertBefore(wrap, el);
       stage.appendChild(el);
       frame.appendChild(stage);
       wrap.appendChild(toolbar);
       wrap.appendChild(frame);
 
-      // Center the frame's horizontal scroll on the stage's center
-      // (specimens use justify-content: center, so this reveals the content).
+      // ---- Code panel ----
+      let codePanel = null;
+      let activeFw = codeSources[0]?.id || null;
+      if (hasCode) {
+        codePanel = document.createElement('div');
+        codePanel.className = 'ds-code-panel';
+        codePanel.hidden = true;
+
+        const fwTabs = codeSources.length > 1
+          ? `<div class="ds-code-fw" role="tablist" aria-label="Framework">
+              ${codeSources.map((c) => `
+                <button type="button" class="ds-code-fw-btn" data-fw="${c.id}" aria-pressed="${c.id === activeFw ? 'true' : 'false'}">${c.label}</button>
+              `).join('')}
+            </div>`
+          : `<div class="ds-code-fw single"><span class="ds-code-fw-btn" aria-pressed="true">${codeSources[0].label}</span></div>`;
+
+        codePanel.innerHTML = `
+          <div class="ds-code-header">
+            ${fwTabs}
+            <span class="spacer"></span>
+            <span class="ds-code-filename"></span>
+          </div>
+          <div class="ds-code-body-wrap" data-fw-render></div>
+        `;
+        wrap.appendChild(codePanel);
+
+        const filenameFor = (id) => id === 'react' ? 'Example.jsx' : id === 'vue' ? 'Example.vue' : 'index.html';
+        const renderActive = () => {
+          const src = codeSources.find((c) => c.id === activeFw) || codeSources[0];
+          codePanel.querySelector('[data-fw-render]').innerHTML = renderCodeBlock(src.raw, src.id);
+          const fnEl = codePanel.querySelector('.ds-code-filename');
+          if (fnEl) fnEl.textContent = filenameFor(src.id);
+        };
+        renderActive();
+
+        codePanel.querySelectorAll('.ds-code-fw-btn[data-fw]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            activeFw = btn.dataset.fw;
+            codePanel.querySelectorAll('.ds-code-fw-btn').forEach((b) => {
+              b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+            });
+            renderActive();
+          });
+        });
+      }
+
       const centerScroll = () => {
         const sw = frame.scrollWidth;
         const cw = frame.clientWidth;
@@ -328,7 +366,6 @@
         else frame.scrollLeft = 0;
       };
 
-      // Wire viewport buttons
       toolbar.querySelectorAll('.ds-viewport-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
           const vpId = btn.dataset.vp;
@@ -344,32 +381,48 @@
             wrap.style.setProperty('--ds-preview-w', '100%');
             toolbar.querySelector('.ds-viewport-meta').textContent = '100%';
           }
-          // Wait for width transition before re-centering scroll.
           requestAnimationFrame(() => requestAnimationFrame(centerScroll));
           setTimeout(centerScroll, 240);
         });
       });
 
-      // Center scroll on initial mount (e.g. phone defaults to Mobile @ 375).
+      if (hasCode) {
+        toolbar.querySelectorAll('.ds-tab-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+            wrap.dataset.tab = tab;
+            toolbar.querySelectorAll('.ds-tab-btn').forEach((b) => {
+              b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+            });
+            const showCode = tab === 'code';
+            frame.hidden = showCode;
+            if (codePanel) codePanel.hidden = !showCode;
+            if (!showCode) requestAnimationFrame(centerScroll);
+          });
+        });
+
+        const copyBtn = toolbar.querySelector('.ds-copy-btn');
+        if (copyBtn) {
+          copyBtn.addEventListener('click', async () => {
+            const src = codeSources.find((c) => c.id === activeFw) || codeSources[0];
+            const ok = await copyText(dedent(src.raw));
+            showToast(ok ? 'Copied!' : 'Copy failed');
+          });
+        }
+      }
+
       requestAnimationFrame(centerScroll);
     });
-  };
+  }
 
-  // Mount: replace body content with layout
-  const mount = () => {
-    // Remove the original <main> from its current position
-    if (main && main.parentNode && main.parentNode !== layout) {
-      main.parentNode.removeChild(main);
-      layout.insertBefore(main, footer);
+  function mount() {
+    const main = document.querySelector('main.ds-content');
+    if (main) {
+      enhancePreviews(main);
+      appendFooter(main);
     }
-    document.body.insertBefore(layout, document.body.firstChild);
-    // Enhance specimens with viewport preview switcher
-    if (main) enhancePreviews(main);
-    // Wire mobile menu
-    wireMobileMenu();
-    // Render any icons now that DOM is updated
-    if (window.Icons && window.Icons.render) window.Icons.render(layout);
-  };
+    if (window.Icons && window.Icons.render) window.Icons.render(document.body);
+  }
 
   if (document.readyState !== 'loading') mount();
   else document.addEventListener('DOMContentLoaded', mount);

@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Lesson planner · Teacher portal · Huchu</title>
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../device-scale.js" defer></script>
+<style>
+  body { background: var(--gray-100); margin: 0; padding: 24px; min-height: 100vh; display: grid; place-items: center; }
+  .device-tablet { width: 1024px; height: 768px; border-radius: 28px; background: #0F1115; padding: 14px; box-shadow: 0 30px 60px -20px rgba(22,24,29,0.25), 0 0 0 1px rgba(22,24,29,0.08); }
+  .device-tablet .screen { width: 100%; height: 100%; border-radius: 16px; overflow: hidden; background: var(--canvas); display: flex; position: relative; }
+
+  /* --- Left rail (teacher) --- */
+  .te-side { width: 232px; background: var(--canvas); border-right: 1px solid var(--border); padding: 18px 14px; display: flex; flex-direction: column; gap: 4px; flex: none; }
+  .te-side .brand { display: inline-flex; align-items: center; gap: 10px; padding: 6px 8px; font: 600 16px/1 var(--font-sans); color: var(--text-strong); margin-bottom: 14px; }
+  .te-side .brand .mark { width: 22px; height: 22px; color: #A78BFA; }
+  .te-side .who { padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+  .te-side .who .av { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #EDE0FF, #A78BFA); color: #4C1D95; display: grid; place-items: center; font: 600 13px/1 var(--font-sans); }
+  .te-side .who .nm { font: 600 13px/1.3 var(--font-sans); color: var(--text-strong); }
+  .te-side .who .sb { font: 11px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .te-side .sh { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); padding: 12px 10px 8px; }
+  .te-side nav a { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 7px; font: 500 13.5px/1 var(--font-sans); color: var(--text-body); text-decoration: none; }
+  .te-side nav a:hover { background: var(--surface-muted); }
+  .te-side nav a.active { background: #EDE0FF; color: #4C1D95; }
+  .te-side nav a svg { width: 16px; height: 16px; color: var(--text-muted); }
+  .te-side nav a.active svg { color: #A78BFA; }
+  .te-side nav a .cnt { margin-left: auto; font: 500 11px/1 var(--font-mono); color: var(--text-subtle); }
+  .te-side nav a.active .cnt { color: #4C1D95; }
+
+  /* --- Main column --- */
+  .te-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .te-top { padding: 14px 24px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; }
+  .te-top .meta { flex: 1; min-width: 0; }
+  .te-top .crumbs { font: 500 12px/1 var(--font-sans); color: var(--text-muted); margin-bottom: 4px; }
+  .te-top h1 { font: 700 20px/1.2 var(--font-sans); letter-spacing: -0.015em; color: var(--text-strong); margin: 0; }
+  .te-top .h-pills { display: inline-flex; gap: 6px; margin-top: 6px; }
+  .te-top .pill { padding: 3px 9px; border-radius: 9999px; background: var(--surface-muted); font: 500 11px/1 var(--font-sans); color: var(--text-muted); }
+  .te-top .pill.brand { background: var(--brand-soft); color: var(--brand-strong); }
+
+  /* tabs (Plans / Library) */
+  .lp-tabs { padding: 0 24px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; gap: 4px; align-items: center; }
+  .lp-tabs .tab { padding: 11px 14px; font: 500 13px/1 var(--font-sans); color: var(--text-muted); border-bottom: 2px solid transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .lp-tabs .tab.active { color: #4C1D95; border-bottom-color: #A78BFA; }
+  .lp-tabs .tab .bdg { padding: 1px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-muted); font: 500 11px/1.4 var(--font-mono); }
+  .lp-tabs .tab.active .bdg { background: #EDE0FF; color: #4C1D95; }
+  .lp-tabs .sp { flex: 1; }
+  .lp-tabs .wk-nav { display: inline-flex; align-items: center; gap: 6px; padding: 4px 0; }
+  .lp-tabs .wk-nav .nav-b { width: 26px; height: 26px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--text-muted); display: grid; place-items: center; cursor: pointer; }
+  .lp-tabs .wk-nav .wk { font: 500 12.5px/1 var(--font-sans); color: var(--text-strong); padding: 0 4px; }
+
+  /* toolbar / actions row */
+  .lp-toolbar { padding: 10px 24px; background: var(--surface); border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 10px; }
+  .lp-toolbar .stat { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 10px; background: var(--surface-muted); border-radius: 9999px; font: 500 12px/1 var(--font-sans); color: var(--text-muted); }
+  .lp-toolbar .stat b { font: 600 12.5px/1 var(--font-mono); color: var(--text-strong); }
+  .lp-toolbar .sp { flex: 1; }
+
+  /* --- Week grid --- */
+  .lp-body { flex: 1; overflow: auto; padding: 14px 24px 20px; background: var(--gray-100); }
+  .wk-grid { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: grid; grid-template-columns: 76px repeat(5, 1fr); }
+  .wk-grid .col-h { background: var(--surface-muted); padding: 10px 12px; font: 600 12px/1.2 var(--font-sans); color: var(--text-strong); border-bottom: 1px solid var(--border); border-right: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 2px; }
+  .wk-grid .col-h .dt { font: 400 10.5px/1 var(--font-mono); color: var(--text-muted); }
+  .wk-grid .col-h.today { background: #EDE0FF; color: #4C1D95; }
+  .wk-grid .col-h.today .dt { color: #6D28D9; }
+  .wk-grid .col-h:last-child { border-right: 0; }
+  .wk-grid .pd-h { padding: 10px 8px; font: 500 10.5px/1.2 var(--font-mono); color: var(--text-subtle); letter-spacing: 0.04em; border-bottom: 1px solid var(--border-subtle); border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 2px; background: var(--canvas); }
+  .wk-grid .pd-h .pd { color: var(--text-strong); font-weight: 600; }
+  .wk-grid .cell { border-bottom: 1px solid var(--border-subtle); border-right: 1px solid var(--border-subtle); padding: 8px 10px; min-height: 88px; display: flex; flex-direction: column; gap: 4px; cursor: pointer; position: relative; }
+  .wk-grid .cell:hover { background: #FAF7FF; }
+  .wk-grid .cell:last-child { border-right: 0; }
+  .wk-grid .cell.empty { background: repeating-linear-gradient(135deg, var(--canvas), var(--canvas) 6px, transparent 6px, transparent 10px); cursor: default; }
+  .wk-grid .cell.empty:hover { background: repeating-linear-gradient(135deg, var(--canvas), var(--canvas) 6px, transparent 6px, transparent 10px); }
+  .wk-grid .cell .cls-tag { display: inline-flex; align-items: center; gap: 5px; font: 600 10.5px/1 var(--font-mono); color: #4C1D95; letter-spacing: 0.02em; }
+  .wk-grid .cell .cls-tag .dot { width: 6px; height: 6px; border-radius: 50%; background: #A78BFA; }
+  .wk-grid .cell.subj-eng .cls-tag { color: #1D4ED8; } .wk-grid .cell.subj-eng .cls-tag .dot { background: #60A5FA; }
+  .wk-grid .cell.subj-sci .cls-tag { color: #047857; } .wk-grid .cell.subj-sci .cls-tag .dot { background: #34D399; }
+  .wk-grid .cell.subj-mat .cls-tag { color: #4C1D95; } .wk-grid .cell.subj-mat .cls-tag .dot { background: #A78BFA; }
+  .wk-grid .cell .topic { font: 500 12px/1.3 var(--font-sans); color: var(--text-strong); }
+  .wk-grid .cell .meta { display: inline-flex; align-items: center; gap: 6px; margin-top: auto; }
+  .wk-grid .cell .code { font: 500 10px/1 var(--font-mono); color: var(--text-subtle); }
+  .wk-grid .cell .att { display: inline-flex; align-items: center; gap: 3px; font: 500 10px/1 var(--font-mono); color: var(--text-muted); padding: 2px 6px; border-radius: 9999px; background: var(--surface-muted); }
+  .wk-grid .cell.active { background: #EDE0FF; box-shadow: inset 0 0 0 2px #A78BFA; }
+  .wk-grid .cell.active:hover { background: #EDE0FF; }
+  .wk-grid .row-bottom .cell { border-bottom: 0; }
+  .wk-grid .row-bottom .pd-h { border-bottom: 0; }
+
+  /* --- Side drawer --- */
+  .drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 360px; background: var(--surface); border-left: 1px solid var(--border); box-shadow: -20px 0 40px -20px rgba(22,24,29,0.15); display: flex; flex-direction: column; }
+  .drawer-h { padding: 14px 18px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 10px; }
+  .drawer-h .pre { font: 500 11px/1 var(--font-mono); color: #6D28D9; letter-spacing: 0.04em; }
+  .drawer-h h2 { font: 700 16px/1.25 var(--font-sans); color: var(--text-strong); margin: 6px 0 0; letter-spacing: -0.01em; }
+  .drawer-h .sub { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 4px; }
+  .drawer-h .x { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text-muted); display: grid; place-items: center; cursor: pointer; flex: none; }
+  .drawer-pills { display: inline-flex; gap: 5px; padding: 0 18px 12px; flex-wrap: wrap; border-bottom: 1px solid var(--border); }
+  .drawer-pills .pill { padding: 3px 9px; border-radius: 9999px; background: var(--surface-muted); font: 500 10.5px/1 var(--font-sans); color: var(--text-muted); }
+  .drawer-pills .pill.brand { background: #EDE0FF; color: #4C1D95; }
+  .drawer-pills .pill.tone-success { background: var(--tone-success-bg); color: var(--tone-success); }
+  .drawer-body { flex: 1; overflow-y: auto; padding: 14px 18px 18px; display: flex; flex-direction: column; gap: 14px; }
+  .dr-sec .lbl { font: 500 10.5px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px; }
+  .dr-sec .txt { font: 13px/1.5 var(--font-sans); color: var(--text-body); }
+  .dr-list { display: flex; flex-direction: column; gap: 5px; margin: 0; padding: 0; list-style: none; }
+  .dr-list li { display: flex; align-items: flex-start; gap: 8px; font: 13px/1.45 var(--font-sans); color: var(--text-body); }
+  .dr-list li::before { content: ""; width: 4px; height: 4px; border-radius: 50%; background: #A78BFA; margin-top: 8px; flex: none; }
+  .dr-files { display: flex; flex-direction: column; gap: 6px; }
+  .dr-file { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: 1px solid var(--border-subtle); border-radius: 8px; background: var(--canvas); }
+  .dr-file .ic { width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; background: var(--brand-soft); color: var(--brand-strong); font: 600 10px/1 var(--font-mono); }
+  .dr-file .nm { font: 500 12.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .dr-file .sb { font: 11px/1 var(--font-mono); color: var(--text-muted); margin-top: 3px; }
+  .dr-file .sp { flex: 1; }
+  .dr-file .dl { color: var(--text-muted); }
+  .dr-foot { border-top: 1px solid var(--border); padding: 12px 18px; display: flex; align-items: center; gap: 8px; background: var(--surface); }
+  .dr-foot .sp { flex: 1; }
+
+  .lp-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .lp-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+  .lp-card .lbl { font: 500 10.5px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+  .lp-card .v { font: 700 18px/1 var(--font-sans); color: var(--text-strong); }
+  .lp-card .ds { font: 12px/1.4 var(--font-sans); color: var(--text-muted); }
+</style>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+</head>
+<body data-portal-kit="teacher" data-portal-screen="lesson-planner" data-kit-nav="teacher">
+
+<main class="kit-stage">
+  <div class="device-tablet">
+    <div class="screen">
+
+      <aside class="te-side">
+        <a class="brand"><span class="mark" data-icon="corelith"></span> Huchu</a>
+        <div class="who">
+          <span class="av">TC</span>
+          <div>
+            <div class="nm">Mr Tendai Chari</div>
+            <div class="sb">Maths · Combined Sci</div>
+          </div>
+        </div>
+        <div class="sh">My classes</div>
+        <nav>
+          <a href="#" class="active"><span data-icon="grid"></span> Form 2A · Maths<span class="cnt">29</span></a>
+          <a href="#"><span data-icon="grid"></span> Form 2B · Maths<span class="cnt">31</span></a>
+          <a href="#"><span data-icon="grid"></span> Form 1A · Maths<span class="cnt">28</span></a>
+          <a href="#"><span data-icon="grid"></span> Form 3B · Comb Sci<span class="cnt">26</span></a>
+          <a href="#"><span data-icon="grid"></span> Form 4A · Comb Sci<span class="cnt">24</span></a>
+        </nav>
+        <div class="sh">Shortcuts</div>
+        <nav>
+          <a href="dashboard.html"><span data-icon="home"></span> Dashboard</a>
+          <a href="schedule.html"><span data-icon="calendar"></span> Schedule</a>
+          <a href="marks.html"><span data-icon="edit"></span> Marks entry</a>
+        </nav>
+      </aside>
+
+      <main class="te-main">
+        <header class="te-top">
+          <div class="meta">
+            <div class="crumbs">Form 2A · Mathematics · Term 2 · ZIMSEC Syllabus 4004</div>
+            <h1>Lesson planner</h1>
+            <div class="h-pills">
+              <span class="pill brand">29 students</span>
+              <span class="pill">5 plans this week</span>
+              <span class="pill">CALA cycle 2</span>
+            </div>
+          </div>
+          <button class="btn btn-ghost"><span data-icon="refresh" data-icon-size="14"></span> Copy from last week</button>
+          <button class="btn btn-primary"><span data-icon="plus" data-icon-size="14"></span> New lesson plan</button>
+        </header>
+
+        <div class="lp-tabs">
+          <span class="tab active"><span data-icon="calendar" data-icon-size="14"></span> Plans <span class="bdg">5</span></span>
+          <span class="tab"><span data-icon="book" data-icon-size="14"></span> Library <span class="bdg">42</span></span>
+          <span class="tab"><span data-icon="grid" data-icon-size="14"></span> Term overview</span>
+          <span class="sp"></span>
+          <div class="wk-nav">
+            <button class="nav-b" aria-label="Previous week"><span data-icon="chleft" data-icon-size="12"></span></button>
+            <span class="wk">Week 5 · 18–22 May 2026</span>
+            <button class="nav-b" aria-label="Next week"><span data-icon="chright" data-icon-size="12"></span></button>
+          </div>
+        </div>
+
+        <div class="lp-toolbar">
+          <span class="stat">Drafted <b>2</b></span>
+          <span class="stat">Ready <b>3</b></span>
+          <span class="stat">Materials attached <b>11</b></span>
+          <span class="sp"></span>
+          <button class="btn btn-ghost"><span data-icon="filter" data-icon-size="14"></span> Filter</button>
+          <button class="btn btn-secondary"><span data-icon="download" data-icon-size="14"></span> Export PDF</button>
+        </div>
+
+        <div class="lp-body">
+          <div class="wk-grid">
+            <!-- header row -->
+            <div class="pd-h"><span>Period</span></div>
+            <div class="col-h"><span>Mon</span><span class="dt">18 May</span></div>
+            <div class="col-h"><span>Tue</span><span class="dt">19 May</span></div>
+            <div class="col-h"><span>Wed</span><span class="dt">20 May</span></div>
+            <div class="col-h today"><span>Thu</span><span class="dt">22 May</span></div>
+            <div class="col-h"><span>Fri</span><span class="dt">23 May</span></div>
+
+            <!-- P1 -->
+            <div class="pd-h"><span class="pd">P1</span><span>07:40</span></div>
+            <div class="cell subj-mat">
+              <span class="cls-tag"><span class="dot"></span> 2A · Maths</span>
+              <span class="topic">Linear equations · solving with brackets</span>
+              <span class="meta"><span class="code">4004/L5</span><span class="att"><span data-icon="pin" data-icon-size="10"></span> 2</span></span>
+            </div>
+            <div class="cell empty"></div>
+            <div class="cell subj-mat">
+              <span class="cls-tag"><span class="dot"></span> 2A · Maths</span>
+              <span class="topic">Linear equations · word problems set-up</span>
+              <span class="meta"><span class="code">4004/L7</span><span class="att"><span data-icon="pin" data-icon-size="10"></span> 3</span></span>
+            </div>
+            <div class="cell subj-mat active">
+              <span class="cls-tag"><span class="dot"></span> 2A · Maths</span>
+              <span class="topic">Linear equations · setting up word problems</span>
+              <span class="meta"><span class="code">4004/L7.2</span><span class="att"><span data-icon="pin" data-icon-size="10"></span> 4</span></span>
+            </div>
+            <div class="cell subj-mat">
+              <span class="cls-tag"><span class="dot"></span> 2A · Maths</span>
+              <span class="topic">Mixed practice · CALA prep</span>
+              <span class="meta"><span class="code">CALA/2.3</span><span class="att"><span data-icon="pin" data-icon-size="10"></span> 2</span></span>
+            </div>
+
+            <!-- P2 -->
+            <div class="pd-h"><span class="pd">P2</span><span>08:30</span></div>
+            <div class="cell subj-mat">
+              <span class="cls-tag"><span class="dot"></span> 2B · Maths</span>
+              <span class="topic">Indices · negative & zero powers</span>
+              <span class="meta"><span class="code">4004/I3</span><span class="att"><span data-icon="pin" data-icon-size="10"></span> 1</span></span>
+            </div>
+            <div class="cell subj-mat">
+              <span class="cls-tag"><span class="dot"></span> 2B · Maths</span>
+              <span class="topic">Indices · simplifying expressions</span>
+              <span class="meta"><span class="code">4004/I4</span><span class="att"><span data-icon="pin" data-icon-size="10"></span> 2</span></span>
+            </div>
+            <div class="cell empty"></div>
+            <div class="cell subj-mat">
+              <span class="cls-tag"><span class="dot"></span> 2B · Maths</span>
+              <span class="topic">Indices · standard form intro</span>
+              <span class="meta"><span class="code">4004/I5</span><span class="att"><span data-icon="pin" data-icon-size="10"></span> 2</span></span>
+            </div>
+            <div class="cell subj-mat">
+              <span class="cls-tag"><span class="dot"></span> 2B · Maths</span>
+              <span class="topic">End-of-week quiz · indices</span>
+              <span class="meta"><span class="code">QZ/03</span><span class="att"><span data-icon="pin" data-icon-size="10"></span> 1</span></span>
+            </div>
+
+            <!-- P3 -->
+            <div class="pd-h"><span class="pd">P3</span><span>09:20</span></div>
+            <div class="cell subj-mat">
+              <span class="cls-tag"><span class="dot"></span> 1A · Maths</span>
+              <span class="topic">Fractions · equivalent forms</span>
+              <span class="meta"><span class="code">4004/F2</span><span class="att"><span data-icon="pin" data-icon-size="10"></span> 2</span></span>
+            </div>
+            <div class="cell subj-mat">
+              <span class="cls-tag"><span class="dot"></span> 1A · Maths</span>
+              <span class="topic">Fractions · adding unlike denoms</span>
+              <span class="meta"><span class="code">4004/F3</span><span class="att"><span data-icon="pin" data-icon-size="10"></span> 3</span></span>
+            </div>
+            <div class="cell subj-mat">
+              <span class="cls-tag"><span class="dot"></span> 1A · Maths</span>
+              <span class="topic">Fractions · word problems · market scenarios</span>
+              <span class="meta"><span class="code">4004/F4</span><span class="att"><span data-icon="pin" data-icon-size="10"></span> 2</span></span>
+            </div>
+            <div class="cell empty"></div>
+            <div class="cell subj-mat">
+              <span class="cls-tag"><span class="dot"></span> 1A · Maths</span>
+              <span class="topic">Recap & low-stakes test</span>
+              <span class="meta"><span class="code">TST/2</span><span class="att"><span data-icon="pin" data-icon-size="10"></span> 1</span></span>
+            </div>
+
+            <!-- P4 -->
+            <div class="pd-h"><span class="pd">P4</span><span>10:30</span></div>
+            <div class="cell empty"></div>
+            <div class="cell subj-sci">
+              <span class="cls-tag"><span class="dot"></span> 3B · Comb Sci</span>
+              <span class="topic">Acids & alkalis · pH scale</span>
+              <span class="meta"><span class="code">4030/C7</span><span class="att"><span data-icon="pin" data-icon-size="10"></span> 3</span></span>
+            </div>
+            <div class="cell subj-sci">
+              <span class="cls-tag"><span class="dot"></span> 3B · Comb Sci</span>
+              <span class="topic">Practical · indicators with red cabbage</span>
+              <span class="meta"><span class="code">PRA/12</span><span class="att"><span data-icon="pin" data-icon-size="10"></span> 4</span></span>
+            </div>
+            <div class="cell empty"></div>
+            <div class="cell subj-sci">
+              <span class="cls-tag"><span class="dot"></span> 3B · Comb Sci</span>
+              <span class="topic">Lab report write-up · CALA</span>
+              <span class="meta"><span class="code">CALA/3.1</span><span class="att"><span data-icon="pin" data-icon-size="10"></span> 2</span></span>
+            </div>
+
+            <!-- P5 -->
+            <div class="row-bottom" style="display: contents;">
+              <div class="pd-h"><span class="pd">P5</span><span>11:20</span></div>
+              <div class="cell subj-sci">
+                <span class="cls-tag"><span class="dot"></span> 4A · Comb Sci</span>
+                <span class="topic">Electricity · series circuits</span>
+                <span class="meta"><span class="code">4030/P9</span><span class="att"><span data-icon="pin" data-icon-size="10"></span> 3</span></span>
+              </div>
+              <div class="cell subj-sci">
+                <span class="cls-tag"><span class="dot"></span> 4A · Comb Sci</span>
+                <span class="topic">Electricity · parallel circuits</span>
+                <span class="meta"><span class="code">4030/P10</span><span class="att"><span data-icon="pin" data-icon-size="10"></span> 2</span></span>
+              </div>
+              <div class="cell subj-sci">
+                <span class="cls-tag"><span class="dot"></span> 4A · Comb Sci</span>
+                <span class="topic">Ohm's law · numeric problems</span>
+                <span class="meta"><span class="code">4030/P11</span><span class="att"><span data-icon="pin" data-icon-size="10"></span> 1</span></span>
+              </div>
+              <div class="cell empty"></div>
+              <div class="cell subj-sci">
+                <span class="cls-tag"><span class="dot"></span> 4A · Comb Sci</span>
+                <span class="topic">Past paper walkthrough · 2024 P2</span>
+                <span class="meta"><span class="code">PP/24</span><span class="att"><span data-icon="pin" data-icon-size="10"></span> 2</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Side drawer: selected cell detail -->
+      <aside class="drawer" aria-label="Lesson detail">
+        <div class="drawer-h">
+          <div style="flex: 1; min-width: 0;">
+            <div class="pre">Thu 22 May · Period 1 · 07:40–08:25</div>
+            <h2>Linear equations · setting up word problems</h2>
+            <div class="sub">Form 2A · Mathematics · Mr Chari · Room 12</div>
+          </div>
+          <button class="x" aria-label="Close"><span data-icon="x" data-icon-size="14"></span></button>
+        </div>
+        <div class="drawer-pills">
+          <span class="pill brand">ZIMSEC 4004</span>
+          <span class="pill">Unit 7 · L7.2</span>
+          <span class="pill">CALA cycle 2</span>
+          <span class="pill tone-success">Ready</span>
+        </div>
+        <div class="drawer-body">
+
+          <div class="dr-sec">
+            <div class="lbl">Topic</div>
+            <div class="txt">Translating real-life word problems into linear equations using one unknown. Focus on Zimbabwean contexts — kombi fares, mealie-meal pricing, school tuck-shop change.</div>
+          </div>
+
+          <div class="dr-sec">
+            <div class="lbl">Learning objectives</div>
+            <ul class="dr-list">
+              <li>Identify the unknown and assign a variable (let x = …).</li>
+              <li>Translate phrases like "three times as much", "half of", "less than" into algebraic expressions.</li>
+              <li>Form and solve a single linear equation in one variable.</li>
+              <li>Check the solution against the original word problem context.</li>
+            </ul>
+          </div>
+
+          <div class="dr-sec">
+            <div class="lbl">Materials & resources</div>
+            <div class="dr-files">
+              <div class="dr-file">
+                <span class="ic">PDF</span>
+                <div>
+                  <div class="nm">L7.2 — Word problems worksheet</div>
+                  <div class="sb">2 pages · 12 questions</div>
+                </div>
+                <span class="sp"></span>
+                <span class="dl" data-icon="download" data-icon-size="14"></span>
+              </div>
+              <div class="dr-file">
+                <span class="ic" style="background: #DCFCE7; color: #047857;">SLD</span>
+                <div>
+                  <div class="nm">Slide deck · 14 slides</div>
+                  <div class="sb">Last edited Mon 19 May</div>
+                </div>
+                <span class="sp"></span>
+                <span class="dl" data-icon="download" data-icon-size="14"></span>
+              </div>
+              <div class="dr-file">
+                <span class="ic" style="background: #FEF3C7; color: #92400E;">VID</span>
+                <div>
+                  <div class="nm">Khan Academy · 4 min clip</div>
+                  <div class="sb">Linked · setup phase only</div>
+                </div>
+                <span class="sp"></span>
+                <span class="dl" data-icon="external" data-icon-size="14"></span>
+              </div>
+              <div class="dr-file">
+                <span class="ic" style="background: #FEE2E5; color: #B83A2A;">CSV</span>
+                <div>
+                  <div class="nm">Exit ticket · 5 questions</div>
+                  <div class="sb">Auto-grades on submit</div>
+                </div>
+                <span class="sp"></span>
+                <span class="dl" data-icon="download" data-icon-size="14"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="dr-sec">
+            <div class="lbl">Homework</div>
+            <div class="txt">Textbook (New General Mathematics Book 2): Exercise 7c, questions 1–8. Due Friday 23 May, marked together Monday P1.</div>
+          </div>
+
+        </div>
+        <div class="dr-foot">
+          <button class="btn btn-ghost"><span data-icon="edit" data-icon-size="14"></span> Edit</button>
+          <span class="sp"></span>
+          <button class="btn btn-secondary"><span data-icon="layers" data-icon-size="14"></span> Duplicate</button>
+          <button class="btn btn-primary">Open lesson</button>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+</main>
+
+</body>
+</html>
