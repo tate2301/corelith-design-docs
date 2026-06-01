@@ -28,7 +28,7 @@
   // -------- Single-source-of-truth link config ----------------------------
   const SECTIONS = [
     { label: 'Foundations', href: ROOT + 'system/foundations.html',
-      match: /\/(foundations|colors|typography|spacing|elevation|motion|iconography|voice|principles)\.html$/ },
+      match: /\/(foundations|colors|typography|spacing|elevation|motion|iconography|voice|principles|accessibility)\.html$/ },
     { label: 'Components',  href: ROOT + 'system/primitives.html',
       match: /\/(primitives|p-[a-z-]+)\.html$/ },
     { label: 'Blocks',      href: ROOT + 'system/blocks.html',
@@ -60,6 +60,7 @@
       ['Motion',            ROOT + 'system/motion.html',        'motion'],
       ['Iconography',       ROOT + 'system/iconography.html',   'iconography'],
       ['Voice & writing',   ROOT + 'system/voice.html',         'voice'],
+      ['Accessibility',     ROOT + 'system/accessibility.html', 'accessibility', 'New'],
     ]},
     { label: 'Components', items: [
       ['Button',            ROOT + 'system/p-button.html',      'p-button'],
