@@ -80,24 +80,104 @@
     return lines.map((l) => l.slice(minIndent)).join('\n');
   }
 
-  // Light HTML/JSX/Vue highlighter. Operates on already-escaped HTML so the
-  // span wrappers can be inserted safely.
+  // Light HTML/JSX/Vue highlighter. We process raw (unescaped) source so the
+  // tag-vs-text regions are unambiguous, escape inside each region, then emit
+  // syntax spans. This avoids the chicken-and-egg of re-matching our own
+  // injected spans.
   function highlight(code, framework) {
-    let s = escHtml(code);
-    if (framework === 'html' || framework === 'vue' || framework === 'react') {
-      // <!-- comments -->
-      s = s.replace(/&lt;!--[\s\S]*?--&gt;/g, (m) => `<span class="c">${m}</span>`);
-      // Attribute strings: ="..." or ='...'
-      s = s.replace(/(=)(&quot;|&#39;)([^&<>\n]*?)(\2)/g,
-        (_, eq, q1, val, q2) => `${eq}<span class="s">${q1}${val}${q2}</span>`);
-      // Tag names: <tag or </tag
-      s = s.replace(/(&lt;\/?)([a-zA-Z][\w-]*)/g,
-        (_, lt, name) => `${lt}<span class="k">${name}</span>`);
-      // Attribute names: whitespace then name=
-      s = s.replace(/(\s)([a-zA-Z-:][\w\-:]*)(=)/g,
-        (_, sp, name, eq) => `${sp}<span class="v">${name}</span>${eq}`);
+    if (!(framework === 'html' || framework === 'vue' || framework === 'react')) {
+      return escHtml(code);
     }
-    return s;
+    let out = '';
+    let i = 0;
+    const N = code.length;
+    while (i < N) {
+      // Comment block
+      if (code.startsWith('<!--', i)) {
+        const end = code.indexOf('-->', i + 4);
+        const stop = end === -1 ? N : end + 3;
+        out += `<span class="c">${escHtml(code.slice(i, stop))}</span>`;
+        i = stop;
+        continue;
+      }
+      // Tag region
+      if (code[i] === '<' && /[a-zA-Z\/]/.test(code[i + 1] || '')) {
+        // Find matching '>' (ignoring those inside quoted attribute values)
+        let j = i + 1;
+        let inQ = null;
+        while (j < N) {
+          const ch = code[j];
+          if (inQ) {
+            if (ch === inQ) inQ = null;
+          } else if (ch === '"' || ch === "'") {
+            inQ = ch;
+          } else if (ch === '>') {
+            break;
+          }
+          j++;
+        }
+        const tagSrc = code.slice(i, j + 1);
+        out += highlightTag(tagSrc);
+        i = j + 1;
+        continue;
+      }
+      // Plain text — just escape
+      // Find next interesting char
+      let j = i;
+      while (j < N && code[j] !== '<') j++;
+      out += escHtml(code.slice(i, j));
+      i = j;
+    }
+    return out;
+  }
+
+  // Highlight one tag, e.g. `<button class="btn">` or `</button>`.
+  function highlightTag(tag) {
+    // tag begins with < and ends with >
+    const lead = tag.startsWith('</') ? '&lt;/' : '&lt;';
+    let rest = tag.slice(lead === '&lt;/' ? 2 : 1, -1); // strip < / and >
+    // Pull out tag name
+    const nameMatch = rest.match(/^([a-zA-Z][\w-]*)/);
+    if (!nameMatch) return escHtml(tag);
+    const tagName = nameMatch[1];
+    rest = rest.slice(tagName.length);
+
+    // Inside the attribute area: highlight name="value" pairs and bare attrs.
+    // We scan character by character.
+    let attrs = '';
+    let k = 0;
+    while (k < rest.length) {
+      const ch = rest[k];
+      if (/\s/.test(ch)) { attrs += escHtml(ch); k++; continue; }
+      if (ch === '/') { attrs += escHtml(ch); k++; continue; }
+      // Attribute name
+      const am = rest.slice(k).match(/^([a-zA-Z@:][\w\-:.]*)/);
+      if (!am) { attrs += escHtml(ch); k++; continue; }
+      const attrName = am[1];
+      k += attrName.length;
+      attrs += `<span class="v">${escHtml(attrName)}</span>`;
+      if (rest[k] === '=') {
+        attrs += '=';
+        k++;
+        const q = rest[k];
+        if (q === '"' || q === "'") {
+          // Find closing quote
+          let end = rest.indexOf(q, k + 1);
+          if (end === -1) end = rest.length;
+          const valWithQuotes = rest.slice(k, end + 1);
+          attrs += `<span class="s">${escHtml(valWithQuotes)}</span>`;
+          k = end + 1;
+        } else {
+          // Unquoted value
+          const um = rest.slice(k).match(/^[^\s>]+/);
+          if (um) {
+            attrs += `<span class="s">${escHtml(um[0])}</span>`;
+            k += um[0].length;
+          }
+        }
+      }
+    }
+    return `${lead}<span class="k">${escHtml(tagName)}</span>${attrs}&gt;`;
   }
 
   function renderCodeBlock(codeRaw, framework) {
