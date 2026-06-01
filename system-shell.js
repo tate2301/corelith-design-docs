@@ -161,8 +161,9 @@
   const topbar = document.createElement('header');
   topbar.className = 'ds-topbar';
   topbar.innerHTML = `
-    <button class="ds-menu-toggle" aria-label="Open menu" aria-expanded="false">
+    <button class="ds-menu-toggle" aria-label="Toggle sidebar" aria-expanded="false" title="Toggle sidebar (\\)">
       <span data-icon="menu" data-icon-size="18"></span>
+      <span class="label">Menu</span>
     </button>
     <a class="ds-brand" href="${inSystem ? '../index.html' : 'index.html'}">
       <span class="mark" data-icon="corelith" data-icon-size="22"></span>
@@ -216,19 +217,22 @@
   scrim.className = 'ds-sidebar-scrim';
   layout.appendChild(scrim);
 
-  // === Mobile menu wiring ===
+  // === Sidebar toggle wiring (drawer on all viewports, persisted) ===
   const wireMobileMenu = () => {
     const toggle = topbar.querySelector('.ds-menu-toggle');
     if (!toggle) return;
+    const STORAGE_KEY = 'huchu-ds-sidebar-open';
     const openMenu = () => {
       sidebar.classList.add('open');
       scrim.classList.add('open');
       toggle.setAttribute('aria-expanded', 'true');
+      try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) {}
     };
     const closeMenu = () => {
       sidebar.classList.remove('open');
       scrim.classList.remove('open');
       toggle.setAttribute('aria-expanded', 'false');
+      try { localStorage.setItem(STORAGE_KEY, '0'); } catch (e) {}
     };
     toggle.addEventListener('click', () => {
       if (sidebar.classList.contains('open')) closeMenu(); else openMenu();
@@ -238,10 +242,21 @@
     sidebar.addEventListener('click', (e) => {
       if (e.target.closest('a')) closeMenu();
     });
-    // Close on Escape
+    // Toggle on Escape (close) or \ (open/close)
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && sidebar.classList.contains('open')) closeMenu();
+      if (e.key === '\\' && !e.metaKey && !e.ctrlKey && !e.altKey &&
+          !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)) {
+        if (sidebar.classList.contains('open')) closeMenu(); else openMenu();
+      }
     });
+    // Restore previously persisted state (default: closed). Only auto-open
+    // on desktop so it doesn't surprise mobile users.
+    try {
+      if (localStorage.getItem(STORAGE_KEY) === '1' && window.innerWidth >= 1024) {
+        openMenu();
+      }
+    } catch (e) {}
   };
 
   // === Viewport preview switcher ===

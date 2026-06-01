@@ -74,16 +74,32 @@
   ];
 
   function mount() {
+    // Always build the drawer so window.HuchuNav.toggle() works on any page
+    // (demos, kits, etc). Only auto-insert the hamburger button into a
+    // recognized topbar; other pages can render their own button that calls
+    // window.HuchuNav.toggle().
     const topbar = document.querySelector('.hx-topbar, .ds-slim-nav');
-    if (!topbar) return;
-    if (topbar.querySelector('.hx-menu-btn')) return; // already wired
-
-    // Insert hamburger button at the start of the topbar
-    const btn = document.createElement('button');
-    btn.className = 'hx-menu-btn';
-    btn.setAttribute('aria-label', 'Open menu');
-    btn.innerHTML = '<span data-icon="menu" data-icon-size="18"></span>';
-    topbar.insertBefore(btn, topbar.firstChild);
+    if (topbar && !topbar.querySelector('.hx-menu-btn')) {
+      // Insert hamburger button at the start of the topbar
+      const btn = document.createElement('button');
+      btn.className = 'hx-menu-btn';
+      btn.setAttribute('aria-label', 'Open menu');
+      btn.innerHTML = '<span data-icon="menu" data-icon-size="18"></span>';
+      topbar.insertBefore(btn, topbar.firstChild);
+    } else if (document.querySelector('.hx-drawer')) {
+      return; // already mounted
+    } else if (!topbar) {
+      // Page has no recognized topbar (demos / kits) — drop a floating
+      // pill in the top-left so users always have a way back to the
+      // global site navigation. Suppressed by body.no-hx-float-btn or in
+      // fullscreen preview mode.
+      const btn = document.createElement('button');
+      btn.className = 'hx-float-btn';
+      btn.setAttribute('aria-label', 'Open site navigation');
+      btn.setAttribute('data-hx-nav-trigger', '');
+      btn.innerHTML = '<span data-icon="menu" data-icon-size="14"></span><span class="lbl">Huchu</span>';
+      document.body.appendChild(btn);
+    }
 
     // Build scrim + drawer
     const scrim = document.createElement('div');
@@ -128,15 +144,28 @@
       scrim.classList.remove('open');
       document.body.style.overflow = '';
     }
+    function toggle() {
+      if (drawer.classList.contains('open')) close(); else open();
+    }
 
-    btn.addEventListener('click', open);
+    // Expose a global API so demos / kits can trigger the drawer from
+    // their own hamburger buttons without re-implementing the markup.
+    window.HuchuNav = { open, close, toggle };
+
+    // Auto-wire any element with data-hx-nav-trigger anywhere on the page
+    document.querySelectorAll('[data-hx-nav-trigger]').forEach(el => {
+      el.addEventListener('click', toggle);
+    });
+
+    const btn = topbar ? topbar.querySelector('.hx-menu-btn') : null;
+    if (btn) btn.addEventListener('click', open);
     scrim.addEventListener('click', close);
     drawer.querySelector('.close').addEventListener('click', close);
     drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', () => setTimeout(close, 100)));
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
 
     if (window.Icons && window.Icons.render) {
-      window.Icons.render(btn);
+      if (btn) window.Icons.render(btn);
       window.Icons.render(drawer);
     }
   }
