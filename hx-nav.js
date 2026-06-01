@@ -35,6 +35,7 @@
       ['Pages',       root + 'system/pages.html',         'grid',         /\/(pages|pg-)/, []],
     ]},
     { label: 'Portals', items: [
+      ['All portals',      root + 'portals/index.html',         'grid',     /\/portals\/index\.html$/, []],
       ['POS terminal',     root + 'portals/pos/index.html',     'receipt',  /\/portals\/pos\//, []],
       ['Parent portal',    root + 'portals/parent/index.html',  'user',     /\/portals\/parent\//, []],
       ['Student portal',   root + 'portals/student/index.html', 'book',     /\/portals\/student\//, []],
@@ -43,6 +44,7 @@
       ['Admin portal',     root + 'portals/admin/index.html',   'shield',   /\/portals\/admin\//, []],
     ]},
     { label: 'Verticals', items: [
+      ['All verticals', root + 'verticals/index.html',              'grid',     /\/verticals\/index\.html$/, []],
       ['Gold',         root + 'verticals/gold/index.html',         'gem',      /\/verticals\/gold\//, []],
       ['Scrap',        root + 'verticals/scrap/index.html',        'recycle',  /\/verticals\/scrap\//, []],
       ['Retail',       root + 'verticals/retail/index.html',       'bag',      /\/verticals\/retail\//, []],
@@ -62,6 +64,12 @@
       ['Settings',      root + 'kits/settings.html',         'settings',  /\/kits\/settings\.html$/, []],
       ['Sign-in',       root + 'kits/signin.html',           'lock',      /\/kits\/signin\.html$/, []],
       ['POS demo',      root + 'portals/pos/demo.html',      'play',      /\/portals\/pos\/demo\.html$/, []],
+    ]},
+    { label: 'Reference', items: [
+      ['Sitemap',       root + 'sitemap.html',               'list',      /\/sitemap\.html$/, []],
+      ['Install',       root + 'system/install.html',        'download',  /\/install\.html$/, []],
+      ['Changelog',     root + 'system/changelog.html',      'clock',     /\/changelog\.html$/, []],
+      ['GitHub',        'https://github.com/tate2301/huchu', 'external',  /^$/, []],
     ]},
   ];
 

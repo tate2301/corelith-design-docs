@@ -1,0 +1,2248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Parent portal demo · Huchu</title>
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../portal-kit-nav.js" defer></script>
+<style>
+  /* ============================================================
+     Parent portal interactive demo — mobile-first
+     ============================================================ */
+  body { background: var(--gray-100); margin: 0; }
+
+  /* Stage: centred phone-sized canvas on desktop, full bleed on mobile */
+  .pd-stage {
+    min-height: calc(100vh - 47px); /* minus pk-nav */
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: var(--gray-100);
+  }
+  .pd-frame {
+    width: 390px; height: 844px;
+    border-radius: 48px;
+    background: #0F1115;
+    padding: 12px;
+    box-shadow: 0 30px 60px -20px rgba(22,24,29,0.25), 0 0 0 1px rgba(22,24,29,0.08);
+    position: relative;
+  }
+  .pd-frame::before {
+    content: ""; position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+    width: 110px; height: 30px; background: #0F1115; border-radius: 0 0 18px 18px; z-index: 20;
+  }
+  .pd-screen {
+    width: 100%; height: 100%;
+    border-radius: 36px;
+    overflow: hidden;
+    background: var(--canvas);
+    position: relative;
+    display: flex; flex-direction: column;
+  }
+
+  /* Fullscreen mode hides pk-nav & device frame entirely */
+  body.is-fullscreen .pk-nav { display: none !important; }
+  body.is-fullscreen { background: #000; }
+  body.is-fullscreen .pd-stage { padding: 0; min-height: 100vh; min-height: 100dvh; }
+  body.is-fullscreen .pd-frame {
+    width: 100vw; height: 100vh; height: 100dvh;
+    border-radius: 0; padding: 0; box-shadow: none;
+  }
+  body.is-fullscreen .pd-frame::before { display: none; }
+  body.is-fullscreen .pd-screen { border-radius: 0; }
+
+  /* Mobile: drop the device chrome and use the whole viewport */
+  @media (max-width: 720px) {
+    .pd-stage { padding: 0; min-height: calc(100dvh - 47px); }
+    .pd-frame {
+      width: 100%; height: calc(100dvh - 47px);
+      border-radius: 0; padding: 0; box-shadow: none;
+    }
+    .pd-frame::before { display: none; }
+    .pd-screen { border-radius: 0; }
+  }
+
+  /* Fullscreen toggle button (floats top-right of stage) */
+  .pd-fs-toggle {
+    position: fixed; top: 56px; right: 16px; z-index: 50;
+    width: 36px; height: 36px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-strong); cursor: pointer;
+    display: grid; place-items: center;
+    box-shadow: 0 4px 12px -4px rgba(0,0,0,0.15);
+  }
+  .pd-fs-toggle:hover { background: var(--surface-muted); }
+  body.is-fullscreen .pd-fs-toggle {
+    top: env(safe-area-inset-top, 14px); right: 14px;
+    background: rgba(255,255,255,0.92);
+  }
+
+  /* App bar custom — has child avatar (tap = child switcher) */
+  .pa-bar {
+    height: 52px; padding: 0 8px 0 12px;
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex: none;
+  }
+  .pa-bar .back {
+    width: 36px; height: 36px; display: grid; place-items: center;
+    border-radius: 8px; color: var(--text-strong); cursor: pointer;
+  }
+  .pa-bar .back:hover { background: var(--surface-muted); }
+  .pa-bar h1 { margin: 0; font: 600 16px/1.1 var(--font-sans); color: var(--text-strong); flex: 1; letter-spacing: -0.01em; }
+  .pa-bar .actions { display: inline-flex; align-items: center; gap: 4px; }
+  .pa-bar .actions button {
+    width: 36px; height: 36px; border-radius: 8px;
+    color: var(--text-strong); display: grid; place-items: center; cursor: pointer;
+    position: relative;
+  }
+  .pa-bar .actions button:hover { background: var(--surface-muted); }
+  .pa-bar .actions .pip {
+    position: absolute; top: 6px; right: 6px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--tone-danger); border: 2px solid var(--surface);
+  }
+  .pa-bar .child-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px 4px 4px; border-radius: 9999px;
+    background: var(--brand-soft); color: var(--brand-strong);
+    cursor: pointer;
+    font: 600 12px/1 var(--font-sans);
+  }
+  .pa-bar .child-btn .av {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--brand); color: #fff;
+    display: grid; place-items: center;
+    font: 700 10.5px/1 var(--font-sans);
+  }
+  .pa-bar .child-btn:hover { background: var(--brand-100); }
+
+  /* Bottom tab bar */
+  .pa-tabs {
+    height: 72px; padding: 8px 8px calc(8px + env(safe-area-inset-bottom, 10px));
+    display: flex; align-items: stretch;
+    background: var(--surface); border-top: 1px solid var(--border);
+    flex: none;
+  }
+  .pa-tabs button {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; border-radius: 8px; padding: 4px 0;
+    color: var(--text-subtle); background: transparent; cursor: pointer;
+    font: 500 11px/1 var(--font-sans); position: relative;
+  }
+  .pa-tabs button.active { color: var(--brand); }
+  .pa-tabs button .ic { width: 22px; height: 22px; display: grid; place-items: center; }
+  .pa-tabs button .bdg {
+    position: absolute; top: 2px; right: calc(50% - 18px);
+    min-width: 16px; height: 16px; padding: 0 4px;
+    background: var(--tone-danger); color: #fff; border-radius: 9999px;
+    font: 600 10px/16px var(--font-mono); text-align: center;
+  }
+
+  /* Scrollable area */
+  .pa-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .pa-scroll::-webkit-scrollbar { width: 0; }
+
+  /* ── HOME ──────────────────────────────────────────────── */
+  .greet { padding: 16px 16px 6px; }
+  .greet .hi { font: 500 13px/1.3 var(--font-sans); color: var(--text-muted); }
+  .greet h2 { font: 700 22px/1.15 var(--font-sans); letter-spacing: -0.02em; margin: 4px 0 0; color: var(--text-strong); }
+  .greet .school { font: 12.5px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 4px; }
+
+  /* Fee hero */
+  .fee-hero {
+    margin: 12px 16px 0;
+    background: linear-gradient(135deg, #166534, #14532D);
+    color: #fff; border-radius: 14px;
+    padding: 18px 18px 16px;
+    position: relative; overflow: clip;
+  }
+  .fee-hero::before {
+    content: ""; position: absolute; right: -40px; top: -40px;
+    width: 160px; height: 160px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%);
+  }
+  .fee-hero .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
+  .fee-hero .val { font: 700 34px/1.05 var(--font-sans); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; margin-top: 10px; }
+  .fee-hero .val .c { font-size: 17px; opacity: 0.85; margin-right: 4px; font-weight: 500; }
+  .fee-hero .due { font: 13px/1.4 var(--font-sans); opacity: 0.9; margin-top: 6px; }
+  .fee-hero .progress { margin-top: 14px; }
+  .fee-hero .progress .bar { height: 6px; background: rgba(255,255,255,0.18); border-radius: 9999px; overflow: hidden; }
+  .fee-hero .progress .bar > span { display: block; height: 100%; background: #fff; border-radius: inherit; transition: width 320ms ease; }
+  .fee-hero .progress .meta { display: flex; justify-content: space-between; font: 500 11px/1 var(--font-sans); opacity: 0.9; margin-top: 8px; }
+  .fee-hero .actions { display: flex; gap: 8px; margin-top: 14px; }
+  .fee-hero .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 14px; border-radius: 9999px;
+    background: rgba(255,255,255,0.18); color: #fff;
+    font: 600 13px/1 var(--font-sans); cursor: pointer;
+  }
+  .fee-hero .btn:hover { background: rgba(255,255,255,0.28); }
+  .fee-hero .btn.solid { background: #fff; color: #166534; }
+  .fee-hero .btn.solid:hover { background: rgba(255,255,255,0.9); }
+  .fee-hero.paid { background: linear-gradient(135deg, #1E40AF, #1D4ED8); }
+  .fee-hero.paid.cleared { background: linear-gradient(135deg, #166534, #14532D); }
+
+  .section-h { padding: 18px 20px 8px; font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); display: flex; align-items: center; justify-content: space-between; }
+  .section-h a, .section-h button { font: 500 12px/1 var(--font-sans); color: var(--brand-strong); text-decoration: none; letter-spacing: 0; text-transform: none; background: none; cursor: pointer; }
+
+  .card-block { margin: 0 16px; }
+
+  /* List rows */
+  .pl-row.cl { cursor: pointer; }
+  .pl-row.cl:hover { background: var(--surface-muted); }
+  .pl-row .badge-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--brand);
+    display: inline-block; margin-left: 4px;
+  }
+  .pl-row .unread { background: var(--brand-soft); color: var(--brand-strong); font: 600 10px/1 var(--font-mono); padding: 3px 7px; border-radius: 9999px; }
+
+  /* Timetable timeline */
+  .tt-row {
+    display: grid; grid-template-columns: 56px 1fr auto;
+    gap: 12px; align-items: center;
+    padding: 12px 16px; border-bottom: 1px solid var(--border-subtle);
+  }
+  .tt-row:last-child { border-bottom: 0; }
+  .tt-row .time { font: 600 14px/1 var(--font-mono); color: var(--text-strong); font-variant-numeric: tabular-nums; }
+  .tt-row .time .ap { display: block; font: 500 10px/1 var(--font-sans); color: var(--text-muted); margin-top: 3px; }
+  .tt-row .nm { font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .tt-row .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .tt-row .now {
+    font: 600 9.5px/1 var(--font-mono); letter-spacing: 0.08em;
+    background: var(--tone-success-bg); color: var(--tone-success);
+    padding: 3px 6px; border-radius: 4px;
+  }
+
+  /* Quick stat tiles */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 16px; }
+  .stat-tile {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 14px;
+    cursor: pointer;
+  }
+  .stat-tile:hover { border-color: var(--brand-200); background: var(--brand-50); }
+  .stat-tile .l { font: 500 11px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.04em; }
+  .stat-tile .v { font: 700 22px/1.1 var(--font-sans); color: var(--text-strong); margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .stat-tile .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 3px; }
+  .stat-tile.brand { background: var(--brand-soft); border-color: var(--brand-100); }
+  .stat-tile.brand .v { color: var(--brand-strong); }
+
+  /* ── NOTICES ───────────────────────────────────────────── */
+  .notice-row {
+    display: grid; grid-template-columns: 36px 1fr auto;
+    gap: 12px; padding: 14px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    cursor: pointer; align-items: flex-start;
+  }
+  .notice-row:hover { background: var(--surface-muted); }
+  .notice-row:last-child { border-bottom: 0; }
+  .notice-row .ic {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--brand-soft); color: var(--brand-strong);
+    display: grid; place-items: center;
+  }
+  .notice-row .ic.warn { background: var(--tone-warn-bg); color: var(--tone-warn); }
+  .notice-row .ic.danger { background: var(--tone-danger-bg); color: var(--tone-danger); }
+  .notice-row .ic.success { background: var(--tone-success-bg); color: var(--tone-success); }
+  .notice-row.unread .nm { color: var(--text-strong); font-weight: 600; }
+  .notice-row .nm { font: 500 14px/1.3 var(--font-sans); color: var(--text-body); }
+  .notice-row .sb { font: 12px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 3px; }
+  .notice-row .meta { font: 11px/1 var(--font-mono); color: var(--text-subtle); margin-top: 6px; }
+  .notice-row .pip { width: 8px; height: 8px; border-radius: 50%; background: var(--brand); margin-top: 8px; }
+
+  /* Notice detail */
+  .notice-detail { padding: 16px 18px 24px; }
+  .notice-detail h2 { font: 700 19px/1.25 var(--font-sans); color: var(--text-strong); margin: 0 0 6px; letter-spacing: -0.01em; }
+  .notice-detail .meta-row { display: flex; align-items: center; gap: 8px; font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-bottom: 14px; }
+  .notice-detail .meta-row .pill {
+    padding: 3px 8px; border-radius: 9999px; background: var(--surface-muted);
+    font: 500 10.5px/1 var(--font-sans);
+  }
+  .notice-detail .body { font: 14px/1.55 var(--font-sans); color: var(--text-body); }
+  .notice-detail .body p { margin: 0 0 12px; }
+  .notice-detail .attach {
+    margin: 14px 0;
+    display: grid; gap: 6px;
+  }
+  .notice-detail .attach a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; background: var(--surface-muted); border-radius: 8px;
+    color: var(--text-strong); text-decoration: none; font: 500 13px/1.3 var(--font-sans);
+  }
+  .notice-detail .attach a .ic { width: 28px; height: 28px; border-radius: 6px; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; flex: none; }
+  .notice-detail .attach a .sz { margin-left: auto; font: 11px/1 var(--font-mono); color: var(--text-muted); }
+  .notice-detail .rsvp { display: flex; gap: 8px; margin: 14px 0 4px; }
+  .notice-detail .rsvp button {
+    flex: 1; padding: 11px; border-radius: 10px;
+    font: 600 13px/1 var(--font-sans); cursor: pointer;
+    background: var(--surface); border: 1px solid var(--border); color: var(--text-strong);
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .notice-detail .rsvp button:hover { background: var(--surface-muted); }
+  .notice-detail .rsvp button.on.yes { background: var(--tone-success); color: #fff; border-color: var(--tone-success); }
+  .notice-detail .rsvp button.on.no  { background: var(--tone-danger); color: #fff; border-color: var(--tone-danger); }
+  .notice-detail .rsvp button.on.maybe { background: var(--tone-warn); color: #fff; border-color: var(--tone-warn); }
+
+  .comments { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-subtle); }
+  .comments h3 { font: 600 13px/1 var(--font-sans); color: var(--text-strong); margin: 0 0 10px; }
+  .comment {
+    display: grid; grid-template-columns: 32px 1fr;
+    gap: 10px; padding: 8px 0;
+  }
+  .comment .av {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--brand-soft); color: var(--brand-strong);
+    display: grid; place-items: center;
+    font: 600 11px/1 var(--font-sans);
+  }
+  .comment.staff .av { background: var(--tone-success-bg); color: var(--tone-success); }
+  .comment .ct {
+    background: var(--surface-muted); padding: 8px 12px; border-radius: 12px;
+  }
+  .comment .nm { font: 600 12px/1.3 var(--font-sans); color: var(--text-strong); }
+  .comment .nm .when { font: 500 10.5px/1 var(--font-mono); color: var(--text-muted); margin-left: 6px; font-weight: 500; }
+  .comment .bd { font: 13px/1.4 var(--font-sans); color: var(--text-body); margin-top: 2px; }
+
+  .comment-input {
+    display: flex; gap: 8px; align-items: center;
+    padding: 10px 0 0;
+  }
+  .comment-input input {
+    flex: 1; height: 38px; padding: 0 14px;
+    border: 1px solid var(--border); border-radius: 9999px;
+    background: var(--surface); font: 13px/1 var(--font-sans);
+  }
+  .comment-input input:focus { outline: 0; border-color: var(--brand); box-shadow: 0 0 0 3px var(--focus-ring-soft); }
+  .comment-input button {
+    width: 38px; height: 38px; border-radius: 9999px;
+    background: var(--brand); color: #fff;
+    display: grid; place-items: center; cursor: pointer;
+  }
+  .comment-input button:hover { background: var(--brand-strong); }
+
+  /* ── FEES ──────────────────────────────────────────────── */
+  .breakdown {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; overflow: clip;
+    margin: 0 16px;
+  }
+  .breakdown-row {
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 8px 12px; padding: 12px 14px;
+    border-bottom: 1px solid var(--border-subtle);
+    cursor: pointer;
+  }
+  .breakdown-row:hover { background: var(--surface-muted); }
+  .breakdown-row:last-child { border-bottom: 0; }
+  .breakdown-row .nm { font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .breakdown-row .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .breakdown-row .v { font: 600 14px/1 var(--font-mono); color: var(--text-strong); font-variant-numeric: tabular-nums; align-self: center; }
+  .breakdown-row.total { background: var(--surface-muted); cursor: default; }
+  .breakdown-row.paid .v { color: var(--tone-success); }
+  .breakdown-row.paid .v::before { content: "−"; margin-right: 3px; }
+  .breakdown-row .chk {
+    width: 18px; height: 18px; border-radius: 5px;
+    border: 1.5px solid var(--border-strong); flex: none;
+    display: grid; place-items: center;
+    margin-right: 8px;
+    background: var(--surface);
+  }
+  .breakdown-row.picked .chk { background: var(--brand); border-color: var(--brand); color: #fff; }
+  .breakdown-row .nm-wrap { display: flex; align-items: flex-start; }
+  .breakdown-row .nm-body { flex: 1; min-width: 0; }
+
+  .pay-bar {
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+    flex: none;
+  }
+  .pay-bar .meta { flex: 1; min-width: 0; }
+  .pay-bar .meta .l { font: 11px/1 var(--font-sans); color: var(--text-muted); }
+  .pay-bar .meta .v { font: 700 17px/1 var(--font-mono); color: var(--text-strong); margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .pay-bar button {
+    padding: 11px 18px; border-radius: 10px;
+    background: var(--brand); color: #fff;
+    font: 600 14px/1 var(--font-sans); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .pay-bar button:hover { background: var(--brand-strong); }
+  .pay-bar button:disabled { background: var(--surface-muted); color: var(--text-muted); cursor: not-allowed; }
+
+  /* Split chooser */
+  .split-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; padding: 0 16px; }
+  .split-row button {
+    padding: 11px 8px; border-radius: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    font: 600 13px/1.2 var(--font-sans); color: var(--text-strong);
+    cursor: pointer; display: flex; flex-direction: column; gap: 4px; align-items: center;
+  }
+  .split-row button:hover { border-color: var(--brand-200); background: var(--brand-50); }
+  .split-row button.on { border-color: var(--brand); background: var(--brand-soft); color: var(--brand-strong); }
+  .split-row button .sb { font: 500 10.5px/1 var(--font-sans); color: var(--text-muted); }
+  .split-row button.on .sb { color: var(--brand-strong); opacity: 0.8; }
+
+  /* Method chooser */
+  .method-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 16px; }
+  .method-btn {
+    padding: 12px; border-radius: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 6px;
+    cursor: pointer; text-align: left;
+  }
+  .method-btn:hover { border-color: var(--brand-200); background: var(--brand-50); }
+  .method-btn.on { border-color: var(--brand); background: var(--brand-soft); }
+  .method-btn .ic-tile {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--surface-muted); color: var(--text-strong);
+    display: grid; place-items: center;
+  }
+  .method-btn.on .ic-tile { background: var(--brand); color: #fff; }
+  .method-btn .nm { font: 600 13px/1.2 var(--font-sans); color: var(--text-strong); }
+  .method-btn .sb { font: 11px/1.3 var(--font-sans); color: var(--text-muted); }
+
+  /* Sim payment box */
+  .sim-box {
+    margin: 0 16px; padding: 14px;
+    background: var(--surface-muted); border-radius: 12px; text-align: center;
+    color: var(--text-muted); font: 13px/1.4 var(--font-sans);
+    border: 1px dashed var(--border-strong);
+  }
+  .sim-box strong { color: var(--text-strong); display: block; font: 600 13.5px/1 var(--font-sans); margin-bottom: 6px; }
+  .sim-box .pulse {
+    display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+    background: var(--brand); margin-right: 6px;
+    animation: pulse 1.2s infinite;
+  }
+  @keyframes pulse { 50% { opacity: 0.4; transform: scale(1.3); } }
+
+  /* Receipt */
+  .receipt-card {
+    margin: 16px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 18px;
+  }
+  .receipt-card .succ-banner {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px; background: var(--tone-success-bg);
+    border-radius: 10px; margin-bottom: 14px;
+  }
+  .receipt-card .succ-banner .ic {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--tone-success); color: #fff;
+    display: grid; place-items: center; flex: none;
+    animation: pop 320ms ease;
+  }
+  @keyframes pop { 0% { transform: scale(0); } 60% { transform: scale(1.15); } 100% { transform: scale(1); } }
+  .receipt-card .succ-banner .nm { font: 600 14px/1.2 var(--font-sans); color: var(--tone-success); }
+  .receipt-card .succ-banner .sb { font: 12px/1.3 var(--font-sans); color: var(--tone-success); opacity: 0.85; margin-top: 2px; }
+  .receipt-card h2 { font: 600 16px/1.2 var(--font-sans); color: var(--text-strong); margin: 0 0 4px; text-align: center; }
+  .receipt-card .ts { font: 12px/1.4 var(--font-sans); color: var(--text-muted); text-align: center; margin-bottom: 14px; }
+  .receipt-card .rl { display: flex; justify-content: space-between; font: 13px/1.55 var(--font-sans); padding: 4px 0; }
+  .receipt-card .rl .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-strong); }
+  .receipt-card .rl.head { font: 600 12px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; border-bottom: 1px dashed var(--border); padding-bottom: 8px; margin-bottom: 4px; }
+  .receipt-card .rl.foot { border-top: 1px dashed var(--border); margin-top: 6px; padding-top: 8px; font-weight: 700; color: var(--text-strong); }
+  .receipt-card .rl.foot .v { font-size: 15px; }
+  .receipt-card .ref {
+    margin-top: 12px; padding: 10px 12px;
+    background: var(--surface-muted); border-radius: 8px;
+    font: 500 12px/1.4 var(--font-sans); color: var(--text-muted);
+    text-align: center;
+  }
+  .receipt-card .ref strong { display: block; color: var(--text-strong); font: 700 14px/1.1 var(--font-mono); margin-top: 4px; }
+  .receipt-card .acts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 16px; }
+  .receipt-card .acts .btn {
+    padding: 11px; border-radius: 8px; font: 500 12.5px/1 var(--font-sans);
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--surface-muted); color: var(--text-strong);
+  }
+  .receipt-card .acts .btn:hover { background: var(--surface-sunken); }
+  .receipt-card .acts .btn.primary {
+    grid-column: 1 / -1; background: var(--brand); color: #fff;
+    padding: 13px; font-weight: 600; font-size: 14px;
+  }
+  .receipt-card .acts .btn.primary:hover { background: var(--brand-strong); }
+
+  /* ── ATTENDANCE & MARKS ────────────────────────────────── */
+  .term-select {
+    display: flex; gap: 6px; padding: 12px 16px 4px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .term-select::-webkit-scrollbar { display: none; }
+  .term-select button {
+    padding: 7px 14px; border-radius: 9999px;
+    background: var(--surface); border: 1px solid var(--border);
+    font: 500 12.5px/1 var(--font-sans); color: var(--text-strong);
+    white-space: nowrap; cursor: pointer; flex: none;
+  }
+  .term-select button.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+  .att-card {
+    margin: 12px 16px 0;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px;
+  }
+  .att-card .summary {
+    display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px;
+  }
+  .att-card .summary .v { font: 700 28px/1 var(--font-sans); color: var(--text-strong); font-variant-numeric: tabular-nums; }
+  .att-card .summary .lbl { font: 500 12px/1.2 var(--font-sans); color: var(--text-muted); }
+  .att-card .sb { font: 12.5px/1.4 var(--font-sans); color: var(--text-muted); margin-bottom: 14px; }
+  .att-grid {
+    display: grid; grid-template-columns: 40px repeat(5, 1fr);
+    gap: 6px 4px; align-items: center;
+  }
+  .att-grid .wk { font: 500 11px/1 var(--font-mono); color: var(--text-muted); }
+  .att-grid .day {
+    font: 500 11px/1 var(--font-sans); color: var(--text-subtle);
+    text-align: center; padding: 6px 0;
+  }
+  .att-grid .dot {
+    width: 100%; aspect-ratio: 1; max-width: 28px; max-height: 28px;
+    margin: 0 auto;
+    border-radius: 8px; background: var(--surface-muted);
+    display: grid; place-items: center;
+    font: 600 11px/1 var(--font-mono); color: var(--text-subtle);
+    cursor: pointer;
+  }
+  .att-grid .dot.p { background: var(--tone-success-bg); color: var(--tone-success); }
+  .att-grid .dot.a { background: var(--tone-danger-bg); color: var(--tone-danger); }
+  .att-grid .dot.l { background: var(--tone-warn-bg); color: var(--tone-warn); }
+  .att-grid .dot.h { background: transparent; color: var(--text-subtle); }
+  .att-legend {
+    display: flex; gap: 14px; padding: 12px 0 0;
+    font: 11.5px/1 var(--font-sans); color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+  .att-legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .att-legend span::before {
+    content: ""; width: 10px; height: 10px; border-radius: 3px; display: inline-block;
+  }
+  .att-legend .l-p::before { background: var(--tone-success); }
+  .att-legend .l-a::before { background: var(--tone-danger); }
+  .att-legend .l-l::before { background: var(--tone-warn); }
+
+  /* Subject mark cards */
+  .subj-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px;
+    margin-bottom: 8px; cursor: pointer;
+  }
+  .subj-card:hover { border-color: var(--brand-200); }
+  .subj-card .hd {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+  }
+  .subj-card .hd .ic {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--brand-soft); color: var(--brand-strong);
+    display: grid; place-items: center; flex: none;
+  }
+  .subj-card .hd .nm { font: 600 14px/1.2 var(--font-sans); color: var(--text-strong); flex: 1; }
+  .subj-card .hd .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .subj-card .hd .v { font: 700 18px/1 var(--font-mono); font-variant-numeric: tabular-nums; }
+  .subj-card .hd .v.A { color: #166534; }
+  .subj-card .hd .v.B { color: #1D4ED8; }
+  .subj-card .hd .v.C { color: var(--tone-warn); }
+  .subj-card .hd .v.D { color: var(--tone-danger); }
+  .subj-card .bar {
+    height: 6px; background: var(--surface-muted); border-radius: 9999px; overflow: hidden;
+  }
+  .subj-card .bar > span { display: block; height: 100%; border-radius: inherit; background: var(--brand); transition: width 320ms ease; }
+  .subj-card .bar > span.A { background: #166534; }
+  .subj-card .bar > span.B { background: #1D4ED8; }
+  .subj-card .bar > span.C { background: var(--tone-warn); }
+  .subj-card .bar > span.D { background: var(--tone-danger); }
+
+  /* ── PROFILE ───────────────────────────────────────────── */
+  .prof-hero {
+    padding: 22px 16px 18px; text-align: center;
+    background: linear-gradient(180deg, var(--brand-soft), transparent);
+  }
+  .prof-hero .av {
+    width: 78px; height: 78px; margin: 0 auto;
+    border-radius: 50%; background: var(--brand);
+    color: #fff; display: grid; place-items: center;
+    font: 700 28px/1 var(--font-sans);
+  }
+  .prof-hero h2 { font: 700 18px/1.2 var(--font-sans); color: var(--text-strong); margin: 12px 0 2px; letter-spacing: -0.01em; }
+  .prof-hero .sb { font: 13px/1.4 var(--font-sans); color: var(--text-muted); }
+
+  .toggle-row {
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 12px; align-items: center; padding: 14px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .toggle-row:last-child { border-bottom: 0; }
+  .toggle-row .nm { font: 500 14px/1.3 var(--font-sans); color: var(--text-strong); }
+  .toggle-row .sb { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .toggle {
+    width: 42px; height: 24px; border-radius: 9999px;
+    background: var(--surface-sunken); position: relative; cursor: pointer;
+    transition: background 160ms ease;
+  }
+  .toggle::after {
+    content: ""; position: absolute;
+    top: 2px; left: 2px;
+    width: 20px; height: 20px; border-radius: 50%; background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: transform 160ms ease;
+  }
+  .toggle.on { background: var(--brand); }
+  .toggle.on::after { transform: translateX(18px); }
+
+  .lang-row {
+    display: grid; grid-template-columns: 1fr auto; align-items: center;
+    padding: 14px 16px; border-bottom: 1px solid var(--border-subtle);
+    cursor: pointer;
+  }
+  .lang-row:hover { background: var(--surface-muted); }
+  .lang-row .nm { font: 500 14px/1.3 var(--font-sans); color: var(--text-strong); }
+  .lang-row .v { font: 500 13px/1.3 var(--font-sans); color: var(--text-muted); display: inline-flex; align-items: center; gap: 6px; }
+
+  /* ── MODAL / BOTTOM SHEET ──────────────────────────────── */
+  .scrim {
+    position: fixed; inset: 0;
+    background: rgba(22,24,29,0.5);
+    z-index: 100;
+    display: grid; place-items: flex-end;
+    animation: scrimIn 160ms ease;
+  }
+  @keyframes scrimIn { from { opacity: 0; } to { opacity: 1; } }
+  .sheet {
+    width: 100%;
+    background: var(--surface);
+    border-top-left-radius: 18px; border-top-right-radius: 18px;
+    padding: 6px 0 calc(14px + env(safe-area-inset-bottom, 0px));
+    max-height: 80vh; overflow-y: auto;
+    animation: sheetIn 260ms cubic-bezier(0.2, 0, 0.1, 1);
+    box-shadow: 0 -10px 30px -10px rgba(0,0,0,0.3);
+  }
+  @keyframes sheetIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .sheet .handle {
+    width: 36px; height: 4px; margin: 6px auto 14px;
+    background: var(--border-strong); border-radius: 9999px;
+  }
+  .sheet h3 { font: 600 16px/1.2 var(--font-sans); color: var(--text-strong); margin: 0 0 4px; padding: 0 18px; }
+  .sheet .sub { font: 13px/1.4 var(--font-sans); color: var(--text-muted); margin: 0 0 14px; padding: 0 18px; }
+  .sheet .picker-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 18px; cursor: pointer;
+    border-top: 1px solid var(--border-subtle);
+  }
+  .sheet .picker-row:hover { background: var(--surface-muted); }
+  .sheet .picker-row .av {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--brand-soft); color: var(--brand-strong);
+    display: grid; place-items: center;
+    font: 700 12px/1 var(--font-sans); flex: none;
+  }
+  .sheet .picker-row.on .av { background: var(--brand); color: #fff; }
+  .sheet .picker-row .nm { font: 500 14px/1.3 var(--font-sans); color: var(--text-strong); }
+  .sheet .picker-row .sb { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .sheet .picker-row .chk { color: var(--brand); margin-left: auto; opacity: 0; }
+  .sheet .picker-row.on .chk { opacity: 1; }
+
+  .sheet .acts { display: flex; gap: 8px; padding: 14px 18px 4px; }
+  .sheet .acts button {
+    flex: 1; padding: 12px; border-radius: 10px;
+    font: 600 13px/1 var(--font-sans); cursor: pointer;
+  }
+  .sheet .acts .ok { background: var(--brand); color: #fff; }
+  .sheet .acts .ok:hover { background: var(--brand-strong); }
+  .sheet .acts .alt { background: var(--surface-muted); color: var(--text-strong); }
+
+  /* Centered modal (alerts) */
+  .modal-center {
+    background: var(--surface); border-radius: 14px;
+    padding: 22px; width: calc(100% - 40px); max-width: 340px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.4);
+    animation: modalIn 220ms cubic-bezier(0.2, 0, 0.1, 1);
+    margin: auto;
+  }
+  @keyframes modalIn { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .scrim.center { place-items: center; padding: 20px; }
+
+  /* ── TOAST ─────────────────────────────────────────────── */
+  .toast-host {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    top: 70px;
+    z-index: 200;
+    display: flex; flex-direction: column; gap: 8px;
+    pointer-events: none;
+    width: 90%; max-width: 360px;
+  }
+  body.is-fullscreen .toast-host { top: 32px; }
+  .toast {
+    background: var(--ink); color: #fff;
+    padding: 11px 16px; border-radius: 10px;
+    font: 500 13px/1.4 var(--font-sans);
+    box-shadow: 0 10px 24px -6px rgba(0,0,0,0.3);
+    display: inline-flex; align-items: center; gap: 8px;
+    animation: toastIn 240ms ease; pointer-events: auto;
+  }
+  .toast.success { background: var(--tone-success); }
+  .toast.danger { background: var(--tone-danger); }
+  .toast.warn { background: var(--tone-warn); color: #fff; }
+  @keyframes toastIn { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+  .toast.out { animation: toastOut 240ms ease forwards; }
+  @keyframes toastOut { to { opacity: 0; transform: translate(-50%, -10px); } }
+  @media (max-width: 720px) {
+    .toast-host { width: calc(100% - 24px); max-width: none; }
+  }
+
+  /* Back row inline helper (for sub-detail pages) */
+  .empty-state {
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--text-muted);
+    font: 13.5px/1.5 var(--font-sans);
+  }
+  .empty-state .ic {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--surface-muted);
+    color: var(--text-subtle);
+    display: grid; place-items: center;
+    margin: 0 auto 12px;
+  }
+</style>
+</head>
+<body data-portal-kit="parent" data-portal-screen="demo">
+
+<div class="pd-stage">
+  <div class="pd-frame">
+    <div class="pd-screen" id="app"></div>
+  </div>
+</div>
+<button class="pd-fs-toggle" id="fs-toggle" title="Fullscreen preview" aria-label="Fullscreen preview">
+  <span data-icon="grid" data-icon-size="16"></span>
+</button>
+<div id="modal-host"></div>
+<div class="toast-host" id="toast-host"></div>
+
+<script>
+/* ============================================================
+   Parent portal interactive demo — single-file vanilla JS
+   Hash-routed: #/home #/fees #/fees/pay #/fees/method
+                #/fees/receipt #/notices #/notice/:id
+                #/attendance #/marks/:subj #/profile
+   ============================================================ */
+
+const $  = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const money = (n, c = '$') => c + ' ' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const escapeHtml = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const initials = (name) => name.split(' ').filter(Boolean).map(p => p[0]).slice(0, 2).join('').toUpperCase();
+
+/* ============================================================
+   Seed data
+   ============================================================ */
+const CHILDREN = [
+  {
+    id: 'c1', name: 'Tanaka Mukamba', short: 'Tanaka',
+    grade: 'Form 2 Newton', school: 'St Faith\'s Park College',
+    schoolShort: 'St Faith\'s Park',
+    term: 'Term 2 · 2026', termWeek: 'Week 6 of 13',
+    fees: {
+      term: 'T2-2026', issued: '02 Apr 2026', due: '28 May 2026', daysLeft: 12,
+      invoices: [
+        { id: 'inv-tuition',  nm: 'Tuition · Form 2',     sb: '13-week term',                   amount: 720.00, kind: 'tuition' },
+        { id: 'inv-boarding', nm: 'Boarding levy',        sb: 'Day scholar — partial',          amount: 120.00, kind: 'boarding' },
+        { id: 'inv-sports',   nm: 'Sports & activities',  sb: 'Cricket club + chess',           amount: 85.00,  kind: 'sports' },
+        { id: 'inv-books',    nm: 'Books & stationery',   sb: 'Form 2 prescribed set',          amount: 95.00,  kind: 'books' },
+      ],
+      paid: 360.00,
+    },
+    timetable: [
+      { time: '08:00', nm: 'English language', sb: 'Mrs Chigumira · Room 12' },
+      { time: '09:00', nm: 'History',          sb: 'Mr Mavhima · Room 7' },
+      { time: '11:00', nm: 'Mathematics',      sb: 'Ms Sibanda · Algebra II', highlight: true },
+      { time: '12:30', nm: 'Lunch break',      sb: '45 min · Dining hall', kind: 'break' },
+      { time: '14:00', nm: 'Sports',           sb: 'Cricket nets · Sports pavilion', highlight: true },
+      { time: '15:30', nm: 'Prep & homework',  sb: 'Form 2 study room' },
+    ],
+    marks: [
+      { subj: 'Mathematics', teacher: 'Ms Sibanda',      mark: 82, grade: 'A', ca: 84, exam: 80, comment: 'Excellent progress on algebra. Targeted revision on quadratics over the holidays.', icon: 'chart' },
+      { subj: 'English',     teacher: 'Mrs Chigumira',   mark: 74, grade: 'B', ca: 78, exam: 70, comment: 'Strong essays. Push for more varied vocabulary and reading width.', icon: 'book' },
+      { subj: 'Shona',       teacher: 'Mr Magaya',       mark: 88, grade: 'A', ca: 90, exam: 86, comment: 'Outstanding. Continue with the literature reading list.', icon: 'star' },
+      { subj: 'Science',     teacher: 'Mrs Banda',       mark: 71, grade: 'B', ca: 76, exam: 66, comment: 'Practicals are strong; theory needs more time. Recommend Friday clinic.', icon: 'zap' },
+      { subj: 'History',     teacher: 'Mr Mavhima',      mark: 65, grade: 'C', ca: 70, exam: 60, comment: 'Improving. Focus on essay structure and source analysis.', icon: 'book' },
+      { subj: 'ICT',         teacher: 'Mr Chitongo',     mark: 91, grade: 'A', ca: 92, exam: 90, comment: 'Top of class. Encouraged to enter the Olympiad.', icon: 'code' },
+    ],
+    attendance: { present: 56, absent: 2, late: 3, total: 61 },
+  },
+  {
+    id: 'c2', name: 'Tendai Chari', short: 'Tendai',
+    grade: 'Form 4 Faraday', school: 'Trinity College Harare',
+    schoolShort: 'Trinity College',
+    term: 'Term 2 · 2026', termWeek: 'Week 6 of 13',
+    fees: {
+      term: 'T2-2026', issued: '02 Apr 2026', due: '28 May 2026', daysLeft: 12,
+      invoices: [
+        { id: 'inv-tuition',  nm: 'Tuition · Form 4',     sb: '13-week term',                   amount: 1400.00, kind: 'tuition' },
+        { id: 'inv-boarding', nm: 'Boarding levy',        sb: 'Full board · Faraday house',     amount: 380.00,  kind: 'boarding' },
+        { id: 'inv-sports',   nm: 'Sports & activities',  sb: 'Athletics + drama club',         amount: 160.00,  kind: 'sports' },
+        { id: 'inv-books',    nm: 'Books & stationery',   sb: 'Form 4 prescribed set',          amount: 100.00,  kind: 'books' },
+      ],
+      paid: 800.00,
+    },
+    timetable: [
+      { time: '07:30', nm: 'Form room',         sb: 'Mr Nyathi · attendance' },
+      { time: '08:00', nm: 'Chemistry',         sb: 'Mrs Banda · Lab 2' },
+      { time: '09:30', nm: 'Combined science',  sb: 'Mr Hove · Room 14' },
+      { time: '11:00', nm: 'Mathematics',       sb: 'Ms Sibanda · O-level paper 2', highlight: true },
+      { time: '12:30', nm: 'Lunch break',       sb: '45 min · Dining hall', kind: 'break' },
+      { time: '14:00', nm: 'Athletics',         sb: '100m & long jump · Track', highlight: true },
+      { time: '16:00', nm: 'Drama club',        sb: 'Hall · rehearsal' },
+    ],
+    marks: [
+      { subj: 'Mathematics', teacher: 'Ms Sibanda',     mark: 78, grade: 'A', ca: 80, exam: 76, comment: 'Consistent A grades. Sit the additional-maths paper next term.', icon: 'chart' },
+      { subj: 'English',     teacher: 'Mrs Chigumira',  mark: 72, grade: 'B', ca: 74, exam: 70, comment: 'Solid analytical writing. Work on time management in exams.', icon: 'book' },
+      { subj: 'Chemistry',   teacher: 'Mrs Banda',      mark: 81, grade: 'A', ca: 85, exam: 77, comment: 'Excellent lab work. Theory mark improving steadily.', icon: 'zap' },
+      { subj: 'Combined sci',teacher: 'Mr Hove',        mark: 69, grade: 'C', ca: 72, exam: 66, comment: 'Physics is the weak area — Friday clinic recommended.', icon: 'gauge' },
+      { subj: 'Geography',   teacher: 'Mr Mavhima',     mark: 86, grade: 'A', ca: 88, exam: 84, comment: 'Outstanding map work. Strong contender for the geography prize.', icon: 'pin' },
+      { subj: 'Shona',       teacher: 'Mr Magaya',      mark: 84, grade: 'A', ca: 86, exam: 82, comment: 'High distinction trajectory. Continue ndimi practice.', icon: 'star' },
+      { subj: 'P.E.',        teacher: 'Coach Ndlovu',   mark: 90, grade: 'A', ca: 90, exam: 90, comment: 'School athletics captain — exemplary effort and attitude.', icon: 'heart' },
+    ],
+    attendance: { present: 58, absent: 1, late: 2, total: 61 },
+  },
+  {
+    id: 'c3', name: 'Anesu Chari', short: 'Anesu',
+    grade: 'Grade 5 Acacia', school: 'Trinity Junior Harare',
+    schoolShort: 'Trinity Junior',
+    term: 'Term 2 · 2026', termWeek: 'Week 6 of 13',
+    fees: {
+      term: 'T2-2026', issued: '02 Apr 2026', due: '28 May 2026', daysLeft: 12,
+      invoices: [
+        { id: 'inv-tuition',  nm: 'Tuition · Grade 5',    sb: '13-week term',                   amount: 480.00, kind: 'tuition' },
+        { id: 'inv-aftercare',nm: 'Aftercare',            sb: '15:00–17:00 · Mon–Fri',          amount: 90.00,  kind: 'boarding' },
+        { id: 'inv-sports',   nm: 'Sports & activities',  sb: 'Swimming + art club',            amount: 65.00,  kind: 'sports' },
+        { id: 'inv-books',    nm: 'Books & stationery',   sb: 'Grade 5 prescribed set',         amount: 55.00,  kind: 'books' },
+      ],
+      paid: 0,
+    },
+    timetable: [
+      { time: '08:00', nm: 'Reading circle',    sb: 'Mrs Mhaka · Room A1' },
+      { time: '09:00', nm: 'Maths',             sb: 'Mrs Ncube · times tables' },
+      { time: '10:00', nm: 'Break',             sb: 'Snack & playground', kind: 'break' },
+      { time: '11:00', nm: 'Mathematics',       sb: 'Mrs Ncube · long division', highlight: true },
+      { time: '13:00', nm: 'Lunch',             sb: 'Dining hall', kind: 'break' },
+      { time: '14:00', nm: 'Sports',            sb: 'Swimming · Junior pool', highlight: true },
+      { time: '15:00', nm: 'Aftercare',         sb: 'Mrs Sande · activities' },
+    ],
+    marks: [
+      { subj: 'Mathematics', teacher: 'Mrs Ncube',     mark: 88, grade: 'A', ca: 90, exam: 86, comment: 'Excellent — confident with multiplication and long division.', icon: 'chart' },
+      { subj: 'English',     teacher: 'Mrs Mhaka',     mark: 92, grade: 'A', ca: 94, exam: 90, comment: 'Voracious reader. Beautiful handwriting; encouraged to enter the spelling bee.', icon: 'book' },
+      { subj: 'Shona',       teacher: 'Mr Magaya',     mark: 80, grade: 'A', ca: 82, exam: 78, comment: 'Strong oral participation. More writing practice will lock in the grade.', icon: 'star' },
+      { subj: 'General sci', teacher: 'Mrs Banda',     mark: 76, grade: 'B', ca: 78, exam: 74, comment: 'Curious and engaged. Encourage at-home experiments.', icon: 'zap' },
+      { subj: 'Social std',  teacher: 'Mr Hove',       mark: 84, grade: 'A', ca: 86, exam: 82, comment: 'Loves map work and history of Zimbabwe.', icon: 'pin' },
+      { subj: 'Art',         teacher: 'Mrs Mukoko',    mark: 95, grade: 'A', ca: 95, exam: 95, comment: 'Outstanding portfolio. Submitted to the Harare Schools Art Fair.', icon: 'sparkles' },
+    ],
+    attendance: { present: 60, absent: 0, late: 1, total: 61 },
+  },
+];
+
+const NOTICES = [
+  {
+    id: 'n1', title: 'PTA general meeting · 04 June',
+    sb: 'Joint session for all parents. Agenda: fee model, transport routes, end-of-year concert.',
+    icon: 'user', tone: 'brand',
+    when: '20 May · 14:32', from: 'Office of the Headmaster',
+    body: [
+      'Dear Parents and Guardians,',
+      'You are warmly invited to the Term 2 PTA general meeting on Wednesday 04 June at 18:00, hosted in the main hall.',
+      'Agenda items include the proposed move to a quarterly invoicing cycle, changes to the Glen Lorne and Borrowdale bus routes, and the programme for the end-of-year carols concert. Light refreshments will be served from 17:30.',
+      'Please RSVP below by Monday 02 June so we can confirm seating.',
+    ],
+    rsvp: true, attachments: [
+      { nm: 'PTA-2026-T2-agenda.pdf', sz: '124 KB' },
+      { nm: 'Bus-routes-proposal.pdf', sz: '88 KB' },
+    ],
+    comments: [
+      { who: 'Mrs Mukamba',   role: 'parent', when: '21 May 09:14', body: 'Looking forward to it. Will there be a Q&A on the new fee model?' },
+      { who: 'Mr Sibanda',    role: 'staff',  when: '21 May 10:02', body: 'Yes — 30 minutes is set aside at the end. Bring questions in writing if you prefer.' },
+    ],
+    unread: true,
+  },
+  {
+    id: 'n2', title: 'End-of-term concert · 18 June',
+    sb: 'Choir, drama, and the senior jazz band. Doors at 17:30, curtain at 18:00.',
+    icon: 'star', tone: 'brand',
+    when: '18 May · 11:08', from: 'Music & Drama',
+    body: [
+      'Our end-of-term concert is on Friday 18 June at 18:00 in the main hall.',
+      'Featuring the school choir, junior recorder ensemble, drama society excerpts, and the senior jazz band. Tickets are not required — seating is on a first-come basis from 17:30.',
+      'Drinks and snacks will be available in the courtyard from interval.',
+    ],
+    rsvp: true, attachments: [
+      { nm: 'Concert-programme.pdf', sz: '212 KB' },
+    ],
+    comments: [],
+    unread: true,
+  },
+  {
+    id: 'n3', title: 'Term 2 fee reminder · due 28 May',
+    sb: 'Friendly reminder. Settle in full or by part-payment via EcoCash, OneMoney, bank transfer or card.',
+    icon: 'card', tone: 'warn',
+    when: '16 May · 08:00', from: 'Bursar\'s office',
+    body: [
+      'This is a friendly reminder that Term 2 fees are due by Wednesday 28 May.',
+      'You can settle through the parent portal — EcoCash and OneMoney are processed instantly, while bank transfers reflect within one business day.',
+      'For payment arrangements, please contact the bursar on bursar@school.co.zw or via the in-app message.',
+    ],
+    rsvp: false, attachments: [
+      { nm: 'Term-2-invoice.pdf', sz: '46 KB' },
+    ],
+    comments: [],
+    unread: true,
+  },
+  {
+    id: 'n4', title: 'Sports day · 31 May',
+    sb: 'Parents welcome. Tea & cakes from the senior class fundraising in the courtyard.',
+    icon: 'heart', tone: 'success',
+    when: '12 May · 16:48', from: 'Sports department',
+    body: [
+      'Annual sports day takes place on Saturday 31 May, 09:00 – 14:00.',
+      'All houses will compete across track and field events. Parents are very welcome — please support our students at the track.',
+      'The senior class is running a tea-and-cakes fundraiser in the courtyard from 10:30 onwards.',
+    ],
+    rsvp: true, attachments: [],
+    comments: [
+      { who: 'Coach Ndlovu', role: 'staff', when: '13 May 07:30', body: 'Reminder: Tendai is leading the 4×100m team. Please make sure spikes are packed.' },
+    ],
+    unread: false,
+  },
+  {
+    id: 'n5', title: 'Library returns this Friday',
+    sb: 'All term-loan library books must be returned by Friday 23 May for the holiday stock-take.',
+    icon: 'book', tone: 'default',
+    when: '10 May · 09:14', from: 'Library',
+    body: [
+      'All term-loan library books must be returned by 16:00 on Friday 23 May.',
+      'This is to allow the librarians to complete the holiday stock-take. Late returns will incur a $1 fee per book per day.',
+    ],
+    rsvp: false, attachments: [],
+    comments: [],
+    unread: false,
+  },
+];
+
+/* ============================================================
+   App state
+   ============================================================ */
+const state = {
+  route: 'home',
+  childId: 'c2',
+  // fees pay flow
+  pay: {
+    picked: {},                  // {invoiceId: true}
+    splitMode: 'full',           // 'full' | 'half' | 'min'
+    method: null,                // 'ecocash' | 'onemoney' | 'bank' | 'card'
+    phone: '0772 145 902',
+    processing: false,
+    receipt: null,               // populated after successful payment
+  },
+  // notices
+  notices: {}, // mutable: read flag, rsvp, comments
+  noticeId: null,
+  // profile
+  notifs: { sms: true, email: true, push: true, marketing: false },
+  language: 'English',
+  // attendance
+  termId: 't2-2026',
+  subjectIdx: null,
+  // modal
+  modal: null,
+};
+
+// Initialize mutable notice state
+NOTICES.forEach(n => {
+  state.notices[n.id] = {
+    unread: n.unread,
+    rsvp: null,                  // 'yes' | 'no' | 'maybe'
+    comments: n.comments.slice(),
+  };
+});
+
+function currentChild() { return CHILDREN.find(c => c.id === state.childId); }
+function feeTotal(child) { return child.fees.invoices.reduce((s, i) => s + i.amount, 0); }
+function feeBalance(child) { return +(feeTotal(child) - child.fees.paid).toFixed(2); }
+function pickedTotal(child) {
+  return child.fees.invoices.reduce((s, i) => s + (state.pay.picked[i.id] ? i.amount : 0), 0);
+}
+function payAmount(child) {
+  const base = pickedTotal(child) || feeBalance(child);
+  if (state.pay.splitMode === 'half') return +(base / 2).toFixed(2);
+  if (state.pay.splitMode === 'min')  return +Math.min(base, 150).toFixed(2);
+  return +base.toFixed(2);
+}
+function unreadCount() { return Object.values(state.notices).filter(n => n.unread).length; }
+
+/* ============================================================
+   Routing
+   ============================================================ */
+function go(route, opts = {}) {
+  state.route = route;
+  if (opts.noticeId !== undefined) state.noticeId = opts.noticeId;
+  if (opts.subjectIdx !== undefined) state.subjectIdx = opts.subjectIdx;
+  closeModal();
+  history.replaceState(null, '', '#/' + route + (opts.suffix || ''));
+  render();
+  const sc = $('.pa-scroll'); if (sc) sc.scrollTop = 0;
+}
+window.addEventListener('hashchange', () => {
+  const r = (location.hash.replace(/^#\/?/, '') || 'home');
+  if (state.route !== r) { state.route = r; render(); }
+});
+
+/* ============================================================
+   Toast & modal helpers
+   ============================================================ */
+function toast(msg, kind = 'default') {
+  const host = $('#toast-host');
+  const el = document.createElement('div');
+  el.className = 'toast' + (kind !== 'default' ? ' ' + kind : '');
+  const icon = kind === 'success' ? 'check' : kind === 'danger' ? 'x' : kind === 'warn' ? 'info' : 'check';
+  el.innerHTML = `<span data-icon="${icon}" data-icon-size="14"></span>${escapeHtml(msg)}`;
+  host.appendChild(el);
+  if (window.Icons) window.Icons.render(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 240); }, 2400);
+}
+
+function openModal(content, opts = {}) {
+  state.modal = { content, center: !!opts.center };
+  renderModal();
+}
+function closeModal() {
+  state.modal = null;
+  renderModal();
+}
+function renderModal() {
+  const host = $('#modal-host');
+  if (!state.modal) { host.innerHTML = ''; return; }
+  host.innerHTML = `<div class="scrim ${state.modal.center ? 'center' : ''}" data-scrim>${state.modal.content}</div>`;
+  if (window.Icons) window.Icons.render(host);
+  host.querySelector('[data-scrim]').addEventListener('click', (e) => {
+    if (e.target.dataset.scrim !== undefined) closeModal();
+  });
+}
+
+/* ============================================================
+   Child switcher sheet
+   ============================================================ */
+function openChildSwitcher() {
+  const c = currentChild();
+  openModal(`
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div class="handle"></div>
+      <h3>Switch child</h3>
+      <p class="sub">Choose which child to view. Fees, timetable, marks and notices change accordingly.</p>
+      ${CHILDREN.map(ch => `
+        <div class="picker-row ${ch.id === c.id ? 'on' : ''}" data-pick-child="${ch.id}">
+          <span class="av">${initials(ch.name)}</span>
+          <div style="flex:1; min-width:0;">
+            <div class="nm">${escapeHtml(ch.name)}</div>
+            <div class="sb">${escapeHtml(ch.grade)} · ${escapeHtml(ch.schoolShort)}</div>
+          </div>
+          <span class="chk" data-icon="check" data-icon-size="18"></span>
+        </div>
+      `).join('')}
+      <div class="picker-row" data-add-child>
+        <span class="av" style="background: var(--surface-muted); color: var(--text-muted);" data-icon="plus" data-icon-size="16"></span>
+        <div style="flex:1;">
+          <div class="nm">Add another child</div>
+          <div class="sb">Link a sibling at any school using the parent portal</div>
+        </div>
+      </div>
+    </div>
+  `);
+  $$('[data-pick-child]').forEach(b => b.addEventListener('click', () => {
+    state.childId = b.dataset.pickChild;
+    // Reset child-scoped flow state
+    state.pay = { picked: {}, splitMode: 'full', method: null, phone: '0772 145 902', processing: false, receipt: null };
+    closeModal();
+    render();
+    toast(`Now viewing ${currentChild().short}`, 'success');
+  }));
+  const add = $('[data-add-child]');
+  if (add) add.addEventListener('click', () => {
+    closeModal();
+    toast('Use the link from the school office to add a child', 'warn');
+  });
+}
+
+/* ============================================================
+   Fullscreen
+   ============================================================ */
+function toggleFullscreen() {
+  const isFs = !!document.fullscreenElement || document.body.classList.contains('is-fullscreen');
+  if (isFs) {
+    document.exitFullscreen().catch(() => {});
+    document.body.classList.remove('is-fullscreen');
+  } else {
+    document.body.classList.add('is-fullscreen');
+    document.documentElement.requestFullscreen?.().catch(() => {});
+  }
+  // Update icon
+  const btn = $('#fs-toggle');
+  if (btn) {
+    const fs = document.body.classList.contains('is-fullscreen');
+    btn.innerHTML = `<span data-icon="${fs ? 'x' : 'grid'}" data-icon-size="16"></span>`;
+    btn.title = fs ? 'Exit fullscreen' : 'Fullscreen preview';
+    btn.setAttribute('aria-label', btn.title);
+    if (window.Icons) window.Icons.render(btn);
+  }
+}
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) document.body.classList.remove('is-fullscreen');
+  const btn = $('#fs-toggle');
+  if (btn) {
+    const fs = document.body.classList.contains('is-fullscreen');
+    btn.innerHTML = `<span data-icon="${fs ? 'x' : 'grid'}" data-icon-size="16"></span>`;
+    if (window.Icons) window.Icons.render(btn);
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.body.classList.contains('is-fullscreen') && !document.fullscreenElement) {
+    document.body.classList.remove('is-fullscreen');
+    const btn = $('#fs-toggle');
+    if (btn) { btn.innerHTML = `<span data-icon="grid" data-icon-size="16"></span>`; if (window.Icons) window.Icons.render(btn); }
+  }
+});
+
+/* ============================================================
+   Render: shell
+   ============================================================ */
+function render() {
+  $('#app').innerHTML = renderShell();
+  if (window.Icons) window.Icons.render($('#app'));
+  wireShell();
+  wireRoute();
+}
+
+function topTabId() {
+  if (state.route.startsWith('fees')) return 'fees';
+  if (state.route.startsWith('notice')) return 'notices';
+  if (state.route === 'attendance' || state.route.startsWith('marks')) return 'attendance';
+  if (state.route === 'profile') return 'profile';
+  return 'home';
+}
+
+function renderShell() {
+  const child = currentChild();
+  return `
+    ${renderAppBar(child)}
+    <div class="pa-scroll" id="pa-scroll">${renderRoute()}</div>
+    ${renderPayBar()}
+    ${renderBottomTabs()}
+  `;
+}
+
+function renderPayBar() {
+  if (state.route !== 'fees') return '';
+  const child = currentChild();
+  const picked = pickedTotal(child);
+  const amount = picked || feeBalance(child);
+  return `
+    <div class="pay-bar">
+      <div class="meta">
+        <div class="l">${picked ? 'Selected items' : 'Outstanding balance'}</div>
+        <div class="v">${money(amount)}</div>
+      </div>
+      <button id="open-pay" ${amount > 0 ? '' : 'disabled'}>
+        Pay <span data-icon="arrow" data-icon-size="14"></span>
+      </button>
+    </div>
+  `;
+}
+
+function renderAppBar(child) {
+  const r = state.route;
+  // Routes with back arrow
+  const withBack = (
+    r === 'fees/pay' || r === 'fees/method' || r === 'fees/receipt' ||
+    r.startsWith('notice/') ||
+    r.startsWith('marks/')
+  );
+  const titles = {
+    'home':         'Hi, Mrs ' + child.name.split(' ').slice(-1)[0],
+    'fees':         'Fees',
+    'fees/pay':     'Pay fees',
+    'fees/method':  'Payment method',
+    'fees/receipt': 'Receipt',
+    'notices':      'Notices',
+    'attendance':   'Attendance & marks',
+    'profile':      'Profile',
+  };
+  let title = titles[r] || '';
+  if (r.startsWith('notice/')) title = 'Notice';
+  if (r.startsWith('marks/'))  title = 'Subject detail';
+
+  const back = withBack
+    ? (r === 'fees/pay' ? 'fees'
+      : r === 'fees/method' ? 'fees/pay'
+      : r === 'fees/receipt' ? 'home'
+      : r.startsWith('notice/') ? 'notices'
+      : r.startsWith('marks/') ? 'attendance'
+      : 'home')
+    : null;
+
+  const unread = unreadCount();
+
+  return `
+    <header class="pa-bar">
+      ${withBack
+        ? `<span class="back" data-back="${back}" role="button" tabindex="0"><span data-icon="back" data-icon-size="18"></span></span>`
+        : ''}
+      <h1>${escapeHtml(title)}</h1>
+      <div class="actions">
+        <button data-child-switcher class="child-btn" title="Switch child">
+          <span class="av">${initials(child.name)}</span>
+          ${child.short}
+        </button>
+        <button data-go-notices title="Notices">
+          <span data-icon="bell" data-icon-size="18"></span>
+          ${unread > 0 ? '<span class="pip"></span>' : ''}
+        </button>
+      </div>
+    </header>
+  `;
+}
+
+const TABS = [
+  { id: 'home',       label: 'Home',     icon: 'home',     route: 'home' },
+  { id: 'fees',       label: 'Fees',     icon: 'card',     route: 'fees' },
+  { id: 'notices',    label: 'Notices',  icon: 'bell',     route: 'notices' },
+  { id: 'profile',    label: 'Profile',  icon: 'user',     route: 'profile' },
+];
+
+function renderBottomTabs() {
+  const cur = topTabId();
+  const unread = unreadCount();
+  return `
+    <nav class="pa-tabs">
+      ${TABS.map(t => `
+        <button class="${cur === t.id ? 'active' : ''}" data-go="${t.route}">
+          <span class="ic" data-icon="${t.icon}" data-icon-size="20"></span>
+          <span>${t.label}</span>
+          ${t.id === 'notices' && unread > 0 ? `<span class="bdg">${unread}</span>` : ''}
+        </button>
+      `).join('')}
+    </nav>
+  `;
+}
+
+function wireShell() {
+  $$('[data-back]').forEach(b => b.addEventListener('click', () => go(b.dataset.back)));
+  $$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+  const cs = $('[data-child-switcher]'); if (cs) cs.addEventListener('click', openChildSwitcher);
+  const gn = $('[data-go-notices]'); if (gn) gn.addEventListener('click', () => go('notices'));
+}
+
+/* ============================================================
+   Route renderer
+   ============================================================ */
+function renderRoute() {
+  const r = state.route;
+  if (r === 'home') return renderHome();
+  if (r === 'fees') return renderFees();
+  if (r === 'fees/pay') return renderFeesPay();
+  if (r === 'fees/method') return renderFeesMethod();
+  if (r === 'fees/receipt') return renderFeesReceipt();
+  if (r === 'notices') return renderNotices();
+  if (r.startsWith('notice/')) return renderNoticeDetail();
+  if (r === 'attendance') return renderAttendance();
+  if (r.startsWith('marks/')) return renderMarkDetail();
+  if (r === 'profile') return renderProfile();
+  return renderHome();
+}
+
+function wireRoute() {
+  const r = state.route;
+  if (r === 'home') wireHome();
+  if (r === 'fees') wireFees();
+  if (r === 'fees/pay') wireFeesPay();
+  if (r === 'fees/method') wireFeesMethod();
+  if (r === 'fees/receipt') wireFeesReceipt();
+  if (r === 'notices') wireNotices();
+  if (r.startsWith('notice/')) wireNoticeDetail();
+  if (r === 'attendance') wireAttendance();
+  if (r.startsWith('marks/')) wireMarkDetail();
+  if (r === 'profile') wireProfile();
+}
+
+/* ============================================================
+   HOME
+   ============================================================ */
+function renderHome() {
+  const c = currentChild();
+  const bal = feeBalance(c);
+  const total = feeTotal(c);
+  const paidPct = Math.max(0, Math.min(100, Math.round((c.fees.paid / total) * 100)));
+  const upcoming = c.timetable.filter(r => r.highlight).slice(0, 2);
+  const unread = unreadCount();
+  const att = c.attendance;
+  const attPct = Math.round((att.present / att.total) * 100);
+  const avgMark = Math.round(c.marks.reduce((s, m) => s + m.mark, 0) / c.marks.length);
+
+  return `
+    <div class="greet">
+      <div class="hi">Good morning</div>
+      <h2>Hi, Mrs ${escapeHtml(c.name.split(' ').slice(-1)[0])}</h2>
+      <div class="school">${escapeHtml(c.school)} · ${escapeHtml(c.term)} · ${escapeHtml(c.termWeek)}</div>
+    </div>
+
+    <div class="fee-hero ${bal === 0 ? 'cleared' : ''}">
+      <div class="lbl">Outstanding · ${escapeHtml(c.short)}</div>
+      <div class="val">
+        <span class="c">$</span>${bal.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}<span style="font-size:18px; opacity:0.85; font-weight:500;">.${(bal % 1).toFixed(2).slice(2)}</span>
+      </div>
+      <div class="due">${bal > 0
+        ? `Term invoice ${c.fees.term} · due ${c.fees.due} · ${c.fees.daysLeft} days left`
+        : `Fully paid for ${c.fees.term} · receipted ${c.fees.due}`}</div>
+      <div class="progress">
+        <div class="bar"><span style="width: ${paidPct}%;"></span></div>
+        <div class="meta"><span>Paid · ${money(c.fees.paid)}</span><span>Total · ${money(total)}</span></div>
+      </div>
+      <div class="actions">
+        ${bal > 0
+          ? `<span class="btn solid" id="hero-pay">Pay now <span data-icon="arrow" data-icon-size="13"></span></span>`
+          : `<span class="btn solid" id="hero-receipt">View receipt <span data-icon="arrow" data-icon-size="13"></span></span>`}
+        <span class="btn" data-go="fees">View invoice</span>
+      </div>
+    </div>
+
+    <div class="section-h">Today<button data-go-tt>View week</button></div>
+    <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px;">
+      ${c.timetable.slice(0, 4).map(r => `
+        <div class="tt-row">
+          <div class="time">${r.time}${r.kind === 'break' ? '<span class="ap">break</span>' : ''}</div>
+          <div>
+            <div class="nm">${escapeHtml(r.nm)}</div>
+            <div class="sb">${escapeHtml(r.sb)}</div>
+          </div>
+          ${r.highlight ? `<span class="now">UP NEXT</span>` : '<span style="color: var(--text-subtle);" data-icon="chright" data-icon-size="14"></span>'}
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="section-h">Quick stats</div>
+    <div class="stat-grid">
+      <div class="stat-tile brand" data-go="attendance">
+        <div class="l">Attendance</div>
+        <div class="v">${attPct}%</div>
+        <div class="sb">${att.present} of ${att.total} days present</div>
+      </div>
+      <div class="stat-tile" data-go="attendance">
+        <div class="l">Term average</div>
+        <div class="v">${avgMark}%</div>
+        <div class="sb">${c.marks.length} subjects assessed</div>
+      </div>
+    </div>
+
+    <div class="section-h">Notices${unread > 0 ? ` · ${unread} new` : ''}<button data-go="notices">All notices</button></div>
+    <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px;">
+      ${NOTICES.slice(0, 3).map(n => `
+        <div class="notice-row ${state.notices[n.id].unread ? 'unread' : ''}" data-notice="${n.id}">
+          <span class="ic ${n.tone === 'default' ? '' : n.tone}" data-icon="${n.icon}" data-icon-size="16"></span>
+          <div>
+            <div class="nm">${escapeHtml(n.title)}</div>
+            <div class="sb">${escapeHtml(n.sb)}</div>
+            <div class="meta">${escapeHtml(n.from)} · ${escapeHtml(n.when)}</div>
+          </div>
+          ${state.notices[n.id].unread ? '<span class="pip"></span>' : '<span data-icon="chright" data-icon-size="14" style="color: var(--text-subtle); margin-top: 8px;"></span>'}
+        </div>
+      `).join('')}
+    </div>
+
+    <div style="height: 24px;"></div>
+  `;
+}
+function wireHome() {
+  const p = $('#hero-pay'); if (p) p.addEventListener('click', () => go('fees/pay'));
+  const r = $('#hero-receipt'); if (r) r.addEventListener('click', () => {
+    if (state.pay.receipt) go('fees/receipt');
+    else toast('No recent payment yet', 'warn');
+  });
+  $$('[data-notice]').forEach(b => b.addEventListener('click', () => openNotice(b.dataset.notice)));
+  const tt = $('[data-go-tt]'); if (tt) tt.addEventListener('click', () => go('attendance'));
+  $$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+}
+
+/* ============================================================
+   FEES — landing (invoice breakdown)
+   ============================================================ */
+function renderFees() {
+  const c = currentChild();
+  const bal = feeBalance(c);
+  const total = feeTotal(c);
+  const paidPct = Math.round((c.fees.paid / total) * 100);
+
+  return `
+    <div style="padding: 14px 16px 6px; display: flex; align-items: center; gap: 10px;">
+      <span style="width:36px; height:36px; border-radius:50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 13px/1 var(--font-sans);">${initials(c.name)}</span>
+      <div>
+        <div style="font: 500 14px/1.3 var(--font-sans); color: var(--text-strong);">${escapeHtml(c.name)}</div>
+        <div style="font: 12px/1.3 var(--font-sans); color: var(--text-muted);">${escapeHtml(c.grade)} · ${escapeHtml(c.school)}</div>
+      </div>
+    </div>
+
+    <div class="fee-hero ${bal === 0 ? 'cleared' : ''}">
+      <div class="lbl">Outstanding balance</div>
+      <div class="val"><span class="c">$</span>${bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+      <div class="due">${bal > 0
+        ? `Term invoice ${c.fees.term} · due ${c.fees.due} · ${c.fees.daysLeft} days left`
+        : `Fully paid · receipted ${c.fees.due}`}</div>
+      <div class="progress">
+        <div class="bar"><span style="width: ${paidPct}%;"></span></div>
+        <div class="meta"><span>Paid · ${money(c.fees.paid)}</span><span>Total · ${money(total)}</span></div>
+      </div>
+    </div>
+
+    <div class="section-h">Invoice breakdown<span style="font: 500 10.5px/1 var(--font-mono); color: var(--text-muted); letter-spacing: 0;">Issued ${escapeHtml(c.fees.issued)}</span></div>
+    <div class="breakdown">
+      ${c.fees.invoices.map(inv => `
+        <div class="breakdown-row" data-inv="${inv.id}">
+          <div>
+            <div class="nm">${escapeHtml(inv.nm)}</div>
+            <div class="sb">${escapeHtml(inv.sb)}</div>
+          </div>
+          <div class="v">${money(inv.amount)}</div>
+        </div>
+      `).join('')}
+      <div class="breakdown-row total">
+        <div>
+          <div class="nm">Invoice total</div>
+          <div class="sb">${escapeHtml(c.fees.term)} · all line items</div>
+        </div>
+        <div class="v">${money(total)}</div>
+      </div>
+      ${c.fees.paid > 0 ? `
+        <div class="breakdown-row paid">
+          <div>
+            <div class="nm">Payment received</div>
+            <div class="sb">EcoCash · ref T-${(238118 + c.id.charCodeAt(1)).toString().slice(-6)}</div>
+          </div>
+          <div class="v">${money(c.fees.paid)}</div>
+        </div>
+      ` : ''}
+    </div>
+
+    <div class="section-h">Payment methods on file</div>
+    <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px;">
+      <div class="pl-row">
+        <span class="ic-tile brand"><span data-icon="phone" data-icon-size="16"></span></span>
+        <div><div class="nm">EcoCash</div><div class="sb">${escapeHtml(state.pay.phone)} · instant</div></div>
+        <span data-icon="chright" style="color: var(--text-subtle);"></span>
+      </div>
+      <div class="pl-row">
+        <span class="ic-tile"><span data-icon="card" data-icon-size="16"></span></span>
+        <div><div class="nm">Visa · 4421</div><div class="sb">2.9% processing fee</div></div>
+        <span data-icon="chright" style="color: var(--text-subtle);"></span>
+      </div>
+      <div class="pl-row">
+        <span class="ic-tile"><span data-icon="building" data-icon-size="16"></span></span>
+        <div><div class="nm">Bank transfer</div><div class="sb">CABS · Stanbic · Standard Chartered</div></div>
+        <span data-icon="chright" style="color: var(--text-subtle);"></span>
+      </div>
+    </div>
+
+    <div style="height: 24px;"></div>
+  `;
+}
+function wireFees() {
+  $$('[data-inv]').forEach(r => r.addEventListener('click', () => {
+    // Quick info — tap to mark for partial pay
+    state.pay.picked[r.dataset.inv] = !state.pay.picked[r.dataset.inv];
+    toast(state.pay.picked[r.dataset.inv] ? 'Selected for payment' : 'Removed from selection');
+    render();
+  }));
+  const op = $('#open-pay'); if (op) op.addEventListener('click', () => go('fees/pay'));
+}
+
+/* ============================================================
+   FEES — Pay flow step 1: invoice picker + split
+   ============================================================ */
+function renderFeesPay() {
+  const c = currentChild();
+  const total = pickedTotal(c) || feeBalance(c);
+  const noneSelected = Object.values(state.pay.picked).every(v => !v);
+  const amount = payAmount(c);
+  return `
+    <div style="padding: 16px 16px 4px;">
+      <div style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Step 1 of 3</div>
+      <div style="font: 600 16px/1.25 var(--font-sans); color: var(--text-strong);">Choose what to pay</div>
+      <div style="font: 13px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 4px;">Tap items to include them, or leave all selected to pay the full balance.</div>
+    </div>
+
+    <div class="breakdown" style="margin-top: 12px;">
+      ${c.fees.invoices.map(inv => `
+        <div class="breakdown-row ${state.pay.picked[inv.id] || noneSelected ? 'picked' : ''}" data-toggle="${inv.id}">
+          <div class="nm-wrap">
+            <span class="chk">${state.pay.picked[inv.id] || noneSelected ? '<span data-icon="check" data-icon-size="12"></span>' : ''}</span>
+            <div class="nm-body">
+              <div class="nm">${escapeHtml(inv.nm)}</div>
+              <div class="sb">${escapeHtml(inv.sb)}</div>
+            </div>
+          </div>
+          <div class="v">${money(inv.amount)}</div>
+        </div>
+      `).join('')}
+      <div class="breakdown-row total">
+        <div>
+          <div class="nm">${noneSelected ? 'Outstanding balance' : 'Selected items'}</div>
+          <div class="sb">${noneSelected ? feeBalance(c) === feeTotal(c) ? 'Full invoice unpaid' : `${money(c.fees.paid)} already paid` : 'Tap an item to remove'}</div>
+        </div>
+        <div class="v">${money(total)}</div>
+      </div>
+    </div>
+
+    <div class="section-h">Step 2 · Choose split</div>
+    <div class="split-row">
+      <button class="${state.pay.splitMode === 'full' ? 'on' : ''}" data-split="full">
+        Pay in full
+        <span class="sb">${money(total)}</span>
+      </button>
+      <button class="${state.pay.splitMode === 'half' ? 'on' : ''}" data-split="half">
+        Pay half
+        <span class="sb">${money(total / 2)}</span>
+      </button>
+      <button class="${state.pay.splitMode === 'min' ? 'on' : ''}" data-split="min">
+        Min ($150)
+        <span class="sb">${money(Math.min(total, 150))}</span>
+      </button>
+    </div>
+
+    <div style="padding: 14px 16px 0;">
+      <div style="background: var(--brand-soft); color: var(--brand-strong); padding: 12px 14px; border-radius: 12px; display: flex; align-items: center; gap: 10px;">
+        <span data-icon="info" data-icon-size="16"></span>
+        <div style="font: 13px/1.4 var(--font-sans);">Today's charge: <strong>${money(amount)}</strong>${state.pay.splitMode !== 'full' ? ` · ${money(total - amount)} remaining` : ''}</div>
+      </div>
+    </div>
+
+    <div style="padding: 24px 16px; display: flex; gap: 8px;">
+      <button data-back-to="fees" style="flex: 1; padding: 12px; border-radius: 10px; background: var(--surface-muted); color: var(--text-strong); font: 600 13px var(--font-sans); cursor: pointer;">Back</button>
+      <button id="go-method" ${amount > 0 ? '' : 'disabled'} style="flex: 2; padding: 12px; border-radius: 10px; background: var(--brand); color: #fff; font: 600 14px var(--font-sans); cursor: pointer; ${amount > 0 ? '' : 'opacity:0.5; cursor:not-allowed;'} display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+        Continue · ${money(amount)} <span data-icon="arrow" data-icon-size="14"></span>
+      </button>
+    </div>
+  `;
+}
+function wireFeesPay() {
+  $$('[data-toggle]').forEach(r => r.addEventListener('click', () => {
+    const id = r.dataset.toggle;
+    state.pay.picked[id] = !state.pay.picked[id];
+    render();
+  }));
+  $$('[data-split]').forEach(b => b.addEventListener('click', () => {
+    state.pay.splitMode = b.dataset.split;
+    render();
+  }));
+  $$('[data-back-to]').forEach(b => b.addEventListener('click', () => go(b.dataset.backTo)));
+  const next = $('#go-method'); if (next) next.addEventListener('click', () => go('fees/method'));
+}
+
+/* ============================================================
+   FEES — Pay flow step 2: method
+   ============================================================ */
+const METHODS = [
+  { id: 'ecocash',  nm: 'EcoCash',          sb: 'Push to phone · instant',    icon: 'phone' },
+  { id: 'onemoney', nm: 'OneMoney',         sb: 'Push to phone · instant',    icon: 'phone' },
+  { id: 'bank',     nm: 'Bank transfer',    sb: 'CABS · Stanbic · 1 biz day', icon: 'building' },
+  { id: 'card',     nm: 'Visa / Mastercard',sb: '2.9% processing fee',        icon: 'card' },
+];
+
+function renderFeesMethod() {
+  const c = currentChild();
+  const amount = payAmount(c);
+  const m = state.pay.method;
+  let detail = '';
+  if (m === 'ecocash' || m === 'onemoney') {
+    const label = m === 'ecocash' ? 'EcoCash' : 'OneMoney';
+    detail = `
+      <div style="padding: 0 16px;">
+        <div style="margin-top: 10px;">
+          <label style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;">${label} phone</label>
+          <input type="tel" id="phone-input" value="${escapeHtml(state.pay.phone)}" style="width: 100%; padding: 0 14px; height: 44px; border: 1px solid var(--border); border-radius: 10px; font: 500 14px var(--font-mono); background: var(--surface); color: var(--text-strong);" />
+        </div>
+      </div>
+      <div style="padding: 14px 16px 0;">
+        <div class="sim-box">
+          <strong><span class="pulse"></span> Push pending</strong>
+          On confirm, an approval prompt will be sent to the phone above.
+        </div>
+      </div>
+    `;
+  } else if (m === 'card') {
+    detail = `
+      <div style="padding: 0 16px;">
+        <div style="margin-top: 10px; display: grid; gap: 10px;">
+          <div>
+            <label style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;">Card number</label>
+            <div style="display:flex; align-items:center; gap:8px; padding: 0 14px; height: 44px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface);">
+              <span data-icon="card" data-icon-size="16" style="color: var(--text-subtle);"></span>
+              <span style="font: 500 14px var(--font-mono); color: var(--text-strong); letter-spacing: 0.06em;">•••• •••• •••• 4421</span>
+              <span style="margin-left:auto; font: 500 11px var(--font-mono); color: var(--text-muted);">Visa</span>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <label style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;">Expiry</label>
+              <div style="padding: 0 14px; height: 44px; line-height: 44px; border: 1px solid var(--border); border-radius: 10px; font: 500 14px var(--font-mono); background: var(--surface);">09 / 28</div>
+            </div>
+            <div>
+              <label style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;">CVV</label>
+              <input type="text" inputmode="numeric" placeholder="•••" maxlength="3" style="width: 100%; padding: 0 14px; height: 44px; border: 1px solid var(--border); border-radius: 10px; font: 500 14px var(--font-mono); background: var(--surface);" />
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  } else if (m === 'bank') {
+    detail = `
+      <div style="padding: 0 16px;">
+        <div style="margin-top: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px;">
+          <div style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Beneficiary details</div>
+          <div style="display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font: 13px/1.5 var(--font-sans); color: var(--text-strong);">
+            <div style="color: var(--text-muted);">Bank</div><div>CABS</div>
+            <div style="color: var(--text-muted);">Account name</div><div>${escapeHtml(c.school)}</div>
+            <div style="color: var(--text-muted);">Account no.</div><div style="font-family: var(--font-mono);">1004 1199 8821</div>
+            <div style="color: var(--text-muted);">Branch</div><div>Avondale · 1004</div>
+            <div style="color: var(--text-muted);">Reference</div><div style="font-family: var(--font-mono); color: var(--brand-strong);">${c.id.toUpperCase()}-${c.fees.term}-${initials(c.name)}</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding: 14px 16px 0;">
+        <div class="sim-box">
+          <strong>Manual transfer</strong>
+          Confirm below once you've completed the transfer in your banking app. We'll match the reference within one business day.
+        </div>
+      </div>
+    `;
+  } else {
+    detail = `<div style="padding: 14px 16px 0;"><div class="sim-box">Choose a method above to continue.</div></div>`;
+  }
+
+  return `
+    <div style="padding: 16px 16px 4px;">
+      <div style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Step 3 of 3</div>
+      <div style="font: 600 16px/1.25 var(--font-sans); color: var(--text-strong);">Choose payment method</div>
+      <div style="font: 13px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 4px;">Today's charge: <strong style="color: var(--text-strong);">${money(amount)}</strong></div>
+    </div>
+
+    <div style="padding: 12px 0 4px;">
+      <div class="method-grid">
+        ${METHODS.map(opt => `
+          <button class="method-btn ${m === opt.id ? 'on' : ''}" data-method="${opt.id}">
+            <span class="ic-tile" data-icon="${opt.icon}" data-icon-size="16"></span>
+            <span class="nm">${escapeHtml(opt.nm)}</span>
+            <span class="sb">${escapeHtml(opt.sb)}</span>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+
+    ${detail}
+
+    <div style="padding: 22px 16px; display: flex; gap: 8px;">
+      <button data-back-to="fees/pay" style="flex: 1; padding: 12px; border-radius: 10px; background: var(--surface-muted); color: var(--text-strong); font: 600 13px var(--font-sans); cursor: pointer;">Back</button>
+      <button id="confirm-pay" ${m && !state.pay.processing ? '' : 'disabled'} style="flex: 2; padding: 12px; border-radius: 10px; background: var(--brand); color: #fff; font: 600 14px var(--font-sans); cursor: pointer; ${m && !state.pay.processing ? '' : 'opacity:0.5; cursor:not-allowed;'} display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
+        ${state.pay.processing ? '<span data-icon="loading" data-icon-size="14"></span> Processing…' : `Confirm · ${money(amount)}`}
+      </button>
+    </div>
+  `;
+}
+function wireFeesMethod() {
+  $$('[data-method]').forEach(b => b.addEventListener('click', () => {
+    state.pay.method = b.dataset.method;
+    render();
+  }));
+  $$('[data-back-to]').forEach(b => b.addEventListener('click', () => go(b.dataset.backTo)));
+  const ph = $('#phone-input'); if (ph) ph.addEventListener('input', (e) => { state.pay.phone = e.target.value; });
+  const ok = $('#confirm-pay'); if (ok) ok.addEventListener('click', () => {
+    if (!state.pay.method) return;
+    state.pay.processing = true; render();
+    setTimeout(() => completePayment(), 1100);
+  });
+}
+
+function methodLabel(m) {
+  return ({
+    ecocash: 'EcoCash',
+    onemoney: 'OneMoney',
+    bank: 'Bank transfer · CABS',
+    card: 'Visa ending 4421',
+  })[m] || m;
+}
+
+function completePayment() {
+  const c = currentChild();
+  const amount = payAmount(c);
+  // Apply payment to child's balance
+  c.fees.paid = +(c.fees.paid + amount).toFixed(2);
+  // Mark fee reminder notice as read
+  if (state.notices.n3) state.notices.n3.unread = false;
+  // Build receipt
+  state.pay.receipt = {
+    ref: 'PR-' + Math.floor(100000 + Math.random() * 900000),
+    when: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+    method: state.pay.method,
+    amount,
+    child: c.name,
+    school: c.school,
+    term: c.fees.term,
+    items: c.fees.invoices.filter(i => state.pay.picked[i.id]),
+    splitMode: state.pay.splitMode,
+  };
+  state.pay.processing = false;
+  go('fees/receipt');
+  toast('Payment successful · ' + money(amount), 'success');
+}
+
+/* ============================================================
+   FEES — Receipt
+   ============================================================ */
+function renderFeesReceipt() {
+  const r = state.pay.receipt;
+  if (!r) {
+    return `
+      <div class="empty-state">
+        <div class="ic"><span data-icon="receipt" data-icon-size="20"></span></div>
+        <div>No recent payment to show.</div>
+        <div style="margin-top: 12px;"><button data-go="fees" style="color: var(--brand-strong); background: none; cursor: pointer; font: 500 13px var(--font-sans);">Go to fees →</button></div>
+      </div>
+    `;
+  }
+  return `
+    <div class="receipt-card">
+      <div class="succ-banner">
+        <div class="ic"><span data-icon="check" data-icon-size="18"></span></div>
+        <div>
+          <div class="nm">Payment received · ${money(r.amount)}</div>
+          <div class="sb">${methodLabel(r.method)} · ${r.method === 'bank' ? 'will reflect within 1 business day' : 'cleared instantly'}</div>
+        </div>
+      </div>
+      <h2>${escapeHtml(r.school)}</h2>
+      <div class="ts">${escapeHtml(r.when)} · ${escapeHtml(r.term)}</div>
+      <div class="rl head"><span>For</span><span class="v">Amount</span></div>
+      <div class="rl"><span>${escapeHtml(r.child)}</span><span class="v">${money(r.amount)}</span></div>
+      ${r.items.length > 0 ? r.items.map(i => `
+        <div class="rl" style="color: var(--text-muted); font-size: 12px;"><span>· ${escapeHtml(i.nm)}</span><span class="v">${money(i.amount)}</span></div>
+      `).join('') : ''}
+      ${r.splitMode !== 'full' ? `<div class="rl" style="color: var(--text-muted); font-size: 12px;"><span>Split · ${r.splitMode === 'half' ? '50% of selected' : 'minimum installment'}</span><span></span></div>` : ''}
+      <div class="rl foot"><span>Total ${methodLabel(r.method)}</span><span class="v">${money(r.amount)}</span></div>
+      <div class="ref">
+        Reference number
+        <strong>${escapeHtml(r.ref)}</strong>
+      </div>
+      <div class="acts">
+        <button class="btn primary" id="rcp-pdf"><span data-icon="download" data-icon-size="14"></span> Download PDF receipt</button>
+        <button class="btn" id="rcp-email"><span data-icon="mail" data-icon-size="13"></span> Email</button>
+        <button class="btn" id="rcp-sms"><span data-icon="phone" data-icon-size="13"></span> SMS</button>
+        <button class="btn" data-go="home" style="grid-column: 1 / -1;"><span data-icon="home" data-icon-size="13"></span> Back to home</button>
+      </div>
+    </div>
+  `;
+}
+function wireFeesReceipt() {
+  const pdf = $('#rcp-pdf'); if (pdf) pdf.addEventListener('click', () => toast('PDF saved to Downloads', 'success'));
+  const em = $('#rcp-email'); if (em) em.addEventListener('click', () => toast('Receipt emailed', 'success'));
+  const sm = $('#rcp-sms'); if (sm) sm.addEventListener('click', () => toast('Receipt SMSed', 'success'));
+  $$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+}
+
+/* ============================================================
+   NOTICES — list
+   ============================================================ */
+function renderNotices() {
+  return `
+    <div class="section-h" style="padding-left: 16px; padding-right: 16px;">All notices<span style="font: 500 11px/1 var(--font-mono); color: var(--text-muted); letter-spacing: 0;">${unreadCount()} unread</span></div>
+    <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px;">
+      ${NOTICES.map(n => `
+        <div class="notice-row ${state.notices[n.id].unread ? 'unread' : ''}" data-notice="${n.id}">
+          <span class="ic ${n.tone === 'default' ? '' : n.tone}" data-icon="${n.icon}" data-icon-size="16"></span>
+          <div>
+            <div class="nm">${escapeHtml(n.title)}</div>
+            <div class="sb">${escapeHtml(n.sb)}</div>
+            <div class="meta">${escapeHtml(n.from)} · ${escapeHtml(n.when)}${state.notices[n.id].rsvp ? ' · RSVP: ' + state.notices[n.id].rsvp : ''}</div>
+          </div>
+          ${state.notices[n.id].unread
+            ? '<span class="pip"></span>'
+            : '<span data-icon="chright" data-icon-size="14" style="color: var(--text-subtle); margin-top: 8px;"></span>'}
+        </div>
+      `).join('')}
+    </div>
+    <div style="padding: 16px;">
+      <button id="mark-all-read" style="width: 100%; padding: 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); color: var(--text-strong); font: 500 13px var(--font-sans); cursor: pointer;">
+        Mark all as read
+      </button>
+    </div>
+    <div style="height: 24px;"></div>
+  `;
+}
+function wireNotices() {
+  $$('[data-notice]').forEach(b => b.addEventListener('click', () => openNotice(b.dataset.notice)));
+  const ma = $('#mark-all-read'); if (ma) ma.addEventListener('click', () => {
+    Object.values(state.notices).forEach(n => n.unread = false);
+    render();
+    toast('All notices marked read', 'success');
+  });
+}
+function openNotice(id) {
+  state.noticeId = id;
+  state.notices[id].unread = false;
+  go('notice/' + id);
+}
+
+/* ============================================================
+   NOTICE — detail
+   ============================================================ */
+function renderNoticeDetail() {
+  const n = NOTICES.find(x => x.id === state.noticeId);
+  if (!n) return `<div class="empty-state">Notice not found.</div>`;
+  const st = state.notices[n.id];
+  return `
+    <div class="notice-detail">
+      <div class="meta-row">
+        <span class="pill" style="background: ${n.tone === 'warn' ? 'var(--tone-warn-bg)' : n.tone === 'success' ? 'var(--tone-success-bg)' : 'var(--brand-soft)'}; color: ${n.tone === 'warn' ? 'var(--tone-warn)' : n.tone === 'success' ? 'var(--tone-success)' : 'var(--brand-strong)'};">${escapeHtml(n.from)}</span>
+        <span>${escapeHtml(n.when)}</span>
+      </div>
+      <h2>${escapeHtml(n.title)}</h2>
+      <div class="body">
+        ${n.body.map(p => `<p>${escapeHtml(p)}</p>`).join('')}
+      </div>
+      ${n.attachments.length > 0 ? `
+        <div style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-top: 6px;">Attachments</div>
+        <div class="attach">
+          ${n.attachments.map(a => `
+            <a href="#" data-attach="${escapeHtml(a.nm)}">
+              <span class="ic" data-icon="receipt" data-icon-size="14"></span>
+              <span>${escapeHtml(a.nm)}</span>
+              <span class="sz">${escapeHtml(a.sz)}</span>
+            </a>
+          `).join('')}
+        </div>
+      ` : ''}
+      ${n.rsvp ? `
+        <div style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-top: 14px;">Your RSVP</div>
+        <div class="rsvp">
+          <button class="${st.rsvp === 'yes' ? 'on yes' : ''}" data-rsvp="yes"><span data-icon="check" data-icon-size="13"></span> Going</button>
+          <button class="${st.rsvp === 'maybe' ? 'on maybe' : ''}" data-rsvp="maybe">Maybe</button>
+          <button class="${st.rsvp === 'no' ? 'on no' : ''}" data-rsvp="no"><span data-icon="x" data-icon-size="13"></span> Can't</button>
+        </div>
+        ${st.rsvp ? `<div style="font: 12px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 6px;">Your RSVP has been sent to ${escapeHtml(n.from)}.</div>` : ''}
+      ` : ''}
+      <div class="comments">
+        <h3>Discussion · ${st.comments.length}</h3>
+        ${st.comments.length === 0 ? `<div style="font: 13px/1.4 var(--font-sans); color: var(--text-muted); padding: 8px 0 4px;">No comments yet. Be the first to respond.</div>` : ''}
+        ${st.comments.map(c => `
+          <div class="comment ${c.role === 'staff' ? 'staff' : ''}">
+            <div class="av">${initials(c.who)}</div>
+            <div class="ct">
+              <div class="nm">${escapeHtml(c.who)} ${c.role === 'staff' ? '<span style="font: 500 9.5px/1 var(--font-mono); background: var(--tone-success-bg); color: var(--tone-success); padding: 2px 5px; border-radius: 4px; margin-left: 2px;">STAFF</span>' : ''}<span class="when">${escapeHtml(c.when)}</span></div>
+              <div class="bd">${escapeHtml(c.body)}</div>
+            </div>
+          </div>
+        `).join('')}
+        <div class="comment-input">
+          <input id="comment-input" placeholder="Write a reply…" />
+          <button id="comment-send" title="Send"><span data-icon="arrow" data-icon-size="16"></span></button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function wireNoticeDetail() {
+  const n = NOTICES.find(x => x.id === state.noticeId);
+  if (!n) return;
+  $$('[data-rsvp]').forEach(b => b.addEventListener('click', () => {
+    state.notices[n.id].rsvp = b.dataset.rsvp;
+    render();
+    toast(`RSVP "${b.dataset.rsvp}" sent`, 'success');
+  }));
+  $$('[data-attach]').forEach(a => a.addEventListener('click', (e) => {
+    e.preventDefault();
+    toast('Downloaded ' + a.dataset.attach, 'success');
+  }));
+  const inp = $('#comment-input');
+  const send = $('#comment-send');
+  function sendComment() {
+    if (!inp.value.trim()) return;
+    state.notices[n.id].comments.push({
+      who: 'Mrs ' + currentChild().name.split(' ').slice(-1)[0],
+      role: 'parent',
+      when: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+      body: inp.value.trim(),
+    });
+    inp.value = '';
+    render();
+    toast('Reply posted', 'success');
+  }
+  if (send) send.addEventListener('click', sendComment);
+  if (inp) inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendComment(); });
+}
+
+/* ============================================================
+   ATTENDANCE & MARKS
+   ============================================================ */
+const TERMS = [
+  { id: 't1-2026', label: 'Term 1 · 2026' },
+  { id: 't2-2026', label: 'Term 2 · 2026' },
+  { id: 't3-2026', label: 'Term 3 · 2026' },
+];
+
+function renderAttendance() {
+  const c = currentChild();
+  // Build a deterministic 6x5 grid based on child id + term
+  const seed = (c.id + state.termId).split('').reduce((s, ch) => s + ch.charCodeAt(0), 0);
+  const weeks = 6;
+  const days = ['Mon','Tue','Wed','Thu','Fri'];
+  const grid = [];
+  let counter = seed;
+  for (let w = 0; w < weeks; w++) {
+    const row = [];
+    for (let d = 0; d < 5; d++) {
+      counter = (counter * 9301 + 49297) % 233280;
+      const r = counter / 233280;
+      let kind = 'p';
+      if (w === weeks - 1 && d > 0) kind = 'h'; // future (current week, partial)
+      else if (r < 0.04) kind = 'a';
+      else if (r < 0.08) kind = 'l';
+      row.push(kind);
+    }
+    grid.push(row);
+  }
+  // Override last row to be "today is Wed", everything Wed+ is empty
+  grid[weeks - 1] = ['p', 'p', 'p', 'h', 'h'];
+
+  const present = grid.flat().filter(k => k === 'p').length;
+  const absent  = grid.flat().filter(k => k === 'a').length;
+  const late    = grid.flat().filter(k => k === 'l').length;
+  const counted = present + absent + late;
+  const attPct  = counted ? Math.round((present / counted) * 100) : 0;
+
+  return `
+    <div class="term-select">
+      ${TERMS.map(t => `<button class="${state.termId === t.id ? 'on' : ''}" data-term="${t.id}">${t.label}</button>`).join('')}
+    </div>
+
+    <div class="att-card">
+      <div class="summary">
+        <span class="v">${attPct}%</span>
+        <span class="lbl">attendance · ${escapeHtml(c.short)}</span>
+      </div>
+      <div class="sb">${present} present · ${late} late · ${absent} absent — ${counted} school days so far this term.</div>
+      <div class="att-grid">
+        <span class="wk"></span>
+        ${days.map(d => `<span class="day">${d}</span>`).join('')}
+        ${grid.map((row, wi) => `
+          <span class="wk">W${wi + 1}</span>
+          ${row.map((k, di) => `
+            <span class="dot ${k}" title="${days[di]} · W${wi+1} · ${({p:'present',a:'absent',l:'late',h:'—'})[k]}">${({p:'P',a:'A',l:'L',h:''})[k]}</span>
+          `).join('')}
+        `).join('')}
+      </div>
+      <div class="att-legend">
+        <span class="l-p">Present</span>
+        <span class="l-l">Late</span>
+        <span class="l-a">Absent</span>
+      </div>
+    </div>
+
+    <div class="section-h">Subject marks<span style="font: 500 11px/1 var(--font-mono); color: var(--text-muted); letter-spacing: 0;">${c.marks.length} subjects</span></div>
+    <div style="padding: 0 16px;">
+      ${c.marks.map((m, idx) => {
+        const pct = m.mark;
+        return `
+          <div class="subj-card" data-mark="${idx}">
+            <div class="hd">
+              <span class="ic" data-icon="${m.icon}" data-icon-size="16"></span>
+              <div style="flex:1; min-width:0;">
+                <div class="nm">${escapeHtml(m.subj)}</div>
+                <div class="sb">${escapeHtml(m.teacher)}</div>
+              </div>
+              <span class="v ${m.grade}">${pct}<span style="font-size: 11px; color: var(--text-muted); margin-left: 4px;">%</span></span>
+            </div>
+            <div class="bar"><span class="${m.grade}" style="width: ${pct}%;"></span></div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+
+    <div style="height: 24px;"></div>
+  `;
+}
+function wireAttendance() {
+  $$('[data-term]').forEach(b => b.addEventListener('click', () => {
+    state.termId = b.dataset.term;
+    render();
+  }));
+  $$('[data-mark]').forEach(b => b.addEventListener('click', () => {
+    state.subjectIdx = +b.dataset.mark;
+    go('marks/' + b.dataset.mark);
+  }));
+}
+
+function renderMarkDetail() {
+  const c = currentChild();
+  const idx = +(state.route.split('/')[1]);
+  const m = c.marks[idx];
+  if (!m) return `<div class="empty-state">Subject not found.</div>`;
+  return `
+    <div style="padding: 18px 16px 0;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="width: 44px; height: 44px; border-radius: 10px; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center;" data-icon="${m.icon}" data-icon-size="20"></span>
+        <div style="flex:1;">
+          <div style="font: 700 18px/1.15 var(--font-sans); color: var(--text-strong); letter-spacing: -0.01em;">${escapeHtml(m.subj)}</div>
+          <div style="font: 13px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px;">${escapeHtml(m.teacher)} · Term 2 · ${escapeHtml(c.grade)}</div>
+        </div>
+        <span style="font: 700 26px/1 var(--font-mono); color: ${m.grade === 'A' ? '#166534' : m.grade === 'B' ? '#1D4ED8' : m.grade === 'C' ? 'var(--tone-warn)' : 'var(--tone-danger)'}; font-variant-numeric: tabular-nums;">${m.mark}<span style="font-size: 14px; color: var(--text-muted); margin-left: 4px;">/100</span></span>
+      </div>
+    </div>
+
+    <div style="padding: 16px;">
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <div style="font: 500 11px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase;">Continuous</div>
+            <div style="font: 700 22px/1 var(--font-mono); color: var(--text-strong); margin-top: 6px; font-variant-numeric: tabular-nums;">${m.ca}<span style="font-size: 12px; color: var(--text-muted);">/100</span></div>
+            <div style="height: 6px; background: var(--surface-muted); border-radius: 9999px; margin-top: 8px; overflow: hidden;"><span style="display: block; height: 100%; width: ${m.ca}%; background: var(--brand);"></span></div>
+          </div>
+          <div>
+            <div style="font: 500 11px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase;">End-of-term exam</div>
+            <div style="font: 700 22px/1 var(--font-mono); color: var(--text-strong); margin-top: 6px; font-variant-numeric: tabular-nums;">${m.exam}<span style="font-size: 12px; color: var(--text-muted);">/100</span></div>
+            <div style="height: 6px; background: var(--surface-muted); border-radius: 9999px; margin-top: 8px; overflow: hidden;"><span style="display: block; height: 100%; width: ${m.exam}%; background: var(--ink);"></span></div>
+          </div>
+        </div>
+        <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <div style="font: 500 11px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase;">Overall grade</div>
+            <div style="font: 700 18px/1 var(--font-sans); color: var(--text-strong); margin-top: 6px;">${m.grade} · ${m.mark >= 80 ? 'Distinction' : m.mark >= 70 ? 'Credit' : m.mark >= 60 ? 'Pass' : 'Needs support'}</div>
+          </div>
+          <span style="padding: 6px 12px; border-radius: 9999px; background: ${m.grade === 'A' ? 'var(--tone-success-bg)' : m.grade === 'B' ? 'var(--brand-soft)' : m.grade === 'C' ? 'var(--tone-warn-bg)' : 'var(--tone-danger-bg)'}; color: ${m.grade === 'A' ? 'var(--tone-success)' : m.grade === 'B' ? 'var(--brand-strong)' : m.grade === 'C' ? 'var(--tone-warn)' : 'var(--tone-danger)'}; font: 700 14px/1 var(--font-mono);">${m.grade}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-h" style="padding-left: 16px; padding-right: 16px;">Teacher's comment</div>
+    <div style="padding: 0 16px;">
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+          <span style="width: 32px; height: 32px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 11px/1 var(--font-sans);">${initials(m.teacher)}</span>
+          <div>
+            <div style="font: 600 13px/1.2 var(--font-sans); color: var(--text-strong);">${escapeHtml(m.teacher)}</div>
+            <div style="font: 11px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px;">${escapeHtml(m.subj)} teacher · ${escapeHtml(c.grade)}</div>
+          </div>
+        </div>
+        <p style="font: 13.5px/1.55 var(--font-sans); color: var(--text-body); margin: 0;">${escapeHtml(m.comment)}</p>
+      </div>
+    </div>
+
+    <div style="padding: 14px 16px 0;">
+      <button id="msg-teacher" style="width: 100%; padding: 12px; border-radius: 10px; background: var(--brand); color: #fff; font: 600 14px var(--font-sans); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+        <span data-icon="chat" data-icon-size="14"></span> Message ${escapeHtml(m.teacher)}
+      </button>
+    </div>
+
+    <div style="height: 24px;"></div>
+  `;
+}
+function wireMarkDetail() {
+  const m = $('#msg-teacher'); if (m) m.addEventListener('click', () => toast('Opening secure message thread', 'success'));
+}
+
+/* ============================================================
+   PROFILE
+   ============================================================ */
+function renderProfile() {
+  const c = currentChild();
+  const last = c.name.split(' ').slice(-1)[0];
+  const initialsP = 'M' + last[0];
+  return `
+    <div class="prof-hero">
+      <div class="av">${initialsP}</div>
+      <h2>Mrs ${escapeHtml(last)}</h2>
+      <div class="sb">Primary guardian · ${CHILDREN.length} children linked</div>
+    </div>
+
+    <div class="section-h" style="padding-left:16px;">Contact details</div>
+    <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px;">
+      <div class="pl-row">
+        <span class="ic-tile brand"><span data-icon="phone" data-icon-size="16"></span></span>
+        <div><div class="nm">${escapeHtml(state.pay.phone)}</div><div class="sb">Primary mobile · verified</div></div>
+        <span data-icon="chright" style="color: var(--text-subtle);"></span>
+      </div>
+      <div class="pl-row">
+        <span class="ic-tile"><span data-icon="mail" data-icon-size="16"></span></span>
+        <div><div class="nm">m.${last.toLowerCase()}@example.co.zw</div><div class="sb">Email · verified</div></div>
+        <span data-icon="chright" style="color: var(--text-subtle);"></span>
+      </div>
+      <div class="pl-row">
+        <span class="ic-tile"><span data-icon="pin" data-icon-size="16"></span></span>
+        <div><div class="nm">14 Maples Drive, Borrowdale</div><div class="sb">Harare · postal address</div></div>
+        <span data-icon="chright" style="color: var(--text-subtle);"></span>
+      </div>
+    </div>
+
+    <div class="section-h" style="padding-left:16px;">Linked children</div>
+    <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px;">
+      ${CHILDREN.map(ch => `
+        <div class="pl-row cl" data-pick-child-quick="${ch.id}">
+          <span class="ic-tile ${ch.id === c.id ? 'brand' : ''}" style="border-radius: 50%; ${ch.id === c.id ? '' : 'background: var(--surface-muted);'}">${initials(ch.name)}</span>
+          <div><div class="nm">${escapeHtml(ch.name)}</div><div class="sb">${escapeHtml(ch.grade)} · ${escapeHtml(ch.schoolShort)}</div></div>
+          ${ch.id === c.id ? '<span style="font: 500 10.5px/1 var(--font-mono); color: var(--brand-strong); background: var(--brand-soft); padding: 4px 8px; border-radius: 9999px; letter-spacing: 0.04em;">ACTIVE</span>' : '<span data-icon="chright" style="color: var(--text-subtle);"></span>'}
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="section-h" style="padding-left:16px;">Notification preferences</div>
+    <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px;">
+      <div class="toggle-row">
+        <div>
+          <div class="nm">SMS alerts</div>
+          <div class="sb">Fee reminders, attendance and urgent notices</div>
+        </div>
+        <span class="toggle ${state.notifs.sms ? 'on' : ''}" data-toggle="sms" role="switch"></span>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="nm">Email digests</div>
+          <div class="sb">Weekly summary of marks, attendance, notices</div>
+        </div>
+        <span class="toggle ${state.notifs.email ? 'on' : ''}" data-toggle="email" role="switch"></span>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="nm">Push notifications</div>
+          <div class="sb">In-app pushes for new notices and comments</div>
+        </div>
+        <span class="toggle ${state.notifs.push ? 'on' : ''}" data-toggle="push" role="switch"></span>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="nm">School newsletter</div>
+          <div class="sb">Monthly community newsletter from the head</div>
+        </div>
+        <span class="toggle ${state.notifs.marketing ? 'on' : ''}" data-toggle="marketing" role="switch"></span>
+      </div>
+    </div>
+
+    <div class="section-h" style="padding-left:16px;">App settings</div>
+    <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px;">
+      <div class="lang-row" id="lang-row">
+        <div class="nm">Language</div>
+        <div class="v">${escapeHtml(state.language)} <span data-icon="chright" data-icon-size="14" style="color: var(--text-subtle);"></span></div>
+      </div>
+      <div class="lang-row" id="help-row">
+        <div class="nm">Help &amp; support</div>
+        <div class="v"><span data-icon="chright" data-icon-size="14" style="color: var(--text-subtle);"></span></div>
+      </div>
+      <div class="lang-row" id="terms-row">
+        <div class="nm">Terms &amp; privacy</div>
+        <div class="v"><span data-icon="chright" data-icon-size="14" style="color: var(--text-subtle);"></span></div>
+      </div>
+    </div>
+
+    <div style="padding: 18px 16px;">
+      <button id="sign-out" style="width: 100%; padding: 14px; border-radius: 10px; background: var(--surface); border: 1px solid var(--tone-danger); color: var(--tone-danger); font: 600 14px var(--font-sans); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+        <span data-icon="logout" data-icon-size="14"></span> Sign out
+      </button>
+    </div>
+
+    <div style="text-align: center; padding: 0 16px 24px; font: 11.5px/1.4 var(--font-sans); color: var(--text-subtle);">
+      Huchu Parent v2.4.1 · build 2026.05.31
+    </div>
+  `;
+}
+function wireProfile() {
+  $$('[data-toggle]').forEach(t => t.addEventListener('click', () => {
+    const k = t.dataset.toggle;
+    state.notifs[k] = !state.notifs[k];
+    render();
+    toast(`${k.toUpperCase()} ${state.notifs[k] ? 'enabled' : 'disabled'}`, 'success');
+  }));
+  $$('[data-pick-child-quick]').forEach(b => b.addEventListener('click', () => {
+    const id = b.dataset.pickChildQuick;
+    if (id === state.childId) return;
+    state.childId = id;
+    state.pay = { picked: {}, splitMode: 'full', method: null, phone: '0772 145 902', processing: false, receipt: null };
+    render();
+    toast(`Now viewing ${currentChild().short}`, 'success');
+  }));
+  const lr = $('#lang-row'); if (lr) lr.addEventListener('click', openLanguagePicker);
+  const hr = $('#help-row'); if (hr) hr.addEventListener('click', () => toast('Opening help centre', 'success'));
+  const tr = $('#terms-row'); if (tr) tr.addEventListener('click', () => toast('Opening terms', 'success'));
+  const so = $('#sign-out'); if (so) so.addEventListener('click', confirmSignOut);
+}
+
+function openLanguagePicker() {
+  const langs = ['English', 'Shona', 'Ndebele'];
+  openModal(`
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div class="handle"></div>
+      <h3>Choose language</h3>
+      <p class="sub">App-wide language for menus, notices and notifications.</p>
+      ${langs.map(l => `
+        <div class="picker-row ${state.language === l ? 'on' : ''}" data-lang="${l}">
+          <span class="av">${l[0]}</span>
+          <div style="flex:1;">
+            <div class="nm">${l}</div>
+            <div class="sb">${l === 'English' ? 'Default · all content available' : l === 'Shona' ? 'ChiShona · navigation & notices' : 'IsiNdebele · navigation & notices'}</div>
+          </div>
+          <span class="chk" data-icon="check" data-icon-size="18"></span>
+        </div>
+      `).join('')}
+    </div>
+  `);
+  $$('[data-lang]').forEach(b => b.addEventListener('click', () => {
+    state.language = b.dataset.lang;
+    closeModal();
+    render();
+    toast('Language set to ' + state.language, 'success');
+  }));
+}
+
+function confirmSignOut() {
+  openModal(`
+    <div class="modal-center" onclick="event.stopPropagation()">
+      <h3 style="font: 600 16px/1.2 var(--font-sans); color: var(--text-strong); margin: 0 0 6px;">Sign out of Huchu Parent?</h3>
+      <p style="font: 13px/1.45 var(--font-sans); color: var(--text-muted); margin: 0 0 16px;">You'll need your phone number and PIN to sign back in. Saved payment methods stay on file.</p>
+      <div style="display: flex; gap: 8px;">
+        <button data-cancel style="flex: 1; padding: 12px; border-radius: 10px; background: var(--surface-muted); color: var(--text-strong); font: 600 13px var(--font-sans); cursor: pointer;">Cancel</button>
+        <button data-confirm style="flex: 1; padding: 12px; border-radius: 10px; background: var(--tone-danger); color: #fff; font: 600 13px var(--font-sans); cursor: pointer;">Sign out</button>
+      </div>
+    </div>
+  `, { center: true });
+  $('[data-cancel]').addEventListener('click', closeModal);
+  $('[data-confirm]').addEventListener('click', () => {
+    closeModal();
+    toast('Signed out. Reload to sign back in.', 'warn');
+  });
+}
+
+/* ============================================================
+   Init
+   ============================================================ */
+function init() {
+  if (/[?&]fullscreen=1/.test(location.search)) {
+    document.body.classList.add('is-fullscreen');
+  }
+  const r = (location.hash.replace(/^#\/?/, '') || 'home');
+  state.route = r;
+  // Wire fullscreen toggle once (it lives outside #app)
+  const fs = $('#fs-toggle');
+  if (fs) fs.addEventListener('click', toggleFullscreen);
+  render();
+}
+if (document.readyState !== 'loading') init();
+else document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>

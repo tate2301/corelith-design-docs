@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Block vs Pattern vs Page · Huchu DS</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<style>
+  /* Local flow diagram styles — kept in-file because they only appear here. */
+  .gd-flow {
+    display: grid; gap: 14px;
+    padding: 24px; background: var(--surface-muted);
+    border: 1px solid var(--border); border-radius: 12px;
+    margin: 18px 0 28px;
+  }
+  .gd-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: stretch; }
+  .gd-row.single { grid-template-columns: 1fr; }
+  .gd-node {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px;
+    display: grid; gap: 4px;
+  }
+  .gd-node.q { border-color: var(--brand-soft); background: var(--brand-soft); color: var(--brand-strong); }
+  .gd-node.block { border-left: 3px solid var(--tone-success); }
+  .gd-node.pattern { border-left: 3px solid var(--brand); }
+  .gd-node.page { border-left: 3px solid var(--tone-warning); }
+  .gd-node h4 { margin: 0; font: 600 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .gd-node p { margin: 0; font: 400 12.5px/1.45 var(--font-sans); color: var(--text-muted); }
+  .gd-arrow {
+    text-align: center; font: 500 11px/1 var(--font-sans);
+    color: var(--text-subtle); padding: 4px 0;
+  }
+  .gd-arrow::before { content: "↓ "; color: var(--text-muted); }
+  .gd-legend {
+    display: inline-flex; gap: 14px; flex-wrap: wrap;
+    font: 500 12px/1 var(--font-sans); color: var(--text-muted);
+    padding: 8px 0 4px;
+  }
+  .gd-legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+  .gd-legend .dot.b { background: var(--tone-success); }
+  .gd-legend .dot.x { background: var(--brand); }
+  .gd-legend .dot.p { background: var(--tone-warning); }
+</style>
+</head>
+<body class="ds-doc">
+  <main class="ds-content">
+    <div class="ds-doc-layout">
+
+      <article>
+        <header class="ds-page-head anim-fade-up">
+          <div class="crumbs">
+            <a href="../index.html">Home</a>
+            <span class="sep">/</span>
+            <a href="guides.html">Guides</a>
+            <span class="sep">/</span>
+            <span>Block vs Pattern vs Page</span>
+          </div>
+          <h1>Block vs Pattern vs Page</h1>
+          <p class="lede">Three categories, one promotion ladder. Knowing where a piece of UI belongs is half the job of working in the system.</p>
+          <div class="meta">
+            <span class="meta-pill"><span data-icon="info" data-icon-size="12"></span>Guide</span>
+            <span class="meta-pill">Decision flowchart</span>
+            <span class="meta-pill">6 worked examples</span>
+          </div>
+        </header>
+
+        <!-- DEFINITIONS -->
+        <section id="definitions">
+          <h2 class="ds-h2">Definitions</h2>
+          <p class="ds-h2-sub">The line between them is sharper than it looks. Read these once, refer back forever.</p>
+
+          <table class="ds-props">
+            <thead><tr><th></th><th>Block</th><th>Pattern</th><th>Page</th></tr></thead>
+            <tbody>
+              <tr><td>Prefix</td><td><code class="inline">b-</code></td><td><code class="inline">x-</code></td><td><code class="inline">pg-</code></td></tr>
+              <tr><td>Scope</td><td>One thing on a page</td><td>A whole surface or interaction</td><td>A real product surface</td></tr>
+              <tr><td>Composes</td><td>Components (<code class="inline">p-</code>)</td><td>Blocks + components</td><td>Patterns + blocks + components</td></tr>
+              <tr><td>Behavior</td><td>Mostly visual</td><td>State machine + URL + keyboard</td><td>Real data + real flows</td></tr>
+              <tr><td>Reuse bar</td><td>Used 2+ times</td><td>Used on 2+ pages with same contract</td><td>One per surface</td></tr>
+              <tr><td>Example</td><td><a href="b-stat-card.html">Stat card</a></td><td><a href="x-data-table.html">Data table</a></td><td><a href="pg-overview.html">Overview dashboard</a></td></tr>
+            </tbody>
+          </table>
+
+          <p>The trap most teams fall into: <strong>calling a block a pattern because it's complicated</strong>. Complexity isn't the test. The test is whether the thing has behavior the system needs to guarantee across uses — a state machine, a URL convention, a keyboard contract.</p>
+        </section>
+
+        <!-- FLOWCHART -->
+        <section id="flowchart">
+          <h2 class="ds-h2">Decision flowchart</h2>
+          <p class="ds-h2-sub">Run any candidate through these four questions in order. Stop at the first answer.</p>
+
+          <div class="gd-flow">
+            <div class="gd-row single">
+              <div class="gd-node q">
+                <h4>Start: you have a candidate UI piece.</h4>
+                <p>What is it — a block, a pattern, or a whole page?</p>
+              </div>
+            </div>
+            <div class="gd-arrow">Q1</div>
+            <div class="gd-row single">
+              <div class="gd-node q">
+                <h4>Does it fill the whole content area of a screen?</h4>
+                <p>Header + body + actions, with real data and real flows.</p>
+              </div>
+            </div>
+            <div class="gd-row">
+              <div class="gd-node page">
+                <h4>Yes → Page</h4>
+                <p>Document under <code class="inline">pg-</code>. Composes patterns and blocks. See <a href="guide-compose-page.html">Compose a page</a>.</p>
+              </div>
+              <div class="gd-node q">
+                <h4>No → continue</h4>
+                <p>It's smaller than a page. Keep going.</p>
+              </div>
+            </div>
+            <div class="gd-arrow">Q2</div>
+            <div class="gd-row single">
+              <div class="gd-node q">
+                <h4>Does it own a state machine, URL convention, or keyboard contract?</h4>
+                <p>e.g. focus trap, hash for active tab, ←/→ navigation, websocket-stale refresh.</p>
+              </div>
+            </div>
+            <div class="gd-row">
+              <div class="gd-node pattern">
+                <h4>Yes → Pattern</h4>
+                <p>Document under <code class="inline">x-</code>. Needs explicit guarantees. See <a href="guide-compose-pattern.html">Compose a pattern</a>.</p>
+              </div>
+              <div class="gd-node q">
+                <h4>No → continue</h4>
+                <p>It's a static composition. Keep going.</p>
+              </div>
+            </div>
+            <div class="gd-arrow">Q3</div>
+            <div class="gd-row single">
+              <div class="gd-node q">
+                <h4>Is it more than one component arranged a specific way?</h4>
+                <p>e.g. title + icon + delta number in a card; or icon + headline + lede + action in a row.</p>
+              </div>
+            </div>
+            <div class="gd-row">
+              <div class="gd-node block">
+                <h4>Yes → Block</h4>
+                <p>Document under <code class="inline">b-</code>. A reusable arrangement of components.</p>
+              </div>
+              <div class="gd-node q">
+                <h4>No → continue</h4>
+                <p>Only one component. Keep going.</p>
+              </div>
+            </div>
+            <div class="gd-arrow">Q4</div>
+            <div class="gd-row">
+              <div class="gd-node q">
+                <h4>It's a single component.</h4>
+                <p>Document under <code class="inline">p-</code> (primitive / component), or extend an existing one with a variant.</p>
+              </div>
+              <div class="gd-node q">
+                <h4>Still not sure?</h4>
+                <p>Default to <strong>block</strong>. Promote later when you see the second use case.</p>
+              </div>
+            </div>
+
+            <div class="gd-legend">
+              <span><span class="dot b"></span>Block</span>
+              <span><span class="dot x"></span>Pattern</span>
+              <span><span class="dot p"></span>Page</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- WORKED EXAMPLES -->
+        <section id="examples">
+          <h2 class="ds-h2">Six worked examples</h2>
+          <p class="ds-h2-sub">Run the candidate through Q1–Q4. The categorization follows.</p>
+
+          <h3 class="ds-h3">1 · Stat card → Block</h3>
+          <p>A title, a big number, a tiny delta. Used in KPI grids, summary bars, and dashboards. No state machine, no URL — purely visual. Q1 no, Q2 no, Q3 yes → <a href="b-stat-card.html">block</a>. The card itself doesn't fetch or know its delta; the page passes them in.</p>
+
+          <h3 class="ds-h3">2 · Data table → Pattern</h3>
+          <p>Sticky header, sortable columns, row selection, pagination, bulk actions, URL-reflected filters, keyboard row navigation. Q1 no (it's part of a page), Q2 yes — state machine (empty / loading / selecting / bulk), URL contract for filters, keyboard contract → <a href="x-data-table.html">pattern</a>.</p>
+
+          <h3 class="ds-h3">3 · Modal → Pattern</h3>
+          <p>Even though it looks like a block, a modal owns focus trap, escape-to-close, scroll lock, return-focus on dismiss, and a state machine (open / closing / open-with-form-dirty). Q1 no, Q2 yes → <a href="x-modal.html">pattern</a>. The modal's <em>content</em> is composed from blocks, but the modal itself is a pattern.</p>
+
+          <h3 class="ds-h3">4 · Page header → Block</h3>
+          <p>Title, lede, meta pills, up to three action buttons. Heavy visual structure, no behavior. Q1 no, Q2 no, Q3 yes → <a href="b-page-header.html">block</a>. Every variant is a configuration of the same arrangement, not a different contract.</p>
+
+          <h3 class="ds-h3">5 · Settings shell → Pattern</h3>
+          <p>240px rail of sections on the left, a content column on the right with deep-linkable sections. The rail entry highlights based on scroll position; the URL hash reflects the active section; section anchors scroll smoothly on click. Q1 yes <em>(it fills the screen)</em>, but it's the shell — Q2 yes (URL + keyboard) → <a href="x-settings.html">pattern</a> (specifically a shell pattern).</p>
+
+          <h3 class="ds-h3">6 · Detail hero → Block</h3>
+          <p>Big title, key identifying facts (status pill, amounts, dates), and the primary action for the record. No state machine, no URL — pure layout. Q1 no, Q2 no, Q3 yes → <a href="b-detail-hero.html">block</a>. It lives inside the Detail view pattern, which <em>does</em> own the URL.</p>
+        </section>
+
+        <!-- DON'T CALLOUTS -->
+        <section id="anti">
+          <h2 class="ds-h2">Common mis-categorizations</h2>
+
+          <div class="ds-rules">
+            <div class="rule dont">
+              <span class="tag">Don't</span>
+              <p><strong>Promote a block to a pattern just because it has multiple parts.</strong> Page header has six parts and is still a block — none of them carry behavior. A pattern earns its prefix by owning a contract, not by being big.</p>
+            </div>
+            <div class="rule dont">
+              <span class="tag">Don't</span>
+              <p><strong>Build a block with state and call it a block.</strong> If your "stat card" needs to fetch its own number, manage loading, and refresh on websocket, it's a small pattern in block clothing. Either lift the state out (recommended) or promote.</p>
+            </div>
+            <div class="rule dont">
+              <span class="tag">Don't</span>
+              <p><strong>Make a pattern out of a single block.</strong> "Critical strip pattern" that's just the <a href="b-critical-strip.html">Critical strip block</a> with no extra behavior — that's just the block. Delete the pattern doc.</p>
+            </div>
+            <div class="rule dont">
+              <span class="tag">Don't</span>
+              <p><strong>Document a page when you mean a pattern.</strong> "Customers page" applies the Detail tabs pattern to a specific record. The pattern is reusable; the page is one concrete application of it.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- CALLOUT -->
+        <div class="ds-callout">
+          <span class="ic" data-icon="info" data-icon-size="18"></span>
+          <div>
+            <h4>What's next</h4>
+            <p>Once you know what you're building, the next question is how it adapts to small screens. See <a href="guide-mobile-adaptation.html">Adapting blocks and patterns for mobile</a>.</p>
+          </div>
+        </div>
+
+        <!-- PAGER -->
+        <nav class="ds-pager">
+          <a href="guide-new-feature.html">
+            <div class="pager-label">← Back to</div>
+            <div class="pager-title">New feature module</div>
+          </a>
+          <a href="guide-mobile-adaptation.html" class="next">
+            <div class="pager-label">Next →</div>
+            <div class="pager-title">Mobile adaptation</div>
+          </a>
+        </nav>
+      </article>
+
+      <!-- TOC -->
+      <aside class="ds-toc">
+        <div class="toc-label">On this page</div>
+        <ul>
+          <li><a href="#definitions" class="current">Definitions</a></li>
+          <li><a href="#flowchart">Decision flowchart</a></li>
+          <li><a href="#examples">Six worked examples</a></li>
+          <li><a href="#anti">Common mis-categorizations</a></li>
+        </ul>
+      </aside>
+
+    </div>
+  </main>
+</body>
+</html>
