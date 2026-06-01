@@ -104,7 +104,7 @@ export function Tooltip({
     else if (r && typeof r === 'object') (r as React.MutableRefObject<HTMLElement | null>).current = node;
   };
 
-  const trigger = cloneElement(children, {
+  const trigger = cloneElement(children as ReactElement<Record<string, unknown>>, {
     ref: setRefs,
     'aria-describedby': open ? id : childProps['aria-describedby'],
     onPointerEnter: (e: React.PointerEvent) => {
@@ -130,7 +130,7 @@ export function Tooltip({
         setOpen(false);
       }
     },
-  } as Partial<React.ComponentProps<typeof children.type>>);
+  });
 
   const portalTarget = typeof document !== 'undefined' ? document.body : null;
 

@@ -24,4 +24,5 @@ export * from './Status';
 export * from './Switch';
 export * from './Tabs';
 export * from './Tag';
+export * from './Toast';
 export * from './Tooltip';

@@ -125,7 +125,7 @@ export const HoverCardTrigger = forwardRef<HTMLElement, HoverCardTriggerProps>(f
     ctx.closeTimer.current = setTimeout(() => ctx.setOpen(false), ctx.closeDelay);
   };
 
-  return cloneElement(children, {
+  return cloneElement(children as ReactElement<Record<string, unknown>>, {
     ref: setRefs,
     onPointerEnter: (e: React.PointerEvent) => {
       childProps.onPointerEnter?.(e);
@@ -135,7 +135,7 @@ export const HoverCardTrigger = forwardRef<HTMLElement, HoverCardTriggerProps>(f
       childProps.onPointerLeave?.(e);
       scheduleClose();
     },
-  } as Partial<React.ComponentProps<typeof children.type>>);
+  });
 });
 
 export interface HoverCardContentProps extends HTMLAttributes<HTMLDivElement> {

@@ -117,7 +117,7 @@ export const PopoverTrigger = forwardRef<HTMLElement, PopoverTriggerProps>(funct
     else if (r && typeof r === 'object') (r as React.MutableRefObject<HTMLElement | null>).current = node;
   };
 
-  return cloneElement(children, {
+  return cloneElement(children as ReactElement<Record<string, unknown>>, {
     ref: setRefs,
     id: ctx.triggerId,
     'aria-haspopup': 'dialog',
@@ -127,7 +127,7 @@ export const PopoverTrigger = forwardRef<HTMLElement, PopoverTriggerProps>(funct
       childProps.onClick?.(e);
       ctx.setOpen(!ctx.open);
     },
-  } as Partial<React.ComponentProps<typeof children.type>>);
+  });
 });
 
 export interface PopoverContentProps extends HTMLAttributes<HTMLDivElement> {

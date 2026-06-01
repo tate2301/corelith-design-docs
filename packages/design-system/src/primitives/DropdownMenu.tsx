@@ -116,7 +116,7 @@ const DropdownMenuTrigger = forwardRef<HTMLElement, DropdownMenuTriggerProps>(fu
     else if (r && typeof r === 'object') (r as React.MutableRefObject<HTMLElement | null>).current = node;
   };
 
-  return cloneElement(children, {
+  return cloneElement(children as ReactElement<Record<string, unknown>>, {
     ref: setRefs,
     id: ctx.triggerId,
     'aria-haspopup': 'menu',
@@ -138,7 +138,7 @@ const DropdownMenuTrigger = forwardRef<HTMLElement, DropdownMenuTriggerProps>(fu
         });
       }
     },
-  } as Partial<React.ComponentProps<typeof children.type>>);
+  });
 });
 
 export interface DropdownMenuContentProps extends HTMLAttributes<HTMLDivElement> {
