@@ -26,41 +26,56 @@
   const CURRENT_FILE = (PATH.split('/').pop() || '').replace('.html', '');
 
   // -------- Single-source-of-truth link config ----------------------------
+  // Top-level main nav. Order mirrors the Polaris-inspired taxonomy.
   const SECTIONS = [
+    { label: 'Get started', href: ROOT + 'system/get-started.html',
+      match: /\/(get-started|install|changelog)\.html$/ },
     { label: 'Foundations', href: ROOT + 'system/foundations.html',
-      match: /\/(foundations|colors|typography|spacing|elevation|motion|iconography|voice|principles|accessibility)\.html$/ },
+      match: /\/(foundations|colors|typography|spacing|elevation|motion|iconography|principles|accessibility)\.html$/ },
+    { label: 'Content',     href: ROOT + 'system/content.html',
+      match: /\/(content|voice)\.html$/ },
+    { label: 'Tokens',      href: ROOT + 'system/tokens.html',
+      match: /\/tokens\.html$/ },
     { label: 'Components',  href: ROOT + 'system/primitives.html',
       match: /\/(primitives|p-[a-z-]+)\.html$/ },
     { label: 'Blocks',      href: ROOT + 'system/blocks.html',
       match: /\/(blocks|b-[a-z-]+)\.html$/ },
     { label: 'Patterns',    href: ROOT + 'system/patterns.html',
       match: /\/(patterns|x-[a-z-]+)\.html$/ },
-    { label: 'Templates',   href: ROOT + 'system/shells.html',
-      match: /\/(shells|pages|pg-[a-z-]+)\.html$/ },
-    { label: 'Portals',     href: ROOT + 'portals/index.html',
-      match: /\/portals\// },
-    { label: 'Verticals',   href: ROOT + 'verticals/index.html',
-      match: /\/verticals\// },
+    { label: 'Guides',      href: ROOT + 'system/guides.html',
+      match: /\/(guides|guide-[a-z-]+)\.html$/ },
+    { label: 'Solutions',   href: ROOT + 'portals/index.html',
+      match: /\/(portals|verticals)\// },
   ];
 
-  // Sidebar (full IA, mirrors system-shell.js groupings)
+  // Sidebar (full IA, single source of truth). Group order follows the
+  // Polaris-inspired taxonomy exactly:
+  //   Get started · Foundations · Content · Tokens · Components · Blocks ·
+  //   Patterns · Shells · Page templates · Guides · Solutions · Reference
   const SIDEBAR = [
     { label: 'Get started', items: [
       ['Overview',          ROOT + 'index.html',                'index'],
-      ['Principles',        ROOT + 'system/principles.html',    'principles'],
+      ['Introduction & install', ROOT + 'system/get-started.html', 'get-started', 'New'],
       ['Install',           ROOT + 'system/install.html',       'install'],
+      ['Principles',        ROOT + 'system/principles.html',    'principles'],
       ['Changelog',         ROOT + 'system/changelog.html',     'changelog', 'v0.5'],
-      ['Sitemap',           ROOT + 'sitemap.html',              'sitemap'],
     ]},
     { label: 'Foundations', items: [
+      ['Principles',        ROOT + 'system/principles.html',    'principles'],
       ['Colors',            ROOT + 'system/colors.html',        'colors'],
       ['Typography',        ROOT + 'system/typography.html',    'typography'],
       ['Spacing & layout',  ROOT + 'system/spacing.html',       'spacing'],
       ['Elevation',         ROOT + 'system/elevation.html',     'elevation'],
       ['Motion',            ROOT + 'system/motion.html',        'motion'],
       ['Iconography',       ROOT + 'system/iconography.html',   'iconography'],
-      ['Voice & writing',   ROOT + 'system/voice.html',         'voice'],
       ['Accessibility',     ROOT + 'system/accessibility.html', 'accessibility', 'New'],
+    ]},
+    { label: 'Content', items: [
+      ['Voice & tone',      ROOT + 'system/voice.html',         'voice'],
+      ['Writing guidelines',ROOT + 'system/content.html',       'content', 'New'],
+    ]},
+    { label: 'Tokens', items: [
+      ['Token reference',   ROOT + 'system/tokens.html',        'tokens', 'New'],
     ]},
     { label: 'Components', items: [
       ['Button',            ROOT + 'system/p-button.html',      'p-button'],
@@ -112,12 +127,23 @@
       ['Auth flow',         ROOT + 'system/x-auth.html',        'x-auth'],
       ['Command palette',   ROOT + 'system/x-command-palette.html', 'x-command-palette'],
     ]},
-    { label: 'Templates', items: [
+    { label: 'Shells', items: [
       ['All shells',        ROOT + 'system/shells.html',        'shells'],
-      ['All pages',         ROOT + 'system/pages.html',         'pages'],
     ]},
-    { label: 'Portals', items: [
+    { label: 'Page templates', items: [
+      ['All page templates',ROOT + 'system/pages.html',         'pages'],
+    ]},
+    { label: 'Guides', items: [
+      ['All guides',        ROOT + 'system/guides.html',        'guides', 'New'],
+      ['Compose a page',    ROOT + 'system/guide-compose-page.html',     'guide-compose-page'],
+      ['Compose a pattern', ROOT + 'system/guide-compose-pattern.html',  'guide-compose-pattern'],
+      ['New feature module',ROOT + 'system/guide-new-feature.html',      'guide-new-feature'],
+      ['Block vs. pattern', ROOT + 'system/guide-block-vs-pattern.html', 'guide-block-vs-pattern'],
+      ['Mobile adaptation', ROOT + 'system/guide-mobile-adaptation.html','guide-mobile-adaptation'],
+    ]},
+    { label: 'Solutions', items: [
       ['All portals',       ROOT + 'portals/index.html',        '__portals'],
+      ['All verticals',     ROOT + 'verticals/index.html',      '__verticals'],
       ['POS terminal',      ROOT + 'portals/pos/index.html',    '__'],
       ['Parent portal',     ROOT + 'portals/parent/index.html', '__'],
       ['Student portal',    ROOT + 'portals/student/index.html','__'],
@@ -125,11 +151,9 @@
       ['Staff portal',      ROOT + 'portals/staff/index.html',  '__'],
       ['Admin portal',      ROOT + 'portals/admin/index.html',  '__'],
     ]},
-    { label: 'Kits & demos', items: [
-      ['Dashboard',         ROOT + 'kits/overview.html',        '__'],
-      ['Settings',          ROOT + 'kits/settings.html',        '__'],
-      ['Sign-in',           ROOT + 'kits/signin.html',          '__'],
-      ['POS demo',          ROOT + 'portals/pos/demo.html',     '__'],
+    { label: 'Reference', items: [
+      ['Sitemap',           ROOT + 'sitemap.html',              'sitemap'],
+      ['GitHub',            'https://github.com/tate2301/huchu','__'],
     ]},
   ];
 
@@ -313,10 +337,39 @@
     return nav;
   }
 
+  // Which sidebar group should be highlighted for the current URL?
+  // A group is active if any of its items matches the current file, or if
+  // the page belongs to that section's catalog (p-*, b-*, x-*, guide-*, etc.).
+  function activeGroupLabel() {
+    // 1. Direct item-key match wins.
+    for (const group of SIDEBAR) {
+      for (const item of group.items) {
+        const key = item[2];
+        if (key && key !== '__' && key === CURRENT_FILE) return group.label;
+      }
+    }
+    // 2. Catalog/prefix matching for component-style pages.
+    const f = CURRENT_FILE;
+    if (/^p-/.test(f) || f === 'primitives') return 'Components';
+    if (/^b-/.test(f) || f === 'blocks')     return 'Blocks';
+    if (/^x-/.test(f) || f === 'patterns')   return 'Patterns';
+    if (/^pg-/.test(f) || f === 'pages')     return 'Page templates';
+    if (/^guide-/.test(f) || f === 'guides') return 'Guides';
+    if (f === 'shells')                       return 'Shells';
+    if (['colors','typography','spacing','elevation','motion','iconography','accessibility','principles','foundations'].includes(f)) return 'Foundations';
+    if (f === 'voice' || f === 'content')     return 'Content';
+    if (f === 'tokens')                       return 'Tokens';
+    if (['get-started','install','changelog'].includes(f)) return 'Get started';
+    if (/\/(portals|verticals)\//.test(PATH)) return 'Solutions';
+    if (f === 'sitemap')                      return 'Reference';
+    return null;
+  }
+
   function renderSidebar() {
     const aside = document.createElement('aside');
     aside.className = 'hx-sidebar';
     aside.setAttribute('aria-label', 'Site navigation');
+    const activeGroup = activeGroupLabel();
     aside.innerHTML = `
       <div class="hx-sidebar-head">
         <a class="hx-brand" href="${ROOT}index.html">
@@ -333,9 +386,9 @@
       </div>
       <div class="hx-sidebar-body">
         ${SIDEBAR.map(group => `
-          <h4>${group.label}</h4>
+          <h4${group.label === activeGroup ? ' class="active"' : ''}>${group.label}</h4>
           ${group.items.map(([label, href, key, tag]) => {
-            const isCur = key && key === CURRENT_FILE;
+            const isCur = key && key !== '__' && key === CURRENT_FILE;
             const tagHtml = tag
               ? `<span class="hx-side-tag">${tag}</span>`
               : '';
