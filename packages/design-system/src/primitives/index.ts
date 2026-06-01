@@ -3,4 +3,12 @@
 //
 // New primitives are added here. Keep the alphabetical order.
 
+export * from './Avatar';
+export * from './Badge';
 export * from './Button';
+export * from './Checkbox';
+export * from './Chip';
+export * from './Input';
+export * from './Select';
+export * from './Status';
+export * from './Switch';
