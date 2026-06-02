@@ -150,6 +150,8 @@
       ['Teacher portal',    ROOT + 'portals/teacher/index.html','__'],
       ['Staff portal',      ROOT + 'portals/staff/index.html',  '__'],
       ['Admin portal',      ROOT + 'portals/admin/index.html',  '__'],
+      ['Owner / Manager',   ROOT + 'portals/owner/index.html',  '__'],
+      ['Gold Mine Clerk',   ROOT + 'portals/gold/index.html',   '__'],
     ]},
     { label: 'Reference', items: [
       ['Sitemap',           ROOT + 'sitemap.html',              'sitemap'],
@@ -236,6 +238,22 @@
         ['billing',      'Billing'],
         ['integrations', 'Integrations'],
         ['demo',         'Full demo'],
+      ],
+    },
+    gold: {
+      label: 'Gold Mine Clerk', home: 'index.html',
+      crumbs: [['Home', ROOT + 'index.html'], ['Portals', ROOT + 'portals/index.html'], ['Gold Mine Clerk', null]],
+      screens: [
+        ['index',  'Hub'],
+        ['demo',   'Full demo'],
+      ],
+    },
+    owner: {
+      label: 'Owner / Manager', home: 'index.html',
+      crumbs: [['Home', ROOT + 'index.html'], ['Portals', ROOT + 'portals/index.html'], ['Owner / Manager', null]],
+      screens: [
+        ['index',  'Hub'],
+        ['demo',   'Executive app'],
       ],
     },
     dashboard: {
