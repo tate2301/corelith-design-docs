@@ -354,11 +354,25 @@
     return nav;
   }
 
+  // Resolve the active screen slug for a kit. For single-page kits the
+  // active state lives in `location.hash` (#/<slug>), not in the filename.
+  // For multi-page kits each screen has its own .html so we use the filename.
+  // The 'demo' slug stays active when the user is on the demo home (no hash).
+  function activeScreenFor(kit) {
+    if (kit.singlePage) {
+      const h = location.hash.replace(/^#\/?/, '');
+      if (h) return h;
+      if (CURRENT_FILE === 'demo') return 'demo';
+      return null;
+    }
+    return CURRENT_FILE;
+  }
+
   function renderKitNav() {
     const kitId = document.body.dataset.kitNav;
     if (!kitId || !KITS[kitId]) return null;
     const kit = KITS[kitId];
-    const current = CURRENT_FILE;
+    const current = activeScreenFor(kit);
 
     const nav = document.createElement('div');
     nav.className = 'hx-kit-nav';
@@ -499,6 +513,22 @@
     if (kitNav) mainNav.insertAdjacentElement('afterend', kitNav);
     document.body.appendChild(sidebar);
     document.body.appendChild(scrim);
+
+    // For single-page kits, sync the kit-nav active tab to the current hash
+    // every time the user navigates. The kit-nav re-renders so the .current
+    // class lands on the right tab without a page reload.
+    const kitId = document.body.dataset.kitNav;
+    if (kitId && KITS[kitId] && KITS[kitId].singlePage) {
+      window.addEventListener('hashchange', () => {
+        const old = document.querySelector('.hx-kit-nav');
+        if (!old) return;
+        const fresh = renderKitNav();
+        if (fresh) {
+          old.replaceWith(fresh);
+          if (window.Icons && window.Icons.render) window.Icons.render(fresh);
+        }
+      });
+    }
 
     // Compute + maintain nav heights as CSS vars
     const measure = () => setNavHeights(mainNav, kitNav);
