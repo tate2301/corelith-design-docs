@@ -26,34 +26,31 @@
   const CURRENT_FILE = (PATH.split('/').pop() || '').replace('.html', '');
 
   // -------- Single-source-of-truth link config ----------------------------
-  // Top-level main nav. Order mirrors the Polaris-inspired taxonomy.
+  // Top-level main nav. Four super-sections instead of ten flat links so the
+  // user always knows which "neighbourhood" they're in:
+  //   Design system · Components · Apps · Catalogs
   const SECTIONS = [
-    { label: 'Get started', href: ROOT + 'system/get-started.html',
-      match: /\/(get-started|install|changelog)\.html$/ },
-    { label: 'Foundations', href: ROOT + 'system/foundations.html',
-      match: /\/(foundations|colors|typography|spacing|elevation|motion|iconography|principles|accessibility)\.html$/ },
-    { label: 'Content',     href: ROOT + 'system/content.html',
-      match: /\/(content|voice)\.html$/ },
-    { label: 'Tokens',      href: ROOT + 'system/tokens.html',
-      match: /\/tokens\.html$/ },
-    { label: 'Components',  href: ROOT + 'system/primitives.html',
-      match: /\/(primitives|p-[a-z-]+)\.html$/ },
-    { label: 'Blocks',      href: ROOT + 'system/blocks.html',
-      match: /\/(blocks|b-[a-z-]+)\.html$/ },
-    { label: 'Patterns',    href: ROOT + 'system/patterns.html',
-      match: /\/(patterns|x-[a-z-]+)\.html$/ },
-    { label: 'Guides',      href: ROOT + 'system/guides.html',
-      match: /\/(guides|guide-[a-z-]+)\.html$/ },
-    { label: 'Kits',        href: ROOT + 'kits/overview.html',
-      match: /\/kits\// },
-    { label: 'Solutions',   href: ROOT + 'portals/index.html',
-      match: /\/(portals|verticals)\// },
+    { label: 'Design',     href: ROOT + 'system/foundations.html',
+      match: /\/(get-started|install|changelog|foundations|colors|typography|spacing|elevation|motion|iconography|principles|accessibility|content|voice|tokens)\.html$/ },
+    { label: 'Build',      href: ROOT + 'system/primitives.html',
+      match: /\/(primitives|p-[a-z-]+|blocks|b-[a-z-]+|patterns|x-[a-z-]+|shells|pages|guides|guide-[a-z-]+)\.html$/ },
+    { label: 'Apps',       href: ROOT + 'portals/index.html',
+      match: /\/portals\// },
+    { label: 'Catalogs',   href: ROOT + 'kits/overview.html',
+      match: /\/(kits|verticals)\// },
   ];
 
-  // Sidebar (full IA, single source of truth). Group order follows the
-  // Polaris-inspired taxonomy exactly:
-  //   Get started · Foundations · Content · Tokens · Components · Blocks ·
-  //   Patterns · Shells · Page templates · Guides · Solutions · Reference
+  // Sidebar (full IA, single source of truth). Reorganised into four
+  // intuitive super-sections so the drawer is scannable on phones:
+  //   Get started   – overview, install, principles, changelog
+  //   Design system – foundations, tokens, content, accessibility
+  //   Build with    – components, blocks, patterns, shells, templates, guides
+  //   Apps          – the 9 live portal demos (apps you can sign into)
+  //   Catalogs      – kits + verticals (UI catalogues, not apps)
+  //   Reference     – sitemap + repo
+  //
+  // Groups render as <details> in the drawer so users can collapse what they
+  // don't need. The active group auto-expands. See renderSidebar().
   const SIDEBAR = [
     { label: 'Get started', items: [
       ['Overview',          ROOT + 'index.html',                'index'],
@@ -62,8 +59,8 @@
       ['Principles',        ROOT + 'system/principles.html',    'principles'],
       ['Changelog',         ROOT + 'system/changelog.html',     'changelog', 'v0.5'],
     ]},
-    { label: 'Foundations', items: [
-      ['Principles',        ROOT + 'system/principles.html',    'principles'],
+    { label: 'Design system', items: [
+      ['Foundations',       ROOT + 'system/foundations.html',   'foundations'],
       ['Colors',            ROOT + 'system/colors.html',        'colors'],
       ['Typography',        ROOT + 'system/typography.html',    'typography'],
       ['Spacing & layout',  ROOT + 'system/spacing.html',       'spacing'],
@@ -71,13 +68,9 @@
       ['Motion',            ROOT + 'system/motion.html',        'motion'],
       ['Iconography',       ROOT + 'system/iconography.html',   'iconography'],
       ['Accessibility',     ROOT + 'system/accessibility.html', 'accessibility', 'New'],
-    ]},
-    { label: 'Content', items: [
+      ['Token reference',   ROOT + 'system/tokens.html',        'tokens'],
       ['Voice & tone',      ROOT + 'system/voice.html',         'voice'],
-      ['Writing guidelines',ROOT + 'system/content.html',       'content', 'New'],
-    ]},
-    { label: 'Tokens', items: [
-      ['Token reference',   ROOT + 'system/tokens.html',        'tokens', 'New'],
+      ['Writing guidelines',ROOT + 'system/content.html',       'content'],
     ]},
     { label: 'Components', items: [
       ['Button',            ROOT + 'system/p-button.html',      'p-button'],
@@ -128,11 +121,7 @@
       ['Modal & sheet',     ROOT + 'system/x-modal.html',       'x-modal'],
       ['Auth flow',         ROOT + 'system/x-auth.html',        'x-auth'],
       ['Command palette',   ROOT + 'system/x-command-palette.html', 'x-command-palette'],
-    ]},
-    { label: 'Shells', items: [
       ['All shells',        ROOT + 'system/shells.html',        'shells'],
-    ]},
-    { label: 'Page templates', items: [
       ['All page templates',ROOT + 'system/pages.html',         'pages'],
     ]},
     { label: 'Guides', items: [
@@ -143,17 +132,39 @@
       ['Block vs. pattern', ROOT + 'system/guide-block-vs-pattern.html', 'guide-block-vs-pattern'],
       ['Mobile adaptation', ROOT + 'system/guide-mobile-adaptation.html','guide-mobile-adaptation'],
     ]},
-    { label: 'Solutions', items: [
-      ['All portals',       ROOT + 'portals/index.html',        '__portals'],
-      ['All verticals',     ROOT + 'verticals/index.html',      '__verticals'],
-      ['POS terminal',      ROOT + 'portals/pos/index.html',    '__'],
-      ['Parent portal',     ROOT + 'portals/parent/index.html', '__'],
-      ['Student portal',    ROOT + 'portals/student/index.html','__'],
-      ['Teacher portal',    ROOT + 'portals/teacher/index.html','__'],
-      ['Staff portal',      ROOT + 'portals/staff/index.html',  '__'],
-      ['Admin portal',      ROOT + 'portals/admin/index.html',  '__'],
-      ['Owner / Manager',   ROOT + 'portals/owner/index.html',  '__'],
-      ['Gold Mine Clerk',   ROOT + 'portals/gold/index.html',   '__'],
+    // Apps = live, sign-in-able portal demos. One CTA per row: open the app.
+    // The portal index page is the "hub" — accessed via the All apps link.
+    { label: 'Apps', icon: 'grid', items: [
+      ['All apps',          ROOT + 'portals/index.html',        '__portals'],
+      ['POS terminal',      ROOT + 'portals/pos/demo.html',     '__', null, 'receipt'],
+      ['Parent portal',     ROOT + 'portals/parent/demo.html',  '__', null, 'user'],
+      ['Student portal',    ROOT + 'portals/student/demo.html', '__', null, 'book'],
+      ['Teacher portal',    ROOT + 'portals/teacher/demo.html', '__', null, 'edit'],
+      ['Staff portal',      ROOT + 'portals/staff/demo.html',   '__', null, 'user'],
+      ['Admin portal',      ROOT + 'portals/admin/demo.html',   '__', 'Dark', 'shield'],
+      ['Owner / Manager',   ROOT + 'portals/owner/demo.html',   '__', 'Dark', 'chart'],
+      ['Gold Mine Clerk',   ROOT + 'portals/gold/demo.html',    '__', null, 'gem'],
+      ['Scrap Yard Clerk',  ROOT + 'portals/scrap/demo.html',   '__', 'New', 'recycle'],
+    ]},
+    // Catalogs = product UI kits + vertical catalogues. NOT apps — they are
+    // libraries of pre-composed pages you can drop into your own product.
+    { label: 'Catalogs', icon: 'folder', items: [
+      ['All catalogs',      ROOT + 'kits/overview.html',        '__catalogs'],
+      ['Verticals',         ROOT + 'verticals/index.html',      '__verticals'],
+      ['Dashboard kit',     ROOT + 'kits/overview.html',        '__'],
+      ['Gold mining',       ROOT + 'verticals/gold/index.html', '__'],
+      ['Scrap metal',       ROOT + 'verticals/scrap/index.html','__'],
+      ['Retail',            ROOT + 'verticals/retail/index.html','__'],
+      ['Schools',           ROOT + 'verticals/schools/index.html','__'],
+      ['Auto',              ROOT + 'verticals/auto/index.html', '__'],
+      ['Warehouses',        ROOT + 'verticals/warehouses/index.html','__'],
+      ['Accounting',        ROOT + 'verticals/accounting/index.html','__'],
+      ['HR',                ROOT + 'verticals/hr/index.html',   '__'],
+      ['Maintenance',       ROOT + 'verticals/maintenance/index.html','__'],
+      ['CCTV',              ROOT + 'verticals/cctv/index.html', '__'],
+      ['Compliance',        ROOT + 'verticals/compliance/index.html','__'],
+      ['Multisite',         ROOT + 'verticals/multisite/index.html','__'],
+      ['Thrift',            ROOT + 'verticals/thrift/index.html','__'],
     ]},
     { label: 'Reference', items: [
       ['Sitemap',           ROOT + 'sitemap.html',              'sitemap'],
@@ -371,6 +382,10 @@
   function renderKitNav() {
     const kitId = document.body.dataset.kitNav;
     if (!kitId || !KITS[kitId]) return null;
+    // Live demo apps opt out — their own bottom-tab nav is the primary nav.
+    // The huchu kit-nav is only useful on multi-page catalogs/kits where it
+    // helps jump between sibling pages. Live SPAs already have that built in.
+    if (document.body.classList.contains('hx-no-kit-nav')) return null;
     const kit = KITS[kitId];
     const current = activeScreenFor(kit);
 
@@ -426,15 +441,12 @@
     const f = CURRENT_FILE;
     if (/^p-/.test(f) || f === 'primitives') return 'Components';
     if (/^b-/.test(f) || f === 'blocks')     return 'Blocks';
-    if (/^x-/.test(f) || f === 'patterns')   return 'Patterns';
-    if (/^pg-/.test(f) || f === 'pages')     return 'Page templates';
+    if (/^x-/.test(f) || f === 'patterns' || /^pg-/.test(f) || f === 'pages' || f === 'shells') return 'Patterns';
     if (/^guide-/.test(f) || f === 'guides') return 'Guides';
-    if (f === 'shells')                       return 'Shells';
-    if (['colors','typography','spacing','elevation','motion','iconography','accessibility','principles','foundations'].includes(f)) return 'Foundations';
-    if (f === 'voice' || f === 'content')     return 'Content';
-    if (f === 'tokens')                       return 'Tokens';
+    if (['colors','typography','spacing','elevation','motion','iconography','accessibility','principles','foundations','voice','content','tokens'].includes(f)) return 'Design system';
     if (['get-started','install','changelog'].includes(f)) return 'Get started';
-    if (/\/(portals|verticals)\//.test(PATH)) return 'Solutions';
+    if (/\/portals\//.test(PATH))             return 'Apps';
+    if (/\/(kits|verticals)\//.test(PATH))    return 'Catalogs';
     if (f === 'sitemap')                      return 'Reference';
     return null;
   }
@@ -459,16 +471,26 @@
         </button>
       </div>
       <div class="hx-sidebar-body">
-        ${SIDEBAR.map(group => `
-          <h4${group.label === activeGroup ? ' class="active"' : ''}>${group.label}</h4>
-          ${group.items.map(([label, href, key, tag]) => {
-            const isCur = key && key !== '__' && key === CURRENT_FILE;
-            const tagHtml = tag
-              ? `<span class="hx-side-tag">${tag}</span>`
-              : '';
-            return `<a href="${href}" class="${isCur ? 'current' : ''}">${label}${tagHtml}</a>`;
-          }).join('')}
-        `).join('')}
+        ${SIDEBAR.map(group => {
+          const isActive = group.label === activeGroup;
+          const openAttr = isActive ? ' open' : '';
+          return `
+          <details class="hx-side-group${isActive ? ' active' : ''}"${openAttr}>
+            <summary>
+              <span class="lb">${group.label}</span>
+              <span class="hx-side-chev" data-icon="chevron" data-icon-size="14"></span>
+            </summary>
+            <div class="hx-side-items">
+              ${group.items.map(item => {
+                const [label, href, key, tag, icon] = item;
+                const isCur = key && key !== '__' && key === CURRENT_FILE;
+                const iconHtml = icon ? `<span class="hx-side-ic" data-icon="${icon}" data-icon-size="14"></span>` : '';
+                const tagHtml = tag ? `<span class="hx-side-tag">${tag}</span>` : '';
+                return `<a href="${href}" class="${isCur ? 'current' : ''}">${iconHtml}<span class="hx-side-lb">${label}</span>${tagHtml}</a>`;
+              }).join('')}
+            </div>
+          </details>`;
+        }).join('')}
       </div>
       <div class="hx-sidebar-foot">
         © 2026 Huchu · <a href="${ROOT}system/changelog.html">Changelog</a> · <a href="${ROOT}system/install.html">Install</a>

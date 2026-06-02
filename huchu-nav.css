@@ -266,29 +266,60 @@ body.hx-nav-mounted {
 .hx-sidebar-body::-webkit-scrollbar { width: 8px; }
 .hx-sidebar-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
 
-.hx-sidebar h4 {
-  font: 500 10.5px/1 var(--font-sans);
-  letter-spacing: 0.1em;
+/* Collapsible group (uses <details>/<summary>) — chevron rotates when open. */
+.hx-side-group {
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 4px 0;
+}
+.hx-side-group:last-of-type { border-bottom: 0; }
+.hx-side-group > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 6px;
+  font: 600 12px/1 var(--font-sans);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-subtle);
-  margin: 18px 8px 6px;
+  user-select: none;
+  transition: color 120ms ease, background-color 120ms ease;
 }
-.hx-sidebar h4:first-child { margin-top: 0; }
-.hx-sidebar h4.active { color: var(--brand-strong); }
+.hx-side-group > summary::-webkit-details-marker { display: none; }
+.hx-side-group > summary:hover { color: var(--text-strong); background: var(--surface-muted); }
+.hx-side-group.active > summary { color: var(--brand-strong); }
+.hx-side-group > summary .lb { flex: 1; }
+.hx-side-group > summary .hx-side-chev {
+  color: var(--text-subtle);
+  transition: transform 180ms cubic-bezier(0.2, 0, 0.1, 1);
+}
+.hx-side-group[open] > summary .hx-side-chev { transform: rotate(180deg); }
+.hx-side-items { padding: 4px 0 8px; }
 
 .hx-sidebar a {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 10px;
+  gap: 10px;
+  padding: 7px 10px 7px 14px;
   border-radius: 6px;
   font: 500 13px/1.4 var(--font-sans);
   color: var(--text-body);
   text-decoration: none;
   transition: background-color 120ms ease;
 }
+.hx-sidebar a .hx-side-ic {
+  width: 18px; height: 18px;
+  display: inline-grid; place-items: center;
+  color: var(--text-subtle);
+  flex: none;
+}
+.hx-sidebar a .hx-side-lb { flex: 1; min-width: 0; }
 .hx-sidebar a:hover { background: var(--surface-muted); color: var(--text-strong); }
+.hx-sidebar a:hover .hx-side-ic { color: var(--text-strong); }
 .hx-sidebar a.current { background: var(--brand-soft); color: var(--brand-strong); font-weight: 500; }
+.hx-sidebar a.current .hx-side-ic { color: var(--brand-strong); }
 
 .hx-side-tag {
   margin-left: auto;
@@ -391,10 +422,10 @@ body.hx-nav-mounted {
     font-weight: 600;
   }
 
-  /* Reserve room at the bottom of every portal page so the fixed nav
-     never sits over the last bit of content (Charge button, save bar,
-     etc.). 56px is the nav strip; env() handles the iOS home indicator. */
-  body[data-kit-nav] {
+  /* Reserve room at the bottom of every kit/catalog page so the fixed nav
+     never sits over the last bit of content. Live demo apps opt out via
+     .hx-no-kit-nav — they own their bottom-tab pattern. */
+  body[data-kit-nav]:not(.hx-no-kit-nav) {
     padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
   }
   body[data-kit-nav].is-fullscreen { padding-bottom: 0; }
@@ -414,6 +445,26 @@ body.is-fullscreen .hx-sidebar-scrim {
   display: none !important;
 }
 body.is-fullscreen.hx-nav-mounted { padding-top: 0 !important; padding-left: 0 !important; }
+
+/* Live demo apps: shrink the main nav to a hamburger + brand only. The app's
+   own bottom tabs are the primary nav; the hamburger opens the expanded
+   drawer. Keeps the chrome out of the way on phones.
+   The !important on padding-top is intentional — demo files set inline body
+   padding for the device-frame stage; without it their content slips under
+   the fixed main nav. */
+body.hx-no-kit-nav.hx-nav-mounted { padding-top: var(--hx-main-nav-h, 56px) !important; }
+body.hx-no-kit-nav .hx-main-nav-c { display: none !important; }
+@media (max-width: 720px) {
+  body.hx-no-kit-nav .hx-search,
+  body.hx-no-kit-nav .hx-theme-toggle { display: none !important; }
+  /* Phones: the inline body padding becomes 0 anyway in most demos, so the
+     device-frame still spans 100vw. We just need top reservation to avoid
+     stacking under the nav. */
+  body.hx-no-kit-nav.hx-nav-mounted .device-desktop {
+    height: calc(100vh - var(--hx-main-nav-h, 56px)) !important;
+    height: calc(100dvh - var(--hx-main-nav-h, 56px)) !important;
+  }
+}
 
 /* ─── Legacy hide rules: keep old chrome hidden on pages that
    still have inline markup we couldn't strip cleanly. The script
