@@ -244,6 +244,9 @@
     },
     gold: {
       label: 'Gold Mine Clerk', home: 'index.html',
+      // Single-page kit: every screen below is a hash route inside demo.html;
+      // the `demo` entry opens the demo home (no hash).
+      singlePage: 'demo.html',
       crumbs: [['Home', ROOT + 'index.html'], ['Portals', ROOT + 'portals/index.html'], ['Gold Mine Clerk', null]],
       screens: [
         ['day-open',     'Day open'],
@@ -259,6 +262,7 @@
     },
     scrap: {
       label: 'Scrap Yard Clerk', home: 'index.html',
+      singlePage: 'demo.html',
       crumbs: [['Home', ROOT + 'index.html'], ['Portals', ROOT + 'portals/index.html'], ['Scrap Yard Clerk', null]],
       screens: [
         ['day-open',     'Day open'],
@@ -274,6 +278,7 @@
     },
     owner: {
       label: 'Owner / Manager', home: 'index.html',
+      singlePage: 'demo.html',
       crumbs: [['Home', ROOT + 'index.html'], ['Portals', ROOT + 'portals/index.html'], ['Owner / Manager', null]],
       screens: [
         ['today',        'Today'],
@@ -372,7 +377,12 @@
       <nav class="hx-kit-nav-c" aria-label="Kit screens">
         ${kit.screens.map(([slug, label]) => {
           const cur = slug === current ? ' current' : '';
-          return `<a href="${slug}.html" class="hx-kit-tab${cur}">${label}</a>`;
+          // Single-page kits route everything through demo.html#/<slug>;
+          // the demo entry itself drops the hash to land on the demo home.
+          const href = kit.singlePage
+            ? (slug === 'demo' ? kit.singlePage : `${kit.singlePage}#/${slug}`)
+            : `${slug}.html`;
+          return `<a href="${href}" class="hx-kit-tab${cur}">${label}</a>`;
         }).join('')}
       </nav>
       <div class="hx-kit-nav-r">

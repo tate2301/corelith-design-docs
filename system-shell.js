@@ -174,16 +174,24 @@
       }
       // JSX tag region
       if (code[i] === '<' && /[a-zA-Z\/>]/.test(code[i + 1] || '')) {
-        // Find matching '>' (ignoring those inside quoted attribute values)
+        // Find matching '>'. Must ignore '>' inside quoted attribute values,
+        // and inside `{...}` JSX-prop expressions (e.g. onClick={() => x}),
+        // so the `>` of an arrow `=>` doesn't close the tag prematurely.
         let j = i + 1;
         let inQ = null;
+        let braceDepth = 0;
         while (j < N) {
           const ch = code[j];
           if (inQ) {
+            if (ch === '\\') { j += 2; continue; }
             if (ch === inQ) inQ = null;
           } else if (ch === '"' || ch === "'") {
             inQ = ch;
-          } else if (ch === '>') {
+          } else if (ch === '{') {
+            braceDepth++;
+          } else if (ch === '}') {
+            if (braceDepth > 0) braceDepth--;
+          } else if (ch === '>' && braceDepth === 0) {
             break;
           }
           j++;
