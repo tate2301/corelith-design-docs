@@ -173,16 +173,6 @@
   .meta-strip .vl { font: 600 13px/1.2 var(--font-sans); color: var(--text-strong); }
   .meta-strip .vl.mono { font-family: var(--font-mono); }
 
-  .big-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-  .big { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
-  .big .lb { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); }
-  .big .vl { font: 700 30px/1 var(--font-sans); font-variant-numeric: tabular-nums; color: var(--text-strong); letter-spacing: -0.02em; }
-  .big .sb { font: 12.5px/1.4 var(--font-sans); color: var(--text-muted); }
-  .big.net { background: linear-gradient(135deg, var(--brand-strong), var(--brand)); border-color: transparent; color: #fff; }
-  .big.net .lb, .big.net .vl, .big.net .sb { color: #fff; }
-  .big.net .lb { opacity: 0.85; }
-  .big.net .sb { opacity: 0.9; }
-
   .ytd-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; padding: 16px 18px; }
   .ytd-cell { display: flex; flex-direction: column; gap: 4px; }
   .ytd-cell .lb { font: 500 10.5px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); }
@@ -253,13 +243,6 @@
   .dir-search .srch input { width: 100%; height: 38px; padding: 0 12px 0 36px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); font: 14px var(--font-sans); color: var(--text-strong); box-sizing: border-box; }
   .dir-search .srch input:focus { outline: 0; border-color: var(--brand); box-shadow: 0 0 0 3px var(--focus-ring-soft); }
   .dir-search .srch [data-icon] { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-subtle); }
-  .chip-bar { display: flex; gap: 6px; flex-wrap: wrap; }
-  .chipd { padding: 5px 12px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12.5px/1 var(--font-sans); color: var(--text-strong); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-  .chipd:hover { background: var(--surface-muted); }
-  .chipd.on { background: var(--brand); color: #fff; border-color: var(--brand); }
-  .chipd .ct { padding: 1px 6px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-muted); font: 500 10.5px/1 var(--font-mono); }
-  .chipd.on .ct { background: rgba(255,255,255,0.18); color: #fff; }
-
   .dir-deck { display: grid; grid-template-columns: 1fr 340px; gap: 16px; }
   .dir-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-content: start; }
   .dcard { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; cursor: pointer; transition: all 120ms; display: flex; flex-direction: column; gap: 10px; }
@@ -320,6 +303,10 @@
 
   /* === Modals === */
   .modal-scrim { position: fixed; inset: 0; background: rgba(22,24,29,0.6); z-index: 100; display: grid; place-items: center; padding: 20px; animation: scrimIn 160ms ease; }
+  /* Allow the new .x-bottom-sheet block to live inside the legacy
+     .modal-scrim host without staying off-screen from its default
+     translateY(100%) (which only resets when paired with .x-bs-scrim.open). */
+  .modal-scrim .x-bottom-sheet { transform: none; animation: modalIn 220ms cubic-bezier(0.2, 0, 0.1, 1); }
   @keyframes scrimIn { from { opacity: 0; } to { opacity: 1; } }
   .modal { background: var(--surface); border-radius: 14px; padding: 22px; width: 100%; max-width: 480px; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.4); animation: modalIn 220ms cubic-bezier(0.2, 0, 0.1, 1); max-height: 90vh; overflow-y: auto; }
   .modal.lg { max-width: 600px; }
@@ -343,8 +330,9 @@
   .toast.out { animation: toastOut 240ms ease forwards; }
   @keyframes toastOut { to { opacity: 0; transform: translateX(20px); } }
 
-  /* === Mobile bottom tabs === */
-  .st-tabs { display: none; }
+  /* === Mobile bottom tabs ===
+     Uses the design-system .b-bottom-tabs block. Hidden by default,
+     shown on phone via the @media (max-width: 720px) rule below. */
 
   /* === Tablet (narrower side rail) === */
   @media (max-width: 1000px) {
@@ -357,7 +345,6 @@
     .form-grid { grid-template-columns: 1fr 1fr; }
     .grid-2, .grid-12 { grid-template-columns: 1fr; }
     .stat-grid, .bal-grid { grid-template-columns: 1fr 1fr; }
-    .big-grid { grid-template-columns: 1fr; }
     .ytd-grid { grid-template-columns: 1fr 1fr; }
     .inbox-grid { grid-template-columns: 1fr; }
     .dir-deck { grid-template-columns: 1fr; }
@@ -387,7 +374,6 @@
     .st-top .bar-btn { padding: 7px 8px; }
     .st-body { padding: 14px 14px 18px; gap: 14px; }
     .stat-grid, .bal-grid { grid-template-columns: 1fr 1fr; }
-    .big-grid { grid-template-columns: 1fr; }
     .grid-2, .grid-12, .clock-deck, .dir-deck, .prof-grid { grid-template-columns: 1fr; }
     .form-grid { grid-template-columns: 1fr; }
     .field.half, .field.full { grid-column: auto; }
@@ -397,30 +383,16 @@
 
     .modal-scrim { padding: 0; align-items: flex-end; }
     .modal { max-width: 100%; border-bottom-left-radius: 0; border-bottom-right-radius: 0; animation: sheetIn 260ms cubic-bezier(0.2, 0, 0.1, 1); }
+    /* Slide the .x-bottom-sheet up like the legacy mobile modal. */
+    .modal-scrim .x-bottom-sheet { animation: sheetIn 260ms cubic-bezier(0.2, 0, 0.1, 1); }
     @keyframes sheetIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
     .toast-host { top: 60px; right: 12px; left: 12px; }
 
-    /* Mobile bottom tab nav */
-    .st-tabs {
-      display: flex; background: var(--surface);
-      border-top: 1px solid var(--border);
-      padding: 0 4px env(safe-area-inset-bottom, 4px);
-    }
-    .st-tabs button {
-      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 3px; padding: 6px 2px;
-      color: var(--text-subtle); background: transparent; cursor: pointer;
-      font: 500 10px/1 var(--font-sans); border: 0; position: relative;
-    }
-    .st-tabs button .ic { width: 22px; height: 22px; display: grid; place-items: center; }
-    .st-tabs button.active { color: var(--brand); }
-    .st-tabs button .badge {
-      position: absolute; top: 4px; right: 28%;
-      min-width: 16px; height: 16px; padding: 0 4px;
-      background: var(--brand); color: #fff;
-      border-radius: 9999px;
-      font: 600 10px/16px var(--font-mono); text-align: center;
-    }
+    /* Mobile bottom tab nav — pin .b-bottom-tabs into the .st-main flex
+       column instead of letting it escape via position: fixed. The flex
+       chain (.st-main → .st-body flex:1 → .b-bottom-tabs auto) is what
+       keeps the body scrollable above the bar inside the device frame. */
+    .b-bottom-tabs { position: static; z-index: auto; box-shadow: none; }
   }
 
   /* ====== Sign-in gate ====== */
@@ -1143,19 +1115,18 @@ function wireTop() {
 
 function renderMobileTabs() {
   return `
-    <nav class="st-tabs">
+    <nav class="b-bottom-tabs" aria-label="Primary">
       ${MOBILE_TABS.map(t => `
-        <button class="${state.route === t.route ? 'active' : ''}" data-go="${t.route}">
-          <span class="ic" data-icon="${t.icon}" data-icon-size="20"></span>
-          <span>${t.label}</span>
-          ${t.route === 'time' && pendingCount() > 0 && state.route !== 'time' ? '' : ''}
+        <button type="button" class="${state.route === t.route ? 'active' : ''}" data-go="${t.route}">
+          <span class="b-bt-ic" data-icon="${t.icon}" data-icon-size="20"></span>
+          ${t.label}
         </button>
       `).join('')}
     </nav>
   `;
 }
 function wireMobileTabs() {
-  $$('.st-tabs [data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+  $$('.b-bottom-tabs [data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
 }
 
 function renderRoute() {
@@ -1601,26 +1572,26 @@ function renderLeave() {
         <div class="sp"></div>
         <span class="pill muted">Last 12 months</span>
       </div>
-      <table class="tbl">
-        <thead>
-          <tr><th style="width:28%">Type &amp; dates</th><th>Days</th><th>Sent</th><th>Goes to</th><th>Status</th><th></th></tr>
-        </thead>
-        <tbody>
-          ${state.leaveRequests.map(r => `
-            <tr class="clickable" data-leave="${r.id}">
-              <td>
-                <div class="nm">${escapeHtml(r.type)}</div>
-                <div class="sb">${fmtRange(r.from, r.to)}</div>
-              </td>
-              <td class="num">${r.days.toFixed(1)}</td>
-              <td class="num">${escapeHtml(r.submitted)}</td>
-              <td>${escapeHtml(r.approver)}</td>
-              <td><span class="pill ${r.status} dot">${statusLabel(r.status)}</span></td>
-              <td style="text-align:right;"><a href="#" data-leave-view="${r.id}" style="font:500 12px/1 var(--font-sans); color: var(--brand-strong); text-decoration:none;">${r.status === 'pending' ? 'Open' : 'View'} →</a></td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
+      <div style="padding: 12px 14px;">
+        ${state.leaveRequests.map(r => `
+          <button class="b-row-card" type="button" data-leave="${r.id}" aria-label="${escapeHtml(r.type)} · ${escapeHtml(fmtRange(r.from, r.to))} · ${escapeHtml(statusLabel(r.status))}">
+            <div class="b-rc-top">
+              <div class="b-rc-info">
+                <div class="b-rc-nm">${escapeHtml(r.type)}</div>
+                <div class="b-rc-sb">${fmtRange(r.from, r.to)} · sent ${escapeHtml(r.submitted)}</div>
+              </div>
+              <div style="text-align: right;">
+                <div class="b-rc-val">${r.days.toFixed(1)} <span style="font: 500 12px/1 var(--font-sans); color: var(--text-muted);">days</span></div>
+                <div class="b-rc-delta"><span class="pill ${r.status} dot">${statusLabel(r.status)}</span></div>
+              </div>
+            </div>
+            <div class="b-rc-meta">
+              <div><div class="b-rc-m-l">Goes to</div><div class="b-rc-m-v">${escapeHtml(r.approver)}</div></div>
+              <div><div class="b-rc-m-l">Ref</div><div class="b-rc-m-v">${escapeHtml(r.id)}</div></div>
+            </div>
+          </button>
+        `).join('')}
+      </div>
     </div>
   `;
 }
@@ -1645,11 +1616,7 @@ function workingDays(from, to) {
 }
 
 function wireLeave() {
-  $$('[data-leave]').forEach(r => r.addEventListener('click', (e) => {
-    if (e.target.dataset.leaveView !== undefined) { e.preventDefault(); openLeaveDetailModal(r.dataset.leave); return; }
-    openLeaveDetailModal(r.dataset.leave);
-  }));
-  $$('[data-leave-view]').forEach(a => a.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openLeaveDetailModal(a.dataset.leaveView); }));
+  $$('[data-leave]').forEach(r => r.addEventListener('click', () => openLeaveDetailModal(r.dataset.leave)));
 }
 
 function openRequestLeaveModal() {
@@ -1661,38 +1628,43 @@ function openRequestLeaveModal() {
   function paint() {
     const days = workingDays(from, to);
     openModal(`
-      <div class="modal lg" onclick="event.stopPropagation()">
-        <h3>Request leave</h3>
-        <p class="sub">Ask for time off. Your manager will see this and can say yes, no, or ask a question.</p>
-        <div class="form-grid">
-          <div class="field half"><label>Type of leave</label>
-            <select id="lr-type">${['Annual','Sick','Compassionate','Study'].map(t => `<option ${t===type?'selected':''}>${t}</option>`).join('')}</select>
+      <div class="x-bottom-sheet" role="dialog" aria-modal="true" aria-labelledby="lr-title" onclick="event.stopPropagation()">
+        <div class="x-bs-grab"></div>
+        <div class="x-bs-head">
+          <h3 id="lr-title">Request leave</h3>
+          <button class="x-bs-close" type="button" aria-label="Close" data-cancel><span data-icon="x" data-icon-size="16"></span></button>
+        </div>
+        <div class="x-bs-body">
+          <p class="sub" style="font: 13px/1.4 var(--font-sans); color: var(--text-muted); margin: 0 0 14px;">Ask for time off. Your manager will see this and can say yes, no, or ask a question.</p>
+          <div class="form-grid">
+            <div class="field half"><label>Type of leave</label>
+              <select id="lr-type">${['Annual','Sick','Compassionate','Study'].map(t => `<option ${t===type?'selected':''}>${t}</option>`).join('')}</select>
+            </div>
+            <div class="field half"><label>Who will approve this</label>
+              <select id="lr-mgr">
+                <option ${manager.startsWith('Tendai')?'selected':''}>Tendai Moyo · Operations</option>
+                <option ${manager.startsWith('Rumbidzai')?'selected':''}>Rumbidzai Chivasa · HR</option>
+                <option ${manager.startsWith('Brighton')?'selected':''}>Brighton Sibanda · Regional</option>
+              </select>
+            </div>
+            <div class="field half"><label>From</label><input type="date" id="lr-from" value="${from}" /></div>
+            <div class="field half"><label>To</label><input type="date" id="lr-to" value="${to}" /></div>
+            <div class="field full"><label>Reason (for your manager)</label>
+              <textarea id="lr-notes" placeholder="A short reason makes it easier for your manager to say yes.">${escapeHtml(notes)}</textarea>
+            </div>
           </div>
-          <div class="field half"><label>Who will approve this</label>
-            <select id="lr-mgr">
-              <option ${manager.startsWith('Tendai')?'selected':''}>Tendai Moyo · Operations</option>
-              <option ${manager.startsWith('Rumbidzai')?'selected':''}>Rumbidzai Chivasa · HR</option>
-              <option ${manager.startsWith('Brighton')?'selected':''}>Brighton Sibanda · Regional</option>
-            </select>
-          </div>
-          <div class="field half"><label>From</label><input type="date" id="lr-from" value="${from}" /></div>
-          <div class="field half"><label>To</label><input type="date" id="lr-to" value="${to}" /></div>
-          <div class="field full"><label>Reason (for your manager)</label>
-            <textarea id="lr-notes" placeholder="A short reason makes it easier for your manager to say yes.">${escapeHtml(notes)}</textarea>
+          <div style="margin-top:14px; padding: 10px 14px; background: var(--brand-soft); border-radius: 8px; font: 13px/1.4 var(--font-sans); color: var(--brand-strong);">
+            <span data-icon="info" data-icon-size="13"></span>
+            You're asking for <b>${days} working day${days===1?'':'s'}</b>${days>0 ? ' · you\'ll have ' + Math.max(0, leaveBalance().annual - days) + ' annual days left after this' : ''}
           </div>
         </div>
-        <div style="margin-top:14px; padding: 10px 14px; background: var(--brand-soft); border-radius: 8px; font: 13px/1.4 var(--font-sans); color: var(--brand-strong);">
-          <span data-icon="info" data-icon-size="13"></span>
-          You're asking for <b>${days} working day${days===1?'':'s'}</b>${days>0 ? ' · you\'ll have ' + Math.max(0, leaveBalance().annual - days) + ' annual days left after this' : ''}
-        </div>
-        <div class="acts">
-          <button class="btn btn-secondary" data-cancel>Cancel</button>
-          <button class="btn btn-ghost" data-draft>Save for later</button>
-          <button class="btn btn-primary ok" data-ok ${days>0?'':'disabled'}><span data-icon="check" data-icon-size="13"></span> Send request</button>
+        <div class="x-bs-foot">
+          <button class="alt" type="button" data-draft>Save for later</button>
+          <button class="primary" type="button" data-ok ${days>0?'':'disabled'}><span data-icon="check" data-icon-size="13"></span> Send request</button>
         </div>
       </div>
     `);
-    const m = $('.modal');
+    const m = $('.x-bottom-sheet');
     const bind = (id, fn) => { const el = $('#'+id, m); el && el.addEventListener('input', fn); el && el.addEventListener('change', fn); };
     bind('lr-type', e => { type = e.target.value; });
     bind('lr-mgr', e => { manager = e.target.value; });
@@ -1896,21 +1868,28 @@ function renderPayslip() {
       <div style="margin-left: auto;"><span class="lb">Status</span><span class="vl"><span class="pill ${p.status === 'Paid' ? 'success' : 'brand'} dot">${escapeHtml(p.status)}</span></span></div>
     </div>
 
-    <div class="big-grid">
-      <div class="big">
-        <span class="lb">Total before deductions</span>
-        <span class="vl">${money(gross)}</span>
-        <span class="sb">Basic pay + housing + transport + bonus</span>
+    <div class="b-stat-hero">
+      <div class="b-sh-lead">
+        <div class="b-sh-l">Take-home pay</div>
+        <div class="b-sh-v">${money(net)}</div>
+        <div class="b-sh-d">${p.status === 'Paid' ? 'Paid' : 'Pays'} ${escapeHtml(p.payDate)} into ${escapeHtml(ME.bank.split(' · ')[0])} ${escapeHtml(ME.bank.split(' · ')[1])}</div>
       </div>
-      <div class="big">
-        <span class="lb">Total deductions</span>
-        <span class="vl">${money(totDed)}</span>
-        <span class="sb">PAYE, NSSA, AIDS levy, NEC, pension, PSMAS</span>
-      </div>
-      <div class="big net">
-        <span class="lb">Take-home pay</span>
-        <span class="vl">${money(net)}</span>
-        <span class="sb">${p.status === 'Paid' ? 'Paid' : 'Pays'} ${escapeHtml(p.payDate)} into ${escapeHtml(ME.bank.split(' · ')[0])} ${escapeHtml(ME.bank.split(' · ')[1])}</span>
+      <div class="b-sh-row">
+        <div class="b-sh-s">
+          <div class="b-sh-l">Before deductions</div>
+          <div class="b-sh-v">${money(gross)}</div>
+          <div class="b-sh-sb">Basic + housing + transport + bonus</div>
+        </div>
+        <div class="b-sh-s">
+          <div class="b-sh-l">Deductions</div>
+          <div class="b-sh-v">${money(totDed)}</div>
+          <div class="b-sh-sb">PAYE, NSSA, AIDS levy, NEC, pension, PSMAS</div>
+        </div>
+        <div class="b-sh-s">
+          <div class="b-sh-l">Pay date</div>
+          <div class="b-sh-v">${escapeHtml(p.payDate.split(' ').slice(0,2).join(' '))}</div>
+          <div class="b-sh-sb">${escapeHtml(p.status)} · ${escapeHtml(p.period)}</div>
+        </div>
       </div>
     </div>
 
@@ -2148,8 +2127,8 @@ function renderDirectory() {
       <button class="btn btn-secondary" data-action="dir-export"><span data-icon="download" data-icon-size="13"></span> Export</button>
     </div>
 
-    <div class="chip-bar">
-      ${DIR_FILTERS.map(f => `<button class="chipd ${state.dirFilter === f.id ? 'on' : ''}" data-filter="${f.id}">${f.label} <span class="ct">${f.count()}</span></button>`).join('')}
+    <div class="b-filter-chips" role="radiogroup" aria-label="Directory filter" style="padding: 0;">
+      ${DIR_FILTERS.map(f => `<button type="button" class="b-fc ${state.dirFilter === f.id ? 'on' : ''}" data-filter="${f.id}" aria-pressed="${state.dirFilter === f.id ? 'true' : 'false'}">${f.label} <span class="b-fc-ct">${f.count()}</span></button>`).join('')}
     </div>
 
     <div class="dir-deck">
