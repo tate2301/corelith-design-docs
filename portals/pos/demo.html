@@ -159,16 +159,8 @@
   .sale .cat-bar .scan { width: 36px; height: 36px; border-radius: 8px; background: var(--surface-muted); color: var(--text-strong); display: grid; place-items: center; border: 1px solid var(--border); cursor: pointer; }
   .sale .cat-bar .scan:hover { background: var(--surface-sunken); }
 
-  .sale .chips { display: flex; gap: 6px; padding: 12px 18px; background: var(--surface); border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
-  .sale .chips::-webkit-scrollbar { display: none; }
-  .sale .chip {
-    padding: 6px 12px; border-radius: 9999px;
-    background: var(--surface); border: 1px solid var(--border);
-    font: 500 12.5px/1 var(--font-sans); color: var(--text-strong);
-    white-space: nowrap; cursor: pointer; transition: all 120ms;
-  }
-  .sale .chip:hover { background: var(--surface-muted); }
-  .sale .chip.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+  /* Sale uses .b-filter-chips — sit it on the cat-bar surface, no extra padding-top */
+  .sale .b-filter-chips { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 18px; }
 
   .sale .grid {
     flex: 1; overflow-y: auto;
@@ -400,10 +392,8 @@
   .refund-pane .rln .nm { font: 500 13px/1.3 var(--font-sans); color: var(--text-strong); }
   .refund-pane .rln .sb { font: 11px/1.3 var(--font-mono); color: var(--text-muted); margin-top: 2px; }
   .refund-pane .rln .v { font: 500 13px/1 var(--font-mono); color: var(--text-strong); }
-  .refund-pane .rsn-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 14px; }
-  .refund-pane .rsn-chips button { padding: 6px 12px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12.5px/1 var(--font-sans); color: var(--text-strong); cursor: pointer; }
-  .refund-pane .rsn-chips button:hover { background: var(--surface-muted); }
-  .refund-pane .rsn-chips button.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+  /* Reason chips use .b-filter-chips — flush so they sit cleanly in the pane */
+  .refund-pane .b-filter-chips { padding: 4px 0 12px; flex-wrap: wrap; }
   .refund-pane .total-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-top: 1px dashed var(--border); margin-top: 8px; }
   .refund-pane .total-bar .lbl { font: 500 12px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
   .refund-pane .total-bar .v { font: 700 20px/1 var(--font-mono); color: var(--tone-danger); font-variant-numeric: tabular-nums; }
@@ -538,9 +528,6 @@
     cursor: pointer; border: 0; width: fit-content;
   }
 
-  /* === Mobile bottom tab bar (shown <=720px) === */
-  .pd-tabs { display: none; }
-
   /* === Mobile cart sheet === */
   .cart-sheet-scrim {
     display: none;
@@ -571,11 +558,13 @@
   @media (max-width: 720px) {
     .pd-app {
       grid-template-columns: 1fr;
-      grid-template-rows: 44px 1fr 60px;
-      grid-template-areas: "bar" "main" "tabs";
+      grid-template-rows: 44px 1fr;
+      grid-template-areas: "bar" "main";
       height: calc(100dvh - 47px); /* minus pk-nav */
       min-height: 0;
     }
+    /* Leave room for the fixed .b-bottom-tabs so the last row isn't covered. */
+    .pd-main { padding-bottom: calc(64px + env(safe-area-inset-bottom, 8px)); }
     .pd-side { display: none; }
 
     /* Top bar compresses */
@@ -590,31 +579,6 @@
     .pd-bar .bar-btn-label { display: none; }
     .pd-bar .bar-btn { padding: 6px 8px; }
 
-    /* Bottom tab bar */
-    .pd-tabs {
-      grid-area: tabs;
-      display: flex;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      padding: 0 4px env(safe-area-inset-bottom, 4px);
-    }
-    .pd-tabs .t {
-      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 3px; padding: 6px 2px;
-      color: var(--text-subtle); background: transparent; cursor: pointer;
-      font: 500 10px/1 var(--font-sans); border: 0;
-      position: relative;
-    }
-    .pd-tabs .t .ic { width: 22px; height: 22px; display: grid; place-items: center; }
-    .pd-tabs .t.active { color: var(--brand); }
-    .pd-tabs .t .badge {
-      position: absolute; top: 4px; right: 28%;
-      min-width: 16px; height: 16px; padding: 0 4px;
-      background: var(--brand); color: #fff;
-      border-radius: 9999px;
-      font: 600 10px/16px var(--font-mono); text-align: center;
-    }
-
     /* Sale: full-width catalog */
     .sale {
       grid-template-columns: 1fr;
@@ -622,7 +586,7 @@
       position: relative;
     }
     .sale .cat-bar { padding: 10px 12px; }
-    .sale .chips { padding: 8px 12px; }
+    .sale .b-filter-chips { padding: 8px 12px; }
     .sale .grid {
       padding: 10px 12px 80px; /* bottom space for view-cart bar */
       grid-template-columns: repeat(2, 1fr);
@@ -911,8 +875,7 @@
   .audit { width: 100%; padding: 22px; overflow-y: auto; }
   .audit-wrap { max-width: 1000px; margin: 0 auto; }
   .audit-h { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
-  .audit-h .filter-chip { padding: 6px 12px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12.5px/1 var(--font-sans); color: var(--text-strong); cursor: pointer; }
-  .audit-h .filter-chip.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .audit-h .b-filter-chips { flex: 1; padding: 0; }
   .audit-log { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
   .audit-log .row { display: grid; grid-template-columns: 78px 90px 1fr auto; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--border-subtle); align-items: center; font: 13px/1.3 var(--font-sans); }
   .audit-log .row:last-child { border-bottom: 0; }
@@ -952,24 +915,19 @@
   /* === Parked sales === */
   .parked { width: 100%; padding: 22px; overflow-y: auto; }
   .parked-wrap { max-width: 880px; margin: 0 auto; }
-  .parked-list { display: grid; gap: 10px; margin-top: 14px; }
-  .parked-row { display: grid; grid-template-columns: auto 1fr auto auto; gap: 14px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 11px; align-items: center; }
-  .parked-row .av { width: 38px; height: 38px; border-radius: 9px; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 11px/1 var(--font-mono); flex: none; }
-  .parked-row .nm { font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
-  .parked-row .meta { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 3px; }
-  .parked-row .vl { font: 600 14px/1 var(--font-mono); color: var(--text-strong); font-variant-numeric: tabular-nums; }
-  .parked-row .acts { display: flex; gap: 6px; }
-  .parked-row .acts button { padding: 7px 12px; border-radius: 7px; font: 500 12.5px/1 var(--font-sans); cursor: pointer; }
-  .parked-row .acts .ok { background: var(--brand); color: #fff; }
-  .parked-row .acts .ok:hover { background: var(--brand-strong); }
-  .parked-row .acts .alt { background: var(--surface-muted); color: var(--text-strong); }
-  @media (max-width: 720px) {
-    .parked { padding: 14px; }
-    .parked-row { grid-template-columns: 1fr auto; gap: 6px 12px; }
-    .parked-row .av { grid-row: 1 / 3; }
-    .parked-row .vl { grid-column: 2; grid-row: 1; }
-    .parked-row .acts { grid-column: 1 / -1; grid-row: 3; justify-content: flex-end; margin-top: 4px; }
+  .parked-list { display: grid; gap: 0; margin-top: 14px; }
+  /* Parked rows extend .b-row-card with a small avatar + action row. */
+  .b-row-card .pk-av {
+    width: 38px; height: 38px; border-radius: 9px; background: var(--brand-soft);
+    color: var(--brand-strong); display: grid; place-items: center;
+    font: 600 11px/1 var(--font-mono); flex: none;
   }
+  .b-row-card .pk-acts { display: flex; gap: 6px; margin-top: 10px; justify-content: flex-end; }
+  .b-row-card .pk-acts button { padding: 7px 12px; border-radius: 7px; font: 500 12.5px/1 var(--font-sans); cursor: pointer; }
+  .b-row-card .pk-acts .ok { background: var(--brand); color: #fff; }
+  .b-row-card .pk-acts .ok:hover { background: var(--brand-strong); }
+  .b-row-card .pk-acts .alt { background: var(--surface-muted); color: var(--text-strong); }
+  @media (max-width: 720px) { .parked { padding: 14px; } }
 
   /* === Offline queue === */
   .offline-banner {
@@ -1058,15 +1016,7 @@
     font: 500 12.5px/1 var(--font-mono); color: var(--text-muted);
     font-variant-numeric: tabular-nums;
   }
-  .ilk-meta .filters { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; }
-  .ilk-meta .fc {
-    padding: 6px 12px; border-radius: 9999px;
-    background: var(--surface); border: 1px solid var(--border);
-    font: 500 12.5px/1 var(--font-sans); color: var(--text-strong);
-    cursor: pointer; transition: all var(--dur-fast) var(--ease-out);
-  }
-  .ilk-meta .fc:hover { background: var(--surface-muted); }
-  .ilk-meta .fc.on { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .ilk-meta .b-filter-chips { margin-left: auto; padding: 0; flex-wrap: wrap; }
 
   .ilk-list {
     background: var(--surface);
@@ -1136,32 +1086,24 @@
   .ilk-empty .ttl { font: 600 15px/1.3 var(--font-sans); color: var(--text-strong); }
   .ilk-empty .sub { margin-top: 4px; }
 
-  /* Item detail sheet */
-  .ilk-sheet {
-    background: var(--surface); border-radius: var(--radius-xl);
-    padding: 22px;
-    width: 100%; max-width: 420px;
-    box-shadow: var(--shadow-modal);
-  }
-  .ilk-sheet .hero { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
-  .ilk-sheet .hero .thumb-lg {
+  /* Item detail sheet uses .x-bottom-sheet — hero/thumb/grid are local scope only */
+  .x-bottom-sheet .ilk-hero { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+  .x-bottom-sheet .ilk-hero .thumb-lg {
     width: 64px; height: 64px; border-radius: var(--radius-xl);
     background: var(--surface-muted); color: var(--text-strong);
     display: grid; place-items: center;
     font: 700 18px/1 var(--font-mono);
   }
-  .ilk-sheet .hero h3 { margin: 0; font: 600 16px/1.3 var(--font-sans); color: var(--text-strong); }
-  .ilk-sheet .hero .sb { font: 13px/1.4 var(--font-mono); color: var(--text-muted); margin-top: 4px; }
-  .ilk-sheet .grid {
+  .x-bottom-sheet .ilk-hero h3 { margin: 0; font: 600 16px/1.3 var(--font-sans); color: var(--text-strong); }
+  .x-bottom-sheet .ilk-hero .sb { font: 13px/1.4 var(--font-mono); color: var(--text-muted); margin-top: 4px; }
+  .x-bottom-sheet .ilk-grid {
     display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-    margin-bottom: 16px;
   }
-  .ilk-sheet .grid .cell {
+  .x-bottom-sheet .ilk-grid .cell {
     padding: 12px 14px; background: var(--surface-muted); border-radius: var(--radius-lg);
   }
-  .ilk-sheet .grid .lbl { font: 500 11px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; }
-  .ilk-sheet .grid .v { font: 600 15px/1.2 var(--font-mono); color: var(--text-strong); margin-top: 6px; font-variant-numeric: tabular-nums; }
-  .ilk-sheet .acts { display: flex; gap: 8px; margin-top: 6px; }
+  .x-bottom-sheet .ilk-grid .lbl { font: 500 11px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+  .x-bottom-sheet .ilk-grid .v { font: 600 15px/1.2 var(--font-mono); color: var(--text-strong); margin-top: 6px; font-variant-numeric: tabular-nums; }
 
   /* === My reports (cashier-scoped) === */
   .mrep { width: 100%; padding: 22px; overflow-y: auto; min-width: 0; }
@@ -1806,19 +1748,19 @@ const MOBILE_TABS = [
 // (Bottom tabs kept short to fit on phone screens)
 function renderTabs() {
   return `
-    <nav class="pd-tabs">
+    <nav class="b-bottom-tabs" aria-label="Primary">
       ${MOBILE_TABS.map(t => `
-        <button class="t ${state.route === t.route ? 'active' : ''}" data-go="${t.route}">
-          <span class="ic" data-icon="${t.icon}" data-icon-size="20"></span>
-          <span>${t.label}</span>
-          ${t.route === 'sale' && cartCount() > 0 ? `<span class="badge">${cartCount()}</span>` : ''}
+        <button type="button" class="${state.route === t.route ? 'active' : ''}" data-go="${t.route}"${state.route === t.route ? ' aria-current="page"' : ''}>
+          <span class="b-bt-ic" data-icon="${t.icon}" data-icon-size="20"></span>
+          ${t.label}
+          ${t.route === 'sale' && cartCount() > 0 ? `<span class="b-bt-badge">${cartCount()}</span>` : ''}
         </button>
       `).join('')}
     </nav>
   `;
 }
 function wireTabs() {
-  $$('.pd-tabs [data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+  $$('.b-bottom-tabs [data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
 }
 function wireCartSheet() {
   const scrim = $('#cart-scrim');
@@ -2007,8 +1949,8 @@ function renderSale() {
           </div>
           <button class="scan" id="sale-scan" title="Find an item"><span data-icon="qr" data-icon-size="16"></span></button>
         </div>
-        <div class="chips">
-          ${CATEGORIES.map(c => `<button class="chip ${state.category === c.id ? 'on' : ''}" data-cat="${c.id}">${c.name}</button>`).join('')}
+        <div class="b-filter-chips">
+          ${CATEGORIES.map(c => `<button type="button" class="b-fc ${state.category === c.id ? 'on' : ''}" data-cat="${c.id}">${c.name}</button>`).join('')}
         </div>
         <div class="grid">
           ${filtered.length ? filtered.map(item => `
@@ -2127,8 +2069,8 @@ function openVoidFlow(itemId) {
       <div class="modal" onclick="event.stopPropagation()">
         <h3>Remove "${escapeHtml(line.name)}"?</h3>
         <p class="sub">Pick a reason. A manager needs to approve this with their PIN.</p>
-        <div class="row" style="flex-wrap: wrap;">
-          ${reasons.map(r => `<button class="chip ${reason === r ? 'on' : ''}" data-r="${r}" style="padding: 6px 12px; border-radius: 9999px; background: ${reason===r?'var(--brand)':'var(--surface-muted)'}; color: ${reason===r?'#fff':'var(--text-strong)'}; font: 500 12px var(--font-sans); cursor: pointer;">${r}</button>`).join('')}
+        <div class="b-filter-chips" style="padding: 4px 0 12px; flex-wrap: wrap;">
+          ${reasons.map(r => `<button type="button" class="b-fc ${reason === r ? 'on' : ''}" data-r="${r}">${r}</button>`).join('')}
         </div>
         <div class="acts">
           <button class="alt" data-cancel>Cancel</button>
@@ -2403,8 +2345,8 @@ function renderRefund() {
           `).join('')}
         </div>
         <div style="font: 500 12px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px;">Why are they returning it?</div>
-        <div class="rsn-chips">
-          ${reasons.map(r => `<button class="${state.refund.reason === r ? 'on' : ''}" data-reason="${r}">${r}</button>`).join('')}
+        <div class="b-filter-chips">
+          ${reasons.map(r => `<button type="button" class="b-fc ${state.refund.reason === r ? 'on' : ''}" data-reason="${r}">${r}</button>`).join('')}
         </div>
         <div class="total-bar">
           <span class="lbl">Money to give back</span>
@@ -2609,10 +2551,10 @@ function renderItem() {
         </label>
         <div class="ilk-meta">
           <span class="ct">Showing ${filtered.length} of ${CATALOG.length} items</span>
-          <div class="filters">
-            <button class="fc ${f==='all'?'on':''}" data-fil="all">All <span style="opacity:0.6">${counts.all}</span></button>
-            <button class="fc ${f==='in'?'on':''}" data-fil="in">In stock <span style="opacity:0.6">${counts.in}</span></button>
-            <button class="fc ${f==='low'?'on':''}" data-fil="low">Running low / sold out <span style="opacity:0.6">${counts.low}</span></button>
+          <div class="b-filter-chips">
+            <button type="button" class="b-fc ${f==='all'?'on':''}" data-fil="all">All <span class="b-fc-ct">${counts.all}</span></button>
+            <button type="button" class="b-fc ${f==='in'?'on':''}" data-fil="in">In stock <span class="b-fc-ct">${counts.in}</span></button>
+            <button type="button" class="b-fc ${f==='low'?'on':''}" data-fil="low">Running low / sold out <span class="b-fc-ct">${counts.low}</span></button>
           </div>
         </div>
         ${filtered.length === 0 ? `
@@ -2665,28 +2607,35 @@ function openItemDetail(itemId) {
   const stockColor = i.oos ? 'var(--tone-danger)' : (i.low ? 'var(--tone-warn)' : 'var(--tone-success)');
   const stockLabel = i.oos ? 'Sold out' : (i.low ? `Only ${i.stock} left` : `${i.stock} in stock`);
   openModal(`
-    <div class="ilk-sheet" onclick="event.stopPropagation()">
-      <div class="hero">
-        <div class="thumb-lg">${escapeHtml(thumb)}</div>
-        <div>
-          <h3>${escapeHtml(i.name)}</h3>
-          <div class="sb">${escapeHtml(i.sku)} · ${escapeHtml(cat)}</div>
+    <div class="x-bottom-sheet" onclick="event.stopPropagation()">
+      <div class="x-bs-grab"></div>
+      <div class="x-bs-head">
+        <h3>Item details</h3>
+        <button class="x-bs-close" data-close type="button" aria-label="Close"><span data-icon="x" data-icon-size="16"></span></button>
+      </div>
+      <div class="x-bs-body">
+        <div class="ilk-hero">
+          <div class="thumb-lg">${escapeHtml(thumb)}</div>
+          <div>
+            <h3>${escapeHtml(i.name)}</h3>
+            <div class="sb">${escapeHtml(i.sku)} · ${escapeHtml(cat)}</div>
+          </div>
+        </div>
+        <div class="ilk-grid">
+          <div class="cell"><div class="lbl">Price each</div><div class="v">${money(i.price)}</div></div>
+          <div class="cell"><div class="lbl">Stock</div><div class="v" style="color: ${stockColor};">${stockLabel}</div></div>
         </div>
       </div>
-      <div class="grid">
-        <div class="cell"><div class="lbl">Price each</div><div class="v">${money(i.price)}</div></div>
-        <div class="cell"><div class="lbl">Stock</div><div class="v" style="color: ${stockColor};">${stockLabel}</div></div>
-      </div>
-      <div class="acts">
-        <button class="btn btn-secondary" data-close style="flex:1;">Close</button>
-        <button class="btn btn-primary" data-sheet-add ${i.oos ? 'disabled aria-disabled="true"' : ''} style="flex:2;">
+      <div class="x-bs-foot">
+        <button class="alt" data-close type="button">Close</button>
+        <button class="primary" data-sheet-add type="button" ${i.oos ? 'disabled aria-disabled="true"' : ''} style="flex:2;">
           <span data-icon="plus" data-icon-size="13"></span> Add to cart · ${money(i.price)}
         </button>
       </div>
     </div>
   `);
-  const m = $('.ilk-sheet');
-  m.querySelector('[data-close]').addEventListener('click', closeModal);
+  const m = $('.x-bottom-sheet');
+  m.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeModal));
   const add = m.querySelector('[data-sheet-add]');
   if (add) add.addEventListener('click', () => {
     addToCart(i.id);
@@ -3259,14 +3208,16 @@ function renderParked() {
               const total = +(sub + tax).toFixed(2);
               const cust = p.customerId ? CUSTOMERS.find(c => c.id === p.customerId) : null;
               return `
-                <div class="parked-row">
-                  <div class="av">${p.id.slice(-3)}</div>
-                  <div>
-                    <div class="nm">${p.id}${cust ? ' · ' + escapeHtml(cust.name) : ''}</div>
-                    <div class="meta">${p.ts} · ${p.lines.length} items · ${escapeHtml(p.who || '')}${p.notes ? ' · ' + escapeHtml(p.notes) : ''}</div>
+                <div class="b-row-card" style="cursor: default;">
+                  <div class="b-rc-top">
+                    <div class="pk-av">${p.id.slice(-3)}</div>
+                    <div class="b-rc-info">
+                      <div class="b-rc-nm">${p.id}${cust ? ' · ' + escapeHtml(cust.name) : ''}</div>
+                      <div class="b-rc-sb">${p.ts} · ${p.lines.length} items · ${escapeHtml(p.who || '')}${p.notes ? ' · ' + escapeHtml(p.notes) : ''}</div>
+                    </div>
+                    <div class="b-rc-val">${money(total)}</div>
                   </div>
-                  <div class="vl">${money(total)}</div>
-                  <div class="acts">
+                  <div class="pk-acts">
                     <button class="alt" data-pdis="${p.id}">Throw away</button>
                     <button class="ok" data-prec="${p.id}">Continue</button>
                   </div>
@@ -3499,8 +3450,10 @@ function renderAudit() {
           <button class="btn-secondary" id="audit-export"><span data-icon="download" data-icon-size="13"></span> Export</button>
         </div>
         <div class="audit-h">
-          ${filters.map(f => `<button class="filter-chip ${filter === f.id ? 'on' : ''}" data-af="${f.id}">${f.label}</button>`).join('')}
-          <span style="margin-left: auto; font: 12px var(--font-mono); color: var(--text-muted);">${items.length} entries</span>
+          <div class="b-filter-chips">
+            ${filters.map(f => `<button type="button" class="b-fc ${filter === f.id ? 'on' : ''}" data-af="${f.id}">${f.label}</button>`).join('')}
+          </div>
+          <span style="font: 12px var(--font-mono); color: var(--text-muted);">${items.length} entries</span>
         </div>
         ${items.length === 0 ? `<div class="audit-empty">No entries yet. Make a sale or open the till to see activity here.</div>` : `
           <div class="audit-log">
