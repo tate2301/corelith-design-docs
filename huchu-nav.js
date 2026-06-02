@@ -13,6 +13,11 @@
  *
  * EXPORTS
  *   window.HuchuNav = { open, close, toggle, pin, unpin, togglePin }
+ *
+ * SIDEBAR STATE (localStorage keys, all prefixed `huchu-side:`)
+ *   huchu-side:pinned   JSON array of pinned link keys/hrefs
+ *   huchu-side:recents  JSON array of {label, href, key} (most-recent first, max 8)
+ *   huchu-side:open     JSON map of {groupLabel: boolean} — last-known open state
  */
 (function () {
   // -------- Path / link helpers -------------------------------------------
@@ -458,11 +463,102 @@
     return null;
   }
 
+  // -------- Sidebar persistence (localStorage) ----------------------------
+  const LS_PINNED  = 'huchu-side:pinned';
+  const LS_RECENTS = 'huchu-side:recents';
+  const LS_OPEN    = 'huchu-side:open';
+
+  function lsGet(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return fallback;
+      return JSON.parse(raw);
+    } catch (e) { return fallback; }
+  }
+  function lsSet(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
+  }
+
+  // The "stable id" for pinned/recent persistence. We use the link key when
+  // available (so a moved file keeps its pin) and fall back to the href.
+  function itemId(item) {
+    const [, href, key] = item;
+    if (key && key !== '__') return 'k:' + key;
+    return 'h:' + href;
+  }
+
+  // Find an item in SIDEBAR by id. Returns {item, group} or null.
+  function findItemById(id) {
+    for (const group of SIDEBAR) {
+      for (const item of group.items) {
+        if (itemId(item) === id) return { item, group };
+      }
+    }
+    return null;
+  }
+
+  // Identify the currently-active link (returns the SIDEBAR item array or null).
+  function currentActiveItem() {
+    for (const group of SIDEBAR) {
+      for (const item of group.items) {
+        const key = item[2];
+        if (key && key !== '__' && key === CURRENT_FILE) return { item, group };
+      }
+    }
+    return null;
+  }
+
+  // Build the contextual breadcrumb "Group → Item" for the active page.
+  function activeBreadcrumb() {
+    const hit = currentActiveItem();
+    if (!hit) return null;
+    return { group: hit.group.label, label: hit.item[0] };
+  }
+
+  // Record the current page as a recent visit (most-recent first, capped at 8).
+  function recordRecent() {
+    const hit = currentActiveItem();
+    if (!hit) return;
+    const id = itemId(hit.item);
+    const recents = lsGet(LS_RECENTS, []).filter(r => r.id !== id);
+    recents.unshift({ id, label: hit.item[0], href: hit.item[1] });
+    lsSet(LS_RECENTS, recents.slice(0, 8));
+  }
+
+  // -------- Sidebar render ------------------------------------------------
+  function buildLinkAnchor(label, href, key, tag, icon, isCur, id, pinned) {
+    const iconHtml = icon ? `<span class="hx-side-ic" data-icon="${icon}" data-icon-size="14"></span>` : '';
+    const tagHtml = tag ? `<span class="hx-side-tag">${tag}</span>` : '';
+    const pinIcon = pinned ? 'pin' : 'pin';
+    const pinTitle = pinned ? 'Unpin' : 'Pin';
+    const pinPressed = pinned ? 'true' : 'false';
+    const curAttr = isCur ? ' aria-current="page"' : '';
+    return `<div class="hx-side-row${pinned ? ' is-pinned' : ''}${isCur ? ' is-current' : ''}" data-side-row data-id="${id}">
+      <a href="${href}" class="hx-side-link${isCur ? ' current' : ''}" data-side-link${curAttr}>${iconHtml}<span class="hx-side-lb">${label}</span>${tagHtml}</a>
+      <button type="button" class="hx-side-pin" aria-pressed="${pinPressed}" aria-label="${pinTitle} ${label.replace(/"/g,'&quot;')}" title="${pinTitle}" data-side-pin>
+        <span data-icon="${pinIcon}" data-icon-size="12"></span>
+      </button>
+    </div>`;
+  }
+
   function renderSidebar() {
     const aside = document.createElement('aside');
     aside.className = 'hx-sidebar';
     aside.setAttribute('aria-label', 'Site navigation');
     const activeGroup = activeGroupLabel();
+    const crumb = activeBreadcrumb();
+    const pinned = lsGet(LS_PINNED, []);
+    const recents = lsGet(LS_RECENTS, []);
+    const savedOpen = lsGet(LS_OPEN, {});
+
+    const breadcrumbHtml = crumb
+      ? `<div class="hx-side-crumbs" aria-label="Current location">
+           <span class="hx-side-crumbs-g">${crumb.group}</span>
+           <span class="hx-side-crumbs-sep" aria-hidden="true">›</span>
+           <span class="hx-side-crumbs-i">${crumb.label}</span>
+         </div>`
+      : '';
+
     aside.innerHTML = `
       <div class="hx-sidebar-head">
         <a class="hx-brand" href="${ROOT}index.html">
@@ -478,12 +574,35 @@
         </button>
       </div>
       <div class="hx-sidebar-body">
+        ${breadcrumbHtml}
+        <div class="hx-side-search" role="search">
+          <span data-icon="search" data-icon-size="13"></span>
+          <input type="search" placeholder="Filter navigation…" aria-label="Filter navigation" data-side-search />
+          <span class="hx-side-search-kbd" aria-hidden="true">/</span>
+        </div>
+        <div class="hx-side-empty" data-side-empty hidden>
+          No items match. <button type="button" class="hx-side-empty-clear" data-side-empty-clear>Clear</button>
+        </div>
+        <div class="hx-side-count" data-side-count hidden></div>
+
+        <div class="hx-side-dyn" data-side-dyn>
+          ${renderDynamicSection('Pinned', 'pinned', pinned.map(id => findItemById(id)).filter(Boolean).map(x => x.item), savedOpen)}
+          ${renderDynamicSection('Recent', 'recent', recents.map(r => findItemById(r.id)).filter(Boolean).map(x => x.item), savedOpen)}
+        </div>
+
         ${SIDEBAR.map(group => {
           const isActive = group.label === activeGroup;
-          const openAttr = isActive ? ' open' : '';
+          // Open precedence: saved state if present, else active group is open.
+          let isOpen;
+          if (Object.prototype.hasOwnProperty.call(savedOpen, group.label)) {
+            isOpen = !!savedOpen[group.label];
+          } else {
+            isOpen = isActive;
+          }
+          const openAttr = isOpen ? ' open' : '';
           return `
-          <details class="hx-side-group${isActive ? ' active' : ''}"${openAttr}>
-            <summary>
+          <details class="hx-side-group${isActive ? ' active' : ''}"${openAttr} data-group="${group.label}">
+            <summary aria-expanded="${isOpen ? 'true' : 'false'}">
               <span class="lb">${group.label}</span>
               <span class="hx-side-chev" data-icon="chevron" data-icon-size="14"></span>
             </summary>
@@ -491,9 +610,9 @@
               ${group.items.map(item => {
                 const [label, href, key, tag, icon] = item;
                 const isCur = key && key !== '__' && key === CURRENT_FILE;
-                const iconHtml = icon ? `<span class="hx-side-ic" data-icon="${icon}" data-icon-size="14"></span>` : '';
-                const tagHtml = tag ? `<span class="hx-side-tag">${tag}</span>` : '';
-                return `<a href="${href}" class="${isCur ? 'current' : ''}">${iconHtml}<span class="hx-side-lb">${label}</span>${tagHtml}</a>`;
+                const id = itemId(item);
+                const isPinned = pinned.indexOf(id) !== -1;
+                return buildLinkAnchor(label, href, key, tag, icon, isCur, id, isPinned);
               }).join('')}
             </div>
           </details>`;
@@ -504,6 +623,34 @@
       </div>
     `;
     return aside;
+  }
+
+  // Pinned + Recent live as their own collapsible <details> blocks at the
+  // very top of the body. Hidden entirely when there's nothing to show.
+  function renderDynamicSection(label, slug, items, savedOpen) {
+    if (!items || !items.length) return '';
+    const pinned = lsGet(LS_PINNED, []);
+    const savedKey = '__' + slug;
+    const isOpen = Object.prototype.hasOwnProperty.call(savedOpen, savedKey)
+      ? !!savedOpen[savedKey] : true;
+    const openAttr = isOpen ? ' open' : '';
+    return `
+      <details class="hx-side-group hx-side-group--dyn"${openAttr} data-group="${savedKey}">
+        <summary aria-expanded="${isOpen ? 'true' : 'false'}">
+          <span class="lb">${label}</span>
+          <span class="hx-side-count-pill">${items.length}</span>
+          <span class="hx-side-chev" data-icon="chevron" data-icon-size="14"></span>
+        </summary>
+        <div class="hx-side-items">
+          ${items.map(item => {
+            const [lbl, href, key, tag, icon] = item;
+            const isCur = key && key !== '__' && key === CURRENT_FILE;
+            const id = itemId(item);
+            const isPinned = pinned.indexOf(id) !== -1;
+            return buildLinkAnchor(lbl, href, key, tag, icon, isCur, id, isPinned);
+          }).join('')}
+        </div>
+      </details>`;
   }
 
   // -------- Mount + wiring ------------------------------------------------
@@ -531,6 +678,9 @@
     document.querySelectorAll('.ds-slim-nav, .hx-topbar').forEach(el => el.remove());
 
     document.body.classList.add('hx-nav-mounted');
+
+    // Record visit BEFORE the sidebar renders so Recent shows current page too.
+    recordRecent();
 
     const mainNav = renderMainNav();
     const kitNav  = renderKitNav();
@@ -589,7 +739,10 @@
 
     function isDesktop() { return window.innerWidth >= DESKTOP_MIN; }
 
+    let lastFocusedBeforeOpen = null;
+
     function open() {
+      lastFocusedBeforeOpen = document.activeElement;
       sidebar.classList.add('open');
       scrim.classList.add('open');
       toggleBtn.setAttribute('aria-expanded', 'true');
@@ -598,6 +751,14 @@
       sidebar.classList.remove('open');
       scrim.classList.remove('open');
       toggleBtn.setAttribute('aria-expanded', 'false');
+      // Return focus to the hamburger trigger (or whoever launched it).
+      try {
+        if (lastFocusedBeforeOpen && document.contains(lastFocusedBeforeOpen)) {
+          lastFocusedBeforeOpen.focus();
+        } else {
+          toggleBtn.focus();
+        }
+      } catch (e) {}
     }
     function toggle() {
       if (document.body.classList.contains('sidebar-pinned')) {
@@ -631,23 +792,274 @@
     closeBtn.addEventListener('click', close);
     pinBtn.addEventListener('click', togglePin);
     scrim.addEventListener('click', close);
-    // Close drawer on sidebar link click (but not when pinned)
+    // Close drawer on sidebar link click (but not when pinned). We
+    // discriminate: pin buttons are NOT links, so they don't trigger close.
     sidebar.addEventListener('click', (e) => {
-      if (!e.target.closest('a')) return;
+      const link = e.target.closest('a');
+      if (!link) return;
       if (document.body.classList.contains('sidebar-pinned')) return;
       setTimeout(close, 80);
     });
 
-    // Keyboard: Escape closes; \ toggles
+    // ── Sidebar: filter, pin toggles, group persistence, keyboard nav ─
+    const searchInput   = sidebar.querySelector('[data-side-search]');
+    const countEl       = sidebar.querySelector('[data-side-count]');
+    const emptyEl       = sidebar.querySelector('[data-side-empty]');
+    const emptyClearBtn = sidebar.querySelector('[data-side-empty-clear]');
+    const dynRoot       = sidebar.querySelector('[data-side-dyn]');
+
+    // Snapshot of per-group open state captured the first time we start
+    // filtering. Restored when the filter clears, so search doesn't clobber
+    // the user's collapsed/expanded preferences.
+    let filterOpenSnapshot = null;
+
+    function applyFilter(q) {
+      const needle = (q || '').trim().toLowerCase();
+      const groups = sidebar.querySelectorAll('.hx-side-group');
+      if (needle && !filterOpenSnapshot) {
+        filterOpenSnapshot = new Map();
+        groups.forEach(g => filterOpenSnapshot.set(g, g.open));
+      }
+      const rows = sidebar.querySelectorAll('[data-side-row]');
+      let total = 0, visible = 0;
+      rows.forEach(row => {
+        total++;
+        const lbl = row.querySelector('.hx-side-lb');
+        const text = lbl ? lbl.textContent.toLowerCase() : '';
+        const match = !needle || text.indexOf(needle) !== -1;
+        row.hidden = !match;
+        if (match) visible++;
+      });
+      suppressTogglePersist = true;
+      groups.forEach(g => {
+        const anyVisible = g.querySelector('[data-side-row]:not([hidden])');
+        g.hidden = !anyVisible;
+        if (needle) {
+          if (anyVisible) g.open = true;
+        } else if (filterOpenSnapshot) {
+          // Restore to pre-filter state.
+          g.open = !!filterOpenSnapshot.get(g);
+        }
+      });
+      // The toggle event for <details> fires async — keep the flag set until
+      // the next microtask flushes so all programmatic toggles are skipped.
+      Promise.resolve().then(() => { suppressTogglePersist = false; });
+      if (!needle) filterOpenSnapshot = null;
+
+      if (needle) {
+        countEl.hidden = false;
+        countEl.textContent = visible + ' of ' + total + ' items';
+        emptyEl.hidden = visible !== 0;
+      } else {
+        countEl.hidden = true;
+        emptyEl.hidden = true;
+      }
+    }
+    if (searchInput) {
+      searchInput.addEventListener('input', () => applyFilter(searchInput.value));
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          if (searchInput.value) {
+            searchInput.value = '';
+            applyFilter('');
+            e.stopPropagation();
+          }
+        }
+      });
+    }
+    if (emptyClearBtn) {
+      emptyClearBtn.addEventListener('click', () => {
+        if (searchInput) { searchInput.value = ''; applyFilter(''); searchInput.focus(); }
+      });
+    }
+
+    // Pin toggle (delegated): click pin button to add/remove from pinned set,
+    // then re-render only the dynamic section so the rest of the sidebar (and
+    // each item's solid-vs-outline state) stays consistent.
+    function refreshDynamic() {
+      if (!dynRoot) return;
+      const pinned = lsGet(LS_PINNED, []);
+      const recents = lsGet(LS_RECENTS, []);
+      const savedOpen = lsGet(LS_OPEN, {});
+      dynRoot.innerHTML =
+        renderDynamicSection('Pinned', 'pinned', pinned.map(id => findItemById(id)).filter(Boolean).map(x => x.item), savedOpen) +
+        renderDynamicSection('Recent', 'recent', recents.map(r => findItemById(r.id)).filter(Boolean).map(x => x.item), savedOpen);
+      if (window.Icons && window.Icons.render) window.Icons.render(dynRoot);
+      // Re-apply pinned state visuals on the static groups (button aria-pressed).
+      sidebar.querySelectorAll('[data-side-row]').forEach(row => {
+        const id = row.getAttribute('data-id');
+        const isP = pinned.indexOf(id) !== -1;
+        row.classList.toggle('is-pinned', isP);
+        const btn = row.querySelector('[data-side-pin]');
+        if (btn) btn.setAttribute('aria-pressed', isP ? 'true' : 'false');
+      });
+      // Preserve filter if active.
+      if (searchInput && searchInput.value) applyFilter(searchInput.value);
+    }
+
+    function togglePinId(id) {
+      const pinned = lsGet(LS_PINNED, []);
+      const idx = pinned.indexOf(id);
+      if (idx === -1) pinned.unshift(id);
+      else pinned.splice(idx, 1);
+      lsSet(LS_PINNED, pinned);
+      refreshDynamic();
+    }
+
+    sidebar.addEventListener('click', (e) => {
+      const pinBtn2 = e.target.closest('[data-side-pin]');
+      if (!pinBtn2) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const row = pinBtn2.closest('[data-side-row]');
+      if (!row) return;
+      togglePinId(row.getAttribute('data-id'));
+    });
+
+    // Persist <details> open/closed state per group label. We skip persistence
+    // while the search filter is forcing groups open — otherwise typing would
+    // clobber the user's real open/closed preferences.
+    let suppressTogglePersist = false;
+    sidebar.addEventListener('toggle', (e) => {
+      const det = e.target;
+      if (!det.matches || !det.matches('.hx-side-group')) return;
+      const sum = det.querySelector('summary');
+      if (sum) sum.setAttribute('aria-expanded', det.open ? 'true' : 'false');
+      if (suppressTogglePersist) return;
+      const label = det.getAttribute('data-group');
+      if (!label) return;
+      const state = lsGet(LS_OPEN, {});
+      state[label] = det.open;
+      lsSet(LS_OPEN, state);
+    }, true);
+
+    // Keyboard navigation inside the sidebar.
+    function visibleSidebarItems() {
+      return Array.from(sidebar.querySelectorAll('[data-side-link]'))
+        .filter(el => {
+          const row = el.closest('[data-side-row]');
+          if (row && row.hidden) return false;
+          const group = el.closest('.hx-side-group');
+          if (group && group.hidden) return false;
+          // Inside a closed <details>, items are hidden.
+          if (group && !group.open) return false;
+          return true;
+        });
+    }
+
+    sidebar.addEventListener('keydown', (e) => {
+      // '/' inside the sidebar focuses search (mirror of global handler).
+      if (e.key === '/' && document.activeElement !== searchInput) {
+        e.preventDefault();
+        if (searchInput) searchInput.focus();
+        return;
+      }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        const items = visibleSidebarItems();
+        if (!items.length) return;
+        e.preventDefault();
+        const cur = document.activeElement;
+        let idx = items.indexOf(cur);
+        if (e.key === 'ArrowDown') idx = (idx + 1) % items.length;
+        else idx = (idx - 1 + items.length) % items.length;
+        items[idx].focus();
+      } else if (e.key === 'Enter') {
+        if (document.activeElement && document.activeElement.matches && document.activeElement.matches('[data-side-link]')) {
+          // Default anchor behaviour handles navigation; nothing extra needed.
+        }
+      }
+    });
+
+    // Global keyboard: Escape closes; \ toggles; / focuses sidebar search
+    // (when not typing in another field).
     document.addEventListener('keydown', (e) => {
       const tag = (document.activeElement && document.activeElement.tagName) || '';
       const inField = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag);
-      if (e.key === 'Escape' && sidebar.classList.contains('open')) close();
+      if (e.key === 'Escape') {
+        if (document.activeElement === searchInput && searchInput.value) {
+          // Esc in search clears first, doesn't close.
+          return;
+        }
+        if (sidebar.classList.contains('open')) close();
+      }
       if (e.key === '\\' && !inField && !e.metaKey && !e.ctrlKey && !e.altKey) {
         e.preventDefault();
         toggle();
       }
+      if (e.key === '/' && !inField && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        // Only intercept when the drawer is open or pinned — otherwise let '/'
+        // pass through for normal find/typing.
+        const drawerActive = sidebar.classList.contains('open') ||
+                             document.body.classList.contains('sidebar-pinned');
+        if (drawerActive && searchInput) {
+          e.preventDefault();
+          searchInput.focus();
+          searchInput.select();
+        }
+      }
     });
+
+    // Focus trap: when the drawer is open (and not pinned), Tab cycles inside.
+    sidebar.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab') return;
+      if (!sidebar.classList.contains('open')) return;
+      if (document.body.classList.contains('sidebar-pinned')) return;
+      const focusables = sidebar.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      const list = Array.from(focusables).filter(el => {
+        // Skip hidden rows / hidden groups.
+        const row = el.closest('[data-side-row]');
+        if (row && row.hidden) return false;
+        const grp = el.closest('.hx-side-group');
+        if (grp && grp.hidden) return false;
+        return el.offsetParent !== null || el === document.activeElement;
+      });
+      if (!list.length) return;
+      const first = list[0];
+      const last = list[list.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus();
+      }
+    });
+
+    // Touch: swipe-from-left-edge to open, swipe-right-on-drawer to close.
+    const SWIPE_THRESHOLD = 60;
+    const EDGE_ZONE = 24;
+    let touchStartX = null, touchStartY = null, touchTarget = null;
+    document.addEventListener('touchstart', (e) => {
+      if (isDesktop()) return;
+      const t = e.touches[0];
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+      if (sidebar.classList.contains('open') && sidebar.contains(e.target)) {
+        touchTarget = 'drawer';
+      } else if (!sidebar.classList.contains('open') && t.clientX <= EDGE_ZONE) {
+        touchTarget = 'edge';
+      } else {
+        touchTarget = null;
+      }
+    }, { passive: true });
+    document.addEventListener('touchmove', (e) => {
+      if (touchStartX == null || !touchTarget) return;
+      const t = e.touches[0];
+      const dx = t.clientX - touchStartX;
+      const dy = Math.abs(t.clientY - touchStartY);
+      if (dy > 40) { touchTarget = null; return; } // mostly-vertical = scroll
+      if (touchTarget === 'edge' && dx > SWIPE_THRESHOLD) {
+        open();
+        touchTarget = null;
+      } else if (touchTarget === 'drawer' && dx < -SWIPE_THRESHOLD) {
+        close();
+        touchTarget = null;
+      }
+    }, { passive: true });
+    document.addEventListener('touchend', () => {
+      touchStartX = touchStartY = null;
+      touchTarget = null;
+    }, { passive: true });
 
     // Restore pinned state (desktop only)
     try {
@@ -684,11 +1096,11 @@
     }
 
     // ── Cmd/Ctrl+K focuses search ─────────────────────────────────────
-    const searchInput = mainNav.querySelector('.hx-search input');
+    const topSearchInput = mainNav.querySelector('.hx-search input');
     document.addEventListener('keydown', (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        if (searchInput) searchInput.focus();
+        if (topSearchInput) topSearchInput.focus();
       }
     });
 
