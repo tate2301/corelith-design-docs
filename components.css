@@ -2095,3 +2095,352 @@ a.module-card:hover { border-color: var(--border-strong); transform: translateY(
 .module-card .arrow { margin-top: auto; font: 500 13px/1 var(--font-sans); color: var(--brand-strong); display: inline-flex; align-items: center; gap: 5px; }
 @media (max-width: 900px)  { .modules-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 600px)  { .modules-grid { grid-template-columns: 1fr; } }
+
+/* ============================================================
+   Recurring portal patterns — promoted from bespoke portal CSS.
+   Each block here was duplicated in 3+ portal demos as a one-off
+   (.gd-tabs / .ow-tabs / .pa-tabs / .pd-tabs etc.). Lifted into
+   the system so portals can adopt a single canonical class.
+
+   Tokens-only. No portal-specific colours bleed into the system —
+   portals tint via --brand and tonal vars on their own root.
+   ============================================================ */
+
+/* ── .b-bottom-tabs ────────────────────────────────────────
+   Mobile bottom tab bar. Used by every portal as the primary
+   phone-resolution nav. Lives at the viewport bottom with a
+   safe-area inset for iOS notch / home indicator.
+   Doc page: system/b-bottom-tabs.html
+   Replaces: .gd-tabs .pa-tabs .ow-tabs .pd-tabs .sd-tabs .st-tabs .bt-nav
+   --------------------------------------------------------- */
+.b-bottom-tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 60;
+  height: 64px;
+  padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 8px));
+  display: flex; align-items: stretch;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -6px 18px -8px rgba(22, 24, 29, 0.10);
+}
+.b-bottom-tabs button,
+.b-bottom-tabs a {
+  flex: 1; min-height: 52px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; padding: 4px 0;
+  border: 0; background: transparent; cursor: pointer; text-decoration: none;
+  color: var(--text-subtle);
+  font: 500 10.5px/1 var(--font-sans);
+  border-radius: 10px;
+  position: relative;
+}
+.b-bottom-tabs button:hover,
+.b-bottom-tabs a:hover { color: var(--text-strong); }
+.b-bottom-tabs .b-bt-ic { width: 22px; height: 22px; display: grid; place-items: center; }
+.b-bottom-tabs button.active,
+.b-bottom-tabs a.active { color: var(--brand-strong); }
+.b-bottom-tabs button.active .b-bt-ic,
+.b-bottom-tabs a.active .b-bt-ic { color: var(--brand); }
+.b-bottom-tabs .b-bt-badge {
+  position: absolute; top: 2px; right: calc(50% - 18px);
+  min-width: 16px; height: 16px; padding: 0 4px;
+  background: var(--tone-danger); color: #fff;
+  border-radius: 9999px;
+  font: 600 10px/16px var(--font-mono); text-align: center;
+}
+/* Show only on phone; hide on tablet/desktop where the sidebar is primary. */
+@media (min-width: 901px) { .b-bottom-tabs { display: none; } }
+
+/* ── .b-filter-chips ───────────────────────────────────────
+   Horizontally-scrolling chip row, typically above a list, with
+   optional unread/count badge. Same shape in pos, parent,
+   student, teacher, staff.
+   Doc page: system/b-filter-chips.html
+   Replaces: .filter-chips / .hist-filter / .audit-h .filter-chip
+   --------------------------------------------------------- */
+.b-filter-chips {
+  display: flex; gap: 8px;
+  padding: 12px 16px 4px;
+  overflow-x: auto; scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.b-filter-chips::-webkit-scrollbar { display: none; }
+.b-filter-chips .b-fc {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  font: 500 12.5px/1 var(--font-sans);
+  color: var(--text-strong);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.b-filter-chips .b-fc:hover { background: var(--surface-muted); }
+.b-filter-chips .b-fc .b-fc-ct {
+  font: 600 11px/1 var(--font-sans);
+  padding: 2px 7px; border-radius: 9999px;
+  background: var(--surface-muted); color: var(--text-muted);
+}
+.b-filter-chips .b-fc.on {
+  background: var(--brand); color: #fff; border-color: var(--brand);
+}
+.b-filter-chips .b-fc.on .b-fc-ct {
+  background: rgba(255, 255, 255, 0.22); color: #fff;
+}
+
+/* ── .b-row-card ───────────────────────────────────────────
+   Full-width tap-target row card — primary mobile list shape.
+   One per record. Tapping opens a detail sheet. Name + sub on
+   the left, primary number on the right, optional pill below.
+   Doc page: system/b-row-card.html
+   Replaces: .row-card / .pl-row (mobile variant) / .flag-row layout
+   --------------------------------------------------------- */
+.b-row-card {
+  display: block; width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  text-align: left; color: var(--text-body);
+  font-family: var(--font-sans);
+  cursor: pointer;
+  transition: background var(--dur-fast, 140ms) var(--ease-out, ease),
+              border-color var(--dur-fast, 140ms) var(--ease-out, ease);
+}
+.b-row-card:hover,
+.b-row-card:active {
+  background: var(--surface-muted);
+  border-color: var(--border-strong);
+}
+.b-row-card .b-rc-top {
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.b-row-card .b-rc-info { flex: 1; min-width: 0; }
+.b-row-card .b-rc-nm {
+  font: 600 14px/1.3 var(--font-sans);
+  color: var(--text-strong);
+}
+.b-row-card .b-rc-sb {
+  font: 12px/1.3 var(--font-sans);
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+.b-row-card .b-rc-val {
+  font: 700 18px/1 var(--font-sans);
+  color: var(--text-strong);
+  font-variant-numeric: tabular-nums;
+}
+.b-row-card .b-rc-delta {
+  font: 500 12.5px/1 var(--font-sans);
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.b-row-card .b-rc-delta.up   { color: var(--tone-success); }
+.b-row-card .b-rc-delta.dn   { color: var(--tone-danger); }
+.b-row-card .b-rc-meta {
+  display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px;
+}
+.b-row-card .b-rc-meta .b-rc-m-l {
+  font: 500 10.5px/1 var(--font-sans);
+  letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--text-subtle);
+}
+.b-row-card .b-rc-meta .b-rc-m-v {
+  font: 600 13px/1 var(--font-mono);
+  color: var(--text-strong);
+  margin-top: 3px;
+}
+
+/* ── .b-stat-hero ──────────────────────────────────────────
+   The opener block: one large brand-tinted "hero" stat, with a
+   row of smaller secondary stats beneath. Used by Parent,
+   Student, Owner, Gold, Scrap, Admin overview screens.
+   Doc page: system/b-stat-hero.html
+   Replaces: .phero + .stat-row / .hero-card + .stat-row
+   --------------------------------------------------------- */
+.b-stat-hero {
+  display: flex; flex-direction: column; gap: 12px;
+  margin-bottom: 18px;
+}
+.b-stat-hero .b-sh-lead {
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-deeper, var(--brand-strong)) 100%);
+  color: #fff;
+  border-radius: 14px;
+  padding: 18px 18px 20px;
+  position: relative;
+  overflow: clip;
+}
+.b-stat-hero .b-sh-lead::before {
+  content: ""; position: absolute; right: -40px; top: -40px;
+  width: 160px; height: 160px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.18), transparent 70%);
+}
+.b-stat-hero .b-sh-lead .b-sh-l {
+  font: 500 11px/1 var(--font-sans);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  opacity: 0.82;
+}
+.b-stat-hero .b-sh-lead .b-sh-v {
+  font: 700 32px/1.05 var(--font-sans);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  margin-top: 10px;
+}
+.b-stat-hero .b-sh-lead .b-sh-d {
+  font: 13.5px/1.4 var(--font-sans);
+  opacity: 0.85; margin-top: 6px; max-width: 28ch;
+}
+.b-stat-hero .b-sh-row {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+}
+@media (max-width: 600px) {
+  .b-stat-hero .b-sh-row { grid-template-columns: repeat(2, 1fr); }
+}
+.b-stat-hero .b-sh-s {
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.b-stat-hero .b-sh-s .b-sh-l {
+  font: 500 11px/1 var(--font-sans);
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-muted);
+}
+.b-stat-hero .b-sh-s .b-sh-v {
+  font: 700 20px/1 var(--font-sans);
+  color: var(--text-strong);
+  font-variant-numeric: tabular-nums;
+  margin-top: 8px;
+}
+.b-stat-hero .b-sh-s .b-sh-sb {
+  font: 500 11.5px/1.3 var(--font-sans);
+  color: var(--text-muted); margin-top: 4px;
+}
+
+/* ── .b-day-list ───────────────────────────────────────────
+   Two-column day/value list. The "tiny chart fallback" used on
+   phones where a real bar chart wouldn't read — owner's revenue
+   by day, parent's payment ladder, gold's daily pour log.
+   Doc page: system/b-day-list.html
+   Replaces: .day-list (owner) + ad-hoc dt/dd pairs in other portals
+   --------------------------------------------------------- */
+.b-day-list {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 14px;
+}
+.b-day-list .b-dl-l {
+  font: 500 13px/1 var(--font-sans);
+  color: var(--text-body);
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.b-day-list .b-dl-v {
+  font: 600 13px/1 var(--font-mono);
+  color: var(--text-strong);
+  font-variant-numeric: tabular-nums;
+  padding: 8px 0;
+  text-align: right;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.b-day-list > :nth-last-child(-n+2) { border-bottom: 0; }
+.b-day-list .b-dl-v.up { color: var(--tone-success); }
+.b-day-list .b-dl-v.dn { color: var(--tone-danger); }
+
+/* ── .x-bottom-sheet ───────────────────────────────────────
+   Bottom-anchored sheet on phone, centred dialog on desktop.
+   Header + scrollable body + sticky footer. Drag handle on
+   mobile only. Used by admin, parent, student, gold for detail
+   views, pickers, action lists.
+   Doc page: system/x-bottom-sheet.html
+   Replaces: .sheet / .more-sheet / .modal (mobile variant) / .sheet-scrim
+   --------------------------------------------------------- */
+.x-bs-scrim {
+  position: fixed; inset: 0; z-index: 90;
+  background: rgba(22, 24, 29, 0.55);
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 200ms var(--ease-out, ease);
+}
+.x-bs-scrim.open { opacity: 1; pointer-events: auto; }
+.x-bottom-sheet {
+  background: var(--surface);
+  width: 100%; max-width: 460px;
+  max-height: 90vh;
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+  display: flex; flex-direction: column;
+  box-shadow: 0 -20px 40px -10px rgba(22, 24, 29, 0.30);
+  transform: translateY(100%);
+  transition: transform 260ms cubic-bezier(0.2, 0, 0.1, 1);
+  padding-bottom: env(safe-area-inset-bottom);
+  overflow: hidden;
+}
+.x-bs-scrim.open .x-bottom-sheet { transform: translateY(0); }
+.x-bottom-sheet .x-bs-grab {
+  width: 38px; height: 4px; border-radius: 9999px;
+  background: var(--border-strong);
+  margin: 8px auto 4px; flex: none;
+}
+.x-bottom-sheet .x-bs-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 18px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex: none;
+}
+.x-bottom-sheet .x-bs-head h3 {
+  font: 600 16px/1.2 var(--font-sans);
+  color: var(--text-strong);
+  margin: 0; flex: 1;
+}
+.x-bottom-sheet .x-bs-head .x-bs-close {
+  width: 36px; height: 36px;
+  border-radius: 9px;
+  background: var(--surface-muted);
+  color: var(--text-strong);
+  display: grid; place-items: center;
+  border: 0; cursor: pointer; flex: none;
+}
+.x-bottom-sheet .x-bs-body {
+  flex: 1; overflow-y: auto;
+  padding: 14px 18px;
+  -webkit-overflow-scrolling: touch;
+}
+.x-bottom-sheet .x-bs-foot {
+  display: flex; gap: 8px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface);
+  flex: none;
+}
+.x-bottom-sheet .x-bs-foot button {
+  flex: 1; min-height: 44px;
+  padding: 0 14px; border-radius: 10px;
+  font: 600 14px/1 var(--font-sans);
+  border: 0; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+}
+.x-bottom-sheet .x-bs-foot button.primary { background: var(--brand); color: #fff; }
+.x-bottom-sheet .x-bs-foot button.primary:hover { background: var(--brand-strong); }
+.x-bottom-sheet .x-bs-foot button.alt {
+  background: var(--surface-muted); color: var(--text-strong);
+}
+.x-bottom-sheet .x-bs-foot button.danger {
+  background: var(--tone-danger); color: #fff;
+}
+
+/* Desktop adaptation: centre the sheet as a dialog. */
+@media (min-width: 720px) {
+  .x-bs-scrim { align-items: center; padding: 24px; }
+  .x-bottom-sheet {
+    border-radius: 14px;
+    max-width: 520px; max-height: 80vh;
+    transform: translateY(20px) scale(0.98); opacity: 0;
+    transition: transform 200ms var(--ease-out, ease),
+                opacity 200ms var(--ease-out, ease);
+  }
+  .x-bs-scrim.open .x-bottom-sheet { transform: none; opacity: 1; }
+  .x-bottom-sheet .x-bs-grab { display: none; }
+}
