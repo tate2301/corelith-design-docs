@@ -514,6 +514,18 @@
     document.body.appendChild(sidebar);
     document.body.appendChild(scrim);
 
+    // Centre the active screen tab in view. On mobile the screen tabs are
+    // pinned to the bottom as a horizontally-scrollable bar, so we make
+    // sure the .current chip is always visible without the user dragging.
+    function scrollActiveTabIntoView() {
+      const tab = document.querySelector('.hx-kit-tab.current');
+      if (!tab) return;
+      try {
+        tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      } catch (e) { /* older browsers */ }
+    }
+    scrollActiveTabIntoView();
+
     // For single-page kits, sync the kit-nav active tab to the current hash
     // every time the user navigates. The kit-nav re-renders so the .current
     // class lands on the right tab without a page reload.
@@ -526,6 +538,7 @@
         if (fresh) {
           old.replaceWith(fresh);
           if (window.Icons && window.Icons.render) window.Icons.render(fresh);
+          scrollActiveTabIntoView();
         }
       });
     }
