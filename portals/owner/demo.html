@@ -1,0 +1,2825 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Owner / Manager demo · Huchu</title>
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  /* ============================================================
+     Owner / Manager Portal — Executive cockpit
+     Desktop-first. Dark by default. Dense, data-rich.
+     ============================================================ */
+
+  :root {
+    --ow-bg:        #0E1015;
+    --ow-bg-soft:   #14171E;
+    --ow-surface:   #16191F;
+    --ow-surface-2: #1B1F26;
+    --ow-surface-3: #232831;
+    --ow-border:    rgba(255,255,255,0.07);
+    --ow-border-2:  rgba(255,255,255,0.12);
+    --ow-text:      #E4E7EC;
+    --ow-text-mute: rgba(228,231,236,0.62);
+    --ow-text-sub:  rgba(228,231,236,0.4);
+    --ow-brand:     #5B8DEF;
+    --ow-brand-2:   #2563EB;
+    --ow-brand-soft:rgba(91,141,239,0.16);
+    --ow-good:      #22C55E;
+    --ow-good-soft: rgba(34,197,94,0.14);
+    --ow-warn:      #F59E0B;
+    --ow-warn-soft: rgba(245,158,11,0.16);
+    --ow-bad:       #EF4444;
+    --ow-bad-soft:  rgba(239,68,68,0.16);
+    --ow-info:      #38BDF8;
+    --ow-info-soft: rgba(56,189,248,0.14);
+    --ow-purple:    #A78BFA;
+    --ow-purple-soft:rgba(167,139,250,0.14);
+  }
+
+  body { background: var(--ow-bg); margin: 0; color: var(--ow-text); }
+
+  /* ===== Fullscreen mode ===== */
+  body.is-fullscreen .pk-nav { display: none !important; }
+  body.is-fullscreen .ow-app { height: 100vh; height: 100dvh; }
+
+  /* ===== Shell ===== */
+  .ow-app {
+    display: grid;
+    grid-template-columns: 232px 1fr;
+    grid-template-rows: 52px 1fr;
+    grid-template-areas: "side bar" "side main";
+    height: calc(100vh - 47px);
+    min-height: 640px;
+    background: var(--ow-bg);
+    color: var(--ow-text);
+    font-family: var(--font-sans);
+  }
+
+  /* ===== Top bar ===== */
+  .ow-bar {
+    grid-area: bar;
+    background: var(--ow-bg-soft);
+    border-bottom: 1px solid var(--ow-border);
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 16px;
+    font: 500 13px/1 var(--font-sans);
+    color: var(--ow-text);
+  }
+  .ow-bar .br { font-weight: 600; color: #fff; }
+  .ow-bar .sep { color: var(--ow-text-sub); }
+  .ow-bar .pill {
+    padding: 3px 10px; border-radius: 9999px;
+    font: 500 11.5px/1 var(--font-sans);
+    background: rgba(255,255,255,0.06); color: var(--ow-text-mute);
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .ow-bar .pill.live { background: var(--ow-good-soft); color: var(--ow-good); }
+  .ow-bar .pill.warn { background: var(--ow-warn-soft); color: var(--ow-warn); }
+  .ow-bar .pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .ow-bar .spacer { flex: 1; }
+  .ow-bar .bar-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 10px; border-radius: 7px;
+    background: rgba(255,255,255,0.05); color: var(--ow-text);
+    border: 0; cursor: pointer; font: 500 12px/1 var(--font-sans);
+  }
+  .ow-bar .bar-btn:hover { background: rgba(255,255,255,0.1); }
+  .ow-bar .bar-btn.brand-btn { background: var(--ow-brand-soft); color: var(--ow-brand); }
+  .ow-bar .bar-btn.brand-btn:hover { background: rgba(91,141,239,0.26); }
+  .ow-bar .who {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 4px 10px 4px 4px; border-radius: 9999px;
+    background: rgba(255,255,255,0.04); cursor: pointer;
+  }
+  .ow-bar .who:hover { background: rgba(255,255,255,0.1); }
+  .ow-bar .who .av {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: linear-gradient(135deg, #5B8DEF, #8B5CF6); color: #fff;
+    display: grid; place-items: center; font: 600 11px/1 var(--font-sans);
+  }
+  .ow-bar .who .nm { font: 600 12.5px/1 var(--font-sans); color: #fff; }
+  .ow-bar .who .rl { font: 11px/1 var(--font-sans); color: var(--ow-text-mute); margin-top: 2px; }
+  .ow-bar .kbd {
+    padding: 2px 6px; border-radius: 5px;
+    background: rgba(255,255,255,0.08); color: var(--ow-text-mute);
+    font: 600 10.5px/1 var(--font-mono);
+    border: 1px solid var(--ow-border);
+  }
+
+  /* ===== Side rail ===== */
+  .ow-side {
+    grid-area: side;
+    background: #0A0C10;
+    border-right: 1px solid var(--ow-border);
+    padding: 14px 10px;
+    display: flex; flex-direction: column; gap: 2px;
+    min-width: 0; overflow-y: auto;
+  }
+  .ow-side .brand {
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 4px 8px 14px; color: #fff;
+    font: 600 14px/1 var(--font-sans);
+    text-decoration: none;
+  }
+  .ow-side .brand .m { color: var(--ow-brand); }
+  .ow-side .tenant {
+    margin: 0 4px 12px;
+    padding: 10px;
+    background: var(--ow-surface);
+    border: 1px solid var(--ow-border);
+    border-radius: 9px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 9px;
+    transition: background 120ms;
+  }
+  .ow-side .tenant:hover { background: var(--ow-surface-2); }
+  .ow-side .tenant .av {
+    width: 30px; height: 30px; border-radius: 7px;
+    background: linear-gradient(135deg, #5B8DEF, #A78BFA);
+    color: #fff; display: grid; place-items: center;
+    font: 700 12px/1 var(--font-sans); flex: none;
+  }
+  .ow-side .tenant .nm { font: 600 12.5px/1.2 var(--font-sans); color: #fff; }
+  .ow-side .tenant .sb { font: 11px/1.2 var(--font-sans); color: var(--ow-text-mute); margin-top: 2px; }
+  .ow-side .tenant .ar { margin-left: auto; color: var(--ow-text-sub); }
+
+  .ow-side .h {
+    font: 600 10px/1 var(--font-sans);
+    letter-spacing: 0.13em; text-transform: uppercase;
+    color: var(--ow-text-sub);
+    padding: 14px 10px 6px;
+  }
+  .ow-side .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 7px;
+    color: var(--ow-text-mute); text-decoration: none;
+    font: 500 13px/1 var(--font-sans);
+    border: 0; background: transparent; cursor: pointer;
+    width: 100%; text-align: left;
+  }
+  .ow-side .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+  .ow-side .nav-item.active { background: var(--ow-brand-soft); color: var(--ow-brand); }
+  .ow-side .nav-item.active .ic { color: var(--ow-brand); }
+  .ow-side .nav-item .ic { width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; flex: none; color: var(--ow-text-sub); }
+  .ow-side .nav-item .cnt {
+    margin-left: auto;
+    padding: 1px 7px; border-radius: 9999px;
+    background: rgba(255,255,255,0.08); color: var(--ow-text-mute);
+    font: 600 10px/1 var(--font-mono);
+  }
+  .ow-side .nav-item .cnt.warn { background: var(--ow-warn-soft); color: var(--ow-warn); }
+  .ow-side .nav-item .cnt.bad  { background: var(--ow-bad-soft); color: var(--ow-bad); }
+  .ow-side .foot {
+    margin-top: auto;
+    padding: 12px 10px 4px;
+    border-top: 1px solid var(--ow-border);
+    font: 11.5px/1.4 var(--font-sans);
+    color: var(--ow-text-sub);
+  }
+  .ow-side .foot strong { color: var(--ow-text-mute); font-weight: 600; display: block; }
+  .ow-side .foot a { color: var(--ow-brand); text-decoration: none; }
+
+  /* ===== Main ===== */
+  .ow-main {
+    grid-area: main;
+    min-width: 0; min-height: 0;
+    overflow: auto;
+    background: var(--ow-bg);
+  }
+  .ow-page { padding: 18px 22px 80px; }
+  .ow-page-head { display: flex; align-items: flex-end; gap: 12px; margin-bottom: 14px; }
+  .ow-page-head .crumb { font: 500 11px/1 var(--font-sans); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ow-text-sub); }
+  .ow-page-head h2 { font: 700 22px/1.1 var(--font-sans); color: #fff; margin: 6px 0 0; letter-spacing: -0.015em; }
+  .ow-page-head .sub { font: 13.5px/1.4 var(--font-sans); color: var(--ow-text-mute); margin-top: 4px; max-width: 640px; }
+  .ow-page-head .spacer { flex: 1; }
+  .ow-page-head .head-acts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* Common */
+  .btn {
+    padding: 7px 12px; border-radius: 7px;
+    background: rgba(255,255,255,0.05); color: var(--ow-text);
+    font: 500 12.5px/1 var(--font-sans);
+    border: 1px solid var(--ow-border);
+    cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .btn.primary { background: var(--ow-brand-2); color: #fff; border-color: var(--ow-brand-2); }
+  .btn.primary:hover { background: var(--ow-brand); }
+  .btn.ghost { background: transparent; }
+  .btn.danger { background: var(--ow-bad-soft); color: var(--ow-bad); border-color: rgba(239,68,68,0.3); }
+  .btn.sm { padding: 5px 9px; font-size: 11.5px; }
+  .seg {
+    display: inline-flex; padding: 2px;
+    background: rgba(255,255,255,0.05); border-radius: 7px;
+    border: 1px solid var(--ow-border);
+  }
+  .seg button { padding: 5px 11px; border-radius: 5px; font: 500 12px var(--font-sans); color: var(--ow-text-mute); background: transparent; cursor: pointer; border: 0; }
+  .seg button.on { background: var(--ow-surface-2); color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+  .seg button:hover:not(.on) { color: #fff; }
+
+  /* KPI tiles */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+  .kpi {
+    background: var(--ow-surface); border: 1px solid var(--ow-border);
+    border-radius: 12px; padding: 14px 16px; cursor: pointer;
+    transition: border-color 120ms, background 120ms;
+    position: relative;
+  }
+  .kpi:hover { border-color: var(--ow-border-2); background: var(--ow-surface-2); }
+  .kpi .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.09em; text-transform: uppercase; color: var(--ow-text-sub); }
+  .kpi .v { font: 700 28px/1 var(--font-sans); color: #fff; margin-top: 10px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .kpi .v .cent { font-size: 18px; color: var(--ow-text-mute); }
+  .kpi .meta { display: flex; align-items: flex-end; justify-content: space-between; margin-top: 10px; gap: 10px; }
+  .kpi .delta { font: 500 12px/1 var(--font-sans); display: inline-flex; align-items: center; gap: 4px; }
+  .kpi .delta.up { color: var(--ow-good); }
+  .kpi .delta.dn { color: var(--ow-bad); }
+  .kpi .delta.flat { color: var(--ow-text-mute); }
+  .kpi .target { font: 500 11px/1.3 var(--font-sans); color: var(--ow-text-sub); text-align: right; }
+  .kpi .target .pct { font: 600 12px var(--font-mono); color: var(--ow-text); }
+  .kpi .spark { display: block; }
+  .kpi.warn { border-color: rgba(245,158,11,0.3); }
+  .kpi.warn .v { color: var(--ow-warn); }
+  .kpi.bad  { border-color: rgba(239,68,68,0.3); }
+  .kpi.bad .v { color: var(--ow-bad); }
+
+  /* Cards / panels */
+  .ow-card {
+    background: var(--ow-surface);
+    border: 1px solid var(--ow-border);
+    border-radius: 12px; padding: 14px 16px;
+  }
+  .ow-card.flat { background: transparent; border: 1px solid var(--ow-border); }
+  .ow-card .ttl { font: 600 13.5px/1.2 var(--font-sans); color: #fff; }
+  .ow-card .sub { font: 12px/1.4 var(--font-sans); color: var(--ow-text-mute); margin-top: 3px; }
+  .ow-card .hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .ow-card .hdr .spacer { flex: 1; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .col-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; }
+  .col-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; }
+  @media (max-width: 1080px) {
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+    .col-2-1, .col-1-2 { grid-template-columns: 1fr; }
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 720px) {
+    .ow-app {
+      grid-template-columns: 1fr;
+      grid-template-rows: 52px 1fr;
+      grid-template-areas: "bar" "main";
+    }
+    .ow-side { display: none; }
+    .ow-side.open {
+      display: flex; position: fixed; inset: 47px 0 0 0;
+      z-index: 90; height: calc(100vh - 47px);
+    }
+    body.is-fullscreen .ow-side.open { inset: 0; height: 100vh; }
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+    .ow-page { padding: 14px; }
+    .ow-bar .bar-btn-label, .ow-bar .who .rl { display: none; }
+    .ow-bar { gap: 8px; padding: 0 10px; font-size: 12px; }
+    .ow-bar .sep, .ow-bar .day-pill { display: none; }
+  }
+
+  /* Tables */
+  .ow-table { width: 100%; border-collapse: collapse; font: 13px/1.4 var(--font-sans); }
+  .ow-table th {
+    text-align: left; padding: 8px 10px; font: 500 11px/1 var(--font-sans);
+    letter-spacing: 0.07em; text-transform: uppercase; color: var(--ow-text-sub);
+    border-bottom: 1px solid var(--ow-border);
+    background: transparent;
+  }
+  .ow-table td {
+    padding: 9px 10px; border-bottom: 1px solid var(--ow-border);
+    color: var(--ow-text); vertical-align: middle;
+  }
+  .ow-table tr:last-child td { border-bottom: 0; }
+  .ow-table tr:hover td { background: rgba(255,255,255,0.03); }
+  .ow-table td.num, .ow-table th.num { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+  .ow-table .nm { font: 600 13px/1.3 var(--font-sans); color: #fff; }
+  .ow-table .sb { font: 11.5px/1.3 var(--font-sans); color: var(--ow-text-mute); margin-top: 2px; }
+  .ow-table .pill { padding: 2px 8px; border-radius: 9999px; font: 500 11px/1.3 var(--font-sans); display: inline-block; }
+  .pill.ok { background: var(--ow-good-soft); color: var(--ow-good); }
+  .pill.warn { background: var(--ow-warn-soft); color: var(--ow-warn); }
+  .pill.bad { background: var(--ow-bad-soft); color: var(--ow-bad); }
+  .pill.info { background: var(--ow-info-soft); color: var(--ow-info); }
+  .pill.neutral { background: rgba(255,255,255,0.08); color: var(--ow-text-mute); }
+
+  .health-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .health-dot.ok { background: var(--ow-good); }
+  .health-dot.warn { background: var(--ow-warn); }
+  .health-dot.bad { background: var(--ow-bad); }
+
+  /* Sparkline / svg */
+  .sk-line { fill: none; stroke-width: 1.5; }
+  .sk-area { opacity: 0.18; }
+
+  /* Vertical tile */
+  .vt-card {
+    background: var(--ow-surface); border: 1px solid var(--ow-border);
+    border-radius: 12px; padding: 14px; cursor: pointer;
+    transition: border-color 120ms, background 120ms;
+  }
+  .vt-card:hover { border-color: var(--ow-border-2); background: var(--ow-surface-2); }
+  .vt-card .top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .vt-card .icn {
+    width: 30px; height: 30px; border-radius: 8px;
+    display: grid; place-items: center; flex: none; color: #fff;
+  }
+  .vt-card .vnm { font: 600 14px/1 var(--font-sans); color: #fff; }
+  .vt-card .ssn { font: 11.5px/1.2 var(--font-sans); color: var(--ow-text-mute); margin-top: 2px; }
+  .vt-card .val { font: 700 21px/1 var(--font-sans); color: #fff; font-variant-numeric: tabular-nums; margin-top: 12px; letter-spacing: -0.01em; }
+  .vt-card .row { display: flex; gap: 14px; margin-top: 10px; }
+  .vt-card .row .l { font: 11px/1 var(--font-sans); color: var(--ow-text-sub); letter-spacing: 0.06em; text-transform: uppercase; }
+  .vt-card .row .x { font: 600 13px/1 var(--font-mono); color: var(--ow-text); margin-top: 4px; }
+
+  /* Leaderboard rank */
+  .rank {
+    display: inline-grid; place-items: center;
+    width: 22px; height: 22px; border-radius: 6px;
+    background: rgba(255,255,255,0.05);
+    font: 700 11px/1 var(--font-mono); color: var(--ow-text-mute);
+  }
+  .rank.gold { background: rgba(245,158,11,0.18); color: var(--ow-warn); }
+  .rank.silver { background: rgba(167,139,250,0.18); color: var(--ow-purple); }
+  .rank.bronze { background: rgba(184,127,87,0.18); color: #DA8A5C; }
+
+  /* Charts */
+  .chart-wrap { position: relative; }
+  .chart-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
+  .chart-legend .lg { font: 12px/1 var(--font-sans); color: var(--ow-text-mute); display: inline-flex; align-items: center; gap: 6px; }
+  .chart-legend .lg .sw { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* Bar list */
+  .bar-row { display: grid; grid-template-columns: 110px 1fr 80px; gap: 10px; align-items: center; padding: 6px 0; }
+  .bar-row .lb { font: 500 12.5px var(--font-sans); color: var(--ow-text); }
+  .bar-row .tk { background: rgba(255,255,255,0.05); height: 8px; border-radius: 9999px; overflow: hidden; }
+  .bar-row .tk .fl { height: 100%; background: var(--ow-brand); border-radius: 9999px; transition: width 240ms; }
+  .bar-row.warn .tk .fl { background: var(--ow-warn); }
+  .bar-row.bad .tk .fl  { background: var(--ow-bad); }
+  .bar-row.good .tk .fl { background: var(--ow-good); }
+  .bar-row .vl { text-align: right; font: 600 12.5px var(--font-mono); color: var(--ow-text); font-variant-numeric: tabular-nums; }
+
+  /* Flag row */
+  .flag-row {
+    display: grid; grid-template-columns: 8px 80px 1fr auto auto;
+    gap: 12px; align-items: center;
+    padding: 11px 14px;
+    background: var(--ow-surface);
+    border: 1px solid var(--ow-border);
+    border-radius: 10px; margin-bottom: 8px;
+    transition: background 120ms;
+  }
+  .flag-row:hover { background: var(--ow-surface-2); }
+  .flag-row.crit .sev-dot { background: var(--ow-bad); box-shadow: 0 0 0 4px rgba(239,68,68,0.18); }
+  .flag-row.warn .sev-dot { background: var(--ow-warn); }
+  .flag-row.info .sev-dot { background: var(--ow-info); }
+  .flag-row .sev-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .flag-row .sev {
+    padding: 2px 8px; border-radius: 9999px; text-align: center;
+    font: 500 10.5px/1.4 var(--font-sans); letter-spacing: 0.04em;
+  }
+  .flag-row.crit .sev { background: var(--ow-bad-soft); color: var(--ow-bad); }
+  .flag-row.warn .sev { background: var(--ow-warn-soft); color: var(--ow-warn); }
+  .flag-row.info .sev { background: var(--ow-info-soft); color: var(--ow-info); }
+  .flag-row .ttl { font: 600 13.5px/1.3 var(--font-sans); color: #fff; }
+  .flag-row .mt  { font: 12px/1.3 var(--font-sans); color: var(--ow-text-mute); margin-top: 3px; }
+  .flag-row .ag  { font: 11.5px/1 var(--font-mono); color: var(--ow-text-sub); }
+
+  /* Sign in (full viewport overlay) */
+  .ow-login {
+    position: fixed; inset: 0; z-index: 50;
+    background: linear-gradient(160deg, #0A0C10 0%, #14181F 50%, #1A1F2A 100%);
+    display: grid; place-items: center;
+    padding: 20px;
+  }
+  body:not(.is-fullscreen) .ow-login { top: 47px; }
+  .ow-login .card {
+    width: 100%; max-width: 380px;
+    background: var(--ow-surface-2);
+    border: 1px solid var(--ow-border);
+    border-radius: 14px;
+    padding: 28px;
+    color: var(--ow-text);
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
+  }
+  .ow-login h1 { font: 700 22px/1.1 var(--font-sans); color: #fff; margin: 0; letter-spacing: -0.015em; }
+  .ow-login .lead { font: 13.5px/1.5 var(--font-sans); color: var(--ow-text-mute); margin-top: 6px; }
+  .ow-login .field { display: block; margin-top: 16px; }
+  .ow-login .field label { font: 500 12px/1 var(--font-sans); color: var(--ow-text-mute); display: block; margin-bottom: 6px; }
+  .ow-login .field input {
+    width: 100%; height: 40px; padding: 0 12px;
+    background: var(--ow-surface); color: #fff;
+    border: 1px solid var(--ow-border-2); border-radius: 8px;
+    font: 500 14px/1 var(--font-sans);
+    box-sizing: border-box;
+  }
+  .ow-login .field input:focus { outline: 0; border-color: var(--ow-brand); box-shadow: 0 0 0 3px var(--ow-brand-soft); }
+  .ow-login .otp-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+  .ow-login .otp-row input { text-align: center; font: 700 18px var(--font-mono); padding: 0; }
+  .ow-login .full {
+    width: 100%; margin-top: 18px; height: 42px;
+    background: var(--ow-brand-2); color: #fff;
+    border: 0; border-radius: 8px; cursor: pointer;
+    font: 600 14px/1 var(--font-sans);
+  }
+  .ow-login .full:hover { background: var(--ow-brand); }
+  .ow-login .meta { font: 12px/1.5 var(--font-sans); color: var(--ow-text-sub); margin-top: 14px; text-align: center; }
+  .ow-login .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 9999px;
+    background: var(--ow-brand-soft); color: var(--ow-brand);
+    font: 500 11px var(--font-sans); margin-bottom: 14px;
+  }
+
+  /* Modal */
+  .modal-scrim {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.55); backdrop-filter: blur(4px);
+    display: grid; place-items: center;
+    padding: 24px; animation: scrimIn 180ms ease;
+  }
+  @keyframes scrimIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--ow-surface-2);
+    color: var(--ow-text);
+    border: 1px solid var(--ow-border-2);
+    border-radius: 12px;
+    padding: 22px;
+    width: 100%; max-width: 480px;
+    box-shadow: 0 24px 48px -12px rgba(0,0,0,0.6);
+    animation: modalIn 240ms cubic-bezier(0.2, 0.8, 0.3, 1);
+  }
+  .modal.wide { max-width: 720px; }
+  .modal.drawer { max-width: 540px; max-height: 88vh; overflow-y: auto; }
+  @keyframes modalIn { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .modal h3 { font: 600 17px/1.2 var(--font-sans); color: #fff; margin: 0 0 4px; }
+  .modal .sub { font: 13px/1.4 var(--font-sans); color: var(--ow-text-mute); margin: 0 0 14px; }
+  .modal .row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .modal .row input, .modal .row select, .modal .row textarea {
+    flex: 1; min-width: 0;
+    height: 36px; padding: 0 10px;
+    background: var(--ow-surface); color: #fff;
+    border: 1px solid var(--ow-border-2); border-radius: 7px;
+    font: 500 13px/1 var(--font-sans);
+  }
+  .modal .row textarea { min-height: 80px; padding: 8px 10px; resize: vertical; }
+  .modal .acts { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+  .modal .acts .btn.primary { padding: 9px 14px; }
+
+  /* Toast */
+  .toast-host {
+    position: fixed; top: 70px; right: 22px;
+    z-index: 200; display: flex; flex-direction: column; gap: 8px;
+    pointer-events: none;
+  }
+  body.is-fullscreen .toast-host { top: 22px; }
+  .toast {
+    background: var(--ow-surface-3); color: #fff;
+    border: 1px solid var(--ow-border-2);
+    padding: 10px 14px; border-radius: 9px;
+    font: 500 13px/1.3 var(--font-sans);
+    display: inline-flex; align-items: center; gap: 8px;
+    box-shadow: 0 12px 24px -6px rgba(0,0,0,0.5);
+    animation: toastIn 240ms ease; pointer-events: auto;
+    max-width: 360px;
+  }
+  .toast.success { background: var(--ow-good); border-color: var(--ow-good); }
+  .toast.danger  { background: var(--ow-bad);  border-color: var(--ow-bad);  }
+  .toast.warn    { background: var(--ow-warn); border-color: var(--ow-warn); }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+  .toast.out { animation: toastOut 240ms ease forwards; }
+  @keyframes toastOut { to { opacity: 0; transform: translateX(20px); } }
+
+  /* Command palette */
+  .cmdk-scrim {
+    position: fixed; inset: 0; z-index: 150;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+    display: flex; align-items: flex-start; justify-content: center;
+    padding-top: 12vh;
+    animation: scrimIn 160ms ease;
+  }
+  .cmdk {
+    width: 100%; max-width: 560px;
+    background: var(--ow-surface-2); color: var(--ow-text);
+    border: 1px solid var(--ow-border-2); border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 30px 60px -10px rgba(0,0,0,0.5);
+  }
+  .cmdk .srch { padding: 14px 16px; border-bottom: 1px solid var(--ow-border); display: flex; align-items: center; gap: 10px; }
+  .cmdk .srch [data-icon] { color: var(--ow-text-mute); }
+  .cmdk .srch input { flex: 1; background: transparent; border: 0; color: #fff; font: 500 15px var(--font-sans); outline: none; }
+  .cmdk .lst { max-height: 380px; overflow-y: auto; padding: 6px; }
+  .cmdk .ph { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ow-text-sub); padding: 10px 10px 4px; }
+  .cmdk .it { padding: 9px 10px; border-radius: 7px; display: flex; align-items: center; gap: 10px; cursor: pointer; font: 500 13.5px var(--font-sans); color: var(--ow-text); }
+  .cmdk .it:hover, .cmdk .it.on { background: var(--ow-surface-3); color: #fff; }
+  .cmdk .it .ic { width: 16px; color: var(--ow-text-sub); }
+  .cmdk .it .ms { margin-left: auto; font: 11.5px var(--font-mono); color: var(--ow-text-sub); }
+  .cmdk .ft { padding: 8px 14px; border-top: 1px solid var(--ow-border); font: 11.5px/1 var(--font-sans); color: var(--ow-text-sub); display: flex; gap: 12px; }
+
+  /* Drawer (drill-in) */
+  .drawer-scrim {
+    position: fixed; inset: 0; z-index: 110;
+    background: rgba(0,0,0,0.55); backdrop-filter: blur(2px);
+    display: flex; justify-content: flex-end;
+    animation: scrimIn 160ms ease;
+  }
+  .drawer {
+    width: 480px; max-width: 95vw; height: 100%;
+    background: var(--ow-surface-2); color: var(--ow-text);
+    border-left: 1px solid var(--ow-border-2);
+    overflow-y: auto;
+    animation: drawerIn 240ms cubic-bezier(0.2, 0.8, 0.3, 1);
+    display: flex; flex-direction: column;
+  }
+  @keyframes drawerIn { from { transform: translateX(40px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  .drawer .dr-hd { padding: 16px 20px; border-bottom: 1px solid var(--ow-border); display: flex; align-items: flex-start; gap: 10px; }
+  .drawer .dr-hd .ttl { font: 600 17px/1.2 var(--font-sans); color: #fff; margin: 0; }
+  .drawer .dr-hd .crumb { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ow-text-sub); margin-bottom: 4px; }
+  .drawer .dr-bd { padding: 18px 20px; flex: 1; }
+  .drawer .dr-ft { padding: 12px 20px; border-top: 1px solid var(--ow-border); display: flex; gap: 8px; justify-content: flex-end; }
+  .drawer .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .drawer .stat-row .s { padding: 10px 12px; background: var(--ow-surface); border-radius: 9px; }
+  .drawer .stat-row .s .l { font: 11px/1 var(--font-sans); color: var(--ow-text-sub); text-transform: uppercase; letter-spacing: 0.07em; }
+  .drawer .stat-row .s .v { font: 700 18px/1 var(--font-sans); color: #fff; margin-top: 6px; font-variant-numeric: tabular-nums; }
+
+  /* Empty / loading / error */
+  .empty-st, .err-st {
+    text-align: center; padding: 40px 20px; color: var(--ow-text-mute);
+    background: var(--ow-surface); border: 1px dashed var(--ow-border); border-radius: 12px;
+  }
+  .empty-st .ic-bg, .err-st .ic-bg {
+    width: 48px; height: 48px; border-radius: 50%;
+    margin: 0 auto 12px; display: grid; place-items: center;
+    background: rgba(255,255,255,0.05); color: var(--ow-text-mute);
+  }
+  .err-st .ic-bg { background: var(--ow-bad-soft); color: var(--ow-bad); }
+  .empty-st .ttl, .err-st .ttl { font: 600 15px/1.3 var(--font-sans); color: #fff; }
+  .empty-st .ds, .err-st .ds { font: 13px/1.4 var(--font-sans); color: var(--ow-text-mute); margin-top: 6px; }
+  .sk { background: rgba(255,255,255,0.06); border-radius: 5px; height: 12px; animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+  /* Annotation chips */
+  .annot {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 2px 8px; border-radius: 9999px;
+    background: var(--ow-purple-soft); color: var(--ow-purple);
+    font: 500 11.5px var(--font-sans);
+  }
+
+  /* Settings */
+  .ow-set {
+    display: grid; grid-template-columns: 220px 1fr; gap: 18px;
+    background: var(--ow-surface); border: 1px solid var(--ow-border); border-radius: 12px; overflow: hidden;
+  }
+  .ow-set .nav { padding: 14px 10px; border-right: 1px solid var(--ow-border); }
+  .ow-set .nav button {
+    width: 100%; text-align: left; padding: 8px 10px; border-radius: 6px;
+    background: transparent; color: var(--ow-text-mute); cursor: pointer; border: 0;
+    font: 500 13px var(--font-sans); display: flex; align-items: center; gap: 8px;
+  }
+  .ow-set .nav button.on { background: var(--ow-brand-soft); color: var(--ow-brand); }
+  .ow-set .nav button:hover:not(.on) { background: rgba(255,255,255,0.05); color: #fff; }
+  .ow-set .body { padding: 18px 20px; }
+  .ow-set .body h3 { font: 600 15px/1.2 var(--font-sans); color: #fff; margin: 0 0 6px; }
+  .ow-set .body .sub { font: 12.5px/1.4 var(--font-sans); color: var(--ow-text-mute); margin-bottom: 14px; }
+  .ow-set .body .field { display: grid; grid-template-columns: 200px 1fr; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--ow-border); }
+  .ow-set .body .field:last-child { border-bottom: 0; }
+  .ow-set .body .field .lb { font: 500 13px var(--font-sans); color: var(--ow-text); }
+  .ow-set .body .field .sb { font: 11.5px var(--font-sans); color: var(--ow-text-mute); margin-top: 3px; }
+  .ow-set .body .field input, .ow-set .body .field select {
+    height: 36px; padding: 0 10px; background: var(--ow-bg); color: #fff;
+    border: 1px solid var(--ow-border-2); border-radius: 7px;
+    font: 500 13px var(--font-sans); justify-self: stretch; max-width: 280px;
+  }
+  .toggle { width: 38px; height: 22px; border-radius: 9999px; background: rgba(255,255,255,0.1); position: relative; cursor: pointer; transition: background 120ms; flex: none; display: inline-block; }
+  .toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform 160ms; }
+  .toggle.on { background: var(--ow-brand-2); }
+  .toggle.on::after { transform: translateX(16px); }
+
+  /* Compliance calendar */
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal .day {
+    aspect-ratio: 1.1; background: var(--ow-surface);
+    border-radius: 6px; padding: 5px 6px;
+    font: 500 11px var(--font-sans); color: var(--ow-text-mute);
+    display: flex; flex-direction: column;
+  }
+  .cal .day.today { border: 1px solid var(--ow-brand); }
+  .cal .day.has .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--ow-warn); margin-top: auto; align-self: flex-start; }
+  .cal .day.has.bad .dot { background: var(--ow-bad); }
+  .cal .day .nm { font: 600 12px var(--font-sans); color: var(--ow-text); }
+  .cal .day .ev { font: 9.5px/1.1 var(--font-sans); color: var(--ow-text-mute); margin-top: 2px; }
+  .cal .head { font: 500 10px var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ow-text-sub); text-align: center; padding: 4px 0; }
+
+  /* Offline banner */
+  .offline-banner {
+    background: var(--ow-warn); color: #1A1308;
+    padding: 8px 14px; font: 500 13px var(--font-sans);
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  /* Tag (initiative, OKR) */
+  .tag { padding: 2px 8px; border-radius: 5px; background: rgba(255,255,255,0.06); color: var(--ow-text-mute); font: 500 11.5px var(--font-sans); }
+  .tag.brand { background: var(--ow-brand-soft); color: var(--ow-brand); }
+
+  /* Annotation list */
+  .ann-row { padding: 10px 0; border-bottom: 1px solid var(--ow-border); display: flex; gap: 10px; }
+  .ann-row:last-child { border-bottom: 0; }
+  .ann-row .av { width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #5B8DEF, #A78BFA); color: #fff; display: grid; place-items: center; font: 600 11px var(--font-sans); flex: none; }
+  .ann-row .nm { font: 600 12.5px var(--font-sans); color: #fff; }
+  .ann-row .tx { font: 12.5px/1.45 var(--font-sans); color: var(--ow-text-mute); margin-top: 3px; }
+  .ann-row .ts { font: 11px var(--font-mono); color: var(--ow-text-sub); }
+
+  /* Hamburger button helper (light) */
+  .ham {
+    display: none;
+  }
+  @media (max-width: 720px) {
+    .ham { display: inline-flex; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+<div id="modal-host"></div>
+<div id="drawer-host"></div>
+<div id="cmdk-host"></div>
+<div class="toast-host" id="toast-host"></div>
+
+<script>
+/* ============================================================
+   OWNER / MANAGER PORTAL — Executive cockpit
+   Mukamba Holdings demo content.
+   ============================================================ */
+
+const $  = (s, p = document) => p.querySelector(s);
+const $$ = (s, p = document) => Array.from(p.querySelectorAll(s));
+const fmt = (n, d = 0) => {
+  if (n === null || n === undefined) return '—';
+  const v = Math.abs(n);
+  const sign = n < 0 ? '-' : '';
+  const s = v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  return sign + s;
+};
+const usd = (n, d = 0) => '$ ' + fmt(n, d);
+const pct = (n, d = 1) => (n >= 0 ? '+' : '') + n.toFixed(d) + '%';
+function escapeHtml(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ===== Seed data — Mukamba Holdings (fictional Zim group) ===== */
+const TENANTS = [
+  { id: 'mh',   name: 'Mukamba Holdings',  sub: 'Group · 7 verticals · 24 branches' },
+  { id: 'mr',   name: 'Mukamba Retail',    sub: '12 branches · USD/ZWG' },
+  { id: 'mg',   name: 'Mukamba Gold',      sub: 'Filabusi · 1 mill · 3 sites' },
+  { id: 'ms',   name: 'Mukamba Scrap',     sub: 'Bulawayo · Harare · Mutare' },
+  { id: 'mc',   name: 'Mukamba Schools',   sub: '2 colleges · 1,420 learners' },
+  { id: 'ma',   name: 'Mukamba Auto',      sub: 'Tinted glass · spares' },
+  { id: 'mt',   name: 'Mukamba Thrift',    sub: 'Microfinance · 6 outlets' },
+];
+
+const VERTICALS = [
+  { id: 'retail',   name: 'Retail',   sub: 'FMCG · 12 branches', icon: 'shop',     color: '#2563EB', rev: 142840, mgn: 18.4, hp: 'ok',   delta: 8.4 },
+  { id: 'gold',     name: 'Gold',     sub: 'Filabusi mill',       icon: 'gold',     color: '#F59E0B', rev:  98620, mgn: 32.1, hp: 'ok',   delta: 12.6 },
+  { id: 'scrap',    name: 'Scrap',    sub: '3 yards',             icon: 'recycle',  color: '#22C55E', rev:  64480, mgn: 14.2, hp: 'warn', delta: -3.2 },
+  { id: 'schools',  name: 'Schools',  sub: '2 colleges',          icon: 'school',   color: '#8B5CF6', rev:  41200, mgn: 22.8, hp: 'ok',   delta: 4.1 },
+  { id: 'auto',     name: 'Auto',     sub: 'Tinting + spares',    icon: 'car',      color: '#06B6D4', rev:  38940, mgn: 16.7, hp: 'warn', delta: 1.8 },
+  { id: 'thrift',   name: 'Thrift',   sub: 'Microfinance',        icon: 'wallet',   color: '#EC4899', rev:  26760, mgn: 41.3, hp: 'bad',  delta: -8.4 },
+];
+
+const BRANCHES = [
+  { id: 'b01', name: 'Park Centre',    vertical: 'Retail',  city: 'Harare',    mtd: 142800, delta: 12.4, hp: 'ok' },
+  { id: 'b02', name: 'Bulawayo Main',  vertical: 'Retail',  city: 'Bulawayo',  mtd:  98620, delta:  8.7, hp: 'ok' },
+  { id: 'b03', name: 'Filabusi Mill',  vertical: 'Gold',    city: 'Filabusi',  mtd:  98620, delta: 12.6, hp: 'ok' },
+  { id: 'b04', name: 'Sam Nujoma',     vertical: 'Retail',  city: 'Harare',    mtd:  78940, delta:  4.2, hp: 'ok' },
+  { id: 'b05', name: 'Westgate',       vertical: 'Retail',  city: 'Harare',    mtd:  72380, delta:  2.1, hp: 'warn' },
+  { id: 'b06', name: 'BYO Scrap Yard', vertical: 'Scrap',   city: 'Bulawayo',  mtd:  41200, delta: -2.8, hp: 'warn' },
+  { id: 'b07', name: 'Mutare Branch',  vertical: 'Retail',  city: 'Mutare',    mtd:  39140, delta:  6.0, hp: 'ok' },
+  { id: 'b08', name: 'HRE Scrap Yard', vertical: 'Scrap',   city: 'Harare',    mtd:  18440, delta: -7.4, hp: 'bad' },
+  { id: 'b09', name: 'Belvedere',      vertical: 'Retail',  city: 'Harare',    mtd:  36280, delta: 11.4, hp: 'ok' },
+  { id: 'b10', name: 'College of Comm',vertical: 'Schools', city: 'Harare',    mtd:  28940, delta:  3.2, hp: 'ok' },
+  { id: 'b11', name: 'Auto Tinting',   vertical: 'Auto',    city: 'Harare',    mtd:  22640, delta:  0.8, hp: 'warn' },
+  { id: 'b12', name: 'Thrift Eastlea', vertical: 'Thrift',  city: 'Harare',    mtd:  12860, delta: -10.4, hp: 'bad' },
+];
+
+const BANKS = [
+  { id: 'nmb',    name: 'NMB Bank',     acct: '****8420',  usd: 184500, zwg: 920000,  ccy: 'mixed' },
+  { id: 'cbz',    name: 'CBZ',          acct: '****1109',  usd:  76240, zwg: 1240000, ccy: 'mixed' },
+  { id: 'stnb',   name: 'Stanbic',      acct: '****0512',  usd: 124800, zwg:      0,  ccy: 'usd' },
+  { id: 'steward',name: 'Steward Bank', acct: '****3308',  usd:  18420, zwg:  84000,  ccy: 'mixed' },
+  { id: 'fbc',    name: 'FBC',          acct: '****7741',  usd:  41200, zwg: 360000,  ccy: 'mixed' },
+];
+const FLOATS = [
+  { id: 'eco1', kind: 'EcoCash Float · Park',     usd:  4200, zwg: 142000 },
+  { id: 'eco2', kind: 'EcoCash Float · Bulawayo', usd:  3100, zwg:  96000 },
+  { id: 'eco3', kind: 'OneMoney · Sam Nujoma',    usd:  1840, zwg:  48000 },
+];
+const TILLS = [
+  { id: 't1', kind: 'Till · Park Centre',   usd: 1242, zwg: 18400 },
+  { id: 't2', kind: 'Till · Westgate',      usd:  984, zwg: 12200 },
+  { id: 't3', kind: 'Till · Bulawayo Main', usd: 1620, zwg: 22400 },
+  { id: 't4', kind: 'Till · Mutare',        usd:  724, zwg:  8800 },
+];
+
+const AR = [
+  { id: 'AR-2841', customer: 'Pick n Pay Zim',     amt: 24820, days: 12, status: 'current' },
+  { id: 'AR-2832', customer: 'Innscor Africa',     amt: 18420, days: 48, status: '31-60' },
+  { id: 'AR-2820', customer: 'TM Supermarkets',    amt: 14200, days: 6,  status: 'current' },
+  { id: 'AR-2815', customer: 'Chicken Inn',        amt:  9840, days: 72, status: '61-90' },
+  { id: 'AR-2812', customer: 'OK Zimbabwe',        amt:  8420, days: 18, status: 'current' },
+  { id: 'AR-2805', customer: 'Truworths',          amt:  7240, days: 96, status: '90+' },
+  { id: 'AR-2801', customer: 'Edgars Stores',      amt:  6120, days: 110, status: '90+' },
+  { id: 'AR-2798', customer: 'Bata Shoe Co.',      amt:  4820, days: 38, status: '31-60' },
+  { id: 'AR-2790', customer: 'Choppies',           amt:  4120, days: 62, status: '61-90' },
+  { id: 'AR-2784', customer: 'Spar Zimbabwe',      amt:  3640, days: 22, status: 'current' },
+];
+const AP = [
+  { id: 'AP-1042', supplier: 'Delta Beverages',    amt: 28420, due: 'in 4 days',  status: 'due-soon' },
+  { id: 'AP-1041', supplier: 'Schweppes Holdings', amt: 14200, due: 'in 12 days', status: 'planned' },
+  { id: 'AP-1038', supplier: 'Dairibord',          amt: 11240, due: 'overdue 3 days', status: 'overdue' },
+  { id: 'AP-1034', supplier: 'National Foods',     amt:  9820, due: 'in 9 days',  status: 'planned' },
+  { id: 'AP-1028', supplier: 'ZESA Holdings',      amt:  6240, due: 'in 2 days',  status: 'due-soon' },
+  { id: 'AP-1020', supplier: 'Liquid Telecom',     amt:  3420, due: 'in 18 days', status: 'planned' },
+  { id: 'AP-1015', supplier: 'TelOne',             amt:  2840, due: 'overdue 8 days', status: 'overdue' },
+];
+
+const FLAGS = [
+  { id: 'F-091', sev: 'crit', ttl: 'Cash float below threshold · Park Centre',          mt: '$ 4,200 vs $ 8,000 floor · 2h ago',   owner: 'Faith Moyo',    age: '2h' },
+  { id: 'F-090', sev: 'crit', ttl: 'AR over 90 days exceeds 5% of book',                mt: '$ 13,360 · Truworths + Edgars',        owner: 'Tendai Mhuru',  age: '4h' },
+  { id: 'F-089', sev: 'warn', ttl: 'Scrap intake volume down 18% week-on-week',         mt: 'BYO yard + HRE yard combined',         owner: 'Joseph Banda',  age: '6h' },
+  { id: 'F-088', sev: 'warn', ttl: 'Payroll % of revenue at 21.4% (target 18%)',        mt: 'Schools vertical · Term invoices late',owner: 'Rumbi Sibanda', age: '1d' },
+  { id: 'F-087', sev: 'warn', ttl: 'ZIMRA QPD due in 8 days · estimate not finalised',  mt: 'Q2 USD $ 24,200 ZWG provisional',      owner: 'Liz Chiwara',   age: '1d' },
+  { id: 'F-086', sev: 'info', ttl: 'New top-10 customer · Innscor moved to #4',          mt: 'Up from #11 last month',              owner: 'Sales team',    age: '2d' },
+  { id: 'F-085', sev: 'info', ttl: 'Park Centre hit weekly revenue target on Thursday', mt: 'Earliest in 11 weeks',                 owner: 'Faith Moyo',    age: '3d' },
+];
+
+const TOP_CUSTOMERS = [
+  { name: 'Pick n Pay Zim',     vertical: 'Retail',  ytd: 482400, share: 12.4, trend: 'up'   },
+  { name: 'Innscor Africa',     vertical: 'Retail',  ytd: 312840, share:  8.1, trend: 'up'   },
+  { name: 'TM Supermarkets',    vertical: 'Retail',  ytd: 284200, share:  7.3, trend: 'flat' },
+  { name: 'Fidelity Refiners',  vertical: 'Gold',    ytd: 276400, share:  7.1, trend: 'up'   },
+  { name: 'OK Zimbabwe',        vertical: 'Retail',  ytd: 198420, share:  5.1, trend: 'dn'   },
+  { name: 'TelOne',             vertical: 'Scrap',   ytd: 142800, share:  3.7, trend: 'up'   },
+  { name: 'Choppies',           vertical: 'Retail',  ytd: 124200, share:  3.2, trend: 'flat' },
+  { name: 'ZESA Holdings',      vertical: 'Scrap',   ytd: 108420, share:  2.8, trend: 'up'   },
+  { name: 'Spar Zimbabwe',      vertical: 'Retail',  ytd:  98640, share:  2.5, trend: 'flat' },
+  { name: 'Bata Shoe Co.',      vertical: 'Retail',  ytd:  78420, share:  2.0, trend: 'dn'   },
+];
+
+const TOP_PRODUCTS = [
+  { sku: 'BV-CC2L',  name: 'Coca-Cola 2L',           vertical: 'Retail',  units: 12420, rev: 31250, margin: 16 },
+  { sku: 'GL-AU24',  name: 'Gold Doré 24kt (oz)',    vertical: 'Gold',    units:    62, rev: 124800, margin: 34 },
+  { sku: 'BV-MZ500', name: 'Mazoe 500ml',            vertical: 'Retail',  units:  8240, rev: 22420, margin: 18 },
+  { sku: 'SC-CU',    name: 'Copper scrap (kg)',      vertical: 'Scrap',   units:  6420, rev: 38520, margin: 12 },
+  { sku: 'BK-BR',    name: 'Bakers Inn bread',       vertical: 'Retail',  units:  4820, rev:  8420, margin: 11 },
+  { sku: 'SC-AL',    name: 'Aluminium scrap (kg)',   vertical: 'Scrap',   units:  3840, rev: 14820, margin: 14 },
+  { sku: 'AU-TNT',   name: 'Auto tinting service',   vertical: 'Auto',    units:   122, rev: 18420, margin: 38 },
+  { sku: 'SC-FE',    name: 'Ferrous scrap (kg)',     vertical: 'Scrap',   units:  9420, rev: 11220, margin:  6 },
+];
+
+const PEOPLE = {
+  headcount: 248, turnover: 4.2, vacancies: 8, payrollPct: 18.6, anniv: 12,
+  byVertical: [
+    { v: 'Retail',  c: 124 }, { v: 'Gold',    c: 38 }, { v: 'Scrap',   c: 26 },
+    { v: 'Schools', c: 32 }, { v: 'Auto',    c: 14 }, { v: 'Thrift',  c: 14 },
+  ],
+};
+
+const COMPLIANCE = [
+  { d: 5,  ttl: 'NSSA monthly remittance', kind: 'NSSA',  sev: 'warn' },
+  { d: 8,  ttl: 'ZIMRA VAT return',         kind: 'ZIMRA', sev: 'warn' },
+  { d: 14, ttl: 'NEC Construction levy',    kind: 'NEC',   sev: 'info' },
+  { d: 15, ttl: 'AIDS levy (3%)',           kind: 'AIDS',  sev: 'info' },
+  { d: 21, ttl: 'EMA waste-cert renewal',   kind: 'EMA',   sev: 'warn' },
+  { d: 25, ttl: 'ZIMRA QPD Q2',             kind: 'ZIMRA', sev: 'bad'  },
+  { d: 28, ttl: 'Fire-cert · Park Centre',  kind: 'Other', sev: 'info' },
+];
+
+const OKRS = [
+  { id: 'O1', ttl: 'Q2: Lift group revenue +12% YoY', owner: 'MD',         pg: 68, blockers: 0 },
+  { id: 'O2', ttl: 'Q2: Cut AR > 60 days to under 3%', owner: 'Finance',    pg: 42, blockers: 2 },
+  { id: 'O3', ttl: 'Open 2nd gold pour facility',      owner: 'Gold MD',    pg: 24, blockers: 1 },
+  { id: 'O4', ttl: 'Stabilise scrap intake +10%',      owner: 'Scrap GM',   pg: 12, blockers: 3 },
+  { id: 'O5', ttl: 'School fees recovery > 92%',       owner: 'Schools',    pg: 78, blockers: 0 },
+  { id: 'O6', ttl: 'Cash position above $ 1.2M USD',   owner: 'Treasurer',  pg: 88, blockers: 0 },
+];
+
+const REPORTS = [
+  { id: 'R-DLY',  name: 'Daily revenue summary',   kind: 'Daily',   schedule: 'every day 06:30', last: 'today 06:30', auto: true },
+  { id: 'R-BWK',  name: 'Weekly board pack',       kind: 'Weekly',  schedule: 'Mon 07:00',       last: 'Mon 07:00',   auto: true },
+  { id: 'R-MPL',  name: 'Monthly P&L',             kind: 'Monthly', schedule: '1st of month',    last: '01 May 06:00',auto: true },
+  { id: 'R-CASH', name: 'Cash position snapshot',  kind: 'Daily',   schedule: 'every day 07:00', last: 'today 07:00', auto: true },
+  { id: 'R-AR',   name: 'AR aging detail',         kind: 'Weekly',  schedule: 'Fri 17:00',       last: 'Fri 17:00',   auto: true },
+  { id: 'R-AP',   name: 'AP payment run',          kind: 'Weekly',  schedule: 'Thu 09:00',       last: 'Thu 09:00',   auto: true },
+  { id: 'R-OPS',  name: 'Operations health',       kind: 'Daily',   schedule: 'every day 18:00', last: 'today 18:00', auto: true },
+  { id: 'R-TAX',  name: 'Tax pack (ZIMRA)',        kind: 'Quarterly',schedule: 'last day Q',     last: '31 Mar',      auto: false },
+];
+
+/* ===== Default settings ===== */
+const DEFAULT_SETTINGS = {
+  theme: 'dark',
+  revTargetUsd: 480000,
+  cashFloorUsd: 1200000,
+  arOver90Pct: 3,
+  notif: { critical: true, warning: true, info: false },
+  cadence: 'daily',
+  branch: 'All branches',
+};
+
+/* ===== Single state ===== */
+const state = {
+  route: 'today',
+  tenantId: 'mh',
+  signedIn: true,        // start signed in by default
+  step: 'creds',         // signin step
+  period: 'mtd',
+  forecastScenario: 'base',
+  arBucket: 'all',
+  reportFilter: 'all',
+  flagFilter: 'all',
+  forceOffline: false,
+  settings: { ...DEFAULT_SETTINGS },
+  settingsTab: 'targets',
+  annotations: {
+    today: [
+      { who: 'Mark Mukamba', av: 'MM', tx: 'Cash position OK going into Tuesday — but watch Park Centre float; flagged this morning.', ts: 'today 07:12' },
+      { who: 'Liz Chiwara',  av: 'LC', tx: 'ZIMRA QPD final estimate tomorrow. Need finance team to lock the number.', ts: 'today 06:48' },
+    ],
+  },
+  modal: null,
+  drawer: null,
+  cmdkOpen: false,
+  cmdkQuery: '',
+};
+
+const ROUTES = ['signin','today','verticals','branches','cash','ar','ap','flags','pnl','forecast','customers','products','people','operations','compliance','churn','okrs','reports','annotate','search','tenants','settings','help'];
+
+/* ===== Persistence ===== */
+const LS = 'huchu-owner-demo:v1';
+const PERSIST = ['tenantId','signedIn','settings','forceOffline','annotations'];
+function saveState() {
+  try {
+    const o = {}; PERSIST.forEach(k => o[k] = state[k]);
+    localStorage.setItem(LS, JSON.stringify(o));
+  } catch(e){}
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS); if (!raw) return;
+    const o = JSON.parse(raw);
+    PERSIST.forEach(k => { if (o[k] !== undefined) state[k] = o[k]; });
+    state.settings = { ...DEFAULT_SETTINGS, ...(state.settings || {}) };
+  } catch(e){}
+}
+function resetDemo() {
+  try { localStorage.removeItem(LS); } catch(e){}
+  location.reload();
+}
+
+/* ===== Toast / modal / drawer ===== */
+function toast(msg, kind='default') {
+  const host = $('#toast-host');
+  const el = document.createElement('div');
+  el.className = 'toast' + (kind!=='default' ? ' '+kind : '');
+  const icon = kind==='success' ? 'check' : kind==='danger' ? 'x' : kind==='warn' ? 'info' : 'check';
+  el.innerHTML = `<span data-icon="${icon}" data-icon-size="14"></span>${escapeHtml(msg)}`;
+  host.appendChild(el);
+  if (window.Icons) window.Icons.render(el);
+  setTimeout(()=>{ el.classList.add('out'); setTimeout(()=>el.remove(), 240); }, 2400);
+}
+function openModal(html) { state.modal = html; renderModal(); }
+function closeModal() { state.modal = null; renderModal(); }
+function renderModal() {
+  const h = $('#modal-host');
+  if (!state.modal) { h.innerHTML = ''; return; }
+  h.innerHTML = `<div class="modal-scrim" data-scrim>${state.modal}</div>`;
+  if (window.Icons) window.Icons.render(h);
+  h.querySelector('[data-scrim]').addEventListener('click', (e) => {
+    if (e.target.dataset.scrim !== undefined) closeModal();
+  });
+}
+function openDrawer(html) { state.drawer = html; renderDrawer(); }
+function closeDrawer() { state.drawer = null; renderDrawer(); }
+function renderDrawer() {
+  const h = $('#drawer-host');
+  if (!state.drawer) { h.innerHTML = ''; return; }
+  h.innerHTML = `<div class="drawer-scrim" data-scrim>${state.drawer}</div>`;
+  if (window.Icons) window.Icons.render(h);
+  h.querySelector('[data-scrim]').addEventListener('click', (e) => {
+    if (e.target.dataset.scrim !== undefined) closeDrawer();
+  });
+  // close button
+  const cl = h.querySelector('[data-drawer-close]');
+  if (cl) cl.addEventListener('click', closeDrawer);
+}
+function openConfirm({title, sub, okLabel='Confirm', danger=false, onOk}) {
+  openModal(`
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>${escapeHtml(title)}</h3>
+      <p class="sub">${escapeHtml(sub||'')}</p>
+      <div class="acts">
+        <button class="btn" data-cancel>Cancel</button>
+        <button class="btn ${danger?'danger':'primary'}" data-ok>${escapeHtml(okLabel)}</button>
+      </div>
+    </div>`);
+  $('.modal [data-cancel]').addEventListener('click', closeModal);
+  $('.modal [data-ok]').addEventListener('click', () => { closeModal(); onOk && onOk(); });
+}
+
+/* ===== Router ===== */
+function go(route) {
+  state.route = route;
+  history.replaceState(null, '', '#/' + route);
+  render();
+  const m = $('.ow-main'); if (m) m.scrollTo(0,0);
+  // close mobile rail
+  const s = $('.ow-side'); if (s && s.classList.contains('open')) s.classList.remove('open');
+}
+window.addEventListener('hashchange', () => {
+  const r = (location.hash.replace(/^#\/?/, '') || 'today');
+  if (state.route !== r) { state.route = r; render(); }
+});
+
+/* ===== Fullscreen ===== */
+function toggleFullscreen() {
+  const isFs = !!document.fullscreenElement || document.body.classList.contains('is-fullscreen');
+  if (isFs) {
+    document.exitFullscreen && document.exitFullscreen().catch(()=>{});
+    document.body.classList.remove('is-fullscreen');
+  } else {
+    document.body.classList.add('is-fullscreen');
+    document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(()=>{});
+  }
+  render();
+}
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) document.body.classList.remove('is-fullscreen');
+  render();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (state.cmdkOpen) { state.cmdkOpen = false; renderCmdk(); return; }
+    if (state.drawer)   { closeDrawer(); return; }
+    if (state.modal)    { closeModal();  return; }
+    if (document.body.classList.contains('is-fullscreen') && !document.fullscreenElement) {
+      document.body.classList.remove('is-fullscreen'); render();
+    }
+  }
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    state.cmdkOpen = !state.cmdkOpen;
+    state.cmdkQuery = '';
+    renderCmdk();
+  }
+});
+
+/* ===== SVG helpers ===== */
+function svgSparkline(values, opts={}) {
+  const w = opts.w || 88, h = opts.h || 22;
+  const c = opts.color || '#22C55E';
+  const min = Math.min(...values), max = Math.max(...values);
+  const rng = max - min || 1;
+  const sx = w / (values.length - 1);
+  const pts = values.map((v,i) => `${(i*sx).toFixed(1)},${(h - ((v - min)/rng)*(h-3) - 1.5).toFixed(1)}`).join(' ');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><polyline points="${pts}" fill="none" stroke="${c}" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+}
+function svgArea(values, opts={}) {
+  const w = opts.w || 320, h = opts.h || 80;
+  const c = opts.color || '#5B8DEF';
+  const min = Math.min(0, ...values), max = Math.max(...values);
+  const rng = max - min || 1;
+  const sx = w / (values.length - 1);
+  const pts = values.map((v,i) => `${(i*sx).toFixed(1)},${(h - ((v - min)/rng)*(h-6) - 3).toFixed(1)}`);
+  const line = pts.join(' ');
+  const fill = `0,${h} ` + pts.join(' ') + ` ${w},${h}`;
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="width:100%;">
+    <polygon points="${fill}" fill="${c}" opacity="0.18"/>
+    <polyline points="${line}" fill="none" stroke="${c}" stroke-width="1.6" stroke-linejoin="round"/>
+  </svg>`;
+}
+function svgBars(values, labels, opts={}) {
+  const w = opts.w || 320, h = opts.h || 120;
+  const c = opts.color || '#5B8DEF';
+  const max = Math.max(...values) || 1;
+  const bw = w / values.length * 0.62;
+  const gap = w / values.length * 0.38;
+  let out = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h+20}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">`;
+  values.forEach((v,i)=>{
+    const bh = (v / max) * (h - 8);
+    const x = i*(bw+gap) + gap/2;
+    const y = h - bh;
+    out += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" fill="${c}" rx="2"/>`;
+    if (labels && labels[i]) out += `<text x="${(x+bw/2).toFixed(1)}" y="${h+14}" text-anchor="middle" font-size="10" fill="rgba(228,231,236,0.5)" font-family="ui-sans-serif,system-ui">${escapeHtml(labels[i])}</text>`;
+  });
+  out += '</svg>';
+  return out;
+}
+function svgMultiLine(serieses, opts={}) {
+  const w = opts.w || 480, h = opts.h || 180;
+  const all = serieses.flatMap(s=>s.values);
+  const min = Math.min(0, ...all), max = Math.max(...all);
+  const rng = max - min || 1;
+  const n = serieses[0].values.length;
+  const sx = w / (n - 1);
+  let out = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">`;
+  // grid lines
+  for (let i=0;i<5;i++) {
+    const y = (h-20) * (i/4) + 10;
+    out += `<line x1="0" y1="${y}" x2="${w}" y2="${y}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+  }
+  serieses.forEach(s => {
+    const pts = s.values.map((v,i)=>`${(i*sx).toFixed(1)},${(h - 10 - ((v - min)/rng)*(h-20)).toFixed(1)}`).join(' ');
+    out += `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="1.8" stroke-linejoin="round"/>`;
+  });
+  out += '</svg>';
+  return out;
+}
+function svgDonut(parts, opts={}) {
+  const size = opts.size || 120;
+  const cx = size/2, cy = size/2;
+  const r = size/2 - 8;
+  const ir = r - 16;
+  const total = parts.reduce((s,p)=>s+p.value,0) || 1;
+  let a0 = -Math.PI/2;
+  let out = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">`;
+  parts.forEach(p => {
+    const ang = (p.value/total) * Math.PI * 2;
+    const a1 = a0 + ang;
+    const large = ang > Math.PI ? 1 : 0;
+    const x0 = cx + r*Math.cos(a0), y0 = cy + r*Math.sin(a0);
+    const x1 = cx + r*Math.cos(a1), y1 = cy + r*Math.sin(a1);
+    const x0i = cx + ir*Math.cos(a0), y0i = cy + ir*Math.sin(a0);
+    const x1i = cx + ir*Math.cos(a1), y1i = cy + ir*Math.sin(a1);
+    out += `<path d="M ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1} L ${x1i} ${y1i} A ${ir} ${ir} 0 ${large} 0 ${x0i} ${y0i} Z" fill="${p.color}"/>`;
+    a0 = a1;
+  });
+  out += '</svg>';
+  return out;
+}
+
+/* ===== Side nav ===== */
+const NAV = [
+  { h: 'Overview' },
+  { route: 'today',      label: 'Today',           icon: 'dashboard' },
+  { route: 'verticals',  label: 'Verticals',       icon: 'grid' },
+  { route: 'branches',   label: 'Branches',        icon: 'shop' },
+  { h: 'Finance' },
+  { route: 'cash',       label: 'Cash position',   icon: 'wallet' },
+  { route: 'ar',         label: 'Receivables',     icon: 'arrow' },
+  { route: 'ap',         label: 'Payables',        icon: 'forward' },
+  { route: 'pnl',        label: 'P&L',             icon: 'receipt' },
+  { route: 'forecast',   label: 'Cash forecast',   icon: 'chart' },
+  { h: 'Operate' },
+  { route: 'flags',      label: 'Flags & alerts',  icon: 'bell',     cntKey: 'flagsCount' },
+  { route: 'operations', label: 'Operations',      icon: 'check' },
+  { route: 'compliance', label: 'Compliance',      icon: 'calendar', cntKey: 'compCount' },
+  { route: 'people',     label: 'People',          icon: 'user' },
+  { h: 'Grow' },
+  { route: 'customers',  label: 'Customers',       icon: 'user' },
+  { route: 'products',   label: 'Products',        icon: 'tag' },
+  { route: 'churn',      label: 'Churn & risk',    icon: 'info' },
+  { route: 'okrs',       label: 'Strategic OKRs',  icon: 'target' },
+  { h: 'Library' },
+  { route: 'reports',    label: 'Reports library', icon: 'folder' },
+  { route: 'annotate',   label: 'Annotations',     icon: 'edit' },
+  { route: 'settings',   label: 'Settings',        icon: 'settings' },
+  { route: 'help',       label: 'Help',            icon: 'info' },
+];
+
+function renderSide() {
+  const t = TENANTS.find(t=>t.id===state.tenantId) || TENANTS[0];
+  const init = t.name.split(' ').map(p=>p[0]).slice(0,2).join('');
+  const flagsCount = FLAGS.filter(f=>f.sev==='crit'||f.sev==='warn').length;
+  const compCount = COMPLIANCE.filter(c=>c.sev==='bad'||c.sev==='warn').length;
+  const counts = { flagsCount, compCount };
+  return `
+    <aside class="ow-side">
+      <a class="brand" href="index.html"><span class="m" data-icon="corelith" data-icon-size="20"></span> Huchu Owner</a>
+      <div class="tenant" id="tenant-btn">
+        <div class="av">${init}</div>
+        <div style="min-width:0;">
+          <div class="nm">${escapeHtml(t.name)}</div>
+          <div class="sb">${escapeHtml(t.sub)}</div>
+        </div>
+        <span class="ar" data-icon="chdown" data-icon-size="14"></span>
+      </div>
+      ${NAV.map(n => n.h
+        ? `<div class="h">${n.h}</div>`
+        : `<button class="nav-item ${state.route===n.route?'active':''}" data-go="${n.route}">
+             <span class="ic" data-icon="${n.icon}" data-icon-size="16"></span>
+             <span>${n.label}</span>
+             ${n.cntKey && counts[n.cntKey] ? `<span class="cnt ${n.cntKey==='flagsCount'?'bad':'warn'}">${counts[n.cntKey]}</span>` : ''}
+           </button>`
+      ).join('')}
+      <div class="foot">
+        <strong>Frontend-only demo</strong>
+        State persists locally. <a href="#" id="reset-demo">Reset demo</a>
+      </div>
+    </aside>
+  `;
+}
+
+function renderBar() {
+  const isFs = !!document.fullscreenElement || document.body.classList.contains('is-fullscreen');
+  const t = TENANTS.find(t=>t.id===state.tenantId) || TENANTS[0];
+  const initT = t.name.split(' ').map(p=>p[0]).slice(0,2).join('');
+  void initT;
+  return `
+    <header class="ow-bar">
+      <button class="bar-btn" data-hx-nav-trigger title="Site menu" aria-label="Open site navigation">
+        <span data-icon="menu" data-icon-size="14"></span>
+      </button>
+      <button class="bar-btn ham" id="rail-toggle" title="Open menu"><span data-icon="menu" data-icon-size="14"></span></button>
+      <span class="br">${escapeHtml(t.name)}</span>
+      <span class="sep">·</span>
+      <span>${escapeHtml(state.settings.branch)}</span>
+      <span class="sep">·</span>
+      <span>FY 2026 · Q2</span>
+      ${state.forceOffline
+        ? '<span class="pill warn"><span class="dot"></span> Offline</span>'
+        : '<span class="pill live"><span class="dot"></span> Live data</span>'}
+      <span class="spacer"></span>
+      <button class="bar-btn brand-btn" id="cmdk-btn">
+        <span data-icon="search" data-icon-size="14"></span>
+        <span class="bar-btn-label">Search anything</span>
+        <span class="kbd">⌘K</span>
+      </button>
+      <button class="bar-btn" id="offline-toggle" title="${state.forceOffline?'Online':'Offline'} mode">
+        <span data-icon="wifi" data-icon-size="14"></span>
+      </button>
+      <button class="bar-btn" id="fs-toggle" title="${isFs?'Exit fullscreen':'Fullscreen preview'}">
+        <span data-icon="${isFs?'x':'grid'}" data-icon-size="14"></span>
+        <span class="bar-btn-label">${isFs?'Exit':'Fullscreen'}</span>
+      </button>
+      <div class="who" id="who-btn">
+        <div style="text-align:right;">
+          <div class="nm">Mark Mukamba</div>
+          <div class="rl">Managing Director</div>
+        </div>
+        <div class="av">MM</div>
+      </div>
+    </header>
+  `;
+}
+
+/* ===== Render shell ===== */
+function render() {
+  saveState();
+  if (!state.signedIn) {
+    $('#app').innerHTML = renderSignIn();
+    if (window.Icons) window.Icons.render($('#app'));
+    wireSignIn();
+    return;
+  }
+  $('#app').innerHTML = `
+    <div class="ow-app">
+      ${renderSide()}
+      ${renderBar()}
+      <div class="ow-main">
+        ${state.forceOffline ? '<div class="offline-banner"><span data-icon="wifi" data-icon-size="14"></span><strong>Offline mode</strong> · Showing cached data from 09:42. Live KPIs will resume when reconnected.</div>' : ''}
+        ${renderRoute()}
+      </div>
+    </div>
+  `;
+  if (window.Icons) window.Icons.render($('#app'));
+  wireShell();
+  wireRoute();
+}
+
+function wireShell() {
+  $$('.ow-side [data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+  const rd = $('#reset-demo'); if (rd) rd.addEventListener('click', (e) => { e.preventDefault(); openConfirm({title:'Reset demo?', sub:'Clears persisted state — settings, annotations, tenant selection.', okLabel:'Reset', danger:true, onOk: resetDemo}); });
+  const fs = $('#fs-toggle'); if (fs) fs.addEventListener('click', toggleFullscreen);
+  const cm = $('#cmdk-btn'); if (cm) cm.addEventListener('click', () => { state.cmdkOpen = true; state.cmdkQuery=''; renderCmdk(); });
+  const of = $('#offline-toggle'); if (of) of.addEventListener('click', () => {
+    state.forceOffline = !state.forceOffline;
+    toast(state.forceOffline ? 'Offline mode on · cached data' : 'Back online', state.forceOffline?'warn':'success');
+    render();
+  });
+  const tb = $('#tenant-btn'); if (tb) tb.addEventListener('click', () => go('tenants'));
+  const wb = $('#who-btn'); if (wb) wb.addEventListener('click', openSignOutModal);
+  const rt = $('#rail-toggle'); if (rt) rt.addEventListener('click', () => {
+    const s = $('.ow-side'); if (s) s.classList.toggle('open');
+  });
+}
+
+function openSignOutModal() {
+  openModal(`
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Sign out?</h3>
+      <p class="sub">You'll be returned to the executive sign-in screen. Cached annotations stay on this device.</p>
+      <div class="acts">
+        <button class="btn" data-cancel>Cancel</button>
+        <button class="btn primary" data-ok>Sign out</button>
+      </div>
+    </div>`);
+  $('.modal [data-cancel]').addEventListener('click', closeModal);
+  $('.modal [data-ok]').addEventListener('click', () => {
+    closeModal(); state.signedIn = false; state.step = 'creds'; render();
+  });
+}
+
+function renderRoute() {
+  switch (state.route) {
+    case 'today':       return renderToday();
+    case 'verticals':   return renderVerticals();
+    case 'branches':    return renderBranches();
+    case 'cash':        return renderCash();
+    case 'ar':          return renderAR();
+    case 'ap':          return renderAP();
+    case 'flags':       return renderFlags();
+    case 'pnl':         return renderPnL();
+    case 'forecast':    return renderForecast();
+    case 'customers':   return renderCustomers();
+    case 'products':    return renderProducts();
+    case 'people':      return renderPeople();
+    case 'operations':  return renderOperations();
+    case 'compliance':  return renderCompliance();
+    case 'churn':       return renderChurn();
+    case 'okrs':        return renderOkrs();
+    case 'reports':     return renderReports();
+    case 'annotate':    return renderAnnotate();
+    case 'tenants':     return renderTenants();
+    case 'settings':    return renderSettings();
+    case 'help':        return renderHelp();
+    case 'signin':      state.signedIn = false; render(); return '';
+    default:            return renderToday();
+  }
+}
+function wireRoute() {
+  switch (state.route) {
+    case 'today':       wireToday(); break;
+    case 'verticals':   wireVerticals(); break;
+    case 'branches':    wireBranches(); break;
+    case 'cash':        wireCash(); break;
+    case 'ar':          wireAR(); break;
+    case 'ap':          wireAP(); break;
+    case 'flags':       wireFlags(); break;
+    case 'pnl':         wirePnL(); break;
+    case 'forecast':    wireForecast(); break;
+    case 'customers':   wireCustomers(); break;
+    case 'products':    wireProducts(); break;
+    case 'people':      wirePeople(); break;
+    case 'operations':  wireOperations(); break;
+    case 'compliance':  wireCompliance(); break;
+    case 'churn':       wireChurn(); break;
+    case 'okrs':        wireOkrs(); break;
+    case 'reports':     wireReports(); break;
+    case 'annotate':    wireAnnotate(); break;
+    case 'tenants':     wireTenants(); break;
+    case 'settings':    wireSettings(); break;
+    case 'help':        wireHelp(); break;
+  }
+  // generic drill-into-anything
+  $$('[data-drill]').forEach(el => el.addEventListener('click', () => openDrillDrawer(el.dataset.drill, el.dataset.label || el.textContent.trim())));
+}
+
+/* ============================================================
+   SIGN IN — admin password + 2FA
+   ============================================================ */
+function renderSignIn() {
+  if (state.step === 'otp') {
+    return `
+      <div class="ow-login">
+        <div class="card">
+          <div class="badge"><span data-icon="check" data-icon-size="11"></span> 2-step verification</div>
+          <h1>Enter the 6-digit code</h1>
+          <div class="lead">We sent a code to <strong>+263 77 ••• 4821</strong>. It expires in 60s.</div>
+          <div class="field"><label>Verification code</label>
+            <div class="otp-row" id="otp-row">
+              ${[0,1,2,3,4,5].map(i => `<input maxlength="1" data-otp="${i}" inputmode="numeric" autofocus="${i===0?'true':'false'}" />`).join('')}
+            </div>
+          </div>
+          <button class="full" id="otp-go">Verify &amp; sign in</button>
+          <div class="meta">Demo · any 6 digits work · <a href="#" id="otp-back" style="color:var(--ow-brand);">Use a different account</a></div>
+        </div>
+      </div>`;
+  }
+  return `
+    <div class="ow-login">
+      <div class="card">
+        <div class="badge"><span data-icon="corelith" data-icon-size="12"></span> Mukamba Holdings</div>
+        <h1>Executive sign in</h1>
+        <div class="lead">Owner / Manager portal. Access requires admin credentials and a 2FA code.</div>
+        <div class="field"><label>Executive ID or email</label>
+          <input type="text" id="si-email" value="mark.mukamba@mukambaholdings.co.zw" autocomplete="username" />
+        </div>
+        <div class="field"><label>Password</label>
+          <input type="password" id="si-pass" value="•••••••••••" autocomplete="current-password" />
+        </div>
+        <button class="full" id="si-go">Continue to 2FA</button>
+        <div class="meta">Demo · click Continue · biometric placeholder shown after 2FA</div>
+      </div>
+    </div>`;
+}
+function wireSignIn() {
+  if (state.step === 'otp') {
+    $$('[data-otp]').forEach((inp,i,arr) => {
+      inp.addEventListener('input', () => {
+        if (inp.value && i < arr.length - 1) arr[i+1].focus();
+      });
+    });
+    $('#otp-go').addEventListener('click', () => {
+      state.signedIn = true; state.step = 'creds'; toast('Signed in · biometric verified', 'success'); render();
+    });
+    $('#otp-back').addEventListener('click', (e) => { e.preventDefault(); state.step='creds'; render(); });
+    return;
+  }
+  $('#si-go').addEventListener('click', () => { state.step = 'otp'; render(); });
+}
+
+/* ============================================================
+   DRILL DRAWER — generic
+   ============================================================ */
+function openDrillDrawer(metric, label) {
+  const series = Array.from({length:14}, (_,i) => 80 + Math.round(Math.sin(i/2)*30 + i*4 + Math.random()*8));
+  openDrawer(`
+    <div class="drawer">
+      <div class="dr-hd">
+        <div style="flex:1;">
+          <div class="crumb">Drill-in · ${escapeHtml(metric)}</div>
+          <div class="ttl">${escapeHtml(label)}</div>
+        </div>
+        <button class="btn ghost sm" data-drawer-close><span data-icon="x" data-icon-size="13"></span></button>
+      </div>
+      <div class="dr-bd">
+        <div class="stat-row">
+          <div class="s"><div class="l">Current</div><div class="v">${usd(series[series.length-1] * 1000)}</div></div>
+          <div class="s"><div class="l">14-day avg</div><div class="v">${usd(series.reduce((a,b)=>a+b,0)/series.length*1000)}</div></div>
+        </div>
+        <div style="background:var(--ow-surface);border-radius:9px;padding:14px;margin-bottom:14px;">
+          <div style="font:500 11px var(--font-sans);text-transform:uppercase;letter-spacing:0.08em;color:var(--ow-text-sub);margin-bottom:8px;">Last 14 days</div>
+          ${svgArea(series, {w: 440, h: 100, color: '#5B8DEF'})}
+        </div>
+        <h4 style="font:600 13px var(--font-sans);color:#fff;margin:18px 0 8px;">Breakdown by branch</h4>
+        <table class="ow-table">
+          <thead><tr><th>Branch</th><th class="num">Contribution</th><th class="num">Δ vs LY</th></tr></thead>
+          <tbody>
+            ${BRANCHES.slice(0,5).map(b=>`<tr><td><div class="nm">${escapeHtml(b.name)}</div><div class="sb">${escapeHtml(b.vertical)} · ${escapeHtml(b.city)}</div></td><td class="num">${usd(b.mtd)}</td><td class="num" style="color:${b.delta>=0?'var(--ow-good)':'var(--ow-bad)'}">${pct(b.delta)}</td></tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div class="dr-ft">
+        <button class="btn" data-drawer-close>Close</button>
+        <button class="btn primary" id="dr-annotate">Annotate &amp; share</button>
+      </div>
+    </div>
+  `);
+  $('#dr-annotate').addEventListener('click', () => {
+    closeDrawer();
+    go('annotate');
+  });
+}
+
+/* ============================================================
+   TODAY — Executive dashboard
+   ============================================================ */
+function renderToday() {
+  const revToday = 38420;
+  const revMTD   = 412840;
+  const target   = state.settings.revTargetUsd;
+  const targetPct= Math.round(revMTD/target*100);
+  const cashPos  = 1186420;
+  const flags    = FLAGS.filter(f=>f.sev==='crit'||f.sev==='warn').length;
+  const spark = [82,84,80,86,88,90,92,89,95,98,96,102,108,112];
+  const sparkCash = [120,115,112,118,124,128,122,126,130,128,132,135,138,142];
+  const sparkAr = [42,44,46,48,52,54,58,62,60,58,60,62,64,68];
+
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">Today · Tuesday 2 June 2026 · 09:42</div>
+          <h2>Good morning, Mark</h2>
+          <div class="sub">Here's the picture across Mukamba Holdings. Two critical flags need your eye; cash is healthy; revenue is tracking 86% of target with 18 trading days left.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="head-acts">
+          <div class="seg" id="period-seg">
+            <button class="${state.period==='mtd'?'on':''}" data-p="mtd">MTD</button>
+            <button class="${state.period==='qtd'?'on':''}" data-p="qtd">QTD</button>
+            <button class="${state.period==='ytd'?'on':''}" data-p="ytd">YTD</button>
+          </div>
+          <button class="btn" id="annotate-btn"><span data-icon="edit" data-icon-size="13"></span> Annotate</button>
+          <button class="btn primary" id="share-btn"><span data-icon="download" data-icon-size="13"></span> Share daily</button>
+        </div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi" data-drill="revenue" data-label="Revenue today">
+          <div class="lbl">Revenue · today</div>
+          <div class="v">${usd(revToday)}</div>
+          <div class="meta">
+            <div class="delta up"><span data-icon="arrow" data-icon-size="11"></span> +12.4% vs yest</div>
+            ${svgSparkline(spark, {color:'#22C55E'})}
+          </div>
+        </div>
+        <div class="kpi" data-drill="revenue-mtd" data-label="Revenue MTD">
+          <div class="lbl">Revenue · MTD vs target</div>
+          <div class="v">${usd(revMTD)}</div>
+          <div class="meta">
+            <div class="delta up"><span data-icon="arrow" data-icon-size="11"></span> +8.4% vs LY</div>
+            <div class="target">${targetPct}% of ${usd(target/1000,0)}k <div class="pct">${targetPct}%</div></div>
+          </div>
+        </div>
+        <div class="kpi" data-drill="cash" data-label="Cash position">
+          <div class="lbl">Cash position</div>
+          <div class="v">${usd(cashPos)}</div>
+          <div class="meta">
+            <div class="delta up"><span data-icon="arrow" data-icon-size="11"></span> +$ 42k week</div>
+            ${svgSparkline(sparkCash, {color:'#5B8DEF'})}
+          </div>
+        </div>
+        <div class="kpi bad" data-drill="flags" data-label="Open flags">
+          <div class="lbl">Open flags</div>
+          <div class="v">${flags}</div>
+          <div class="meta">
+            <div class="delta dn"><span data-icon="info" data-icon-size="11"></span> 2 critical · 3 warn</div>
+            ${svgSparkline([2,3,4,4,5,5,6,5,5,4,5,6,5,5], {color:'#EF4444'})}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-2-1" style="margin-bottom:14px;">
+        <div class="ow-card">
+          <div class="hdr">
+            <div>
+              <div class="ttl">Group revenue · 14-day trend</div>
+              <div class="sub">USD revenue across all verticals · vs same period LY</div>
+            </div>
+            <div class="spacer"></div>
+            <button class="btn sm" data-go="pnl"><span data-icon="external" data-icon-size="12"></span> P&amp;L detail</button>
+          </div>
+          ${svgMultiLine([
+            { values: [320,340,310,360,380,370,390,420,410,430,440,460,470,485], color: '#5B8DEF' },
+            { values: [290,310,295,330,340,330,355,380,370,395,400,420,425,440], color: 'rgba(228,231,236,0.3)' },
+          ], { h: 200, w: 600 })}
+          <div class="chart-legend">
+            <span class="lg"><span class="sw" style="background:#5B8DEF;"></span> FY 2026</span>
+            <span class="lg"><span class="sw" style="background:rgba(228,231,236,0.3);"></span> FY 2025</span>
+          </div>
+        </div>
+        <div class="ow-card">
+          <div class="hdr"><div class="ttl">Annotations · today</div><div class="spacer"></div><button class="btn sm" data-go="annotate">All</button></div>
+          ${(state.annotations.today||[]).map(a=>`
+            <div class="ann-row">
+              <div class="av">${escapeHtml(a.av)}</div>
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:baseline;gap:8px;">
+                  <div class="nm">${escapeHtml(a.who)}</div>
+                  <div class="ts">${escapeHtml(a.ts)}</div>
+                </div>
+                <div class="tx">${escapeHtml(a.tx)}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="col-1-2" style="margin-bottom:14px;">
+        <div class="ow-card">
+          <div class="hdr"><div class="ttl">Cash · USD vs ZWG</div></div>
+          <div style="display:flex;align-items:center;gap:14px;">
+            ${svgDonut([
+              { value: 444960, color: '#5B8DEF' },
+              { value: 741460, color: '#A78BFA' },
+            ], { size: 110 })}
+            <div style="flex:1;">
+              <div style="margin-bottom:8px;">
+                <div style="font:11px var(--font-sans);color:var(--ow-text-sub);letter-spacing:0.07em;text-transform:uppercase;">USD</div>
+                <div style="font:700 17px var(--font-mono);color:#fff;">${usd(444960)}</div>
+              </div>
+              <div>
+                <div style="font:11px var(--font-sans);color:var(--ow-text-sub);letter-spacing:0.07em;text-transform:uppercase;">ZWG (USD-eq)</div>
+                <div style="font:700 17px var(--font-mono);color:#fff;">${usd(741460)}</div>
+              </div>
+            </div>
+          </div>
+          <button class="btn sm" data-go="cash" style="margin-top:14px;width:100%;justify-content:center;">Full cash position</button>
+        </div>
+        <div class="ow-card">
+          <div class="hdr"><div class="ttl">AR aging</div><div class="spacer"></div><button class="btn sm" data-go="ar">Detail</button></div>
+          ${[
+            ['Current (0-30)', 56240, 'good', 64],
+            ['31-60 days',     23240, 'warn', 26],
+            ['61-90 days',     13960, 'warn', 16],
+            ['Over 90',        13360, 'bad',  15],
+          ].map(([l,v,t,p])=>`
+            <div class="bar-row ${t}">
+              <div class="lb">${l}</div>
+              <div class="tk"><div class="fl" style="width:${p}%;"></div></div>
+              <div class="vl">${usd(v)}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="ow-card">
+        <div class="hdr"><div class="ttl">Top critical flags</div><div class="sub" style="margin-left:14px;">Curated for the morning · click any to drill in</div><div class="spacer"></div><button class="btn sm" data-go="flags">All ${FLAGS.length}</button></div>
+        ${FLAGS.slice(0,3).map(f=>renderFlagRow(f)).join('')}
+      </div>
+    </div>
+  `;
+}
+function wireToday() {
+  $$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+  $$('#period-seg [data-p]').forEach(b => b.addEventListener('click', () => { state.period = b.dataset.p; render(); toast(`Period: ${b.dataset.p.toUpperCase()}`); }));
+  $('#annotate-btn').addEventListener('click', () => go('annotate'));
+  $('#share-btn').addEventListener('click', () => {
+    openConfirm({title:'Share daily board pack?', sub:'Sends the daily summary PDF to your distribution list (3 recipients) and pins to #execs Slack.', okLabel:'Send now', onOk: () => toast('Daily pack sent to 3 recipients', 'success')});
+  });
+  $$('[data-flag-resolve]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); openConfirm({title:'Resolve flag?', sub:'Marks the flag as resolved and notifies the owner.', okLabel:'Resolve', onOk: () => toast('Flag resolved', 'success')}); }));
+  $$('[data-flag-snooze]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); toast('Flag snoozed 24h'); }));
+}
+
+function renderFlagRow(f) {
+  return `
+    <div class="flag-row ${f.sev}" data-drill="flag" data-label="${escapeHtml(f.ttl)}">
+      <span class="sev-dot"></span>
+      <span class="sev">${f.sev==='crit'?'Critical':f.sev==='warn'?'Warning':'Info'}</span>
+      <div style="min-width:0;">
+        <div class="ttl">${escapeHtml(f.ttl)}</div>
+        <div class="mt">${escapeHtml(f.mt)} · owner: ${escapeHtml(f.owner)}</div>
+      </div>
+      <div class="ag">${escapeHtml(f.age)}</div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn sm" data-flag-snooze="${f.id}">Snooze</button>
+        <button class="btn sm primary" data-flag-resolve="${f.id}">Resolve</button>
+      </div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   VERTICALS — Snapshot
+   ============================================================ */
+function renderVerticals() {
+  const total = VERTICALS.reduce((s,v)=>s+v.rev,0);
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">Verticals · MTD</div>
+          <h2>Six verticals · how each is tracking</h2>
+          <div class="sub">Revenue, margin, and health per business unit. Each tile is clickable for the full drill.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="head-acts">
+          <button class="btn" id="exp-csv"><span data-icon="download" data-icon-size="13"></span> CSV</button>
+          <button class="btn primary" data-go="branches">By branch →</button>
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:14px;">
+        ${VERTICALS.map(v => `
+          <div class="vt-card" data-drill="vertical" data-label="${escapeHtml(v.name)}">
+            <div class="top">
+              <div class="icn" style="background:${v.color};"><span data-icon="${v.icon}" data-icon-size="16"></span></div>
+              <div style="flex:1;">
+                <div class="vnm">${escapeHtml(v.name)}</div>
+                <div class="ssn">${escapeHtml(v.sub)}</div>
+              </div>
+              <span class="health-dot ${v.hp}" title="Health"></span>
+            </div>
+            <div class="val">${usd(v.rev)}</div>
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:6px;">
+              <div>
+                <span style="font:500 12px var(--font-sans);color:${v.delta>=0?'var(--ow-good)':'var(--ow-bad)'};">${v.delta>=0?'▲':'▼'} ${Math.abs(v.delta).toFixed(1)}% vs LM</span>
+              </div>
+              ${svgSparkline(Array.from({length:12},(_,i)=>v.rev/12*(0.7+Math.sin(i/2)*0.2+i*0.05)), {color:v.delta>=0?'#22C55E':'#EF4444'})}
+            </div>
+            <div class="row">
+              <div>
+                <div class="l">Margin</div>
+                <div class="x">${v.mgn.toFixed(1)}%</div>
+              </div>
+              <div>
+                <div class="l">% of group</div>
+                <div class="x">${(v.rev/total*100).toFixed(1)}%</div>
+              </div>
+              <div>
+                <div class="l">Health</div>
+                <div class="x" style="color:${v.hp==='ok'?'var(--ow-good)':v.hp==='warn'?'var(--ow-warn)':'var(--ow-bad)'};">${v.hp==='ok'?'On track':v.hp==='warn'?'Watch':'At risk'}</div>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="ow-card">
+        <div class="hdr"><div class="ttl">Contribution mix · MTD</div></div>
+        <div style="display:flex;align-items:center;gap:18px;">
+          ${svgDonut(VERTICALS.map(v=>({value:v.rev, color:v.color})), {size:140})}
+          <div style="flex:1;display:grid;grid-template-columns:repeat(2,1fr);gap:6px;">
+            ${VERTICALS.map(v=>`
+              <div style="display:flex;align-items:center;gap:8px;padding:4px 0;">
+                <span style="width:10px;height:10px;border-radius:2px;background:${v.color};"></span>
+                <span style="flex:1;font:500 13px var(--font-sans);color:var(--ow-text);">${v.name}</span>
+                <span style="font:600 13px var(--font-mono);color:#fff;">${(v.rev/total*100).toFixed(1)}%</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function wireVerticals() {
+  $$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+  $('#exp-csv').addEventListener('click', () => toast('Verticals exported to CSV', 'success'));
+}
+
+/* ============================================================
+   BRANCHES — Leaderboard
+   ============================================================ */
+function renderBranches() {
+  const sorted = [...BRANCHES].sort((a,b)=>b.mtd - a.mtd);
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">Branches · MTD</div>
+          <h2>Branch leaderboard</h2>
+          <div class="sub">Ranked best to worst. Each row drills into the branch dashboard.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="head-acts">
+          <div class="seg">
+            <button class="on">By revenue</button>
+            <button>By margin</button>
+            <button>By Δ%</button>
+          </div>
+          <button class="btn"><span data-icon="download" data-icon-size="13"></span> Export</button>
+        </div>
+      </div>
+
+      <div class="ow-card">
+        <table class="ow-table">
+          <thead><tr><th style="width:30px;">#</th><th>Branch</th><th>Vertical</th><th class="num">MTD revenue</th><th>Trend (12d)</th><th class="num">Δ vs LM</th><th>Health</th><th></th></tr></thead>
+          <tbody>
+            ${sorted.map((b,i)=>`
+              <tr data-drill="branch" data-label="${escapeHtml(b.name)}" style="cursor:pointer;">
+                <td><span class="rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${String(i+1).padStart(2,'0')}</span></td>
+                <td><div class="nm">${escapeHtml(b.name)}</div><div class="sb">${escapeHtml(b.city)}</div></td>
+                <td><span class="pill neutral">${escapeHtml(b.vertical)}</span></td>
+                <td class="num">${usd(b.mtd)}</td>
+                <td>${svgSparkline(Array.from({length:12},(_,j)=>50+Math.sin(j/2+i)*20+j*2), {w:96, color:b.delta>=0?'#22C55E':'#EF4444'})}</td>
+                <td class="num" style="color:${b.delta>=0?'var(--ow-good)':'var(--ow-bad)'};">${pct(b.delta)}</td>
+                <td><span class="pill ${b.hp==='ok'?'ok':b.hp==='warn'?'warn':'bad'}">${b.hp==='ok'?'Good':b.hp==='warn'?'Watch':'At risk'}</span></td>
+                <td style="text-align:right;color:var(--ow-text-sub);"><span data-icon="chright" data-icon-size="14"></span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+function wireBranches() {
+  $$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+}
+
+/* ============================================================
+   CASH POSITION
+   ============================================================ */
+function renderCash() {
+  const totalUsd = BANKS.reduce((s,b)=>s+b.usd,0) + FLOATS.reduce((s,f)=>s+f.usd,0) + TILLS.reduce((s,t)=>s+t.usd,0);
+  const totalZwg = BANKS.reduce((s,b)=>s+b.zwg,0) + FLOATS.reduce((s,f)=>s+f.zwg,0) + TILLS.reduce((s,t)=>s+t.zwg,0);
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">Cash position · live</div>
+          <h2>Where the money is</h2>
+          <div class="sub">Bank accounts, EcoCash floats, and physical tills across the group. USD shown side-by-side with ZWG.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="head-acts">
+          <button class="btn"><span data-icon="refresh" data-icon-size="13"></span> Refresh</button>
+          <button class="btn primary" data-go="forecast">12-week forecast →</button>
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:14px;">
+        <div class="kpi" data-drill="cash-usd" data-label="Total USD"><div class="lbl">Total USD</div><div class="v">${usd(totalUsd)}</div><div class="meta"><div class="delta up">▲ $ 24,200 week</div></div></div>
+        <div class="kpi" data-drill="cash-zwg" data-label="Total ZWG"><div class="lbl">Total ZWG</div><div class="v">${fmt(totalZwg)}</div><div class="meta"><div class="delta up">▲ 124k week</div></div></div>
+        <div class="kpi warn" data-drill="floor" data-label="vs floor"><div class="lbl">vs cash floor</div><div class="v">${Math.round(totalUsd/state.settings.cashFloorUsd*100)}%</div><div class="meta"><div class="delta">${usd(state.settings.cashFloorUsd)} floor · USD</div></div></div>
+      </div>
+
+      <div class="col-2-1" style="margin-bottom:14px;">
+        <div class="ow-card">
+          <div class="hdr"><div class="ttl">Bank accounts</div><div class="spacer"></div><button class="btn sm" id="add-bank">+ Add account</button></div>
+          <table class="ow-table">
+            <thead><tr><th>Bank</th><th>Account</th><th class="num">USD</th><th class="num">ZWG</th><th></th></tr></thead>
+            <tbody>
+              ${BANKS.map(b=>`
+                <tr data-drill="bank" data-label="${escapeHtml(b.name)} ${escapeHtml(b.acct)}">
+                  <td><div class="nm">${escapeHtml(b.name)}</div><div class="sb">${b.ccy==='usd'?'USD only':'Mixed'}</div></td>
+                  <td><span style="font:500 12.5px var(--font-mono);color:var(--ow-text-mute);">${escapeHtml(b.acct)}</span></td>
+                  <td class="num">${usd(b.usd)}</td>
+                  <td class="num">${fmt(b.zwg)}</td>
+                  <td style="text-align:right;color:var(--ow-text-sub);"><span data-icon="chright" data-icon-size="14"></span></td>
+                </tr>
+              `).join('')}
+              <tr style="background:rgba(91,141,239,0.08);">
+                <td colspan="2" style="font-weight:600;color:#fff;">Bank subtotal</td>
+                <td class="num" style="color:#fff;font-weight:700;">${usd(BANKS.reduce((s,b)=>s+b.usd,0))}</td>
+                <td class="num" style="color:#fff;font-weight:700;">${fmt(BANKS.reduce((s,b)=>s+b.zwg,0))}</td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <div class="ow-card" style="margin-bottom:12px;">
+            <div class="hdr"><div class="ttl">Mobile money floats</div></div>
+            ${FLOATS.map(f=>`
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--ow-border);">
+                <div style="font:500 12.5px var(--font-sans);color:var(--ow-text);">${escapeHtml(f.kind)}</div>
+                <div style="text-align:right;">
+                  <div style="font:600 12.5px var(--font-mono);color:#fff;">${usd(f.usd)}</div>
+                  <div style="font:11px var(--font-mono);color:var(--ow-text-mute);">${fmt(f.zwg)} ZWG</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="ow-card">
+            <div class="hdr"><div class="ttl">Tills (cash drawer)</div></div>
+            ${TILLS.map(t=>`
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--ow-border);">
+                <div style="font:500 12.5px var(--font-sans);color:var(--ow-text);">${escapeHtml(t.kind)}</div>
+                <div style="text-align:right;">
+                  <div style="font:600 12.5px var(--font-mono);color:#fff;">${usd(t.usd)}</div>
+                  <div style="font:11px var(--font-mono);color:var(--ow-text-mute);">${fmt(t.zwg)} ZWG</div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div class="ow-card">
+        <div class="hdr"><div class="ttl">USD trend · 30 days</div></div>
+        ${svgArea([920,932,940,948,952,945,958,966,972,980,988,995,1004,1012,1020,1028,1034,1042,1050,1058,1064,1072,1080,1090,1100,1114,1126,1138,1156,1186], {h: 140, color: '#5B8DEF'})}
+      </div>
+    </div>
+  `;
+}
+function wireCash() {
+  $$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+  $('#add-bank').addEventListener('click', () => {
+    openModal(`
+      <div class="modal" onclick="event.stopPropagation()">
+        <h3>Add bank account</h3>
+        <p class="sub">Connect a new account for daily balance refresh. Auto-pull happens every 30 minutes.</p>
+        <div class="row"><input placeholder="Bank name (e.g. POSB)" /></div>
+        <div class="row"><input placeholder="Account number" /></div>
+        <div class="row"><select><option>USD</option><option>ZWG</option><option>Mixed</option></select></div>
+        <div class="acts"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Connect</button></div>
+      </div>`);
+    $('.modal [data-cancel]').addEventListener('click', closeModal);
+    $('.modal [data-ok]').addEventListener('click', () => { closeModal(); toast('Bank account added · syncing','success'); });
+  });
+}
+
+/* ============================================================
+   AR AGING
+   ============================================================ */
+function renderAR() {
+  const buckets = {
+    current: AR.filter(r=>r.status==='current'),
+    '31-60': AR.filter(r=>r.status==='31-60'),
+    '61-90': AR.filter(r=>r.status==='61-90'),
+    '90+':   AR.filter(r=>r.status==='90+'),
+  };
+  const sum = (arr) => arr.reduce((s,r)=>s+r.amt, 0);
+  const total = sum(AR);
+  const buck = state.arBucket;
+  const visible = buck==='all' ? AR : buckets[buck];
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">Receivables aging</div>
+          <h2>What we're owed · top overdue</h2>
+          <div class="sub">Buckets across the group. Click any row for invoice detail and dunning history.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="head-acts">
+          <button class="btn"><span data-icon="download" data-icon-size="13"></span> Export</button>
+          <button class="btn primary" id="dun-all">Send statements →</button>
+        </div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi ${buck==='all'?'':''}" data-b="all" style="cursor:pointer;"><div class="lbl">Total AR</div><div class="v">${usd(total)}</div><div class="meta"><div class="delta flat">${AR.length} invoices</div></div></div>
+        <div class="kpi" data-b="current" style="cursor:pointer;"><div class="lbl">0-30 days</div><div class="v" style="color:var(--ow-good);">${usd(sum(buckets.current))}</div><div class="meta"><div class="delta">${buckets.current.length} invoices</div></div></div>
+        <div class="kpi warn" data-b="31-60" style="cursor:pointer;"><div class="lbl">31-60</div><div class="v">${usd(sum(buckets['31-60']))}</div><div class="meta"><div class="delta">${buckets['31-60'].length} invoices</div></div></div>
+        <div class="kpi bad" data-b="90+" style="cursor:pointer;"><div class="lbl">Over 90 days</div><div class="v">${usd(sum(buckets['90+']))}</div><div class="meta"><div class="delta dn">${(sum(buckets['90+'])/total*100).toFixed(1)}% of book</div></div></div>
+      </div>
+
+      <div class="ow-card">
+        <div class="hdr">
+          <div class="ttl">Top 10 overdue ${buck==='all'?'· all':`· ${buck}`}</div>
+          <div class="spacer"></div>
+          <div class="seg" id="bucket-seg">
+            ${['all','current','31-60','61-90','90+'].map(k=>`<button class="${buck===k?'on':''}" data-b="${k}">${k==='all'?'All':k}</button>`).join('')}
+          </div>
+        </div>
+        <table class="ow-table">
+          <thead><tr><th>Invoice</th><th>Customer</th><th class="num">Amount</th><th class="num">Days</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            ${visible.map(r=>`
+              <tr data-drill="invoice" data-label="${escapeHtml(r.id)} — ${escapeHtml(r.customer)}">
+                <td><span style="font:600 12.5px var(--font-mono);color:#fff;">${escapeHtml(r.id)}</span></td>
+                <td><div class="nm">${escapeHtml(r.customer)}</div></td>
+                <td class="num">${usd(r.amt)}</td>
+                <td class="num">${r.days}</td>
+                <td><span class="pill ${r.status==='current'?'ok':r.status==='31-60'?'warn':r.status==='61-90'?'warn':'bad'}">${r.status}</span></td>
+                <td style="text-align:right;"><button class="btn sm" data-remind="${r.id}">Remind</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+function wireAR() {
+  $$('#bucket-seg [data-b]').forEach(b => b.addEventListener('click', () => { state.arBucket = b.dataset.b; render(); }));
+  $$('.kpi[data-b]').forEach(b => b.addEventListener('click', () => { state.arBucket = b.dataset.b; render(); }));
+  $('#dun-all').addEventListener('click', () => openConfirm({title:'Send overdue statements?', sub:`Sends statements to ${AR.filter(r=>r.status!=='current').length} overdue customers via email + SMS.`, okLabel:'Send all', onOk: () => toast('Statements sent to 7 customers','success')}));
+  $$('[data-remind]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); toast(`Reminder sent · ${b.dataset.remind}`, 'success'); }));
+}
+
+/* ============================================================
+   AP AGING
+   ============================================================ */
+function renderAP() {
+  const overdue = AP.filter(r=>r.status==='overdue');
+  const dueSoon = AP.filter(r=>r.status==='due-soon');
+  const planned = AP.filter(r=>r.status==='planned');
+  const sum = (arr) => arr.reduce((s,r)=>s+r.amt, 0);
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">Payables aging</div>
+          <h2>What we owe · payment run</h2>
+          <div class="sub">Suppliers grouped by urgency. Set up Thursday's payment run with one click.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="head-acts">
+          <button class="btn"><span data-icon="download" data-icon-size="13"></span> Export</button>
+          <button class="btn primary" id="pay-run">Schedule pay run</button>
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:14px;">
+        <div class="kpi bad"><div class="lbl">Overdue</div><div class="v">${usd(sum(overdue))}</div><div class="meta"><div class="delta dn">${overdue.length} suppliers · pay this week</div></div></div>
+        <div class="kpi warn"><div class="lbl">Due this week</div><div class="v">${usd(sum(dueSoon))}</div><div class="meta"><div class="delta">${dueSoon.length} suppliers</div></div></div>
+        <div class="kpi"><div class="lbl">Planned</div><div class="v">${usd(sum(planned))}</div><div class="meta"><div class="delta">${planned.length} suppliers · next 30d</div></div></div>
+      </div>
+
+      <div class="ow-card">
+        <div class="hdr"><div class="ttl">Payables · due order</div></div>
+        <table class="ow-table">
+          <thead><tr><th>Invoice</th><th>Supplier</th><th class="num">Amount</th><th>Due</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            ${AP.map(r=>`
+              <tr data-drill="ap" data-label="${escapeHtml(r.id)} — ${escapeHtml(r.supplier)}">
+                <td><span style="font:600 12.5px var(--font-mono);color:#fff;">${escapeHtml(r.id)}</span></td>
+                <td><div class="nm">${escapeHtml(r.supplier)}</div></td>
+                <td class="num">${usd(r.amt)}</td>
+                <td>${escapeHtml(r.due)}</td>
+                <td><span class="pill ${r.status==='overdue'?'bad':r.status==='due-soon'?'warn':'neutral'}">${r.status==='overdue'?'Overdue':r.status==='due-soon'?'Due soon':'Planned'}</span></td>
+                <td style="text-align:right;"><button class="btn sm primary" data-pay="${r.id}">Approve</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+function wireAP() {
+  $('#pay-run').addEventListener('click', () => openConfirm({title:'Schedule Thursday pay run?', sub:`Pays all overdue and due-soon (${AP.filter(r=>r.status!=='planned').length} suppliers, ${usd(AP.filter(r=>r.status!=='planned').reduce((s,r)=>s+r.amt,0))}). Requires 2nd approver.`, okLabel:'Schedule', onOk: () => toast('Pay run scheduled · awaiting 2nd approver','success')}));
+  $$('[data-pay]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); toast(`Payment approved · ${b.dataset.pay}`, 'success'); }));
+}
+
+/* ============================================================
+   FLAGS & ALERTS — Inbox
+   ============================================================ */
+function renderFlags() {
+  const filter = state.flagFilter;
+  const visible = filter==='all' ? FLAGS : FLAGS.filter(f=>f.sev===filter);
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">Flags &amp; alerts inbox</div>
+          <h2>What needs your attention</h2>
+          <div class="sub">Curated inbox · severity, age, owner. Snooze for 24h or resolve directly.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="head-acts">
+          <div class="seg" id="flag-seg">
+            ${[['all','All'],['crit','Critical'],['warn','Warning'],['info','Info']].map(([k,l])=>`<button class="${filter===k?'on':''}" data-f="${k}">${l}</button>`).join('')}
+          </div>
+          <button class="btn" id="snooze-all">Snooze all 24h</button>
+        </div>
+      </div>
+
+      <div>${visible.map(f=>renderFlagRow(f)).join('')}</div>
+    </div>
+  `;
+}
+function wireFlags() {
+  $$('#flag-seg [data-f]').forEach(b => b.addEventListener('click', () => { state.flagFilter = b.dataset.f; render(); }));
+  $('#snooze-all').addEventListener('click', () => openConfirm({title:'Snooze all flags 24h?', sub:'Resolves nothing — just hides until tomorrow morning at 09:00.', okLabel:'Snooze all', onOk:()=>toast('All flags snoozed','warn')}));
+  $$('[data-flag-resolve]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); toast('Flag resolved','success'); }));
+  $$('[data-flag-snooze]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); toast('Flag snoozed 24h'); }));
+}
+
+/* ============================================================
+   P&L — Period-flexible
+   ============================================================ */
+function renderPnL() {
+  const p = state.period;
+  const rows = [
+    { kind:'rev', label:'Retail sales',          mtd: 142840, qtd: 412840, ytd: 1248400, lastMtd: 131800 },
+    { kind:'rev', label:'Gold sales',            mtd:  98620, qtd: 280800, ytd:  876240, lastMtd:  87600 },
+    { kind:'rev', label:'Scrap sales',           mtd:  64480, qtd: 198400, ytd:  624000, lastMtd:  66600 },
+    { kind:'rev', label:'School fees',           mtd:  41200, qtd: 124800, ytd:  362000, lastMtd:  39600 },
+    { kind:'rev', label:'Auto services',         mtd:  38940, qtd: 116240, ytd:  348000, lastMtd:  38300 },
+    { kind:'rev', label:'Microfinance interest', mtd:  26760, qtd:  82400, ytd:  248000, lastMtd:  29200 },
+    { kind:'tot', label:'Total revenue',         mtd: 412840, qtd:1215480, ytd: 3706640, lastMtd: 393100 },
+    { kind:'cost',label:'Cost of sales',         mtd:-256000, qtd:-758000, ytd:-2280000, lastMtd:-242000 },
+    { kind:'cost',label:'Operating expenses',    mtd: -82400, qtd:-248000, ytd: -742000, lastMtd: -78600 },
+    { kind:'cost',label:'Payroll',               mtd: -76840, qtd:-228000, ytd: -688000, lastMtd: -74200 },
+    { kind:'tot', label:'Operating profit',      mtd: -2400,  qtd: -18520, ytd:  -3360,  lastMtd:  -1700 },
+  ];
+  const k = p === 'mtd' ? 'mtd' : p === 'qtd' ? 'qtd' : 'ytd';
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">P&amp;L · ${p.toUpperCase()}</div>
+          <h2>Profit &amp; loss</h2>
+          <div class="sub">Switch period · drill any row by vertical or branch.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="head-acts">
+          <div class="seg" id="pnl-seg">
+            ${[['mtd','MTD'],['qtd','QTD'],['ytd','YTD']].map(([v,l])=>`<button class="${p===v?'on':''}" data-p="${v}">${l}</button>`).join('')}
+          </div>
+          <button class="btn"><span data-icon="download" data-icon-size="13"></span> PDF</button>
+        </div>
+      </div>
+
+      <div class="ow-card">
+        <table class="ow-table">
+          <thead><tr><th>Line item</th><th class="num">${p.toUpperCase()}</th><th class="num">Prior</th><th class="num">Δ %</th><th></th></tr></thead>
+          <tbody>
+            ${rows.map(r=>{
+              const v = r[k];
+              const prior = k==='mtd' ? r.lastMtd : Math.round(r[k]*0.94);
+              const delta = prior ? ((v-prior)/Math.abs(prior))*100 : 0;
+              return `<tr ${r.kind==='tot'?'style="background:rgba(91,141,239,0.06);font-weight:600;"':''} data-drill="pnl" data-label="${escapeHtml(r.label)}">
+                <td style="${r.kind==='tot'?'color:#fff;font-weight:700;':r.kind==='cost'?'color:var(--ow-text-mute);':''}">${escapeHtml(r.label)}</td>
+                <td class="num" style="${r.kind==='tot'?'color:#fff;font-weight:700;':''}">${usd(v)}</td>
+                <td class="num" style="color:var(--ow-text-mute);">${usd(prior)}</td>
+                <td class="num" style="color:${delta>=0?'var(--ow-good)':'var(--ow-bad)'};">${pct(delta)}</td>
+                <td style="text-align:right;color:var(--ow-text-sub);"><span data-icon="chright" data-icon-size="14"></span></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+function wirePnL() {
+  $$('#pnl-seg [data-p]').forEach(b => b.addEventListener('click', () => { state.period = b.dataset.p; render(); }));
+}
+
+/* ============================================================
+   FORECAST — 12-week cash flow
+   ============================================================ */
+function renderForecast() {
+  const sc = state.forecastScenario;
+  // 12 weeks of cash balance
+  const base   = [1186,1210,1240,1265,1280,1295,1310,1340,1360,1380,1400,1430];
+  const opt    = [1186,1240,1300,1360,1400,1440,1490,1540,1580,1620,1670,1720];
+  const stress = [1186,1140,1080,1020,960, 920, 880, 860, 820, 800, 790, 780];
+  const data = sc==='opt'?opt: sc==='stress'?stress : base;
+  const color= sc==='opt'?'#22C55E': sc==='stress'?'#EF4444':'#5B8DEF';
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">Cash flow forecast · 12 weeks</div>
+          <h2>Where the cash position lands</h2>
+          <div class="sub">Rolling 12-week projection · switch scenarios. Anchored on current USD position $ 1,186k.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="head-acts">
+          <div class="seg" id="sc-seg">
+            ${[['base','Base'],['opt','Optimistic'],['stress','Stress']].map(([v,l])=>`<button class="${sc===v?'on':''}" data-s="${v}">${l}</button>`).join('')}
+          </div>
+          <button class="btn" id="export-fc"><span data-icon="download" data-icon-size="13"></span> Excel</button>
+        </div>
+      </div>
+
+      <div class="ow-card" style="margin-bottom:14px;">
+        <div class="hdr"><div class="ttl">Projected USD cash position</div><div class="spacer"></div><span class="pill ${sc==='opt'?'ok':sc==='stress'?'bad':'info'}">${sc==='base'?'Base case':sc==='opt'?'Optimistic':'Stress'}</span></div>
+        ${svgArea(data, { h: 200, color, w: 600 })}
+        <div class="chart-legend">
+          <span class="lg"><span class="sw" style="background:${color};"></span> ${sc} ($ thousands USD)</span>
+          <span class="lg"><span class="sw" style="background:rgba(245,158,11,0.6);"></span> Cash floor $ ${state.settings.cashFloorUsd/1000}k</span>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="ow-card"><div class="hdr"><div class="ttl">Week 4</div></div><div style="font:700 22px var(--font-mono);color:#fff;">${usd(data[4]*1000)}</div><div style="font:12px var(--font-sans);color:var(--ow-text-mute);margin-top:4px;">${data[4]>=state.settings.cashFloorUsd/1000?'Above floor':'Below floor'}</div></div>
+        <div class="ow-card"><div class="hdr"><div class="ttl">Week 8</div></div><div style="font:700 22px var(--font-mono);color:#fff;">${usd(data[8]*1000)}</div><div style="font:12px var(--font-sans);color:var(--ow-text-mute);margin-top:4px;">${data[8]>=state.settings.cashFloorUsd/1000?'Above floor':'Below floor'}</div></div>
+        <div class="ow-card"><div class="hdr"><div class="ttl">Week 12</div></div><div style="font:700 22px var(--font-mono);color:#fff;">${usd(data[11]*1000)}</div><div style="font:12px var(--font-sans);color:var(--ow-text-mute);margin-top:4px;">${data[11]>=state.settings.cashFloorUsd/1000?'Above floor':'Below floor'}</div></div>
+      </div>
+    </div>
+  `;
+}
+function wireForecast() {
+  $$('#sc-seg [data-s]').forEach(b => b.addEventListener('click', () => { state.forecastScenario = b.dataset.s; render(); }));
+  $('#export-fc').addEventListener('click', () => toast('Forecast exported · 12-week.xlsx','success'));
+}
+
+/* ============================================================
+   TOP CUSTOMERS — Concentration risk
+   ============================================================ */
+function renderCustomers() {
+  const total = TOP_CUSTOMERS.reduce((s,c)=>s+c.ytd,0);
+  const top3 = TOP_CUSTOMERS.slice(0,3).reduce((s,c)=>s+c.ytd,0);
+  const concentration = top3/total*100;
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">Top customers · YTD</div>
+          <h2>Where the revenue comes from</h2>
+          <div class="sub">Top 10 by YTD revenue · concentration risk warning when top-3 exceeds 30%.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="head-acts">
+          <button class="btn"><span data-icon="download" data-icon-size="13"></span> Export</button>
+        </div>
+      </div>
+
+      ${concentration > 25 ? `
+        <div class="ow-card" style="background:var(--ow-warn-soft);border-color:rgba(245,158,11,0.3);margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span data-icon="info" data-icon-size="18" style="color:var(--ow-warn);"></span>
+            <div>
+              <div style="font:600 14px var(--font-sans);color:var(--ow-warn);">Concentration risk · top-3 customers = ${concentration.toFixed(1)}% of YTD</div>
+              <div style="font:12.5px/1.4 var(--font-sans);color:var(--ow-text-mute);margin-top:3px;">Above 25% threshold. Consider sales diversification before Q3.</div>
+            </div>
+          </div>
+        </div>
+      ` : ''}
+
+      <div class="ow-card">
+        <table class="ow-table">
+          <thead><tr><th>#</th><th>Customer</th><th>Vertical</th><th class="num">YTD revenue</th><th class="num">% of group</th><th>Trend</th></tr></thead>
+          <tbody>
+            ${TOP_CUSTOMERS.map((c,i)=>`
+              <tr data-drill="customer" data-label="${escapeHtml(c.name)}">
+                <td><span class="rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${i+1}</span></td>
+                <td><div class="nm">${escapeHtml(c.name)}</div></td>
+                <td><span class="pill neutral">${escapeHtml(c.vertical)}</span></td>
+                <td class="num">${usd(c.ytd)}</td>
+                <td class="num">${c.share.toFixed(1)}%</td>
+                <td><span style="color:${c.trend==='up'?'var(--ow-good)':c.trend==='dn'?'var(--ow-bad)':'var(--ow-text-mute)'};font:500 12.5px var(--font-sans);">${c.trend==='up'?'▲ Growing':c.trend==='dn'?'▼ Slipping':'– Flat'}</span></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+function wireCustomers() {}
+
+/* ============================================================
+   TOP PRODUCTS / SKUs
+   ============================================================ */
+function renderProducts() {
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">Top products · MTD · cross-vertical</div>
+          <h2>What's moving</h2>
+          <div class="sub">Top SKUs by revenue across every vertical. Slow movers and dead stock surface lower down.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="head-acts">
+          <div class="seg">
+            <button class="on">By revenue</button>
+            <button>By units</button>
+            <button>By margin</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="ow-card">
+        <table class="ow-table">
+          <thead><tr><th>SKU</th><th>Product</th><th>Vertical</th><th class="num">Units</th><th class="num">Revenue</th><th class="num">Margin %</th></tr></thead>
+          <tbody>
+            ${TOP_PRODUCTS.map(p=>`
+              <tr data-drill="product" data-label="${escapeHtml(p.name)}">
+                <td><span style="font:600 12px var(--font-mono);color:var(--ow-text-mute);">${escapeHtml(p.sku)}</span></td>
+                <td><div class="nm">${escapeHtml(p.name)}</div></td>
+                <td><span class="pill neutral">${escapeHtml(p.vertical)}</span></td>
+                <td class="num">${fmt(p.units)}</td>
+                <td class="num">${usd(p.rev)}</td>
+                <td class="num" style="color:${p.margin>=20?'var(--ow-good)':p.margin>=12?'var(--ow-warn)':'var(--ow-bad)'};">${p.margin}%</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid-2" style="margin-top:14px;">
+        <div class="ow-card"><div class="hdr"><div class="ttl">Slow movers · 60+ days</div></div>
+          <div style="font:12.5px/1.5 var(--font-sans);color:var(--ow-text-mute);">14 SKUs with zero turnover in the last 60 days · combined book value <strong style="color:var(--ow-warn);">${usd(18420)}</strong>.</div>
+          <button class="btn sm" style="margin-top:10px;">View slow movers</button>
+        </div>
+        <div class="ow-card"><div class="hdr"><div class="ttl">Dead stock · 180+ days</div></div>
+          <div style="font:12.5px/1.5 var(--font-sans);color:var(--ow-text-mute);">3 SKUs with zero turnover for 180 days · combined book value <strong style="color:var(--ow-bad);">${usd(4820)}</strong>.</div>
+          <button class="btn sm" style="margin-top:10px;">Mark for write-off</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function wireProducts() {}
+
+/* ============================================================
+   PEOPLE
+   ============================================================ */
+function renderPeople() {
+  const p = PEOPLE;
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">People · group</div>
+          <h2>Headcount &amp; payroll</h2>
+          <div class="sub">Workforce by vertical · turnover, vacancies, and payroll as % of revenue.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="head-acts"><button class="btn"><span data-icon="download" data-icon-size="13"></span> HR pack</button></div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi"><div class="lbl">Headcount</div><div class="v">${p.headcount}</div><div class="meta"><div class="delta up">+4 this quarter</div></div></div>
+        <div class="kpi"><div class="lbl">Turnover (TTM)</div><div class="v">${p.turnover}%</div><div class="meta"><div class="delta up">Below 5% target</div></div></div>
+        <div class="kpi warn"><div class="lbl">Open vacancies</div><div class="v">${p.vacancies}</div><div class="meta"><div class="delta">3 critical roles</div></div></div>
+        <div class="kpi"><div class="lbl">Payroll % rev</div><div class="v">${p.payrollPct}%</div><div class="meta"><div class="delta">Target 18%</div></div></div>
+      </div>
+
+      <div class="col-2-1" style="margin-top:14px;">
+        <div class="ow-card">
+          <div class="hdr"><div class="ttl">Headcount by vertical</div></div>
+          ${svgBars(p.byVertical.map(x=>x.c), p.byVertical.map(x=>x.v), {h:160, w:480, color:'#5B8DEF'})}
+        </div>
+        <div class="ow-card">
+          <div class="hdr"><div class="ttl">Upcoming anniversaries</div></div>
+          <div style="font:13px/1.5 var(--font-sans);color:var(--ow-text-mute);">${p.anniv} colleagues this month — including 3 ten-year milestones.</div>
+          <button class="btn sm" style="margin-top:10px;">View list</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function wirePeople() {}
+
+/* ============================================================
+   OPERATIONS HEALTH
+   ============================================================ */
+function renderOperations() {
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">Operations · today</div>
+          <h2>Operations health</h2>
+          <div class="sub">Trading hours, incidents, supply-chain SLAs, system uptime across the estate.</div>
+        </div>
+        <div class="spacer"></div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi"><div class="lbl">Branches trading</div><div class="v">23 / 24</div><div class="meta"><div class="delta dn">1 closed · Mutare (stock)</div></div></div>
+        <div class="kpi"><div class="lbl">System uptime</div><div class="v">99.84%</div><div class="meta"><div class="delta up">7-day rolling</div></div></div>
+        <div class="kpi warn"><div class="lbl">Open incidents</div><div class="v">3</div><div class="meta"><div class="delta">1 P2 · 2 P3</div></div></div>
+        <div class="kpi"><div class="lbl">Supplier SLA</div><div class="v">94.2%</div><div class="meta"><div class="delta up">Above 90% target</div></div></div>
+      </div>
+
+      <div class="ow-card" style="margin-top:14px;">
+        <div class="hdr"><div class="ttl">Today's incidents</div></div>
+        <table class="ow-table">
+          <thead><tr><th>ID</th><th>Branch</th><th>Issue</th><th>Priority</th><th>Age</th><th></th></tr></thead>
+          <tbody>
+            <tr><td><span style="font:600 12px var(--font-mono);">INC-2401</span></td><td>Mutare</td><td>POS terminal offline · stock-take blocked</td><td><span class="pill warn">P2</span></td><td>2h</td><td style="text-align:right;"><button class="btn sm">View</button></td></tr>
+            <tr><td><span style="font:600 12px var(--font-mono);">INC-2400</span></td><td>BYO Scrap Yard</td><td>Weighbridge calibration overdue</td><td><span class="pill info">P3</span></td><td>4h</td><td style="text-align:right;"><button class="btn sm">View</button></td></tr>
+            <tr><td><span style="font:600 12px var(--font-mono);">INC-2398</span></td><td>Park Centre</td><td>EcoCash float topped up below threshold</td><td><span class="pill info">P3</span></td><td>6h</td><td style="text-align:right;"><button class="btn sm">View</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+function wireOperations() {}
+
+/* ============================================================
+   COMPLIANCE CALENDAR
+   ============================================================ */
+function renderCompliance() {
+  // Generate a month grid for June 2026
+  const days = 30;
+  let cells = '';
+  const headers = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  headers.forEach(h => cells += `<div class="head">${h}</div>`);
+  // June 2026 — 1 June is Monday
+  for (let d = 1; d <= days; d++) {
+    const ev = COMPLIANCE.find(c => c.d === d);
+    cells += `<div class="day ${ev ? 'has '+ev.sev : ''} ${d===2?'today':''}">
+      <div class="nm">${d}</div>
+      ${ev ? `<div class="ev">${escapeHtml(ev.kind)}</div><span class="dot"></span>` : ''}
+    </div>`;
+  }
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">Compliance calendar · June 2026</div>
+          <h2>What's due, what's coming</h2>
+          <div class="sub">ZIMRA, NSSA, NEC, AIDS levy, EMA, licences, fire-certs. Auto-reminded 7 / 3 / 1 days before.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="head-acts">
+          <button class="btn" id="add-comp">+ Add deadline</button>
+        </div>
+      </div>
+
+      <div class="col-2-1">
+        <div class="ow-card">
+          <div class="cal">${cells}</div>
+        </div>
+        <div class="ow-card">
+          <div class="hdr"><div class="ttl">Upcoming · next 30 days</div></div>
+          ${COMPLIANCE.map(c=>`
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--ow-border);">
+              <span class="health-dot ${c.sev==='bad'?'bad':c.sev==='warn'?'warn':'ok'}"></span>
+              <div style="flex:1;min-width:0;">
+                <div style="font:600 13px var(--font-sans);color:#fff;">${escapeHtml(c.ttl)}</div>
+                <div style="font:11.5px var(--font-sans);color:var(--ow-text-mute);margin-top:2px;">${escapeHtml(c.kind)} · ${c.d} Jun</div>
+              </div>
+              <span class="pill ${c.sev==='bad'?'bad':c.sev==='warn'?'warn':'info'}">${c.d-2}d</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+function wireCompliance() {
+  $('#add-comp').addEventListener('click', () => {
+    openModal(`
+      <div class="modal" onclick="event.stopPropagation()">
+        <h3>Add compliance deadline</h3>
+        <p class="sub">Sets a reminder cascade · 7 / 3 / 1 days before. Assign to an owner for accountability.</p>
+        <div class="row"><input placeholder="Title (e.g. NSSA monthly)" /></div>
+        <div class="row"><select><option>ZIMRA</option><option>NSSA</option><option>NEC</option><option>EMA</option><option>Other</option></select><input type="date" value="2026-06-15" /></div>
+        <div class="row"><input placeholder="Owner" value="Liz Chiwara" /></div>
+        <div class="acts"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Add deadline</button></div>
+      </div>`);
+    $('.modal [data-cancel]').addEventListener('click', closeModal);
+    $('.modal [data-ok]').addEventListener('click', () => { closeModal(); toast('Deadline added · reminders scheduled','success'); });
+  });
+}
+
+/* ============================================================
+   CHURN & RISK
+   ============================================================ */
+function renderChurn() {
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">Customer concentration &amp; churn</div>
+          <h2>Retention &amp; risk</h2>
+          <div class="sub">NRR, churn by reason, top-account retention. Drill a row for the customer view.</div>
+        </div>
+        <div class="spacer"></div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi"><div class="lbl">NRR · TTM</div><div class="v">108.4%</div><div class="meta"><div class="delta up">+2.4% YoY</div></div></div>
+        <div class="kpi"><div class="lbl">Gross churn</div><div class="v">6.2%</div><div class="meta"><div class="delta up">Below 8% target</div></div></div>
+        <div class="kpi warn"><div class="lbl">Top-3 share</div><div class="v">28.4%</div><div class="meta"><div class="delta dn">Concentration risk</div></div></div>
+        <div class="kpi"><div class="lbl">NPS</div><div class="v">42</div><div class="meta"><div class="delta up">+4 vs LQ</div></div></div>
+      </div>
+
+      <div class="col-2-1" style="margin-top:14px;">
+        <div class="ow-card">
+          <div class="hdr"><div class="ttl">Churn by reason · 12 months</div></div>
+          ${[
+            ['Price', 38, 'warn'],
+            ['Service quality', 24, 'bad'],
+            ['Competition', 18, 'warn'],
+            ['Stock-outs', 12, 'warn'],
+            ['Closed business', 8, 'neutral'],
+          ].map(([l,p,t])=>`
+            <div class="bar-row ${t==='bad'?'bad':t==='warn'?'warn':''}">
+              <div class="lb">${l}</div>
+              <div class="tk"><div class="fl" style="width:${p}%;"></div></div>
+              <div class="vl">${p}%</div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="ow-card">
+          <div class="hdr"><div class="ttl">At-risk accounts</div></div>
+          <div style="font:13px/1.5 var(--font-sans);color:var(--ow-text-mute);">4 accounts flagged this month with declining spend &gt; 30%.</div>
+          ${[['Edgars Stores',-38],['Truworths',-32],['Bata Shoe Co.',-28],['Choppies',-22]].map(([n,d])=>`
+            <div style="display:flex;align-items:center;padding:8px 0;border-bottom:1px solid var(--ow-border);">
+              <div style="flex:1;font:600 12.5px var(--font-sans);color:#fff;">${n}</div>
+              <div style="font:600 12.5px var(--font-mono);color:var(--ow-bad);">${d}%</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+function wireChurn() {}
+
+/* ============================================================
+   OKRs / Strategic initiatives
+   ============================================================ */
+function renderOkrs() {
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">Strategic initiatives · Q2 2026</div>
+          <h2>Quarterly OKRs</h2>
+          <div class="sub">Progress, blockers, owners. Tap any objective for the key-result tree.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="head-acts">
+          <button class="btn primary" id="add-okr">+ New objective</button>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        ${OKRS.map(o=>`
+          <div class="ow-card" data-drill="okr" data-label="${escapeHtml(o.ttl)}" style="cursor:pointer;">
+            <div style="display:flex;align-items:flex-start;gap:10px;">
+              <div style="flex:1;">
+                <div style="font:500 11px var(--font-sans);letter-spacing:0.08em;text-transform:uppercase;color:var(--ow-text-sub);">${o.id}</div>
+                <div style="font:600 15px/1.3 var(--font-sans);color:#fff;margin-top:4px;">${escapeHtml(o.ttl)}</div>
+                <div style="font:12px var(--font-sans);color:var(--ow-text-mute);margin-top:4px;">Owner · <strong style="color:var(--ow-text);">${escapeHtml(o.owner)}</strong></div>
+              </div>
+              ${o.blockers>0 ? `<span class="pill bad">${o.blockers} block${o.blockers>1?'ers':'er'}</span>` : `<span class="pill ok">On track</span>`}
+            </div>
+            <div style="margin-top:14px;">
+              <div style="display:flex;justify-content:space-between;font:500 12px var(--font-sans);color:var(--ow-text-mute);margin-bottom:4px;">
+                <span>Progress</span><span style="font:600 13px var(--font-mono);color:#fff;">${o.pg}%</span>
+              </div>
+              <div class="tk" style="background:rgba(255,255,255,0.05);height:8px;border-radius:9999px;overflow:hidden;">
+                <div style="width:${o.pg}%;height:100%;background:${o.pg>=70?'var(--ow-good)':o.pg>=40?'var(--ow-warn)':'var(--ow-bad)'};border-radius:9999px;"></div>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+function wireOkrs() {
+  $('#add-okr').addEventListener('click', () => {
+    openModal(`
+      <div class="modal" onclick="event.stopPropagation()">
+        <h3>New Q2 objective</h3>
+        <p class="sub">Quarterly objective with up to 4 key results.</p>
+        <div class="row"><input placeholder="Objective title" /></div>
+        <div class="row"><input placeholder="Owner" /></div>
+        <div class="row"><textarea placeholder="Key results — one per line"></textarea></div>
+        <div class="acts"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Create</button></div>
+      </div>`);
+    $('.modal [data-cancel]').addEventListener('click', closeModal);
+    $('.modal [data-ok]').addEventListener('click', () => { closeModal(); toast('Objective created','success'); });
+  });
+}
+
+/* ============================================================
+   REPORTS LIBRARY
+   ============================================================ */
+function renderReports() {
+  const f = state.reportFilter;
+  const visible = f==='all' ? REPORTS : REPORTS.filter(r=>r.kind.toLowerCase()===f);
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">Reports library</div>
+          <h2>Auto-generated &amp; on-demand reports</h2>
+          <div class="sub">Daily revenue, weekly board pack, monthly P&amp;L, quarterly tax pack. Schedule or run on-demand.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="head-acts">
+          <div class="seg" id="rep-seg">
+            ${[['all','All'],['daily','Daily'],['weekly','Weekly'],['monthly','Monthly'],['quarterly','Quarterly']].map(([k,l])=>`<button class="${f===k?'on':''}" data-r="${k}">${l}</button>`).join('')}
+          </div>
+          <button class="btn primary" id="new-rep">+ New report</button>
+        </div>
+      </div>
+
+      <div class="ow-card">
+        <table class="ow-table">
+          <thead><tr><th>Report</th><th>Cadence</th><th>Schedule</th><th>Last run</th><th>Auto</th><th></th></tr></thead>
+          <tbody>
+            ${visible.map(r=>`
+              <tr data-drill="report" data-label="${escapeHtml(r.name)}">
+                <td><div class="nm">${escapeHtml(r.name)}</div><div class="sb">${escapeHtml(r.id)}</div></td>
+                <td><span class="pill neutral">${escapeHtml(r.kind)}</span></td>
+                <td style="font:500 12.5px var(--font-mono);color:var(--ow-text-mute);">${escapeHtml(r.schedule)}</td>
+                <td style="color:var(--ow-text-mute);">${escapeHtml(r.last)}</td>
+                <td>${r.auto ? '<span class="pill ok">Auto</span>' : '<span class="pill neutral">Manual</span>'}</td>
+                <td style="text-align:right;display:flex;gap:6px;justify-content:flex-end;"><button class="btn sm" data-run="${r.id}">Run</button><button class="btn sm primary" data-share="${r.id}">Share</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+function wireReports() {
+  $$('#rep-seg [data-r]').forEach(b => b.addEventListener('click', () => { state.reportFilter = b.dataset.r; render(); }));
+  $$('[data-run]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); toast(`Running ${b.dataset.run}…`); setTimeout(()=>toast('Report ready','success'), 900); }));
+  $$('[data-share]').forEach(b => b.addEventListener('click', (e) => { e.stopPropagation(); openConfirm({title:'Share report?', sub:'Sends to your distribution list (3 recipients).', okLabel:'Share', onOk:()=>toast('Report shared','success')}); }));
+  $('#new-rep').addEventListener('click', () => {
+    openModal(`
+      <div class="modal" onclick="event.stopPropagation()">
+        <h3>New custom report</h3>
+        <p class="sub">Build a report from scratch — choose source, group-by, and schedule.</p>
+        <div class="row"><input placeholder="Report name" /></div>
+        <div class="row"><select><option>Daily</option><option>Weekly</option><option>Monthly</option></select></div>
+        <div class="acts"><button class="btn" data-cancel>Cancel</button><button class="btn primary" data-ok>Create</button></div>
+      </div>`);
+    $('.modal [data-cancel]').addEventListener('click', closeModal);
+    $('.modal [data-ok]').addEventListener('click', () => { closeModal(); toast('Report created','success'); });
+  });
+}
+
+/* ============================================================
+   ANNOTATE & SHARE
+   ============================================================ */
+function renderAnnotate() {
+  const anns = state.annotations.today || [];
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">Annotations</div>
+          <h2>Annotate any chart, KPI or flag</h2>
+          <div class="sub">Notes live alongside the data. Share with finance, ops, or your board.</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="head-acts">
+          <button class="btn primary" id="new-ann">+ New annotation</button>
+        </div>
+      </div>
+
+      <div class="ow-card">
+        <div class="hdr"><div class="ttl">Annotations · today's screen</div><div class="spacer"></div><span class="pill neutral">${anns.length}</span></div>
+        ${anns.length === 0 ? `<div class="empty-st"><div class="ic-bg"><span data-icon="edit" data-icon-size="18"></span></div><div class="ttl">No annotations yet</div><div class="ds">Highlight a chart or KPI and add a note.</div></div>` : ''}
+        ${anns.map((a,i)=>`
+          <div class="ann-row">
+            <div class="av">${escapeHtml(a.av)}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:baseline;gap:8px;">
+                <div class="nm">${escapeHtml(a.who)}</div>
+                <div class="ts">${escapeHtml(a.ts)}</div>
+                <div style="flex:1;"></div>
+                <button class="btn sm ghost" data-del="${i}"><span data-icon="x" data-icon-size="12"></span></button>
+              </div>
+              <div class="tx">${escapeHtml(a.tx)}</div>
+              <div style="margin-top:6px;display:flex;gap:6px;">
+                <span class="annot"><span data-icon="check" data-icon-size="10"></span> Shared with #execs</span>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+function wireAnnotate() {
+  $('#new-ann').addEventListener('click', () => {
+    openModal(`
+      <div class="modal" onclick="event.stopPropagation()">
+        <h3>New annotation</h3>
+        <p class="sub">Pin a note to today's executive screen — visible to your distribution list.</p>
+        <div class="row"><textarea id="ann-tx" placeholder="What you noticed…" autofocus></textarea></div>
+        <div class="acts">
+          <button class="btn" data-cancel>Cancel</button>
+          <button class="btn primary" data-ok>Save &amp; share</button>
+        </div>
+      </div>`);
+    $('.modal [data-cancel]').addEventListener('click', closeModal);
+    $('.modal [data-ok]').addEventListener('click', () => {
+      const tx = $('#ann-tx').value.trim();
+      if (!tx) { toast('Add some text first','warn'); return; }
+      state.annotations.today = state.annotations.today || [];
+      state.annotations.today.unshift({ who: 'Mark Mukamba', av: 'MM', tx, ts: 'now' });
+      closeModal(); render(); toast('Annotation saved','success');
+    });
+  });
+  $$('[data-del]').forEach(b => b.addEventListener('click', () => {
+    const i = +b.dataset.del;
+    state.annotations.today.splice(i,1); render(); toast('Annotation removed');
+  }));
+}
+
+/* ============================================================
+   TENANTS / SUBSIDIARY SWITCHER
+   ============================================================ */
+function renderTenants() {
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">Tenant switcher</div>
+          <h2>Switch business unit</h2>
+          <div class="sub">View the cockpit at group level, or zoom into any subsidiary's standalone P&amp;L.</div>
+        </div>
+        <div class="spacer"></div>
+      </div>
+
+      <div class="grid-2">
+        ${TENANTS.map(t=>`
+          <div class="ow-card" data-tenant="${t.id}" style="cursor:pointer;display:flex;align-items:center;gap:14px;${t.id===state.tenantId?'border-color:var(--ow-brand);background:var(--ow-brand-soft);':''}">
+            <div style="width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#5B8DEF,#A78BFA);display:grid;place-items:center;color:#fff;font:700 14px var(--font-sans);flex:none;">${t.name.split(' ').map(p=>p[0]).slice(0,2).join('')}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font:600 14px var(--font-sans);color:#fff;">${escapeHtml(t.name)}</div>
+              <div style="font:12px var(--font-sans);color:var(--ow-text-mute);margin-top:3px;">${escapeHtml(t.sub)}</div>
+            </div>
+            ${t.id===state.tenantId ? '<span class="pill info">Current</span>' : '<span data-icon="chright" data-icon-size="14" style="color:var(--ow-text-sub);"></span>'}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+function wireTenants() {
+  $$('[data-tenant]').forEach(b => b.addEventListener('click', () => {
+    state.tenantId = b.dataset.tenant;
+    const t = TENANTS.find(t=>t.id===state.tenantId);
+    toast(`Switched to ${t.name}`, 'success');
+    go('today');
+  }));
+}
+
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+function renderSettings() {
+  const tab = state.settingsTab;
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">Settings</div>
+          <h2>Targets, thresholds &amp; preferences</h2>
+          <div class="sub">Calibrate the cockpit · alert thresholds, revenue targets, theme.</div>
+        </div>
+        <div class="spacer"></div>
+      </div>
+
+      <div class="ow-set">
+        <div class="nav">
+          ${[
+            ['targets','Targets','target'],
+            ['alerts','Alert thresholds','bell'],
+            ['cadence','Report cadence','calendar'],
+            ['theme','Theme','settings'],
+            ['account','Account','user'],
+          ].map(([k,l,i])=>`<button class="${tab===k?'on':''}" data-t="${k}"><span data-icon="${i}" data-icon-size="14"></span> ${l}</button>`).join('')}
+        </div>
+        <div class="body">
+          ${renderSettingsTab(tab)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+function renderSettingsTab(tab) {
+  const s = state.settings;
+  if (tab === 'targets') return `
+    <h3>Revenue &amp; cash targets</h3>
+    <div class="sub">Set the numbers the cockpit compares against. These drive the KPI tiles and progress bars.</div>
+    <div class="field"><div><div class="lb">Monthly revenue target (USD)</div><div class="sb">Group-wide. Used in the Today header.</div></div><input id="set-rev" type="number" value="${s.revTargetUsd}" /></div>
+    <div class="field"><div><div class="lb">Cash floor (USD)</div><div class="sb">Below this, the cash KPI turns red.</div></div><input id="set-floor" type="number" value="${s.cashFloorUsd}" /></div>
+    <div class="field"><div><div class="lb">AR over-90 threshold (%)</div><div class="sb">Flag fires when AR &gt; 90 days exceeds this share of the book.</div></div><input id="set-ar" type="number" value="${s.arOver90Pct}" /></div>
+    <div style="margin-top:16px;text-align:right;"><button class="btn primary" id="save-targets">Save targets</button></div>
+  `;
+  if (tab === 'alerts') return `
+    <h3>Alert delivery</h3>
+    <div class="sub">Choose which severity tiers reach you via push / email / SMS.</div>
+    <div class="field"><div><div class="lb">Critical alerts</div><div class="sb">Push + SMS + email immediately.</div></div><span class="toggle ${s.notif.critical?'on':''}" data-tg="critical"></span></div>
+    <div class="field"><div><div class="lb">Warning alerts</div><div class="sb">Email digest every 4h.</div></div><span class="toggle ${s.notif.warning?'on':''}" data-tg="warning"></span></div>
+    <div class="field"><div><div class="lb">Info alerts</div><div class="sb">Inbox only; no notification.</div></div><span class="toggle ${s.notif.info?'on':''}" data-tg="info"></span></div>
+  `;
+  if (tab === 'cadence') return `
+    <h3>Report cadence</h3>
+    <div class="sub">Auto-generated reports follow these schedules.</div>
+    <div class="field"><div><div class="lb">Daily summary</div><div class="sb">When the morning pack arrives.</div></div><select><option>06:30</option><option>07:00</option><option>07:30</option></select></div>
+    <div class="field"><div><div class="lb">Weekly board pack</div><div class="sb">When Monday's pack ships.</div></div><select><option>Mon 07:00</option><option>Sun 17:00</option></select></div>
+    <div class="field"><div><div class="lb">Monthly P&amp;L</div><div class="sb">Cut-off day.</div></div><select><option>1st of month</option><option>Last day</option></select></div>
+  `;
+  if (tab === 'theme') return `
+    <h3>Appearance</h3>
+    <div class="sub">Dark by default — designed for the morning desk.</div>
+    <div class="field"><div><div class="lb">Theme</div><div class="sb">Dark recommended for KPI clarity.</div></div>
+      <div class="seg" id="th-seg">
+        <button class="${s.theme==='dark'?'on':''}" data-th="dark">Dark (default)</button>
+        <button class="${s.theme==='light'?'on':''}" data-th="light">Light</button>
+        <button class="${s.theme==='auto'?'on':''}" data-th="auto">Auto</button>
+      </div>
+    </div>
+    <div class="field"><div><div class="lb">Dense mode</div><div class="sb">Tighter row spacing for more data on screen.</div></div><span class="toggle on"></span></div>
+  `;
+  if (tab === 'account') return `
+    <h3>Account &amp; access</h3>
+    <div class="field"><div><div class="lb">Sign-in email</div></div><input value="mark.mukamba@mukambaholdings.co.zw" /></div>
+    <div class="field"><div><div class="lb">2FA method</div><div class="sb">Required for executive sign-in.</div></div><select><option>SMS to +263 77 ••• 4821</option><option>Authenticator app</option><option>Hardware key</option></select></div>
+    <div class="field"><div><div class="lb">Trusted devices</div><div class="sb">3 trusted devices · 1 admin browser.</div></div><button class="btn sm">Manage</button></div>
+  `;
+  return '';
+}
+function wireSettings() {
+  $$('.ow-set .nav [data-t]').forEach(b => b.addEventListener('click', () => { state.settingsTab = b.dataset.t; render(); }));
+  const st = $('#save-targets'); if (st) st.addEventListener('click', () => {
+    state.settings.revTargetUsd = +$('#set-rev').value || state.settings.revTargetUsd;
+    state.settings.cashFloorUsd = +$('#set-floor').value || state.settings.cashFloorUsd;
+    state.settings.arOver90Pct  = +$('#set-ar').value   || state.settings.arOver90Pct;
+    saveState(); toast('Targets saved','success');
+  });
+  $$('[data-tg]').forEach(t => t.addEventListener('click', () => {
+    const k = t.dataset.tg; state.settings.notif[k] = !state.settings.notif[k]; render();
+  }));
+  $$('#th-seg [data-th]').forEach(b => b.addEventListener('click', () => { state.settings.theme = b.dataset.th; render(); toast(`Theme: ${b.dataset.th}`); }));
+}
+
+/* ============================================================
+   HELP
+   ============================================================ */
+function renderHelp() {
+  return `
+    <div class="ow-page">
+      <div class="ow-page-head">
+        <div>
+          <div class="crumb">Help</div>
+          <h2>How the cockpit works</h2>
+          <div class="sub">Shortcuts, quick start, and how to get the most from the morning routine.</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="ow-card">
+          <div class="hdr"><div class="ttl">Keyboard shortcuts</div></div>
+          <table class="ow-table">
+            <tbody>
+              <tr><td>⌘K / Ctrl-K</td><td>Open command palette · search anything</td></tr>
+              <tr><td>Esc</td><td>Close any modal, drawer, or command palette</td></tr>
+              <tr><td>g + t</td><td>Go to Today</td></tr>
+              <tr><td>g + c</td><td>Go to Cash position</td></tr>
+              <tr><td>g + f</td><td>Go to Flags</td></tr>
+              <tr><td>F</td><td>Toggle fullscreen preview</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="ow-card">
+          <div class="hdr"><div class="ttl">Morning routine</div></div>
+          <ol style="margin:0;padding-left:20px;color:var(--ow-text-mute);font:13.5px/1.7 var(--font-sans);">
+            <li>Open <strong style="color:#fff;">Today</strong> — scan the four hero KPIs.</li>
+            <li>Check the <strong style="color:#fff;">Flags inbox</strong> — resolve or snooze each.</li>
+            <li>Glance at <strong style="color:#fff;">Cash position</strong> — confirm above floor.</li>
+            <li>Drill into any flagged vertical or branch.</li>
+            <li>Annotate anything material before 10:00; share with execs.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="ow-card" style="margin-top:14px;">
+        <div class="hdr"><div class="ttl">UI states · empty / loading / error</div></div>
+        <div class="grid-3">
+          <div>
+            <div style="font:500 12px var(--font-sans);color:var(--ow-text-mute);margin-bottom:6px;">Loading skeleton</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <div class="sk" style="width:60%;"></div>
+              <div class="sk" style="width:92%;"></div>
+              <div class="sk" style="width:76%;"></div>
+              <div class="sk" style="width:84%;"></div>
+            </div>
+          </div>
+          <div class="empty-st"><div class="ic-bg"><span data-icon="folder" data-icon-size="18"></span></div><div class="ttl">No flags today</div><div class="ds">Quiet morning. Enjoy.</div></div>
+          <div class="err-st"><div class="ic-bg"><span data-icon="info" data-icon-size="18"></span></div><div class="ttl">Couldn't fetch cash data</div><div class="ds">Sync error. <button class="btn sm" id="retry-help" style="margin-top:8px;">Retry</button></div></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function wireHelp() {
+  const r = $('#retry-help'); if (r) r.addEventListener('click', () => toast('Retrying…') || setTimeout(()=>toast('Synced','success'),700));
+}
+
+/* ============================================================
+   COMMAND PALETTE
+   ============================================================ */
+function renderCmdk() {
+  const host = $('#cmdk-host');
+  if (!state.cmdkOpen) { host.innerHTML = ''; return; }
+  const q = state.cmdkQuery.toLowerCase();
+  const all = [
+    ...ROUTES.filter(r => r !== 'signin').map(r => ({ kind:'Page', label: r[0].toUpperCase()+r.slice(1), route: r, icon:'grid' })),
+    ...BRANCHES.map(b => ({ kind:'Branch', label: b.name, route: 'branches', icon:'shop' })),
+    ...TOP_CUSTOMERS.map(c => ({ kind:'Customer', label: c.name, route: 'customers', icon:'user' })),
+    ...FLAGS.map(f => ({ kind:'Flag', label: f.ttl, route: 'flags', icon:'bell' })),
+    ...VERTICALS.map(v => ({ kind:'Vertical', label: v.name, route: 'verticals', icon:'grid' })),
+  ];
+  const matches = q ? all.filter(x => x.label.toLowerCase().includes(q)).slice(0, 12) : all.slice(0, 12);
+  const groups = {};
+  matches.forEach(m => { (groups[m.kind] = groups[m.kind] || []).push(m); });
+  host.innerHTML = `
+    <div class="cmdk-scrim" data-scrim>
+      <div class="cmdk" onclick="event.stopPropagation()">
+        <div class="srch">
+          <span data-icon="search" data-icon-size="16"></span>
+          <input id="cmdk-input" placeholder="Search branches, KPIs, flags, customers…" value="${escapeHtml(state.cmdkQuery)}" />
+          <span class="kbd" style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:5px;border:1px solid var(--ow-border);color:var(--ow-text-mute);font:600 10.5px var(--font-mono);">Esc</span>
+        </div>
+        <div class="lst">
+          ${Object.keys(groups).length === 0 ? `<div style="padding:30px 16px;text-align:center;color:var(--ow-text-mute);font:13px var(--font-sans);">No matches</div>` : ''}
+          ${Object.entries(groups).map(([k,arr])=>`
+            <div class="ph">${k}</div>
+            ${arr.map(m=>`<div class="it" data-cmdk-go="${m.route}">
+              <span class="ic" data-icon="${m.icon}" data-icon-size="14"></span>
+              <span>${escapeHtml(m.label)}</span>
+              <span class="ms">${m.kind}</span>
+            </div>`).join('')}
+          `).join('')}
+        </div>
+        <div class="ft"><span>↑ ↓ navigate</span><span>↵ open</span><span>esc close</span></div>
+      </div>
+    </div>
+  `;
+  if (window.Icons) window.Icons.render(host);
+  host.querySelector('[data-scrim]').addEventListener('click', (e) => { if (e.target.dataset.scrim !== undefined) { state.cmdkOpen = false; renderCmdk(); } });
+  const inp = $('#cmdk-input');
+  inp.focus();
+  inp.addEventListener('input', () => { state.cmdkQuery = inp.value; renderCmdk(); });
+  $$('[data-cmdk-go]').forEach(b => b.addEventListener('click', () => { state.cmdkOpen = false; renderCmdk(); go(b.dataset.cmdkGo); }));
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+function init() {
+  loadState();
+  if (/[?&]fullscreen=1/.test(location.search)) {
+    document.body.classList.add('is-fullscreen');
+  }
+  const r = (location.hash.replace(/^#\/?/, '') || 'today');
+  if (r === 'signin') { state.signedIn = false; state.step = 'creds'; }
+  else if (ROUTES.includes(r)) state.route = r;
+  render();
+}
+if (document.readyState !== 'loading') init();
+else document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
