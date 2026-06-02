@@ -8,189 +8,332 @@
 <script src="../icons.js" defer></script>
 <script src="../system-shell.js" defer></script>
 <style>
-  .frame { border: 1px solid var(--border); border-radius: 14px; overflow: clip; background: var(--canvas); margin: 16px 0 32px; }
-  .erp-shell { display: grid; grid-template-columns: 240px 1fr; min-height: 720px; }
-  .erp-sidebar { background: var(--canvas); border-right: 1px solid var(--border); padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
-  .erp-org-switcher { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
-  .erp-org-switcher .mark { width: 26px; height: 26px; background: var(--ink); color: var(--canvas); border-radius: 6px; display: grid; place-items: center; }
+  /* === Page-scoped helpers for the ERP demo frame ===
+     Uses tokens only; the desktop shell is wide on purpose,
+     so on mobile we wrap it in a horizontally-scrollable scroller
+     rather than letting it overflow the page. */
+
+  .frame {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: clip;
+    background: var(--canvas);
+    margin: 16px 0 32px;
+  }
+  /* Mobile: scroll the wide shell inside the frame, never the page */
+  .frame-scroller {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .erp-shell {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    min-height: 720px;
+    min-width: 1080px; /* keeps desktop proportions inside the scroller */
+  }
+  .erp-sidebar {
+    background: var(--canvas);
+    border-right: 1px solid var(--border);
+    padding: var(--space-4) var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+  .erp-org-switcher {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+  .erp-org-switcher .mark {
+    width: 26px; height: 26px;
+    background: var(--ink);
+    color: var(--canvas);
+    border-radius: 6px;
+    display: grid; place-items: center;
+  }
   .erp-org-switcher .mark svg { width: 16px; height: 16px; color: var(--brand-300); }
   .erp-org-switcher .name { font: 600 14px/1 var(--font-sans); color: var(--text-strong); flex: 1; }
-  .erp-section-head { padding: 16px 10px 8px; font: var(--type-caption); color: var(--text-subtle); }
-  .erp-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; font: 500 13.5px/1 var(--font-sans); color: var(--text-body); cursor: pointer; text-align: left; }
+  .erp-section-head { padding: var(--space-4) var(--space-3) var(--space-2); font: var(--type-caption); color: var(--text-subtle); }
+  .erp-item {
+    display: flex; align-items: center; gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border-radius: 7px;
+    font: 500 13.5px/1 var(--font-sans);
+    color: var(--text-body);
+    cursor: pointer;
+    text-align: left;
+    background: transparent;
+    border: 0;
+  }
   .erp-item:hover { background: var(--surface-muted); }
   .erp-item.active { background: var(--brand-soft); color: var(--brand-strong); }
   .erp-item svg { width: 16px; height: 16px; color: var(--text-muted); flex: none; }
   .erp-item.active svg { color: var(--brand); }
 
   .erp-main { display: flex; flex-direction: column; min-width: 0; }
-  .erp-top { display: flex; align-items: center; gap: 10px; padding: 12px 24px; border-bottom: 1px solid var(--border); background: var(--surface); }
-  .erp-top .crumbs { display: inline-flex; align-items: center; gap: 8px; font: var(--type-body); color: var(--text-muted); }
+  .erp-top {
+    display: flex; align-items: center; gap: var(--space-2);
+    padding: 12px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .erp-top .crumbs { display: inline-flex; align-items: center; gap: var(--space-2); font: var(--type-body); color: var(--text-muted); }
   .erp-top .crumbs a { color: inherit; text-decoration: none; }
   .erp-top .crumbs a:last-child { color: var(--text-strong); font-weight: 500; }
   .erp-top .crumbs .sep { color: var(--text-subtle); display: inline-flex; }
   .erp-top .spacer { flex: 1; }
 
-  .erp-page { padding: 28px 32px 40px; display: grid; gap: 18px; }
-  .erp-page-h { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; }
+  .erp-page { padding: 28px 32px 40px; display: grid; gap: var(--space-4); }
+  .erp-page-h { display: flex; justify-content: space-between; align-items: flex-end; gap: var(--space-4); }
   .erp-page-h h1 { font: var(--type-display-sm); font-size: 26px; margin: 0; color: var(--text-strong); }
   .erp-page-h p { color: var(--text-muted); margin: 4px 0 0; font: var(--type-body-sm); }
 
-  .pcat-toolbar { display: flex; align-items: center; gap: 10px; }
+  .pcat-toolbar { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
   .pcat-toolbar .spacer { flex: 1; }
-  .pcat-search { position: relative; flex: 0 1 320px; }
-  .pcat-search input { width: 100%; height: 36px; padding: 0 12px 0 36px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); font: var(--type-body); outline: none; }
+  .pcat-search { position: relative; flex: 0 1 320px; min-width: 200px; }
+  .pcat-search input {
+    width: 100%;
+    height: var(--h-control-md, 36px);
+    padding: 0 12px 0 36px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font: var(--type-body);
+    outline: none;
+    color: var(--text-strong);
+  }
   .pcat-search > [data-icon] { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-subtle); }
 
   .pcat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
-  .pcat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: clip; cursor: pointer; transition: border-color var(--dur-fast), transform var(--dur-fast); }
+  .pcat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: clip;
+    cursor: pointer;
+    transition: border-color var(--dur-fast), transform var(--dur-fast);
+  }
   .pcat-card:hover { border-color: var(--border-strong); transform: translateY(-1px); }
-  .pcat-card .pcat-img { width: 100%; height: 140px; background: var(--surface-muted); display: grid; place-items: center; color: var(--text-subtle); font: 600 18px/1 var(--font-mono); position: relative; }
-  .pcat-card .pcat-img.gem { background: linear-gradient(135deg, #FEF4DA, #F4C15B); color: #6B5119; }
-  .pcat-card .pcat-img.cu  { background: linear-gradient(135deg, #FED4B5, #E2A458); color: #6B3F19; }
+  .pcat-card .pcat-img {
+    width: 100%; height: 140px;
+    background: var(--surface-muted);
+    display: grid; place-items: center;
+    color: var(--text-subtle);
+    font: 600 18px/1 var(--font-mono);
+    position: relative;
+  }
+  /* Mineral swatches — tonal gradients built from system warm/brand scales */
+  .pcat-card .pcat-img.gem { background: linear-gradient(135deg, var(--brand-50), var(--brand-300)); color: var(--brand-strong); }
+  .pcat-card .pcat-img.cu  { background: linear-gradient(135deg, var(--brand-100), var(--brand-500)); color: var(--brand-strong); }
   .pcat-card .pcat-img.ag  { background: linear-gradient(135deg, var(--gray-100), var(--gray-300)); color: var(--gray-700); }
   .pcat-card .pcat-img.blu { background: linear-gradient(135deg, var(--brand-50), var(--brand-200)); color: var(--brand-strong); }
-  .pcat-card .pcat-img .pcat-status { position: absolute; top: 10px; left: 10px; padding: 4px 8px; background: rgba(255,255,255,0.92); border-radius: 9999px; font: 500 11px/1 var(--font-sans); color: var(--text-strong); letter-spacing: 0.04em; text-transform: uppercase; }
-  .pcat-card .pcat-img .pcat-fave { position: absolute; top: 10px; right: 10px; width: 28px; height: 28px; border-radius: 9999px; background: rgba(255,255,255,0.92); display: grid; place-items: center; color: var(--text-muted); }
+  .pcat-card .pcat-img .pcat-status {
+    position: absolute; top: 10px; left: 10px;
+    padding: 4px 8px;
+    background: var(--surface);
+    border-radius: var(--radius-pill, 9999px);
+    font: 500 11px/1 var(--font-sans);
+    color: var(--text-strong);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+  .pcat-card .pcat-img .pcat-fave {
+    position: absolute; top: 10px; right: 10px;
+    width: 28px; height: 28px;
+    border-radius: var(--radius-pill, 9999px);
+    background: var(--surface);
+    display: grid; place-items: center;
+    color: var(--text-muted);
+  }
   .pcat-card .pcat-body { padding: 14px 16px; }
   .pcat-card .pcat-cat { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
-  .pcat-card .pcat-nm { font: var(--type-section-title); margin-top: 6px; }
-  .pcat-card .pcat-sk { font: var(--type-caption); font-family: var(--font-mono); color: var(--text-muted); margin-top: 4px; }
-  .pcat-card .pcat-foot { display: flex; align-items: baseline; justify-content: space-between; padding: 12px 16px; border-top: 1px solid var(--border-subtle); }
+  .pcat-card .pcat-nm { font: var(--type-section-title); margin-top: 6px; word-break: break-word; }
+  .pcat-card .pcat-sk { font: var(--type-caption); font-family: var(--font-mono); color: var(--text-muted); margin-top: 4px; word-break: break-all; }
+  .pcat-card .pcat-foot { display: flex; align-items: baseline; justify-content: space-between; padding: 12px 16px; border-top: 1px solid var(--border-subtle); gap: 8px; flex-wrap: wrap; }
   .pcat-card .pcat-price { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 600; color: var(--text-strong); font-size: 16px; }
   .pcat-card .pcat-price .u { font: 500 11px/1 var(--font-sans); color: var(--text-muted); margin-left: 2px; }
   .pcat-card .pcat-stock { font: var(--type-caption); color: var(--tone-success); }
   .pcat-card .pcat-stock.low { color: var(--tone-warn); }
   .pcat-card .pcat-stock.out { color: var(--tone-danger); }
+
+  @media (max-width: 1100px) { .pcat-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 900px)  { .pcat-grid { grid-template-columns: repeat(2, 1fr); } }
 </style>
 </head>
 <body class="ds-doc">
-<main class="ds-content wide">
+<main class="ds-content">
   <header class="ds-page-head anim-fade-up">
     <div class="crumbs"><a href="../index.html">Home</a><span class="sep">/</span><a href="pages.html">Pages</a><span class="sep">/</span><span>Product catalog</span></div>
     <h1>Product catalog</h1>
-    <p class="lede">The product list for retail and scrap operations. Grid view by default; switches to a dense table view for back-office editing.</p>
+    <p class="lede">The product list for retail and scrap operations. Grid view by default; switches to a dense table view for back-office editing. Searches by name, SKU, or barcode.</p>
     <div class="meta">
+      <span class="ds-status" data-status="beta">In progress</span>
       <span class="meta-pill">Retail module</span>
       <span class="meta-pill">Grid + table</span>
       <span class="meta-pill"><span data-icon="zap" data-icon-size="12"></span>Inline edit</span>
     </div>
   </header>
 
-  <h2 class="ds-h2">Catalog page</h2>
-  <p class="ds-h2-sub">Filter chips above, search-right, view toggle. Click any card to open the product detail drawer.</p>
+  <section>
+    <h2 class="ds-h2">Catalog page</h2>
+    <p class="ds-h2-sub">Filter chips above, search-right, view toggle. Click any card to open the product detail drawer. The shell below is wide — on phone it scrolls horizontally inside the frame so the rest of the page stays readable.</p>
 
-  <div class="frame">
-    <div class="erp-shell">
-      <aside class="erp-sidebar">
-        <div class="erp-org-switcher">
-          <span class="mark" data-icon="corelith" data-icon-size="16"></span>
-          <span class="name">Huchu Enterprises</span>
-          <span class="chev" data-icon="chevron" style="color: var(--text-subtle);"></span>
+    <div class="frame">
+      <div class="frame-scroller">
+        <div class="erp-shell">
+          <aside class="erp-sidebar">
+            <div class="erp-org-switcher">
+              <span class="mark" data-icon="corelith" data-icon-size="16"></span>
+              <span class="name">Huchu Enterprises</span>
+              <span class="chev" data-icon="chevron"></span>
+            </div>
+            <nav style="display: grid; gap: 1px; margin-top: 12px;">
+              <button class="erp-item"><span data-icon="home"></span>Overview</button>
+              <button class="erp-item"><span data-icon="add"></span>Create</button>
+            </nav>
+            <div class="erp-section-head">Retail</div>
+            <nav style="display: grid; gap: 1px;">
+              <button class="erp-item active"><span data-icon="box"></span>Products</button>
+              <button class="erp-item"><span data-icon="warehouse"></span>Inventory</button>
+              <button class="erp-item"><span data-icon="receipt"></span>POS terminal</button>
+              <button class="erp-item"><span data-icon="user"></span>Customers</button>
+              <button class="erp-item"><span data-icon="coins"></span>Sales</button>
+              <button class="erp-item"><span data-icon="trending"></span>Reports</button>
+            </nav>
+          </aside>
+
+          <main class="erp-main">
+            <div class="erp-top">
+              <nav class="crumbs">
+                <a>Home</a><span class="sep" data-icon="chright"></span>
+                <a>Retail</a><span class="sep" data-icon="chright"></span>
+                <a>Products</a>
+              </nav>
+              <div class="spacer"></div>
+              <button class="btn btn-secondary btn-sm"><span data-icon="upload"></span>Import CSV</button>
+              <button class="btn btn-primary btn-sm"><span data-icon="plus"></span>New product</button>
+            </div>
+
+            <div class="erp-page">
+              <div class="erp-page-h">
+                <div><h1>Products</h1><p>218 products · 14 categories · last edit 2 minutes ago</p></div>
+                <div class="seg-tabs"><button>Table</button><button class="active">Grid</button></div>
+              </div>
+
+              <div class="pcat-toolbar">
+                <div class="pcat-search">
+                  <span data-icon="search"></span>
+                  <input placeholder="Search by name, SKU, or barcode…" />
+                </div>
+                <button class="fchip active">All <span class="t-mono">218</span></button>
+                <button class="fchip">Active</button>
+                <button class="fchip">Low stock <span class="badge badge-warn">4</span></button>
+                <button class="fchip">Out</button>
+                <div class="spacer"></div>
+                <button class="btn btn-secondary btn-sm"><span data-icon="filter"></span>Category <span data-icon="chevron"></span></button>
+                <button class="btn btn-secondary btn-sm"><span data-icon="sort"></span>Sort: Name <span data-icon="chevron"></span></button>
+              </div>
+
+              <div class="pcat-grid">
+                <div class="pcat-card">
+                  <div class="pcat-img gem"><span class="pcat-status">Active</span>24K</div>
+                  <div class="pcat-body"><div class="pcat-cat">Gold · bar</div><div class="pcat-nm">Gold bar · 1 g</div><div class="pcat-sk">SKU-GOLD-1G · 738291</div></div>
+                  <div class="pcat-foot"><span class="pcat-price">$80.00 <span class="u">/ bar</span></span><span class="pcat-stock">142 in stock</span></div>
+                </div>
+                <div class="pcat-card">
+                  <div class="pcat-img gem"><span class="pcat-status">Active</span>22K</div>
+                  <div class="pcat-body"><div class="pcat-cat">Gold · bar</div><div class="pcat-nm">Gold bar · 5 g</div><div class="pcat-sk">SKU-GOLD-5G · 738294</div></div>
+                  <div class="pcat-foot"><span class="pcat-price">$365.00 <span class="u">/ bar</span></span><span class="pcat-stock">42 in stock</span></div>
+                </div>
+                <div class="pcat-card">
+                  <div class="pcat-img gem"><span class="pcat-status">Active</span>SCR</div>
+                  <div class="pcat-body"><div class="pcat-cat">Gold · scrap</div><div class="pcat-nm">Gold scrap · per gram</div><div class="pcat-sk">SKU-GOLD-SCRAP</div></div>
+                  <div class="pcat-foot"><span class="pcat-price">$72.00 <span class="u">/ gram</span></span><span class="pcat-stock low">8 g left</span></div>
+                </div>
+                <div class="pcat-card">
+                  <div class="pcat-img ag"><span class="pcat-status">Active</span>Ag</div>
+                  <div class="pcat-body"><div class="pcat-cat">Silver</div><div class="pcat-nm">Silver ingot · 100 g</div><div class="pcat-sk">SKU-AG-100G</div></div>
+                  <div class="pcat-foot"><span class="pcat-price">$92.00 <span class="u">/ ingot</span></span><span class="pcat-stock">24 in stock</span></div>
+                </div>
+                <div class="pcat-card">
+                  <div class="pcat-img cu"><span class="pcat-status">Active</span>Cu</div>
+                  <div class="pcat-body"><div class="pcat-cat">Copper</div><div class="pcat-nm">Copper wire · per kg</div><div class="pcat-sk">SKU-CU-KG</div></div>
+                  <div class="pcat-foot"><span class="pcat-price">$8.40 <span class="u">/ kg</span></span><span class="pcat-stock low">12 kg left</span></div>
+                </div>
+                <div class="pcat-card">
+                  <div class="pcat-img cu"><span class="pcat-status">Active</span>Cu</div>
+                  <div class="pcat-body"><div class="pcat-cat">Copper</div><div class="pcat-nm">Copper tubing</div><div class="pcat-sk">SKU-CU-TUBE</div></div>
+                  <div class="pcat-foot"><span class="pcat-price">$6.20 <span class="u">/ kg</span></span><span class="pcat-stock">86 kg</span></div>
+                </div>
+                <div class="pcat-card">
+                  <div class="pcat-img blu"><span class="pcat-status">Active</span>Br</div>
+                  <div class="pcat-body"><div class="pcat-cat">Brass</div><div class="pcat-nm">Brass fittings</div><div class="pcat-sk">SKU-BR-FIT</div></div>
+                  <div class="pcat-foot"><span class="pcat-price">$4.10 <span class="u">/ kg</span></span><span class="pcat-stock">38 kg</span></div>
+                </div>
+                <div class="pcat-card">
+                  <div class="pcat-img ag"><span class="pcat-status">Active</span>Al</div>
+                  <div class="pcat-body"><div class="pcat-cat">Aluminium</div><div class="pcat-nm">Aluminium cans</div><div class="pcat-sk">SKU-AL-CAN</div></div>
+                  <div class="pcat-foot"><span class="pcat-price">$1.20 <span class="u">/ kg</span></span><span class="pcat-stock">412 kg</span></div>
+                </div>
+              </div>
+            </div>
+          </main>
         </div>
-        <nav style="display: grid; gap: 1px; margin-top: 12px;">
-          <button class="erp-item"><span data-icon="home"></span>Overview</button>
-          <button class="erp-item"><span data-icon="add"></span>Create</button>
-        </nav>
-        <div class="erp-section-head">Retail</div>
-        <nav style="display: grid; gap: 1px;">
-          <button class="erp-item active"><span data-icon="box"></span>Products</button>
-          <button class="erp-item"><span data-icon="warehouse"></span>Inventory</button>
-          <button class="erp-item"><span data-icon="receipt"></span>POS terminal</button>
-          <button class="erp-item"><span data-icon="user"></span>Customers</button>
-          <button class="erp-item"><span data-icon="coins"></span>Sales</button>
-          <button class="erp-item"><span data-icon="trending"></span>Reports</button>
-        </nav>
-      </aside>
-
-      <main class="erp-main">
-        <div class="erp-top">
-          <nav class="crumbs">
-            <a>Home</a><span class="sep" data-icon="chright"></span>
-            <a>Retail</a><span class="sep" data-icon="chright"></span>
-            <a>Products</a>
-          </nav>
-          <div class="spacer"></div>
-          <button class="btn btn-secondary btn-sm"><span data-icon="upload"></span>Import CSV</button>
-          <button class="btn btn-primary btn-sm"><span data-icon="plus"></span>New product</button>
-        </div>
-
-        <div class="erp-page">
-          <div class="erp-page-h">
-            <div><h1>Products</h1><p>218 products · 14 categories · last edit 2 minutes ago</p></div>
-            <div class="seg-tabs"><button>Table</button><button class="active">Grid</button></div>
-          </div>
-
-          <div class="pcat-toolbar">
-            <div class="pcat-search">
-              <span data-icon="search"></span>
-              <input placeholder="Search by name, SKU, or barcode…" />
-            </div>
-            <button class="fchip active">All <span style="margin-left: 4px; opacity: 0.7;">218</span></button>
-            <button class="fchip">Active</button>
-            <button class="fchip">Low stock <span style="margin-left: 4px; background: var(--tone-warn); color: #fff; padding: 1px 5px; border-radius: 9999px;">4</span></button>
-            <button class="fchip">Out</button>
-            <div class="spacer"></div>
-            <button class="btn btn-secondary btn-sm"><span data-icon="filter"></span>Category <span data-icon="chevron"></span></button>
-            <button class="btn btn-secondary btn-sm"><span data-icon="sort"></span>Sort: Name <span data-icon="chevron"></span></button>
-          </div>
-
-          <div class="pcat-grid">
-            <div class="pcat-card">
-              <div class="pcat-img gem"><span class="pcat-status">Active</span>24K</div>
-              <div class="pcat-body"><div class="pcat-cat">Gold · bar</div><div class="pcat-nm">Gold bar · 1 g</div><div class="pcat-sk">SKU-GOLD-1G · 738291</div></div>
-              <div class="pcat-foot"><span class="pcat-price">$80.00 <span class="u">/ bar</span></span><span class="pcat-stock">142 in stock</span></div>
-            </div>
-            <div class="pcat-card">
-              <div class="pcat-img gem"><span class="pcat-status">Active</span>22K</div>
-              <div class="pcat-body"><div class="pcat-cat">Gold · bar</div><div class="pcat-nm">Gold bar · 5 g</div><div class="pcat-sk">SKU-GOLD-5G · 738294</div></div>
-              <div class="pcat-foot"><span class="pcat-price">$365.00 <span class="u">/ bar</span></span><span class="pcat-stock">42 in stock</span></div>
-            </div>
-            <div class="pcat-card">
-              <div class="pcat-img gem"><span class="pcat-status">Active</span>SCR</div>
-              <div class="pcat-body"><div class="pcat-cat">Gold · scrap</div><div class="pcat-nm">Gold scrap · per gram</div><div class="pcat-sk">SKU-GOLD-SCRAP</div></div>
-              <div class="pcat-foot"><span class="pcat-price">$72.00 <span class="u">/ gram</span></span><span class="pcat-stock low">8 g left</span></div>
-            </div>
-            <div class="pcat-card">
-              <div class="pcat-img ag"><span class="pcat-status">Active</span>Ag</div>
-              <div class="pcat-body"><div class="pcat-cat">Silver</div><div class="pcat-nm">Silver ingot · 100 g</div><div class="pcat-sk">SKU-AG-100G</div></div>
-              <div class="pcat-foot"><span class="pcat-price">$92.00 <span class="u">/ ingot</span></span><span class="pcat-stock">24 in stock</span></div>
-            </div>
-            <div class="pcat-card">
-              <div class="pcat-img cu"><span class="pcat-status">Active</span>Cu</div>
-              <div class="pcat-body"><div class="pcat-cat">Copper</div><div class="pcat-nm">Copper wire · per kg</div><div class="pcat-sk">SKU-CU-KG</div></div>
-              <div class="pcat-foot"><span class="pcat-price">$8.40 <span class="u">/ kg</span></span><span class="pcat-stock low">12 kg left</span></div>
-            </div>
-            <div class="pcat-card">
-              <div class="pcat-img cu"><span class="pcat-status">Active</span>Cu</div>
-              <div class="pcat-body"><div class="pcat-cat">Copper</div><div class="pcat-nm">Copper tubing</div><div class="pcat-sk">SKU-CU-TUBE</div></div>
-              <div class="pcat-foot"><span class="pcat-price">$6.20 <span class="u">/ kg</span></span><span class="pcat-stock">86 kg</span></div>
-            </div>
-            <div class="pcat-card">
-              <div class="pcat-img blu"><span class="pcat-status">Active</span>Br</div>
-              <div class="pcat-body"><div class="pcat-cat">Brass</div><div class="pcat-nm">Brass fittings</div><div class="pcat-sk">SKU-BR-FIT</div></div>
-              <div class="pcat-foot"><span class="pcat-price">$4.10 <span class="u">/ kg</span></span><span class="pcat-stock">38 kg</span></div>
-            </div>
-            <div class="pcat-card">
-              <div class="pcat-img ag"><span class="pcat-status">Active</span>Al</div>
-              <div class="pcat-body"><div class="pcat-cat">Aluminium</div><div class="pcat-nm">Aluminium cans</div><div class="pcat-sk">SKU-AL-CAN</div></div>
-              <div class="pcat-foot"><span class="pcat-price">$1.20 <span class="u">/ kg</span></span><span class="pcat-stock">412 kg</span></div>
-            </div>
-          </div>
-        </div>
-      </main>
+      </div>
     </div>
-  </div>
+  </section>
 
   <section>
     <h2 class="ds-h2">Variants &amp; views</h2>
     <p>The catalog supports three views: <strong>grid</strong> (shown above, default for retail), <strong>table</strong> (dense, for back-office editing), and <strong>kanban</strong> (by category lifecycle stage — drafted, active, deprecated). Each view shares the same filter bar.</p>
+  </section>
 
+  <section>
     <h2 class="ds-h2">When to use</h2>
     <p>For browsing or scanning the catalog, grid view is best — the visual recognition helps clerks at the POS. For bulk editing prices or attributes, switch to table view and use multi-select. For weighing-scale items (gold scrap, copper, lead), prefer per-unit pricing.</p>
   </section>
 
+  <section>
+    <h2 class="ds-h2">Composition</h2>
+    <div class="ds-cards cols-3">
+      <a class="ds-card" href="b-list-page-shell.html">
+        <div class="ds-card-icon" data-icon="list" data-icon-size="18"></div>
+        <div><h3>List page shell</h3><p>Header · toolbar · table or grid.</p></div>
+        <div class="ds-card-foot"><span>Block</span><span class="arrow">→</span></div>
+      </a>
+      <a class="ds-card" href="b-data-toolbar.html">
+        <div class="ds-card-icon" data-icon="filter" data-icon-size="18"></div>
+        <div><h3>Data toolbar</h3><p>Search, chips, sort, view toggle.</p></div>
+        <div class="ds-card-foot"><span>Block</span><span class="arrow">→</span></div>
+      </a>
+      <a class="ds-card" href="p-segmented-control.html">
+        <div class="ds-card-icon" data-icon="grid" data-icon-size="18"></div>
+        <div><h3>Segmented control</h3><p>The Grid / Table view toggle.</p></div>
+        <div class="ds-card-foot"><span>Primitive</span><span class="arrow">→</span></div>
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="ds-h2">Mobile behaviour</h2>
+    <p>The 4-up product grid collapses to 3, then 2 columns. The desktop ERP shell above keeps its proportions but scrolls horizontally inside its frame — the page itself never widens past 390 px. Filter chips wrap to a second row, and toolbar actions fall onto a new line rather than overflowing.</p>
+  </section>
+
+  <div class="ds-callout">
+    <span class="ic" data-icon="info" data-icon-size="18"></span>
+    <div>
+      <h4>Related</h4>
+      <p>For the live cashier surface see <a href="pg-retail.html">Retail / POS</a>. For per-site stock see <a href="pg-inventory.html">Inventory</a>.</p>
+    </div>
+  </div>
+
   <nav class="ds-pager">
-    <a href="portals/pos/demo.html"><div class="pager-label">← Previous</div><div class="pager-title">POS terminal</div></a>
+    <a href="pg-posting.html"><div class="pager-label">← Previous</div><div class="pager-title">Posting Studio</div></a>
     <a href="pg-inventory.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Inventory</div></a>
   </nav>
 </main>
