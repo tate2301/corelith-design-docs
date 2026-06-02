@@ -153,15 +153,7 @@
   .signin-card h2 { font: 700 22px/1.2 var(--font-sans); color: var(--text-strong); margin: 0 0 6px; }
   .signin-card .sub { font: 14px/1.5 var(--font-sans); color: var(--text-muted); margin: 0 0 22px; }
   .signin-card .lbl { font: 500 11.5px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; margin: 14px 0 6px; }
-  .signin-card .pin-disp { display: flex; gap: 10px; justify-content: center; margin: 12px 0; }
-  .signin-card .pin-disp .d { width: 48px; height: 56px; border-radius: 10px; background: var(--surface-muted); display: grid; place-items: center; font: 700 26px/1 var(--font-mono); color: var(--text-strong); border: 2px solid transparent; }
-  .signin-card .pin-disp .d.fill { border-color: #E2A458; background: #FFF7EB; color: #6B3F19; }
-  .signin-card .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
-  .signin-card .pin-pad button {
-    height: 56px; border-radius: 10px; background: var(--surface-muted);
-    color: var(--text-strong); font: 600 19px/1 var(--font-sans); cursor: pointer; border: 0;
-  }
-  .signin-card .pin-pad button:hover { background: var(--surface-sunken); }
+  .signin-card .otp { display: flex; gap: 10px; justify-content: center; margin: 12px 0; }
   .signin-card .stay { display: flex; align-items: center; gap: 8px; margin: 18px 0 0; color: var(--text-body); font: 13.5px/1.4 var(--font-sans); cursor: pointer; }
   .signin-card .stay input { width: 18px; height: 18px; }
 
@@ -398,16 +390,9 @@
   @keyframes modalIn { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
   .modal h3 { font: 600 17px/1.2 var(--font-sans); color: var(--text-strong); margin: 0 0 4px; }
   .modal .sub { font: 13.5px/1.4 var(--font-sans); color: var(--text-muted); margin: 0 0 16px; }
-  .modal .pin { display: flex; gap: 8px; justify-content: center; margin: 14px 0 16px; }
-  .modal .pin .d { width: 42px; height: 50px; border-radius: 8px; background: var(--surface-muted); display: grid; place-items: center; font: 700 24px/1 var(--font-mono); color: var(--text-strong); border: 2px solid transparent; }
-  .modal .pin .d.fill { border-color: #E2A458; background: #FFF7EB; color: #6B3F19; }
-  .modal .pin .d.err { border-color: var(--tone-danger); background: var(--tone-danger-bg); color: var(--tone-danger); animation: shake 350ms; }
+  .modal .otp { display: flex; gap: 8px; justify-content: center; margin: 14px 0 16px; }
+  .modal .otp input[aria-invalid="true"] { border-color: var(--tone-danger); color: var(--tone-danger); animation: shake 350ms; }
   @keyframes shake { 25%, 75% { transform: translateX(-4px); } 50% { transform: translateX(4px); } }
-  .modal .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-  .modal .pin-pad button { height: 52px; border-radius: 9px; background: var(--surface-muted); color: var(--text-strong); font: 600 20px/1 var(--font-sans); cursor: pointer; border: 0; }
-  .modal .pin-pad button:hover { background: var(--surface-sunken); }
-  .modal .pin-pad button.cancel { background: transparent; color: var(--text-muted); font-weight: 500; font-size: 13px; }
-  .modal .pin-pad button.bksp { color: var(--tone-warn); }
   .modal .pin-err { color: var(--tone-danger); font: 500 12.5px/1.4 var(--font-sans); text-align: center; margin-top: 6px; }
 
   .modal .field { margin-bottom: 12px; }
@@ -753,31 +738,37 @@ function openPinModal({ title, sub, onAccept, validPin = '4321' }) {
       <div class="modal" onclick="event.stopPropagation()">
         <h3>${escapeHtml(title)}</h3>
         <p class="sub">${escapeHtml(sub)}</p>
-        <div class="pin">
-          ${[0,1,2,3].map(i => `<div class="d ${pin.length > i ? 'fill' : ''} ${error ? 'err' : ''}">${pin[i] ? '•' : ''}</div>`).join('')}
+        <div class="otp" role="group" aria-label="4-digit PIN">
+          ${[0,1,2,3].map(i => `<input type="password" inputmode="numeric" maxlength="1" autocomplete="one-time-code" data-d="${i}" value="${pin[i] || ''}" aria-label="Digit ${i+1}" ${error ? 'aria-invalid="true"' : ''} />`).join('')}
         </div>
         ${error ? `<div class="pin-err">Incorrect PIN. Try again.</div>` : ''}
-        <div class="pin-pad">
-          ${[1,2,3,4,5,6,7,8,9].map(n => `<button data-d="${n}">${n}</button>`).join('')}
-          <button class="cancel" data-cancel>Cancel</button>
-          <button data-d="0">0</button>
-          <button class="bksp" data-bksp>⌫</button>
+        <div class="acts" style="display:flex; gap:8px; margin-top: 14px;">
+          <button class="btn btn-secondary" style="flex:1; justify-content:center;" data-cancel>Cancel</button>
         </div>
       </div>
     `);
     const m = $('.modal');
-    m.querySelectorAll('[data-d]').forEach(b => b.addEventListener('click', () => {
-      if (pin.length >= 4) return;
-      pin += b.dataset.d; error = false;
-      if (pin.length === 4) {
-        setTimeout(() => {
-          if (pin === validPin) { closeModal(); onAccept(); }
-          else { error = true; pin = ''; paint(); }
-        }, 220);
-      }
-      paint();
-    }));
-    m.querySelector('[data-bksp]').addEventListener('click', () => { pin = pin.slice(0, -1); error = false; paint(); });
+    const cells = m.querySelectorAll('[data-d]');
+    const sync = () => { pin = Array.from(cells).map(c => c.value).join('').replace(/\D/g, '').slice(0, 4); };
+    cells.forEach((cell, idx) => {
+      cell.addEventListener('input', (e) => {
+        const v = (e.target.value || '').replace(/\D/g, '').slice(-1);
+        e.target.value = v;
+        error = false;
+        if (v && cells[idx + 1]) cells[idx + 1].focus();
+        sync();
+        if (pin.length === 4) {
+          setTimeout(() => {
+            if (pin === validPin) { closeModal(); onAccept(); }
+            else { error = true; pin = ''; paint(); }
+          }, 220);
+        }
+      });
+      cell.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !cell.value && cells[idx - 1]) { cells[idx - 1].focus(); cells[idx - 1].value = ''; }
+      });
+    });
+    if (cells[pin.length] || cells[0]) (cells[pin.length] || cells[0]).focus();
     m.querySelector('[data-cancel]').addEventListener('click', closeModal);
   }
   paint();
@@ -979,16 +970,10 @@ function renderSignin() {
         <div class="input"><span data-icon="user" data-icon-size="15"></span><input id="op-id" value="OP-08" autocomplete="off" /></div>
 
         <div class="lbl">PIN</div>
-        <div class="pin-disp">
-          ${[0,1,2,3].map(i => `<div class="d ${state.pin.length > i ? 'fill' : ''}">${state.pin[i] ? '•' : ''}</div>`).join('')}
+        <div class="otp" id="signin-pin" role="group" aria-label="4-digit PIN">
+          ${[0,1,2,3].map(i => `<input type="password" inputmode="numeric" maxlength="1" autocomplete="one-time-code" data-d="${i}" value="${state.pin[i] || ''}" aria-label="Digit ${i+1}" ${state.pinErr ? 'aria-invalid="true"' : ''} />`).join('')}
         </div>
         ${state.pinErr ? `<div class="pin-err" style="text-align:center; color:var(--tone-danger); font: 500 12.5px var(--font-sans); margin-top:-6px; margin-bottom:6px;">Wrong PIN — try 1234.</div>` : ''}
-        <div class="pin-pad">
-          ${[1,2,3,4,5,6,7,8,9].map(n => `<button data-d="${n}">${n}</button>`).join('')}
-          <button data-bksp>⌫</button>
-          <button data-d="0">0</button>
-          <button data-clear>Clear</button>
-        </div>
 
         <label class="stay"><input type="checkbox" id="stay" ${state.stay ? 'checked' : ''}/> Stay signed in for this shift</label>
 
@@ -1000,14 +985,32 @@ function renderSignin() {
   `;
 }
 function wireSignin() {
-  $$('.signin-card [data-d]').forEach(b => b.addEventListener('click', () => {
-    if (state.pin.length >= 4) return;
-    state.pin += b.dataset.d;
-    state.pinErr = false;
-    render();
-  }));
-  const bk = $('.signin-card [data-bksp]'); if (bk) bk.addEventListener('click', () => { state.pin = state.pin.slice(0,-1); state.pinErr = false; render(); });
-  const cl = $('.signin-card [data-clear]'); if (cl) cl.addEventListener('click', () => { state.pin = ''; state.pinErr = false; render(); });
+  const cells = $$('#signin-pin input');
+  const sync = () => { state.pin = cells.map(c => c.value).join('').replace(/\D/g, '').slice(0, 4); };
+  cells.forEach((cell, idx) => {
+    cell.addEventListener('input', (e) => {
+      const v = (e.target.value || '').replace(/\D/g, '').slice(-1);
+      e.target.value = v;
+      state.pinErr = false;
+      if (v && cells[idx + 1]) cells[idx + 1].focus();
+      sync();
+      const go_ = $('#signin-go'); if (go_) go_.disabled = state.pin.length !== 4;
+    });
+    cell.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !cell.value && cells[idx - 1]) { cells[idx - 1].focus(); cells[idx - 1].value = ''; sync(); const go_ = $('#signin-go'); if (go_) go_.disabled = state.pin.length !== 4; }
+      if (e.key === 'ArrowLeft' && cells[idx - 1]) cells[idx - 1].focus();
+      if (e.key === 'ArrowRight' && cells[idx + 1]) cells[idx + 1].focus();
+    });
+    cell.addEventListener('paste', (e) => {
+      const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 4);
+      if (!text) return; e.preventDefault();
+      text.split('').forEach((d, k) => { if (cells[k]) cells[k].value = d; });
+      const last = cells[Math.min(text.length, cells.length) - 1]; if (last) last.focus();
+      sync(); const go_ = $('#signin-go'); if (go_) go_.disabled = state.pin.length !== 4;
+    });
+  });
+  const focusCell = cells[Math.min(state.pin.length, cells.length - 1)];
+  if (focusCell) focusCell.focus();
   const st = $('#stay'); if (st) st.addEventListener('change', e => { state.stay = e.target.checked; });
   const go_ = $('#signin-go'); if (go_) go_.addEventListener('click', () => {
     if (state.pin !== '1234') { state.pinErr = true; state.pin = ''; render(); return; }

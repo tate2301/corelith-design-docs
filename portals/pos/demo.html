@@ -12,7 +12,80 @@
 <link rel="stylesheet" href="../../huchu-nav.css" />
 <script src="../../huchu-nav.js" defer></script>
 <style>
-  body { background: var(--gray-100); margin: 0; }
+  body { background: var(--canvas); margin: 0; transition: background-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out); }
+
+  /* === Dark theme — tokens flip via a single class on <body> === */
+  body.is-dark {
+    --canvas:         #0F1115;
+    --surface:        #161922;
+    --surface-muted:  #1D2230;
+    --surface-sunken: #252A39;
+    --surface-deep:   #2F3548;
+
+    --gray-50:        #0F1115;
+    --gray-100:       #161922;
+    --gray-200:       #1D2230;
+    --gray-300:       #252A39;
+    --gray-400:       #3D4358;
+    --gray-500:       #6B7388;
+    --gray-600:       #8A91A8;
+    --gray-700:       #A8AEC2;
+    --gray-800:       #C6CBDA;
+    --gray-900:       #E5E8F0;
+    --gray-950:       #F5F7FB;
+
+    --ink:            #0B0D12;
+    --ink-soft:       #161922;
+
+    --border:         rgba(255,255,255,0.10);
+    --border-strong:  rgba(255,255,255,0.18);
+    --border-subtle:  rgba(255,255,255,0.06);
+    --hairline:       rgba(255,255,255,0.08);
+
+    --text-strong:    #F5F7FB;
+    --text-body:      #E1E4ED;
+    --text-muted:     #98A0B5;
+    --text-subtle:    #6B7388;
+    --text-inverse:   #16181D;
+    --text-link:      #85A8F8;
+
+    --brand-soft:     rgba(11, 93, 240, 0.18);
+    --brand-tint:     rgba(11, 93, 240, 0.14);
+    --brand-50:       rgba(11, 93, 240, 0.10);
+    --brand-100:      rgba(11, 93, 240, 0.20);
+
+    --tone-success-bg: rgba(94, 142, 84, 0.18);
+    --tone-warn-bg:    rgba(176, 118, 38, 0.18);
+    --tone-danger-bg:  rgba(184, 58, 42, 0.18);
+    --tone-info-bg:    rgba(11, 93, 240, 0.18);
+    --tone-success:    #9CC290;
+    --tone-warn:       #DDB36A;
+    --tone-danger:     #E08374;
+    --tone-info:       #85A8F8;
+
+    --focus-ring-soft: rgba(133, 168, 248, 0.30);
+
+    --shadow-rest:    0 1px 0 rgba(0,0,0,0.30);
+    --shadow-hover:   0 2px 8px rgba(0,0,0,0.40);
+    --shadow-popover: 0 12px 32px -8px rgba(0,0,0,0.50), 0 2px 6px rgba(0,0,0,0.30);
+    --shadow-modal:   0 24px 64px -12px rgba(0,0,0,0.60), 0 4px 12px rgba(0,0,0,0.40);
+
+    color-scheme: dark;
+  }
+  body.is-dark .sale .tile.bev .sw { background: linear-gradient(135deg, rgba(220,238,255,0.16), rgba(111,160,255,0.32)); color: #BFD5FF; }
+  body.is-dark .sale .tile.gro .sw { background: linear-gradient(135deg, rgba(254,244,218,0.12), rgba(244,193,91,0.28)); color: #F4D38A; }
+  body.is-dark .sale .tile.tob .sw { background: linear-gradient(135deg, rgba(252,231,243,0.12), rgba(236,72,153,0.28)); color: #F4A5C9; }
+  body.is-dark .sale .tile.cln .sw { background: linear-gradient(135deg, rgba(220,252,231,0.12), rgba(74,222,128,0.26)); color: #9CDAB4; }
+  body.is-dark .sale .tile.bak .sw { background: linear-gradient(135deg, rgba(255,229,200,0.12), rgba(226,164,88,0.28)); color: #E8C28A; }
+  body.is-dark .sale .tile.snk .sw { background: linear-gradient(135deg, rgba(237,224,255,0.12), rgba(167,139,250,0.30)); color: #C6B3FF; }
+
+  /* Dark-mode modal scrim is slightly lighter (background is already dark) */
+  body.is-dark .modal-scrim { background: rgba(0,0,0,0.70); }
+  body.is-dark .cart-sheet-scrim { background: rgba(0,0,0,0.65); }
+  body.is-dark .toast { background: #2A2F3D; color: #F5F7FB; box-shadow: 0 8px 24px -6px rgba(0,0,0,0.6); }
+  body.is-dark .toast.success { background: var(--tone-success); color: #0F1115; }
+  body.is-dark .toast.danger { background: var(--tone-danger); color: #0F1115; }
+  body.is-dark .toast.warn { background: var(--tone-warn); color: #0F1115; }
 
   /* === App shell === */
   .pd-app {
@@ -418,19 +491,9 @@
   @keyframes modalIn { from { opacity: 0; transform: translateY(8px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
   .modal h3 { font: 600 16px/1.2 var(--font-sans); color: var(--text-strong); margin: 0 0 4px; }
   .modal .sub { font: 13px/1.4 var(--font-sans); color: var(--text-muted); margin: 0 0 14px; }
-  .modal .pin {
-    display: flex; gap: 8px; justify-content: center; margin: 14px 0 16px;
-  }
-  .modal .pin .d { width: 40px; height: 48px; border-radius: 8px; background: var(--surface-muted); display: grid; place-items: center; font: 700 22px/1 var(--font-mono); color: var(--text-strong); border: 2px solid transparent; }
-  .modal .pin .d.fill { border-color: var(--brand); background: var(--brand-soft); color: var(--brand-strong); }
-  .modal .pin .d.err { border-color: var(--tone-danger); background: var(--tone-danger-bg); color: var(--tone-danger); animation: shake 350ms; }
+  .modal .otp { display: flex; gap: 8px; justify-content: center; margin: 14px 0 16px; }
+  .modal .otp input[aria-invalid="true"] { border-color: var(--tone-danger); color: var(--tone-danger); animation: shake 350ms; }
   @keyframes shake { 25%, 75% { transform: translateX(-4px); } 50% { transform: translateX(4px); } }
-  .modal .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-  .modal .pin-pad button { height: 48px; border-radius: 8px; background: var(--surface-muted); color: var(--text-strong); font: 600 18px/1 var(--font-sans); cursor: pointer; }
-  .modal .pin-pad button:hover { background: var(--surface-sunken); }
-  .modal .pin-pad button.cancel { background: transparent; color: var(--text-muted); font-weight: 500; font-size: 13px; }
-  .modal .pin-pad button.cancel:hover { background: var(--surface-muted); color: var(--text-strong); }
-  .modal .pin-pad button.bksp { color: var(--tone-warn); }
   .modal .pin-err { color: var(--tone-danger); font: 500 12px/1.4 var(--font-sans); text-align: center; margin-top: 6px; }
 
   .modal .row { display: flex; gap: 6px; margin-bottom: 12px; }
@@ -712,9 +775,7 @@
       padding-bottom: calc(22px + env(safe-area-inset-bottom));
     }
     @keyframes sheetIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
-    .modal .pin { gap: 6px; }
-    .modal .pin .d { width: 36px; height: 44px; font-size: 20px; }
-    .modal .pin-pad button { height: 52px; font-size: 19px; }
+    .modal .otp { gap: 6px; }
 
     /* Toast: shift below pk-nav */
     .toast-host { top: 64px; right: 12px; left: 12px; }
@@ -764,15 +825,13 @@
   .login-card .cashier-row .sb { font: 11.5px/1.3 var(--font-sans); color: rgba(255,255,255,0.55); margin-top: 2px; }
   .login-card .cashier-row .ar { margin-left: auto; color: rgba(255,255,255,0.4); }
   .login-card .pin-area { padding: 14px 0 6px; }
-  .login-card .pin-area .pin-cells { display: flex; gap: 8px; justify-content: center; margin-bottom: 14px; }
-  .login-card .pin-area .pin-cells .d { width: 42px; height: 50px; border-radius: 8px; background: rgba(255,255,255,0.06); display: grid; place-items: center; font: 700 24px/1 var(--font-mono); color: #fff; border: 2px solid transparent; }
-  .login-card .pin-area .pin-cells .d.fill { border-color: var(--brand); background: rgba(11,93,240,0.2); }
-  .login-card .pin-area .pin-cells .d.err { border-color: var(--tone-danger); background: rgba(225,29,72,0.18); animation: shake 350ms; }
-  .login-card .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-  .login-card .pin-pad button { height: 54px; border-radius: 10px; background: rgba(255,255,255,0.07); color: #fff; font: 600 19px/1 var(--font-sans); cursor: pointer; border: 0; transition: background 100ms; }
-  .login-card .pin-pad button:hover { background: rgba(255,255,255,0.13); }
-  .login-card .pin-pad button.fn { background: transparent; color: rgba(255,255,255,0.6); font-size: 13px; font-weight: 500; }
-  .login-card .pin-pad button.fn:hover { background: rgba(255,255,255,0.05); color: #fff; }
+  .login-card .pin-area .otp { display: flex; gap: 8px; justify-content: center; margin-bottom: 14px; }
+  .login-card .pin-area .otp input { background: rgba(255,255,255,0.06); color: #fff; border-color: rgba(255,255,255,0.18); }
+  .login-card .pin-area .otp input:focus { border-color: var(--brand); background: rgba(11,93,240,0.2); box-shadow: 0 0 0 3px rgba(11,93,240,0.25); }
+  .login-card .pin-area .otp input[aria-invalid="true"] { border-color: var(--tone-danger); background: rgba(225,29,72,0.18); animation: shake 350ms; }
+  .login-card .pin-area .acts { display: flex; gap: 8px; justify-content: center; margin-top: 4px; }
+  .login-card .pin-area .acts .btn-ghost { color: rgba(255,255,255,0.7); }
+  .login-card .pin-area .acts .btn-ghost:hover { color: #fff; background: rgba(255,255,255,0.08); border-color: transparent; }
   .login-card .remember { display: flex; align-items: center; gap: 8px; padding: 12px 0 0; cursor: pointer; }
   .login-card .remember input { width: 16px; height: 16px; accent-color: var(--brand); }
   .login-card .remember span { font: 12.5px/1.3 var(--font-sans); color: rgba(255,255,255,0.7); }
@@ -1249,32 +1308,37 @@ function openPinModal({ title, sub, onAccept, validPin = '4321' }) {
       <div class="modal" onclick="event.stopPropagation()">
         <h3>${escapeHtml(title)}</h3>
         <p class="sub">${escapeHtml(sub)}</p>
-        <div class="pin">
-          ${[0,1,2,3].map(i => `<div class="d ${pin.length > i ? 'fill' : ''} ${error ? 'err' : ''}">${pin[i] ? '•' : ''}</div>`).join('')}
+        <div class="otp" role="group" aria-label="4-digit PIN">
+          ${[0,1,2,3].map(i => `<input type="password" inputmode="numeric" maxlength="1" autocomplete="one-time-code" data-d="${i}" value="${pin[i] || ''}" aria-label="Digit ${i+1}" ${error ? 'aria-invalid="true"' : ''} />`).join('')}
         </div>
         ${error ? `<div class="pin-err">Incorrect PIN. Try again.</div>` : ''}
-        <div class="pin-pad">
-          ${[1,2,3,4,5,6,7,8,9].map(n => `<button data-d="${n}">${n}</button>`).join('')}
-          <button class="cancel" data-cancel>Cancel</button>
-          <button data-d="0">0</button>
-          <button class="bksp" data-bksp>⌫</button>
+        <div class="acts" style="margin-top: 14px;">
+          <button class="btn btn-secondary" style="flex:1; justify-content:center;" data-cancel>Cancel</button>
         </div>
       </div>
     `);
     const modal = $('.modal');
-    modal.querySelectorAll('[data-d]').forEach(b => b.addEventListener('click', () => {
-      if (pin.length >= 4) return;
-      pin += b.dataset.d;
-      error = false;
-      if (pin.length === 4) {
-        setTimeout(() => {
-          if (pin === validPin) { closeModal(); onAccept(); }
-          else { error = true; pin = ''; paint(); }
-        }, 220);
-      }
-      paint();
-    }));
-    modal.querySelector('[data-bksp]').addEventListener('click', () => { pin = pin.slice(0, -1); error = false; paint(); });
+    const cells = modal.querySelectorAll('[data-d]');
+    const sync = () => { pin = Array.from(cells).map(c => c.value).join('').replace(/\D/g, '').slice(0, 4); };
+    cells.forEach((cell, idx) => {
+      cell.addEventListener('input', (e) => {
+        const v = (e.target.value || '').replace(/\D/g, '').slice(-1);
+        e.target.value = v;
+        error = false;
+        if (v && cells[idx + 1]) cells[idx + 1].focus();
+        sync();
+        if (pin.length === 4) {
+          setTimeout(() => {
+            if (pin === validPin) { closeModal(); onAccept(); }
+            else { error = true; pin = ''; paint(); }
+          }, 220);
+        }
+      });
+      cell.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !cell.value && cells[idx - 1]) { cells[idx - 1].focus(); cells[idx - 1].value = ''; }
+      });
+    });
+    if (cells[pin.length] || cells[0]) (cells[pin.length] || cells[0]).focus();
     modal.querySelector('[data-cancel]').addEventListener('click', closeModal);
   }
   paint();
@@ -2457,14 +2521,11 @@ function renderLogin() {
           <h2>Enter PIN</h2>
           <p class="sub">Welcome back, ${escapeHtml(sel.name)} · ${sel.role}</p>
           <div class="pin-area">
-            <div class="pin-cells">
-              ${[0,1,2,3].map(i => `<div class="d ${pin.length > i ? 'fill' : ''} ${err ? 'err' : ''}">${pin[i] ? '•' : ''}</div>`).join('')}
+            <div class="otp" id="lp-otp" role="group" aria-label="4-digit PIN">
+              ${[0,1,2,3].map(i => `<input type="password" inputmode="numeric" maxlength="1" autocomplete="one-time-code" data-lpd-cell="${i}" value="${pin[i] || ''}" aria-label="Digit ${i+1}" ${err ? 'aria-invalid="true"' : ''} />`).join('')}
             </div>
-            <div class="pin-pad">
-              ${[1,2,3,4,5,6,7,8,9].map(n => `<button data-lpd="${n}">${n}</button>`).join('')}
-              <button class="fn" data-lpd-back>← Back</button>
-              <button data-lpd="0">0</button>
-              <button class="fn" data-lpd-bksp>⌫</button>
+            <div class="acts">
+              <button class="btn btn-ghost btn-sm" data-lpd-back><span data-icon="back" data-icon-size="12"></span> Back</button>
             </div>
             <label class="remember">
               <input type="checkbox" id="lp-remember" ${remember ? 'checked' : ''} />
@@ -2498,29 +2559,42 @@ function wireLogin() {
     state._loginPin = ''; state._loginErr = false;
     render();
   }));
-  $$('[data-lpd]').forEach(b => b.addEventListener('click', () => {
-    if ((state._loginPin || '').length >= 4) return;
-    state._loginPin = (state._loginPin || '') + b.dataset.lpd;
-    state._loginErr = false;
-    if (state._loginPin.length === 4) {
-      const sel = state._loginSel;
-      setTimeout(() => {
-        if (sel && state._loginPin === sel.pin) {
-          state.cashier = { id: sel.id, name: sel.name, role: sel.role };
-          state._loginPin = ''; state._loginSel = null;
-          logAudit('shift', `Signed in: ${state.cashier.name} (${state.cashier.role})`);
-          if (!state.dayOpen) { state.route = 'open-till'; }
-          render();
-        } else {
-          state._loginErr = true; state._loginPin = '';
-          render();
-        }
-      }, 200);
-    }
-    render();
-  }));
+  const cells = $$('[data-lpd-cell]');
+  const sync = () => { state._loginPin = cells.map(c => c.value).join('').replace(/\D/g, '').slice(0, 4); };
+  cells.forEach((cell, idx) => {
+    cell.addEventListener('input', (e) => {
+      const v = (e.target.value || '').replace(/\D/g, '').slice(-1);
+      e.target.value = v;
+      state._loginErr = false;
+      if (v && cells[idx + 1]) cells[idx + 1].focus();
+      sync();
+      if (state._loginPin.length === 4) {
+        const sel = state._loginSel;
+        setTimeout(() => {
+          if (sel && state._loginPin === sel.pin) {
+            state.cashier = { id: sel.id, name: sel.name, role: sel.role };
+            state._loginPin = ''; state._loginSel = null;
+            logAudit('shift', `Signed in: ${state.cashier.name} (${state.cashier.role})`);
+            if (!state.dayOpen) { state.route = 'open-till'; }
+            render();
+          } else {
+            state._loginErr = true; state._loginPin = '';
+            render();
+          }
+        }, 200);
+      }
+    });
+    cell.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !cell.value && cells[idx - 1]) { cells[idx - 1].focus(); cells[idx - 1].value = ''; sync(); }
+      if (e.key === 'ArrowLeft' && cells[idx - 1]) cells[idx - 1].focus();
+      if (e.key === 'ArrowRight' && cells[idx + 1]) cells[idx + 1].focus();
+    });
+  });
+  if (cells.length) {
+    const focusCell = cells[Math.min((state._loginPin || '').length, cells.length - 1)];
+    if (focusCell) focusCell.focus();
+  }
   const back = $('[data-lpd-back]'); if (back) back.addEventListener('click', () => { state._loginSel = null; state._loginPin = ''; render(); });
-  const bk = $('[data-lpd-bksp]'); if (bk) bk.addEventListener('click', () => { state._loginPin = (state._loginPin || '').slice(0, -1); state._loginErr = false; render(); });
   const rm = $('#lp-remember'); if (rm) rm.addEventListener('change', (e) => { state._loginRemember = e.target.checked; });
 }
 

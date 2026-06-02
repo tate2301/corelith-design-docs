@@ -804,11 +804,8 @@
   }
   .signin-shell .remember .nm { font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
   .signin-shell .remember .sb { font: 12px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
-  .signin-shell .otp-row { display: flex; gap: 8px; }
-  .signin-shell .otp-row input {
-    flex: 1; text-align: center; font: 600 22px var(--font-mono);
-    letter-spacing: 0; padding: 0;
-  }
+  .signin-shell .otp { display: flex; gap: 8px; justify-content: space-between; }
+  .signin-shell .otp input { width: 44px; padding: 0; letter-spacing: 0; }
   .signin-shell .footer-link {
     margin-top: auto; text-align: center;
     font: 12.5px/1.5 var(--font-sans); color: var(--text-muted);
@@ -3077,7 +3074,9 @@ function renderSignIn() {
       <h1>Enter code</h1>
       <p class="lede">We sent a 6-digit code to <strong>${escapeHtml(s.phone)}</strong>. The code is valid for 5 minutes.</p>
       <label>Verification code</label>
-      <input id="si-otp" type="tel" inputmode="numeric" maxlength="6" placeholder="••••••" value="${escapeHtml(s.otp)}" style="text-align: center; font: 700 22px/1 var(--font-mono); letter-spacing: 0.6em;" />
+      <div class="otp" id="si-otp" role="group" aria-label="6-digit verification code">
+        ${[0,1,2,3,4,5].map(i => `<input type="tel" inputmode="numeric" maxlength="1" autocomplete="one-time-code" data-otp-cell="${i}" value="${escapeHtml(s.otp[i] || '')}" aria-label="Digit ${i+1}" />`).join('')}
+      </div>
       <button class="primary" id="si-verify" ${s.otp.length === 6 ? '' : 'disabled'}>Verify &amp; sign in <span data-icon="arrow" data-icon-size="15"></span></button>
       <button class="alt" id="si-resend">Resend code</button>
       <div class="footer-link">
@@ -3100,17 +3099,44 @@ function wireSignIn() {
     const help = $('#si-help'); if (help) help.addEventListener('click', (e) => { e.preventDefault(); toast('Ask the bursar for a link code', 'warn'); });
   } else {
     const b = $('#si-back'); if (b) b.addEventListener('click', () => { s.step = 'phone'; render(); });
-    const o = $('#si-otp');
-    if (o) {
-      o.addEventListener('input', (e) => {
-        s.otp = e.target.value.replace(/\D/g, '').slice(0, 6);
-        e.target.value = s.otp;
-        render();
-        // Auto-focus persistence
-        const n = $('#si-otp'); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); }
+    const otpRoot = $('#si-otp');
+    if (otpRoot) {
+      const cells = Array.from(otpRoot.querySelectorAll('input[data-otp-cell]'));
+      const syncFromCells = () => { s.otp = cells.map(c => c.value).join('').replace(/\D/g, '').slice(0, 6); };
+      const updateVerify = () => { const v = $('#si-verify'); if (v) v.disabled = s.otp.length !== 6; };
+      const tryAutoVerify = () => { if (s.otp.length === 6) setTimeout(() => { const v = $('#si-verify'); if (v && !v.disabled) v.click(); }, 200); };
+      cells.forEach((cell, idx) => {
+        cell.addEventListener('input', (e) => {
+          const v = (e.target.value || '').replace(/\D/g, '');
+          if (v.length > 1) {
+            // paste-like into a single cell
+            const digits = v.slice(0, 6 - idx).split('');
+            digits.forEach((d, k) => { if (cells[idx + k]) cells[idx + k].value = d; });
+            const next = cells[Math.min(idx + digits.length, cells.length - 1)];
+            if (next) next.focus();
+          } else {
+            e.target.value = v;
+            if (v && cells[idx + 1]) cells[idx + 1].focus();
+          }
+          syncFromCells(); updateVerify(); tryAutoVerify();
+        });
+        cell.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace' && !cell.value && cells[idx - 1]) { cells[idx - 1].focus(); cells[idx - 1].value = ''; syncFromCells(); updateVerify(); }
+          if (e.key === 'ArrowLeft' && cells[idx - 1]) cells[idx - 1].focus();
+          if (e.key === 'ArrowRight' && cells[idx + 1]) cells[idx + 1].focus();
+        });
+        cell.addEventListener('paste', (e) => {
+          const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+          if (!text) return;
+          e.preventDefault();
+          text.split('').forEach((d, k) => { if (cells[k]) cells[k].value = d; });
+          const last = cells[Math.min(text.length, cells.length) - 1];
+          if (last) last.focus();
+          syncFromCells(); updateVerify(); tryAutoVerify();
+        });
       });
-      // focus on mount
-      o.focus();
+      const focusCell = cells[Math.min(s.otp.length, cells.length - 1)];
+      if (focusCell) focusCell.focus();
     }
     const v = $('#si-verify'); if (v) v.addEventListener('click', () => {
       if (s.otp.length !== 6) return;

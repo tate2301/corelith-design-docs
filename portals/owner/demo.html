@@ -425,8 +425,8 @@
     box-sizing: border-box;
   }
   .ow-login .field input:focus { outline: 0; border-color: var(--ow-brand); box-shadow: 0 0 0 3px var(--ow-brand-soft); }
-  .ow-login .otp-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
-  .ow-login .otp-row input { text-align: center; font: 700 18px var(--font-mono); padding: 0; }
+  .ow-login .otp { display: flex; gap: 8px; justify-content: space-between; }
+  .ow-login .otp input { flex: 1; padding: 0; box-sizing: border-box; }
   .ow-login .full {
     width: 100%; margin-top: 18px; height: 42px;
     background: var(--ow-brand-2); color: #fff;
@@ -1296,8 +1296,8 @@ function renderSignIn() {
           <h1>Enter the 6-digit code</h1>
           <div class="lead">We sent a code to <strong>+263 77 ••• 4821</strong>. It expires in 60s.</div>
           <div class="field"><label>Verification code</label>
-            <div class="otp-row" id="otp-row">
-              ${[0,1,2,3,4,5].map(i => `<input maxlength="1" data-otp="${i}" inputmode="numeric" autofocus="${i===0?'true':'false'}" />`).join('')}
+            <div class="otp" id="otp-row" role="group" aria-label="6-digit verification code">
+              ${[0,1,2,3,4,5].map(i => `<input maxlength="1" data-otp="${i}" inputmode="numeric" autocomplete="one-time-code" autofocus="${i===0?'true':'false'}" aria-label="Digit ${i+1}" />`).join('')}
             </div>
           </div>
           <button class="full" id="otp-go">Verify &amp; sign in</button>
@@ -1326,7 +1326,13 @@ function wireSignIn() {
   if (state.step === 'otp') {
     $$('[data-otp]').forEach((inp,i,arr) => {
       inp.addEventListener('input', () => {
+        inp.value = inp.value.replace(/\D/g, '').slice(0, 1);
         if (inp.value && i < arr.length - 1) arr[i+1].focus();
+      });
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !inp.value && i > 0) arr[i-1].focus();
+        if (e.key === 'ArrowLeft' && i > 0) arr[i-1].focus();
+        if (e.key === 'ArrowRight' && i < arr.length - 1) arr[i+1].focus();
       });
     });
     $('#otp-go').addEventListener('click', () => {

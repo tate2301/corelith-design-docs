@@ -327,16 +327,9 @@
   .modal.lg { max-width: 540px; }
   .modal h3 { font: 600 16.5px var(--font-sans); color: var(--text-strong); margin: 0 0 4px; }
   .modal .sub { font: 13px/1.45 var(--font-sans); color: var(--text-muted); margin: 0 0 16px; }
-  .modal .pin { display: flex; gap: 8px; justify-content: center; margin: 14px 0 16px; }
-  .modal .pin .d { width: 42px; height: 50px; border-radius: 8px; background: var(--surface-muted); display: grid; place-items: center; font: 700 22px var(--font-mono); color: var(--text-strong); border: 2px solid transparent; }
-  .modal .pin .d.fill { border-color: #D4A641; background: #FEF4DA; color: #4A381A; }
-  .modal .pin .d.err { border-color: var(--tone-danger); background: var(--tone-danger-bg); color: var(--tone-danger); animation: shake 350ms; }
+  .modal .otp { display: flex; gap: 8px; justify-content: center; margin: 14px 0 16px; }
+  .modal .otp input[aria-invalid="true"] { border-color: var(--tone-danger); color: var(--tone-danger); animation: shake 350ms; }
   @keyframes shake { 25%, 75% { transform: translateX(-4px); } 50% { transform: translateX(4px); } }
-  .modal .pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-  .modal .pin-pad button { height: 50px; border-radius: 8px; background: var(--surface-muted); color: var(--text-strong); font: 600 18px var(--font-sans); cursor: pointer; border: 0; }
-  .modal .pin-pad button:hover { background: var(--surface-sunken); }
-  .modal .pin-pad button.cancel { background: transparent; color: var(--text-muted); font-weight: 500; font-size: 13px; }
-  .modal .pin-pad button.bksp { color: var(--tone-warn); }
   .modal .pin-err { color: var(--tone-danger); font: 500 12px var(--font-sans); text-align: center; margin-top: 6px; }
   .modal .acts { display: flex; gap: 8px; margin-top: 16px; }
   .modal .acts button { flex: 1; padding: 11px; border-radius: 8px; font: 600 13px var(--font-sans); cursor: pointer; border: 0; }
@@ -1921,28 +1914,40 @@ function openPinModal({ title, sub, onAccept, validPin = '4321' }) {
     state.modal = { cls: 'modal', html: `
       <h3>${escapeHtml(title)}</h3>
       <p class="sub">${escapeHtml(sub)}</p>
-      <div class="pin">${[0,1,2,3].map(i => `<div class="d ${pin.length > i ? 'fill' : ''} ${error ? 'err' : ''}">${pin[i] ? '•' : ''}</div>`).join('')}</div>
+      <div class="otp" role="group" aria-label="4-digit PIN">
+        ${[0,1,2,3].map(i => `<input type="password" inputmode="numeric" maxlength="1" autocomplete="one-time-code" data-d="${i}" value="${pin[i] || ''}" aria-label="Digit ${i+1}" ${error ? 'aria-invalid="true"' : ''} />`).join('')}
+      </div>
       ${error ? `<div class="pin-err">Incorrect PIN. Try again.</div>` : ''}
-      <div class="pin-pad">
-        ${[1,2,3,4,5,6,7,8,9].map(n => `<button data-d="${n}">${n}</button>`).join('')}
-        <button class="cancel" data-close>Cancel</button>
-        <button data-d="0">0</button>
-        <button class="bksp" data-bksp>⌫</button>
+      <div class="acts">
+        <button class="alt" data-close>Cancel</button>
       </div>
     `};
     renderModal();
-    $$('.modal [data-d]').forEach(b => b.addEventListener('click', () => {
-      if (pin.length >= 4) return;
-      pin += b.dataset.d; error = false;
+    const cells = $$('.modal [data-d]');
+    const refresh = () => {
+      pin = cells.map(c => c.value).join('').replace(/\D/g, '').slice(0, 4);
       if (pin.length === 4) {
         setTimeout(() => {
           if (pin === validPin) { closeModal(); onAccept(); }
           else { error = true; pin = ''; paint(); }
         }, 220);
       }
-      paint();
-    }));
-    $('.modal [data-bksp]').addEventListener('click', () => { pin = pin.slice(0,-1); error = false; paint(); });
+    };
+    cells.forEach((cell, idx) => {
+      cell.addEventListener('input', (e) => {
+        const v = (e.target.value || '').replace(/\D/g, '').slice(-1);
+        e.target.value = v;
+        error = false;
+        if (v && cells[idx + 1]) cells[idx + 1].focus();
+        refresh();
+      });
+      cell.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !cell.value && cells[idx - 1]) { cells[idx - 1].focus(); cells[idx - 1].value = ''; }
+        if (e.key === 'ArrowLeft' && cells[idx - 1]) cells[idx - 1].focus();
+        if (e.key === 'ArrowRight' && cells[idx + 1]) cells[idx + 1].focus();
+      });
+    });
+    if (cells[pin.length] || cells[0]) (cells[pin.length] || cells[0]).focus();
   }
   paint();
 }

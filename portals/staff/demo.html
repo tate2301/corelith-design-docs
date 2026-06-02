@@ -428,9 +428,8 @@
   .signin-card .row-link a { color: var(--brand-strong); text-decoration: none; font-weight: 500; }
   .signin-card .meta-foot { display: flex; gap: 12px; align-items: center; padding-top: 12px; border-top: 1px solid var(--border-subtle); font: 12px/1.4 var(--font-sans); color: var(--text-muted); }
   .signin-card .meta-foot .ic { width: 22px; height: 22px; border-radius: 6px; background: var(--surface-muted); color: var(--text-strong); display: grid; place-items: center; flex: none; }
-  .signin-card .codes { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
-  .signin-card .codes input { width: 100%; height: 52px; padding: 0; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); font: 700 22px/1 var(--font-mono); color: var(--text-strong); text-align: center; box-sizing: border-box; }
-  .signin-card .codes input:focus { outline: 0; border-color: var(--brand); box-shadow: 0 0 0 3px var(--focus-ring-soft); }
+  .signin-card .otp { display: flex; gap: 8px; justify-content: space-between; }
+  .signin-card .otp input { flex: 1; padding: 0; box-sizing: border-box; }
 
   /* ====== Hamburger ====== */
   .hamb { width: 32px; height: 32px; border-radius: 7px; background: transparent; border: 0; color: var(--text-strong); display: grid; place-items: center; cursor: pointer; flex: none; }
@@ -1205,8 +1204,8 @@ function renderSignIn() {
           <h2>Two-step verification</h2>
           <p class="sub">We sent a 6-digit code to your authenticator app. Enter it to finish signing in as <b>${escapeHtml(ME.name)}</b>.</p>
           ${state.signInError ? `<div class="err"><span data-icon="info" data-icon-size="14"></span>${escapeHtml(state.signInError)}</div>` : ''}
-          <div class="codes" id="otp-codes">
-            ${[0,1,2,3,4,5].map(i => `<input maxlength="1" data-otp="${i}" inputmode="numeric" autocomplete="one-time-code" />`).join('')}
+          <div class="otp" id="otp-codes" role="group" aria-label="6-digit verification code">
+            ${[0,1,2,3,4,5].map(i => `<input maxlength="1" data-otp="${i}" inputmode="numeric" autocomplete="one-time-code" aria-label="Digit ${i+1}" />`).join('')}
           </div>
           <div class="row-link">
             <label class="toggle ${state.rememberDevice ? 'on' : ''}" id="otp-remember">
@@ -3094,7 +3093,9 @@ function open2FAModal() {
       <div class="qr-box"><div class="qr-grid"></div></div>
       <div style="text-align: center; font: 12px/1.4 var(--font-mono); color: var(--text-muted); margin-top: 8px;">Or enter secret manually:<br><b style="color: var(--text-strong); letter-spacing: 0.1em;">MUKA-CHIP-2026-PARK-TOTP</b></div>
       <div class="field full" style="margin-top: 14px;"><label>Code from your authenticator</label>
-        <input id="otp-test" inputmode="numeric" maxlength="6" placeholder="123 456" style="letter-spacing: 0.2em; font-family: var(--font-mono); text-align: center; font-size: 18px; height: 44px;" />
+        <div class="otp" id="otp-test" role="group" aria-label="6-digit verification code">
+          ${[0,1,2,3,4,5].map(i => `<input maxlength="1" data-otp-test="${i}" inputmode="numeric" autocomplete="one-time-code" aria-label="Digit ${i+1}" />`).join('')}
+        </div>
       </div>
       <div style="margin-top: 10px; padding: 10px 12px; background: var(--brand-soft); color: var(--brand-strong); border-radius: 8px; font: 12.5px/1.4 var(--font-sans);">
         Recovery codes will be shown after enrolment. Store them in a safe place — they let you sign in if you lose your phone.
@@ -3106,8 +3107,19 @@ function open2FAModal() {
     </div>
   `);
   $('.modal [data-close]').addEventListener('click', closeModal);
+  // wire OTP cell auto-advance
+  const otpCells = $$('.modal [data-otp-test]');
+  otpCells.forEach((inp, i) => {
+    inp.addEventListener('input', () => {
+      inp.value = inp.value.replace(/\D/g, '').slice(0, 1);
+      if (inp.value && i < otpCells.length - 1) otpCells[i+1].focus();
+    });
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !inp.value && i > 0) otpCells[i-1].focus();
+    });
+  });
   $('.modal [data-ok]').addEventListener('click', () => {
-    const v = $('#otp-test').value.trim();
+    const v = otpCells.map(c => c.value).join('').trim();
     if (v.length !== 6) { toast('Enter the 6-digit code', 'warn'); return; }
     state.twoFAEnabled = true;
     closeModal();
