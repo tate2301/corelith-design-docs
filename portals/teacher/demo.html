@@ -1353,20 +1353,20 @@ document.addEventListener('keydown', (e) => {
 
 /* ===== NAV ===== */
 const NAV = [
-  { route: 'dashboard',   label: 'Today',       icon: 'home' },
-  { route: 'roll',        label: 'Take roll',   icon: 'check' },
-  { route: 'marks',       label: 'Marks',       icon: 'edit' },
-  { route: 'gradebook',   label: 'Gradebook',   icon: 'grid' },
-  { route: 'comms',       label: 'Comms',       icon: 'chat' },
-  { route: 'schedule',    label: 'Schedule',    icon: 'calendar' },
-  { route: 'lessons',     label: 'Lessons',     icon: 'book' },
-  { route: 'assignments', label: 'Assignments', icon: 'list' },
-  { route: 'library',     label: 'Library',     icon: 'folder' },
-  { route: 'reports',     label: 'Reports',     icon: 'chart' },
-  { route: 'meetings',    label: 'Meetings',    icon: 'clock' },
-  { route: 'profile',     label: 'Profile',     icon: 'user' },
-  { route: 'settings',    label: 'Settings',    icon: 'settings' },
-  { route: 'help',        label: 'Help',        icon: 'info' },
+  { route: 'dashboard',   label: 'Today',          icon: 'home' },
+  { route: 'roll',        label: 'Attendance',     icon: 'check' },
+  { route: 'marks',       label: 'Enter marks',    icon: 'edit' },
+  { route: 'gradebook',   label: 'Marks book',     icon: 'grid' },
+  { route: 'comms',       label: 'Messages',       icon: 'chat' },
+  { route: 'schedule',    label: 'Timetable',      icon: 'calendar' },
+  { route: 'lessons',     label: 'Lesson plans',   icon: 'book' },
+  { route: 'assignments', label: 'Homework',       icon: 'list' },
+  { route: 'library',     label: 'Shared files',   icon: 'folder' },
+  { route: 'reports',     label: 'Reports',        icon: 'chart' },
+  { route: 'meetings',    label: 'Parent meetings',icon: 'clock' },
+  { route: 'profile',     label: 'Profile',        icon: 'user' },
+  { route: 'settings',    label: 'Settings',       icon: 'settings' },
+  { route: 'help',        label: 'Help',           icon: 'info' },
 ];
 
 /* ===== Render shell ===== */
@@ -1380,7 +1380,7 @@ function render() {
   }
   $('#app').innerHTML = `
     <div class="td-app ${state.offline ? 'has-offline' : ''}">
-      ${state.offline ? `<div class="offline-banner" style="grid-area: off;"><span data-icon="wifi" data-icon-size="14"></span> You are offline · changes will sync when reconnected <button data-act="dismiss-offline">Dismiss</button></div>` : ''}
+      ${state.offline ? `<div class="offline-banner" style="grid-area: off;"><span data-icon="wifi" data-icon-size="14"></span> You're offline · changes will save once the internet comes back <button data-act="dismiss-offline">Hide</button></div>` : ''}
       ${renderSide()}
       ${renderBar()}
       <div class="td-main">${renderRoute()}</div>
@@ -1428,7 +1428,7 @@ function renderSide() {
           <span class="cnt">${c.size}</span>
         </button>
       `).join('')}
-      <div class="sh">Workflow</div>
+      <div class="sh">Daily work</div>
       ${PRIMARY.map(renderNav).join('')}
       <div class="sh">More</div>
       ${SECONDARY.map(renderNav).join('')}
@@ -1445,20 +1445,20 @@ function renderSide() {
 function renderBar() {
   const titles = {
     dashboard:   ['Thursday · 22 May 2026 · Term 2 Week 5', 'Good morning, Mr Chari'],
-    roll:        ['Form 2A · Mathematics · Period 3', 'Take attendance'],
-    marks:       [`Form ${state.classId} · Mathematics · Term 2`, 'Marks entry'],
-    gradebook:   [`Form ${state.classId} · Mathematics · Term 2`, 'Gradebook'],
-    comms:       ['Form 2A homeroom + Maths classes', 'Communications'],
-    schedule:    ['My timetable · Term 2 · 2026', 'Weekly schedule'],
+    roll:        ['Form 2A · Mathematics · Period 3', 'Mark attendance'],
+    marks:       [`Form ${state.classId} · Mathematics · Term 2`, 'Enter marks'],
+    gradebook:   [`Form ${state.classId} · Mathematics · Term 2`, 'Marks book'],
+    comms:       ['Form 2A class teacher + Maths classes', 'Parent messages'],
+    schedule:    ['My timetable · Term 2 · 2026', 'Weekly timetable'],
     lessons:     [`Form ${state.classId} · ZIMSEC Syllabus 4004`, 'Lesson planner'],
-    assignments: ['All classes · Term 2 · 2026', 'Assignments'],
-    library:     ['Department · Maths & Combined Science', 'Resource library'],
+    assignments: ['All classes · Term 2 · 2026', 'Homework &amp; tasks'],
+    library:     ['Department · Maths & Combined Science', 'Shared files'],
     profile:     ['Park Centre High School · Staff ID T1042', 'My profile'],
-    meetings:    ['Parent–teacher · Term 2 · 2026', 'Meetings & appointments'],
-    reports:     ['Cohort analytics · Term 2 · 2026', 'Reports'],
+    meetings:    ['Parent meetings · Term 2 · 2026', 'Parent meetings'],
+    reports:     ['Class numbers · Term 2 · 2026', 'Reports'],
     settings:    ['Account · Preferences · Privacy', 'Settings'],
-    help:        ['Teacher portal · How-to guides', 'Help centre'],
-    states:      ['Demo · empty / loading / error', 'UI states'],
+    help:        ['Teacher portal · How-to guides', 'Help'],
+    states:      ['Demo · empty / loading / error', 'Screen states'],
   };
   const [crumb, title] = titles[state.route] || titles.dashboard;
   const isFs = document.body.classList.contains('is-fullscreen');
@@ -1469,15 +1469,15 @@ function renderBar() {
         <div class="crumbs">${esc(crumb)}</div>
         <h1>${esc(title)}</h1>
       </div>
-      <button class="bar-btn" id="off-toggle" title="${state.offline ? 'Go back online' : 'Simulate offline (demo)'}">
+      <button class="bar-btn" id="off-toggle" title="${state.offline ? 'Go back online' : 'Pretend to go offline (demo)'}">
         <span data-icon="${state.offline ? 'wifi' : 'wifi'}" data-icon-size="14"></span>
         <span class="bar-btn-label">${state.offline ? 'Offline' : 'Online'}</span>
       </button>
-      <button class="bar-btn bell-wrap" id="bell-btn" title="Notifications" aria-label="Notifications">
+      <button class="bar-btn bell-wrap" id="bell-btn" title="Alerts" aria-label="Alerts">
         <span data-icon="bell" data-icon-size="14"></span>
         ${totalUnread > 0 ? `<span class="ndot">${totalUnread}</span>` : ''}
       </button>
-      <button class="bar-btn" id="fs-toggle" title="${isFs ? 'Exit fullscreen' : 'Fullscreen preview'}">
+      <button class="bar-btn" id="fs-toggle" title="${isFs ? 'Exit fullscreen' : 'Open fullscreen'}">
         <span data-icon="${isFs ? 'x' : 'grid'}" data-icon-size="14"></span>
         <span class="bar-btn-label">${isFs ? 'Exit' : 'Fullscreen'}</span>
       </button>
@@ -1499,17 +1499,17 @@ function wireShell() {
   const bell = $('#bell-btn'); if (bell) bell.addEventListener('click', () => go('comms'));
   const off = $('#off-toggle'); if (off) off.addEventListener('click', () => {
     state.offline = !state.offline; render();
-    toast(state.offline ? 'Offline mode on — changes queued locally' : 'Back online', state.offline ? 'warn' : 'success');
+    toast(state.offline ? 'Offline mode on — changes are saved on this device for now' : 'Back online', state.offline ? 'warn' : 'success');
   });
 }
 function openSignOutModal() {
   openModal(`
     <div class="modal" onclick="event.stopPropagation()">
       <h3>Sign out of shared device?</h3>
-      <p class="sub">This will lock the device and return to the staff sign-in screen. Unsaved drafts will be preserved for 24 h.</p>
+      <p class="sub">This locks the tablet and goes back to the staff sign-in screen. Any unsent drafts stay safe for 24 hours.</p>
       <div style="background: var(--surface-muted); border-radius: 10px; padding: 12px 14px; font: 13px/1.5 var(--font-sans); color: var(--text-body); margin-bottom: 8px;">
         <strong>${esc(ME.name)}</strong> · Staff ID T1042<br/>
-        Last active: just now · Drafts: 2 (auto-saved)
+        Last used: just now · Drafts: 2 (saved automatically)
       </div>
       <div class="acts">
         <button class="alt" data-cancel>Stay signed in</button>
@@ -1574,11 +1574,11 @@ function renderDashboard() {
   const totalUnread = THREADS.reduce((s, t) => s + t.unread, 0);
   const unreadThreads = THREADS.filter(t => t.unread > 0).slice(0, 3);
   const tabs = [
-    { id: 'today',  label: 'Today', icon: 'home' },
-    { id: 'marks',  label: 'Marks', icon: 'edit', bdg: 3 },
-    { id: 'comms',  label: 'Comms', icon: 'chat', bdg: totalUnread },
-    { id: 'sched',  label: 'Schedule', icon: 'calendar' },
-    { id: 'lessons',label: 'Lessons',  icon: 'book' },
+    { id: 'today',  label: 'Today',     icon: 'home' },
+    { id: 'marks',  label: 'Marks',     icon: 'edit', bdg: 3 },
+    { id: 'comms',  label: 'Messages',  icon: 'chat', bdg: totalUnread },
+    { id: 'sched',  label: 'Timetable', icon: 'calendar' },
+    { id: 'lessons',label: 'Lessons',   icon: 'book' },
   ];
   return `
     <div class="td-tabs">
@@ -1595,15 +1595,15 @@ function renderDashboard() {
             <h2>Good morning, ${esc(ME.name.split(' ').slice(-1)[0])}</h2>
             <div class="sb">${esc(ME.subjects)} · 5 classes · Term 2 · Week 5</div>
           </div>
-          <button class="btn-secondary" data-act="new-assignment"><span data-icon="plus" data-icon-size="14"></span> New assignment</button>
+          <button class="btn-secondary" data-act="new-assignment"><span data-icon="plus" data-icon-size="14"></span> Set new homework</button>
         </div>
 
         <div class="sched-strip">
           <div class="sched-strip-h">
-            <h3>Today's schedule</h3>
+            <h3>Today's lessons</h3>
             <span class="ds">6 periods · 1 free</span>
             <span class="sp"></span>
-            <span class="now">Now · Period 3</span>
+            <span class="now">Right now · Period 3</span>
           </div>
           <div class="sched-rail">
             ${TODAY_SCHEDULE.map(s => {
@@ -1620,25 +1620,25 @@ function renderDashboard() {
         <div class="att-card">
           <div class="left">
             <div class="lbl">Up next · Period 3 in 4 minutes</div>
-            <h3>Take attendance — Form 2A · Mathematics</h3>
-            <div class="ds">29 students on roll · Last marked Wednesday, 2 absentees flagged</div>
+            <h3>Mark attendance — Form 2A · Mathematics</h3>
+            <div class="ds">29 pupils on the class list · Last taken Wednesday, 2 pupils were absent</div>
           </div>
-          <button class="go" data-go="roll">Take roll <span data-icon="chright" data-icon-size="14"></span></button>
+          <button class="go" data-go="roll">Mark attendance <span data-icon="chright" data-icon-size="14"></span></button>
         </div>
 
         <div class="grid-cards">
           <div class="card">
             <div class="card-h">
-              <h3>Classes to mark</h3>
+              <h3>Papers to mark</h3>
               <span class="sp"></span>
-              <span class="bdg warn">3 pending</span>
+              <span class="bdg warn">3 waiting</span>
             </div>
             <div>
               <div class="class-line" data-go="marks">
                 <span class="dot" style="background: #A78BFA;"></span>
                 <div>
                   <div class="nm">Form 2A · Maths · Quiz 1</div>
-                  <div class="sb">29 papers · submitted yesterday</div>
+                  <div class="sb">29 papers · handed in yesterday</div>
                 </div>
                 <span class="pill pending">Mark</span>
               </div>
@@ -1654,7 +1654,7 @@ function renderDashboard() {
                 <span class="dot" style="background: #34D399;"></span>
                 <div>
                   <div class="nm">Form 1A · Maths · Test 2</div>
-                  <div class="sb">28 papers · 12 marked</div>
+                  <div class="sb">28 papers · 12 done</div>
                 </div>
                 <span class="pill pending">Continue</span>
               </div>
@@ -1665,7 +1665,7 @@ function renderDashboard() {
             <div class="card-h">
               <h3>Parent messages</h3>
               <span class="sp"></span>
-              <span class="bdg brand">${totalUnread} unread</span>
+              <span class="bdg brand">${totalUnread} new</span>
               <button class="link" data-go="comms">Open inbox →</button>
             </div>
             <div>
@@ -1691,7 +1691,7 @@ function renderDashboard() {
           </div>
           <div class="stats-grid">
             <div class="stat">
-              <div class="lbl">Assignments out</div>
+              <div class="lbl">Homework set</div>
               <div class="v">4</div>
               <div class="ds">2 due Friday · 2 next week</div>
             </div>
@@ -1701,9 +1701,9 @@ function renderDashboard() {
               <div class="ds">Across 3 classes</div>
             </div>
             <div class="stat">
-              <div class="lbl">Attendance rate</div>
+              <div class="lbl">Attendance</div>
               <div class="v">94.2%</div>
-              <div class="ds">All classes · 5-day avg</div>
+              <div class="ds">All classes · 5-day average</div>
             </div>
           </div>
         </div>
@@ -1730,7 +1730,7 @@ function wireDashboard() {
     go('comms');
   }));
   const na = $('[data-act="new-assignment"]'); if (na) na.addEventListener('click', () => {
-    toast('New assignment template opened (demo)', 'success');
+    toast('New homework form opened (demo)', 'success');
   });
 }
 
@@ -1750,11 +1750,11 @@ function renderRoll() {
     <div class="roll-wrap" style="position: relative;">
       <div class="roll-header">
         <div class="crumbs">Thu 22 May · Period 3 · 09:20</div>
-        <h2>Take roll · ${esc(cls.form)}</h2>
+        <h2>Mark attendance · ${esc(cls.form)}</h2>
         <div class="pills">
           <span class="pill">${esc(cls.subj)}</span>
           <span class="pill">${esc(cls.room)}</span>
-          <span class="pill">${roster.length} on roll</span>
+          <span class="pill">${roster.length} pupils</span>
         </div>
       </div>
       <div class="roll-counter">
@@ -1763,12 +1763,12 @@ function renderRoll() {
         <div class="cell late"><div class="v">${c.L}</div><div class="group"><div class="lbl">Late</div></div></div>
       </div>
       <div class="roll-toolbar">
-        <span style="font: 500 12px var(--font-sans); color: var(--text-muted);">Quick:</span>
+        <span style="font: 500 12px var(--font-sans); color: var(--text-muted);">Quick mark:</span>
         <button class="qa" data-mark-all="P"><span data-icon="check" data-icon-size="12"></span> All present</button>
         <button class="qa" data-mark-all="A">All absent</button>
-        <button class="qa" data-reset>Reset</button>
+        <button class="qa" data-reset>Start over</button>
         <span class="sp"></span>
-        <span style="font: 11px var(--font-mono); color: var(--text-muted);">${roster.length} students · A–Z</span>
+        <span style="font: 11px var(--font-mono); color: var(--text-muted);">${roster.length} pupils · A–Z</span>
       </div>
       <div class="roll-list" id="roll-list">
         ${roster.map(s => {
@@ -1787,11 +1787,11 @@ function renderRoll() {
       </div>
       <div class="roll-save">
         <div class="summary">
-          <div class="lb">Roll · Period 3</div>
-          <div class="v">${c.P}P · ${c.A}A · ${c.L}L</div>
+          <div class="lb">Attendance · Period 3</div>
+          <div class="v">${c.P} present · ${c.A} absent · ${c.L} late</div>
         </div>
         <button class="btn-alt" data-back-dash><span data-icon="back" data-icon-size="13"></span> Back</button>
-        <button class="btn-save" data-save-roll><span data-icon="check" data-icon-size="14"></span> Save &amp; next class</button>
+        <button class="btn-save" data-save-roll><span data-icon="check" data-icon-size="14"></span> Save &amp; go to next class</button>
       </div>
     </div>
   `;
@@ -1813,7 +1813,7 @@ function wireRoll() {
     render();
   }));
   const rs = $('[data-reset]'); if (rs) rs.addEventListener('click', () => {
-    state.roll = seedRoll(state.roll.classId); render(); toast('Roll reset to default');
+    state.roll = seedRoll(state.roll.classId); render(); toast('Attendance reset');
   });
   const bd = $('[data-back-dash]'); if (bd) bd.addEventListener('click', () => go('dashboard'));
   const sv = $('[data-save-roll]'); if (sv) sv.addEventListener('click', () => {
@@ -1821,7 +1821,7 @@ function wireRoll() {
     openModal(`
       <div class="modal" onclick="event.stopPropagation()">
         <h3>Save attendance · ${esc(state.roll.classId === '2A' ? 'Form 2A' : 'Form ' + state.roll.classId)}</h3>
-        <p class="sub">Confirm to submit this period's roll. Absentee notifications will be sent to parents of absent students.</p>
+        <p class="sub">Confirm to save this period's attendance. Parents of absent pupils will get an SMS.</p>
         <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px;">
           <div style="padding: 12px; background: var(--tone-success-bg); border-radius: 8px; text-align: center;">
             <div style="font: 700 22px var(--font-sans); color: var(--tone-success);">${c.P}</div>
@@ -1838,14 +1838,14 @@ function wireRoll() {
         </div>
         <div class="acts">
           <button class="alt" data-cancel>Cancel</button>
-          <button class="ok" data-confirm>Submit roll &amp; continue</button>
+          <button class="ok" data-confirm>Save attendance &amp; continue</button>
         </div>
       </div>
     `);
     $('[data-cancel]').addEventListener('click', closeModal);
     $('[data-confirm]').addEventListener('click', () => {
       closeModal();
-      toast(`Roll saved · ${c.P}P · ${c.A}A · ${c.L}L`, 'success');
+      toast(`Attendance saved · ${c.P} present · ${c.A} absent · ${c.L} late`, 'success');
       // advance to next class on the schedule
       const idx = TODAY_SCHEDULE.findIndex(s => s.classId === state.roll.classId);
       const nxt = TODAY_SCHEDULE.slice(idx + 1).find(s => s.classId);
@@ -1889,31 +1889,31 @@ function renderMarks() {
         <option value="t1" ${state.marks.term==='t1'?'selected':''}>Term 1 · 2026</option>
         <option value="t3" ${state.marks.term==='t3'?'selected':''}>Term 3 · 2025</option>
       </select>
-      <span class="lbl">Assessment</span>
+      <span class="lbl">Test</span>
       <div class="seg" id="m-assess">
-        <button data-ass="q1" class="${state.marks.assessmentId==='q1'?'on':''}">CA1 · Quiz</button>
-        <button data-ass="t1" class="${state.marks.assessmentId==='t1'?'on':''}">CA2 · Test</button>
+        <button data-ass="q1" class="${state.marks.assessmentId==='q1'?'on':''}">Quiz 1</button>
+        <button data-ass="t1" class="${state.marks.assessmentId==='t1'?'on':''}">Class test</button>
         <button data-ass="mid" class="${state.marks.assessmentId==='mid'?'on':''}">Mid-term</button>
         <button data-ass="end" class="${state.marks.assessmentId==='end'?'on':''}">End-of-term</button>
       </div>
       <span class="lbl" style="margin-left: 4px;">Out of</span>
       <input class="num-in" type="number" min="1" max="500" value="${ass.max}" id="m-max" />
       <span class="sp"></span>
-      <span class="stat-pill">Entered <b>${entered} / ${roster.length}</b></span>
-      <span class="stat-pill">Avg <b>${avg.toFixed(1)}</b></span>
+      <span class="stat-pill">Done <b>${entered} / ${roster.length}</b></span>
+      <span class="stat-pill">Average <b>${avg.toFixed(1)}</b></span>
       <span class="stat-pill">Top <b>${top || '—'}</b></span>
-      <span class="stat-pill">Low <b>${low || '—'}</b></span>
+      <span class="stat-pill">Lowest <b>${low || '—'}</b></span>
       <button class="btn-secondary" id="m-save"><span data-icon="check" data-icon-size="13"></span> Save</button>
       <button class="btn-primary" id="m-publish" ${state.marks.published ? 'disabled' : ''}>
         <span data-icon="upload" data-icon-size="13"></span>
-        ${state.marks.published ? 'Published' : 'Publish to parents'}
+        ${state.marks.published ? 'Sent to parents' : 'Send to parents'}
       </button>
     </div>
     <div class="marks-wrap">
       <table class="marks-table">
         <thead>
           <tr>
-            <th class="stu" style="text-align: left;">Student</th>
+            <th class="stu" style="text-align: left;">Pupil</th>
             <th>${esc(ass.name)}<span class="sub">/ ${ass.max}</span></th>
             <th>Percent<span class="sub">/ 100</span></th>
             <th>Grade</th>
@@ -1938,11 +1938,11 @@ function renderMarks() {
       </table>
     </div>
     <footer class="marks-foot">
-      <span class="hint"><span class="kbd">Tab</span> Next student</span>
-      <span class="hint"><span class="kbd">Enter</span> Save & next</span>
-      <span class="hint"><span class="kbd">0–${ass.max}</span> Valid range</span>
+      <span class="hint"><span class="kbd">Tab</span> Next pupil</span>
+      <span class="hint"><span class="kbd">Enter</span> Save &amp; next</span>
+      <span class="hint"><span class="kbd">0–${ass.max}</span> Allowed range</span>
       <span class="sp"></span>
-      <span style="font: 12px var(--font-sans); color: var(--text-muted);">${entered === roster.length ? 'All marks entered · ready to publish' : `${roster.length - entered} student(s) remaining`}</span>
+      <span style="font: 12px var(--font-sans); color: var(--text-muted);">${entered === roster.length ? 'All marks done · ready to send to parents' : `${roster.length - entered} pupil(s) still to do`}</span>
     </footer>
   `;
 }
@@ -2015,6 +2015,7 @@ function saveMarks() {
     state.gradebook.values[`${s.id}-${a.id}`] = (v === '' || v == null) ? null : +v;
   });
   toast(`${entered} marks saved for ${a.name}`, 'success');
+
 }
 function publishMarks() {
   const a = ASSESSMENTS_2A.find(a => a.id === state.marks.assessmentId);
@@ -2024,15 +2025,15 @@ function publishMarks() {
   }).length;
   openModal(`
     <div class="modal" onclick="event.stopPropagation()">
-      <h3>Publish marks to parents?</h3>
-      <p class="sub"><strong>${esc(a.name)}</strong> for <strong>Form ${esc(state.classId)} · Mathematics</strong>. Parents will receive an SMS + portal notification.</p>
+      <h3>Send marks to parents?</h3>
+      <p class="sub"><strong>${esc(a.name)}</strong> for <strong>Form ${esc(state.classId)} · Mathematics</strong>. Parents will get an SMS and a message in their app.</p>
       <div style="background: var(--surface-muted); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;">
-        <div style="font: 500 12px var(--font-sans); color: var(--text-muted);">Will publish</div>
+        <div style="font: 500 12px var(--font-sans); color: var(--text-muted);">Will send</div>
         <div style="font: 600 16px var(--font-sans); color: var(--text-strong); margin-top: 4px;">${entered} / ${roster.length} marks · out of ${a.max}</div>
       </div>
       <div class="acts">
         <button class="alt" data-cancel>Cancel</button>
-        <button class="ok" data-confirm>Publish</button>
+        <button class="ok" data-confirm>Send</button>
       </div>
     </div>
   `);
@@ -2041,7 +2042,7 @@ function publishMarks() {
     closeModal();
     state.marks.published = true;
     saveMarks();
-    toast(`Published ${entered} marks · ${a.name}`, 'success');
+    toast(`Sent ${entered} marks to parents · ${a.name}`, 'success');
     render();
   });
 }
@@ -2092,7 +2093,7 @@ function renderGradebook() {
   return `
     <div class="gb-toolbar">
       <div class="chips">
-        ${[['all','All'],['ca','CA'],['ex','Exam'],['hw','Homework']].map(([id,label]) =>
+        ${[['all','All'],['ca','Class tests'],['ex','Exams'],['hw','Homework']].map(([id,label]) =>
           `<button class="chip ${state.gradebook.filter === id ? 'on' : ''}" data-gb-filter="${id}">${label}</button>`).join('')}
       </div>
       <select id="gb-term">
@@ -2101,16 +2102,16 @@ function renderGradebook() {
         <option>Term 3 · 2025</option>
       </select>
       <div class="sp"></div>
-      <span class="stat-pill">Class avg <b>${classAvg.toFixed(1)}</b></span>
+      <span class="stat-pill">Class average <b>${classAvg.toFixed(1)}</b></span>
       <span class="stat-pill">Highest <b>${highest.toFixed(0)}</b></span>
       <span class="stat-pill">Lowest <b>${lowest.toFixed(0)}</b></span>
-      <button class="btn-secondary" id="gb-export"><span data-icon="download" data-icon-size="13"></span> Export</button>
+      <button class="btn-secondary" id="gb-export"><span data-icon="download" data-icon-size="13"></span> Download</button>
     </div>
     <div class="gb-wrap">
       <table class="gb-table">
         <thead>
           <tr>
-            <th class="stu" style="text-align: left;">Student</th>
+            <th class="stu" style="text-align: left;">Pupil</th>
             ${cols.map(c => `<th>${esc(c.name)}<span class="sub">/${c.max}</span><span class="tag ${c.type === 'CA' ? 'ca' : c.type === 'Exam' ? 'ex' : 'hw'}">${c.type}</span></th>`).join('')}
             <th class="avg">Average<span class="sub">/100</span></th>
             <th class="add" id="gb-add"><span data-icon="plus" data-icon-size="12"></span> Add column</th>
@@ -2181,31 +2182,31 @@ function wireGradebook() {
     render();
     if (val != null) toast(`Updated ${col.name} for ${studentId}`, 'success');
   }
-  const exp = $('#gb-export'); if (exp) exp.addEventListener('click', () => toast('Gradebook CSV exported', 'success'));
+  const exp = $('#gb-export'); if (exp) exp.addEventListener('click', () => toast('Marks book downloaded (CSV)', 'success'));
   const add = $('#gb-add'); if (add) add.addEventListener('click', openAddAssessmentModal);
 }
 function openAddAssessmentModal() {
   openModal(`
     <div class="modal" onclick="event.stopPropagation()">
-      <h3>Add assessment column</h3>
-      <p class="sub">Adds a new column to the gradebook. Empty cells until you enter marks.</p>
+      <h3>Add a new column</h3>
+      <p class="sub">Adds a new column to the marks book. Cells stay empty until you type in marks.</p>
       <div class="field-label">Name</div>
       <div class="row"><input id="add-name" placeholder="e.g. Quiz 3, Homework 4, End of term" autofocus /></div>
       <div class="field-label">Type</div>
       <div class="row" style="margin-bottom: 6px;">
         <div class="chip-grp" id="add-type">
-          <button class="ch on" data-t="CA">CA</button>
+          <button class="ch on" data-t="CA">Class test</button>
           <button class="ch" data-t="HW">Homework</button>
           <button class="ch" data-t="Exam">Exam</button>
         </div>
       </div>
       <div style="display: flex; gap: 10px;">
         <div style="flex: 1;">
-          <div class="field-label">Max marks</div>
+          <div class="field-label">Out of</div>
           <div class="row"><input id="add-max" type="number" value="20" min="1" max="500" /></div>
         </div>
         <div style="flex: 1;">
-          <div class="field-label">Weight %</div>
+          <div class="field-label">Counts for (%)</div>
           <div class="row"><input id="add-weight" type="number" value="10" min="0" max="100" /></div>
         </div>
       </div>
@@ -2222,7 +2223,7 @@ function openAddAssessmentModal() {
   }));
   $('[data-cancel]').addEventListener('click', closeModal);
   $('[data-confirm]').addEventListener('click', () => {
-    const name = $('#add-name').value.trim() || 'New assessment';
+    const name = $('#add-name').value.trim() || 'New column';
     const max = Math.max(1, +$('#add-max').value || 20);
     const weight = Math.max(0, +$('#add-weight').value || 10);
     const id = 'a' + Date.now().toString(36).slice(-5);
@@ -2245,11 +2246,11 @@ function renderComms() {
     <div class="cm-layout ${state.comms.threadId ? 'has-thread' : ''}" id="cm-layout">
       <aside class="cm-side">
         <div class="cm-side-h">
-          <h2>Inbox <span class="bdg">${THREADS.reduce((s,t) => s+t.unread, 0)} unread</span></h2>
-          <div class="ds">Mr Chari · Form 2A homeroom + Maths classes</div>
+          <h2>Inbox <span class="bdg">${THREADS.reduce((s,t) => s+t.unread, 0)} new</span></h2>
+          <div class="ds">Mr Chari · Form 2A class teacher + Maths classes</div>
           <div class="search">
             <span data-icon="search" data-icon-size="14"></span>
-            <input placeholder="Search parents or students…" />
+            <input placeholder="Search parents or pupils…" />
           </div>
         </div>
         <div class="cm-tabs">
@@ -2271,7 +2272,7 @@ function renderComms() {
             </div>`).join('')}
         </div>
         <div class="cm-side-foot">
-          <button class="btn-cta" id="cm-broadcast"><span data-icon="bell" data-icon-size="14"></span> Broadcast to whole class</button>
+          <button class="btn-cta" id="cm-broadcast"><span data-icon="bell" data-icon-size="14"></span> Send to whole class</button>
         </div>
       </aside>
       <main class="cm-main">
@@ -2301,9 +2302,9 @@ function renderComms() {
             <button class="send" id="cm-send" ${draft.trim() ? '' : 'disabled'}><span data-icon="arrow" data-icon-size="18"></span></button>
           </div>
           <div class="toolbar">
-            <button id="cm-attach" class="${state.comms.attachToggle ? 'active' : ''}"><span data-icon="folder" data-icon-size="12"></span> Attach${state.comms.attachToggle ? ' · 1 file' : ''}</button>
+            <button id="cm-attach" class="${state.comms.attachToggle ? 'active' : ''}"><span data-icon="folder" data-icon-size="12"></span> Attach file${state.comms.attachToggle ? ' · 1 file' : ''}</button>
             <button id="cm-quick"><span data-icon="user" data-icon-size="12"></span> Quick reply</button>
-            <button id="cm-schedule"><span data-icon="calendar" data-icon-size="12"></span> Schedule</button>
+            <button id="cm-schedule"><span data-icon="calendar" data-icon-size="12"></span> Send later</button>
           </div>
         </div>
       </main>
@@ -2320,7 +2321,7 @@ function wireComms() {
   }));
   $$('[data-cm-filter]').forEach(b => b.addEventListener('click', () => {
     state.comms.filter = b.dataset.cmFilter; render();
-    if (state.comms.filter !== 'inbox') toast('Filter is demo-only — showing inbox', 'warn');
+    if (state.comms.filter !== 'inbox') toast('This filter is for the demo — showing inbox', 'warn');
   }));
   const back = $('[data-cm-back]'); if (back) back.addEventListener('click', () => {
     state.comms.threadId = null; render();
@@ -2339,10 +2340,10 @@ function wireComms() {
   const at = $('#cm-attach'); if (at) at.addEventListener('click', () => {
     state.comms.attachToggle = !state.comms.attachToggle;
     render();
-    toast(state.comms.attachToggle ? 'Attachment ready · 1 file' : 'Attachment removed');
+    toast(state.comms.attachToggle ? 'File ready to send · 1 file' : 'File removed');
   });
   const qr = $('#cm-quick'); if (qr) qr.addEventListener('click', openQuickReplyModal);
-  const sc = $('#cm-schedule'); if (sc) sc.addEventListener('click', () => toast('Scheduled for tomorrow 07:30', 'success'));
+  const sc = $('#cm-schedule'); if (sc) sc.addEventListener('click', () => toast('Will send tomorrow at 07:30', 'success'));
   const br = $('#cm-broadcast'); if (br) br.addEventListener('click', openBroadcastModal);
 
   // scroll stream to bottom
@@ -2356,19 +2357,20 @@ function sendReply() {
   state.comms.drafts[state.comms.threadId] = '';
   state.comms.attachToggle = false;
   toast('Reply sent', 'success');
+
   render();
 }
 function openQuickReplyModal() {
   const replies = [
-    'Thank you, noted. I will follow up by end of day.',
-    'Confirmed — see you at the parent-teacher evening on Tue 27 May.',
-    'Please send the absent note via the portal when you can.',
-    'I will arrange a one-on-one clinic time for them this week.',
+    'Thank you, noted. I will get back to you by the end of the day.',
+    'Confirmed — see you at the parent meeting on Tue 27 May.',
+    'Please send the absence note through the app when you can.',
+    'I will set aside a one-on-one help time for them this week.',
   ];
   openModal(`
     <div class="modal" onclick="event.stopPropagation()">
       <h3>Quick replies</h3>
-      <p class="sub">Tap a template to insert it into the composer.</p>
+      <p class="sub">Tap one to drop it into your reply box.</p>
       ${replies.map((r, i) => `<div style="padding: 12px 14px; background: var(--surface-muted); border-radius: 10px; margin-bottom: 8px; font: 13.5px/1.5 var(--font-sans); color: var(--text-body); cursor: pointer;" data-quick="${i}">${esc(r)}</div>`).join('')}
       <div class="acts"><button class="alt" data-cancel style="flex: 1;">Close</button></div>
     </div>
@@ -2388,18 +2390,18 @@ function openBroadcastModal() {
   function paint() {
     openModal(`
       <div class="modal wide" onclick="event.stopPropagation()">
-        <h3>Broadcast to whole class</h3>
-        <p class="sub">Sends an SMS + portal notification to every parent of every selected class.</p>
-        <div class="field-label">Recipients</div>
+        <h3>Send to whole class</h3>
+        <p class="sub">Sends an SMS and an app message to every parent in the classes you pick.</p>
+        <div class="field-label">Send to</div>
         <div class="chip-grp" style="margin-bottom: 10px;">
           ${classes.map(c => `<button class="ch ${selected.includes(c.id) ? 'on' : ''}" data-cls="${c.id}">${esc(c.label)}</button>`).join('')}
         </div>
-        <div class="field-label">Subject</div>
+        <div class="field-label">Title</div>
         <div class="row"><input id="br-subj" value="${esc(subject)}" /></div>
         <div class="field-label">Message</div>
-        <div class="row"><textarea id="br-body" placeholder="Type the announcement…">${esc(body)}</textarea></div>
-        <div class="field-label">Preview · what parents will receive</div>
-        <div class="preview-card">${esc(subject)}\n\n${esc(body || '(type a message to see preview)')}${'\n\n— Mr Chari, Maths · Park Centre High'}</div>
+        <div class="row"><textarea id="br-body" placeholder="Type the message…">${esc(body)}</textarea></div>
+        <div class="field-label">Preview · what parents will see</div>
+        <div class="preview-card">${esc(subject)}\n\n${esc(body || '(type a message to see a preview)')}${'\n\n— Mr Chari, Maths · Park Centre High'}</div>
         <div class="acts">
           <button class="alt" data-cancel>Cancel</button>
           <button class="ok" data-confirm ${(body.trim() && selected.length) ? '' : 'disabled'} style="${(body.trim() && selected.length) ? '' : 'opacity:0.5; cursor:not-allowed;'}">Send to ${selected.length ? selected.reduce((s, id) => s + (CLASSES.find(c=>c.id===id)||{size:0}).size, 0) : 0} parents</button>
@@ -2412,13 +2414,13 @@ function openBroadcastModal() {
       else selected.push(id);
       paint();
     }));
-    const sub = $('#br-subj'); if (sub) sub.addEventListener('input', e => { subject = e.target.value; const pv = document.querySelector('.preview-card'); if (pv) pv.textContent = `${subject}\n\n${body || '(type a message to see preview)'}\n\n— Mr Chari, Maths · Park Centre High`; });
-    const bd = $('#br-body'); if (bd) bd.addEventListener('input', e => { body = e.target.value; const pv = document.querySelector('.preview-card'); if (pv) pv.textContent = `${subject}\n\n${body || '(type a message to see preview)'}\n\n— Mr Chari, Maths · Park Centre High`; const ok = document.querySelector('[data-confirm]'); if (ok) { ok.disabled = !(body.trim() && selected.length); ok.style.opacity = (body.trim() && selected.length) ? '' : '0.5'; ok.style.cursor = (body.trim() && selected.length) ? '' : 'not-allowed'; } });
+    const sub = $('#br-subj'); if (sub) sub.addEventListener('input', e => { subject = e.target.value; const pv = document.querySelector('.preview-card'); if (pv) pv.textContent = `${subject}\n\n${body || '(type a message to see a preview)'}\n\n— Mr Chari, Maths · Park Centre High`; });
+    const bd = $('#br-body'); if (bd) bd.addEventListener('input', e => { body = e.target.value; const pv = document.querySelector('.preview-card'); if (pv) pv.textContent = `${subject}\n\n${body || '(type a message to see a preview)'}\n\n— Mr Chari, Maths · Park Centre High`; const ok = document.querySelector('[data-confirm]'); if (ok) { ok.disabled = !(body.trim() && selected.length); ok.style.opacity = (body.trim() && selected.length) ? '' : '0.5'; ok.style.cursor = (body.trim() && selected.length) ? '' : 'not-allowed'; } });
     $('[data-cancel]').addEventListener('click', closeModal);
     $('[data-confirm]').addEventListener('click', () => {
       const count = selected.reduce((s, id) => s + (CLASSES.find(c=>c.id===id)||{size:0}).size, 0);
       closeModal();
-      toast(`Broadcast sent to ${count} parents across ${selected.length} class(es)`, 'success');
+      toast(`Sent to ${count} parents across ${selected.length} class(es)`, 'success');
     });
   }
   paint();
@@ -2438,13 +2440,13 @@ function renderSchedule() {
         <button data-sch-week="1"><span data-icon="chright" data-icon-size="14"></span></button>
       </div>
       <button class="btn-secondary" data-sch-today><span data-icon="calendar" data-icon-size="13"></span> Today</button>
-      <button class="btn-primary" data-sch-add><span data-icon="plus" data-icon-size="13"></span> Add substitution</button>
+      <button class="btn-primary" data-sch-add><span data-icon="plus" data-icon-size="13"></span> Add cover lesson</button>
       <span class="sp"></span>
       <div class="legend">
         <span class="sw"><span class="b" style="background: #A78BFA;"></span> Maths</span>
         <span class="sw"><span class="b" style="background: #60A5FA;"></span> Comb Sci</span>
         <span class="sw"><span class="b" style="background: #34D399;"></span> English</span>
-        <span class="sw"><span class="b" style="background: #C2410C;"></span> Substitution</span>
+        <span class="sw"><span class="b" style="background: #C2410C;"></span> Cover lesson</span>
       </div>
     </div>
     <div class="sch-wrap">
@@ -2458,7 +2460,7 @@ function renderSchedule() {
               return `<div class="sch-cell sub-cover" data-sch-cell="cover|${row.p}|${di}"><div class="sub">${esc(cell.cover)}</div><div class="cls">${esc(cell.cover.split(' · ')[0])}</div><div class="rm">${esc(cell.room)}</div></div>`;
             }
             if (!cell.classId) {
-              return `<div class="sch-cell free"><div class="sub">Free</div><div class="cls">Prep</div><div class="rm">Staff rm</div></div>`;
+              return `<div class="sch-cell free"><div class="sub">Free</div><div class="cls">Prep time</div><div class="rm">Staff rm</div></div>`;
             }
             const c = CLASSES.find(x => x.id === cell.classId);
             const subjKey = c.subjKey;
@@ -2475,7 +2477,7 @@ function wireSchedule() {
     state.schedule.week += +b.dataset.schWeek;
     render();
   }));
-  const td = $('[data-sch-today]'); if (td) td.addEventListener('click', () => { state.schedule.week = 0; render(); toast('Jumped to this week'); });
+  const td = $('[data-sch-today]'); if (td) td.addEventListener('click', () => { state.schedule.week = 0; render(); toast('Back to this week'); });
   const ad = $('[data-sch-add]'); if (ad) ad.addEventListener('click', openSubstitutionModal);
   $$('[data-sch-cell]').forEach(b => b.addEventListener('click', () => {
     const [classId, period, dayIdx] = b.dataset.schCell.split('|');
@@ -2487,11 +2489,11 @@ function openClassDetailModal(classId, period, dayIdx) {
   if (classId === 'cover') {
     openModal(`
       <div class="modal" onclick="event.stopPropagation()">
-        <h3>Substitution · Cover for Mrs Mhike</h3>
+        <h3>Cover lesson · Standing in for Mrs Mhike</h3>
         <p class="sub">${esc(days[dayIdx])} · ${esc(period)} · Form 3A · English · Rm 8</p>
         <div style="background: var(--surface-muted); padding: 12px; border-radius: 8px; font: 13px/1.5 var(--font-sans); color: var(--text-body); margin-bottom: 8px;">
-          Lesson plan supplied: <strong>Reading comprehension · The Old Man and the Medal</strong>.
-          Materials in shared folder · /english/3A/week5.
+          Lesson plan provided: <strong>Reading comprehension · The Old Man and the Medal</strong>.
+          Materials in the shared folder · /english/3A/week5.
         </div>
         <div class="acts">
           <button class="alt" data-cancel>Close</button>
@@ -2500,14 +2502,14 @@ function openClassDetailModal(classId, period, dayIdx) {
       </div>
     `);
     $('[data-cancel]').addEventListener('click', closeModal);
-    $('[data-confirm]').addEventListener('click', () => { closeModal(); toast('Substitution acknowledged', 'success'); });
+    $('[data-confirm]').addEventListener('click', () => { closeModal(); toast('Cover lesson accepted', 'success'); });
     return;
   }
   const c = CLASSES.find(x => x.id === classId);
   openModal(`
     <div class="modal" onclick="event.stopPropagation()">
       <h3>${esc(c.form)} · ${esc(c.subj)}</h3>
-      <p class="sub">${esc(days[dayIdx])} · ${esc(period)} · ${esc(c.room)} · ${c.size} students</p>
+      <p class="sub">${esc(days[dayIdx])} · ${esc(period)} · ${esc(c.room)} · ${c.size} pupils</p>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
         <div style="padding: 10px 12px; background: var(--surface-muted); border-radius: 8px;">
           <div style="font: 500 11px var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase;">Topic</div>
@@ -2515,13 +2517,13 @@ function openClassDetailModal(classId, period, dayIdx) {
         </div>
         <div style="padding: 10px 12px; background: var(--surface-muted); border-radius: 8px;">
           <div style="font: 500 11px var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase;">Materials</div>
-          <div style="font: 500 13px var(--font-sans); color: var(--text-strong); margin-top: 4px;">4 attached</div>
+          <div style="font: 500 13px var(--font-sans); color: var(--text-strong); margin-top: 4px;">4 files attached</div>
         </div>
       </div>
       <div class="acts">
         <button class="alt" data-cancel>Close</button>
         <button class="alt" data-open-lessons>Open lesson plan</button>
-        <button class="ok" data-take-roll>Take roll for this class</button>
+        <button class="ok" data-take-roll>Mark attendance for this class</button>
       </div>
     </div>
   `);
@@ -2532,8 +2534,8 @@ function openClassDetailModal(classId, period, dayIdx) {
 function openSubstitutionModal() {
   openModal(`
     <div class="modal" onclick="event.stopPropagation()">
-      <h3>Add substitution</h3>
-      <p class="sub">Cover for another teacher. Approved subs appear in your timetable highlighted in orange.</p>
+      <h3>Add a cover lesson</h3>
+      <p class="sub">Stand in for another teacher. Once approved, the lesson shows on your timetable in orange.</p>
       <div class="field-label">Date · period</div>
       <div class="row">
         <select id="sub-date">
@@ -2550,7 +2552,7 @@ function openSubstitutionModal() {
       </div>
       <div class="field-label">Class</div>
       <div class="row"><input id="sub-class" placeholder="e.g. Form 3A · English · Rm 8" value="Form 3A · English · Rm 8" /></div>
-      <div class="field-label">For teacher</div>
+      <div class="field-label">Standing in for</div>
       <div class="row"><input id="sub-for" placeholder="e.g. Mrs Mhike" value="Mrs Mhike" /></div>
       <div class="acts">
         <button class="alt" data-cancel>Cancel</button>
@@ -2562,7 +2564,7 @@ function openSubstitutionModal() {
   $('[data-confirm]').addEventListener('click', () => {
     const cls = $('#sub-class').value || 'class';
     closeModal();
-    toast(`Substitution added · ${cls}`, 'success');
+    toast(`Cover lesson added · ${cls}`, 'success');
   });
 }
 
@@ -2598,7 +2600,7 @@ function renderLessons() {
   return `
     <div class="td-tabs">
       <span class="tab active"><span data-icon="calendar" data-icon-size="14"></span> Plans <span class="bdg">5</span></span>
-      <span class="tab"><span data-icon="book" data-icon-size="14"></span> Library <span class="bdg">42</span></span>
+      <span class="tab"><span data-icon="book" data-icon-size="14"></span> Shared files <span class="bdg">42</span></span>
       <span class="sp"></span>
       <button class="btn-ghost" data-copy-week><span data-icon="refresh" data-icon-size="13"></span> Copy from last week</button>
       <button class="btn-primary" data-new-lesson><span data-icon="plus" data-icon-size="13"></span> New lesson plan</button>
@@ -2640,7 +2642,7 @@ function renderLessonDrawer(lp) {
         <div style="flex: 1; min-width: 0;">
           <div class="pre">${esc(dayLabels[lp.day])} · ${esc(periodLabels[lp.period])}</div>
           <h3>${esc(lp.topic)}</h3>
-          <div class="sub">${esc(c.form)} · ${esc(c.subj)} · ${esc(c.room)} · ${c.size} students</div>
+          <div class="sub">${esc(c.form)} · ${esc(c.subj)} · ${esc(c.room)} · ${c.size} pupils</div>
         </div>
         <button class="x" data-lp-close aria-label="Close"><span data-icon="x" data-icon-size="14"></span></button>
       </div>
@@ -2648,7 +2650,7 @@ function renderLessonDrawer(lp) {
         <span class="pill brand">ZIMSEC ${esc(lp.code.split('/')[0])}</span>
         <span class="pill">Unit ${esc(lp.code.split('/')[1] || '7')}</span>
         <span class="pill">CALA cycle 2</span>
-        ${done ? `<span class="pill tone-success">Complete</span>` : `<span class="pill tone-success">Ready</span>`}
+        ${done ? `<span class="pill tone-success">Done</span>` : `<span class="pill tone-success">Ready</span>`}
       </div>
       <div class="lp-drawer-body">
         <div class="dr-sec">
@@ -2656,11 +2658,11 @@ function renderLessonDrawer(lp) {
           <input class="txt" id="lp-topic" value="${esc(lp.topic)}" />
         </div>
         <div class="dr-sec">
-          <div class="lbl">Learning objectives</div>
+          <div class="lbl">What pupils should learn</div>
           <textarea id="lp-obj">${esc(lp.objectives.join('\n'))}</textarea>
         </div>
         <div class="dr-sec">
-          <div class="lbl">Materials &amp; resources (${lp.attachments} files)</div>
+          <div class="lbl">Materials &amp; files (${lp.attachments} files)</div>
           <textarea id="lp-mat">${esc(lp.materials)}</textarea>
         </div>
         <div class="dr-sec">
@@ -2671,10 +2673,10 @@ function renderLessonDrawer(lp) {
       <div class="lp-drawer-foot">
         <button class="lp-toggle ${done ? 'on' : ''}" data-lp-done>
           <span data-icon="${done ? 'check' : 'circle'}" data-icon-size="13"></span>
-          ${done ? 'Marked complete' : 'Mark as complete'}
+          ${done ? 'Marked done' : 'Mark as done'}
         </button>
         <span class="sp"></span>
-        <button class="btn-secondary" data-lp-copy><span data-icon="layers" data-icon-size="13"></span> Duplicate</button>
+        <button class="btn-secondary" data-lp-copy><span data-icon="layers" data-icon-size="13"></span> Copy</button>
         <button class="btn-primary" data-lp-save><span data-icon="check" data-icon-size="13"></span> Save plan</button>
       </div>
     </aside>
@@ -2703,13 +2705,13 @@ function wireLessons() {
     render();
   });
   const cp = $('[data-lp-copy]'); if (cp) cp.addEventListener('click', () => {
-    toast('Lesson duplicated to next week (demo)', 'success');
+    toast('Lesson copied to next week (demo)', 'success');
   });
   const cw = $('[data-copy-week]'); if (cw) cw.addEventListener('click', () => {
     openModal(`
       <div class="modal" onclick="event.stopPropagation()">
         <h3>Copy lessons from last week?</h3>
-        <p class="sub">Pulls all 5 lesson plans from Week 4 (12–16 May) into this week. Existing entries this week will be kept; empty slots will be filled.</p>
+        <p class="sub">Brings all 5 lesson plans from Week 4 (12–16 May) into this week. Anything already in this week stays the same; empty slots get filled in.</p>
         <div class="acts">
           <button class="alt" data-cancel>Cancel</button>
           <button class="ok" data-confirm>Copy 5 plans</button>
@@ -2720,7 +2722,7 @@ function wireLessons() {
     $('[data-confirm]').addEventListener('click', () => { closeModal(); toast('Copied 5 plans from last week', 'success'); });
   });
   const nl = $('[data-new-lesson]'); if (nl) nl.addEventListener('click', () => {
-    toast('New lesson template — pick an empty cell (demo)', 'warn');
+    toast('New lesson — tap an empty cell to start (demo)', 'warn');
   });
 }
 
@@ -2742,16 +2744,16 @@ function renderSignIn() {
         <label for="si-pw">Password</label>
         <input id="si-pw" type="password" placeholder="••••••••" value="changeme" />
         <div class="row">
-          <label><input type="checkbox" id="si-shared" ${shared ? 'checked' : ''}/> Classroom-shared device (auto-lock 10 min)</label>
+          <label><input type="checkbox" id="si-shared" ${shared ? 'checked' : ''}/> Shared classroom tablet (locks after 10 min idle)</label>
           <span class="sp"></span>
-          <a href="#" data-act="si-forgot">Forgot?</a>
+          <a href="#" data-act="si-forgot">Forgot password?</a>
         </div>
         ${err ? `<div class="err"><span data-icon="info" data-icon-size="14"></span> ${esc(err)}</div>` : ''}
-        ${shared ? `<div class="shared"><span data-icon="lock" data-icon-size="14"></span> Shared mode · drafts auto-lock when idle</div>` : ''}
+        ${shared ? `<div class="shared"><span data-icon="lock" data-icon-size="14"></span> Shared mode · drafts lock when no one is using the tablet</div>` : ''}
         <button class="btn-go" type="submit">Sign in</button>
         <div class="row" style="justify-content: center; margin-top: 14px;">
           <span style="color: var(--text-muted);">Need access?</span>
-          <a href="#" data-act="si-help">Contact IT</a>
+          <a href="#" data-act="si-help">Ask IT</a>
         </div>
       </form>
     </div>
@@ -2764,8 +2766,8 @@ function wireSignIn() {
     const id = ($('#si-id').value || '').trim();
     const pw = ($('#si-pw').value || '').trim();
     state.session.sharedDevice = $('#si-shared').checked;
-    if (!id || !pw) { state.session.err = 'Enter Staff ID and password.'; render(); return; }
-    if (id.length < 3) { state.session.err = 'Invalid Staff ID. Try T1042 / changeme'; render(); return; }
+    if (!id || !pw) { state.session.err = 'Please type in your Staff ID and password.'; render(); return; }
+    if (id.length < 3) { state.session.err = 'That Staff ID is not correct. Try T1042 / changeme'; render(); return; }
     state.session.err = null;
     state.session.signedIn = true;
     state.session.teacherId = id;
@@ -2773,9 +2775,10 @@ function wireSignIn() {
     history.replaceState(null, '', '#/dashboard');
     render();
     toast(`Welcome back, ${ME.name.split(' ').slice(-1)[0]}`, 'success');
+
   });
-  const fg = $('[data-act="si-forgot"]'); if (fg) fg.addEventListener('click', (e) => { e.preventDefault(); toast('Password reset link sent to staff email', 'success'); });
-  const hp = $('[data-act="si-help"]'); if (hp) hp.addEventListener('click', (e) => { e.preventDefault(); toast('IT desk · Rm 4, extension 200', 'warn'); });
+  const fg = $('[data-act="si-forgot"]'); if (fg) fg.addEventListener('click', (e) => { e.preventDefault(); toast('A password reset link has been sent to your staff email', 'success'); });
+  const hp = $('[data-act="si-help"]'); if (hp) hp.addEventListener('click', (e) => { e.preventDefault(); toast('IT office · Rm 4, extension 200', 'warn'); });
 }
 
 /* ============================================================
@@ -2791,16 +2794,16 @@ function renderAssignments() {
     { id: 'all',  label: 'All', n: state.assignments.items.length },
     { id: 'open', label: 'Open', n: state.assignments.items.filter(a => a.status === 'open').length },
     { id: 'due',  label: 'Due this week', n: state.assignments.items.filter(a => a.status === 'due').length },
-    { id: 'closed', label: 'Closed', n: state.assignments.items.filter(a => a.status === 'closed').length },
+    { id: 'closed', label: 'Finished', n: state.assignments.items.filter(a => a.status === 'closed').length },
   ];
   return `
     <div class="pg-head">
       <div class="crumb">Term 2 · 5 classes · ZIMSEC 4004 / 4030</div>
-      <h2>Assignments</h2>
-      <div class="sub">Create, distribute and track submission &amp; marking progress across all your classes.</div>
+      <h2>Homework &amp; tasks</h2>
+      <div class="sub">Set work, send it out, and see who has handed in and what's been marked.</div>
       <div class="acts">
-        <button class="btn-primary" id="as-new"><span data-icon="plus" data-icon-size="13"></span> New assignment</button>
-        <button class="btn-secondary" id="as-import"><span data-icon="upload" data-icon-size="13"></span> Import from library</button>
+        <button class="btn-primary" id="as-new"><span data-icon="plus" data-icon-size="13"></span> New task</button>
+        <button class="btn-secondary" id="as-import"><span data-icon="upload" data-icon-size="13"></span> Pick from shared files</button>
         <span class="sp"></span>
         <div class="as-tabs">
           ${tabs.map(t => `<button class="${state.assignments.filter === t.id ? 'on' : ''}" data-as-tab="${t.id}">${t.label} <span style="opacity:0.7;">${t.n}</span></button>`).join('')}
@@ -2812,8 +2815,8 @@ function renderAssignments() {
         ${items.length === 0 ? `
           <div class="empty-state">
             <div class="ic-wrap"><span data-icon="list" data-icon-size="24"></span></div>
-            <div class="ttl">No assignments in this filter</div>
-            <div>Try “All” or create a new assignment from scratch.</div>
+            <div class="ttl">Nothing here yet</div>
+            <div>Try "All" or set a new task from scratch.</div>
           </div>
         ` : `
         <div class="as-list">
@@ -2825,12 +2828,12 @@ function renderAssignments() {
                 <div class="tags">
                   ${a.classes.map(cl => `<span class="tag t-form">Form ${esc(cl)}</span>`).join('')}
                   <span class="tag">${esc(a.type)}</span>
-                  <span class="tag t-status-${a.status}">${a.status === 'open' ? 'Open' : a.status === 'due' ? 'Due soon' : 'Closed'}</span>
+                  <span class="tag t-status-${a.status}">${a.status === 'open' ? 'Open' : a.status === 'due' ? 'Due soon' : 'Finished'}</span>
                 </div>
                 <h4>${esc(a.title)}</h4>
-                <div class="meta">Issued ${esc(a.issued)} · Due ${esc(a.due)}</div>
+                <div class="meta">Set ${esc(a.issued)} · Due ${esc(a.due)}</div>
                 <div class="bars">
-                  <span class="bar-lbl">Sub</span>
+                  <span class="bar-lbl">In</span>
                   <span class="bar"><span class="fill" style="width:${pctSub}%;"></span></span>
                   <span class="bar-lbl">${a.submitted}/${a.total}</span>
                   <span class="bar-lbl">·</span>
@@ -2840,9 +2843,9 @@ function renderAssignments() {
                 </div>
               </div>
               <div class="stats">
-                <div class="stat"><div class="lbl">Submit</div><div class="v">${pctSub}%</div></div>
+                <div class="stat"><div class="lbl">Handed in</div><div class="v">${pctSub}%</div></div>
                 <div class="stat"><div class="lbl">Marked</div><div class="v">${pctMk}%</div></div>
-                <div class="stat"><div class="lbl">Pending</div><div class="v">${a.submitted - a.marked}</div></div>
+                <div class="stat"><div class="lbl">Waiting</div><div class="v">${a.submitted - a.marked}</div></div>
               </div>
             </div>`;
           }).join('')}

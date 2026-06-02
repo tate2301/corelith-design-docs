@@ -692,8 +692,8 @@ const NAV = [
   { route: 'disputes',   label: 'Disputes',   icon: 'info', tag: () => DISPUTES.filter(d => d.status === 'open').length || '' },
   { route: 'photos',     label: 'Photo log',  icon: 'qr' },
   { route: 'settings',   label: 'Settings',   icon: 'more' },
-  { route: 'audit',      label: 'Audit log',  icon: 'receipt' },
-  { route: 'help',       label: 'Help · PPE', icon: 'info' },
+  { route: 'audit',      label: 'Activity trail',  icon: 'receipt' },
+  { route: 'help',       label: 'Help · safety gear', icon: 'info' },
   { route: 'end-of-day', label: 'End of day', icon: 'check' },
 ];
 
@@ -701,7 +701,7 @@ const MOBILE_TABS = [
   { route: 'intake',    label: 'Intake',    icon: 'plus' },
   { route: 'suppliers', label: 'Suppliers', icon: 'user' },
   { route: 'payouts',   label: 'Payouts',   icon: 'wallet' },
-  { route: 'stockpile', label: 'Stock',     icon: 'layers' },
+  { route: 'stockpile', label: 'Stockpile', icon: 'layers' },
   { route: 'settings',  label: 'More',      icon: 'more' },
 ];
 
@@ -806,8 +806,8 @@ function render() {
     ${state.offline ? `
       <div class="offline-strip">
         <span data-icon="info" data-icon-size="14"></span>
-        Offline mode · intakes are saved locally
-        <span class="q">${state.queued} queued</span>
+        No signal · intakes save on the tablet for now
+        <span class="q">${state.queued} waiting</span>
       </div>
     ` : ''}
   `;
@@ -820,7 +820,7 @@ function renderSide() {
   return `
     <aside class="sd-side">
       <a class="sd-brand" href="index.html"><span class="m" data-icon="corelith" data-icon-size="22"></span> <span>Mukamba Scrap</span></a>
-      <div class="sd-h">Workflows</div>
+      <div class="sd-h">Screens</div>
       ${NAV.map(n => {
         const tagVal = n.tag ? n.tag() : '';
         return `
@@ -833,7 +833,7 @@ function renderSide() {
       }).join('')}
       <div class="sd-foot">
         <strong>Live demo</strong>
-        Workington branch · refresh resets state. Supervisor PIN <code>4321</code>.
+        Workington branch · refresh starts over. Boss PIN <code>4321</code>.
       </div>
     </aside>
   `;
@@ -843,7 +843,7 @@ function renderBar() {
   const isFs = document.body.classList.contains('is-fullscreen');
   return `
     <header class="sd-bar">
-      <button class="bar-btn" data-hx-nav-trigger title="Site menu" aria-label="Open site menu">
+      <button class="bar-btn" data-hx-nav-trigger title="Open menu" aria-label="Open menu">
         <span data-icon="menu" data-icon-size="14"></span>
       </button>
       <span class="br">Mukamba Scrap</span>
@@ -851,18 +851,18 @@ function renderBar() {
       <span>${state.operator.branch} branch</span>
       <span class="sep">·</span>
       <span>Shift ${state.operator.shift}</span>
-      <span class="pill ${state.offline ? 'off' : 'live'}"><span class="dot"></span> ${state.offline ? 'Offline · ' + state.queued + ' queued' : 'Online'}</span>
+      <span class="pill ${state.offline ? 'off' : 'live'}"><span class="dot"></span> ${state.offline ? 'No signal · ' + state.queued + ' waiting' : 'Online'}</span>
       <span class="spacer"></span>
-      <button class="bar-btn" id="offline-toggle" title="Toggle offline mode">
+      <button class="bar-btn" id="offline-toggle" title="Switch offline mode">
         <span data-icon="${state.offline ? 'check' : 'info'}" data-icon-size="13"></span>
-        <span class="bar-btn-label">${state.offline ? 'Go online' : 'Simulate offline'}</span>
+        <span class="bar-btn-label">${state.offline ? 'Go online' : 'Try offline'}</span>
       </button>
-      <button class="bar-btn" id="fs-toggle" title="${isFs ? 'Exit fullscreen' : 'Fullscreen preview'}">
+      <button class="bar-btn" id="fs-toggle" title="${isFs ? 'Exit full screen' : 'Full screen'}">
         <span data-icon="${isFs ? 'x' : 'grid'}" data-icon-size="13"></span>
-        <span class="bar-btn-label">${isFs ? 'Exit' : 'Fullscreen'}</span>
+        <span class="bar-btn-label">${isFs ? 'Exit' : 'Full screen'}</span>
       </button>
       <span class="oper">
-        <span>${escapeHtml(state.operator.name)} · operator</span>
+        <span>${escapeHtml(state.operator.name)} · clerk</span>
         <span class="av">${state.operator.name.split(' ').map(p=>p[0]).slice(0,2).join('')}</span>
       </span>
     </header>
@@ -887,7 +887,7 @@ function wireShell() {
   const fs = $('#fs-toggle'); if (fs) fs.addEventListener('click', toggleFullscreen);
   const ot = $('#offline-toggle'); if (ot) ot.addEventListener('click', () => {
     state.offline = !state.offline;
-    toast(state.offline ? 'Switched to offline mode · intakes will queue' : 'Back online · syncing queue', state.offline ? 'warn' : 'success');
+    toast(state.offline ? 'Offline mode on · intakes will wait on the tablet' : 'Back online · sending the waiting intakes', state.offline ? 'warn' : 'success');
     render();
   });
 }
@@ -966,7 +966,7 @@ function renderSignin() {
         <h2>Mukamba Scrap · Workington</h2>
         <p class="sub">Sign in to start your shift. Demo PIN is <code>1234</code>.</p>
 
-        <div class="lbl">Operator ID</div>
+        <div class="lbl">Clerk ID</div>
         <div class="input"><span data-icon="user" data-icon-size="15"></span><input id="op-id" value="OP-08" autocomplete="off" /></div>
 
         <div class="lbl">PIN</div>
@@ -978,7 +978,7 @@ function renderSignin() {
         <label class="stay"><input type="checkbox" id="stay" ${state.stay ? 'checked' : ''}/> Stay signed in for this shift</label>
 
         <button class="btn-big primary" id="signin-go" style="width:100%; margin-top: 18px;" ${state.pin.length === 4 ? '' : 'disabled'}>
-          <span data-icon="check" data-icon-size="16"></span> Sign in &amp; start shift
+          <span data-icon="check" data-icon-size="16"></span> Sign in and start shift
         </button>
       </div>
     </div>
@@ -1016,7 +1016,7 @@ function wireSignin() {
     if (state.pin !== '1234') { state.pinErr = true; state.pin = ''; render(); return; }
     state.signedIn = true;
     state.pin = '';
-    toast('Signed in · welcome ' + state.operator.name.split(' ')[0], 'success');
+    toast('Signed in · welcome back ' + state.operator.name.split(' ')[0], 'success');
     go('day-open');
   });
 }
@@ -1030,7 +1030,7 @@ function renderDayOpen() {
       <div class="page-h">
         <div style="flex:1;">
           <h2>Open the day</h2>
-          <p class="lede">Three checks before the first supplier rolls in. Tap each step to confirm.</p>
+          <p class="lede">Three checks before the first supplier rolls in. Tap each step to tick it off.</p>
         </div>
       </div>
       <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px;">
@@ -1039,7 +1039,7 @@ function renderDayOpen() {
           <div class="weigh-disp live" style="margin: 0;">
             <div class="lbl">Weighbridge B2</div>
             <div class="val">8,420<span class="u">kg</span></div>
-            <div class="sb">Auto-read · stable for 4.2 s</div>
+            <div class="sb">Reading on its own · steady for 4.2 s</div>
           </div>
           <button class="btn-big primary" id="do-tare" style="width:100%; margin-top: 12px;">
             <span data-icon="check" data-icon-size="14"></span> Lock tare 8,420 kg
@@ -1048,18 +1048,18 @@ function renderDayOpen() {
         <div class="panel">
           <h3>② Yard layout <span class="meta">3 bins</span></h3>
           <div style="display:grid; gap: 8px;">
-            <div class="check-row done"><div class="box"><span data-icon="check" data-icon-size="12"></span></div><div><div class="nm">Bin A · ferrous</div><div class="sb">Workington · 12 t capacity</div></div></div>
-            <div class="check-row done"><div class="box"><span data-icon="check" data-icon-size="12"></span></div><div><div class="nm">Bin B · non-ferrous</div><div class="sb">Workington · 4 t capacity</div></div></div>
-            <div class="check-row"><div class="box"></div><div><div class="nm">Bin C · mixed sort</div><div class="sb">Workington · 6 t · check for water</div></div></div>
+            <div class="check-row done"><div class="box"><span data-icon="check" data-icon-size="12"></span></div><div><div class="nm">Bin A · steel and iron</div><div class="sb">Workington · holds 12 t</div></div></div>
+            <div class="check-row done"><div class="box"><span data-icon="check" data-icon-size="12"></span></div><div><div class="nm">Bin B · copper, brass, aluminium</div><div class="sb">Workington · holds 4 t</div></div></div>
+            <div class="check-row"><div class="box"></div><div><div class="nm">Bin C · mixed for sorting</div><div class="sb">Workington · holds 6 t · check for water</div></div></div>
           </div>
         </div>
         <div class="panel">
-          <h3>③ Safety check <span class="meta">PPE</span></h3>
+          <h3>③ Safety check <span class="meta">gear</span></h3>
           <div style="display:grid; gap: 8px;">
-            <div class="check-row done"><div class="box"><span data-icon="check" data-icon-size="12"></span></div><div><div class="nm">Hard hat &amp; high-vis</div></div></div>
+            <div class="check-row done"><div class="box"><span data-icon="check" data-icon-size="12"></span></div><div><div class="nm">Hard hat &amp; high-vis vest</div></div></div>
             <div class="check-row done"><div class="box"><span data-icon="check" data-icon-size="12"></span></div><div><div class="nm">Cut-resistant gloves</div></div></div>
-            <div class="check-row done"><div class="box"><span data-icon="check" data-icon-size="12"></span></div><div><div class="nm">Weighbridge calibration · 100 kg ref</div></div></div>
-            <div class="check-row"><div class="box"></div><div><div class="nm">Fire-extinguisher check</div><div class="sb">Last 02 Jun · 1d overdue</div></div></div>
+            <div class="check-row done"><div class="box"><span data-icon="check" data-icon-size="12"></span></div><div><div class="nm">Weighbridge check · 100 kg test weight</div></div></div>
+            <div class="check-row"><div class="box"></div><div><div class="nm">Fire extinguisher check</div><div class="sb">Last done 02 Jun · 1 day late</div></div></div>
           </div>
         </div>
       </div>
@@ -1071,7 +1071,7 @@ function renderDayOpen() {
   `;
 }
 function wireDayOpen() {
-  const t = $('#do-tare'); if (t) t.addEventListener('click', () => toast('Tare 8,420 kg recorded', 'success'));
+  const t = $('#do-tare'); if (t) t.addEventListener('click', () => toast('Tare 8,420 kg saved', 'success'));
   const s = $('#do-start'); if (s) s.addEventListener('click', () => { toast('Shift ' + state.operator.shift + ' open · ready for intakes', 'success'); go('intake'); });
 }
 
@@ -1090,8 +1090,8 @@ function renderIntake() {
       <section class="left">
         <div class="page-h">
           <div style="flex:1;">
-            <h2>Record an intake</h2>
-            <p class="lede">Follow the steps left to right. Tap a supplier, capture weight, pick the grade, snap photos, confirm.</p>
+            <h2>Write up an intake</h2>
+            <p class="lede">Work down the steps. Tap the supplier, take the weight, pick the grade, snap photos, confirm.</p>
           </div>
           <div class="right" style="background:transparent; border:0; padding:0; display:block;">
             <span class="stat-tile" style="padding: 8px 14px; display:inline-block;">
@@ -1106,13 +1106,13 @@ function renderIntake() {
           <div class="step-head"><span class="n">1</span> Supplier</div>
           <div class="input" style="margin-bottom: 10px;">
             <span data-icon="search" data-icon-size="14"></span>
-            <input id="in-sup-search" placeholder="Search supplier · name or phone…" value="${escapeHtml(i.search)}" />
+            <input id="in-sup-search" placeholder="Find supplier · name or phone…" value="${escapeHtml(i.search)}" />
             <button class="btn-big" style="padding: 6px 10px; min-height:32px; font-size:12.5px;" data-go="supplier-new">
               <span data-icon="plus" data-icon-size="13"></span> New supplier
             </button>
           </div>
           <div class="supplier-pick">
-            ${filtered.length === 0 ? `<div class="empty" style="padding:30px;"><div class="lg" data-icon="user" data-icon-size="28"></div>No supplier matches "${escapeHtml(i.search)}". <a href="#" data-go="supplier-new" style="color: var(--brand-strong);">Register them →</a></div>` : ''}
+            ${filtered.length === 0 ? `<div class="empty" style="padding:30px;"><div class="lg" data-icon="user" data-icon-size="28"></div>No supplier found for "${escapeHtml(i.search)}". <a href="#" data-go="supplier-new" style="color: var(--brand-strong);">Sign them up →</a></div>` : ''}
             ${filtered.slice(0, 5).map(s => `
               <div class="sup-row ${i.supplierId === s.id ? 'on' : ''}" data-pick-sup="${s.id}">
                 <div class="av">${s.name.split(' ').map(p=>p[0]).slice(0,2).join('')}</div>
@@ -1120,7 +1120,7 @@ function renderIntake() {
                   <div class="nm">${escapeHtml(s.name)}${s.dispute ? ' <span style="color:var(--tone-danger); font-size:11px; margin-left:6px;">• open dispute</span>' : ''}</div>
                   <div class="sb">${escapeHtml(s.phone)} · ${s.visits} visits · ${escapeHtml(s.kyc)}</div>
                 </div>
-                <span class="vl">${(s.totalKg/1000).toFixed(1)} t lifetime</span>
+                <span class="vl">${(s.totalKg/1000).toFixed(1)} t to date</span>
               </div>
             `).join('')}
           </div>
@@ -1132,14 +1132,14 @@ function renderIntake() {
           <div class="weigh-disp ${i.weighLive ? 'live' : ''}">
             <div class="lbl">Weighbridge B2 · Workington</div>
             <div class="val">${(i.weight || 0).toLocaleString()}<span class="u">kg</span></div>
-            <div class="sb">${i.weighLive ? 'Live read · auto-stable' : 'Manual override'}</div>
+            <div class="sb">${i.weighLive ? 'Live read · steady' : 'Typed in by hand'}</div>
           </div>
           <div style="display:flex; gap: 8px;">
             <button class="btn-big primary" id="in-read" style="flex:2;">
               <span data-icon="check" data-icon-size="14"></span> Read weighbridge
             </button>
             <button class="btn-big ghost" id="in-manual" style="flex:1;">
-              <span data-icon="edit" data-icon-size="14"></span> Manual
+              <span data-icon="edit" data-icon-size="14"></span> Type by hand
             </button>
           </div>
         </div>
@@ -1157,9 +1157,9 @@ function renderIntake() {
           </div>
           <div style="margin-top: 12px; display: flex; gap: 6px; align-items: center;">
             <button class="btn-big ghost" id="in-reject" style="padding: 8px 12px; min-height: 36px; font-size: 12.5px;">
-              <span data-icon="x" data-icon-size="13"></span> Reject load…
+              <span data-icon="x" data-icon-size="13"></span> Turn load away…
             </button>
-            ${i.rejectReason ? `<span style="font: 500 12.5px var(--font-sans); color: var(--tone-danger);">Reject: ${escapeHtml(i.rejectReason)}</span>` : ''}
+            ${i.rejectReason ? `<span style="font: 500 12.5px var(--font-sans); color: var(--tone-danger);">Turned away: ${escapeHtml(i.rejectReason)}</span>` : ''}
           </div>
         </div>
 
@@ -1189,7 +1189,7 @@ function renderIntake() {
       </section>
 
       <section class="right">
-        <div style="font: 500 11.5px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px;">Preview</div>
+        <div style="font: 500 11.5px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px;">Check it</div>
         <h3 style="margin: 0 0 14px; font: 600 16px var(--font-sans); color: var(--text-strong);">Payout ticket</h3>
         <div style="display:grid; gap: 10px;">
           <div class="setting-row" style="padding: 8px 0; border:0;">
@@ -1210,23 +1210,23 @@ function renderIntake() {
           </div>
           <div class="setting-row" style="padding: 8px 0; border:0;">
             <div><div class="nm" style="color: var(--text-muted); font-weight: 500;">Photos</div></div>
-            <div class="ctrl" style="font: 500 13.5px var(--font-mono); color: var(--text-strong);">${i.photos.length} captured</div>
+            <div class="ctrl" style="font: 500 13.5px var(--font-mono); color: var(--text-strong);">${i.photos.length} taken</div>
           </div>
           <div class="setting-row" style="padding: 8px 0; border:0;">
-            <div><div class="nm" style="color: var(--text-muted); font-weight: 500;">Payment</div></div>
+            <div><div class="nm" style="color: var(--text-muted); font-weight: 500;">Pay by</div></div>
             <div class="ctrl" style="font: 500 13.5px var(--font-sans); color: var(--text-strong);">${escapeHtml(i.method)}</div>
           </div>
         </div>
 
         <div class="payout-card">
-          <div class="row"><span>Gross</span><span class="v">${money(payout)}</span></div>
-          <div class="row"><span>Levy (ZIMRA Sch. 14 · 5%)</span><span class="v">– ${money(payout * 0.05)}</span></div>
-          <div class="row gr"><span>Net payout</span><span class="v">${money(payout * 0.95)}</span></div>
+          <div class="row"><span>Total</span><span class="v">${money(payout)}</span></div>
+          <div class="row"><span>ZIMRA tax (Sch. 14 · 5%)</span><span class="v">– ${money(payout * 0.05)}</span></div>
+          <div class="row gr"><span>Supplier gets</span><span class="v">${money(payout * 0.95)}</span></div>
         </div>
 
         <div style="display:grid; gap: 8px; margin-top: 16px;">
           <button class="btn-big primary" id="in-confirm" ${(sup && i.weight && grade) ? '' : 'disabled'}>
-            <span data-icon="check" data-icon-size="15"></span> Confirm intake &amp; ${i.method === 'Cash' ? 'pay cash' : 'queue payout'}
+            <span data-icon="check" data-icon-size="15"></span> Save intake &amp; ${i.method === 'Cash' ? 'pay cash' : 'send to payouts'}
           </button>
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 8px;">
             <button class="btn-big ghost" id="in-print"><span data-icon="print" data-icon-size="14"></span> Print ticket</button>
@@ -1250,43 +1250,43 @@ function wireIntake() {
     const fake = 800 + Math.floor(Math.random() * 4200);
     state.intake.weight = fake;
     state.intake.weighLive = true;
-    toast('Weighbridge stable · ' + kg(fake), 'success');
+    toast('Weighbridge steady · ' + kg(fake), 'success');
     render();
   });
   const man = $('#in-manual'); if (man) man.addEventListener('click', () => {
-    const v = prompt('Manual weight override (kg)', state.intake.weight || '');
-    if (v != null && !isNaN(+v)) { state.intake.weight = Math.max(0, +v); state.intake.weighLive = false; render(); toast('Manual override recorded', 'warn'); }
+    const v = prompt('Type the weight by hand (kg)', state.intake.weight || '');
+    if (v != null && !isNaN(+v)) { state.intake.weight = Math.max(0, +v); state.intake.weighLive = false; render(); toast('Weight saved (typed by hand)', 'warn'); }
   });
   $$('[data-grade]').forEach(b => b.addEventListener('click', () => { state.intake.gradeId = b.dataset.grade; render(); }));
   $$('[data-method]').forEach(b => b.addEventListener('click', () => { state.intake.method = b.dataset.method; render(); }));
   const rj = $('#in-reject'); if (rj) rj.addEventListener('click', () => openRejectModal());
   const ph = $('#in-photo'); if (ph) ph.addEventListener('click', () => {
     state.intake.photos.push(true);
-    toast('Photo captured', 'success');
+    toast('Photo taken', 'success');
     render();
   });
   $$('[data-rm-photo]').forEach(b => b.addEventListener('click', () => {
     state.intake.photos.splice(+b.dataset.rmPhoto, 1); render();
   }));
   const cf = $('#in-confirm'); if (cf) cf.addEventListener('click', () => confirmIntake());
-  const pr = $('#in-print'); if (pr) pr.addEventListener('click', () => toast('Ticket queued to receipt printer'));
+  const pr = $('#in-print'); if (pr) pr.addEventListener('click', () => toast('Ticket sent to the receipt printer'));
   const sm = $('#in-sms'); if (sm) sm.addEventListener('click', () => toast('SMS sent to supplier', 'success'));
 }
 
 function openRejectModal() {
-  const reasons = ['Wet load · cannot weigh', 'Contaminated · oil/asbestos', 'Stolen-goods indicator', 'Wrong yard · belongs at Mutare', 'Other'];
+  const reasons = ['Wet load · can\'t weigh', 'Dirty · oil or asbestos', 'Looks stolen', 'Wrong yard · should go to Mutare', 'Other'];
   let picked = null;
   function paint() {
     openModal(`
       <div class="modal" onclick="event.stopPropagation()">
-        <h3>Reject this load</h3>
-        <p class="sub">Logged against the supplier ledger. Supervisor PIN required.</p>
+        <h3>Turn this load away</h3>
+        <p class="sub">Goes onto the supplier's record. Boss PIN needed.</p>
         <div style="display:flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
           ${reasons.map(r => `<button class="grade-tile ${picked === r ? 'on' : ''}" data-r="${r}" style="padding: 8px 12px;"><span class="gn">${r}</span></button>`).join('')}
         </div>
         <div class="acts">
           <button class="alt" data-cancel>Cancel</button>
-          <button class="ok" data-ok ${picked ? '' : 'disabled'}>Reject load</button>
+          <button class="ok" data-ok ${picked ? '' : 'disabled'}>Turn load away</button>
         </div>
       </div>
     `);
@@ -1295,9 +1295,9 @@ function openRejectModal() {
     m.querySelector('[data-cancel]').addEventListener('click', closeModal);
     m.querySelector('[data-ok]').addEventListener('click', () => {
       if (!picked) return;
-      openPinModal({ title: 'Supervisor PIN', sub: 'Confirm load rejection. Use 4321 for demo.', onAccept: () => {
+      openPinModal({ title: 'Boss PIN', sub: 'Confirm you are turning this load away. Use 4321 for demo.', onAccept: () => {
         state.intake.rejectReason = picked;
-        toast('Load rejected: ' + picked, 'warn'); render();
+        toast('Load turned away: ' + picked, 'warn'); render();
       }});
     });
   }
@@ -1312,10 +1312,10 @@ function confirmIntake() {
   const payout = grade.price * i.weight * 0.95;
   if (i.method === 'Cash') {
     state.cash.intakeId = 'IN-' + (2848 + Math.floor(Math.random() * 50));
-    toast('Intake confirmed · proceed to cash counter', 'success');
+    toast('Intake saved · take them to the cash counter', 'success');
     go('cash-payout');
   } else {
-    toast(`Intake confirmed · ${sup.name} · ${money(payout)} via ${i.method}`, 'success');
+    toast(`Intake saved · ${sup.name} · ${money(payout)} by ${i.method}`, 'success');
     state.intake = { step: 1, supplierId: null, search: '', weight: 0, weighLive: true, gradeId: null, rejectReason: null, photos: [], method: state.settings.defaultMethod };
     render();
   }
@@ -1332,11 +1332,11 @@ function renderSuppliers() {
     <div class="page">
       <div class="page-h">
         <div style="flex:1;">
-          <h2>Supplier ledger</h2>
-          <p class="lede">Look up any supplier, see lifetime intakes, payout history, and live disputes.</p>
+          <h2>Suppliers</h2>
+          <p class="lede">Look up any supplier. See all their past intakes, past payouts, and any open disputes.</p>
         </div>
         <div class="right">
-          <button class="btn-big primary" data-go="supplier-new"><span data-icon="plus" data-icon-size="14"></span> Register supplier</button>
+          <button class="btn-big primary" data-go="supplier-new"><span data-icon="plus" data-icon-size="14"></span> Sign up supplier</button>
         </div>
       </div>
       <div style="display:grid; grid-template-columns: 1fr 1.4fr; gap: 16px;">
@@ -1346,7 +1346,7 @@ function renderSuppliers() {
             <input id="sup-search" placeholder="Name or phone…" value="${escapeHtml(state.supplierSearch)}" autofocus />
           </div>
           <div class="supplier-pick" style="max-height: 520px;">
-            ${filtered.length === 0 ? `<div class="empty"><div class="lg" data-icon="user" data-icon-size="28"></div>No supplier matches.</div>` : ''}
+            ${filtered.length === 0 ? `<div class="empty"><div class="lg" data-icon="user" data-icon-size="28"></div>No supplier found.</div>` : ''}
             ${filtered.map(s => `
               <div class="sup-row ${state.supplierSel === s.id ? 'on' : ''}" data-pick="${s.id}">
                 <div class="av">${s.name.split(' ').map(p=>p[0]).slice(0,2).join('')}</div>
@@ -1373,24 +1373,24 @@ function renderSuppliers() {
             </div>
             <div class="stat-row" style="margin-bottom: 14px;">
               <div class="stat-tile"><div class="lbl">Visits</div><div class="v">${sel.visits}</div></div>
-              <div class="stat-tile"><div class="lbl">Lifetime kg</div><div class="v">${(sel.totalKg/1000).toFixed(1)} t</div></div>
+              <div class="stat-tile"><div class="lbl">Total kg to date</div><div class="v">${(sel.totalKg/1000).toFixed(1)} t</div></div>
               <div class="stat-tile brand"><div class="lbl">Last payout</div><div class="v">${money(sel.totalKg * 0.32 / sel.visits)}</div></div>
             </div>
-            <h3 style="font: 600 14px var(--font-sans); color: var(--text-strong); margin: 8px 0 10px;">Recent intakes</h3>
+            <h3 style="font: 600 14px var(--font-sans); color: var(--text-strong); margin: 8px 0 10px;">Latest intakes</h3>
             <table class="rep-table">
-              <thead><tr><th>Date</th><th>Grade</th><th class="num">kg</th><th class="num">$/kg</th><th class="num">Payout</th><th>Method</th></tr></thead>
+              <thead><tr><th>Date</th><th>Grade</th><th class="num">kg</th><th class="num">$/kg</th><th class="num">Payout</th><th>Pay by</th></tr></thead>
               <tbody>
                 ${TODAY_INTAKES.filter(t => t.sup === sel.id).map(t => {
                   const g = findGrade(t.grade);
                   return `<tr><td>${t.ts}</td><td>${escapeHtml(g.name)}</td><td class="num">${t.kg.toLocaleString()}</td><td class="num">${money(t.price)}</td><td class="num">${money(t.kg * t.price * 0.95)}</td><td>${t.method}</td></tr>`;
-                }).join('') || `<tr><td colspan="6" style="text-align:center; padding: 18px; color: var(--text-muted);">No intakes today.</td></tr>`}
+                }).join('') || `<tr><td colspan="6" style="text-align:center; padding: 18px; color: var(--text-muted);">No intakes from them today.</td></tr>`}
               </tbody>
             </table>
             <div style="display:flex; gap: 8px; margin-top: 18px;">
               <button class="btn-big ghost" id="sup-msg" style="flex:1;"><span data-icon="phone" data-icon-size="14"></span> Send SMS</button>
               <button class="btn-big primary" id="sup-intake" style="flex:1;"><span data-icon="plus" data-icon-size="14"></span> Start intake for ${sel.name.split(' ')[0]}</button>
             </div>
-          ` : `<div class="empty"><div class="lg" data-icon="user" data-icon-size="32"></div>Pick a supplier to see their full ledger.</div>`}
+          ` : `<div class="empty"><div class="lg" data-icon="user" data-icon-size="32"></div>Tap a supplier on the left to see their full record.</div>`}
         </div>
       </div>
     </div>
@@ -1412,21 +1412,21 @@ function renderSupplierNew() {
     <div class="page">
       <div class="page-h">
         <div style="flex:1;">
-          <h2>Register new supplier</h2>
-          <p class="lede">KYC light — name, ID number, phone &amp; EcoCash. Add EMA permit / ITF 263 for company suppliers.</p>
+          <h2>Sign up a new supplier</h2>
+          <p class="lede">Quick sign-up — name, ID number, phone, EcoCash. Add EMA permit and ITF 263 if it's a company.</p>
         </div>
         <button class="btn-big ghost" data-go="suppliers"><span data-icon="back" data-icon-size="13"></span> Back</button>
       </div>
       <div class="panel" style="max-width: 720px;">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-          <div class="field"><label style="font: 500 11.5px var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; display:block; margin-bottom: 6px;">Full name / Business name</label><input class="input" value="Munhumutapa Salvage" style="width:100%;" /></div>
-          <div class="field"><label style="font: 500 11.5px var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; display:block; margin-bottom: 6px;">National ID / BP number</label><input class="input" value="63-991242M63" style="width:100%;" /></div>
-          <div class="field"><label style="font: 500 11.5px var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; display:block; margin-bottom: 6px;">Phone (primary)</label><input class="input" value="0772 904 118" style="width:100%;" /></div>
-          <div class="field"><label style="font: 500 11.5px var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; display:block; margin-bottom: 6px;">EcoCash / OneMoney</label><input class="input" value="0772 904 118" style="width:100%;" /></div>
-          <div class="field" style="grid-column: 1/-1;"><label style="font: 500 11.5px var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; display:block; margin-bottom: 6px;">Address / yard</label><input class="input" value="9 Coventry Rd, Workington, Harare" style="width:100%;" /></div>
+          <div class="field"><label style="font: 500 11.5px var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; display:block; margin-bottom: 6px;">Full name or business name</label><input class="input" value="Munhumutapa Salvage" style="width:100%;" /></div>
+          <div class="field"><label style="font: 500 11.5px var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; display:block; margin-bottom: 6px;">National ID or BP number</label><input class="input" value="63-991242M63" style="width:100%;" /></div>
+          <div class="field"><label style="font: 500 11.5px var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; display:block; margin-bottom: 6px;">Main phone</label><input class="input" value="0772 904 118" style="width:100%;" /></div>
+          <div class="field"><label style="font: 500 11.5px var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; display:block; margin-bottom: 6px;">EcoCash or OneMoney</label><input class="input" value="0772 904 118" style="width:100%;" /></div>
+          <div class="field" style="grid-column: 1/-1;"><label style="font: 500 11.5px var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; display:block; margin-bottom: 6px;">Address or yard</label><input class="input" value="9 Coventry Rd, Workington, Harare" style="width:100%;" /></div>
         </div>
 
-        <h3 style="margin: 22px 0 10px; font: 600 14px var(--font-sans); color: var(--text-strong);">Documents captured</h3>
+        <h3 style="margin: 22px 0 10px; font: 600 14px var(--font-sans); color: var(--text-strong);">Photos of their papers</h3>
         <div style="display:flex; gap: 12px; flex-wrap: wrap;">
           <div class="photo-chip has" style="width: 100px; height: 100px;">
             <span class="ph-ic" data-icon="qr" data-icon-size="28"></span>
@@ -1442,11 +1442,11 @@ function renderSupplierNew() {
           </button>
         </div>
 
-        <h3 style="margin: 22px 0 10px; font: 600 14px var(--font-sans); color: var(--text-strong);">Compliance flags</h3>
+        <h3 style="margin: 22px 0 10px; font: 600 14px var(--font-sans); color: var(--text-strong);">Papers check</h3>
         <div style="display:grid; gap: 8px;">
-          <div class="check-row done"><div class="box"><span data-icon="check" data-icon-size="12"></span></div><div><div class="nm">National ID matches government register</div></div></div>
-          <div class="check-row done"><div class="box"><span data-icon="check" data-icon-size="12"></span></div><div><div class="nm">EMA permit valid through Dec 2026</div></div></div>
-          <div class="check-row"><div class="box"></div><div><div class="nm">ITF 263 (tax clearance) on file</div><div class="sb">Optional for informal suppliers</div></div></div>
+          <div class="check-row done"><div class="box"><span data-icon="check" data-icon-size="12"></span></div><div><div class="nm">National ID matches the government record</div></div></div>
+          <div class="check-row done"><div class="box"><span data-icon="check" data-icon-size="12"></span></div><div><div class="nm">EMA permit good until Dec 2026</div></div></div>
+          <div class="check-row"><div class="box"></div><div><div class="nm">ITF 263 (tax clearance) on file</div><div class="sb">Not needed for walk-in suppliers</div></div></div>
         </div>
 
         <div style="display:flex; gap: 8px; margin-top: 22px; justify-content: flex-end;">
@@ -1458,8 +1458,8 @@ function renderSupplierNew() {
   `;
 }
 function wireSupplierNew() {
-  const sv = $('#sn-save'); if (sv) sv.addEventListener('click', () => { toast('Supplier "Munhumutapa Salvage" registered', 'success'); go('suppliers'); });
-  const d = $('#sn-doc'); if (d) d.addEventListener('click', () => toast('Document captured'));
+  const sv = $('#sn-save'); if (sv) sv.addEventListener('click', () => { toast('Supplier "Munhumutapa Salvage" signed up', 'success'); go('suppliers'); });
+  const d = $('#sn-doc'); if (d) d.addEventListener('click', () => toast('Photo taken'));
 }
 
 /* ============================================================
@@ -1476,23 +1476,23 @@ function renderPayouts() {
     <div class="page">
       <div class="page-h">
         <div style="flex:1;">
-          <h2>Payouts queue</h2>
-          <p class="lede">${queued.length} pending payouts grouped by method. Batch-release with supervisor PIN.</p>
+          <h2>Payouts waiting</h2>
+          <p class="lede">${queued.length} payouts still to send out, grouped by how they get paid. Send them all out at once with the boss PIN.</p>
         </div>
         <div class="right">
-          <button class="btn-big primary" id="pq-release-all"><span data-icon="check" data-icon-size="14"></span> Release all · PIN</button>
+          <button class="btn-big primary" id="pq-release-all"><span data-icon="check" data-icon-size="14"></span> Pay them all · PIN</button>
         </div>
       </div>
 
       <div class="stat-row">
-        <div class="stat-tile brand"><div class="lbl">Pending</div><div class="v">${money(queued.reduce((s,i)=>s+i.kg*i.price*0.95,0))}</div></div>
+        <div class="stat-tile brand"><div class="lbl">Still to pay</div><div class="v">${money(queued.reduce((s,i)=>s+i.kg*i.price*0.95,0))}</div></div>
         <div class="stat-tile"><div class="lbl">EcoCash</div><div class="v">${money((groups['EcoCash']||[]).reduce((s,i)=>s+i.kg*i.price*0.95,0))}</div></div>
         <div class="stat-tile"><div class="lbl">EFT / ZIPIT</div><div class="v">${money(((groups['EFT']||[]).concat(groups['ZIPIT']||[])).reduce((s,i)=>s+i.kg*i.price*0.95,0))}</div></div>
-        <div class="stat-tile"><div class="lbl">Released today</div><div class="v">${money(TODAY_INTAKES.filter(i=>i.status==='paid').reduce((s,i)=>s+i.kg*i.price*0.95,0))}</div></div>
+        <div class="stat-tile"><div class="lbl">Paid out today</div><div class="v">${money(TODAY_INTAKES.filter(i=>i.status==='paid').reduce((s,i)=>s+i.kg*i.price*0.95,0))}</div></div>
       </div>
 
       <div class="pq-grouping">
-        ${methods.length === 0 ? `<div class="panel"><div class="empty"><div class="lg" data-icon="check" data-icon-size="32"></div>Queue clear · all payouts released.</div></div>` : ''}
+        ${methods.length === 0 ? `<div class="panel"><div class="empty"><div class="lg" data-icon="check" data-icon-size="32"></div>All clear · everyone has been paid.</div></div>` : ''}
         ${methods.map(m => {
           const rows = groups[m];
           const total = rows.reduce((s,i)=>s+i.kg*i.price*0.95,0);
@@ -1500,9 +1500,9 @@ function renderPayouts() {
             <div class="pq-group">
               <div class="gh">
                 <span class="nm">${escapeHtml(m)}</span>
-                <span class="ct">${rows.length} pending</span>
+                <span class="ct">${rows.length} waiting</span>
                 <span class="total">${money(total)}</span>
-                <button data-release-grp="${m}">Release group · PIN</button>
+                <button data-release-grp="${m}">Pay this group · PIN</button>
               </div>
               ${rows.map(r => {
                 const sup = findSupplier(r.sup);
@@ -1530,16 +1530,16 @@ function wirePayouts() {
   $$('[data-pq-sel]').forEach(c => c.addEventListener('change', e => { state.payouts.selected[c.dataset.pqSel] = e.target.checked; render(); }));
   $$('[data-release-grp]').forEach(b => b.addEventListener('click', () => {
     const m = b.dataset.releaseGrp;
-    openPinModal({ title: 'Release ' + m + ' payouts', sub: 'Supervisor PIN required. Use 4321 for demo.', onAccept: () => {
+    openPinModal({ title: 'Pay out the ' + m + ' group', sub: 'Boss PIN needed. Use 4321 for demo.', onAccept: () => {
       TODAY_INTAKES.filter(i => i.method === m && i.status === 'queued').forEach(i => i.status = 'paid');
-      toast(m + ' batch released', 'success');
+      toast(m + ' group paid', 'success');
       render();
     }});
   }));
   const ra = $('#pq-release-all'); if (ra) ra.addEventListener('click', () => {
-    openPinModal({ title: 'Release all payouts', sub: 'Push to ' + TODAY_INTAKES.filter(i=>i.status==='queued').length + ' suppliers. Use 4321.', onAccept: () => {
+    openPinModal({ title: 'Pay everyone waiting', sub: 'Send to ' + TODAY_INTAKES.filter(i=>i.status==='queued').length + ' suppliers. Use 4321.', onAccept: () => {
       TODAY_INTAKES.forEach(i => { if (i.status === 'queued') i.status = 'paid'; });
-      toast('All payouts released', 'success');
+      toast('Everyone paid', 'success');
       render();
     }});
   });
@@ -1556,14 +1556,14 @@ function renderCashPayout() {
       <div class="page-h">
         <div style="flex:1;">
           <h2>Cash payout · ${state.cash.intakeId}</h2>
-          <p class="lede">Sipho Moyo · Aluminium cans · 418 kg · ${money(due)} owed.</p>
+          <p class="lede">Sipho Moyo · Aluminium cans · 418 kg · pay ${money(due)}.</p>
         </div>
         <button class="btn-big ghost" data-go="intake"><span data-icon="back" data-icon-size="13"></span> Back to intake</button>
       </div>
 
       <div style="display:grid; grid-template-columns: 1.4fr 1fr; gap: 16px;">
         <div class="panel">
-          <h3>Count out the cash <span class="meta">${money(cashTotal)} counted</span></h3>
+          <h3>Count out the cash <span class="meta">${money(cashTotal)} so far</span></h3>
           <div class="denom-grid">
             ${DENOMS.map(d => {
               const c = state.cash.counted[String(d.v)] || 0;
@@ -1583,15 +1583,15 @@ function renderCashPayout() {
           <div style="margin-top: 16px; padding: 12px 16px; background: ${cashTotal >= due ? 'var(--tone-success-bg)' : 'var(--tone-warn-bg)'}; color: ${cashTotal >= due ? 'var(--tone-success)' : 'var(--tone-warn)'}; border-radius: 10px; display: flex; align-items: center; gap: 12px;">
             <span data-icon="${cashTotal >= due ? 'check' : 'info'}" data-icon-size="18"></span>
             <div style="flex:1;">
-              <div style="font: 600 14px/1.2 var(--font-sans);">${cashTotal >= due ? 'Counted match — ready to pay' : 'Short by ' + money(due - cashTotal)}</div>
-              <div style="font: 12.5px/1.3 var(--font-sans); opacity: 0.85; margin-top: 2px;">Due ${money(due)} · Counted ${money(cashTotal)}</div>
+              <div style="font: 600 14px/1.2 var(--font-sans);">${cashTotal >= due ? 'Count matches — ready to pay' : 'Short by ' + money(due - cashTotal)}</div>
+              <div style="font: 12.5px/1.3 var(--font-sans); opacity: 0.85; margin-top: 2px;">Owed ${money(due)} · Counted ${money(cashTotal)}</div>
             </div>
           </div>
         </div>
 
         <div class="panel">
-          <h3>Supplier signature</h3>
-          <p style="font: 12.5px/1.5 var(--font-sans); color: var(--text-muted); margin: 0 0 12px;">Acknowledge receipt of ${money(due)}.</p>
+          <h3>Supplier signs</h3>
+          <p style="font: 12.5px/1.5 var(--font-sans); color: var(--text-muted); margin: 0 0 12px;">Signs that they got ${money(due)}.</p>
           <div class="sig-pad ${state.cash.signed ? 'signed' : ''}" id="sig-pad">
             ${state.cash.signed ? '' : 'Tap to sign'}
           </div>
@@ -1602,13 +1602,13 @@ function renderCashPayout() {
           <h3 style="margin-top: 18px;">Receipt</h3>
           <div class="payout-card" style="margin: 0;">
             <div class="row"><span>Intake</span><span class="v">${state.cash.intakeId}</span></div>
-            <div class="row"><span>Weight</span><span class="v">418 kg</span></div>
+            <div class="row"><span>Net weight</span><span class="v">418 kg</span></div>
             <div class="row"><span>Grade</span><span class="v">Aluminium</span></div>
-            <div class="row gr"><span>Cash out</span><span class="v">${money(due)}</span></div>
+            <div class="row gr"><span>Pay cash</span><span class="v">${money(due)}</span></div>
           </div>
 
           <button class="btn-big primary" id="cash-confirm" style="width:100%; margin-top: 14px;" ${cashTotal >= due && state.cash.signed ? '' : 'disabled'}>
-            <span data-icon="print" data-icon-size="15"></span> Print receipt &amp; release
+            <span data-icon="print" data-icon-size="15"></span> Print receipt &amp; hand over cash
           </button>
         </div>
       </div>
@@ -1625,7 +1625,7 @@ function wireCashPayout() {
   const sp = $('#sig-pad'); if (sp) sp.addEventListener('click', () => { state.cash.signed = true; render(); });
   const sc = $('#sig-clear'); if (sc) sc.addEventListener('click', () => { state.cash.signed = false; render(); });
   const cf = $('#cash-confirm'); if (cf) cf.addEventListener('click', () => {
-    toast('Cash receipt printed · paid out to supplier', 'success');
+    toast('Cash receipt printed · supplier paid', 'success');
     state.cash = { intakeId: 'IN-2844', counted: { '20': 18, '10': 5, '5': 1, '2': 1, '1': 1 }, signed: false };
     go('intake');
   });
@@ -1639,8 +1639,8 @@ function renderStockpile() {
     <div class="page">
       <div class="page-h">
         <div style="flex:1;">
-          <h2>Stockpile across yards</h2>
-          <p class="lede">Per-grade totals at Workington · Greendale · Mutare. Movement log shows the last 24h.</p>
+          <h2>Stockpile across the yards</h2>
+          <p class="lede">Totals for each grade at Workington · Greendale · Mutare. Movements list shows the last 24 hours.</p>
         </div>
         <div class="right">
           <button class="btn-big ghost"><span data-icon="download" data-icon-size="14"></span> Export</button>
@@ -1664,9 +1664,9 @@ function renderStockpile() {
       </div>
 
       <div class="panel" style="margin-top: 20px;">
-        <h3>Movements · last 24h <span class="meta">14 events</span></h3>
+        <h3>Movements · last 24 hours <span class="meta">14 items</span></h3>
         <table class="move-table">
-          <thead><tr><th>Time</th><th>Grade</th><th>Direction</th><th>From → To</th><th class="num">kg</th><th>Ref</th></tr></thead>
+          <thead><tr><th>Time</th><th>Grade</th><th>In/Out</th><th>From → To</th><th class="num">kg</th><th>Ref</th></tr></thead>
           <tbody>
             <tr><td>13:55</td><td>Mixed</td><td><span class="badge in">Intake</span></td><td>Bhebhe Hardware → Workington</td><td class="num">840</td><td>IN-2848</td></tr>
             <tr><td>13:08</td><td>Steel C</td><td><span class="badge in">Intake</span></td><td>Mhondoro Salvage Coop → Workington</td><td class="num">3,640</td><td>IN-2847</td></tr>
@@ -1700,7 +1700,7 @@ function renderDispatch() {
       <div class="page-h">
         <div style="flex:1;">
           <h2>Bulk-sale dispatch</h2>
-          <p class="lede">Pick a stockpile and a buyer. Run all pre-dispatch checks before printing the weighbridge ticket.</p>
+          <p class="lede">Pick a stockpile and a buyer. Tick off every check before you print the weighbridge ticket.</p>
         </div>
       </div>
 
@@ -1714,7 +1714,7 @@ function renderDispatch() {
                 return `
                   <button class="grade-tile ${d.gradeId === s.grade ? 'on' : ''}" data-dgrade="${s.grade}" style="padding: 12px;">
                     <span class="gn">${escapeHtml(g.name)}</span>
-                    <span class="gp">${(s.kg/1000).toFixed(1)} t available</span>
+                    <span class="gp">${(s.kg/1000).toFixed(1)} t on hand</span>
                   </button>
                 `;
               }).join('')}
@@ -1737,30 +1737,30 @@ function renderDispatch() {
                 <div class="input"><span data-icon="user" data-icon-size="14"></span><input value="${escapeHtml(d.buyer)}" id="d-buyer" /></div>
               </div>
               <div class="field" style="margin:0;">
-                <label style="font: 500 11.5px var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; display:block; margin-bottom: 6px;">Truck reg</label>
+                <label style="font: 500 11.5px var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; display:block; margin-bottom: 6px;">Truck plate</label>
                 <div class="input"><span data-icon="forward" data-icon-size="14"></span><input value="${escapeHtml(d.truck)}" id="d-truck" /></div>
               </div>
             </div>
           </div>
 
           <div class="panel">
-            <h3>3 · Pre-dispatch checks</h3>
+            <h3>3 · Checks before the truck leaves</h3>
             <div class="checklist">
               <div class="check-row ${d.checks.weight ? 'done' : ''}" data-chk="weight">
                 <div class="box"><span data-icon="check" data-icon-size="12"></span></div>
-                <div><div class="nm">Loaded weight matches ticket</div><div class="sb">${loadKg.toLocaleString()} kg · weighbridge B2 stable</div></div>
+                <div><div class="nm">Loaded weight matches the ticket</div><div class="sb">${loadKg.toLocaleString()} kg · weighbridge B2 steady</div></div>
               </div>
               <div class="check-row ${d.checks.photos ? 'done' : ''}" data-chk="photos">
                 <div class="box"><span data-icon="check" data-icon-size="12"></span></div>
-                <div><div class="nm">Load photos captured (4 angles)</div><div class="sb">Required for insurance &amp; ZIMRA</div></div>
+                <div><div class="nm">Load photos taken (4 sides)</div><div class="sb">Needed for insurance and ZIMRA</div></div>
               </div>
               <div class="check-row ${d.checks.papers ? 'done' : ''}" data-chk="papers">
                 <div class="box"><span data-icon="check" data-icon-size="12"></span></div>
-                <div><div class="nm">ZIMRA Schedule 14 paperwork</div><div class="sb">Export-grade scrap declaration</div></div>
+                <div><div class="nm">ZIMRA Schedule 14 papers</div><div class="sb">Scrap-for-export declaration</div></div>
               </div>
               <div class="check-row ${d.checks.ema ? 'done' : ''}" data-chk="ema">
                 <div class="box"><span data-icon="check" data-icon-size="12"></span></div>
-                <div><div class="nm">EMA permit copy in cab</div><div class="sb">Required at Beitbridge border</div></div>
+                <div><div class="nm">EMA permit copy in the truck cab</div><div class="sb">Needed at the Beitbridge border</div></div>
               </div>
             </div>
           </div>
@@ -1777,15 +1777,15 @@ function renderDispatch() {
             <div style="display:grid; gap: 6px;">
               <div class="setting-row" style="padding: 6px 0; border: 0;"><div class="nm" style="color: var(--text-muted); font-weight: 500;">Grade</div><div class="ctrl" style="font: 500 13.5px var(--font-sans); color: var(--text-strong);">${escapeHtml(grade.name)}</div></div>
               <div class="setting-row" style="padding: 6px 0; border: 0;"><div class="nm" style="color: var(--text-muted); font-weight: 500;">Net weight</div><div class="ctrl" style="font: 500 13.5px var(--font-mono); color: var(--text-strong);">${loadKg.toLocaleString()} kg</div></div>
-              <div class="setting-row" style="padding: 6px 0; border: 0;"><div class="nm" style="color: var(--text-muted); font-weight: 500;">$/kg (bulk)</div><div class="ctrl" style="font: 500 13.5px var(--font-mono); color: var(--text-strong);">${money(grade.price * 1.15)}</div></div>
+              <div class="setting-row" style="padding: 6px 0; border: 0;"><div class="nm" style="color: var(--text-muted); font-weight: 500;">$/kg (bulk price)</div><div class="ctrl" style="font: 500 13.5px var(--font-mono); color: var(--text-strong);">${money(grade.price * 1.15)}</div></div>
             </div>
             <div class="payout-card">
               <div class="row gr"><span>Invoice total</span><span class="v">${money(value)}</span></div>
             </div>
             <button class="btn-big primary" id="d-dispatch" style="width:100%; margin-top: 16px;" ${allChecked ? '' : 'disabled'}>
-              <span data-icon="forward" data-icon-size="15"></span> Print ticket &amp; release truck
+              <span data-icon="forward" data-icon-size="15"></span> Print ticket &amp; let the truck go
             </button>
-            ${!allChecked ? `<p style="font: 12.5px/1.4 var(--font-sans); color: var(--tone-warn); margin-top: 8px; text-align: center;">Complete all checks before release.</p>` : ''}
+            ${!allChecked ? `<p style="font: 12.5px/1.4 var(--font-sans); color: var(--tone-warn); margin-top: 8px; text-align: center;">Tick every check before the truck leaves.</p>` : ''}
           </div>
         </div>
       </div>
@@ -1799,8 +1799,8 @@ function wireDispatch() {
   const bd = $('#d-buyer'); if (bd) bd.addEventListener('input', e => { state.dispatch.buyer = e.target.value; });
   const td = $('#d-truck'); if (td) td.addEventListener('input', e => { state.dispatch.truck = e.target.value; });
   const ds = $('#d-dispatch'); if (ds) ds.addEventListener('click', () => {
-    openPinModal({ title: 'Supervisor release', sub: 'Confirm bulk dispatch. Use 4321 for demo.', onAccept: () => {
-      toast('Dispatch released · truck cleared to Beitbridge', 'success');
+    openPinModal({ title: 'Boss sign-off', sub: 'Confirm the bulk dispatch. Use 4321 for demo.', onAccept: () => {
+      toast('Dispatch done · truck cleared for Beitbridge', 'success');
       go('stockpile');
     }});
   });
@@ -1829,8 +1829,8 @@ function renderReports() {
     <div class="page">
       <div class="page-h">
         <div style="flex:1;">
-          <h2>Daily totals · Tuesday 3 June</h2>
-          <p class="lede">By grade, by supplier, by method. Variance vs the 45 t shift target.</p>
+          <h2>Day totals · Tuesday 3 June</h2>
+          <p class="lede">By grade, by supplier, by pay method. Difference vs the 45 t shift target.</p>
         </div>
         <div class="right">
           <button class="btn-big ghost"><span data-icon="download" data-icon-size="14"></span> Export CSV</button>
@@ -1840,7 +1840,7 @@ function renderReports() {
 
       <div class="stat-row">
         <div class="stat-tile brand"><div class="lbl">Total intake</div><div class="v">${(totalKg/1000).toFixed(1)} t</div><div class="delta ${variance >= 0 ? 'up':'dn'}">${variance >= 0 ? '+' : ''}${(variance/1000).toFixed(1)} t vs target</div></div>
-        <div class="stat-tile"><div class="lbl">Payout total (net)</div><div class="v">${money(totalVal*0.95)}</div></div>
+        <div class="stat-tile"><div class="lbl">Paid out (after tax)</div><div class="v">${money(totalVal*0.95)}</div></div>
         <div class="stat-tile"><div class="lbl">Intakes</div><div class="v">${TODAY_INTAKES.length}</div></div>
         <div class="stat-tile"><div class="lbl">Suppliers seen</div><div class="v">${new Set(TODAY_INTAKES.map(i=>i.sup)).size}</div></div>
       </div>
@@ -1864,9 +1864,9 @@ function renderReports() {
           </table>
         </div>
         <div class="panel">
-          <h3>By payment method</h3>
+          <h3>By pay method</h3>
           <table class="rep-table">
-            <thead><tr><th>Method</th><th class="num">Net $</th><th>Share</th></tr></thead>
+            <thead><tr><th>Method</th><th class="num">Paid $</th><th>Share</th></tr></thead>
             <tbody>
               ${Object.entries(byMethod).sort((a,b)=>b[1]-a[1]).map(([m, v]) => `
                 <tr>
@@ -1910,8 +1910,8 @@ function renderDisputes() {
     <div class="page">
       <div class="page-h">
         <div style="flex:1;">
-          <h2>Disputes inbox</h2>
-          <p class="lede">${open.length} open · supervisor PIN required to resolve. Decisions go to the audit log.</p>
+          <h2>Disputes</h2>
+          <p class="lede">${open.length} open · boss PIN needed to close one. Every decision goes onto the activity trail.</p>
         </div>
       </div>
       <div style="display:grid; grid-template-columns: 1fr 1.3fr; gap: 16px;">
@@ -1930,7 +1930,7 @@ function renderDisputes() {
               </div>
             `;
           }).join('')}
-          <div style="padding: 14px 16px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); font: 600 13px var(--font-sans); color: var(--text-muted);">Resolved · ${resolved.length}</div>
+          <div style="padding: 14px 16px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); font: 600 13px var(--font-sans); color: var(--text-muted);">Closed · ${resolved.length}</div>
           ${resolved.map(d => {
             const s = findSupplier(d.sup);
             return `
@@ -1940,7 +1940,7 @@ function renderDisputes() {
                   <div class="nm">${escapeHtml(d.reason)} · ${escapeHtml(s.name)}</div>
                   <div class="sb">${d.id} · ${d.intake} · ${d.opened}</div>
                 </div>
-                <span class="stat">Resolved</span>
+                <span class="stat">Closed</span>
               </div>
             `;
           }).join('')}
@@ -1955,12 +1955,12 @@ function renderDisputes() {
               <div class="stat-tile"><div class="lbl">Opened</div><div class="v" style="font-size: 15px; font-family: var(--font-sans);">${escapeHtml(sel.opened)}</div></div>
               <div class="stat-tile"><div class="lbl">Status</div><div class="v" style="font-size: 15px; font-family: var(--font-sans); color: ${sel.status==='open'?'var(--tone-warn)':'var(--tone-success)'}">${sel.status}</div></div>
             </div>
-            <div class="field"><label style="font: 500 11.5px var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; display:block; margin-bottom: 6px;">Resolution notes</label><textarea class="input" style="height: 80px; padding: 10px 12px; width: 100%; box-sizing: border-box;" placeholder="Re-weighed at second bridge, confirmed 840 kg. Photos attached."></textarea></div>
+            <div class="field"><label style="font: 500 11.5px var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; display:block; margin-bottom: 6px;">Notes on how it was sorted</label><textarea class="input" style="height: 80px; padding: 10px 12px; width: 100%; box-sizing: border-box;" placeholder="Weighed again on the second bridge — 840 kg confirmed. Photos attached."></textarea></div>
             <div style="display:flex; gap: 8px; margin-top: 12px;">
               <button class="btn-big ghost" id="dp-side" style="flex:1;">Side with supplier</button>
-              <button class="btn-big primary" id="dp-resolve" style="flex:1;">Resolve · supervisor PIN</button>
+              <button class="btn-big primary" id="dp-resolve" style="flex:1;">Close it · boss PIN</button>
             </div>
-          ` : `<div class="empty"><div class="lg" data-icon="info" data-icon-size="32"></div>Pick a dispute on the left to review.</div>`}
+          ` : `<div class="empty"><div class="lg" data-icon="info" data-icon-size="32"></div>Tap a dispute on the left to look it over.</div>`}
         </div>
       </div>
     </div>
@@ -1968,11 +1968,11 @@ function renderDisputes() {
 }
 function wireDisputes() {
   $$('[data-disp]').forEach(b => b.addEventListener('click', () => { state.disputeSel = b.dataset.disp; render(); }));
-  const ds = $('#dp-side'); if (ds) ds.addEventListener('click', () => toast('Adjustment recorded · supplier credited', 'success'));
-  const dr = $('#dp-resolve'); if (dr) dr.addEventListener('click', () => openPinModal({ title: 'Supervisor PIN', sub: 'Authorize dispute resolution. Use 4321.', onAccept: () => {
+  const ds = $('#dp-side'); if (ds) ds.addEventListener('click', () => toast('Fix recorded · supplier credited', 'success'));
+  const dr = $('#dp-resolve'); if (dr) dr.addEventListener('click', () => openPinModal({ title: 'Boss PIN', sub: 'Sign off on closing this dispute. Use 4321.', onAccept: () => {
     const d = DISPUTES.find(x => x.id === state.disputeSel);
     if (d) d.status = 'resolved';
-    toast('Dispute resolved · ' + state.disputeSel, 'success');
+    toast('Dispute closed · ' + state.disputeSel, 'success');
     render();
   }}));
 }

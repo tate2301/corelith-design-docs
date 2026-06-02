@@ -1513,17 +1513,17 @@ function isMobile() { return window.innerWidth <= 720; }
 
 const NAV = [
   { group: 'Sell',     route: 'sale',     label: 'New sale',      icon: 'plus' },
-  { group: 'Sell',     route: 'item',     label: 'Item lookup',   icon: 'search' },
+  { group: 'Sell',     route: 'item',     label: 'Find an item',  icon: 'search' },
   { group: 'Sell',     route: 'customer', label: 'Customers',     icon: 'user' },
-  { group: 'Sell',     route: 'parked',   label: 'Parked sales',  icon: 'folder' },
-  { group: 'Reverse',  route: 'refund',   label: 'Refund',        icon: 'forward' },
-  { group: 'Reverse',  route: 'void-receipt', label: 'Void receipt', icon: 'x' },
-  { group: 'Cash',     route: 'cash-drop',label: 'Cash drop',     icon: 'download' },
+  { group: 'Sell',     route: 'parked',   label: 'Saved sales',   icon: 'folder' },
+  { group: 'Returns',  route: 'refund',   label: 'Refund',        icon: 'forward' },
+  { group: 'Returns',  route: 'void-receipt', label: 'Cancel a sale', icon: 'x' },
+  { group: 'Cash',     route: 'cash-drop',label: 'Move cash',     icon: 'download' },
   { group: 'Cash',     route: 'cashup',   label: 'Cash-up',       icon: 'wallet' },
   { group: 'Reports',  route: 'my-reports', label: 'My day',       icon: 'chart' },
-  { group: 'Reports',  route: 'z-report', label: 'Z-report',      icon: 'receipt' },
-  { group: 'Reports',  route: 'audit',    label: 'Audit log',     icon: 'list' },
-  { group: 'System',   route: 'offline-queue', label: 'Offline queue', icon: 'wifi' },
+  { group: 'Reports',  route: 'z-report', label: 'End-of-day report', icon: 'receipt' },
+  { group: 'Reports',  route: 'audit',    label: 'Activity log',  icon: 'list' },
+  { group: 'System',   route: 'offline-queue', label: 'No-internet queue', icon: 'wifi' },
   { group: 'System',   route: 'settings', label: 'Settings',      icon: 'settings' },
   { group: 'System',   route: 'help',     label: 'Help',          icon: 'info' },
 ];
@@ -1624,7 +1624,7 @@ function openPinModal({ title, sub, onAccept, validPin = '4321' }) {
         <div class="otp" role="group" aria-label="4-digit PIN">
           ${[0,1,2,3].map(i => `<input type="password" inputmode="numeric" maxlength="1" autocomplete="one-time-code" data-d="${i}" value="${pin[i] || ''}" aria-label="Digit ${i+1}" ${error ? 'aria-invalid="true"' : ''} />`).join('')}
         </div>
-        ${error ? `<div class="pin-err">Incorrect PIN. Try again.</div>` : ''}
+        ${error ? `<div class="pin-err">Wrong PIN. Try again.</div>` : ''}
         <div class="acts" style="margin-top: 14px;">
           <button class="btn btn-secondary" style="flex:1; justify-content:center;" data-cancel>Cancel</button>
         </div>
@@ -1665,8 +1665,8 @@ function openDiscountModal() {
   function paint() {
     openModal(`
       <div class="modal" onclick="event.stopPropagation()">
-        <h3>Apply discount</h3>
-        <p class="sub">Reduces the subtotal before tax. Manager-tracked.</p>
+        <h3>Give a discount</h3>
+        <p class="sub">Takes money off the subtotal, before tax. The manager will see this.</p>
         <div class="row">
           <div class="seg">
             <button class="${type==='pct'?'on':''}" data-t="pct">Percent</button>
@@ -1679,7 +1679,7 @@ function openDiscountModal() {
         </div>
         <div class="acts">
           <button class="alt" data-clear>Remove</button>
-          <button class="ok" data-ok>Apply</button>
+          <button class="ok" data-ok>Give discount</button>
         </div>
       </div>
     `);
@@ -1694,7 +1694,7 @@ function openDiscountModal() {
       if (v <= 0) { state.cart.discount = null; }
       else state.cart.discount = { type, value: v };
       closeModal(); render();
-      toast(v > 0 ? 'Discount applied' : 'Discount removed', 'success');
+      toast(v > 0 ? 'Discount given' : 'Discount removed', 'success');
     });
     modal.querySelector('[data-clear]').addEventListener('click', () => {
       state.cart.discount = null; closeModal(); render();
@@ -1750,9 +1750,9 @@ function render() {
   const hb = $('#help-btn'); if (hb) hb.addEventListener('click', () => go('help'));
   const sw = $('#switch-user'); if (sw) sw.addEventListener('click', () => {
     openConfirmModal({
-      title: 'Switch user?', sub: 'Sign out and return to the cashier picker. Any cart in progress will be parked.',
+      title: 'Switch cashier?', sub: 'Signs you out and goes back to the cashier list. If a sale is in progress, it will be saved for later.',
       okLabel: 'Sign out', onOk: () => {
-        if (state.cart.lines.length > 0) parkCurrentSale('Auto-parked on user switch');
+        if (state.cart.lines.length > 0) parkCurrentSale('Saved when switching cashier');
         logAudit('shift', `Signed out: ${state.cashier.name}`);
         state.cashier = null; render();
       }
@@ -1764,19 +1764,19 @@ function renderOfflineBanner() {
   return `
     <div class="offline-banner">
       <span data-icon="wifi" data-icon-size="14"></span>
-      <strong>Offline mode</strong>
-      <span class="badge">${state.pendingQueue.length} queued</span>
-      <span>Transactions are saved locally and will sync when back online.</span>
+      <strong>No internet</strong>
+      <span class="badge">${state.pendingQueue.length} waiting</span>
+      <span>Sales are saved on this device and will send to the cloud once you're back online.</span>
       <span class="spacer"></span>
-      <button id="ob-queue">View queue</button>
+      <button id="ob-queue">See what's waiting</button>
     </div>
   `;
 }
 
 function confirmReset() {
   openConfirmModal({
-    title: 'Reset the demo?', sub: 'Clears persisted state — shift, cart, audit log, settings, parked sales, queue.',
-    okLabel: 'Reset everything', danger: true,
+    title: 'Start the demo over?', sub: 'Wipes everything saved in this browser — shift, cart, activity log, settings, saved sales, queue.',
+    okLabel: 'Start over', danger: true,
     onOk: () => resetDemo(),
   });
 }
@@ -1803,6 +1803,7 @@ const MOBILE_TABS = [
   { route: 'refund', label: 'Refund', icon: 'forward' },
   { route: 'my-reports', label: 'My day', icon: 'chart' },
 ];
+// (Bottom tabs kept short to fit on phone screens)
 function renderTabs() {
   return `
     <nav class="pd-tabs">
@@ -1851,8 +1852,8 @@ function renderSide() {
         `).join('')}
       `).join('')}
       <div class="pd-foot">
-        <strong>Frontend-only demo</strong>
-        State persists in this browser. <a href="#" id="reset-demo" style="color: rgba(255,255,255,0.75); text-decoration: underline;">Reset demo</a>
+        <strong>Demo only</strong>
+        Saved in your browser. <a href="#" id="reset-demo" style="color: rgba(255,255,255,0.75); text-decoration: underline;">Start over</a>
       </div>
     </aside>
   `;
@@ -1865,7 +1866,7 @@ function renderBar() {
   const initials = cashier.name.split(' ').map(p => p[0]).slice(0, 2).join('');
   return `
     <header class="pd-bar">
-      <button class="bar-btn" data-hx-nav-trigger title="Site menu" aria-label="Open site navigation">
+      <button class="bar-btn" data-hx-nav-trigger title="Website menu" aria-label="Open website menu">
         <span data-icon="menu" data-icon-size="14"></span>
       </button>
       <span class="br">${escapeHtml(state.settings.branch)}</span>
@@ -1874,20 +1875,20 @@ function renderBar() {
       <span class="sep">·</span>
       <span>Shift S-2841</span>
       ${state.forceOffline
-        ? '<span class="pill" style="background: var(--tone-warn-bg); color: var(--tone-warn);"><span class="dot"></span> Offline</span>'
+        ? '<span class="pill" style="background: var(--tone-warn-bg); color: var(--tone-warn);"><span class="dot"></span> No internet</span>'
         : '<span class="pill live"><span class="dot"></span> Online</span>'}
-      <span class="day-pill ${state.dayOpen ? 'open' : 'closed'}"><span class="dot"></span> Day ${state.dayOpen ? 'open' : 'closed'}</span>
+      <span class="day-pill ${state.dayOpen ? 'open' : 'closed'}"><span class="dot"></span> Till ${state.dayOpen ? 'open' : 'closed'}</span>
       ${cust ? `<span class="pill" style="background: var(--brand-soft); color: var(--brand-strong);"><span data-icon="user" data-icon-size="11"></span> ${escapeHtml(cust.name)}</span>` : ''}
       <span class="spacer"></span>
-      <button class="bar-btn" id="theme-toggle" title="${state.theme === 'dark' ? 'Switch to light' : 'Switch to dark'}" aria-label="Toggle theme" aria-pressed="${state.theme === 'dark'}">
+      <button class="bar-btn" id="theme-toggle" title="${state.theme === 'dark' ? 'Switch to light look' : 'Switch to dark look'}" aria-label="Switch light/dark look" aria-pressed="${state.theme === 'dark'}">
         ${themeIconSVG(state.theme)}
       </button>
       <button class="bar-btn" id="help-btn" title="Help &amp; shortcuts"><span data-icon="info" data-icon-size="14"></span></button>
-      <button class="bar-btn" id="fs-toggle" title="${isFs ? 'Exit fullscreen' : 'Fullscreen preview'}" aria-label="${isFs ? 'Exit fullscreen' : 'Fullscreen preview'}">
+      <button class="bar-btn" id="fs-toggle" title="${isFs ? 'Exit full screen' : 'Full screen'}" aria-label="${isFs ? 'Exit full screen' : 'Full screen'}">
         <span data-icon="${isFs ? 'x' : 'grid'}" data-icon-size="14"></span>
-        <span class="bar-btn-label">${isFs ? 'Exit' : 'Fullscreen'}</span>
+        <span class="bar-btn-label">${isFs ? 'Exit' : 'Full screen'}</span>
       </button>
-      <button class="bar-btn" id="switch-user" title="Switch user">
+      <button class="bar-btn" id="switch-user" title="Switch cashier">
         <span class="cashier" style="margin: 0;">
           <span class="bar-btn-label">${escapeHtml(cashier.name)} · ${cashier.role}</span>
           <span class="av">${initials}</span>
@@ -2002,9 +2003,9 @@ function renderSale() {
         <div class="cat-bar">
           <div class="srch">
             <span data-icon="search" data-icon-size="16"></span>
-            <input id="sale-search" placeholder="Search items or scan barcode…" value="${escapeHtml(state.search)}" />
+            <input id="sale-search" placeholder="Search for an item or scan a barcode…" value="${escapeHtml(state.search)}" />
           </div>
-          <button class="scan" id="sale-scan" title="Open item lookup"><span data-icon="qr" data-icon-size="16"></span></button>
+          <button class="scan" id="sale-scan" title="Find an item"><span data-icon="qr" data-icon-size="16"></span></button>
         </div>
         <div class="chips">
           ${CATEGORIES.map(c => `<button class="chip ${state.category === c.id ? 'on' : ''}" data-cat="${c.id}">${c.name}</button>`).join('')}
@@ -2015,16 +2016,16 @@ function renderSale() {
               <div class="sw">${escapeHtml(item.name.split(' ')[0].slice(0, 4))}</div>
               <div class="nm">${escapeHtml(item.name)}</div>
               <div class="pr">${money(item.price)}</div>
-              <div class="stk">${item.oos ? 'Out' : item.stock + ' in'}</div>
+              <div class="stk">${item.oos ? 'None' : item.stock + ' left'}</div>
             </button>
-          `).join('') : '<div style="grid-column: 1/-1; padding: 60px; text-align: center; color: var(--text-muted); font: 14px var(--font-sans);">No items match.</div>'}
+          `).join('') : '<div style="grid-column: 1/-1; padding: 60px; text-align: center; color: var(--text-muted); font: 14px var(--font-sans);">No items found.</div>'}
         </div>
       </section>
       ${lines.length > 0 ? `
         <div class="view-cart-bar" id="view-cart-bar">
           <div class="ic-bg"><span data-icon="bag" data-icon-size="16"></span></div>
           <div style="flex:1;">
-            <div class="lbl">View cart</div>
+            <div class="lbl">See cart</div>
             <div class="meta">${cartCount()} ${cartCount() === 1 ? 'item' : 'items'}${state.cart.customerId ? ' · ' + CUSTOMERS.find(c=>c.id===state.cart.customerId).name.split(' ')[0] : ''}</div>
           </div>
           <span class="v">${money(total)}</span>
@@ -2034,7 +2035,7 @@ function renderSale() {
         <div class="ch">
           <h3>Cart</h3>
           <span class="cnt">${cartCount()} ${cartCount() === 1 ? 'item' : 'items'}</span>
-          <button id="cart-clear" title="Clear cart" ${lines.length === 0 ? 'disabled' : ''}><span data-icon="x" data-icon-size="14"></span></button>
+          <button id="cart-clear" title="Empty cart" ${lines.length === 0 ? 'disabled' : ''}><span data-icon="x" data-icon-size="14"></span></button>
           <button class="close-sheet" id="close-sheet" title="Close" style="display: none;"><span data-icon="x" data-icon-size="14"></span></button>
         </div>
         <div class="cust" id="cust-link">
@@ -2043,7 +2044,7 @@ function renderSale() {
             <div><div class="nm">${escapeHtml(cust.name)}</div><div class="sb">${escapeHtml(cust.phone)} · ${cust.loyalty} pts</div></div>
           ` : `
             <span class="av"><span data-icon="user" data-icon-size="14"></span></span>
-            <div><div class="nm" style="color: var(--text-muted);">Walk-in customer</div><div class="sb">Tap to attach</div></div>
+            <div><div class="nm" style="color: var(--text-muted);">Walk-in customer</div><div class="sb">Tap to add one</div></div>
           `}
           <span class="ar" data-icon="chright" data-icon-size="14"></span>
         </div>
@@ -2051,20 +2052,20 @@ function renderSale() {
           ${lines.length === 0 ? `
             <div class="empty">
               <div class="lg" data-icon="bag" data-icon-size="32"></div>
-              <div>No items yet.</div>
-              <div style="margin-top:6px; font-size: 11.5px;">Tap any tile to begin.</div>
+              <div>Cart is empty.</div>
+              <div style="margin-top:6px; font-size: 11.5px;">Tap any item to add it.</div>
             </div>
           ` : lines.map(l => `
             <div class="line ${l.voided ? 'voided' : ''}">
               <div class="nm">${escapeHtml(l.name)}</div>
               <div class="total">${money(l.qty * l.price)}</div>
               <div class="meta">${l.sku} · ${money(l.price)}</div>
-              ${l.voided ? `<div class="ctrl"><span style="font: 500 11px var(--font-sans); color: var(--tone-danger);">Voided</span></div>` : `
+              ${l.voided ? `<div class="ctrl"><span style="font: 500 11px var(--font-sans); color: var(--tone-danger);">Removed</span></div>` : `
                 <div class="ctrl">
                   <button data-dec="${l.id}">−</button>
                   <span class="q">${l.qty}</span>
                   <button data-inc="${l.id}">+</button>
-                  <span class="more" data-void="${l.id}" title="Void line"><span data-icon="x" data-icon-size="12"></span></span>
+                  <span class="more" data-void="${l.id}" title="Remove this item"><span data-icon="x" data-icon-size="12"></span></span>
                 </div>
               `}
             </div>
@@ -2088,10 +2089,10 @@ function renderSale() {
         ` : ''}
         <div class="acts">
           <button id="act-disc" ${lines.length === 0 ? 'disabled' : ''}><span data-icon="tag" data-icon-size="12"></span> Discount</button>
-          <button id="act-park" ${lines.length === 0 ? 'disabled' : ''}><span data-icon="folderx" data-icon-size="12"></span> Park</button>
+          <button id="act-park" ${lines.length === 0 ? 'disabled' : ''}><span data-icon="folderx" data-icon-size="12"></span> Save for later</button>
         </div>
         <button class="charge" id="act-charge" ${lines.length === 0 ? 'disabled' : ''}>
-          <span>Charge</span>
+          <span>Take payment</span>
           <span class="v">${money(total)}</span>
         </button>
       </aside>
@@ -2108,10 +2109,10 @@ function wireSale() {
   const inp = $('#sale-search');
   if (inp) inp.addEventListener('input', (e) => { state.search = e.target.value; render(); setTimeout(() => { const i = $('#sale-search'); if (i) { i.focus(); i.setSelectionRange(state.search.length, state.search.length); } }, 0); });
   const scan = $('#sale-scan'); if (scan) scan.addEventListener('click', () => go('item'));
-  const cclr = $('#cart-clear'); if (cclr) cclr.addEventListener('click', () => { if (state.cart.lines.length === 0) return; clearCart(); toast('Cart cleared'); });
+  const cclr = $('#cart-clear'); if (cclr) cclr.addEventListener('click', () => { if (state.cart.lines.length === 0) return; clearCart(); toast('Cart emptied'); });
   const cl = $('#cust-link'); if (cl) cl.addEventListener('click', () => go('customer'));
   const ad = $('#act-disc'); if (ad) ad.addEventListener('click', openDiscountModal);
-  const ap = $('#act-park'); if (ap) ap.addEventListener('click', () => { toast('Sale parked for later', 'success'); clearCart(); });
+  const ap = $('#act-park'); if (ap) ap.addEventListener('click', () => { toast('Sale saved for later', 'success'); clearCart(); });
   const ac = $('#act-charge'); if (ac) ac.addEventListener('click', () => { state.tender = { method: 'cash', received: 0, processing: false }; go('tender'); });
   const de = $('#disc-edit'); if (de) de.addEventListener('click', openDiscountModal);
 }
@@ -2124,8 +2125,8 @@ function openVoidFlow(itemId) {
   function paint() {
     openModal(`
       <div class="modal" onclick="event.stopPropagation()">
-        <h3>Void "${escapeHtml(line.name)}"?</h3>
-        <p class="sub">Choose a reason. Supervisor PIN required.</p>
+        <h3>Remove "${escapeHtml(line.name)}"?</h3>
+        <p class="sub">Pick a reason. A manager needs to approve this with their PIN.</p>
         <div class="row" style="flex-wrap: wrap;">
           ${reasons.map(r => `<button class="chip ${reason === r ? 'on' : ''}" data-r="${r}" style="padding: 6px 12px; border-radius: 9999px; background: ${reason===r?'var(--brand)':'var(--surface-muted)'}; color: ${reason===r?'#fff':'var(--text-strong)'}; font: 500 12px var(--font-sans); cursor: pointer;">${r}</button>`).join('')}
         </div>
@@ -2140,7 +2141,7 @@ function openVoidFlow(itemId) {
     m.querySelector('[data-cancel]').addEventListener('click', closeModal);
     m.querySelector('[data-ok]').addEventListener('click', () => {
       if (!reason) return;
-      openPinModal({ title: 'Supervisor PIN', sub: 'Use 4321 for the demo.', onAccept: () => { voidLine(itemId); toast('Line voided: ' + reason, 'success'); } });
+      openPinModal({ title: 'Manager PIN', sub: 'Use 4321 for the demo.', onAccept: () => { voidLine(itemId); toast('Item removed: ' + reason, 'success'); } });
     });
   }
   paint();
@@ -2156,24 +2157,24 @@ function renderTender() {
     const change = received - total;
     workPane = `
       <div class="work">
-        <h3>Cash tender</h3>
+        <h3>Cash payment</h3>
         <div class="recv">
           <div class="cell due">
-            <div class="lbl">Due</div>
+            <div class="lbl">To pay</div>
             <div class="v">${money(total)}</div>
           </div>
           <div class="cell">
-            <div class="lbl">Received</div>
+            <div class="lbl">Customer gave</div>
             <div class="v">${money(received)}</div>
           </div>
           ${change >= 0 ? `
             <div class="cell chg" style="grid-column:1/-1;">
-              <div class="lbl">Change due</div>
+              <div class="lbl">Give back as change</div>
               <div class="v">${money(change)}</div>
             </div>
           ` : `
             <div class="cell short" style="grid-column:1/-1;">
-              <div class="lbl">Short by</div>
+              <div class="lbl">Still need</div>
               <div class="v">${money(-change)}</div>
             </div>
           `}
@@ -2195,15 +2196,15 @@ function renderTender() {
       <div class="work">
         <h3>Card payment</h3>
         <div class="sim">
-          <strong><span class="pulse"></span> Awaiting card</strong>
-          Present card or device to the terminal.
+          <strong><span class="pulse"></span> Waiting for card</strong>
+          Ask the customer to tap or insert their card on the machine.
         </div>
         <div style="display:flex; gap: 6px;">
           <button class="q" data-sim="card-tap" style="flex:1; padding: 14px; border-radius: 8px; background: var(--brand-soft); color: var(--brand-strong); font: 600 14px var(--font-sans); cursor: pointer;">
-            <span data-icon="card" data-icon-size="14"></span> Simulate tap
+            <span data-icon="card" data-icon-size="14"></span> Pretend they tapped
           </button>
           <button class="q" data-sim="card-decline" style="padding: 14px; border-radius: 8px; background: var(--tone-danger-bg); color: var(--tone-danger); font: 500 13px var(--font-sans); cursor: pointer;">
-            Decline
+            Card refused
           </button>
         </div>
       </div>
@@ -2214,14 +2215,14 @@ function renderTender() {
       <div class="work">
         <h3>${label} payment</h3>
         <div class="row" style="display:flex; gap:8px;">
-          <input placeholder="Customer phone e.g. 0772 145 902" id="mob-num" style="flex:1; height: 42px; padding: 0 14px; border: 1px solid var(--border); border-radius: 8px; font: 500 14px var(--font-sans);" />
+          <input placeholder="Customer phone number e.g. 0772 145 902" id="mob-num" style="flex:1; height: 42px; padding: 0 14px; border: 1px solid var(--border); border-radius: 8px; font: 500 14px var(--font-sans);" />
         </div>
         <button class="q" data-sim="mobile-push" style="padding: 14px; border-radius: 8px; background: var(--brand); color: #fff; font: 600 14px var(--font-sans); cursor: pointer;">
-          <span data-icon="phone" data-icon-size="14"></span> Send push
+          <span data-icon="phone" data-icon-size="14"></span> Send to phone
         </button>
         <div class="sim">
-          <strong><span class="pulse"></span> Awaiting customer approval</strong>
-          Customer will see a prompt on their phone to approve ${money(total)} to Mukamba Group · Park Centre.
+          <strong><span class="pulse"></span> Waiting for customer to approve</strong>
+          The customer will see a message on their phone to approve ${money(total)} to Mukamba Group · Park Centre.
         </div>
       </div>
     `;
@@ -2229,9 +2230,9 @@ function renderTender() {
     workPane = `
       <div class="work">
         <h3>Split payment</h3>
-        <p class="sub" style="color: var(--text-muted); font: 13px var(--font-sans);">Tender across multiple methods.</p>
+        <p class="sub" style="color: var(--text-muted); font: 13px var(--font-sans);">Customer is paying with more than one method.</p>
         <div class="recv">
-          <div class="cell"><div class="lbl">Due</div><div class="v">${money(total)}</div></div>
+          <div class="cell"><div class="lbl">To pay</div><div class="v">${money(total)}</div></div>
           <div class="cell" style="background: var(--brand-soft);">
             <div class="lbl">Cash</div>
             <div style="display:flex; gap:4px; align-items:center; margin-top:6px;">
@@ -2243,7 +2244,7 @@ function renderTender() {
         <div class="recv" style="margin-top: 6px;">
           <div class="cell"><div class="lbl">Card</div><div class="v">${money(total / 2)}</div></div>
         </div>
-        <div class="sim">Cash and card together. Confirm to charge the card for the remainder.</div>
+        <div class="sim">Cash plus card. Tap confirm to take the rest on the card.</div>
       </div>
     `;
   }
@@ -2254,24 +2255,24 @@ function renderTender() {
     <div class="tender">
       <div class="tender-wrap">
         <div class="due">
-          <div class="lbl">Total due · ${cartCount()} ${cartCount() === 1 ? 'item' : 'items'}</div>
+          <div class="lbl">Total to pay · ${cartCount()} ${cartCount() === 1 ? 'item' : 'items'}</div>
           <div class="am"><span class="c">$</span>${total.toFixed(2).split('.')[0]}<span style="color: var(--text-muted); font-weight: 500;">.${total.toFixed(2).split('.')[1]}</span></div>
-          <div class="lines-info">${state.cart.customerId ? CUSTOMERS.find(c=>c.id===state.cart.customerId).name + ' · loyalty' : 'Walk-in customer'}</div>
+          <div class="lines-info">${state.cart.customerId ? CUSTOMERS.find(c=>c.id===state.cart.customerId).name + ' · loyalty member' : 'Walk-in customer'}</div>
         </div>
         <div class="methods">
-          <h3>Method</h3>
+          <h3>How they're paying</h3>
           <div class="mgrid">
             <button class="mbtn ${method==='cash'?'on':''}" data-m="cash"><span class="ic-tile" data-icon="wallet" data-icon-size="18"></span><span class="nm">Cash</span><span class="sb">Notes &amp; coins</span></button>
             <button class="mbtn ${method==='card'?'on':''}" data-m="card"><span class="ic-tile" data-icon="card" data-icon-size="18"></span><span class="nm">Card</span><span class="sb">Visa · Master · ZimSwitch</span></button>
-            <button class="mbtn ${method==='ecocash'?'on':''}" data-m="ecocash"><span class="ic-tile" data-icon="phone" data-icon-size="18"></span><span class="nm">EcoCash</span><span class="sb">Push to phone</span></button>
-            <button class="mbtn ${method==='onemoney'?'on':''}" data-m="onemoney"><span class="ic-tile" data-icon="phone" data-icon-size="18"></span><span class="nm">OneMoney</span><span class="sb">Push to phone</span></button>
-            <button class="mbtn ${method==='split'?'on':''}" data-m="split" style="grid-column:1/-1;"><span class="ic-tile" data-icon="layers" data-icon-size="18"></span><span class="nm">Split tender</span><span class="sb">Multiple methods</span></button>
+            <button class="mbtn ${method==='ecocash'?'on':''}" data-m="ecocash"><span class="ic-tile" data-icon="phone" data-icon-size="18"></span><span class="nm">EcoCash</span><span class="sb">Send to their phone</span></button>
+            <button class="mbtn ${method==='onemoney'?'on':''}" data-m="onemoney"><span class="ic-tile" data-icon="phone" data-icon-size="18"></span><span class="nm">OneMoney</span><span class="sb">Send to their phone</span></button>
+            <button class="mbtn ${method==='split'?'on':''}" data-m="split" style="grid-column:1/-1;"><span class="ic-tile" data-icon="layers" data-icon-size="18"></span><span class="nm">Split payment</span><span class="sb">Paying with more than one method</span></button>
           </div>
         </div>
         ${workPane}
         <div class="confirm">
           <button class="cancel" data-cancel>← Back to cart</button>
-          <button class="ok" data-confirm ${canConfirm ? '' : 'disabled'}>${state.tender.processing ? 'Processing…' : 'Confirm payment'}</button>
+          <button class="ok" data-confirm ${canConfirm ? '' : 'disabled'}>${state.tender.processing ? 'Working…' : 'Confirm payment'}</button>
         </div>
       </div>
     </div>
@@ -2296,7 +2297,7 @@ function wireTender() {
     render();
   }));
   $$('[data-sim]').forEach(b => b.addEventListener('click', () => {
-    if (b.dataset.sim === 'card-decline') { toast('Card declined. Try another method.', 'danger'); return; }
+    if (b.dataset.sim === 'card-decline') { toast('Card refused. Ask the customer to try another way.', 'danger'); return; }
     state.tender.processing = true; render();
     setTimeout(() => completeSale(), 900);
   }));
@@ -2330,14 +2331,14 @@ function completeSale() {
 
 function renderReceipt() {
   const r = state.lastReceipt;
-  if (!r) return `<div class="page"><div class="empty" style="padding:60px; text-align:center;">No recent receipt. <a href="#" data-go="sale" style="color: var(--brand-strong);">Start a sale →</a></div></div>`;
+  if (!r) return `<div class="page"><div class="empty" style="padding:60px; text-align:center;">No recent receipt to show. <a href="#" data-go="sale" style="color: var(--brand-strong);">Start a sale →</a></div></div>`;
   return `
     <div class="receipt-page">
       <div class="receipt-card">
         <div class="succ">
           <div class="ic"><span data-icon="check" data-icon-size="20"></span></div>
           <div>
-            <div class="nm">Payment received · ${money(r.total)}</div>
+            <div class="nm">Paid · ${money(r.total)}</div>
             <div class="sb">${methodLabel(r.method)}${r.method === 'cash' ? ' · change ' + money(r.change) : ''}</div>
           </div>
         </div>
@@ -2349,9 +2350,9 @@ function renderReceipt() {
         <div class="rl" style="margin-top: 12px;"><span>Subtotal</span><span class="v">${money(r.subtotal)}</span></div>
         ${r.discount > 0 ? `<div class="rl"><span>Discount</span><span class="v">– ${money(r.discount)}</span></div>` : ''}
         <div class="rl"><span>VAT 14.5%</span><span class="v">${money(r.tax)}</span></div>
-        <div class="rl foot"><span>Total ${methodLabel(r.method)}</span><span class="v">${money(r.total)}</span></div>
+        <div class="rl foot"><span>Total paid by ${methodLabel(r.method)}</span><span class="v">${money(r.total)}</span></div>
         <div class="acts">
-          <button class="btn primary" data-go="sale"><span data-icon="plus" data-icon-size="14"></span> Start new sale</button>
+          <button class="btn primary" data-go="sale"><span data-icon="plus" data-icon-size="14"></span> Start a new sale</button>
           <button class="btn alt" id="rcp-print"><span data-icon="print" data-icon-size="13"></span> Print</button>
           <button class="btn alt" id="rcp-email"><span data-icon="mail" data-icon-size="13"></span> Email</button>
           <button class="btn alt" id="rcp-sms"><span data-icon="phone" data-icon-size="13"></span> SMS</button>
@@ -2365,9 +2366,9 @@ function methodLabel(m) {
 }
 function wireReceipt() {
   $$('[data-go]').forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); go(b.dataset.go); }));
-  const p = $('#rcp-print'); if (p) p.addEventListener('click', () => { toast('Sent to receipt printer'); });
-  const em = $('#rcp-email'); if (em) em.addEventListener('click', () => { toast('Email sent', 'success'); });
-  const sm = $('#rcp-sms'); if (sm) sm.addEventListener('click', () => { toast('SMS sent', 'success'); });
+  const p = $('#rcp-print'); if (p) p.addEventListener('click', () => { toast('Printing receipt'); });
+  const em = $('#rcp-email'); if (em) em.addEventListener('click', () => { toast('Receipt emailed', 'success'); });
+  const sm = $('#rcp-sms'); if (sm) sm.addEventListener('click', () => { toast('Receipt SMS sent', 'success'); });
 }
 
 /* === Refund screen === */
@@ -2401,32 +2402,32 @@ function renderRefund() {
             </label>
           `).join('')}
         </div>
-        <div style="font: 500 12px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px;">Reason</div>
+        <div style="font: 500 12px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px;">Why are they returning it?</div>
         <div class="rsn-chips">
           ${reasons.map(r => `<button class="${state.refund.reason === r ? 'on' : ''}" data-reason="${r}">${r}</button>`).join('')}
         </div>
         <div class="total-bar">
-          <span class="lbl">Refund amount</span>
+          <span class="lbl">Money to give back</span>
           <span class="v">– ${money(grand)}</span>
         </div>
         <div style="display:flex; gap: 8px; margin-top: 12px;">
           <button class="btn-secondary" id="rfd-cancel" style="flex:1;">Clear</button>
           <button class="btn-primary" id="rfd-go" ${refundTotal > 0 && state.refund.reason ? '' : 'disabled'} style="flex:2;">
-            <span data-icon="check" data-icon-size="13"></span> Authorize refund ${money(grand)}
+            <span data-icon="check" data-icon-size="13"></span> Get manager approval for ${money(grand)} refund
           </button>
         </div>
       </div>
     `;
   } else {
-    detail = `<div class="pane"><div class="empty">Pick a receipt on the left to begin a refund.</div></div>`;
+    detail = `<div class="pane"><div class="empty">Pick a receipt on the left to start a refund.</div></div>`;
   }
 
   return `
     <div class="page">
       <div class="page-h">
         <div style="flex:1;">
-          <h2>Refund a receipt</h2>
-          <p class="lede">Find the original transaction, choose lines to refund, and authorize with a supervisor PIN.</p>
+          <h2>Refund a sale</h2>
+          <p class="lede">Find the original receipt, pick the items being returned, and a manager will approve with their PIN.</p>
         </div>
       </div>
       <div class="splitp has-detail ${state.refund.receiptId ? 'has-selection' : ''}" id="splitp-refund">
@@ -2434,7 +2435,7 @@ function renderRefund() {
           <div class="h">Recent receipts</div>
           <div class="input" style="margin-bottom: 10px;">
             <span data-icon="search" data-icon-size="14"></span>
-            <input id="rfd-search" placeholder="Search receipt ID or customer…" value="${escapeHtml(state.refund.search)}" />
+            <input id="rfd-search" placeholder="Search by receipt number or customer name…" value="${escapeHtml(state.refund.search)}" />
           </div>
           <div class="list-rows">
             ${filtered.map(r => `
@@ -2473,8 +2474,8 @@ function wireRefund() {
     const sel = RECEIPTS.find(r => r.id === state.refund.receiptId);
     const refundTotal = sel.items.reduce((s, it) => s + (state.refund.lineCheck[it.id] ? it.total : 0), 0);
     const grand = +(refundTotal * 1.145).toFixed(2);
-    openPinModal({ title: 'Supervisor PIN', sub: 'Authorize refund of ' + money(grand) + '. Use 4321 for demo.', onAccept: () => {
-      toast('Refund issued: ' + money(grand), 'success');
+    openPinModal({ title: 'Manager PIN', sub: 'Approve refund of ' + money(grand) + '. Use 4321 for the demo.', onAccept: () => {
+      toast('Refund given: ' + money(grand), 'success');
       state.refund = { receiptId: null, lineCheck: {}, reason: null, search: '' };
       render();
     }});
@@ -2491,7 +2492,7 @@ function renderCustomer() {
       <div class="page-h">
         <div style="flex:1;">
           <h2>Customers</h2>
-          <p class="lede">Search or pick a customer, then attach them to the current sale or view their history.</p>
+          <p class="lede">Search for a customer, then add them to this sale or check what they've bought before.</p>
         </div>
         ${state.cart.lines.length > 0 ? `<button class="btn-secondary" data-go="sale"><span data-icon="back" data-icon-size="13"></span> Back to sale</button>` : ''}
       </div>
@@ -2500,7 +2501,7 @@ function renderCustomer() {
           <div class="h">Search</div>
           <div class="input" style="margin-bottom: 10px;">
             <span data-icon="search" data-icon-size="14"></span>
-            <input id="cust-search" placeholder="Name or phone…" value="${escapeHtml(state.customerSearch)}" autofocus />
+            <input id="cust-search" placeholder="Name or phone number…" value="${escapeHtml(state.customerSearch)}" autofocus />
           </div>
           <div class="list-rows">
             ${filtered.map(c => `
@@ -2510,10 +2511,10 @@ function renderCustomer() {
                   <div class="nm">${escapeHtml(c.name)}</div>
                   <div class="sb">${escapeHtml(c.phone)} · ${c.loyalty} pts</div>
                 </div>
-                <span class="vl">${c.orderCount} orders</span>
+                <span class="vl">${c.orderCount} visits</span>
               </div>
             `).join('')}
-            ${filtered.length === 0 ? `<div class="empty">No matches.</div>` : ''}
+            ${filtered.length === 0 ? `<div class="empty">No customers found.</div>` : ''}
           </div>
         </div>
         <div class="pane">
@@ -2533,9 +2534,9 @@ function renderCustomer() {
               <div class="stats">
                 <div class="stat brand"><div class="v">${sel.loyalty}</div><div class="l">Loyalty pts</div></div>
                 <div class="stat"><div class="v">${money(sel.credit)}</div><div class="l">Store credit</div></div>
-                <div class="stat"><div class="v">${sel.orderCount}</div><div class="l">Orders</div></div>
+                <div class="stat"><div class="v">${sel.orderCount}</div><div class="l">Visits</div></div>
               </div>
-              <div style="font: 500 12px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; margin: 6px 0 8px;">Recent orders</div>
+              <div style="font: 500 12px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; margin: 6px 0 8px;">Recent purchases</div>
               <div class="list-rows">
                 ${RECEIPTS.filter(r => r.customer && r.customer.id === sel.id).slice(0, 3).map(r => `
                   <div class="lr" style="cursor: default;">
@@ -2543,16 +2544,16 @@ function renderCustomer() {
                     <div><div class="nm">${r.id}</div><div class="sb">${r.ts}</div></div>
                     <span class="vl">${money(r.total)}</span>
                   </div>
-                `).join('') || `<div class="empty" style="padding: 18px;">No prior orders in history.</div>`}
+                `).join('') || `<div class="empty" style="padding: 18px;">No past purchases yet.</div>`}
               </div>
               <div style="display: flex; gap: 6px; margin-top: 16px;">
-                <button class="btn-secondary" style="flex:1;" id="cust-clear">Clear from sale</button>
+                <button class="btn-secondary" style="flex:1;" id="cust-clear">Remove from sale</button>
                 <button class="btn-primary" style="flex:2;" id="cust-use">
-                  <span data-icon="plus" data-icon-size="13"></span> Use for current sale
+                  <span data-icon="plus" data-icon-size="13"></span> Add to this sale
                 </button>
               </div>
             </div>
-          ` : `<div class="empty">Pick a customer to see their loyalty, credit, and order history.</div>`}
+          ` : `<div class="empty">Pick a customer to see their loyalty points, store credit and past purchases.</div>`}
         </div>
       </div>
     </div>
@@ -2565,12 +2566,12 @@ function wireCustomer() {
   const use = $('#cust-use'); if (use) use.addEventListener('click', () => {
     state.cart.customerId = state.customerSel;
     const c = CUSTOMERS.find(x => x.id === state.customerSel);
-    toast(`${c.name} attached to sale`, 'success');
+    toast(`${c.name} added to sale`, 'success');
     go('sale');
   });
   const clr = $('#cust-clear'); if (clr) clr.addEventListener('click', () => {
     state.cart.customerId = null; state.customerSel = null;
-    toast('Customer cleared'); render();
+    toast('Customer removed'); render();
   });
   $$('[data-go]').forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); go(b.dataset.go); }));
 }
@@ -2594,32 +2595,32 @@ function renderItem() {
       <div class="ilk-wrap">
         <div class="page-h" style="margin-bottom: 0;">
           <div style="flex:1;">
-            <h2>Item lookup</h2>
-            <p class="lede">Search the catalog or scan a barcode. Tap a row for details, or the <strong>+</strong> button to add.</p>
+            <h2>Find an item</h2>
+            <p class="lede">Type to search or scan a barcode. Tap a row to see details, or tap <strong>+</strong> to add it to the cart.</p>
           </div>
           ${state.cart.lines.length > 0 ? `<button class="btn btn-secondary btn-sm" data-go="sale"><span data-icon="back" data-icon-size="13"></span> Back to sale</button>` : ''}
         </div>
         <label class="ilk-search">
           <span data-icon="search" data-icon-size="16"></span>
-          <input id="item-search" placeholder="Search by name or SKU…" value="${escapeHtml(state.itemSearch)}" autofocus />
+          <input id="item-search" placeholder="Search by name or product code…" value="${escapeHtml(state.itemSearch)}" autofocus />
           <button class="scan" id="item-scan" type="button">
             <span data-icon="qr" data-icon-size="14"></span> Scan
           </button>
         </label>
         <div class="ilk-meta">
-          <span class="ct">${filtered.length} of ${CATALOG.length} items</span>
+          <span class="ct">Showing ${filtered.length} of ${CATALOG.length} items</span>
           <div class="filters">
             <button class="fc ${f==='all'?'on':''}" data-fil="all">All <span style="opacity:0.6">${counts.all}</span></button>
             <button class="fc ${f==='in'?'on':''}" data-fil="in">In stock <span style="opacity:0.6">${counts.in}</span></button>
-            <button class="fc ${f==='low'?'on':''}" data-fil="low">Low / out <span style="opacity:0.6">${counts.low}</span></button>
+            <button class="fc ${f==='low'?'on':''}" data-fil="low">Running low / sold out <span style="opacity:0.6">${counts.low}</span></button>
           </div>
         </div>
         ${filtered.length === 0 ? `
           <div class="ilk-list">
             <div class="ilk-empty">
               <div class="ic"><span data-icon="search" data-icon-size="20"></span></div>
-              <div class="ttl">No items match${state.itemSearch ? ' "' + escapeHtml(state.itemSearch) + '"' : ''}</div>
-              <div class="sub">Try a different search, or change the filter above.</div>
+              <div class="ttl">Nothing found${state.itemSearch ? ' for "' + escapeHtml(state.itemSearch) + '"' : ''}</div>
+              <div class="sub">Try a different word, or change the filter above.</div>
             </div>
           </div>
         ` : `
@@ -2627,7 +2628,7 @@ function renderItem() {
             ${filtered.map(i => {
               const cat = (CATEGORIES.find(c=>c.id===i.cat)||{}).name || '';
               const dotClass = i.oos ? 'attention' : (i.low ? 'progress' : 'ok');
-              const stockLabel = i.oos ? 'Out of stock' : (i.low ? `${i.stock} left · low` : `${i.stock} in stock`);
+              const stockLabel = i.oos ? 'Sold out' : (i.low ? `Only ${i.stock} left` : `${i.stock} in stock`);
               const thumb = (i.sku.split('-')[0] || '').slice(0, 3);
               return `
                 <div class="ilk-row ${i.cat} ${i.oos ? 'oos' : ''}" data-detail="${i.id}">
@@ -2643,7 +2644,7 @@ function renderItem() {
                     </div>
                   </div>
                   <div class="price">${money(i.price)}</div>
-                  <button class="add" data-add="${i.id}" ${i.oos ? 'disabled aria-disabled="true"' : ''} title="${i.oos ? 'Out of stock' : 'Add to cart'}" aria-label="${i.oos ? 'Out of stock' : 'Add ' + i.name + ' to cart'}">
+                  <button class="add" data-add="${i.id}" ${i.oos ? 'disabled aria-disabled="true"' : ''} title="${i.oos ? 'Sold out' : 'Add to cart'}" aria-label="${i.oos ? 'Sold out' : 'Add ' + i.name + ' to cart'}">
                     <span data-icon="plus" data-icon-size="14"></span>
                   </button>
                 </div>
@@ -2662,7 +2663,7 @@ function openItemDetail(itemId) {
   const cat = (CATEGORIES.find(c=>c.id===i.cat)||{}).name || '';
   const thumb = (i.sku.split('-')[0] || '').slice(0, 3);
   const stockColor = i.oos ? 'var(--tone-danger)' : (i.low ? 'var(--tone-warn)' : 'var(--tone-success)');
-  const stockLabel = i.oos ? 'Out of stock' : (i.low ? `${i.stock} left · low` : `${i.stock} in stock`);
+  const stockLabel = i.oos ? 'Sold out' : (i.low ? `Only ${i.stock} left` : `${i.stock} in stock`);
   openModal(`
     <div class="ilk-sheet" onclick="event.stopPropagation()">
       <div class="hero">
@@ -2673,7 +2674,7 @@ function openItemDetail(itemId) {
         </div>
       </div>
       <div class="grid">
-        <div class="cell"><div class="lbl">Unit price</div><div class="v">${money(i.price)}</div></div>
+        <div class="cell"><div class="lbl">Price each</div><div class="v">${money(i.price)}</div></div>
         <div class="cell"><div class="lbl">Stock</div><div class="v" style="color: ${stockColor};">${stockLabel}</div></div>
       </div>
       <div class="acts">
@@ -2742,9 +2743,9 @@ function renderCashup() {
   const cashCounted = countedTotal();
   const variance = +(cashCounted - expCash).toFixed(2);
   const absVar = Math.abs(variance);
-  let varKind = 'ok'; let varTtl = 'Within tolerance';
-  if (absVar > 10) { varKind = 'bad'; varTtl = 'Over tolerance — supervisor review'; }
-  else if (absVar > 2) { varKind = 'warn'; varTtl = 'Small variance — confirm count'; }
+  let varKind = 'ok'; let varTtl = 'Looks good';
+  if (absVar > 10) { varKind = 'bad'; varTtl = 'Too far off — needs a manager to check'; }
+  else if (absVar > 2) { varKind = 'warn'; varTtl = 'Small difference — count again to be sure'; }
   if (absVar === 0) { varTtl = 'Exact match'; }
   const expTotal = exp.cash + exp.card + exp.mobile + exp.credit;
 
@@ -2752,8 +2753,8 @@ function renderCashup() {
     <div class="cashup">
       <div class="page-h" style="margin-bottom: 16px;">
         <div style="flex:1;">
-          <h2>Close shift S-2841</h2>
-          <p class="lede">Count the till by denomination. Variance is compared against expected cash from receipts.</p>
+          <h2>End shift S-2841 (cash-up)</h2>
+          <p class="lede">Count the money in the till by notes and coins. We compare that to what the receipts say you should have.</p>
         </div>
         <div style="display:flex; gap:6px; align-items: center; font: 13px var(--font-sans); color: var(--text-muted);">
           <span data-icon="clock" data-icon-size="13"></span> Opened 07:30 · 7h 14m
@@ -2761,15 +2762,15 @@ function renderCashup() {
       </div>
       <div class="cashup-grid">
         <div class="pane">
-          <h3>Expected (from receipts) <span style="font: 11px var(--font-mono); color: var(--text-muted);">147 transactions</span></h3>
+          <h3>What the receipts say <span style="font: 11px var(--font-mono); color: var(--text-muted);">147 sales</span></h3>
           <div class="ex-row"><span>Cash · ZWG / USD</span><span class="v">${money(exp.cash)}</span></div>
           <div class="ex-row"><span>Card · ZimSwitch</span><span class="v">${money(exp.card)}</span></div>
-          <div class="ex-row"><span>Mobile · EcoCash + OneMoney</span><span class="v">${money(exp.mobile)}</span></div>
+          <div class="ex-row"><span>Mobile money · EcoCash + OneMoney</span><span class="v">${money(exp.mobile)}</span></div>
           <div class="ex-row"><span>Store credit</span><span class="v">${money(exp.credit)}</span></div>
-          <div class="ex-row total"><span>Expected total</span><span class="v">${money(expTotal)}</span></div>
+          <div class="ex-row total"><span>Total you should have</span><span class="v">${money(expTotal)}</span></div>
         </div>
         <div class="pane">
-          <h3>Cash count <span style="font: 11px var(--font-mono); color: var(--text-muted);">$ counted ${money(cashCounted)}</span></h3>
+          <h3>Count the cash <span style="font: 11px var(--font-mono); color: var(--text-muted);">Counted so far: ${money(cashCounted)}</span></h3>
           ${DENOMS.map(d => {
             const c = state.shift.counted[String(d.v)] || 0;
             const ln = d.v * c;
@@ -2790,13 +2791,13 @@ function renderCashup() {
           <div class="ic"><span data-icon="${varKind==='ok'?'check':varKind==='warn'?'info':'asterisk'}" data-icon-size="18"></span></div>
           <div>
             <div class="ttl">${varTtl}</div>
-            <div class="sb">${variance >= 0 ? 'Over' : 'Short'} by ${money(absVar)} · tolerance is ± $10</div>
+            <div class="sb">Cash ${variance >= 0 ? 'over' : 'short'} by ${money(absVar)} · up to $10 either way is fine</div>
           </div>
           <div class="v">${variance >= 0 ? '+' : '–'} ${money(absVar)}</div>
         </div>
         <div class="submit">
-          <button class="alt" id="cu-reset">Reset count</button>
-          <button class="ok" id="cu-close">Close shift</button>
+          <button class="alt" id="cu-reset">Clear count</button>
+          <button class="ok" id="cu-close">End shift</button>
         </div>
       </div>
     </div>
@@ -2812,20 +2813,20 @@ function wireCashup() {
     state.shift.counted[i.dataset.v] = Math.max(0, +e.target.value || 0);
     // don't full re-render on input
     const tot = $('.cashup-grid .pane:nth-of-type(2) h3 span');
-    if (tot) tot.textContent = '$ counted ' + money(countedTotal());
+    if (tot) tot.textContent = 'Counted so far: ' + money(countedTotal());
   }));
   const rst = $('#cu-reset'); if (rst) rst.addEventListener('click', () => {
     DENOMS.forEach(d => state.shift.counted[String(d.v)] = 0);
-    render(); toast('Count reset');
+    render(); toast('Count cleared');
   });
   const cls = $('#cu-close'); if (cls) cls.addEventListener('click', () => {
     const variance = countedTotal() - state.shift.expected.cash;
     if (Math.abs(variance) > 10) {
-      openPinModal({ title: 'Supervisor PIN', sub: 'Variance ' + money(Math.abs(variance)) + ' exceeds tolerance. Use 4321 for demo.', onAccept: () => {
-        toast('Shift closed with supervisor override', 'warn');
+      openPinModal({ title: 'Manager PIN', sub: 'Cash is off by ' + money(Math.abs(variance)) + ' — too far. A manager needs to approve. Use 4321 for the demo.', onAccept: () => {
+        toast('Shift ended with manager approval', 'warn');
       }});
     } else {
-      toast('Shift S-2841 closed cleanly', 'success');
+      toast('Shift S-2841 ended — all good', 'success');
     }
   });
 }
@@ -2839,29 +2840,29 @@ function renderZReport() {
       <div class="zrep-card">
         <div style="display:flex; align-items: flex-start; gap: 14px;">
           <div style="flex:1;">
-            <h2>End-of-day Z-report</h2>
-            <div class="sub">Generated 22 May 2026 · 19:14 · finalised &amp; sealed</div>
+            <h2>Z-report (end-of-day summary)</h2>
+            <div class="sub">Made on 22 May 2026 · 19:14 · final, can't be changed</div>
           </div>
           <div style="display:grid; gap: 4px; text-align: right;">
             <span class="pill" style="display:inline-flex; align-items:center; gap: 4px; padding: 3px 9px; border-radius: 9999px; background: var(--tone-success-bg); color: var(--tone-success); font: 500 11px var(--font-sans); justify-self: end;">
-              <span data-icon="check" data-icon-size="11"></span> Sealed
+              <span data-icon="check" data-icon-size="11"></span> Locked in
             </span>
             <div style="font: 11px var(--font-mono); color: var(--text-muted);">Shift S-2841 · Till 02 · Faith Moyo</div>
           </div>
         </div>
         <div class="kpis">
-          <div class="k"><div class="l">Gross sales</div><div class="v">${money(gross)}</div></div>
-          <div class="k"><div class="l">Discounts</div><div class="v">– $ 112.50</div></div>
+          <div class="k"><div class="l">Sales (before discounts)</div><div class="v">${money(gross)}</div></div>
+          <div class="k"><div class="l">Discounts given</div><div class="v">– $ 112.50</div></div>
           <div class="k"><div class="l">VAT 14.5%</div><div class="v">$ 391.10</div></div>
-          <div class="k brand"><div class="l">Net sales</div><div class="v">${money(exp.cash + exp.card + exp.mobile + exp.credit)}</div></div>
+          <div class="k brand"><div class="l">Take-home (after discounts)</div><div class="v">${money(exp.cash + exp.card + exp.mobile + exp.credit)}</div></div>
         </div>
         <div class="sec">
-          <h3>Payment methods <span class="meta">147 transactions</span></h3>
+          <h3>How customers paid <span class="meta">147 sales</span></h3>
           <table class="tbl">
-            <thead><tr><th>Method</th><th class="num">Count</th><th class="num">Amount</th><th class="num">Share</th></tr></thead>
+            <thead><tr><th>How they paid</th><th class="num">How many</th><th class="num">Amount</th><th class="num">Share</th></tr></thead>
             <tbody>
               <tr><td>Cash · ZWG / USD</td><td class="num">96</td><td class="num">${money(exp.cash)}</td><td class="num">65.4%</td></tr>
-              <tr><td>Card · POS terminal</td><td class="num">38</td><td class="num">${money(exp.card)}</td><td class="num">22.2%</td></tr>
+              <tr><td>Card · machine</td><td class="num">38</td><td class="num">${money(exp.card)}</td><td class="num">22.2%</td></tr>
               <tr><td>EcoCash · USSD + app</td><td class="num">9</td><td class="num">$ 142.00</td><td class="num">5.0%</td></tr>
               <tr><td>OneMoney · QR</td><td class="num">4</td><td class="num">$ 57.00</td><td class="num">2.0%</td></tr>
               <tr><td>Store credit · loyalty</td><td class="num">2</td><td class="num">${money(exp.credit)}</td><td class="num">0.9%</td></tr>
@@ -2869,9 +2870,9 @@ function renderZReport() {
           </table>
         </div>
         <div class="sec">
-          <h3>Top items sold <span class="meta">by revenue · top 7 of 184 SKUs</span></h3>
+          <h3>Best-selling items <span class="meta">top 7 out of 184</span></h3>
           <table class="tbl">
-            <thead><tr><th>#</th><th>Item</th><th class="num">Qty</th><th class="num">Revenue</th></tr></thead>
+            <thead><tr><th>#</th><th>Item</th><th class="num">How many</th><th class="num">Total</th></tr></thead>
             <tbody>
               <tr><td>1</td><td>Mealie meal 10kg · GRO-002</td><td class="num">42</td><td class="num">$ 344.40</td></tr>
               <tr><td>2</td><td>Mazoe Orange Crush 2L · BEV-001</td><td class="num">58 u</td><td class="num">$ 261.00</td></tr>
@@ -2884,8 +2885,8 @@ function renderZReport() {
           </table>
         </div>
         <div class="ftr">
-          <button class="alt" id="z-export"><span data-icon="download" data-icon-size="13"></span> Export CSV</button>
-          <button class="alt" id="z-email"><span data-icon="mail" data-icon-size="13"></span> Email finance</button>
+          <button class="alt" id="z-export"><span data-icon="download" data-icon-size="13"></span> Save as spreadsheet</button>
+          <button class="alt" id="z-email"><span data-icon="mail" data-icon-size="13"></span> Email to accounts</button>
           <button class="pri" id="z-print"><span data-icon="print" data-icon-size="13"></span> Print Z-report</button>
         </div>
       </div>
@@ -2893,9 +2894,9 @@ function renderZReport() {
   `;
 }
 function wireZReport() {
-  const e = $('#z-export'); if (e) e.addEventListener('click', () => toast('CSV exported', 'success'));
-  const m = $('#z-email'); if (m) m.addEventListener('click', () => toast('Sent to finance@mukamba.co.zw', 'success'));
-  const p = $('#z-print'); if (p) p.addEventListener('click', () => toast('Sent to receipt printer', 'success'));
+  const e = $('#z-export'); if (e) e.addEventListener('click', () => toast('Spreadsheet saved', 'success'));
+  const m = $('#z-email'); if (m) m.addEventListener('click', () => toast('Sent to accounts@mukamba.co.zw', 'success'));
+  const p = $('#z-print'); if (p) p.addEventListener('click', () => toast('Sending to printer', 'success'));
 }
 
 /* === MY REPORTS (cashier-scoped) === */
@@ -2933,9 +2934,9 @@ function renderMyReports() {
   const countedCash = expectedCash + 1.50; // small over
   const variance = +(countedCash - expectedCash).toFixed(2);
   const absVar = Math.abs(variance);
-  let varKind = 'ok', varTtl = 'Within tolerance';
-  if (absVar > 10) { varKind = 'bad'; varTtl = 'Over tolerance — flag for supervisor'; }
-  else if (absVar > 2) { varKind = 'warn'; varTtl = 'Small variance — recount before close'; }
+  let varKind = 'ok', varTtl = 'Looks good';
+  if (absVar > 10) { varKind = 'bad'; varTtl = 'Too far off — let the manager know'; }
+  else if (absVar > 2) { varKind = 'warn'; varTtl = 'Small difference — count again before you end the shift'; }
   return `
     <div class="mrep">
       <div class="mrep-wrap">
@@ -2945,7 +2946,7 @@ function renderMyReports() {
             <div class="eyebrow">My day · ${new Date().toISOString().slice(0,10)}</div>
             <h2>${escapeHtml(cashier.name)}</h2>
             <div class="sb">Shift S-2841 · ${escapeHtml(state.settings.till)} · ${escapeHtml(state.settings.branch)}</div>
-            <span class="pill"><span class="dot"></span> Opened 07:30 · 7h 14m active</span>
+            <span class="pill"><span class="dot"></span> Started 07:30 · serving for 7h 14m</span>
           </div>
         </div>
 
@@ -2953,20 +2954,20 @@ function renderMyReports() {
           <div class="mrep-tile brand">
             <div class="lbl">My sales today</div>
             <div class="v">${money(mySales.total)}</div>
-            <div class="d">${mySales.count} transactions</div>
+            <div class="d">${mySales.count} sales</div>
           </div>
           <div class="mrep-tile">
-            <div class="lbl">Voided lines</div>
+            <div class="lbl">Items I removed</div>
             <div class="v">${myVoids}</div>
-            <div class="d">In current shift</div>
+            <div class="d">This shift</div>
           </div>
           <div class="mrep-tile">
-            <div class="lbl">Refunds issued</div>
+            <div class="lbl">Refunds given</div>
             <div class="v">${money(myRefunds.total)}</div>
             <div class="d">${myRefunds.count} refund${myRefunds.count===1?'':'s'}</div>
           </div>
           <div class="mrep-tile">
-            <div class="lbl">Discounts applied</div>
+            <div class="lbl">Discounts given</div>
             <div class="v">${money(myDiscounts)}</div>
             <div class="d">Across ${mySales.count} sales</div>
           </div>
@@ -2975,8 +2976,8 @@ function renderMyReports() {
         <div class="mrep-row2">
           <div class="mrep-card">
             <div class="ch">
-              <h3>Top 3 items I sold</h3>
-              <span class="meta">by revenue · today</span>
+              <h3>My top 3 items today</h3>
+              <span class="meta">by money earned · today</span>
             </div>
             <div class="mrep-bars">
               ${topItems.map((t, idx) => `
@@ -2993,7 +2994,7 @@ function renderMyReports() {
           </div>
           <div class="mrep-card">
             <div class="ch">
-              <h3>My tender mix</h3>
+              <h3>How my customers paid</h3>
               <span class="meta">${money(mixTotal)} total</span>
             </div>
             <div class="mrep-mix">
@@ -3016,7 +3017,7 @@ function renderMyReports() {
 
         <div class="mrep-card">
           <div class="ch">
-            <h3>Hourly sales</h3>
+            <h3>Sales hour by hour</h3>
             <span class="meta">My sales · 08:00 – 16:00</span>
           </div>
           <div class="mrep-spark">
@@ -3034,15 +3035,15 @@ function renderMyReports() {
         <div class="mrep-var ${varKind}">
           <div class="ic"><span data-icon="${varKind === 'ok' ? 'check' : varKind === 'warn' ? 'info' : 'asterisk'}" data-icon-size="16"></span></div>
           <div>
-            <div class="ttl">Float &amp; cash variance · ${varTtl}</div>
-            <div class="sb">Expected ${money(expectedCash)} (float ${money(myFloat)} + cash sales) · counted ${money(countedCash)}</div>
+            <div class="ttl">Float (starting cash) &amp; cash check · ${varTtl}</div>
+            <div class="sb">You should have ${money(expectedCash)} (float ${money(myFloat)} + cash sales) · counted ${money(countedCash)}</div>
           </div>
           <div class="v">${variance >= 0 ? '+' : '–'} ${money(absVar)}</div>
         </div>
 
         <div class="mrep-foot">
-          Need the full Z-report (branch totals, supplier mix)?
-          <a id="mrep-zlink">Request supervisor access</a>
+          Need the full Z-report (whole-shop totals, supplier mix)?
+          <a id="mrep-zlink">Ask a manager to unlock it</a>
         </div>
       </div>
     </div>
@@ -3052,11 +3053,11 @@ function wireMyReports() {
   const a = $('#mrep-zlink');
   if (a) a.addEventListener('click', () => {
     openPinModal({
-      title: 'Supervisor PIN',
-      sub: 'The Z-report shows branch-wide totals. Use 4321 for the demo.',
+      title: 'Manager PIN',
+      sub: 'The Z-report shows totals for the whole shop. Use 4321 for the demo.',
       validPin: state.settings.supervisorPin,
       onAccept: () => {
-        toast('Supervisor verified — opening Z-report', 'success');
+        toast('Manager approved — opening Z-report', 'success');
         go('z-report');
       },
     });
@@ -3085,7 +3086,7 @@ function renderLogin() {
           <span class="v">${escapeHtml(state.settings.till)} · ${escapeHtml(state.settings.branchCode)}</span>
         </div>
         ${sel ? `
-          <h2>Enter PIN</h2>
+          <h2>Type your PIN</h2>
           <p class="sub">Welcome back, ${escapeHtml(sel.name)} · ${sel.role}</p>
           <div class="pin-area">
             <div class="otp" id="lp-otp" role="group" aria-label="4-digit PIN">
@@ -3098,11 +3099,11 @@ function renderLogin() {
               <input type="checkbox" id="lp-remember" ${remember ? 'checked' : ''} />
               <span>Remember this device for 8 hours</span>
             </label>
-            <div class="pin-err">${err ? 'Incorrect PIN. Hint: PIN matches the user below.' : ''}</div>
+            <div class="pin-err">${err ? 'Wrong PIN. Tip: the PIN is shown next to your name.' : ''}</div>
           </div>
         ` : `
           <h2>Sign in</h2>
-          <p class="sub">Choose your cashier ID to begin.</p>
+          <p class="sub">Tap your name to sign in.</p>
           ${cashiers.map(c => `
             <div class="cashier-row" data-lc="${c.id}">
               <div class="av">${c.name.split(' ').map(p=>p[0]).slice(0,2).join('')}</div>
@@ -3113,10 +3114,10 @@ function renderLogin() {
               <span class="ar" data-icon="chright" data-icon-size="14"></span>
             </div>
           `).join('')}
-          <div class="skip">For the demo all PINs are visible above. Supervisor PIN ${state.settings.supervisorPin}.</div>
+          <div class="skip">This is just a demo, so the PINs are shown next to each name. Manager PIN is ${state.settings.supervisorPin}.</div>
         `}
       </div>
-      <div class="foot"><strong>POS portal · frontend-only reference</strong> · No network calls</div>
+      <div class="foot"><strong>Till demo · for show only</strong> · Nothing is saved online</div>
     </div>
   `;
 }
@@ -3175,12 +3176,12 @@ function renderOpenTill() {
         <div style="display:flex; align-items:center; gap:12px; margin-bottom: 14px;">
           <div style="width:42px; height:42px; border-radius:10px; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center;"><span data-icon="wallet" data-icon-size="20"></span></div>
           <div>
-            <h2 style="margin:0;">Open till &amp; start shift</h2>
-            <p class="lede" style="margin:0;">Count the opening cash float in the drawer, then sign in to begin the day.</p>
+            <h2 style="margin:0;">Open the till &amp; start your shift</h2>
+            <p class="lede" style="margin:0;">Count the starting cash (the float) in the drawer, then sign in to start the day.</p>
           </div>
         </div>
         <div class="field">
-          <label>Opening cash float</label>
+          <label>Float (starting cash in drawer)</label>
           <input type="number" min="0" step="0.01" id="ot-float" value="${initial.float}" />
         </div>
         <div class="row2">
@@ -3194,15 +3195,15 @@ function renderOpenTill() {
           </div>
         </div>
         <div class="field">
-          <label>Cashier signature</label>
-          <input type="text" id="ot-sign" placeholder="Type your full name to confirm" value="${escapeHtml(initial.sign)}" />
+          <label>Your signature</label>
+          <input type="text" id="ot-sign" placeholder="Type your full name to sign" value="${escapeHtml(initial.sign)}" />
         </div>
         <div style="padding: 12px; background: var(--surface-muted); border-radius: 8px; font: 12.5px/1.5 var(--font-sans); color: var(--text-muted);">
-          <strong style="color: var(--text-strong);">By opening this till you confirm:</strong>
+          <strong style="color: var(--text-strong);">By opening the till you agree that:</strong>
           <ul style="margin: 6px 0 0; padding-left: 18px;">
-            <li>The opening float matches the amount above</li>
-            <li>You are the cashier responsible for ${state.settings.till} for this shift</li>
-            <li>Variance over $${state.settings.varianceTolerance.toFixed(2)} at close requires supervisor approval</li>
+            <li>The float matches the amount above</li>
+            <li>You are the cashier for ${state.settings.till} this shift</li>
+            <li>If the cash is off by more than $${state.settings.varianceTolerance.toFixed(2)} at the end, a manager has to approve</li>
           </ul>
         </div>
         <div class="actions">
@@ -3222,12 +3223,12 @@ function wireOpenTill() {
   const ok = $('#ot-ok'); if (ok) ok.addEventListener('click', () => {
     const f = +ft.value || 0;
     const sign = (sg.value || '').trim();
-    if (!sign) { toast('Cashier signature is required', 'warn'); return; }
+    if (!sign) { toast('Please sign your name first', 'warn'); return; }
     state.openingFloat = f;
     state.dayOpen = true;
     state._openTill = null;
     logAudit('shift', `Opened till · float ${money(f)} · signed by ${sign}`, f);
-    toast(`Shift opened · float ${money(f)}`, 'success');
+    toast(`Shift started · float ${money(f)}`, 'success');
     go('sale');
   });
 }
@@ -3240,15 +3241,15 @@ function renderParked() {
       <div class="parked-wrap">
         <div class="page-h">
           <div style="flex:1;">
-            <h2>Parked sales</h2>
-            <p class="lede">Carts saved for later. Recall to continue, or discard to drop them.</p>
+            <h2>Saved sales</h2>
+            <p class="lede">Sales paused for later. Pick one back up, or throw it away.</p>
           </div>
         </div>
         ${list.length === 0 ? `
           <div class="screen-card" style="text-align:center; padding: 40px;">
             <div style="width:48px; height:48px; border-radius:12px; background: var(--surface-muted); color: var(--text-strong); display: inline-grid; place-items: center; margin-bottom: 12px;"><span data-icon="folder" data-icon-size="22"></span></div>
-            <h3 style="margin:0 0 4px; font: 600 16px var(--font-sans);">No parked sales</h3>
-            <p style="margin:0; font: 13px var(--font-sans); color: var(--text-muted);">Tap <strong>Park</strong> on the cart to save a sale for later.</p>
+            <h3 style="margin:0 0 4px; font: 600 16px var(--font-sans);">No saved sales</h3>
+            <p style="margin:0; font: 13px var(--font-sans); color: var(--text-muted);">Tap <strong>Save for later</strong> on the cart to pause a sale.</p>
           </div>
         ` : `
           <div class="parked-list">
@@ -3262,12 +3263,12 @@ function renderParked() {
                   <div class="av">${p.id.slice(-3)}</div>
                   <div>
                     <div class="nm">${p.id}${cust ? ' · ' + escapeHtml(cust.name) : ''}</div>
-                    <div class="meta">${p.ts} · ${p.lines.length} lines · ${escapeHtml(p.who || '')}${p.notes ? ' · ' + escapeHtml(p.notes) : ''}</div>
+                    <div class="meta">${p.ts} · ${p.lines.length} items · ${escapeHtml(p.who || '')}${p.notes ? ' · ' + escapeHtml(p.notes) : ''}</div>
                   </div>
                   <div class="vl">${money(total)}</div>
                   <div class="acts">
-                    <button class="alt" data-pdis="${p.id}">Discard</button>
-                    <button class="ok" data-prec="${p.id}">Recall</button>
+                    <button class="alt" data-pdis="${p.id}">Throw away</button>
+                    <button class="ok" data-prec="${p.id}">Continue</button>
                   </div>
                 </div>
               `;
@@ -3282,10 +3283,10 @@ function wireParked() {
   $$('[data-prec]').forEach(b => b.addEventListener('click', () => recallParkedSale(b.dataset.prec)));
   $$('[data-pdis]').forEach(b => b.addEventListener('click', () => {
     const id = b.dataset.pdis;
-    openConfirmModal({ title: 'Discard parked sale?', sub: `Sale ${id} will be removed.`, okLabel: 'Discard', danger: true, onOk: () => {
+    openConfirmModal({ title: 'Throw away this saved sale?', sub: `Sale ${id} will be deleted.`, okLabel: 'Throw away', danger: true, onOk: () => {
       state.parkedSales = state.parkedSales.filter(p => p.id !== id);
       logAudit('void', `Discarded parked ${id}`);
-      toast('Parked sale discarded'); render();
+      toast('Saved sale thrown away'); render();
     }});
   }));
 }

@@ -1728,7 +1728,7 @@ function openChildSwitcher() {
     <div class="sheet" onclick="event.stopPropagation()">
       <div class="handle"></div>
       <h3>Switch child</h3>
-      <p class="sub">Choose which child to view. Fees, timetable, marks and notices change accordingly.</p>
+      <p class="sub">Pick which child you want to look at. Fees, school day, marks and news will all change.</p>
       ${CHILDREN.map(ch => `
         <div class="picker-row ${ch.id === c.id ? 'on' : ''}" data-pick-child="${ch.id}">
           <span class="av">${initials(ch.name)}</span>
@@ -1743,7 +1743,7 @@ function openChildSwitcher() {
         <span class="av" style="background: var(--surface-muted); color: var(--text-muted);" data-icon="plus" data-icon-size="16"></span>
         <div style="flex:1;">
           <div class="nm">Add another child</div>
-          <div class="sb">Link a sibling at any school using the parent portal</div>
+          <div class="sb">Add a brother or sister at any school using this app</div>
         </div>
       </div>
     </div>
@@ -1754,12 +1754,12 @@ function openChildSwitcher() {
     state.pay = { picked: {}, splitMode: 'full', method: null, phone: '0772 145 902', processing: false, receipt: null };
     closeModal();
     render();
-    toast(`Now viewing ${currentChild().short}`, 'success');
+    toast(`Now showing ${currentChild().short}`, 'success');
   }));
   const add = $('[data-add-child]');
   if (add) add.addEventListener('click', () => {
     closeModal();
-    toast('Use the link from the school office to add a child', 'warn');
+    toast('Ask the school office for a code to add a child', 'warn');
   });
 }
 
@@ -1843,8 +1843,8 @@ function renderOfflineBanner() {
   return `
     <div class="offline-banner">
       <span class="ic" data-icon="info" data-icon-size="14"></span>
-      <div>You're offline — showing last saved data.</div>
-      <button id="retry-online">Retry</button>
+      <div>No internet — showing what we last saved.</div>
+      <button id="retry-online">Try again</button>
     </div>
   `;
 }
@@ -1857,7 +1857,7 @@ function renderPayBar() {
   return `
     <div class="pay-bar">
       <div class="meta">
-        <div class="l">${picked ? 'Selected items' : 'Outstanding balance'}</div>
+        <div class="l">${picked ? 'Chosen items' : 'What you still owe'}</div>
         <div class="v">${money(amount)}</div>
       </div>
       <button id="open-pay" ${amount > 0 ? '' : 'disabled'}>
@@ -1881,30 +1881,30 @@ function renderAppBar(child) {
   );
   const titles = {
     'home':            'Hi, Mrs ' + child.name.split(' ').slice(-1)[0],
-    'fees':            'Fees',
+    'fees':            'School fees',
     'fees/pay':        'Pay fees',
-    'fees/method':     'Payment method',
+    'fees/method':     'How to pay',
     'fees/receipt':    'Receipt',
-    'payment-history': 'Payment history',
-    'notices':         'Notices',
+    'payment-history': 'Past payments',
+    'notices':         'School news',
     'messages':        'Messages',
     'attendance':      'Attendance & marks',
-    'leave-request':   'Request leave',
+    'leave-request':   'Ask for time off',
     'calendar':        'School calendar',
-    'library':         'Library account',
-    'timetable':       'Today\'s timetable',
-    'profile':         'Profile',
-    'security':        'Sign-in security',
-    'notifications':   'Notifications',
-    'children':        'My children',
-    'help':            'Help & support',
+    'library':         'Library',
+    'timetable':       'Today at school',
+    'profile':         'Your details',
+    'security':        'Sign-in & safety',
+    'notifications':   'Alerts',
+    'children':        'Your children',
+    'help':            'Help',
   };
   let title = titles[r] || '';
-  if (r.startsWith('notice/'))     title = 'Notice';
+  if (r.startsWith('notice/'))     title = 'School news';
   if (r.startsWith('message/'))    title = 'Message';
-  if (r.startsWith('marks/'))      title = 'Subject detail';
-  if (r.startsWith('attendance/')) title = 'Day detail';
-  if (r.startsWith('child/'))      title = 'Child profile';
+  if (r.startsWith('marks/'))      title = 'Subject';
+  if (r.startsWith('attendance/')) title = 'That day';
+  if (r.startsWith('child/'))      title = 'Child details';
 
   // Back targets
   const backMap = {
@@ -1945,7 +1945,7 @@ function renderAppBar(child) {
           <span class="av">${initials(child.name)}</span>
           ${child.short}
         </button>
-        <button data-go-notices title="Notices">
+        <button data-go-notices title="School news">
           <span data-icon="bell" data-icon-size="18"></span>
           ${unread + msgUnread > 0 ? '<span class="pip"></span>' : ''}
         </button>
@@ -1957,8 +1957,8 @@ function renderAppBar(child) {
 const TABS = [
   { id: 'home',       label: 'Home',     icon: 'home',     route: 'home' },
   { id: 'fees',       label: 'Fees',     icon: 'card',     route: 'fees' },
-  { id: 'notices',    label: 'Notices',  icon: 'bell',     route: 'notices' },
-  { id: 'profile',    label: 'Profile',  icon: 'user',     route: 'profile' },
+  { id: 'notices',    label: 'News',     icon: 'bell',     route: 'notices' },
+  { id: 'profile',    label: 'You',      icon: 'user',     route: 'profile' },
 ];
 
 function renderBottomTabs() {
@@ -1985,12 +1985,12 @@ function wireShell() {
   const hb = $('[data-huchu-toggle]');
   if (hb) hb.addEventListener('click', () => {
     if (window.HuchuNav && typeof window.HuchuNav.toggle === 'function') window.HuchuNav.toggle();
-    else toast('Site menu unavailable in this preview', 'warn');
+    else toast('Menu not available in this preview', 'warn');
   });
   const r = $('#retry-online'); if (r) r.addEventListener('click', () => {
     state.offline = false;
     render();
-    toast('Back online', 'success');
+    toast('You\'re back online', 'success');
   });
 }
 
@@ -2074,13 +2074,13 @@ function renderHome() {
     </div>
 
     <div class="fee-hero ${bal === 0 ? 'cleared' : ''}">
-      <div class="lbl">Outstanding · ${escapeHtml(c.short)}</div>
+      <div class="lbl">You still owe · ${escapeHtml(c.short)}</div>
       <div class="val">
         <span class="c">$</span>${bal.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}<span style="font-size:18px; opacity:0.85; font-weight:500;">.${(bal % 1).toFixed(2).slice(2)}</span>
       </div>
       <div class="due">${bal > 0
-        ? `Term invoice ${c.fees.term} · due ${c.fees.due} · ${c.fees.daysLeft} days left`
-        : `Fully paid for ${c.fees.term} · receipted ${c.fees.due}`}</div>
+        ? `${c.fees.term} fees · pay by ${c.fees.due} · ${c.fees.daysLeft} days to go`
+        : `${c.fees.term} fees fully paid · receipt sent ${c.fees.due}`}</div>
       <div class="progress">
         <div class="bar"><span style="width: ${paidPct}%;"></span></div>
         <div class="meta"><span>Paid · ${money(c.fees.paid)}</span><span>Total · ${money(total)}</span></div>
@@ -2088,12 +2088,12 @@ function renderHome() {
       <div class="actions">
         ${bal > 0
           ? `<span class="btn solid" id="hero-pay">Pay now <span data-icon="arrow" data-icon-size="13"></span></span>`
-          : `<span class="btn solid" id="hero-receipt">View receipt <span data-icon="arrow" data-icon-size="13"></span></span>`}
-        <span class="btn" data-go="fees">View invoice</span>
+          : `<span class="btn solid" id="hero-receipt">See receipt <span data-icon="arrow" data-icon-size="13"></span></span>`}
+        <span class="btn" data-go="fees">See fee statement</span>
       </div>
     </div>
 
-    <div class="section-h">Today<button data-go-tt>View week</button></div>
+    <div class="section-h">Today<button data-go-tt>See full day</button></div>
     <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px;">
       ${c.timetable.slice(0, 4).map(r => `
         <div class="tt-row">
@@ -2107,17 +2107,17 @@ function renderHome() {
       `).join('')}
     </div>
 
-    <div class="section-h">Quick stats</div>
+    <div class="section-h">Quick look</div>
     <div class="stat-grid">
       <div class="stat-tile brand" data-go="attendance">
-        <div class="l">Attendance</div>
+        <div class="l">How often at school</div>
         <div class="v">${attPct}%</div>
-        <div class="sb">${att.present} of ${att.total} days present</div>
+        <div class="sb">Present ${att.present} of ${att.total} days</div>
       </div>
       <div class="stat-tile" data-go="attendance">
-        <div class="l">Term average</div>
+        <div class="l">Average mark</div>
         <div class="v">${avgMark}%</div>
-        <div class="sb">${c.marks.length} subjects assessed</div>
+        <div class="sb">Across ${c.marks.length} subjects</div>
       </div>
     </div>
 
@@ -2127,11 +2127,11 @@ function renderHome() {
       <span class="pill-btn" data-go="library"><span data-icon="book" data-icon-size="13"></span> Library</span>
       <span class="pill-btn" data-go="payment-history"><span data-icon="receipt" data-icon-size="13"></span> Receipts</span>
       <span class="pill-btn" data-go="messages"><span data-icon="chat" data-icon-size="13"></span> Messages</span>
-      <span class="pill-btn" data-go="leave-request"><span data-icon="pin" data-icon-size="13"></span> Leave</span>
+      <span class="pill-btn" data-go="leave-request"><span data-icon="pin" data-icon-size="13"></span> Time off</span>
       <span class="pill-btn" data-go="children"><span data-icon="user" data-icon-size="13"></span> Children</span>
     </div>
 
-    <div class="section-h">Notices${unread > 0 ? ` · ${unread} new` : ''}<button data-go="notices">All notices</button></div>
+    <div class="section-h">School news${unread > 0 ? ` · ${unread} new` : ''}<button data-go="notices">See all</button></div>
     <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px;">
       ${NOTICES.slice(0, 3).map(n => `
         <div class="notice-row ${state.notices[n.id].unread ? 'unread' : ''}" data-notice="${n.id}">
@@ -2153,7 +2153,7 @@ function wireHome() {
   const p = $('#hero-pay'); if (p) p.addEventListener('click', () => go('fees/pay'));
   const r = $('#hero-receipt'); if (r) r.addEventListener('click', () => {
     if (state.pay.receipt) go('fees/receipt');
-    else toast('No recent payment yet', 'warn');
+    else toast('No recent payment to show yet', 'warn');
   });
   $$('[data-notice]').forEach(b => b.addEventListener('click', () => openNotice(b.dataset.notice)));
   const tt = $('[data-go-tt]'); if (tt) tt.addEventListener('click', () => go('timetable'));
@@ -2179,18 +2179,18 @@ function renderFees() {
     </div>
 
     <div class="fee-hero ${bal === 0 ? 'cleared' : ''}">
-      <div class="lbl">Outstanding balance</div>
+      <div class="lbl">What you still owe</div>
       <div class="val"><span class="c">$</span>${bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
       <div class="due">${bal > 0
-        ? `Term invoice ${c.fees.term} · due ${c.fees.due} · ${c.fees.daysLeft} days left`
-        : `Fully paid · receipted ${c.fees.due}`}</div>
+        ? `${c.fees.term} fees · pay by ${c.fees.due} · ${c.fees.daysLeft} days to go`
+        : `All paid · receipt sent ${c.fees.due}`}</div>
       <div class="progress">
         <div class="bar"><span style="width: ${paidPct}%;"></span></div>
         <div class="meta"><span>Paid · ${money(c.fees.paid)}</span><span>Total · ${money(total)}</span></div>
       </div>
     </div>
 
-    <div class="section-h">Invoice breakdown<span style="font: 500 10.5px/1 var(--font-mono); color: var(--text-muted); letter-spacing: 0;">Issued ${escapeHtml(c.fees.issued)}</span></div>
+    <div class="section-h">Fee statement<span style="font: 500 10.5px/1 var(--font-mono); color: var(--text-muted); letter-spacing: 0;">Sent ${escapeHtml(c.fees.issued)}</span></div>
     <div class="breakdown">
       ${c.fees.invoices.map(inv => `
         <div class="breakdown-row" data-inv="${inv.id}">
@@ -2203,15 +2203,15 @@ function renderFees() {
       `).join('')}
       <div class="breakdown-row total">
         <div>
-          <div class="nm">Invoice total</div>
-          <div class="sb">${escapeHtml(c.fees.term)} · all line items</div>
+          <div class="nm">Total for the term</div>
+          <div class="sb">${escapeHtml(c.fees.term)} · everything added up</div>
         </div>
         <div class="v">${money(total)}</div>
       </div>
       ${c.fees.paid > 0 ? `
         <div class="breakdown-row paid">
           <div>
-            <div class="nm">Payment received</div>
+            <div class="nm">Already paid</div>
             <div class="sb">EcoCash · ref T-${(238118 + c.id.charCodeAt(1)).toString().slice(-6)}</div>
           </div>
           <div class="v">${money(c.fees.paid)}</div>
@@ -2219,36 +2219,36 @@ function renderFees() {
       ` : ''}
     </div>
 
-    <div class="section-h">Discounts applied<span style="font: 500 10.5px/1 var(--font-mono); color: var(--text-muted); letter-spacing: 0;">Auto-applied</span></div>
+    <div class="section-h">Money off<span style="font: 500 10.5px/1 var(--font-mono); color: var(--text-muted); letter-spacing: 0;">Added for you</span></div>
     <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px;">
       <div class="pl-row">
         <span class="ic-tile" style="background: var(--tone-success-bg); color: var(--tone-success);"><span data-icon="check" data-icon-size="14"></span></span>
         <div>
-          <div class="nm">Sibling discount · 7.5%</div>
-          <div class="sb">3 children on the platform</div>
+          <div class="nm">Brothers & sisters · 7.5% off</div>
+          <div class="sb">For families with 3 or more children</div>
         </div>
         <span style="font: 600 13px var(--font-mono); color: var(--tone-success);">−${money(total * 0.075)}</span>
       </div>
       <div class="pl-row">
         <span class="ic-tile" style="background: var(--tone-info-bg, var(--brand-soft)); color: var(--brand-strong);"><span data-icon="clock" data-icon-size="14"></span></span>
         <div>
-          <div class="nm">Early-pay discount · 2%</div>
-          <div class="sb">If settled in full by ${escapeHtml(c.fees.due)}</div>
+          <div class="nm">Pay early · 2% off</div>
+          <div class="sb">If you pay it all by ${escapeHtml(c.fees.due)}</div>
         </div>
         <span style="font: 600 13px var(--font-mono); color: var(--brand-strong);">−${money(total * 0.02)}</span>
       </div>
     </div>
 
-    <div class="section-h">Payment methods on file<button data-go="payment-history">All receipts →</button></div>
+    <div class="section-h">Saved ways to pay<button data-go="payment-history">Past payments →</button></div>
     <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px;">
       <div class="pl-row">
         <span class="ic-tile brand"><span data-icon="phone" data-icon-size="16"></span></span>
-        <div><div class="nm">EcoCash</div><div class="sb">${escapeHtml(state.pay.phone)} · instant</div></div>
+        <div><div class="nm">EcoCash</div><div class="sb">${escapeHtml(state.pay.phone)} · clears right away</div></div>
         <span data-icon="chright" style="color: var(--text-subtle);"></span>
       </div>
       <div class="pl-row">
         <span class="ic-tile"><span data-icon="card" data-icon-size="16"></span></span>
-        <div><div class="nm">Visa · 4421</div><div class="sb">2.9% processing fee</div></div>
+        <div><div class="nm">Visa · 4421</div><div class="sb">Card fee: 2.9%</div></div>
         <span data-icon="chright" style="color: var(--text-subtle);"></span>
       </div>
       <div class="pl-row">
@@ -2265,7 +2265,7 @@ function wireFees() {
   $$('[data-inv]').forEach(r => r.addEventListener('click', () => {
     // Quick info — tap to mark for partial pay
     state.pay.picked[r.dataset.inv] = !state.pay.picked[r.dataset.inv];
-    toast(state.pay.picked[r.dataset.inv] ? 'Selected for payment' : 'Removed from selection');
+    toast(state.pay.picked[r.dataset.inv] ? 'Added to what you\'ll pay' : 'Removed');
     render();
   }));
   const op = $('#open-pay'); if (op) op.addEventListener('click', () => go('fees/pay'));
@@ -2282,8 +2282,8 @@ function renderFeesPay() {
   return `
     <div style="padding: 16px 16px 4px;">
       <div style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Step 1 of 3</div>
-      <div style="font: 600 16px/1.25 var(--font-sans); color: var(--text-strong);">Choose what to pay</div>
-      <div style="font: 13px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 4px;">Tap items to include them, or leave all selected to pay the full balance.</div>
+      <div style="font: 600 16px/1.25 var(--font-sans); color: var(--text-strong);">Pick what to pay for</div>
+      <div style="font: 13px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 4px;">Tap an item to pick it, or leave all of them ticked to pay the full amount.</div>
     </div>
 
     <div class="breakdown" style="margin-top: 12px;">
@@ -2301,17 +2301,17 @@ function renderFeesPay() {
       `).join('')}
       <div class="breakdown-row total">
         <div>
-          <div class="nm">${noneSelected ? 'Outstanding balance' : 'Selected items'}</div>
-          <div class="sb">${noneSelected ? feeBalance(c) === feeTotal(c) ? 'Full invoice unpaid' : `${money(c.fees.paid)} already paid` : 'Tap an item to remove'}</div>
+          <div class="nm">${noneSelected ? 'What you still owe' : 'Your picks'}</div>
+          <div class="sb">${noneSelected ? feeBalance(c) === feeTotal(c) ? 'Nothing paid yet' : `${money(c.fees.paid)} already paid` : 'Tap an item to take it out'}</div>
         </div>
         <div class="v">${money(total)}</div>
       </div>
     </div>
 
-    <div class="section-h">Step 2 · Choose split</div>
+    <div class="section-h">Step 2 · How much today?</div>
     <div class="split-row">
       <button class="${state.pay.splitMode === 'full' ? 'on' : ''}" data-split="full">
-        Pay in full
+        Pay all
         <span class="sb">${money(total)}</span>
       </button>
       <button class="${state.pay.splitMode === 'half' ? 'on' : ''}" data-split="half">
@@ -2319,7 +2319,7 @@ function renderFeesPay() {
         <span class="sb">${money(total / 2)}</span>
       </button>
       <button class="${state.pay.splitMode === 'min' ? 'on' : ''}" data-split="min">
-        Min ($150)
+        Pay $150
         <span class="sb">${money(Math.min(total, 150))}</span>
       </button>
     </div>
@@ -2327,14 +2327,14 @@ function renderFeesPay() {
     <div style="padding: 14px 16px 0;">
       <div style="background: var(--brand-soft); color: var(--brand-strong); padding: 12px 14px; border-radius: 12px; display: flex; align-items: center; gap: 10px;">
         <span data-icon="info" data-icon-size="16"></span>
-        <div style="font: 13px/1.4 var(--font-sans);">Today's charge: <strong>${money(amount)}</strong>${state.pay.splitMode !== 'full' ? ` · ${money(total - amount)} remaining` : ''}</div>
+        <div style="font: 13px/1.4 var(--font-sans);">Paying today: <strong>${money(amount)}</strong>${state.pay.splitMode !== 'full' ? ` · ${money(total - amount)} still left` : ''}</div>
       </div>
     </div>
 
     <div style="padding: 24px 16px; display: flex; gap: 8px;">
       <button data-back-to="fees" style="flex: 1; padding: 12px; border-radius: 10px; background: var(--surface-muted); color: var(--text-strong); font: 600 13px var(--font-sans); cursor: pointer;">Back</button>
       <button id="go-method" ${amount > 0 ? '' : 'disabled'} style="flex: 2; padding: 12px; border-radius: 10px; background: var(--brand); color: #fff; font: 600 14px var(--font-sans); cursor: pointer; ${amount > 0 ? '' : 'opacity:0.5; cursor:not-allowed;'} display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-        Continue · ${money(amount)} <span data-icon="arrow" data-icon-size="14"></span>
+        Next · ${money(amount)} <span data-icon="arrow" data-icon-size="14"></span>
       </button>
     </div>
   `;
@@ -2357,10 +2357,10 @@ function wireFeesPay() {
    FEES — Pay flow step 2: method
    ============================================================ */
 const METHODS = [
-  { id: 'ecocash',  nm: 'EcoCash',          sb: 'Push to phone · instant',    icon: 'phone' },
-  { id: 'onemoney', nm: 'OneMoney',         sb: 'Push to phone · instant',    icon: 'phone' },
-  { id: 'bank',     nm: 'Bank transfer',    sb: 'CABS · Stanbic · 1 biz day', icon: 'building' },
-  { id: 'card',     nm: 'Visa / Mastercard',sb: '2.9% processing fee',        icon: 'card' },
+  { id: 'ecocash',  nm: 'EcoCash',          sb: 'Confirm on your phone · clears now', icon: 'phone' },
+  { id: 'onemoney', nm: 'OneMoney',         sb: 'Confirm on your phone · clears now', icon: 'phone' },
+  { id: 'bank',     nm: 'Bank transfer',    sb: 'CABS · Stanbic · clears next day',   icon: 'building' },
+  { id: 'card',     nm: 'Visa / Mastercard',sb: 'Card fee: 2.9%',                     icon: 'card' },
 ];
 
 function renderFeesMethod() {
@@ -2373,14 +2373,14 @@ function renderFeesMethod() {
     detail = `
       <div style="padding: 0 16px;">
         <div style="margin-top: 10px;">
-          <label style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;">${label} phone</label>
+          <label style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;">${label} phone number</label>
           <input type="tel" id="phone-input" value="${escapeHtml(state.pay.phone)}" style="width: 100%; padding: 0 14px; height: 44px; border: 1px solid var(--border); border-radius: 10px; font: 500 14px var(--font-mono); background: var(--surface); color: var(--text-strong);" />
         </div>
       </div>
       <div style="padding: 14px 16px 0;">
         <div class="sim-box">
-          <strong><span class="pulse"></span> Push pending</strong>
-          On confirm, an approval prompt will be sent to the phone above.
+          <strong><span class="pulse"></span> Check your phone</strong>
+          When you tap Confirm, you'll get a prompt on the phone above. Type your PIN to approve.
         </div>
       </div>
     `;
@@ -2389,7 +2389,7 @@ function renderFeesMethod() {
       <div style="padding: 0 16px;">
         <div style="margin-top: 10px; display: grid; gap: 10px;">
           <div>
-            <label style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;">Card number</label>
+            <label style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;">Card number on file</label>
             <div style="display:flex; align-items:center; gap:8px; padding: 0 14px; height: 44px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface);">
               <span data-icon="card" data-icon-size="16" style="color: var(--text-subtle);"></span>
               <span style="font: 500 14px var(--font-mono); color: var(--text-strong); letter-spacing: 0.06em;">•••• •••• •••• 4421</span>
@@ -2398,11 +2398,11 @@ function renderFeesMethod() {
           </div>
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <div>
-              <label style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;">Expiry</label>
+              <label style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;">Expires</label>
               <div style="padding: 0 14px; height: 44px; line-height: 44px; border: 1px solid var(--border); border-radius: 10px; font: 500 14px var(--font-mono); background: var(--surface);">09 / 28</div>
             </div>
             <div>
-              <label style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;">CVV</label>
+              <label style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;">3-digit code</label>
               <input type="text" inputmode="numeric" placeholder="•••" maxlength="3" style="width: 100%; padding: 0 14px; height: 44px; border: 1px solid var(--border); border-radius: 10px; font: 500 14px var(--font-mono); background: var(--surface);" />
             </div>
           </div>
@@ -2413,32 +2413,32 @@ function renderFeesMethod() {
     detail = `
       <div style="padding: 0 16px;">
         <div style="margin-top: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px;">
-          <div style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Beneficiary details</div>
+          <div style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Send the money here</div>
           <div style="display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font: 13px/1.5 var(--font-sans); color: var(--text-strong);">
             <div style="color: var(--text-muted);">Bank</div><div>CABS</div>
             <div style="color: var(--text-muted);">Account name</div><div>${escapeHtml(c.school)}</div>
-            <div style="color: var(--text-muted);">Account no.</div><div style="font-family: var(--font-mono);">1004 1199 8821</div>
+            <div style="color: var(--text-muted);">Account number</div><div style="font-family: var(--font-mono);">1004 1199 8821</div>
             <div style="color: var(--text-muted);">Branch</div><div>Avondale · 1004</div>
-            <div style="color: var(--text-muted);">Reference</div><div style="font-family: var(--font-mono); color: var(--brand-strong);">${c.id.toUpperCase()}-${c.fees.term}-${initials(c.name)}</div>
+            <div style="color: var(--text-muted);">Reference (use this)</div><div style="font-family: var(--font-mono); color: var(--brand-strong);">${c.id.toUpperCase()}-${c.fees.term}-${initials(c.name)}</div>
           </div>
         </div>
       </div>
       <div style="padding: 14px 16px 0;">
         <div class="sim-box">
-          <strong>Manual transfer</strong>
-          Confirm below once you've completed the transfer in your banking app. We'll match the reference within one business day.
+          <strong>Bank transfer</strong>
+          Send the money in your banking app, then tap Confirm below. We'll match it to your child's fees within one working day.
         </div>
       </div>
     `;
   } else {
-    detail = `<div style="padding: 14px 16px 0;"><div class="sim-box">Choose a method above to continue.</div></div>`;
+    detail = `<div style="padding: 14px 16px 0;"><div class="sim-box">Pick a way to pay above to keep going.</div></div>`;
   }
 
   return `
     <div style="padding: 16px 16px 4px;">
       <div style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Step 3 of 3</div>
-      <div style="font: 600 16px/1.25 var(--font-sans); color: var(--text-strong);">Choose payment method</div>
-      <div style="font: 13px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 4px;">Today's charge: <strong style="color: var(--text-strong);">${money(amount)}</strong></div>
+      <div style="font: 600 16px/1.25 var(--font-sans); color: var(--text-strong);">How would you like to pay?</div>
+      <div style="font: 13px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 4px;">Paying today: <strong style="color: var(--text-strong);">${money(amount)}</strong></div>
     </div>
 
     <div style="padding: 12px 0 4px;">
@@ -2458,7 +2458,7 @@ function renderFeesMethod() {
     <div style="padding: 22px 16px; display: flex; gap: 8px;">
       <button data-back-to="fees/pay" style="flex: 1; padding: 12px; border-radius: 10px; background: var(--surface-muted); color: var(--text-strong); font: 600 13px var(--font-sans); cursor: pointer;">Back</button>
       <button id="confirm-pay" ${m && !state.pay.processing ? '' : 'disabled'} style="flex: 2; padding: 12px; border-radius: 10px; background: var(--brand); color: #fff; font: 600 14px var(--font-sans); cursor: pointer; ${m && !state.pay.processing ? '' : 'opacity:0.5; cursor:not-allowed;'} display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-        ${state.pay.processing ? '<span data-icon="loading" data-icon-size="14"></span> Processing…' : `Confirm · ${money(amount)}`}
+        ${state.pay.processing ? '<span data-icon="loading" data-icon-size="14"></span> Working on it…' : `Confirm · ${money(amount)}`}
       </button>
     </div>
   `;
@@ -2482,7 +2482,7 @@ function methodLabel(m) {
     ecocash: 'EcoCash',
     onemoney: 'OneMoney',
     bank: 'Bank transfer · CABS',
-    card: 'Visa ending 4421',
+    card: 'Visa card ending 4421',
   })[m] || m;
 }
 
@@ -2507,7 +2507,7 @@ function completePayment() {
   };
   state.pay.processing = false;
   go('fees/receipt');
-  toast('Payment successful · ' + money(amount), 'success');
+  toast('Payment done · ' + money(amount), 'success');
 }
 
 /* ============================================================
@@ -2529,8 +2529,8 @@ function renderFeesReceipt() {
       <div class="succ-banner">
         <div class="ic"><span data-icon="check" data-icon-size="18"></span></div>
         <div>
-          <div class="nm">Payment received · ${money(r.amount)}</div>
-          <div class="sb">${methodLabel(r.method)} · ${r.method === 'bank' ? 'will reflect within 1 business day' : 'cleared instantly'}</div>
+          <div class="nm">We got your payment · ${money(r.amount)}</div>
+          <div class="sb">${methodLabel(r.method)} · ${r.method === 'bank' ? 'will show by the next working day' : 'cleared right away'}</div>
         </div>
       </div>
       <h2>${escapeHtml(r.school)}</h2>
@@ -2540,25 +2540,25 @@ function renderFeesReceipt() {
       ${r.items.length > 0 ? r.items.map(i => `
         <div class="rl" style="color: var(--text-muted); font-size: 12px;"><span>· ${escapeHtml(i.nm)}</span><span class="v">${money(i.amount)}</span></div>
       `).join('') : ''}
-      ${r.splitMode !== 'full' ? `<div class="rl" style="color: var(--text-muted); font-size: 12px;"><span>Split · ${r.splitMode === 'half' ? '50% of selected' : 'minimum installment'}</span><span></span></div>` : ''}
-      <div class="rl foot"><span>Total ${methodLabel(r.method)}</span><span class="v">${money(r.amount)}</span></div>
+      ${r.splitMode !== 'full' ? `<div class="rl" style="color: var(--text-muted); font-size: 12px;"><span>Part-pay · ${r.splitMode === 'half' ? 'half of what you picked' : 'smallest amount'}</span><span></span></div>` : ''}
+      <div class="rl foot"><span>Paid by ${methodLabel(r.method)}</span><span class="v">${money(r.amount)}</span></div>
       <div class="ref">
         Reference number
         <strong>${escapeHtml(r.ref)}</strong>
       </div>
       <div class="acts">
-        <button class="btn primary" id="rcp-pdf"><span data-icon="download" data-icon-size="14"></span> Download PDF receipt</button>
-        <button class="btn" id="rcp-email"><span data-icon="mail" data-icon-size="13"></span> Email</button>
-        <button class="btn" id="rcp-sms"><span data-icon="phone" data-icon-size="13"></span> SMS</button>
+        <button class="btn primary" id="rcp-pdf"><span data-icon="download" data-icon-size="14"></span> Save receipt as PDF</button>
+        <button class="btn" id="rcp-email"><span data-icon="mail" data-icon-size="13"></span> Email me a copy</button>
+        <button class="btn" id="rcp-sms"><span data-icon="phone" data-icon-size="13"></span> Text me a copy</button>
         <button class="btn" data-go="home" style="grid-column: 1 / -1;"><span data-icon="home" data-icon-size="13"></span> Back to home</button>
       </div>
     </div>
   `;
 }
 function wireFeesReceipt() {
-  const pdf = $('#rcp-pdf'); if (pdf) pdf.addEventListener('click', () => toast('PDF saved to Downloads', 'success'));
-  const em = $('#rcp-email'); if (em) em.addEventListener('click', () => toast('Receipt emailed', 'success'));
-  const sm = $('#rcp-sms'); if (sm) sm.addEventListener('click', () => toast('Receipt SMSed', 'success'));
+  const pdf = $('#rcp-pdf'); if (pdf) pdf.addEventListener('click', () => toast('Receipt saved to Downloads', 'success'));
+  const em = $('#rcp-email'); if (em) em.addEventListener('click', () => toast('Receipt emailed to you', 'success'));
+  const sm = $('#rcp-sms'); if (sm) sm.addEventListener('click', () => toast('Receipt sent by SMS', 'success'));
   $$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
 }
 
@@ -2567,7 +2567,7 @@ function wireFeesReceipt() {
    ============================================================ */
 function renderNotices() {
   return `
-    <div class="section-h" style="padding-left: 16px; padding-right: 16px;">All notices<span style="font: 500 11px/1 var(--font-mono); color: var(--text-muted); letter-spacing: 0;">${unreadCount()} unread</span></div>
+    <div class="section-h" style="padding-left: 16px; padding-right: 16px;">School news<span style="font: 500 11px/1 var(--font-mono); color: var(--text-muted); letter-spacing: 0;">${unreadCount()} new</span></div>
     <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px;">
       ${NOTICES.map(n => `
         <div class="notice-row ${state.notices[n.id].unread ? 'unread' : ''}" data-notice="${n.id}">
@@ -2575,7 +2575,7 @@ function renderNotices() {
           <div>
             <div class="nm">${escapeHtml(n.title)}</div>
             <div class="sb">${escapeHtml(n.sb)}</div>
-            <div class="meta">${escapeHtml(n.from)} · ${escapeHtml(n.when)}${state.notices[n.id].rsvp ? ' · RSVP: ' + state.notices[n.id].rsvp : ''}</div>
+            <div class="meta">${escapeHtml(n.from)} · ${escapeHtml(n.when)}${state.notices[n.id].rsvp ? ' · You said: ' + ({yes:'Going', no:'Can\'t come', maybe:'Maybe'}[state.notices[n.id].rsvp] || state.notices[n.id].rsvp) : ''}</div>
           </div>
           ${state.notices[n.id].unread
             ? '<span class="pip"></span>'
@@ -2585,7 +2585,7 @@ function renderNotices() {
     </div>
     <div style="padding: 16px;">
       <button id="mark-all-read" style="width: 100%; padding: 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); color: var(--text-strong); font: 500 13px var(--font-sans); cursor: pointer;">
-        Mark all as read
+        Mark them all as read
       </button>
     </div>
     <div style="height: 24px;"></div>
@@ -2596,7 +2596,7 @@ function wireNotices() {
   const ma = $('#mark-all-read'); if (ma) ma.addEventListener('click', () => {
     Object.values(state.notices).forEach(n => n.unread = false);
     render();
-    toast('All notices marked read', 'success');
+    toast('All marked as read', 'success');
   });
 }
 function openNotice(id) {
@@ -2623,7 +2623,7 @@ function renderNoticeDetail() {
         ${n.body.map(p => `<p>${escapeHtml(p)}</p>`).join('')}
       </div>
       ${n.attachments.length > 0 ? `
-        <div style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-top: 6px;">Attachments</div>
+        <div style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-top: 6px;">Files to download</div>
         <div class="attach">
           ${n.attachments.map(a => `
             <a href="#" data-attach="${escapeHtml(a.nm)}">
@@ -2635,17 +2635,17 @@ function renderNoticeDetail() {
         </div>
       ` : ''}
       ${n.rsvp ? `
-        <div style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-top: 14px;">Your RSVP</div>
+        <div style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-top: 14px;">Are you coming?</div>
         <div class="rsvp">
           <button class="${st.rsvp === 'yes' ? 'on yes' : ''}" data-rsvp="yes"><span data-icon="check" data-icon-size="13"></span> Going</button>
           <button class="${st.rsvp === 'maybe' ? 'on maybe' : ''}" data-rsvp="maybe">Maybe</button>
-          <button class="${st.rsvp === 'no' ? 'on no' : ''}" data-rsvp="no"><span data-icon="x" data-icon-size="13"></span> Can't</button>
+          <button class="${st.rsvp === 'no' ? 'on no' : ''}" data-rsvp="no"><span data-icon="x" data-icon-size="13"></span> Can't come</button>
         </div>
-        ${st.rsvp ? `<div style="font: 12px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 6px;">Your RSVP has been sent to ${escapeHtml(n.from)}.</div>` : ''}
+        ${st.rsvp ? `<div style="font: 12px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 6px;">We told ${escapeHtml(n.from)}.</div>` : ''}
       ` : ''}
       <div class="comments">
-        <h3>Discussion · ${st.comments.length}</h3>
-        ${st.comments.length === 0 ? `<div style="font: 13px/1.4 var(--font-sans); color: var(--text-muted); padding: 8px 0 4px;">No comments yet. Be the first to respond.</div>` : ''}
+        <h3>Replies · ${st.comments.length}</h3>
+        ${st.comments.length === 0 ? `<div style="font: 13px/1.4 var(--font-sans); color: var(--text-muted); padding: 8px 0 4px;">No replies yet. Be the first.</div>` : ''}
         ${st.comments.map(c => `
           <div class="comment ${c.role === 'staff' ? 'staff' : ''}">
             <div class="av">${initials(c.who)}</div>
@@ -2656,7 +2656,7 @@ function renderNoticeDetail() {
           </div>
         `).join('')}
         <div class="comment-input">
-          <input id="comment-input" placeholder="Write a reply…" />
+          <input id="comment-input" placeholder="Type a reply…" />
           <button id="comment-send" title="Send"><span data-icon="arrow" data-icon-size="16"></span></button>
         </div>
       </div>
@@ -2669,11 +2669,11 @@ function wireNoticeDetail() {
   $$('[data-rsvp]').forEach(b => b.addEventListener('click', () => {
     state.notices[n.id].rsvp = b.dataset.rsvp;
     render();
-    toast(`RSVP "${b.dataset.rsvp}" sent`, 'success');
+    toast(`We told the school: ${({yes:'Going', no:'Can\'t come', maybe:'Maybe'}[b.dataset.rsvp] || b.dataset.rsvp)}`, 'success');
   }));
   $$('[data-attach]').forEach(a => a.addEventListener('click', (e) => {
     e.preventDefault();
-    toast('Downloaded ' + a.dataset.attach, 'success');
+    toast(a.dataset.attach + ' saved to Downloads', 'success');
   }));
   const inp = $('#comment-input');
   const send = $('#comment-send');
@@ -2687,7 +2687,7 @@ function wireNoticeDetail() {
     });
     inp.value = '';
     render();
-    toast('Reply posted', 'success');
+    toast('Reply sent', 'success');
   }
   if (send) send.addEventListener('click', sendComment);
   if (inp) inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendComment(); });
@@ -2740,9 +2740,9 @@ function renderAttendance() {
     <div class="att-card">
       <div class="summary">
         <span class="v">${attPct}%</span>
-        <span class="lbl">attendance · ${escapeHtml(c.short)}</span>
+        <span class="lbl">at school · ${escapeHtml(c.short)}</span>
       </div>
-      <div class="sb">${present} present · ${late} late · ${absent} absent — ${counted} school days so far this term.</div>
+      <div class="sb">Present ${present} days · late ${late} · absent ${absent} — out of ${counted} school days so far.</div>
       <div class="att-grid">
         <span class="wk"></span>
         ${days.map(d => `<span class="day">${d}</span>`).join('')}
@@ -2760,15 +2760,15 @@ function renderAttendance() {
       </div>
       <div style="margin-top: 14px; display: flex; gap: 8px;">
         <button id="req-leave" style="flex: 1; padding: 10px; border-radius: 10px; background: var(--surface-muted); color: var(--text-strong); font: 600 12.5px var(--font-sans); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-          <span data-icon="pin" data-icon-size="13"></span> Request leave
+          <span data-icon="pin" data-icon-size="13"></span> Ask for time off
         </button>
         <button id="dl-report" style="flex: 1; padding: 10px; border-radius: 10px; background: var(--brand); color: #fff; font: 600 12.5px var(--font-sans); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;">
-          <span data-icon="download" data-icon-size="13"></span> End-of-term PDF
+          <span data-icon="download" data-icon-size="13"></span> Term report (PDF)
         </button>
       </div>
     </div>
 
-    <div class="section-h">Subject marks<span style="font: 500 11px/1 var(--font-mono); color: var(--text-muted); letter-spacing: 0;">${c.marks.length} subjects</span></div>
+    <div class="section-h">Marks by subject<span style="font: 500 11px/1 var(--font-mono); color: var(--text-muted); letter-spacing: 0;">${c.marks.length} subjects</span></div>
     <div style="padding: 0 16px;">
       ${c.marks.map((m, idx) => {
         const pct = m.mark;
@@ -2808,7 +2808,7 @@ function wireAttendance() {
   }));
   const rl = $('#req-leave'); if (rl) rl.addEventListener('click', () => go('leave-request'));
   const dl = $('#dl-report'); if (dl) dl.addEventListener('click', () => {
-    toast('End-of-term report saved to Downloads', 'success');
+    toast('Term report saved to Downloads', 'success');
   });
 }
 
@@ -2833,7 +2833,7 @@ function renderMarkDetail() {
       <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div>
-            <div style="font: 500 11px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase;">Continuous</div>
+            <div style="font: 500 11px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase;">Class work</div>
             <div style="font: 700 22px/1 var(--font-mono); color: var(--text-strong); margin-top: 6px; font-variant-numeric: tabular-nums;">${m.ca}<span style="font-size: 12px; color: var(--text-muted);">/100</span></div>
             <div style="height: 6px; background: var(--surface-muted); border-radius: 9999px; margin-top: 8px; overflow: hidden;"><span style="display: block; height: 100%; width: ${m.ca}%; background: var(--brand);"></span></div>
           </div>
@@ -2846,21 +2846,21 @@ function renderMarkDetail() {
         <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between;">
           <div>
             <div style="font: 500 11px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase;">Overall grade</div>
-            <div style="font: 700 18px/1 var(--font-sans); color: var(--text-strong); margin-top: 6px;">${m.grade} · ${m.mark >= 80 ? 'Distinction' : m.mark >= 70 ? 'Credit' : m.mark >= 60 ? 'Pass' : 'Needs support'}</div>
+            <div style="font: 700 18px/1 var(--font-sans); color: var(--text-strong); margin-top: 6px;">${m.grade} · ${m.mark >= 80 ? 'Distinction' : m.mark >= 70 ? 'Credit' : m.mark >= 60 ? 'Pass' : 'Needs extra help'}</div>
           </div>
           <span style="padding: 6px 12px; border-radius: 9999px; background: ${m.grade === 'A' ? 'var(--tone-success-bg)' : m.grade === 'B' ? 'var(--brand-soft)' : m.grade === 'C' ? 'var(--tone-warn-bg)' : 'var(--tone-danger-bg)'}; color: ${m.grade === 'A' ? 'var(--tone-success)' : m.grade === 'B' ? 'var(--brand-strong)' : m.grade === 'C' ? 'var(--tone-warn)' : 'var(--tone-danger)'}; font: 700 14px/1 var(--font-mono);">${m.grade}</span>
         </div>
       </div>
     </div>
 
-    <div class="section-h" style="padding-left: 16px; padding-right: 16px;">Teacher's comment</div>
+    <div class="section-h" style="padding-left: 16px; padding-right: 16px;">What the teacher says</div>
     <div style="padding: 0 16px;">
       <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px;">
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
           <span style="width: 32px; height: 32px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 11px/1 var(--font-sans);">${initials(m.teacher)}</span>
           <div>
             <div style="font: 600 13px/1.2 var(--font-sans); color: var(--text-strong);">${escapeHtml(m.teacher)}</div>
-            <div style="font: 11px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px;">${escapeHtml(m.subj)} teacher · ${escapeHtml(c.grade)}</div>
+            <div style="font: 11px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px;">Teaches ${escapeHtml(m.subj)} · ${escapeHtml(c.grade)}</div>
           </div>
         </div>
         <p style="font: 13.5px/1.55 var(--font-sans); color: var(--text-body); margin: 0;">${escapeHtml(m.comment)}</p>
@@ -2877,7 +2877,7 @@ function renderMarkDetail() {
   `;
 }
 function wireMarkDetail() {
-  const m = $('#msg-teacher'); if (m) m.addEventListener('click', () => toast('Opening secure message thread', 'success'));
+  const m = $('#msg-teacher'); if (m) m.addEventListener('click', () => toast('Opening message…', 'success'));
 }
 
 /* ============================================================
@@ -2891,51 +2891,51 @@ function renderProfile() {
     <div class="prof-hero">
       <div class="av">${initialsP}</div>
       <h2>Mrs ${escapeHtml(last)}</h2>
-      <div class="sb">Primary guardian · ${CHILDREN.length} children linked</div>
+      <div class="sb">Main parent · ${CHILDREN.length} children on your account</div>
     </div>
 
-    <div class="section-h" style="padding-left:16px;">Contact details</div>
+    <div class="section-h" style="padding-left:16px;">How the school reaches you</div>
     <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px;">
       <div class="pl-row">
         <span class="ic-tile brand"><span data-icon="phone" data-icon-size="16"></span></span>
-        <div><div class="nm">${escapeHtml(state.pay.phone)}</div><div class="sb">Primary mobile · verified</div></div>
+        <div><div class="nm">${escapeHtml(state.pay.phone)}</div><div class="sb">Main phone · checked</div></div>
         <span data-icon="chright" style="color: var(--text-subtle);"></span>
       </div>
       <div class="pl-row">
         <span class="ic-tile"><span data-icon="mail" data-icon-size="16"></span></span>
-        <div><div class="nm">m.${last.toLowerCase()}@example.co.zw</div><div class="sb">Email · verified</div></div>
+        <div><div class="nm">m.${last.toLowerCase()}@example.co.zw</div><div class="sb">Email · checked</div></div>
         <span data-icon="chright" style="color: var(--text-subtle);"></span>
       </div>
       <div class="pl-row">
         <span class="ic-tile"><span data-icon="pin" data-icon-size="16"></span></span>
-        <div><div class="nm">14 Maples Drive, Borrowdale</div><div class="sb">Harare · postal address</div></div>
+        <div><div class="nm">14 Maples Drive, Borrowdale</div><div class="sb">Harare · home address</div></div>
         <span data-icon="chright" style="color: var(--text-subtle);"></span>
       </div>
     </div>
 
-    <div class="section-h" style="padding-left:16px;">Linked children<button data-go="children">Manage</button></div>
+    <div class="section-h" style="padding-left:16px;">Your children<button data-go="children">Manage</button></div>
     <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px;">
       ${CHILDREN.map(ch => `
         <div class="pl-row cl" data-pick-child-quick="${ch.id}">
           <span class="ic-tile ${ch.id === c.id ? 'brand' : ''}" style="border-radius: 50%; ${ch.id === c.id ? '' : 'background: var(--surface-muted);'}">${initials(ch.name)}</span>
           <div><div class="nm">${escapeHtml(ch.name)}</div><div class="sb">${escapeHtml(ch.grade)} · ${escapeHtml(ch.schoolShort)}</div></div>
-          ${ch.id === c.id ? '<span style="font: 500 10.5px/1 var(--font-mono); color: var(--brand-strong); background: var(--brand-soft); padding: 4px 8px; border-radius: 9999px; letter-spacing: 0.04em;">ACTIVE</span>' : '<span data-icon="chright" style="color: var(--text-subtle);"></span>'}
+          ${ch.id === c.id ? '<span style="font: 500 10.5px/1 var(--font-mono); color: var(--brand-strong); background: var(--brand-soft); padding: 4px 8px; border-radius: 9999px; letter-spacing: 0.04em;">VIEWING</span>' : '<span data-icon="chright" style="color: var(--text-subtle);"></span>'}
         </div>
       `).join('')}
     </div>
 
-    <div class="section-h" style="padding-left:16px;">Account</div>
+    <div class="section-h" style="padding-left:16px;">Your account</div>
     <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px;">
       <div class="lang-row" data-go="security">
-        <div class="nm">Sign-in &amp; security</div>
-        <div class="v">${state.twoFA ? '<span class="pill on" style="padding: 3px 8px; border-radius: 9999px; background: var(--tone-success-bg); color: var(--tone-success); font: 600 10px var(--font-mono);">2FA</span>' : ''} <span data-icon="chright" data-icon-size="14" style="color: var(--text-subtle);"></span></div>
+        <div class="nm">Sign-in &amp; safety</div>
+        <div class="v">${state.twoFA ? '<span class="pill on" style="padding: 3px 8px; border-radius: 9999px; background: var(--tone-success-bg); color: var(--tone-success); font: 600 10px var(--font-mono);">EXTRA CODE ON</span>' : ''} <span data-icon="chright" data-icon-size="14" style="color: var(--text-subtle);"></span></div>
       </div>
       <div class="lang-row" data-go="notifications">
-        <div class="nm">Notifications</div>
+        <div class="nm">Alerts</div>
         <div class="v"><span data-icon="chright" data-icon-size="14" style="color: var(--text-subtle);"></span></div>
       </div>
       <div class="lang-row" data-go="payment-history">
-        <div class="nm">Payment history</div>
+        <div class="nm">Past payments</div>
         <div class="v"><span data-icon="chright" data-icon-size="14" style="color: var(--text-subtle);"></span></div>
       </div>
     </div>
@@ -2947,11 +2947,11 @@ function renderProfile() {
         <div class="v">${escapeHtml(state.language)} <span data-icon="chright" data-icon-size="14" style="color: var(--text-subtle);"></span></div>
       </div>
       <div class="lang-row" data-go="help">
-        <div class="nm">Help &amp; support</div>
+        <div class="nm">Help</div>
         <div class="v"><span data-icon="chright" data-icon-size="14" style="color: var(--text-subtle);"></span></div>
       </div>
       <div class="lang-row" id="terms-row">
-        <div class="nm">Terms &amp; privacy</div>
+        <div class="nm">Rules &amp; privacy</div>
         <div class="v"><span data-icon="chright" data-icon-size="14" style="color: var(--text-subtle);"></span></div>
       </div>
     </div>
@@ -2972,7 +2972,7 @@ function wireProfile() {
     const k = t.dataset.toggle;
     state.notifs[k] = !state.notifs[k];
     render();
-    toast(`${k.toUpperCase()} ${state.notifs[k] ? 'enabled' : 'disabled'}`, 'success');
+    toast(`${k.toUpperCase()} ${state.notifs[k] ? 'turned on' : 'turned off'}`, 'success');
   }));
   $$('[data-pick-child-quick]').forEach(b => b.addEventListener('click', () => {
     const id = b.dataset.pickChildQuick;
@@ -2980,10 +2980,10 @@ function wireProfile() {
     state.childId = id;
     state.pay = { picked: {}, splitMode: 'full', method: null, phone: '0772 145 902', processing: false, receipt: null };
     render();
-    toast(`Now viewing ${currentChild().short}`, 'success');
+    toast(`Now showing ${currentChild().short}`, 'success');
   }));
   const lr = $('#lang-row'); if (lr) lr.addEventListener('click', openLanguagePicker);
-  const tr = $('#terms-row'); if (tr) tr.addEventListener('click', () => toast('Opening terms', 'success'));
+  const tr = $('#terms-row'); if (tr) tr.addEventListener('click', () => toast('Opening rules…', 'success'));
   const so = $('#sign-out'); if (so) so.addEventListener('click', confirmSignOut);
 }
 
@@ -2992,14 +2992,14 @@ function openLanguagePicker() {
   openModal(`
     <div class="sheet" onclick="event.stopPropagation()">
       <div class="handle"></div>
-      <h3>Choose language</h3>
-      <p class="sub">App-wide language for menus, notices and notifications.</p>
+      <h3>Pick your language</h3>
+      <p class="sub">Used across the app — menus, school news and alerts.</p>
       ${langs.map(l => `
         <div class="picker-row ${state.language === l ? 'on' : ''}" data-lang="${l}">
           <span class="av">${l[0]}</span>
           <div style="flex:1;">
             <div class="nm">${l}</div>
-            <div class="sb">${l === 'English' ? 'Default · all content available' : l === 'Shona' ? 'ChiShona · navigation & notices' : 'IsiNdebele · navigation & notices'}</div>
+            <div class="sb">${l === 'English' ? 'Default · everything in English' : l === 'Shona' ? 'ChiShona · menus & school news' : 'IsiNdebele · menus & school news'}</div>
           </div>
           <span class="chk" data-icon="check" data-icon-size="18"></span>
         </div>
@@ -3010,7 +3010,7 @@ function openLanguagePicker() {
     state.language = b.dataset.lang;
     closeModal();
     render();
-    toast('Language set to ' + state.language, 'success');
+    toast('Language changed to ' + state.language, 'success');
   }));
 }
 
@@ -3018,7 +3018,7 @@ function confirmSignOut() {
   openModal(`
     <div class="modal-center" onclick="event.stopPropagation()">
       <h3 style="font: 600 16px/1.2 var(--font-sans); color: var(--text-strong); margin: 0 0 6px;">Sign out of Huchu Parent?</h3>
-      <p style="font: 13px/1.45 var(--font-sans); color: var(--text-muted); margin: 0 0 16px;">You'll need your phone number and PIN to sign back in. Saved payment methods stay on file.</p>
+      <p style="font: 13px/1.45 var(--font-sans); color: var(--text-muted); margin: 0 0 16px;">You'll need your phone number and PIN to sign back in. Your saved ways to pay are kept safe.</p>
       <div style="display: flex; gap: 8px;">
         <button data-cancel style="flex: 1; padding: 12px; border-radius: 10px; background: var(--surface-muted); color: var(--text-strong); font: 600 13px var(--font-sans); cursor: pointer;">Cancel</button>
         <button data-confirm style="flex: 1; padding: 12px; border-radius: 10px; background: var(--tone-danger); color: #fff; font: 600 13px var(--font-sans); cursor: pointer;">Sign out</button>
@@ -3046,23 +3046,23 @@ function renderSignIn() {
       <div class="signin-shell">
         <div class="brand"><span class="mk" data-icon="corelith" data-icon-size="18"></span> Huchu Parent</div>
         <h1>Sign in</h1>
-        <p class="lede">Enter your registered phone number. We'll send a 6-digit code to confirm it's you.</p>
-        <label>Mobile number</label>
+        <p class="lede">Enter the phone number you gave the school. We'll text you a 6-digit code to check it's really you.</p>
+        <label>Phone number</label>
         <input id="si-phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="0772 000 000" value="${escapeHtml(s.phone)}" />
         <div class="remember ${s.rememberDevice ? 'on' : ''}" id="si-remember">
           <span class="box">${s.rememberDevice ? '<span data-icon="check" data-icon-size="12"></span>' : ''}</span>
           <div>
-            <div class="nm">Remember this device</div>
-            <div class="sb">Skip OTP on this phone for the next 30 days</div>
+            <div class="nm">Remember this phone</div>
+            <div class="sb">Skip the code on this phone for the next 30 days</div>
           </div>
         </div>
         <button class="primary" id="si-send">Send code <span data-icon="arrow" data-icon-size="15"></span></button>
         <div class="meta-hint">
           <span class="ic" data-icon="info" data-icon-size="14"></span>
-          <div>Demo · use the suggested number above and any 6-digit OTP (e.g. <strong>112233</strong>).</div>
+          <div>Demo · use the phone number above and any 6 digits as the code (try <strong>112233</strong>).</div>
         </div>
         <div class="footer-link">
-          New to Huchu Parent? <a href="#" id="si-help">Get a link code from school</a>
+          First time here? <a href="#" id="si-help">Ask the school for your code</a>
         </div>
       </div>
     `;
@@ -3070,17 +3070,17 @@ function renderSignIn() {
   return `
     <div class="signin-shell">
       <div class="brand"><span class="mk" data-icon="corelith" data-icon-size="18"></span> Huchu Parent</div>
-      <button class="alt" id="si-back" style="text-align: left; padding: 0; margin-bottom: 14px;"><span data-icon="back" data-icon-size="14"></span> Edit phone number</button>
-      <h1>Enter code</h1>
-      <p class="lede">We sent a 6-digit code to <strong>${escapeHtml(s.phone)}</strong>. The code is valid for 5 minutes.</p>
-      <label>Verification code</label>
-      <div class="otp" id="si-otp" role="group" aria-label="6-digit verification code">
+      <button class="alt" id="si-back" style="text-align: left; padding: 0; margin-bottom: 14px;"><span data-icon="back" data-icon-size="14"></span> Change phone number</button>
+      <h1>Enter your code</h1>
+      <p class="lede">We sent a 6-digit code to <strong>${escapeHtml(s.phone)}</strong>. It works for the next 5 minutes.</p>
+      <label>6-digit code</label>
+      <div class="otp" id="si-otp" role="group" aria-label="6-digit code">
         ${[0,1,2,3,4,5].map(i => `<input type="tel" inputmode="numeric" maxlength="1" autocomplete="one-time-code" data-otp-cell="${i}" value="${escapeHtml(s.otp[i] || '')}" aria-label="Digit ${i+1}" />`).join('')}
       </div>
-      <button class="primary" id="si-verify" ${s.otp.length === 6 ? '' : 'disabled'}>Verify &amp; sign in <span data-icon="arrow" data-icon-size="15"></span></button>
-      <button class="alt" id="si-resend">Resend code</button>
+      <button class="primary" id="si-verify" ${s.otp.length === 6 ? '' : 'disabled'}>Sign in <span data-icon="arrow" data-icon-size="15"></span></button>
+      <button class="alt" id="si-resend">Send the code again</button>
       <div class="footer-link">
-        Trouble signing in? <a href="#" id="si-help2">Contact the school office</a>
+        Can't sign in? <a href="#" id="si-help2">Call the school office</a>
       </div>
     </div>
   `;
@@ -3091,12 +3091,12 @@ function wireSignIn() {
     const p = $('#si-phone'); if (p) p.addEventListener('input', (e) => { s.phone = e.target.value; });
     const rb = $('#si-remember'); if (rb) rb.addEventListener('click', () => { s.rememberDevice = !s.rememberDevice; render(); });
     const sd = $('#si-send'); if (sd) sd.addEventListener('click', () => {
-      if (!s.phone.trim()) { toast('Enter your phone number', 'warn'); return; }
+      if (!s.phone.trim()) { toast('Please type your phone number', 'warn'); return; }
       s.step = 'otp'; s.otpSent = true; s.otp = '';
       render();
       toast('Code sent to ' + s.phone, 'success');
     });
-    const help = $('#si-help'); if (help) help.addEventListener('click', (e) => { e.preventDefault(); toast('Ask the bursar for a link code', 'warn'); });
+    const help = $('#si-help'); if (help) help.addEventListener('click', (e) => { e.preventDefault(); toast('Ask the school office for your sign-up code', 'warn'); });
   } else {
     const b = $('#si-back'); if (b) b.addEventListener('click', () => { s.step = 'phone'; render(); });
     const otpRoot = $('#si-otp');
@@ -3146,8 +3146,8 @@ function wireSignIn() {
       render();
       toast('Welcome back', 'success');
     });
-    const r = $('#si-resend'); if (r) r.addEventListener('click', () => { toast('Code resent', 'success'); });
-    const help2 = $('#si-help2'); if (help2) help2.addEventListener('click', (e) => { e.preventDefault(); toast('Office: bursar@school.co.zw · 0242 880 411', 'warn'); });
+    const r = $('#si-resend'); if (r) r.addEventListener('click', () => { toast('We sent the code again', 'success'); });
+    const help2 = $('#si-help2'); if (help2) help2.addEventListener('click', (e) => { e.preventDefault(); toast('School office: bursar@school.co.zw · 0242 880 411', 'warn'); });
   }
 }
 
@@ -3157,7 +3157,7 @@ function wireSignIn() {
 function renderPaymentHistory() {
   const allChildren = [{ id:'all', short:'All children' }].concat(CHILDREN.map(c => ({ id: c.id, short: c.short })));
   const methods = [
-    { id:'all',      label:'All methods' },
+    { id:'all',      label:'Any way' },
     { id:'ecocash',  label:'EcoCash' },
     { id:'onemoney', label:'OneMoney' },
     { id:'bank',     label:'Bank' },
@@ -3183,9 +3183,9 @@ function renderPaymentHistory() {
   return `
     <div style="padding: 14px 16px 4px;">
       <div style="background: var(--brand-soft); border-radius: 12px; padding: 14px 16px;">
-        <div style="font: 500 11px var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--brand-strong); opacity: 0.85;">Year-to-date</div>
+        <div style="font: 500 11px var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--brand-strong); opacity: 0.85;">Paid this year</div>
         <div style="font: 700 28px/1.1 var(--font-sans); color: var(--brand-strong); font-variant-numeric: tabular-nums; margin-top: 4px;">${money(total)}</div>
-        <div style="font: 12px/1.4 var(--font-sans); color: var(--brand-strong); opacity: 0.85; margin-top: 4px;">${filtered.length} payment${filtered.length===1?'':'s'} across ${new Set(filtered.map(p=>p.childId)).size} child${new Set(filtered.map(p=>p.childId)).size===1?'':'ren'}</div>
+        <div style="font: 12px/1.4 var(--font-sans); color: var(--brand-strong); opacity: 0.85; margin-top: 4px;">${filtered.length} payment${filtered.length===1?'':'s'} for ${new Set(filtered.map(p=>p.childId)).size} child${new Set(filtered.map(p=>p.childId)).size===1?'':'ren'}</div>
       </div>
     </div>
 
@@ -3199,8 +3199,8 @@ function renderPaymentHistory() {
     ${Object.keys(byMonth).length === 0 ? `
       <div class="empty-state" style="padding: 40px 24px;">
         <div class="ic"><span data-icon="receipt" data-icon-size="20"></span></div>
-        <div>No payments match these filters.</div>
-        <div style="margin-top: 12px;"><button id="hist-reset" style="color: var(--brand-strong); background: none; cursor: pointer; font: 500 13px var(--font-sans);">Clear filters →</button></div>
+        <div>No payments match what you picked.</div>
+        <div style="margin-top: 12px;"><button id="hist-reset" style="color: var(--brand-strong); background: none; cursor: pointer; font: 500 13px var(--font-sans);">Show all →</button></div>
       </div>
     ` : Object.entries(byMonth).map(([m, rows]) => `
       <div class="hist-month-h">${monthLabel(m)}</div>
@@ -3215,7 +3215,7 @@ function renderPaymentHistory() {
             </div>
           </div>
           <div class="v">${money(p.amount)}</div>
-          <span class="dl" data-dl="${p.id}" title="Download receipt"><span data-icon="download" data-icon-size="14"></span></span>
+          <span class="dl" data-dl="${p.id}" title="Save receipt"><span data-icon="download" data-icon-size="14"></span></span>
         </div>
       `).join('')}
     `).join('')}
@@ -3232,7 +3232,7 @@ function wirePaymentHistory() {
   }));
   $$('[data-dl]').forEach(b => b.addEventListener('click', (e) => {
     e.stopPropagation();
-    toast('Receipt ' + b.dataset.dl + ' downloaded', 'success');
+    toast('Receipt ' + b.dataset.dl + ' saved', 'success');
   }));
   $$('[data-receipt]').forEach(b => b.addEventListener('click', () => {
     const p = PAYMENT_HISTORY.find(x => x.id === b.dataset.receipt);
@@ -3247,7 +3247,7 @@ function wirePaymentHistory() {
 
 function openReceiptModal(p) {
   const c = CHILDREN.find(x => x.id === p.childId);
-  const methodNice = ({ecocash:'EcoCash',onemoney:'OneMoney',bank:'Bank transfer · CABS',card:'Visa ending 4421'})[p.method] || p.method;
+  const methodNice = ({ecocash:'EcoCash',onemoney:'OneMoney',bank:'Bank transfer · CABS',card:'Visa card ending 4421'})[p.method] || p.method;
   openModal(`
     <div class="sheet" onclick="event.stopPropagation()">
       <div class="handle"></div>
@@ -3257,7 +3257,7 @@ function openReceiptModal(p) {
         <div style="background: var(--surface-muted); border-radius: 10px; padding: 14px;">
           <div style="display:flex; justify-content:space-between; font: 13px var(--font-sans); padding: 4px 0;"><span style="color: var(--text-muted);">Child</span><span style="color: var(--text-strong);">${escapeHtml((c||{name:'—'}).name)}</span></div>
           <div style="display:flex; justify-content:space-between; font: 13px var(--font-sans); padding: 4px 0;"><span style="color: var(--text-muted);">Term</span><span style="color: var(--text-strong);">${escapeHtml(p.term)}</span></div>
-          <div style="display:flex; justify-content:space-between; font: 13px var(--font-sans); padding: 4px 0;"><span style="color: var(--text-muted);">Method</span><span style="color: var(--text-strong);">${escapeHtml(methodNice)}</span></div>
+          <div style="display:flex; justify-content:space-between; font: 13px var(--font-sans); padding: 4px 0;"><span style="color: var(--text-muted);">Paid by</span><span style="color: var(--text-strong);">${escapeHtml(methodNice)}</span></div>
           <div style="display:flex; justify-content:space-between; font: 13px var(--font-sans); padding: 4px 0;"><span style="color: var(--text-muted);">Date</span><span style="color: var(--text-strong); font-family: var(--font-mono);">${escapeHtml(p.date)}</span></div>
           <div style="display:flex; justify-content:space-between; font: 13px var(--font-sans); padding: 4px 0;"><span style="color: var(--text-muted);">Reference</span><span style="color: var(--text-strong); font-family: var(--font-mono);">${escapeHtml(p.ref)}</span></div>
           <div style="border-top: 1px dashed var(--border); margin-top: 6px; padding-top: 8px; display: flex; justify-content: space-between; font: 600 14px var(--font-sans);"><span>Amount</span><span style="font-family: var(--font-mono); color: var(--brand-strong);">${money(p.amount)}</span></div>
@@ -3265,12 +3265,12 @@ function openReceiptModal(p) {
       </div>
       <div class="acts">
         <button class="alt" data-rcp-share>Share</button>
-        <button class="ok" data-rcp-dl>Download PDF</button>
+        <button class="ok" data-rcp-dl>Save as PDF</button>
       </div>
     </div>
   `);
-  $('[data-rcp-dl]').addEventListener('click', () => { closeModal(); toast('Receipt PDF saved', 'success'); });
-  $('[data-rcp-share]').addEventListener('click', () => { closeModal(); toast('Share sheet opened', 'success'); });
+  $('[data-rcp-dl]').addEventListener('click', () => { closeModal(); toast('Receipt saved', 'success'); });
+  $('[data-rcp-share]').addEventListener('click', () => { closeModal(); toast('Choose where to share', 'success'); });
 }
 
 /* ============================================================
@@ -3279,11 +3279,11 @@ function openReceiptModal(p) {
 function renderAttendanceDay() {
   const parts = state.attendanceDay ? state.attendanceDay.split('-') : null;
   if (!parts) {
-    return `<div class="empty-state"><div class="ic"><span data-icon="calendar" data-icon-size="18"></span></div>No day selected. <button data-go="attendance" style="color: var(--brand-strong); background: none; cursor: pointer; font: 500 13px var(--font-sans); margin-top: 8px;">Back to attendance →</button></div>`;
+    return `<div class="empty-state"><div class="ic"><span data-icon="calendar" data-icon-size="18"></span></div>No day picked. <button data-go="attendance" style="color: var(--brand-strong); background: none; cursor: pointer; font: 500 13px var(--font-sans); margin-top: 8px;">Back to attendance →</button></div>`;
   }
   const [wIdx, dIdx, kind] = parts;
   const days = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
-  const statusLabel = { p:'Present', a:'Absent', l:'Late', h:'No data' }[kind] || '—';
+  const statusLabel = { p:'At school', a:'Not at school', l:'Late', h:'No record' }[kind] || '—';
   const c = currentChild();
   const lessons = c.timetable.filter(t => t.kind !== 'break');
   // Make some lessons absent/late depending on kind
@@ -3294,8 +3294,8 @@ function renderAttendanceDay() {
         <span class="badge-status ${kind}">${statusLabel}</span>
         <span style="font: 12.5px var(--font-sans); color: var(--text-muted);">${escapeHtml(c.school)}</span>
       </div>
-      ${kind === 'a' ? `<div style="margin-top: 12px; background: var(--tone-danger-bg); color: var(--tone-danger); padding: 10px 12px; border-radius: 10px; font: 13px/1.4 var(--font-sans);">Marked absent · no reason on file. <button id="day-leave" style="color: var(--tone-danger); background: none; cursor: pointer; font: 600 12.5px var(--font-sans); text-decoration: underline;">Submit reason →</button></div>` : ''}
-      ${kind === 'l' ? `<div style="margin-top: 12px; background: var(--tone-warn-bg); color: var(--tone-warn); padding: 10px 12px; border-radius: 10px; font: 13px/1.4 var(--font-sans);">Marked late · arrived 08:24 (24 min after register).</div>` : ''}
+      ${kind === 'a' ? `<div style="margin-top: 12px; background: var(--tone-danger-bg); color: var(--tone-danger); padding: 10px 12px; border-radius: 10px; font: 13px/1.4 var(--font-sans);">Marked away · no reason yet. <button id="day-leave" style="color: var(--tone-danger); background: none; cursor: pointer; font: 600 12.5px var(--font-sans); text-decoration: underline;">Tell the school why →</button></div>` : ''}
+      ${kind === 'l' ? `<div style="margin-top: 12px; background: var(--tone-warn-bg); color: var(--tone-warn); padding: 10px 12px; border-radius: 10px; font: 13px/1.4 var(--font-sans);">Marked late · arrived at 08:24 (24 minutes after registration).</div>` : ''}
     </div>
 
     <div class="section-h">Lessons that day</div>
@@ -3319,7 +3319,7 @@ function renderAttendanceDay() {
 
     <div style="padding: 16px;">
       <button data-go="leave-request" style="width: 100%; padding: 12px; border-radius: 10px; background: var(--brand); color: #fff; font: 600 13.5px var(--font-sans); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
-        <span data-icon="edit" data-icon-size="14"></span> Submit leave / absence reason
+        <span data-icon="edit" data-icon-size="14"></span> Send a reason or ask for time off
       </button>
     </div>
 
@@ -3337,8 +3337,8 @@ function renderLeaveRequest() {
   const c = currentChild();
   return `
     <div style="padding: 16px 16px 4px;">
-      <div style="font: 600 16px/1.2 var(--font-sans); color: var(--text-strong);">Request leave for ${escapeHtml(c.short)}</div>
-      <div style="font: 13px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 4px;">Notify the form teacher and update the register.</div>
+      <div style="font: 600 16px/1.2 var(--font-sans); color: var(--text-strong);">Ask for time off for ${escapeHtml(c.short)}</div>
+      <div style="font: 13px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 4px;">We'll let the class teacher know and update the register.</div>
     </div>
 
     <div style="padding: 16px 0 0;">
@@ -3354,41 +3354,41 @@ function renderLeaveRequest() {
       </div>
 
       <div class="form-field">
-        <label>Reason</label>
+        <label>Why?</label>
         <select id="lv-reason">
-          <option>Medical / illness</option>
+          <option>Sick</option>
           <option>Family event</option>
-          <option>Religious observance</option>
+          <option>Church or religious day</option>
           <option>Travel</option>
           <option>Other</option>
         </select>
       </div>
 
       <div class="form-field">
-        <label>Notes for the form teacher</label>
-        <textarea id="lv-notes" placeholder="e.g. doctor's appointment at 10:00, will return Wednesday morning."></textarea>
+        <label>Anything to tell the class teacher</label>
+        <textarea id="lv-notes" placeholder="e.g. doctor's appointment at 10:00, back at school Wednesday morning."></textarea>
       </div>
 
       <div class="form-field">
-        <label>Attach medical note (optional)</label>
+        <label>Add a doctor's note (if you have one)</label>
         <div style="border: 1px dashed var(--border-strong); border-radius: 10px; padding: 18px; text-align: center; font: 13px/1.4 var(--font-sans); color: var(--text-muted); background: var(--surface-muted);">
           <span data-icon="upload" data-icon-size="22" style="color: var(--text-subtle);"></span>
-          <div style="margin-top: 8px;">Tap to attach a doctor's note or PDF</div>
+          <div style="margin-top: 8px;">Tap to add a photo or PDF of the doctor's note</div>
         </div>
       </div>
 
       <div style="padding: 0 16px 16px;">
         <button id="lv-submit" style="width: 100%; padding: 13px; border-radius: 10px; background: var(--brand); color: #fff; font: 600 14px var(--font-sans); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
-          <span data-icon="check" data-icon-size="14"></span> Submit request
+          <span data-icon="check" data-icon-size="14"></span> Send to school
         </button>
-        <div style="font: 11.5px/1.4 var(--font-sans); color: var(--text-muted); text-align: center; margin-top: 8px;">${escapeHtml(c.profile.formTeacher)} will be notified by SMS.</div>
+        <div style="font: 11.5px/1.4 var(--font-sans); color: var(--text-muted); text-align: center; margin-top: 8px;">We'll text ${escapeHtml(c.profile.formTeacher)} to let them know.</div>
       </div>
     </div>
   `;
 }
 function wireLeaveRequest() {
   const s = $('#lv-submit'); if (s) s.addEventListener('click', () => {
-    toast('Leave request submitted', 'success');
+    toast('Sent to the school', 'success');
     setTimeout(() => go('attendance'), 600);
   });
 }
@@ -3442,7 +3442,7 @@ function renderCalendar() {
       </div>
     </div>
 
-    <div class="section-h">Upcoming events</div>
+    <div class="section-h">Coming up</div>
     <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow: clip;">
       ${upcoming.map(e => {
         const dt = new Date(e.date);
@@ -3474,7 +3474,7 @@ function wireCalendar() {
   }));
   $$('[data-add-cal]').forEach(b => b.addEventListener('click', () => {
     const [, nm] = b.dataset.addCal.split('|');
-    toast(`Added "${nm}" to phone calendar`, 'success');
+    toast(`"${nm}" added to your phone calendar`, 'success');
   }));
 }
 function shiftMonth(ym, delta) {
@@ -3489,7 +3489,7 @@ function openEventsSheet(date, evs) {
     <div class="sheet" onclick="event.stopPropagation()">
       <div class="handle"></div>
       <h3>${escapeHtml(new Date(date).toLocaleString('en-GB', { weekday:'long', day:'numeric', month:'long' }))}</h3>
-      <p class="sub">${evs.length} event${evs.length===1?'':'s'} scheduled</p>
+      <p class="sub">${evs.length} thing${evs.length===1?'':'s'} on that day</p>
       ${evs.map(e => `
         <div class="picker-row" data-evt-add="${escapeHtml(e.nm)}">
           <span class="av"><span data-icon="calendar" data-icon-size="16"></span></span>
@@ -3504,7 +3504,7 @@ function openEventsSheet(date, evs) {
   `);
   $$('[data-evt-add]').forEach(b => b.addEventListener('click', () => {
     closeModal();
-    toast(`Added "${b.dataset.evtAdd}" to phone calendar`, 'success');
+    toast(`"${b.dataset.evtAdd}" added to your phone calendar`, 'success');
   }));
 }
 
@@ -3525,22 +3525,22 @@ function renderLibrary() {
 
     <div class="stat-grid" style="padding-top: 8px;">
       <div class="stat-tile brand">
-        <div class="l">Books on loan</div>
+        <div class="l">Books borrowed</div>
         <div class="v">${lib.loans.length}</div>
-        <div class="sb">${lib.loans.filter(l=>l.status==='over').length} overdue</div>
+        <div class="sb">${lib.loans.filter(l=>l.status==='over').length} late</div>
       </div>
       <div class="stat-tile">
-        <div class="l">Fines outstanding</div>
+        <div class="l">Money owed</div>
         <div class="v" style="${lib.fines > 0 ? 'color: var(--tone-danger);' : 'color: var(--tone-success);'}">${money(lib.fines)}</div>
-        <div class="sb">${lib.fines > 0 ? 'Settle at library desk' : 'Account clear'}</div>
+        <div class="sb">${lib.fines > 0 ? 'Pay at the library desk' : 'Nothing owed'}</div>
       </div>
     </div>
 
-    <div class="section-h">Current loans</div>
+    <div class="section-h">Borrowed now</div>
     <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow: clip;">
       ${lib.loans.length === 0 ? `
         <div class="empty-state" style="padding: 30px 16px;">
-          <div>No books currently on loan.</div>
+          <div>No books borrowed right now.</div>
         </div>
       ` : lib.loans.map(b => `
         <div class="lib-row ${b.status === 'over' ? 'over' : ''}">
@@ -3549,16 +3549,16 @@ function renderLibrary() {
             <div class="nm">${escapeHtml(b.title)}</div>
             <div class="sb">${escapeHtml(b.author)}</div>
           </div>
-          <div class="due ${b.status}">${b.status === 'over' ? 'OVERDUE' : 'Due ' + b.due.slice(0, -5)}</div>
+          <div class="due ${b.status}">${b.status === 'over' ? 'LATE' : 'Bring back by ' + b.due.slice(0, -5)}</div>
         </div>
       `).join('')}
     </div>
 
-    <div class="section-h">Reserved &amp; holds</div>
+    <div class="section-h">Books waiting for you</div>
     <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow: clip;">
       ${lib.holds.length === 0 ? `
         <div class="empty-state" style="padding: 24px 16px;">
-          <div style="font: 13px var(--font-sans); color: var(--text-muted);">No holds on record.</div>
+          <div style="font: 13px var(--font-sans); color: var(--text-muted);">No books on hold.</div>
         </div>
       ` : lib.holds.map(h => `
         <div class="lib-row">
@@ -3567,14 +3567,14 @@ function renderLibrary() {
             <div class="nm">${escapeHtml(h.title)}</div>
             <div class="sb">${escapeHtml(h.author)}</div>
           </div>
-          <div class="due ok">#${h.position} in queue</div>
+          <div class="due ok">#${h.position} in line</div>
         </div>
       `).join('')}
     </div>
 
     <div style="padding: 16px;">
       <button id="lib-renew" style="width: 100%; padding: 12px; border-radius: 10px; background: var(--brand); color: #fff; font: 600 13.5px var(--font-sans); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
-        <span data-icon="refresh" data-icon-size="14"></span> Renew all eligible loans
+        <span data-icon="refresh" data-icon-size="14"></span> Keep them longer (renew)
       </button>
     </div>
 
@@ -3586,7 +3586,7 @@ function wireLibrary() {
     const c = currentChild();
     c.library.loans.forEach(l => { if (l.status !== 'over') l.due = '23 Jun 2026'; });
     render();
-    toast('Eligible loans renewed for 21 days', 'success');
+    toast('Books kept for another 21 days', 'success');
   });
 }
 
@@ -3597,7 +3597,7 @@ function renderTimetable() {
   const c = currentChild();
   return `
     <div style="padding: 14px 16px 6px;">
-      <div style="font: 600 16px/1.2 var(--font-sans); color: var(--text-strong);">${escapeHtml(c.short)} · today</div>
+      <div style="font: 600 16px/1.2 var(--font-sans); color: var(--text-strong);">${escapeHtml(c.short)} · today at school</div>
       <div style="font: 12.5px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 4px;">${escapeHtml(c.grade)} · ${escapeHtml(c.school)} · ${escapeHtml(c.termWeek)}</div>
     </div>
 
@@ -3624,7 +3624,7 @@ function renderTimetable() {
   `;
 }
 function wireTimetable() {
-  const m = $('#tt-msg'); if (m) m.addEventListener('click', () => toast('Opening message thread…', 'success'));
+  const m = $('#tt-msg'); if (m) m.addEventListener('click', () => toast('Opening message…', 'success'));
 }
 
 /* ============================================================
@@ -3634,7 +3634,7 @@ function renderMessages() {
   const msgs = state.messages;
   const unread = msgs.filter(m => m.unread).length;
   return `
-    <div class="section-h" style="padding-left: 16px; padding-right: 16px;">Teacher messages<span style="font: 500 11px var(--font-mono); color: var(--text-muted); letter-spacing: 0;">${unread} unread</span></div>
+    <div class="section-h" style="padding-left: 16px; padding-right: 16px;">Messages from teachers<span style="font: 500 11px var(--font-mono); color: var(--text-muted); letter-spacing: 0;">${unread} new</span></div>
     <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow: clip;">
       ${msgs.length === 0 ? `<div class="empty-state" style="padding: 30px 24px;"><div class="ic"><span data-icon="chat" data-icon-size="20"></span></div><div>No messages yet.</div></div>` : msgs.map(m => `
         <div class="msg-row staff" data-msg="${m.id}">
@@ -3654,7 +3654,7 @@ function renderMessages() {
 
     <div style="padding: 16px;">
       <button id="new-msg" style="width: 100%; padding: 12px; border-radius: 10px; background: var(--brand); color: #fff; font: 600 13.5px var(--font-sans); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
-        <span data-icon="plus" data-icon-size="14"></span> New message to school
+        <span data-icon="plus" data-icon-size="14"></span> Write to the school
       </button>
     </div>
 
@@ -3667,7 +3667,7 @@ function wireMessages() {
     const m = state.messages.find(x => x.id === b.dataset.msg); if (m) m.unread = false;
     go('message/' + b.dataset.msg);
   }));
-  const nm = $('#new-msg'); if (nm) nm.addEventListener('click', () => toast('New-message form (demo)', 'warn'));
+  const nm = $('#new-msg'); if (nm) nm.addEventListener('click', () => toast('Write a new message (demo)', 'warn'));
 }
 
 function renderMessageThread() {
@@ -3721,75 +3721,75 @@ function renderSecurity() {
   const last = c.name.split(' ').slice(-1)[0].toLowerCase();
   return `
     <div style="padding: 14px 16px 6px;">
-      <div style="font: 600 16px/1.2 var(--font-sans); color: var(--text-strong);">Sign-in &amp; security</div>
-      <div style="font: 13px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 4px;">Protect access to your child's school records.</div>
+      <div style="font: 600 16px/1.2 var(--font-sans); color: var(--text-strong);">Sign-in &amp; safety</div>
+      <div style="font: 13px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 4px;">Keep your child's school details safe.</div>
     </div>
 
-    <div class="section-h">Two-factor authentication</div>
+    <div class="section-h">Extra security code</div>
     <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px;">
       <div class="toggle-row">
         <div>
-          <div class="nm">SMS verification on sign-in</div>
-          <div class="sb">Code sent to ${escapeHtml(state.signIn.phone)} each time you sign in on a new device</div>
+          <div class="nm">Text me a code when I sign in</div>
+          <div class="sb">A code goes to ${escapeHtml(state.signIn.phone)} every time you sign in on a new phone or computer</div>
         </div>
         <span class="toggle ${state.twoFA ? 'on' : ''}" id="tfa-toggle" role="switch"></span>
       </div>
       ${state.twoFA ? `
         <div class="toggle-row">
           <div>
-            <div class="nm">Backup codes</div>
-            <div class="sb">8 single-use codes for when you can't get the SMS</div>
+            <div class="nm">Spare codes</div>
+            <div class="sb">8 codes (each one works once) for when you can't get the text</div>
           </div>
-          <button id="gen-codes" style="background: var(--brand-soft); color: var(--brand-strong); padding: 6px 12px; border-radius: 9999px; font: 600 11.5px var(--font-sans); cursor: pointer;">Generate</button>
+          <button id="gen-codes" style="background: var(--brand-soft); color: var(--brand-strong); padding: 6px 12px; border-radius: 9999px; font: 600 11.5px var(--font-sans); cursor: pointer;">Make codes</button>
         </div>
       ` : ''}
     </div>
 
-    <div class="section-h">Active sessions</div>
+    <div class="section-h">Where you're signed in</div>
     <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px;">
       <div class="sec-row">
         <div>
           <div class="nm">This phone · iPhone 14</div>
-          <div class="sb">Harare, Zimbabwe · Last active just now</div>
+          <div class="sb">Harare, Zimbabwe · Active right now</div>
         </div>
-        <span class="pill on">CURRENT</span>
+        <span class="pill on">THIS ONE</span>
       </div>
       <div class="sec-row" data-end-session="bp">
         <div>
-          <div class="nm">Browser · Chrome on MacBook</div>
+          <div class="nm">Chrome on MacBook</div>
           <div class="sb">Borrowdale · 2 hours ago</div>
         </div>
-        <span class="v" style="color: var(--tone-danger);">End</span>
+        <span class="v" style="color: var(--tone-danger);">Sign out</span>
       </div>
       <div class="sec-row" data-end-session="tab">
         <div>
-          <div class="nm">Tablet · Family iPad</div>
+          <div class="nm">Family iPad</div>
           <div class="sb">Borrowdale · 4 days ago</div>
         </div>
-        <span class="v" style="color: var(--tone-danger);">End</span>
+        <span class="v" style="color: var(--tone-danger);">Sign out</span>
       </div>
     </div>
 
-    <div class="section-h">Change credentials</div>
+    <div class="section-h">Change your sign-in</div>
     <div class="card-block" style="background:var(--surface); border:1px solid var(--border); border-radius:12px;">
       <div class="sec-row" id="change-pin">
         <div>
-          <div class="nm">Change PIN</div>
+          <div class="nm">Change your PIN</div>
           <div class="sb">Last changed 14 Mar 2026</div>
         </div>
         <span class="v"><span data-icon="chright" data-icon-size="14" style="color: var(--text-subtle);"></span></span>
       </div>
       <div class="sec-row" id="change-phone">
         <div>
-          <div class="nm">Change phone number</div>
+          <div class="nm">Change your phone number</div>
           <div class="sb">${escapeHtml(state.signIn.phone)}</div>
         </div>
         <span class="v"><span data-icon="chright" data-icon-size="14" style="color: var(--text-subtle);"></span></span>
       </div>
       <div class="sec-row" id="biometrics">
         <div>
-          <div class="nm">Use Face ID / fingerprint</div>
-          <div class="sb">Quick re-auth on this device</div>
+          <div class="nm">Use Face ID or fingerprint</div>
+          <div class="sb">Quick sign-in on this phone</div>
         </div>
         <span class="pill off">OFF</span>
       </div>
@@ -3804,11 +3804,11 @@ function wireSecurity() {
       // Confirm enabling
       openModal(`
         <div class="modal-center" onclick="event.stopPropagation()">
-          <h3 style="font: 600 16px/1.2 var(--font-sans); color: var(--text-strong); margin: 0 0 6px;">Enable 2FA?</h3>
-          <p style="font: 13px/1.45 var(--font-sans); color: var(--text-muted); margin: 0 0 16px;">You'll be sent a 6-digit code via SMS each time you sign in on a new device. You can disable this later.</p>
+          <h3 style="font: 600 16px/1.2 var(--font-sans); color: var(--text-strong); margin: 0 0 6px;">Turn on extra security?</h3>
+          <p style="font: 13px/1.45 var(--font-sans); color: var(--text-muted); margin: 0 0 16px;">We'll text you a 6-digit code every time you sign in on a new phone or computer. You can turn this off later.</p>
           <div style="display: flex; gap: 8px;">
-            <button data-cancel style="flex: 1; padding: 12px; border-radius: 10px; background: var(--surface-muted); color: var(--text-strong); font: 600 13px var(--font-sans); cursor: pointer;">Cancel</button>
-            <button data-confirm style="flex: 1; padding: 12px; border-radius: 10px; background: var(--brand); color: #fff; font: 600 13px var(--font-sans); cursor: pointer;">Enable</button>
+            <button data-cancel style="flex: 1; padding: 12px; border-radius: 10px; background: var(--surface-muted); color: var(--text-strong); font: 600 13px var(--font-sans); cursor: pointer;">Not now</button>
+            <button data-confirm style="flex: 1; padding: 12px; border-radius: 10px; background: var(--brand); color: #fff; font: 600 13px var(--font-sans); cursor: pointer;">Turn on</button>
           </div>
         </div>
       `, { center: true });
@@ -3818,12 +3818,12 @@ function wireSecurity() {
         closeModal();
         render();
         persist();
-        toast('Two-factor authentication enabled', 'success');
+        toast('Extra security code is on', 'success');
       });
     } else {
       state.twoFA = false;
       render(); persist();
-      toast('Two-factor authentication disabled', 'warn');
+      toast('Extra security code is off', 'warn');
     }
   });
   const gc = $('#gen-codes'); if (gc) gc.addEventListener('click', () => {
@@ -3831,8 +3831,8 @@ function wireSecurity() {
     openModal(`
       <div class="sheet" onclick="event.stopPropagation()">
         <div class="handle"></div>
-        <h3>Backup codes</h3>
-        <p class="sub">Save these somewhere safe — each works once.</p>
+        <h3>Your spare codes</h3>
+        <p class="sub">Keep these somewhere safe. Each one works one time only.</p>
         <div style="padding: 0 18px;">
           <div style="background: var(--surface-muted); border-radius: 10px; padding: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font: 600 13px var(--font-mono); color: var(--text-strong);">
             ${codes.map(c => `<div>${escapeHtml(c)}</div>`).join('')}
@@ -3840,21 +3840,21 @@ function wireSecurity() {
         </div>
         <div class="acts">
           <button class="alt" data-copy>Copy</button>
-          <button class="ok" data-dl-codes>Download</button>
+          <button class="ok" data-dl-codes>Save as PDF</button>
         </div>
       </div>
     `);
-    $('[data-copy]').addEventListener('click', () => { closeModal(); toast('Codes copied to clipboard', 'success'); });
+    $('[data-copy]').addEventListener('click', () => { closeModal(); toast('Codes copied', 'success'); });
     $('[data-dl-codes]').addEventListener('click', () => { closeModal(); toast('Codes saved as PDF', 'success'); });
   });
   $$('[data-end-session]').forEach(b => b.addEventListener('click', () => {
-    toast('Session ended', 'success');
+    toast('Signed out', 'success');
     b.style.opacity = '0.4';
     b.style.pointerEvents = 'none';
   }));
-  const cp = $('#change-pin'); if (cp) cp.addEventListener('click', () => toast('PIN-change flow', 'warn'));
-  const cf = $('#change-phone'); if (cf) cf.addEventListener('click', () => toast('Phone-number-change flow', 'warn'));
-  const bi = $('#biometrics'); if (bi) bi.addEventListener('click', () => toast('Biometrics require an app build', 'warn'));
+  const cp = $('#change-pin'); if (cp) cp.addEventListener('click', () => toast('Change your PIN (demo)', 'warn'));
+  const cf = $('#change-phone'); if (cf) cf.addEventListener('click', () => toast('Change phone number (demo)', 'warn'));
+  const bi = $('#biometrics'); if (bi) bi.addEventListener('click', () => toast('Face ID / fingerprint only in the installed app', 'warn'));
 }
 
 /* ============================================================

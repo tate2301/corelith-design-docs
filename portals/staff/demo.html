@@ -590,7 +590,7 @@ const NAV = [
   { route: 'directory',  label: 'Directory',    icon: 'user' },
   { route: 'kudos',      label: 'Kudos',        icon: 'heart' },
   { route: 'documents',  label: 'Documents',    icon: 'folder' },
-  { route: 'inbox',      label: 'Inbox',        icon: 'inbox', manager: true },
+  { route: 'inbox',      label: 'Approvals',    icon: 'inbox', manager: true },
   { route: 'profile',    label: 'Profile',      icon: 'user' },
   { route: 'settings',   label: 'Settings',     icon: 'settings' },
   { route: 'help',       label: 'Help & FAQ',   icon: 'info' },
@@ -599,7 +599,7 @@ const NAV = [
 const MOBILE_TABS = [
   { route: 'dashboard', label: 'Home', icon: 'home' },
   { route: 'payslip',   label: 'Pay',  icon: 'card' },
-  { route: 'time',      label: 'Time', icon: 'clock' },
+  { route: 'time',      label: 'Clock', icon: 'clock' },
   { route: 'profile',   label: 'You',  icon: 'user' },
 ];
 
@@ -781,9 +781,9 @@ const state = {
   clockInTime: '07:42',
   events: [
     { kind: 'in',  nm: 'Clocked in',  sb: 'Today · Park Centre · on time',          tm: '07:42' },
-    { kind: 'out', nm: 'Clocked out', sb: 'Thu 21 May · 17:08 · 9h 26m total',      tm: '17:08' },
+    { kind: 'out', nm: 'Clocked out', sb: 'Thu 21 May · 17:08 · 9h 26m for the day', tm: '17:08' },
     { kind: 'in',  nm: 'Clocked in',  sb: 'Thu 21 May · 07:42 · Park Centre',       tm: '07:42' },
-    { kind: 'out', nm: 'Clocked out', sb: 'Wed 20 May · 17:14 · 9h 32m total',      tm: '17:14' },
+    { kind: 'out', nm: 'Clocked out', sb: 'Wed 20 May · 17:14 · 9h 32m for the day', tm: '17:14' },
     { kind: 'in',  nm: 'Clocked in',  sb: 'Wed 20 May · 07:42 · Park Centre',       tm: '07:42' },
   ],
 
@@ -948,21 +948,21 @@ function render() {
   }
 
   const url = ({
-    dashboard: 'https://staff.huchu.app / Park Centre / Self-service',
+    dashboard: 'https://staff.huchu.app / Park Centre / Home',
     leave:     'https://staff.huchu.app / Leave',
     payslip:   'https://staff.huchu.app / My pay / ' + PAYSLIPS[state.payslipPeriod].label,
     time:      'https://staff.huchu.app / Time clock',
     timesheet: 'https://staff.huchu.app / Timesheet',
-    expenses:  'https://staff.huchu.app / Expenses',
+    expenses:  'https://staff.huchu.app / Money you spent',
     reviews:   'https://staff.huchu.app / Performance reviews',
-    directory: 'https://staff.huchu.app / Directory',
+    directory: 'https://staff.huchu.app / Workmates',
     kudos:     'https://staff.huchu.app / Kudos',
     documents: 'https://staff.huchu.app / Documents',
-    inbox:     'https://staff.huchu.app / Approvals · inbox',
-    profile:   'https://staff.huchu.app / Profile',
+    inbox:     'https://staff.huchu.app / Waiting for your approval',
+    profile:   'https://staff.huchu.app / Your details',
     settings:  'https://staff.huchu.app / Settings',
-    help:      'https://staff.huchu.app / Help · FAQ',
-    onboarding:'https://staff.huchu.app / Onboarding',
+    help:      'https://staff.huchu.app / Help',
+    onboarding:'https://staff.huchu.app / Getting started',
   })[state.route] || 'https://staff.huchu.app';
   const chrome = $('#chrome-url'); if (chrome) chrome.textContent = url;
 
@@ -1001,7 +1001,7 @@ function renderSide() {
       <nav>
         <button data-action="request-leave"><span class="ic" data-icon="plus"></span><span>Request leave</span></button>
         <button data-go="payslip"><span class="ic" data-icon="download"></span><span>Latest payslip</span></button>
-        <button data-action="contact-hr"><span class="ic" data-icon="chat"></span><span>Contact HR</span></button>
+        <button data-action="contact-hr"><span class="ic" data-icon="chat"></span><span>Message HR</span></button>
       </nav>
       <div class="foot">
         <span class="av">${ME.initials}</span>
@@ -1024,21 +1024,21 @@ function wireSide() {
 
 function renderTop() {
   const titles = {
-    dashboard:  { crumbs: 'Staff · Self-service · Home',         h: `Good morning, ${ME.name.split(' ')[0]}` },
-    leave:      { crumbs: 'Staff · Self-service · Leave',        h: 'Leave' },
+    dashboard:  { crumbs: 'Staff · Home',                        h: `Good morning, ${ME.name.split(' ')[0]}` },
+    leave:      { crumbs: 'Staff · Leave',                       h: 'Leave' },
     payslip:    { crumbs: 'Staff · My pay · Payslip',            h: `${PAYSLIPS[state.payslipPeriod].label} payslip` },
-    time:       { crumbs: 'Staff · Self-service · Time',         h: 'Time clock' },
+    time:       { crumbs: 'Staff · Time clock',                  h: 'Time clock' },
     timesheet:  { crumbs: 'Staff · Time · Weekly timesheet',     h: 'My timesheet' },
-    expenses:   { crumbs: 'Staff · Expenses',                    h: 'Expenses' },
+    expenses:   { crumbs: 'Staff · Money you spent',             h: 'Money you spent for work' },
     reviews:    { crumbs: 'Staff · Performance · Reviews',       h: 'My performance' },
-    directory:  { crumbs: 'Staff · Directory',                   h: 'Directory' },
-    kudos:      { crumbs: 'Staff · Recognition · Kudos',         h: 'Kudos & recognition' },
-    documents:  { crumbs: 'Staff · Resources · Documents',       h: 'Documents & policies' },
-    inbox:      { crumbs: 'Staff · Manager · Approvals',         h: 'Approvals · inbox' },
-    profile:    { crumbs: 'Staff · Profile · Account',           h: 'My profile' },
-    settings:   { crumbs: 'Staff · Account · Settings',          h: 'Settings' },
-    help:       { crumbs: 'Staff · Help & support',              h: 'Help & FAQ' },
-    onboarding: { crumbs: 'Staff · Welcome · Onboarding',        h: 'Welcome to Mukamba' },
+    directory:  { crumbs: 'Staff · Workmates',                   h: 'Workmates' },
+    kudos:      { crumbs: 'Staff · Kudos',                       h: 'Kudos & shout-outs' },
+    documents:  { crumbs: 'Staff · Documents',                   h: 'Documents & policies' },
+    inbox:      { crumbs: 'Staff · Manager · Approvals',         h: 'Waiting for your approval' },
+    profile:    { crumbs: 'Staff · Your details',                h: 'Your details' },
+    settings:   { crumbs: 'Staff · Settings',                    h: 'Settings' },
+    help:       { crumbs: 'Staff · Help',                        h: 'Help & common questions' },
+    onboarding: { crumbs: 'Staff · Getting started',             h: 'Welcome to Mukamba' },
   };
   const t = titles[state.route] || titles.dashboard;
 
@@ -1046,7 +1046,7 @@ function renderTop() {
   if (state.route === 'dashboard') {
     extra = `
       <button class="bar-btn" data-action="request-leave"><span data-icon="plus" data-icon-size="13"></span><span class="bar-btn-label">Request leave</span></button>
-      <button class="bar-btn primary" data-go="time"><span data-icon="clock" data-icon-size="13"></span><span class="bar-btn-label">${state.clockedIn ? 'Clocked in · ' + state.clockInTime : 'Clock in'}</span></button>
+      <button class="bar-btn primary" data-go="time"><span data-icon="clock" data-icon-size="13"></span><span class="bar-btn-label">${state.clockedIn ? 'Clocked in at ' + state.clockInTime : 'Clock in'}</span></button>
     `;
   } else if (state.route === 'leave') {
     extra = `
@@ -1066,18 +1066,18 @@ function renderTop() {
   } else if (state.route === 'directory') {
     extra = `<span class="pill muted">${PEOPLE.length} people</span>`;
   } else if (state.route === 'inbox') {
-    extra = `<span class="pill brand">${pendingCount()} pending</span>`;
+    extra = `<span class="pill brand">${pendingCount()} waiting</span>`;
   } else if (state.route === 'profile') {
     extra = `<button class="bar-btn primary" data-action="save-profile"><span data-icon="check" data-icon-size="13"></span><span class="bar-btn-label">Save changes</span></button>`;
   } else if (state.route === 'timesheet') {
     extra = `
       <button class="bar-btn" data-action="ts-save"><span data-icon="check" data-icon-size="13"></span><span class="bar-btn-label">Save draft</span></button>
-      <button class="bar-btn primary" data-action="ts-submit"${state.timesheet.submitted?' disabled':''}><span data-icon="upload" data-icon-size="13"></span><span class="bar-btn-label">${state.timesheet.submitted?'Submitted':'Submit for approval'}</span></button>
+      <button class="bar-btn primary" data-action="ts-submit"${state.timesheet.submitted?' disabled':''}><span data-icon="upload" data-icon-size="13"></span><span class="bar-btn-label">${state.timesheet.submitted?'Sent':'Send to manager'}</span></button>
     `;
   } else if (state.route === 'expenses') {
-    extra = `<button class="bar-btn primary" data-action="exp-new"><span data-icon="plus" data-icon-size="13"></span><span class="bar-btn-label">New expense</span></button>`;
+    extra = `<button class="bar-btn primary" data-action="exp-new"><span data-icon="plus" data-icon-size="13"></span><span class="bar-btn-label">New claim</span></button>`;
   } else if (state.route === 'reviews') {
-    extra = `<button class="bar-btn primary" data-action="rv-checkin"><span data-icon="calendar" data-icon-size="13"></span><span class="bar-btn-label">Schedule check-in</span></button>`;
+    extra = `<button class="bar-btn primary" data-action="rv-checkin"><span data-icon="calendar" data-icon-size="13"></span><span class="bar-btn-label">Book a catch-up</span></button>`;
   } else if (state.route === 'kudos') {
     extra = `<button class="bar-btn primary" data-action="kudos-new"><span data-icon="heart" data-icon-size="13"></span><span class="bar-btn-label">Send kudos</span></button>`;
   } else if (state.route === 'documents') {
@@ -1085,7 +1085,7 @@ function renderTop() {
   } else if (state.route === 'settings') {
     extra = `<button class="bar-btn primary" data-action="save-settings"><span data-icon="check" data-icon-size="13"></span><span class="bar-btn-label">Save settings</span></button>`;
   } else if (state.route === 'help') {
-    extra = `<button class="bar-btn" data-action="chat-hr"><span data-icon="chat" data-icon-size="13"></span><span class="bar-btn-label">Chat with HR</span></button>`;
+    extra = `<button class="bar-btn" data-action="chat-hr"><span data-icon="chat" data-icon-size="13"></span><span class="bar-btn-label">Message HR</span></button>`;
   } else if (state.route === 'onboarding') {
     const done = Object.values(state.onboarding).filter(Boolean).length;
     extra = `<span class="pill brand">${done} / ${ONBOARDING_TASKS.length} done</span>`;
@@ -1100,9 +1100,9 @@ function renderTop() {
       </div>
       <div class="actions">
         ${extra}
-        <button class="bar-btn" id="fs-toggle" title="${state.fullscreen ? 'Exit fullscreen' : 'Fullscreen preview'}">
+        <button class="bar-btn" id="fs-toggle" title="${state.fullscreen ? 'Leave full screen' : 'Show full screen'}">
           <span data-icon="${state.fullscreen ? 'x' : 'grid'}" data-icon-size="13"></span>
-          <span class="bar-btn-label">${state.fullscreen ? 'Exit' : 'Fullscreen'}</span>
+          <span class="bar-btn-label">${state.fullscreen ? 'Exit' : 'Full screen'}</span>
         </button>
       </div>
     </header>
@@ -1118,20 +1118,20 @@ function wireTop() {
   $$('.st-top [data-action]').forEach(b => b.addEventListener('click', () => {
     const a = b.dataset.action;
     if (a === 'request-leave') { if (state.route !== 'leave') go('leave'); setTimeout(openRequestLeaveModal, 80); }
-    else if (a === 'export-history') toast('Leave history exported as CSV', 'success');
+    else if (a === 'export-history') toast('Leave history saved as CSV file', 'success');
     else if (a === 'print-payslip') toast('Sent to printer', 'success');
     else if (a === 'download-payslip') toast(`${PAYSLIPS[state.payslipPeriod].label} payslip downloaded`, 'success');
-    else if (a === 'time-history') toast('Opening fortnight timesheet…');
-    else if (a === 'save-profile') toast('Profile changes saved', 'success');
-    else if (a === 'ts-save') toast('Timesheet draft saved · auto-saves every 30s', 'success');
-    else if (a === 'ts-submit') { state.timesheet.submitted = true; toast('Timesheet submitted to Tendai Moyo for approval', 'success'); render(); }
+    else if (a === 'time-history') toast('Opening this fortnight\'s timesheet…');
+    else if (a === 'save-profile') toast('Your details saved', 'success');
+    else if (a === 'ts-save') toast('Timesheet saved · saves itself every 30 seconds', 'success');
+    else if (a === 'ts-submit') { state.timesheet.submitted = true; toast('Timesheet sent to Tendai Moyo to approve', 'success'); render(); }
     else if (a === 'exp-new') openExpenseModal();
     else if (a === 'rv-checkin') openCheckInModal();
     else if (a === 'kudos-new') openKudosModal();
     else if (a === 'save-settings') { persist(); toast('Settings saved', 'success'); }
-    else if (a === 'chat-hr') toast('Opening chat with Rumbidzai Chivasa (HR business partner)…', 'success');
+    else if (a === 'chat-hr') toast('Opening chat with Rumbidzai Chivasa (HR)…', 'success');
   }));
-  const ps = $('#period-sel'); if (ps) ps.addEventListener('change', (e) => { state.payslipPeriod = e.target.value; render(); toast('Loaded ' + PAYSLIPS[e.target.value].label, 'success'); });
+  const ps = $('#period-sel'); if (ps) ps.addEventListener('change', (e) => { state.payslipPeriod = e.target.value; render(); toast('Showing ' + PAYSLIPS[e.target.value].label, 'success'); });
 }
 
 function renderMobileTabs() {
@@ -1201,8 +1201,8 @@ function renderSignIn() {
       <div class="signin-gate">
         <div class="signin-card">
           <div class="brand-mark"><span class="mk" data-icon="corelith" data-icon-size="18"></span> Huchu Staff</div>
-          <h2>Two-step verification</h2>
-          <p class="sub">We sent a 6-digit code to your authenticator app. Enter it to finish signing in as <b>${escapeHtml(ME.name)}</b>.</p>
+          <h2>Extra security code</h2>
+          <p class="sub">We sent a 6-digit code to your authenticator app on your phone. Type it in to finish signing in as <b>${escapeHtml(ME.name)}</b>.</p>
           ${state.signInError ? `<div class="err"><span data-icon="info" data-icon-size="14"></span>${escapeHtml(state.signInError)}</div>` : ''}
           <div class="otp" id="otp-codes" role="group" aria-label="6-digit verification code">
             ${[0,1,2,3,4,5].map(i => `<input maxlength="1" data-otp="${i}" inputmode="numeric" autocomplete="one-time-code" aria-label="Digit ${i+1}" />`).join('')}
@@ -1210,17 +1210,17 @@ function renderSignIn() {
           <div class="row-link">
             <label class="toggle ${state.rememberDevice ? 'on' : ''}" id="otp-remember">
               <span class="sw"></span>
-              <span class="lb">Trust this device for 30 days</span>
+              <span class="lb">Remember this computer for 30 days</span>
             </label>
           </div>
-          <button class="btn btn-primary" id="otp-verify" style="height: 44px; justify-content: center; font-size: 14px;"><span data-icon="check" data-icon-size="14"></span> Verify &amp; sign in</button>
+          <button class="btn btn-primary" id="otp-verify" style="height: 44px; justify-content: center; font-size: 14px;"><span data-icon="check" data-icon-size="14"></span> Check code &amp; sign in</button>
           <div class="row-link">
-            <a href="#" id="otp-resend">Resend code</a>
-            <a href="#" id="otp-back">Use a different account</a>
+            <a href="#" id="otp-resend">Send a new code</a>
+            <a href="#" id="otp-back">Sign in as someone else</a>
           </div>
           <div class="meta-foot">
             <span class="ic"><span data-icon="shield" data-icon-size="12"></span></span>
-            Codes refresh every 30 seconds. If you've lost access to your authenticator, contact Ruvimbo Mhlanga in IT.
+            Codes change every 30 seconds. Lost your phone or can't open the app? Call Ruvimbo Mhlanga in IT.
           </div>
         </div>
       </div>
@@ -1231,12 +1231,12 @@ function renderSignIn() {
       <div class="signin-card">
         <div class="brand-mark"><span class="mk" data-icon="corelith" data-icon-size="18"></span> Huchu Staff</div>
         <h2>Sign in to your account</h2>
-        <p class="sub">Mukamba Group · Park Centre branch · staff self-service portal.</p>
+        <p class="sub">Mukamba Group · Park Centre branch · your staff account.</p>
         ${state.signInError ? `<div class="err"><span data-icon="info" data-icon-size="14"></span>${escapeHtml(state.signInError)}</div>` : ''}
-        <div class="field full"><label>Employee ID</label><input id="si-emp" placeholder="EMP-00284" value="EMP-00284" autocomplete="username" /></div>
+        <div class="field full"><label>Employee number</label><input id="si-emp" placeholder="EMP-00284" value="EMP-00284" autocomplete="username" /></div>
         <div class="field full"><label>Password</label>
           <div style="position: relative;">
-            <input id="si-pw" type="${state.passwordVisible ? 'text' : 'password'}" placeholder="Your portal password" value="HuchuDemo2026!" autocomplete="current-password" style="padding-right: 36px;" />
+            <input id="si-pw" type="${state.passwordVisible ? 'text' : 'password'}" placeholder="Your password" value="HuchuDemo2026!" autocomplete="current-password" style="padding-right: 36px;" />
             <button type="button" id="si-pw-toggle" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: transparent; border: 0; cursor: pointer; color: var(--text-subtle); padding: 4px;">
               <span data-icon="${state.passwordVisible ? 'eyeoff' : 'eye'}" data-icon-size="16"></span>
             </button>
@@ -1245,17 +1245,17 @@ function renderSignIn() {
         <div class="row-link">
           <label class="toggle ${state.rememberDevice ? 'on' : ''}" id="si-remember">
             <span class="sw"></span>
-            <span class="lb">Remember this device</span>
+            <span class="lb">Remember this computer</span>
           </label>
-          <a href="#" id="si-forgot">Forgot password</a>
+          <a href="#" id="si-forgot">Forgot password?</a>
         </div>
         <button class="btn btn-primary" id="si-go" style="height: 44px; justify-content: center; font-size: 14px;"><span data-icon="lock" data-icon-size="14"></span> Sign in</button>
         <div class="row-link" style="justify-content: center;">
-          <span style="color: var(--text-muted);">New here? <a href="#" id="si-help">Activate your account</a></span>
+          <span style="color: var(--text-muted);">New here? <a href="#" id="si-help">Set up your account</a></span>
         </div>
         <div class="meta-foot">
           <span class="ic"><span data-icon="shield" data-icon-size="12"></span></span>
-          Single sign-on via Mukamba SSO · 2-step verification required from new devices. By signing in you agree to the <a href="#" style="color: var(--brand-strong);">acceptable-use policy</a>.
+          Use your Mukamba sign-in. New computers need the extra security code. By signing in you agree to the <a href="#" style="color: var(--brand-strong);">rules for using this app</a>.
         </div>
       </div>
     </div>
@@ -1282,13 +1282,13 @@ function wireSignIn() {
     if (verify) verify.addEventListener('click', () => {
       const code = inputs.map(i => i.value).join('');
       if (code.length < 6) {
-        state.signInError = 'Enter the full 6-digit code from your authenticator.';
+        state.signInError = 'Type all 6 numbers from your authenticator app.';
         render();
         return;
       }
       // Accept any 6-digit code in the demo, or specifically reject 000000
       if (code === '000000') {
-        state.signInError = 'That code is incorrect or has expired. Try again.';
+        state.signInError = 'That code is wrong or has expired. Try again.';
         render();
         return;
       }
@@ -1297,10 +1297,10 @@ function wireSignIn() {
       state.signInStep = 'creds';
       persist();
       render();
-      toast('Welcome back, ' + ME.name.split(' ')[0] + ' · signed in to Park Centre', 'success');
+      toast('Welcome back, ' + ME.name.split(' ')[0] + ' · signed in at Park Centre', 'success');
     });
     const resend = $('#otp-resend');
-    if (resend) resend.addEventListener('click', (e) => { e.preventDefault(); toast('New code sent to your authenticator'); });
+    if (resend) resend.addEventListener('click', (e) => { e.preventDefault(); toast('New code sent to your phone'); });
     const back = $('#otp-back');
     if (back) back.addEventListener('click', (e) => { e.preventDefault(); state.signInStep = 'creds'; state.signInError = null; render(); });
     return;
@@ -1311,9 +1311,9 @@ function wireSignIn() {
   const submit = () => {
     const emp = (empInp.value || '').trim();
     const pw = (pwInp.value || '').trim();
-    if (!emp || !pw) { state.signInError = 'Enter your employee ID and password to continue.'; render(); return; }
-    if (!/^EMP-\d{3,6}$/i.test(emp)) { state.signInError = 'Employee ID must look like EMP-00284.'; render(); return; }
-    if (pw.length < 4) { state.signInError = 'That password doesn\'t look right. Need help? Use "Forgot password".'; render(); return; }
+    if (!emp || !pw) { state.signInError = 'Type your employee number and password to continue.'; render(); return; }
+    if (!/^EMP-\d{3,6}$/i.test(emp)) { state.signInError = 'Your employee number looks like EMP-00284.'; render(); return; }
+    if (pw.length < 4) { state.signInError = 'That password doesn\'t look right. Tap "Forgot password?" for help.'; render(); return; }
     state.signInError = null;
     if (state.twoFAEnabled) { state.signInStep = '2fa'; render(); return; }
     state.signedIn = true;
@@ -1327,23 +1327,23 @@ function wireSignIn() {
   const tog = $('#si-pw-toggle'); if (tog) tog.addEventListener('click', () => { state.passwordVisible = !state.passwordVisible; render(); });
   const rem = $('#si-remember'); if (rem) rem.addEventListener('click', () => { state.rememberDevice = !state.rememberDevice; render(); });
   const fg = $('#si-forgot'); if (fg) fg.addEventListener('click', (e) => { e.preventDefault(); openForgotPasswordModal(); });
-  const help = $('#si-help'); if (help) help.addEventListener('click', (e) => { e.preventDefault(); toast('Activation invite re-sent to chipo.mutasa@mukamba.co.zw'); });
+  const help = $('#si-help'); if (help) help.addEventListener('click', (e) => { e.preventDefault(); toast('Set-up email sent again to chipo.mutasa@mukamba.co.zw'); });
 }
 
 function openForgotPasswordModal() {
   openModal(`
     <div class="modal" onclick="event.stopPropagation()">
       <h3>Reset your password</h3>
-      <p class="sub">We'll email you a reset link. The link is valid for 60 minutes.</p>
-      <div class="field full"><label>Employee ID or work email</label><input value="EMP-00284" /></div>
+      <p class="sub">We'll email you a link to set a new password. The link works for 60 minutes.</p>
+      <div class="field full"><label>Employee number or work email</label><input value="EMP-00284" /></div>
       <div class="acts">
         <button class="btn btn-secondary" data-close>Cancel</button>
-        <button class="btn btn-primary ok" data-ok>Email reset link</button>
+        <button class="btn btn-primary ok" data-ok>Email me the link</button>
       </div>
     </div>
   `);
   $('.modal [data-close]').addEventListener('click', closeModal);
-  $('.modal [data-ok]').addEventListener('click', () => { closeModal(); toast('Reset link sent to chipo.mutasa@mukamba.co.zw', 'success'); });
+  $('.modal [data-ok]').addEventListener('click', () => { closeModal(); toast('Reset link emailed to chipo.mutasa@mukamba.co.zw', 'success'); });
 }
 
 /* ============================================================
@@ -1354,24 +1354,24 @@ function renderDashboard() {
     <!-- Stat tiles -->
     <div class="stat-grid">
       <div class="stat brand">
-        <div class="lb"><span data-icon="card" data-icon-size="12"></span> Next payslip</div>
+        <div class="lb"><span data-icon="card" data-icon-size="12"></span> Next pay</div>
         <div class="vl">$ 1,840.00</div>
-        <div class="sb">Pays Friday 29 May · period May 2026</div>
+        <div class="sb">Pays Friday 29 May · for May 2026</div>
       </div>
       <div class="stat">
-        <div class="lb"><span data-icon="calendar" data-icon-size="12"></span> Leave balance</div>
+        <div class="lb"><span data-icon="calendar" data-icon-size="12"></span> Leave days left</div>
         <div class="vl">12 days</div>
         <div class="sb">Annual · 5 sick · 3 compassionate</div>
       </div>
       <div class="stat">
-        <div class="lb"><span data-icon="clock" data-icon-size="12"></span> Hours this period</div>
+        <div class="lb"><span data-icon="clock" data-icon-size="12"></span> Hours worked this pay period</div>
         <div class="vl">86h 40m</div>
-        <div class="sb">Target 96h · 4 days remaining</div>
+        <div class="sb">Aiming for 96h · 4 days to go</div>
       </div>
       <div class="stat">
-        <div class="lb"><span data-icon="star" data-icon-size="12"></span> Anniversary</div>
+        <div class="lb"><span data-icon="star" data-icon-size="12"></span> Years here</div>
         <div class="vl">3 years</div>
-        <div class="sb">Joined 14 August 2023</div>
+        <div class="sb">Started 14 August 2023</div>
       </div>
     </div>
 
@@ -1379,7 +1379,7 @@ function renderDashboard() {
     <div class="grid-2">
       <div class="panel">
         <div class="panel-h">
-          <h2>Today's tasks</h2>
+          <h2>Things to do today</h2>
           <div class="sp"></div>
           <span class="pill muted">2 to do</span>
         </div>
@@ -1387,8 +1387,8 @@ function renderDashboard() {
           <div class="task-row ${state.tasksDone['t1']?'done':''}" data-task="t1">
             <div class="cb"><span data-icon="check" data-icon-size="12"></span></div>
             <div>
-              <div class="nm">Submit fortnight timesheet</div>
-              <div class="sb">Period ending 24 May · sign off before Tuesday close</div>
+              <div class="nm">Send in your fortnight timesheet</div>
+              <div class="sb">Two weeks ending 24 May · finish before close of business Tuesday</div>
             </div>
             <span class="due late">Due Tue</span>
           </div>
@@ -1396,23 +1396,23 @@ function renderDashboard() {
             <div class="cb"><span data-icon="check" data-icon-size="12"></span></div>
             <div>
               <div class="nm">Approve ${pendingCount()} leave requests from your team</div>
-              <div class="sb">Faith, Anesu, Brighton · oldest waiting since 20 May</div>
+              <div class="sb">Faith, Anesu, Brighton · oldest one waiting since 20 May</div>
             </div>
             <span class="due">Today</span>
           </div>
           <div class="task-row ${state.tasksDone['t3']?'done':''}" data-task="t3" data-open="profile">
             <div class="cb"><span data-icon="check" data-icon-size="12"></span></div>
             <div>
-              <div class="nm">Confirm emergency contact details</div>
-              <div class="sb">HR annual check · takes about 1 minute</div>
+              <div class="nm">Check your emergency contact is still right</div>
+              <div class="sb">HR checks once a year · takes about 1 minute</div>
             </div>
             <span class="due">This week</span>
           </div>
           <div class="task-row ${state.tasksDone['t4']?'done':''}" data-task="t4">
             <div class="cb"><span data-icon="check" data-icon-size="12"></span></div>
             <div>
-              <div class="nm">Acknowledge new travel-claim policy</div>
-              <div class="sb">Per-diem rates effective 1 June · 2 min read</div>
+              <div class="nm">Read and tick off the new travel-claim rules</div>
+              <div class="sb">New daily travel rates start 1 June · 2 minute read</div>
             </div>
             <span class="due">By 31 May</span>
           </div>
@@ -1421,14 +1421,14 @@ function renderDashboard() {
 
       <div class="panel">
         <div class="panel-h">
-          <h2>Upcoming holidays</h2>
+          <h2>Public holidays coming up</h2>
           <div class="sp"></div>
-          <a href="#">2026 calendar</a>
+          <a href="#">See 2026 calendar</a>
         </div>
         <div class="panel-body">
           <div class="hol-row"><div class="dt"><div class="d">25</div><div class="m">May</div></div><div><div class="nm">Africa Day</div><div class="sb">Public holiday · branches closed</div></div><span class="pill">Mon</span></div>
           <div class="hol-row"><div class="dt"><div class="d">11</div><div class="m">Aug</div></div><div><div class="nm">Heroes' Day</div><div class="sb">Public holiday</div></div><span class="pill">Tue</span></div>
-          <div class="hol-row"><div class="dt"><div class="d">12</div><div class="m">Aug</div></div><div><div class="nm">Defence Forces Day</div><div class="sb">Public holiday · double-time roster</div></div><span class="pill">Wed</span></div>
+          <div class="hol-row"><div class="dt"><div class="d">12</div><div class="m">Aug</div></div><div><div class="nm">Defence Forces Day</div><div class="sb">Public holiday · double pay if you work</div></div><span class="pill">Wed</span></div>
           <div class="hol-row"><div class="dt"><div class="d">22</div><div class="m">Dec</div></div><div><div class="nm">Unity Day</div><div class="sb">Public holiday</div></div><span class="pill">Mon</span></div>
           <div class="hol-row"><div class="dt"><div class="d">25</div><div class="m">Dec</div></div><div><div class="nm">Christmas Day</div><div class="sb">Public holiday · branches closed</div></div><span class="pill">Thu</span></div>
         </div>
@@ -1438,27 +1438,27 @@ function renderDashboard() {
     <!-- Anniversaries & birthdays this week -->
     <div class="grid-2">
       <div class="panel">
-        <div class="panel-h"><h2>Anniversaries this week</h2><div class="sp"></div><span class="pill brand">3</span></div>
+        <div class="panel-h"><h2>Work anniversaries this week</h2><div class="sp"></div><span class="pill brand">3</span></div>
         <div class="panel-body">
           <div class="ann-row">
             <span class="av">FM</span>
-            <div><div class="nm">Faith Moyo · 4 years at Mukamba</div><div class="sb">Senior cashier · Park Centre · joined 23 May 2022</div></div>
+            <div><div class="nm">Faith Moyo · 4 years at Mukamba</div><div class="sb">Senior cashier · Park Centre · started 23 May 2022</div></div>
             <span class="ic"><span data-icon="star" data-icon-size="16"></span></span>
           </div>
           <div class="ann-row">
             <span class="av">TM</span>
-            <div><div class="nm">Tendai Moyo · 8 years</div><div class="sb">Operations manager · joined 26 May 2018</div></div>
+            <div><div class="nm">Tendai Moyo · 8 years</div><div class="sb">Operations manager · started 26 May 2018</div></div>
             <span class="ic"><span data-icon="star" data-icon-size="16"></span></span>
           </div>
           <div class="ann-row">
             <span class="av">PD</span>
-            <div><div class="nm">Patience Dube · 2 years</div><div class="sb">Junior accountant · Head office · joined 28 May 2024</div></div>
+            <div><div class="nm">Patience Dube · 2 years</div><div class="sb">Junior accountant · Head office · started 28 May 2024</div></div>
             <span class="ic"><span data-icon="star" data-icon-size="16"></span></span>
           </div>
         </div>
       </div>
       <div class="panel">
-        <div class="panel-h"><h2>Birthdays this week</h2><div class="sp"></div><a href="#" data-go-kudos>Send kudos</a></div>
+        <div class="panel-h"><h2>Birthdays this week</h2><div class="sp"></div><a href="#" data-go-kudos>Send a shout-out</a></div>
         <div class="panel-body">
           <div class="ann-row">
             <span class="av" style="background: var(--tone-warn-bg); color: var(--tone-warn);">AM</span>
@@ -1482,24 +1482,24 @@ function renderDashboard() {
     <!-- Recent activity (full width) -->
     <div class="panel">
       <div class="panel-h">
-        <h2>Recent activity</h2>
+        <h2>What's been happening</h2>
         <div class="sp"></div>
-        <a href="#">View all</a>
+        <a href="#">See all</a>
       </div>
       <div class="panel-body">
         <div class="feed-row">
           <span class="ic success"><span data-icon="check" data-icon-size="16"></span></span>
           <div>
-            <div class="nm">Leave approved · 3 days annual</div>
-            <div class="sb">Tendai Moyo (manager) approved 25–27 Jun for Victoria Falls trip</div>
+            <div class="nm">Your leave was approved · 3 days annual</div>
+            <div class="sb">Your manager Tendai Moyo approved 25–27 Jun for your Victoria Falls trip</div>
           </div>
           <span class="tm">2h ago</span>
         </div>
         <div class="feed-row">
           <span class="ic brand"><span data-icon="card" data-icon-size="16"></span></span>
           <div>
-            <div class="nm">Payslip issued · April 2026</div>
-            <div class="sb">$ 1,815.42 paid into CBZ Bank · stub available for download</div>
+            <div class="nm">April 2026 payslip ready</div>
+            <div class="sb">$ 1,815.42 paid into your CBZ Bank account · you can download the payslip</div>
           </div>
           <span class="tm">28 Apr</span>
         </div>
@@ -1507,23 +1507,23 @@ function renderDashboard() {
           <span class="ic"><span data-icon="clock" data-icon-size="16"></span></span>
           <div>
             <div class="nm">Clocked in at Park Centre</div>
-            <div class="sb">07:42 · 8 minutes early · within geo-fence</div>
+            <div class="sb">07:42 · 8 minutes early · phone confirms you're at the branch</div>
           </div>
           <span class="tm">Today</span>
         </div>
         <div class="feed-row">
           <span class="ic warn"><span data-icon="info" data-icon-size="16"></span></span>
           <div>
-            <div class="nm">3 leave requests awaiting your approval</div>
-            <div class="sb">Faith Moyo, Anesu Moyo and Brighton Mhlanga · open the manager inbox</div>
+            <div class="nm">3 leave requests waiting for you to approve</div>
+            <div class="sb">Faith Moyo, Anesu Moyo and Brighton Mhlanga · open Approvals to see them</div>
           </div>
           <span class="tm">Today</span>
         </div>
         <div class="feed-row">
           <span class="ic brand"><span data-icon="book" data-icon-size="16"></span></span>
           <div>
-            <div class="nm">Policy update · Travel claims</div>
-            <div class="sb">New per-diem rates for inter-branch travel effective 1 June</div>
+            <div class="nm">New rules · Travel claims</div>
+            <div class="sb">New daily travel rates for trips between branches start 1 June</div>
           </div>
           <span class="tm">21 May</span>
         </div>
@@ -1531,7 +1531,7 @@ function renderDashboard() {
           <span class="ic success"><span data-icon="check" data-icon-size="16"></span></span>
           <div>
             <div class="nm">NSSA registration confirmed</div>
-            <div class="sb">HR uploaded updated reference number to your profile</div>
+            <div class="sb">HR added your updated NSSA number to your details</div>
           </div>
           <span class="tm">14 May</span>
         </div>
@@ -1546,7 +1546,7 @@ function wireDashboard() {
     const id = r.dataset.task;
     state.tasksDone[id] = !state.tasksDone[id];
     render();
-    toast(state.tasksDone[id] ? 'Task marked done' : 'Task reopened');
+    toast(state.tasksDone[id] ? 'Marked done' : 'Marked not done');
   }));
   $$('[data-go-kudos]').forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openKudosModal(); }));
 }
@@ -1565,38 +1565,38 @@ function renderLeave() {
         <div class="lb">Annual leave</div>
         <div class="vl">${b.annual} <span>/ ${b.annualTotal} days</span></div>
         <div class="bar"><i style="width: ${Math.round(b.annual/b.annualTotal*100)}%; background: var(--brand);"></i></div>
-        <div class="sb">${b.annualTotal-b.annual} days taken · expires 31 Dec</div>
+        <div class="sb">${b.annualTotal-b.annual} days used · unused days expire 31 Dec</div>
       </div>
       <div class="bal">
         <div class="lb">Sick leave</div>
         <div class="vl">${b.sick} <span>/ ${b.sickTotal} days</span></div>
         <div class="bar"><i style="width: ${Math.round(b.sick/b.sickTotal*100)}%; background: var(--tone-info);"></i></div>
-        <div class="sb">Doctor's note from day 3</div>
+        <div class="sb">Need a doctor's note from day 3</div>
       </div>
       <div class="bal">
         <div class="lb">Compassionate</div>
         <div class="vl">${b.comp} <span>/ ${b.compTotal} days</span></div>
         <div class="bar"><i style="width: 100%; background: var(--tone-warn);"></i></div>
-        <div class="sb">Per Labour Act · immediate family</div>
+        <div class="sb">For close family · per Labour Act</div>
       </div>
       <div class="bal">
         <div class="lb">Study leave</div>
         <div class="vl">${b.study} <span>/ ${b.studyTotal} days</span></div>
         <div class="bar"><i style="width: 100%; background: #A78BFA;"></i></div>
-        <div class="sb">Approved courses · HR pre-approval</div>
+        <div class="sb">For approved courses · ask HR first</div>
       </div>
     </div>
 
     <!-- Recent requests -->
     <div class="panel">
       <div class="panel-h">
-        <h2>Recent requests</h2>
+        <h2>Your recent leave requests</h2>
         <div class="sp"></div>
         <span class="pill muted">Last 12 months</span>
       </div>
       <table class="tbl">
         <thead>
-          <tr><th style="width:28%">Type &amp; dates</th><th>Days</th><th>Submitted</th><th>Approver</th><th>Status</th><th></th></tr>
+          <tr><th style="width:28%">Type &amp; dates</th><th>Days</th><th>Sent</th><th>Goes to</th><th>Status</th><th></th></tr>
         </thead>
         <tbody>
           ${state.leaveRequests.map(r => `
@@ -1608,8 +1608,8 @@ function renderLeave() {
               <td class="num">${r.days.toFixed(1)}</td>
               <td class="num">${escapeHtml(r.submitted)}</td>
               <td>${escapeHtml(r.approver)}</td>
-              <td><span class="pill ${r.status} dot">${cap(r.status)}</span></td>
-              <td style="text-align:right;"><a href="#" data-leave-view="${r.id}" style="font:500 12px/1 var(--font-sans); color: var(--brand-strong); text-decoration:none;">${r.status === 'pending' ? 'Manage' : 'View'} →</a></td>
+              <td><span class="pill ${r.status} dot">${statusLabel(r.status)}</span></td>
+              <td style="text-align:right;"><a href="#" data-leave-view="${r.id}" style="font:500 12px/1 var(--font-sans); color: var(--brand-strong); text-decoration:none;">${r.status === 'pending' ? 'Open' : 'View'} →</a></td>
             </tr>
           `).join('')}
         </tbody>
@@ -1624,6 +1624,10 @@ function fmtRange(from, to) {
   return fmt(from) + ' – ' + fmt(to);
 }
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+function statusLabel(s) {
+  const map = { pending: 'Waiting', approved: 'Approved', denied: 'Turned down', draft: 'Draft' };
+  return map[s] || cap(s);
+}
 
 function workingDays(from, to) {
   const d1 = new Date(from), d2 = new Date(to);
@@ -1652,12 +1656,12 @@ function openRequestLeaveModal() {
     openModal(`
       <div class="modal lg" onclick="event.stopPropagation()">
         <h3>Request leave</h3>
-        <p class="sub">Submit a new leave request. Your manager will be notified and can approve or query.</p>
+        <p class="sub">Ask for time off. Your manager will see this and can say yes, no, or ask a question.</p>
         <div class="form-grid">
-          <div class="field half"><label>Type</label>
+          <div class="field half"><label>Type of leave</label>
             <select id="lr-type">${['Annual','Sick','Compassionate','Study'].map(t => `<option ${t===type?'selected':''}>${t}</option>`).join('')}</select>
           </div>
-          <div class="field half"><label>Manager (approver)</label>
+          <div class="field half"><label>Who will approve this</label>
             <select id="lr-mgr">
               <option ${manager.startsWith('Tendai')?'selected':''}>Tendai Moyo · Operations</option>
               <option ${manager.startsWith('Rumbidzai')?'selected':''}>Rumbidzai Chivasa · HR</option>
@@ -1666,18 +1670,18 @@ function openRequestLeaveModal() {
           </div>
           <div class="field half"><label>From</label><input type="date" id="lr-from" value="${from}" /></div>
           <div class="field half"><label>To</label><input type="date" id="lr-to" value="${to}" /></div>
-          <div class="field full"><label>Notes for approver</label>
-            <textarea id="lr-notes" placeholder="Short reason — helps your manager approve quickly.">${escapeHtml(notes)}</textarea>
+          <div class="field full"><label>Reason (for your manager)</label>
+            <textarea id="lr-notes" placeholder="A short reason makes it easier for your manager to say yes.">${escapeHtml(notes)}</textarea>
           </div>
         </div>
         <div style="margin-top:14px; padding: 10px 14px; background: var(--brand-soft); border-radius: 8px; font: 13px/1.4 var(--font-sans); color: var(--brand-strong);">
           <span data-icon="info" data-icon-size="13"></span>
-          Requesting <b>${days} working day${days===1?'':'s'}</b>${days>0 ? ' · balance after: ' + Math.max(0, leaveBalance().annual - days) + ' days annual' : ''}
+          You're asking for <b>${days} working day${days===1?'':'s'}</b>${days>0 ? ' · you\'ll have ' + Math.max(0, leaveBalance().annual - days) + ' annual days left after this' : ''}
         </div>
         <div class="acts">
           <button class="btn btn-secondary" data-cancel>Cancel</button>
-          <button class="btn btn-ghost" data-draft>Save draft</button>
-          <button class="btn btn-primary ok" data-ok ${days>0?'':'disabled'}><span data-icon="check" data-icon-size="13"></span> Submit request</button>
+          <button class="btn btn-ghost" data-draft>Save for later</button>
+          <button class="btn btn-primary ok" data-ok ${days>0?'':'disabled'}><span data-icon="check" data-icon-size="13"></span> Send request</button>
         </div>
       </div>
     `);
@@ -1689,7 +1693,7 @@ function openRequestLeaveModal() {
     bind('lr-to', e => { to = e.target.value; paint(); });
     bind('lr-notes', e => { notes = e.target.value; });
     m.querySelector('[data-cancel]').addEventListener('click', closeModal);
-    m.querySelector('[data-draft]').addEventListener('click', () => { closeModal(); toast('Draft saved'); });
+    m.querySelector('[data-draft]').addEventListener('click', () => { closeModal(); toast('Saved · finish later'); });
     m.querySelector('[data-ok]').addEventListener('click', () => {
       const id = 'LR-2026-' + String(15 + Math.floor(Math.random()*80)).padStart(3,'0');
       state.leaveRequests.unshift({
@@ -1701,7 +1705,7 @@ function openRequestLeaveModal() {
         notes: notes || '(no notes)',
       });
       closeModal();
-      toast('Leave request submitted · awaiting ' + manager.split(' · ')[0], 'success');
+      toast('Leave request sent · waiting on ' + manager.split(' · ')[0], 'success');
       if (state.route !== 'leave') go('leave'); else render();
     });
   }
@@ -1714,17 +1718,17 @@ function openLeaveDetailModal(id) {
   openModal(`
     <div class="modal" onclick="event.stopPropagation()">
       <h3>${escapeHtml(r.type)} · ${escapeHtml(r.id)}</h3>
-      <p class="sub">Submitted ${escapeHtml(r.submitted)} · ${r.days.toFixed(1)} working days</p>
+      <p class="sub">Sent ${escapeHtml(r.submitted)} · ${r.days.toFixed(1)} working days</p>
       <div class="meta-strip" style="margin-bottom: 14px;">
         <div><span class="lb">Dates</span><span class="vl">${escapeHtml(fmtRange(r.from, r.to))}</span></div>
-        <div><span class="lb">Approver</span><span class="vl">${escapeHtml(r.approver)}</span></div>
-        <div><span class="lb">Status</span><span class="vl"><span class="pill ${r.status} dot">${cap(r.status)}</span></span></div>
+        <div><span class="lb">Goes to</span><span class="vl">${escapeHtml(r.approver)}</span></div>
+        <div><span class="lb">Status</span><span class="vl"><span class="pill ${r.status} dot">${statusLabel(r.status)}</span></span></div>
       </div>
-      <div style="font:500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Notes</div>
+      <div style="font:500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Your reason</div>
       <div style="padding: 10px 12px; background: var(--surface-muted); border-radius: 8px; font: 13px/1.5 var(--font-sans); color: var(--text-body);">${escapeHtml(r.notes)}</div>
       <div class="acts">
         <button class="btn btn-secondary" data-close>Close</button>
-        ${r.status === 'pending' ? `<button class="btn btn-danger danger" data-cancel-req>Cancel request</button>` : ''}
+        ${r.status === 'pending' ? `<button class="btn btn-danger danger" data-cancel-req>Cancel this request</button>` : ''}
       </div>
     </div>
   `);
@@ -1750,21 +1754,21 @@ function renderInbox() {
     <div class="inbox-grid">
       <div class="inbox-list">
         <div class="panel-h" style="border-bottom: 1px solid var(--border-subtle);">
-          <h2>Pending approvals</h2>
+          <h2>Waiting for your decision</h2>
           <div class="sp"></div>
           <span class="pill brand">${state.approvalQueue.length}</span>
         </div>
         ${state.approvalQueue.length === 0 ? `
           <div style="padding: 60px 20px; text-align: center; color: var(--text-muted); font: 13px var(--font-sans);">
             <div style="font-size: 32px; margin-bottom: 10px;"><span data-icon="check" data-icon-size="32"></span></div>
-            Inbox zero — nothing pending.
+            All done — nothing waiting.
           </div>
         ` : state.approvalQueue.map(r => `
           <div class="lr ${inboxState.selectedId === r.id ? 'on' : ''}" data-aq="${r.id}">
             <span class="av">${r.who.init}</span>
             <div>
               <div class="nm">${escapeHtml(r.who.name)} · ${escapeHtml(r.type)}</div>
-              <div class="sb">${escapeHtml(fmtRange(r.from, r.to))} · submitted ${escapeHtml(r.submitted)}</div>
+              <div class="sb">${escapeHtml(fmtRange(r.from, r.to))} · sent ${escapeHtml(r.submitted)}</div>
             </div>
             <span class="days">${r.days.toFixed(1)}d</span>
           </div>
@@ -1772,7 +1776,7 @@ function renderInbox() {
       </div>
 
       <div class="inbox-review">
-        ${sel ? renderInboxDetail(sel) : `<div class="empty">Pick a request to review.</div>`}
+        ${sel ? renderInboxDetail(sel) : `<div class="empty">Tap a request on the left to open it.</div>`}
       </div>
     </div>
   `;
@@ -1784,15 +1788,15 @@ function renderInboxDetail(r) {
       <span class="av">${r.who.init}</span>
       <div style="flex:1;">
         <h3>${escapeHtml(r.who.name)}</h3>
-        <div class="sb">${escapeHtml(r.who.role)} · reports to you · ${escapeHtml(r.who.branch)}</div>
+        <div class="sb">${escapeHtml(r.who.role)} · works under you · ${escapeHtml(r.who.branch)}</div>
       </div>
-      <span class="pill pending dot">Pending ${escapeHtml(r.submitted)}</span>
+      <span class="pill pending dot">Waiting since ${escapeHtml(r.submitted)}</span>
     </div>
 
     <div class="kv">
       <div class="cell"><div class="k">Type</div><div class="v">${escapeHtml(r.type)}</div></div>
       <div class="cell"><div class="k">Working days</div><div class="v">${r.days.toFixed(1)} days</div></div>
-      <div class="cell"><div class="k">Their balance</div><div class="v">${r.balance} days remaining</div></div>
+      <div class="cell"><div class="k">Their leave days left</div><div class="v">${r.balance} days</div></div>
     </div>
 
     <div>
@@ -1805,25 +1809,25 @@ function renderInboxDetail(r) {
     <div class="conflict ${r.conflict ? 'warn' : 'ok'}">
       <span class="ic"><span data-icon="${r.conflict ? 'info' : 'check'}" data-icon-size="14"></span></span>
       <div>
-        <div style="font-weight: 600;">${r.conflict ? 'Team calendar conflict' : 'No team calendar conflicts'}</div>
-        <div style="opacity: 0.85; margin-top: 2px;">${r.conflict ? 'Overlaps with your trip 25–27 Jun and Faith Moyo\'s approved leave. Branch will be short-staffed.' : 'Branch coverage remains within minimum staffing.'}</div>
+        <div style="font-weight: 600;">${r.conflict ? 'Clashes with other staff leave' : 'No clash with other staff'}</div>
+        <div style="opacity: 0.85; margin-top: 2px;">${r.conflict ? 'Same dates as your trip 25–27 Jun and Faith Moyo\'s approved leave. Branch will be short-staffed.' : 'Branch will still have enough people on duty.'}</div>
       </div>
     </div>
 
     <div>
-      <div style="font:500 11px/1 var(--font-sans); letter-spacing:.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Their notes</div>
+      <div style="font:500 11px/1 var(--font-sans); letter-spacing:.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Their reason</div>
       <div style="padding: 10px 12px; background: var(--surface-muted); border-radius: 8px; font: 13px/1.5 var(--font-sans); color: var(--text-body);">${escapeHtml(r.notes)}</div>
     </div>
 
     <div>
-      <div style="font:500 11px/1 var(--font-sans); letter-spacing:.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Comment (optional)</div>
-      <textarea id="iq-comment" placeholder="Optional message back to ${escapeHtml(r.who.name.split(' ')[0])}…" style="width: 100%; min-height: 60px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font: 13px var(--font-sans); color: var(--text-strong); resize: vertical; box-sizing: border-box;"></textarea>
+      <div style="font:500 11px/1 var(--font-sans); letter-spacing:.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Message back (optional)</div>
+      <textarea id="iq-comment" placeholder="A short message to ${escapeHtml(r.who.name.split(' ')[0])}…" style="width: 100%; min-height: 60px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font: 13px var(--font-sans); color: var(--text-strong); resize: vertical; box-sizing: border-box;"></textarea>
     </div>
 
     <div style="display: flex; gap: 8px; margin-top: 4px;">
-      <button class="btn btn-secondary" data-iq-query>Query</button>
+      <button class="btn btn-secondary" data-iq-query>Ask a question</button>
       <div style="flex:1"></div>
-      <button class="btn btn-danger" data-iq-reject><span data-icon="x" data-icon-size="13"></span> Reject</button>
+      <button class="btn btn-danger" data-iq-reject><span data-icon="x" data-icon-size="13"></span> Turn down</button>
       <button class="btn btn-primary" data-iq-approve><span data-icon="check" data-icon-size="13"></span> Approve leave</button>
     </div>
   `;
@@ -1836,7 +1840,7 @@ function wireInbox() {
     const r = state.approvalQueue.find(x => x.id === inboxState.selectedId); if (!r) return;
     state.approvalQueue = state.approvalQueue.filter(x => x.id !== r.id);
     inboxState.selectedId = state.approvalQueue[0] ? state.approvalQueue[0].id : null;
-    const verb = kind === 'approve' ? 'Approved' : kind === 'reject' ? 'Rejected' : 'Queried';
+    const verb = kind === 'approve' ? 'Approved' : kind === 'reject' ? 'Turned down' : 'Question sent on';
     const tone = kind === 'approve' ? 'success' : kind === 'reject' ? 'danger' : 'warn';
     toast(`${verb} ${r.who.name.split(' ')[0]}'s ${r.type.toLowerCase()} · ${r.days}d`, tone);
     render();
@@ -1878,18 +1882,18 @@ function renderPayslip() {
   return `
     <div class="meta-strip">
       <div><span class="lb">Employee</span><span class="vl">${escapeHtml(ME.name)} · ${escapeHtml(ME.empId)}</span></div>
-      <div><span class="lb">Period</span><span class="vl">${escapeHtml(p.period)}</span></div>
+      <div><span class="lb">For the month of</span><span class="vl">${escapeHtml(p.period)}</span></div>
       <div><span class="lb">Pay date</span><span class="vl">${escapeHtml(p.payDate)}</span></div>
-      <div><span class="lb">Bank</span><span class="vl mono">${escapeHtml(ME.bank)}</span></div>
+      <div><span class="lb">Paid into</span><span class="vl mono">${escapeHtml(ME.bank)}</span></div>
       <div><span class="lb">Tax code</span><span class="vl mono">PAYE-2026</span></div>
       <div style="margin-left: auto;"><span class="lb">Status</span><span class="vl"><span class="pill ${p.status === 'Paid' ? 'success' : 'brand'} dot">${escapeHtml(p.status)}</span></span></div>
     </div>
 
     <div class="big-grid">
       <div class="big">
-        <span class="lb">Gross earnings</span>
+        <span class="lb">Total before deductions</span>
         <span class="vl">${money(gross)}</span>
-        <span class="sb">Basic + housing + transport + bonus</span>
+        <span class="sb">Basic pay + housing + transport + bonus</span>
       </div>
       <div class="big">
         <span class="lb">Total deductions</span>
@@ -1897,7 +1901,7 @@ function renderPayslip() {
         <span class="sb">PAYE, NSSA, AIDS levy, NEC, pension, PSMAS</span>
       </div>
       <div class="big net">
-        <span class="lb">Net pay</span>
+        <span class="lb">Take-home pay</span>
         <span class="vl">${money(net)}</span>
         <span class="sb">${p.status === 'Paid' ? 'Paid' : 'Pays'} ${escapeHtml(p.payDate)} into ${escapeHtml(ME.bank.split(' · ')[0])} ${escapeHtml(ME.bank.split(' · ')[1])}</span>
       </div>
@@ -1906,7 +1910,7 @@ function renderPayslip() {
     <div class="grid-12">
       <div class="panel">
         <div class="panel-h">
-          <h2>Earnings</h2>
+          <h2>What you earned</h2>
           <div class="sp"></div>
           <span class="tot">${money(gross)}</span>
         </div>
@@ -1921,14 +1925,14 @@ function renderPayslip() {
                 <td class="r num">${r.amount.toFixed(2)}</td>
               </tr>
             `).join('')}
-            <tr class="foot"><td colspan="3">Gross earnings</td><td class="r num">${gross.toFixed(2)}</td></tr>
+            <tr class="foot"><td colspan="3">Total before deductions</td><td class="r num">${gross.toFixed(2)}</td></tr>
           </tbody>
         </table>
       </div>
 
       <div class="panel">
         <div class="panel-h">
-          <h2>Deductions</h2>
+          <h2>What was taken off</h2>
           <div class="sp"></div>
           <span class="tot" style="color: var(--tone-danger);">– ${money(totDed)}</span>
         </div>
@@ -1951,19 +1955,19 @@ function renderPayslip() {
 
     <div class="panel">
       <div class="panel-h">
-        <h2>Year-to-date · January – ${p.label.split(' ')[0]} 2026</h2>
+        <h2>Year so far · January to ${p.label.split(' ')[0]} 2026</h2>
         <div class="sp"></div>
-        <span style="font:500 12px/1 var(--font-sans); color: var(--text-muted);">${periodsToInclude.length + 2} of 12 periods</span>
+        <span style="font:500 12px/1 var(--font-sans); color: var(--text-muted);">${periodsToInclude.length + 2} of 12 months</span>
       </div>
       <div class="ytd-grid">
-        <div class="ytd-cell"><span class="lb">YTD gross</span><span class="vl">${money(ytdGrossDisplay)}</span><span class="sb">Earnings before deductions</span></div>
-        <div class="ytd-cell"><span class="lb">YTD PAYE</span><span class="vl">${money(ytdPAYE + 700)}</span><span class="sb">Remitted to ZIMRA</span></div>
-        <div class="ytd-cell"><span class="lb">YTD NSSA</span><span class="vl">${money(ytdNSSA + 180)}</span><span class="sb">Employee + employer matched</span></div>
-        <div class="ytd-cell"><span class="lb">YTD pension</span><span class="vl">${money(ytdPens + 200)}</span><span class="sb">Old Mutual group scheme</span></div>
-        <div class="ytd-cell"><span class="lb">YTD AIDS levy</span><span class="vl">${money(ytdAIDS + 21)}</span><span class="sb">3% of PAYE</span></div>
-        <div class="ytd-cell"><span class="lb">YTD NEC</span><span class="vl">${money(ytdNEC + 48)}</span><span class="sb">Commercial sector</span></div>
-        <div class="ytd-cell"><span class="lb">YTD medical</span><span class="vl">${money(ytdMed + 5.66)}</span><span class="sb">PSMAS family plan</span></div>
-        <div class="ytd-cell"><span class="lb">YTD net</span><span class="vl" style="color: var(--brand-strong);">${money(ytdNet)}</span><span class="sb">Banked into ${escapeHtml(ME.bank.split(' · ')[1] || ME.bank)}</span></div>
+        <div class="ytd-cell"><span class="lb">Earned this year</span><span class="vl">${money(ytdGrossDisplay)}</span><span class="sb">Before anything was taken off</span></div>
+        <div class="ytd-cell"><span class="lb">PAYE paid</span><span class="vl">${money(ytdPAYE + 700)}</span><span class="sb">Sent to ZIMRA (income tax)</span></div>
+        <div class="ytd-cell"><span class="lb">NSSA paid</span><span class="vl">${money(ytdNSSA + 180)}</span><span class="sb">Your share · company matches it</span></div>
+        <div class="ytd-cell"><span class="lb">Pension paid</span><span class="vl">${money(ytdPens + 200)}</span><span class="sb">Old Mutual group scheme</span></div>
+        <div class="ytd-cell"><span class="lb">AIDS levy paid</span><span class="vl">${money(ytdAIDS + 21)}</span><span class="sb">3% of your PAYE</span></div>
+        <div class="ytd-cell"><span class="lb">NEC paid</span><span class="vl">${money(ytdNEC + 48)}</span><span class="sb">Commercial sector</span></div>
+        <div class="ytd-cell"><span class="lb">Medical aid paid</span><span class="vl">${money(ytdMed + 5.66)}</span><span class="sb">PSMAS family plan</span></div>
+        <div class="ytd-cell"><span class="lb">Take-home this year</span><span class="vl" style="color: var(--brand-strong);">${money(ytdNet)}</span><span class="sb">Paid into ${escapeHtml(ME.bank.split(' · ')[1] || ME.bank)}</span></div>
       </div>
     </div>
   `;
@@ -1989,12 +1993,12 @@ function renderTime() {
             <div class="cell">
               <div class="ck">Today</div>
               <div class="cv">${state.clockedIn ? '1h 19m' : '0h 00m'}</div>
-              <div class="csb">${state.clockedIn ? 'In at ' + state.clockInTime + ' · target 8h' : 'Not yet clocked in'}</div>
+              <div class="csb">${state.clockedIn ? 'In at ' + state.clockInTime + ' · aiming for 8h' : 'Not clocked in yet'}</div>
             </div>
             <div class="cell">
               <div class="ck">This pay period</div>
               <div class="cv">86h 40m</div>
-              <div class="csb">Of 96h · 4 days left</div>
+              <div class="csb">Out of 96h · 4 days left</div>
             </div>
           </div>
           <button class="clock-btn ${state.clockedIn ? 'out' : ''}" id="clock-toggle">
@@ -2004,7 +2008,7 @@ function renderTime() {
         </div>
 
         <div class="panel">
-          <div class="panel-h"><h2>Recent clock events</h2><div class="sp"></div><a href="#">All</a></div>
+          <div class="panel-h"><h2>Recent clock-ins and clock-outs</h2><div class="sp"></div><a href="#">See all</a></div>
           <div class="panel-body" style="padding: 0;">
             ${state.events.map(ev => `
               <div class="feed-row">
@@ -2022,7 +2026,7 @@ function renderTime() {
 
       <div style="display: flex; flex-direction: column; gap: 16px;">
         <div class="panel">
-          <div class="panel-h"><h2>Location · geo-fence</h2><div class="sp"></div><span class="pill success dot">In range</span></div>
+          <div class="panel-h"><h2>Are you at the branch?</h2><div class="sp"></div><span class="pill success dot">Yes, you're here</span></div>
           <div class="geo" style="border: 0; border-radius: 0;">
             <div class="map">
               <div class="road h1"></div>
@@ -2034,8 +2038,8 @@ function renderTime() {
             <div class="bar">
               <span class="ic"><span data-icon="check" data-icon-size="14"></span></span>
               <div style="flex:1;">
-                <div class="nm">Inside Park Centre fence</div>
-                <div class="sb">18m from till counter · accuracy ±8m</div>
+                <div class="nm">You're at Park Centre branch</div>
+                <div class="sb">18m from the till · location accurate to ±8m</div>
               </div>
               <span style="font: 500 11px/1 var(--font-mono); color: var(--text-subtle);">GPS</span>
             </div>
@@ -2046,16 +2050,16 @@ function renderTime() {
           <div class="panel-h"><h2>This pay period</h2><div class="sp"></div></div>
           <div style="padding: 16px 18px; display: flex; flex-direction: column; gap: 10px;">
             <div style="display: flex; justify-content: space-between; font: 13.5px var(--font-sans); color: var(--text-muted);">
-              <span>Worked</span><span style="font: 500 14px/1 var(--font-mono); color: var(--text-strong);">86h 40m</span>
+              <span>Hours worked</span><span style="font: 500 14px/1 var(--font-mono); color: var(--text-strong);">86h 40m</span>
             </div>
             <div style="display: flex; justify-content: space-between; font: 13.5px var(--font-sans); color: var(--text-muted);">
-              <span>Target</span><span style="font: 500 14px/1 var(--font-mono); color: var(--text-strong);">96h 00m</span>
+              <span>Hours expected</span><span style="font: 500 14px/1 var(--font-mono); color: var(--text-strong);">96h 00m</span>
             </div>
             <div style="display: flex; justify-content: space-between; font: 13.5px var(--font-sans); color: var(--text-muted);">
               <span>Overtime</span><span style="font: 500 14px/1 var(--font-mono); color: var(--text-strong);">2h 14m</span>
             </div>
             <div style="height: 8px; border-radius: 9999px; background: var(--surface-muted); overflow: hidden; margin-top: 6px;"><i style="display: block; height: 100%; width: 90%; background: var(--brand);"></i></div>
-            <div style="font: 12px/1.4 var(--font-sans); color: var(--text-muted);">Fortnight ends 24 May. Submit timesheet by Tuesday close.</div>
+            <div style="font: 12px/1.4 var(--font-sans); color: var(--text-muted);">Two-week period ends 24 May. Send in your timesheet by close of business Tuesday.</div>
           </div>
         </div>
       </div>
@@ -2085,8 +2089,8 @@ function wireTime() {
       state.events.unshift({ kind: 'in', nm: 'Clocked in', sb: 'Today · Park Centre · on time', tm: hhmm });
       toast('Clocked in at Park Centre branch', 'success');
     } else {
-      state.events.unshift({ kind: 'out', nm: 'Clocked out', sb: 'Today · ' + hhmm + ' · session complete', tm: hhmm });
-      toast('Clocked out · session saved', 'success');
+      state.events.unshift({ kind: 'out', nm: 'Clocked out', sb: 'Today · ' + hhmm + ' · shift saved', tm: hhmm });
+      toast('Clocked out · shift saved', 'success');
     }
     render();
   });
@@ -2132,7 +2136,7 @@ function renderDirectory() {
     <div class="dir-search">
       <div class="srch">
         <span data-icon="search" data-icon-size="16"></span>
-        <input id="dir-search" placeholder="Search name, role, department or branch…" value="${escapeHtml(state.dirSearch)}" />
+        <input id="dir-search" placeholder="Search by name, job, department or branch…" value="${escapeHtml(state.dirSearch)}" />
       </div>
       <button class="btn btn-secondary" data-action="dir-export"><span data-icon="download" data-icon-size="13"></span> Export</button>
     </div>
@@ -2143,7 +2147,7 @@ function renderDirectory() {
 
     <div class="dir-deck">
       <div class="dir-grid">
-        ${list.length === 0 ? `<div style="grid-column:1/-1; padding: 40px; text-align: center; color: var(--text-muted); font: 13px var(--font-sans);">No matches.</div>` : list.map(p => `
+        ${list.length === 0 ? `<div style="grid-column:1/-1; padding: 40px; text-align: center; color: var(--text-muted); font: 13px var(--font-sans);">No one matches.</div>` : list.map(p => `
           <div class="dcard ${state.dirSelected === p.id ? 'on' : ''}" data-person="${p.id}">
             <div class="h">
               <span class="av ${p.av}">${p.init}</span>
@@ -2151,7 +2155,7 @@ function renderDirectory() {
                 <div class="nm">${escapeHtml(p.name)}</div>
                 <div class="rl">${escapeHtml(p.role)}</div>
               </div>
-              <span class="stat ${p.status === 'away' ? 'away' : p.status === 'off' ? 'off' : ''}" title="${p.status === 'away' ? 'In a meeting' : p.status === 'off' ? 'Off duty' : 'Online'}"></span>
+              <span class="stat ${p.status === 'away' ? 'away' : p.status === 'off' ? 'off' : ''}" title="${p.status === 'away' ? 'In a meeting' : p.status === 'off' ? 'Off work' : 'At work'}"></span>
             </div>
             <div class="pills">
               <span class="pill"><span data-icon="building" data-icon-size="10"></span> ${escapeHtml(p.dept)}</span>
@@ -2187,18 +2191,18 @@ function renderDirectory() {
           </div>
           ${reports.length ? `
             <div class="sec">
-              <div class="sh">Direct reports · ${reports.length}</div>
+              <div class="sh">People they manage · ${reports.length}</div>
               ${reports.map(r => `<div style="display:flex; align-items:center; gap: 10px; padding: 6px 0;"><span style="width: 26px; height: 26px; border-radius: 50%; background: var(--surface-muted); color: var(--text-strong); display: grid; place-items: center; font: 600 10px/1 var(--font-sans);">${r.init}</span><div style="flex:1;"><div style="font: 500 13px/1.2 var(--font-sans); color: var(--text-strong);">${escapeHtml(r.name)}</div><div style="font: 11px/1.2 var(--font-sans); color: var(--text-muted); margin-top:1px;">${escapeHtml(r.role)}</div></div></div>`).join('')}
             </div>
           ` : ''}
           <div class="sec">
-            <div class="sh">On-call</div>
+            <div class="sh">On call (available outside hours)</div>
             <div class="toggle ${state.onCall ? 'on' : ''}" id="dir-oncall">
               <span class="sw"></span>
-              <span class="lb">${state.onCall ? 'On call now · pager 0782 010 555' : 'Not on call'}</span>
+              <span class="lb">${state.onCall ? 'On call now · phone 0782 010 555' : 'Not on call'}</span>
             </div>
           </div>
-        ` : `<div class="empty">Pick a person from the grid to see their profile.</div>`}
+        ` : `<div class="empty">Tap a workmate on the left to see their details.</div>`}
       </div>
     </div>
   `;
@@ -2213,7 +2217,7 @@ function wireDirectory() {
   $$('[data-person]').forEach(b => b.addEventListener('click', () => { state.dirSelected = b.dataset.person; render(); }));
   const oc = $('#dir-oncall'); if (oc) oc.addEventListener('click', () => {
     state.onCall = !state.onCall;
-    toast(state.onCall ? 'You are now on call' : 'On-call status cleared');
+    toast(state.onCall ? 'You\'re now on call' : 'You\'re no longer on call');
     render();
   });
   $$('[data-action]').forEach(b => {
@@ -2223,11 +2227,11 @@ function wireDirectory() {
         const p = PEOPLE.find(x => x.id === state.dirSelected);
         if (!p) return;
         if (a === 'dir-call') toast('Calling ' + p.name + ' · ' + p.phone);
-        if (a === 'dir-email') toast('New email to ' + p.email, 'success');
+        if (a === 'dir-email') toast('Writing email to ' + p.email, 'success');
         if (a === 'dir-chat') toast('Opening chat with ' + p.name.split(' ')[0], 'success');
       });
     }
-    if (a === 'dir-export') b.addEventListener('click', () => toast('Directory exported as CSV', 'success'));
+    if (a === 'dir-export') b.addEventListener('click', () => toast('Staff list saved as CSV file', 'success'));
   });
 }
 
@@ -2241,7 +2245,7 @@ function renderProfile() {
         <div class="av">${ME.initials}</div>
         <h3>${escapeHtml(ME.name)}</h3>
         <div class="rl">${escapeHtml(ME.role)} · ${escapeHtml(ME.branch)}</div>
-        <div style="font: 11.5px/1.3 var(--font-mono); color: var(--text-subtle); margin-top: 2px;">${escapeHtml(ME.empId)} · joined ${escapeHtml(ME.joined)}</div>
+        <div style="font: 11.5px/1.3 var(--font-mono); color: var(--text-subtle); margin-top: 2px;">${escapeHtml(ME.empId)} · started ${escapeHtml(ME.joined)}</div>
         <div class="stack">
           <button class="btn btn-secondary" data-action="change-avatar"><span data-icon="camera" data-icon-size="13"></span> Change photo</button>
           <button class="btn btn-secondary" data-action="change-pw"><span data-icon="lock" data-icon-size="13"></span> Change password</button>
@@ -2501,7 +2505,7 @@ function renderTimesheet() {
               <td><span class="num">${escapeHtml(t.id)}</span></td>
               <td>${escapeHtml(t.week)}</td>
               <td class="r num">${t.total.toFixed(1)}h</td>
-              <td><span class="pill ${t.status} dot">${cap(t.status)}</span></td>
+              <td><span class="pill ${t.status} dot">${statusLabel(t.status)}</span></td>
               <td style="text-align:right;"><a href="#" style="font:500 12px/1 var(--font-sans); color: var(--brand-strong); text-decoration:none;">View →</a></td>
             </tr>
           `).join('')}
@@ -2581,7 +2585,7 @@ function renderExpenses() {
                 <td><div style="font: 13px/1.4 var(--font-sans); color: var(--text-body); max-width: 320px;">${escapeHtml(e.desc)}</div></td>
                 <td class="r num">${money(e.amount)}</td>
                 <td>${e.receipt ? '<span class="pill success"><span data-icon="check" data-icon-size="10"></span> Attached</span>' : '<span class="pill muted">Missing</span>'}</td>
-                <td><span class="pill ${e.status} dot">${cap(e.status)}</span></td>
+                <td><span class="pill ${e.status} dot">${statusLabel(e.status)}</span></td>
                 <td style="text-align:right;"><a href="#" data-exp-view="${e.id}" style="font:500 12px/1 var(--font-sans); color: var(--brand-strong); text-decoration:none;">View →</a></td>
               </tr>
             `).join('')}
@@ -2665,7 +2669,7 @@ function openExpenseDetail(id) {
       <div class="meta-strip" style="margin-bottom: 14px;">
         <div><span class="lb">Amount</span><span class="vl mono">${money(e.amount)}</span></div>
         <div><span class="lb">Category</span><span class="vl">${escapeHtml(e.cat)}</span></div>
-        <div><span class="lb">Status</span><span class="vl"><span class="pill ${e.status} dot">${cap(e.status)}</span></span></div>
+        <div><span class="lb">Status</span><span class="vl"><span class="pill ${e.status} dot">${statusLabel(e.status)}</span></span></div>
         <div><span class="lb">Receipt</span><span class="vl">${e.receipt ? 'Attached' : 'Missing'}</span></div>
       </div>
       <div style="font:500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Description</div>
