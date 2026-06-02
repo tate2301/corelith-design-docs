@@ -188,16 +188,6 @@
   .card-h .link { font: 500 12px/1 var(--font-sans); color: var(--te-brand-strong); cursor: pointer; background: transparent; border: 0; padding: 4px 6px; border-radius: 5px; }
   .card-h .link:hover { background: var(--te-brand-soft); }
 
-  .class-line { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border-subtle); cursor: pointer; }
-  .class-line:last-child { border-bottom: 0; }
-  .class-line:hover { background: var(--surface-muted); margin: 0 -10px; padding: 9px 10px; border-radius: 7px; }
-  .class-line .dot { width: 8px; height: 8px; border-radius: 50%; }
-  .class-line .nm { font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
-  .class-line .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 1px; }
-  .class-line .pill { padding: 3px 9px; border-radius: 9999px; font: 500 11px/1 var(--font-sans); }
-  .class-line .pill.pending { background: var(--tone-warn-bg); color: var(--tone-warn); }
-  .class-line .pill.done { background: var(--tone-success-bg); color: var(--tone-success); }
-
   .msg-row { display: grid; grid-template-columns: 36px 1fr auto; gap: 10px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border-subtle); cursor: pointer; }
   .msg-row:last-child { border-bottom: 0; }
   .msg-row:hover { background: var(--surface-muted); margin: 0 -10px; padding: 9px 10px; border-radius: 7px; }
@@ -313,14 +303,8 @@
 
   /* === Gradebook === */
   .gb-toolbar { padding: 10px 24px; background: var(--surface); border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .gb-toolbar .chips { display: inline-flex; gap: 6px; }
-  .gb-toolbar .chip { padding: 5px 12px; border-radius: 9999px; background: var(--surface-muted); font: 500 12px/1 var(--font-sans); color: var(--text-muted); cursor: pointer; border: 0; }
-  .gb-toolbar .chip:hover { background: var(--surface-sunken); }
-  .gb-toolbar .chip.on { background: var(--te-brand-strong); color: #fff; }
   .gb-toolbar select { height: 30px; padding: 0 28px 0 10px; border: 1px solid var(--border); background: var(--surface); border-radius: 6px; font: 500 12.5px/1 var(--font-sans); color: var(--text-strong); cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23565C69' stroke-width='2'><path d='m6 9 6 6 6-6'/></svg>"); background-repeat: no-repeat; background-position: right 8px center; }
   .gb-toolbar .sp { flex: 1; }
-  .gb-toolbar .stat-pill { display: inline-flex; align-items: baseline; gap: 6px; padding: 4px 11px; background: var(--surface-muted); border-radius: 9999px; font: 500 11.5px/1 var(--font-sans); color: var(--text-muted); }
-  .gb-toolbar .stat-pill b { font: 600 12.5px/1 var(--font-mono); color: var(--text-strong); }
 
   .gb-wrap { flex: 1; overflow: auto; padding: 14px 24px 24px; background: var(--gray-100); }
   .gb-table { width: 100%; min-width: 900px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; border-collapse: separate; border-spacing: 0; }
@@ -740,12 +724,6 @@
   .rp-line .area { fill: var(--te-brand); opacity: 0.12; }
   .rp-line .path { fill: none; stroke: var(--te-brand); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .rp-line .pt { fill: #fff; stroke: var(--te-brand); stroke-width: 2; }
-  .rp-dist { display: flex; flex-direction: column; gap: 8px; }
-  .rp-dist .grade-row { display: grid; grid-template-columns: 30px 1fr 40px; gap: 8px; align-items: center; font: 500 12px/1 var(--font-sans); color: var(--text-strong); }
-  .rp-dist .grade-row .g { font: 700 13px/1 var(--font-mono); }
-  .rp-dist .grade-row .tk { height: 10px; background: var(--surface-muted); border-radius: 5px; overflow: hidden; }
-  .rp-dist .grade-row .tk .fl { height: 100%; background: var(--te-brand); border-radius: 5px; }
-  .rp-dist .grade-row .ct { text-align: right; font: 500 12px var(--font-mono); color: var(--text-muted); }
 
   /* === Settings === */
   .st-grid { display: grid; grid-template-columns: 220px 1fr; gap: 16px; }
@@ -1305,7 +1283,9 @@ function closeModal() { state.modal = null; renderModal(); }
 function renderModal() {
   const host = $('#modal-host');
   if (!state.modal) { host.innerHTML = ''; return; }
-  host.innerHTML = `<div class="modal-scrim" data-scrim>${state.modal}</div>`;
+  const isSheet = state.modal.indexOf('x-bottom-sheet') !== -1;
+  const scrimCls = isSheet ? 'x-bs-scrim open' : 'modal-scrim';
+  host.innerHTML = `<div class="${scrimCls}" data-scrim>${state.modal}</div>`;
   if (window.Icons) window.Icons.render(host);
   host.querySelector('[data-scrim]').addEventListener('click', (e) => {
     if (e.target.dataset.scrim !== undefined) closeModal();
@@ -1634,30 +1614,42 @@ function renderDashboard() {
               <span class="bdg warn">3 waiting</span>
             </div>
             <div>
-              <div class="class-line" data-go="marks">
-                <span class="dot" style="background: #A78BFA;"></span>
-                <div>
-                  <div class="nm">Form 2A · Maths · Quiz 1</div>
-                  <div class="sb">29 papers · handed in yesterday</div>
+              <button type="button" class="b-row-card" data-go="marks">
+                <div class="b-rc-top">
+                  <div class="b-rc-info">
+                    <div class="b-rc-nm">Form 2A · Maths · Quiz 1</div>
+                    <div class="b-rc-sb">Handed in yesterday</div>
+                  </div>
+                  <div>
+                    <div class="b-rc-val">29</div>
+                    <div class="b-rc-delta">papers</div>
+                  </div>
                 </div>
-                <span class="pill pending">Mark</span>
-              </div>
-              <div class="class-line" data-go="marks">
-                <span class="dot" style="background: #60A5FA;"></span>
-                <div>
-                  <div class="nm">Form 3B · Comb Sci · Lab report</div>
-                  <div class="sb">26 papers · due Mon 26 May</div>
+              </button>
+              <button type="button" class="b-row-card" data-go="marks">
+                <div class="b-rc-top">
+                  <div class="b-rc-info">
+                    <div class="b-rc-nm">Form 3B · Comb Sci · Lab report</div>
+                    <div class="b-rc-sb">Due Mon 26 May</div>
+                  </div>
+                  <div>
+                    <div class="b-rc-val">26</div>
+                    <div class="b-rc-delta">papers</div>
+                  </div>
                 </div>
-                <span class="pill pending">Mark</span>
-              </div>
-              <div class="class-line" data-go="marks">
-                <span class="dot" style="background: #34D399;"></span>
-                <div>
-                  <div class="nm">Form 1A · Maths · Test 2</div>
-                  <div class="sb">28 papers · 12 done</div>
+              </button>
+              <button type="button" class="b-row-card" data-go="marks">
+                <div class="b-rc-top">
+                  <div class="b-rc-info">
+                    <div class="b-rc-nm">Form 1A · Maths · Test 2</div>
+                    <div class="b-rc-sb">12 of 28 done</div>
+                  </div>
+                  <div>
+                    <div class="b-rc-val">16</div>
+                    <div class="b-rc-delta dn">to go</div>
+                  </div>
                 </div>
-                <span class="pill pending">Continue</span>
-              </div>
+              </button>
             </div>
           </div>
 
@@ -2090,11 +2082,29 @@ function renderGradebook() {
     const vals = roster.map(s => state.gradebook.values[`${s.id}-${c.id}`]).filter(v => v != null);
     return vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : 0;
   });
+  const counts = {
+    all: state.gradebook.columns.length,
+    ca: state.gradebook.columns.filter(c => c.type === 'CA').length,
+    ex: state.gradebook.columns.filter(c => c.type === 'Exam').length,
+    hw: state.gradebook.columns.filter(c => c.type === 'HW').length,
+  };
   return `
+    <div class="b-stat-hero" style="margin: 14px 24px 0;">
+      <div class="b-sh-lead">
+        <div class="b-sh-l">Class average</div>
+        <div class="b-sh-v">${classAvg.toFixed(1)}</div>
+        <div class="b-sh-d">${roster.length} pupils · Term 2 · weighted across ${state.gradebook.columns.length} assessments</div>
+      </div>
+      <div class="b-sh-row">
+        <div class="b-sh-s"><div class="b-sh-l">Highest</div><div class="b-sh-v">${highest.toFixed(0)}</div><div class="b-sh-sb">Top pupil this term</div></div>
+        <div class="b-sh-s"><div class="b-sh-l">Lowest</div><div class="b-sh-v">${lowest.toFixed(0)}</div><div class="b-sh-sb">Needs follow-up</div></div>
+        <div class="b-sh-s"><div class="b-sh-l">Assessments</div><div class="b-sh-v">${state.gradebook.columns.length}</div><div class="b-sh-sb">CA · Exam · Homework</div></div>
+      </div>
+    </div>
     <div class="gb-toolbar">
-      <div class="chips">
-        ${[['all','All'],['ca','Class tests'],['ex','Exams'],['hw','Homework']].map(([id,label]) =>
-          `<button class="chip ${state.gradebook.filter === id ? 'on' : ''}" data-gb-filter="${id}">${label}</button>`).join('')}
+      <div class="b-filter-chips" style="padding: 0;">
+        ${[['all','All',counts.all],['ca','Class tests',counts.ca],['ex','Exams',counts.ex],['hw','Homework',counts.hw]].map(([id,label,n]) =>
+          `<button class="b-fc ${state.gradebook.filter === id ? 'on' : ''}" data-gb-filter="${id}">${label} <span class="b-fc-ct">${n}</span></button>`).join('')}
       </div>
       <select id="gb-term">
         <option>Term 2 · 2026</option>
@@ -2102,9 +2112,6 @@ function renderGradebook() {
         <option>Term 3 · 2025</option>
       </select>
       <div class="sp"></div>
-      <span class="stat-pill">Class average <b>${classAvg.toFixed(1)}</b></span>
-      <span class="stat-pill">Highest <b>${highest.toFixed(0)}</b></span>
-      <span class="stat-pill">Lowest <b>${lowest.toFixed(0)}</b></span>
       <button class="btn-secondary" id="gb-export"><span data-icon="download" data-icon-size="13"></span> Download</button>
     </div>
     <div class="gb-wrap">
@@ -2388,23 +2395,35 @@ function openBroadcastModal() {
   let body = '';
   let subject = 'Reminder · Friday quiz';
   function paint() {
+    const sendCount = selected.length ? selected.reduce((s, id) => s + (CLASSES.find(c=>c.id===id)||{size:0}).size, 0) : 0;
+    const canSend = !!(body.trim() && selected.length);
     openModal(`
-      <div class="modal wide" onclick="event.stopPropagation()">
-        <h3>Send to whole class</h3>
-        <p class="sub">Sends an SMS and an app message to every parent in the classes you pick.</p>
-        <div class="field-label">Send to</div>
-        <div class="chip-grp" style="margin-bottom: 10px;">
-          ${classes.map(c => `<button class="ch ${selected.includes(c.id) ? 'on' : ''}" data-cls="${c.id}">${esc(c.label)}</button>`).join('')}
+      <div class="x-bottom-sheet" onclick="event.stopPropagation()" style="max-width: 600px;">
+        <div class="x-bs-grab"></div>
+        <div class="x-bs-head">
+          <h3>Send to whole class</h3>
+          <button class="x-bs-close" data-cancel aria-label="Close"><span data-icon="x" data-icon-size="14"></span></button>
         </div>
-        <div class="field-label">Title</div>
-        <div class="row"><input id="br-subj" value="${esc(subject)}" /></div>
-        <div class="field-label">Message</div>
-        <div class="row"><textarea id="br-body" placeholder="Type the message…">${esc(body)}</textarea></div>
-        <div class="field-label">Preview · what parents will see</div>
-        <div class="preview-card">${esc(subject)}\n\n${esc(body || '(type a message to see a preview)')}${'\n\n— Mr Chari, Maths · Park Centre High'}</div>
-        <div class="acts">
+        <div class="x-bs-body">
+          <p style="font: 13px/1.45 var(--font-sans); color: var(--text-muted); margin: 0 0 14px;">Sends an SMS and an app message to every parent in the classes you pick.</p>
+          <div class="field"><span class="field-label">Send to</span>
+            <div class="b-filter-chips" style="padding: 0; flex-wrap: wrap;">
+              ${classes.map(c => `<button class="b-fc ${selected.includes(c.id) ? 'on' : ''}" data-cls="${c.id}">${esc(c.label)}</button>`).join('')}
+            </div>
+          </div>
+          <div class="field" style="margin-top: 12px;"><span class="field-label">Title</span>
+            <input class="input" id="br-subj" value="${esc(subject)}" />
+          </div>
+          <div class="field" style="margin-top: 12px;"><span class="field-label">Message</span>
+            <textarea class="textarea" id="br-body" placeholder="Type the message…">${esc(body)}</textarea>
+          </div>
+          <div class="field" style="margin-top: 12px;"><span class="field-label">Preview · what parents will see</span>
+            <div class="preview-card" style="background: var(--surface-muted); border-radius: 10px; padding: 12px 14px; font: 13.5px/1.55 var(--font-sans); color: var(--text-body); white-space: pre-wrap; max-height: 180px; overflow-y: auto;">${esc(subject)}\n\n${esc(body || '(type a message to see a preview)')}${'\n\n— Mr Chari, Maths · Park Centre High'}</div>
+          </div>
+        </div>
+        <div class="x-bs-foot">
           <button class="alt" data-cancel>Cancel</button>
-          <button class="ok" data-confirm ${(body.trim() && selected.length) ? '' : 'disabled'} style="${(body.trim() && selected.length) ? '' : 'opacity:0.5; cursor:not-allowed;'}">Send to ${selected.length ? selected.reduce((s, id) => s + (CLASSES.find(c=>c.id===id)||{size:0}).size, 0) : 0} parents</button>
+          <button class="primary" data-confirm ${canSend ? '' : 'disabled'} style="${canSend ? '' : 'opacity:0.5; cursor:not-allowed;'}">Send to ${sendCount} parents</button>
         </div>
       </div>
     `);
@@ -3350,8 +3369,8 @@ function renderReports() {
           <div class="rp-card">
             <h4>Grade distribution · Form 2A · Mid-term</h4>
             <div class="sub">29 students · marked 22 May</div>
-            <div class="rp-dist">
-              ${dist.map(d => `<div class="grade-row"><span class="g">${d.g}</span><div class="tk"><div class="fl" style="width:${d.pct}%; background: ${d.g==='A'?'var(--tone-success)':d.g==='B'?'#92400E':d.g==='C'?'#B83A2A':'#71717A'};"></div></div><span class="ct">${d.n}</span></div>`).join('')}
+            <div class="b-day-list">
+              ${dist.map(d => `<div class="b-dl-l">Grade ${d.g} · ${d.pct}%</div><div class="b-dl-v ${d.g==='A'?'up':d.g==='U'?'dn':''}">${d.n}</div>`).join('')}
             </div>
           </div>
           <div class="rp-card">
