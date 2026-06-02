@@ -318,6 +318,15 @@
       if (el.closest('.ds-variant-grid')) return;
       targets.push({ el, kind: 'specimen' });
     });
+    // Pattern pages use `.comp-box` for compositions. Treat any .comp-box that
+    // carries a `data-code` attribute as a specimen so it gets the Preview/Code
+    // tab. (.comp-box without `data-code` is left alone — those pages may have
+    // many compositions and only the first/representative one needs a snippet.)
+    scope.querySelectorAll('.comp-box[data-code], .dt-cell[data-code]').forEach((el) => {
+      if (el.closest('.ds-preview')) return;
+      if (el.closest('.ds-specimen')) return;
+      targets.push({ el, kind: 'specimen' });
+    });
     scope.querySelectorAll('.ds-variant-grid').forEach((el) => {
       if (el.closest('.ds-preview')) return;
       if (el.closest('.ds-specimen')) return;
