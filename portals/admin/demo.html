@@ -2729,7 +2729,8 @@ function renderIntegrations() {
               </div>
               <div class="desc">${escapeHtml(i.desc)}</div>
               <div class="foot">
-                <span class="pill ${i.badge}">${i.badge === 'on' ? 'Connected' : i.badge === 'beta' ? 'Still being tested' : 'Ready to connect'}</span>
+                <span class="pill ${i.badge}">${i.badge === 'on' ? 'Connected' : i.badge === 'beta' ? 'Beta' : 'Not connected'}</span>
+                <button class="conn-btn ${i.badge === 'on' ? 'off' : ''}" data-int-btn="${i.id}">${i.badge === 'on' ? 'Configure' : 'Connect'}</button>
               </div>
             </div>
           `).join('')}
@@ -2803,30 +2804,87 @@ function renderIntegrationDrawer() {
    Settings
    ============================================================ */
 function renderSettings() {
+  const sec = (id, icon, title, open, body) => `
+    <details class="sec" ${open ? 'open' : ''} data-sec="${id}">
+      <summary>
+        <span class="ic"><span data-icon="${icon}" data-icon-size="16"></span></span>
+        <span class="title">${title}</span>
+        <span class="chev" data-icon="forward" data-icon-size="14"></span>
+      </summary>
+      <div class="sec-body">${body}</div>
+    </details>
+  `;
   return `
     <section class="ad-main">
       <div class="ad-top">
-        ${burger()}
-        <span class="crumb">${escapeHtml(state.tenant.id)} · preferences</span>
+        <span class="crumb">${escapeHtml(state.tenant.id)} · settings</span>
         <h1>Settings</h1>
         <div class="spacer"></div>
       </div>
       <div class="ad-body">
         <div class="settings-body">
-          <div class="sec">
-            <h3>Appearance</h3>
-            <p class="sb">Control how the admin portal looks for your account.</p>
+          ${sec('business', 'building', 'Business info', true, `
+            <p class="sb">How your business appears on receipts, invoices and the parent portal.</p>
             <div class="toggle-row">
               <div class="info">
-                <div class="ttl">Dark theme</div>
-                <div class="ds">Pretend to be infrastructure. Live-applies across all screens.</div>
+                <div class="ttl">Business name</div>
+                <div class="ds">Shown on every customer receipt.</div>
               </div>
-              <button class="toggle ${state.settings.darkTheme ? 'on' : ''}" id="t-dark"></button>
+              <input value="${escapeHtml(state.tenant.name)}" style="max-width: 200px; min-height: 44px; padding: 0 12px; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; background: rgba(255,255,255,0.06); color: #fff; font: 14px var(--font-mono); flex: none;" />
             </div>
-          </div>
-          <div class="sec">
-            <h3>Notifications</h3>
-            <p class="sb">When do you want to hear from the platform?</p>
+            <div class="toggle-row">
+              <div class="info">
+                <div class="ttl">Email send domain</div>
+                <div class="ds">SPF, DKIM, DMARC must verify.</div>
+              </div>
+              <input id="email-domain" value="${escapeHtml(state.settings.emailDomain)}" style="max-width: 200px; min-height: 44px; padding: 0 12px; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; background: rgba(255,255,255,0.06); color: #fff; font: 14px var(--font-mono); flex: none;" />
+            </div>
+          `)}
+          ${sec('branding', 'image', 'Branding', false, `
+            <p class="sb">Logos and colors appear on receipts, emails, and the parent portal.</p>
+            <div class="toggle-row">
+              <div class="info">
+                <div class="ttl">Business logo</div>
+                <div class="ds">PNG or SVG, max 2 MB.</div>
+              </div>
+              <button class="add-btn" id="upload-logo" style="width: auto; padding: 0 14px; min-height: 44px; border-radius: 10px; background: rgba(255,255,255,0.06); color: #fff; font: 600 13.5px var(--font-sans); border: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"><span data-icon="upload" data-icon-size="14"></span> Upload</button>
+            </div>
+            <div class="toggle-row">
+              <div class="info">
+                <div class="ttl">Brand colour</div>
+                <div class="ds">Used in customer-facing CTAs.</div>
+              </div>
+              <div style="display: inline-flex; align-items: center; gap: 8px;">
+                <input id="brand-color" type="color" value="${escapeHtml(state.settings.brandColor)}" style="width: 44px; height: 44px; border: 0; border-radius: 10px; padding: 0; background: transparent; cursor: pointer;" />
+                <span style="font: 500 12.5px var(--font-mono); color: rgba(255,255,255,0.6);">${escapeHtml(state.settings.brandColor.toUpperCase())}</span>
+              </div>
+            </div>
+          `)}
+          ${sec('security', 'shield', 'Security · 2FA, sign-in rules', false, `
+            <p class="sb">Account protection.</p>
+            <div class="toggle-row">
+              <div class="info">
+                <div class="ttl">Extra security code (2FA)</div>
+                <div class="ds">Required on every sign-in from an unrecognised device.</div>
+              </div>
+              <button class="toggle ${state.settings.twoFactor ? 'on' : ''}" id="t-2fa"></button>
+            </div>
+            <div class="toggle-row">
+              <div class="info">
+                <div class="ttl">Require 2FA for everyone</div>
+                <div class="ds">All users must turn on 2FA within 7 days.</div>
+              </div>
+              <button class="toggle on" id="t-2fa-enforce"></button>
+            </div>
+            <div class="toggle-row">
+              <div class="info">
+                <div class="ttl">Auto sign-out</div>
+                <div class="ds">After this many minutes of idle.</div>
+              </div>
+              <select id="sess-timeout" style="max-width: 180px; min-height: 44px; padding: 0 12px; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; background: rgba(255,255,255,0.06); color: #fff; font: 14px var(--font-sans); flex: none;">
+                ${[15, 30, 60, 120, 240, 480].map(v => `<option value="${v}" ${state.settings.sessionTimeout === v ? 'selected' : ''}>${v} minutes</option>`).join('')}
+              </select>
+            </div>
             <div class="cadence">
               ${['realtime', 'hourly', 'daily', 'weekly'].map(c => `
                 <label class="${state.settings.cadence === c ? 'on' : ''}" data-cadence="${c}">
@@ -2836,92 +2894,46 @@ function renderSettings() {
                 </label>
               `).join('')}
             </div>
-          </div>
-          <div class="sec">
-            <h3>Security</h3>
-            <p class="sb">Account-level protection. Tenant-wide policies live under Users &amp; roles.</p>
+          `)}
+          ${sec('data', 'inbox', 'Data & backups', false, `
+            <p class="sb">Where your data lives and how often it's backed up.</p>
             <div class="toggle-row">
               <div class="info">
-                <div class="ttl">Two-factor authentication</div>
-                <div class="ds">Required on every sign-in from an unrecognised device. App-based TOTP.</div>
+                <div class="ttl">Backup schedule</div>
+                <div class="ds">Daily at 03:00 SAST · 35 days kept.</div>
               </div>
-              <button class="toggle ${state.settings.twoFactor ? 'on' : ''}" id="t-2fa"></button>
-            </div>
-            <div class="toggle-row">
-              <div class="info">
-                <div class="ttl">Enforce 2FA tenant-wide</div>
-                <div class="ds">All users on ${escapeHtml(state.tenant.name)} must enrol within 7 days. SSO sessions are exempt.</div>
-              </div>
-              <button class="toggle on" id="t-2fa-enforce"></button>
+              <button class="add-btn" data-go="backups" style="width: auto; padding: 0 14px; min-height: 44px; border-radius: 10px; background: rgba(255,255,255,0.06); color: #fff; font: 600 13.5px var(--font-sans); border: 0; cursor: pointer;">Manage</button>
             </div>
             <div class="toggle-row">
               <div class="info">
-                <div class="ttl">Session timeout</div>
-                <div class="ds">Idle sessions are signed out after this many minutes.</div>
+                <div class="ttl">API tokens</div>
+                <div class="ds">Secret passwords for other apps.</div>
               </div>
-              <select id="sess-timeout" style="width: 140px; height: 34px; border: 1px solid var(--border); border-radius: 8px; padding: 0 10px; background: var(--surface); color: var(--text-strong); font: 13px var(--font-sans);">
-                ${[15, 30, 60, 120, 240, 480].map(v => `<option value="${v}" ${state.settings.sessionTimeout === v ? 'selected' : ''}>${v} minutes</option>`).join('')}
-              </select>
+              <button class="add-btn" data-go="keys" style="width: auto; padding: 0 14px; min-height: 44px; border-radius: 10px; background: rgba(255,255,255,0.06); color: #fff; font: 600 13.5px var(--font-sans); border: 0; cursor: pointer;">Manage</button>
             </div>
-          </div>
-          <div class="sec">
-            <h3>Brand customisation</h3>
-            <p class="sb">Logos and colors appear in customer-facing receipts, emails, and the parent portal.</p>
+          `)}
+          ${sec('danger', 'flag', 'Danger zone', false, `
+            <p class="sb">Permanent actions. We&rsquo;ll ask you to confirm first.</p>
             <div class="toggle-row">
               <div class="info">
-                <div class="ttl">Tenant logo</div>
-                <div class="ds">PNG or SVG · max 2 MB · transparent backgrounds recommended.</div>
+                <div class="ttl">Sign out everywhere</div>
+                <div class="ds">Sign out from every device you use, including this one.</div>
               </div>
-              <button class="add-btn" id="upload-logo" style="width: auto; padding: 8px 14px;"><span data-icon="upload" data-icon-size="13"></span> Upload</button>
+              <button class="add-btn" id="signout-all-btn" style="width: auto; padding: 0 14px; min-height: 44px; border-radius: 10px; background: var(--tone-danger-bg); color: var(--tone-danger); font: 600 13.5px var(--font-sans); border: 0; cursor: pointer;">Sign out</button>
             </div>
             <div class="toggle-row">
               <div class="info">
-                <div class="ttl">Brand color</div>
-                <div class="ds">Used in the parent portal CTA buttons and receipt header bands.</div>
+                <div class="ttl">Close this business</div>
+                <div class="ds">Removes all data after 30 days. Cannot be undone.</div>
               </div>
-              <div style="display: inline-flex; align-items: center; gap: 8px;">
-                <input id="brand-color" type="color" value="${escapeHtml(state.settings.brandColor)}" style="width: 36px; height: 36px; border: 0; border-radius: 8px; padding: 0; background: transparent; cursor: pointer;" />
-                <span style="font: 500 12.5px var(--font-mono); color: var(--text-muted);">${escapeHtml(state.settings.brandColor.toUpperCase())}</span>
-              </div>
+              <button class="add-btn" id="close-tenant-btn" style="width: auto; padding: 0 14px; min-height: 44px; border-radius: 10px; background: var(--tone-danger-bg); color: var(--tone-danger); font: 600 13.5px var(--font-sans); border: 0; cursor: pointer;">Close</button>
             </div>
-            <div class="toggle-row">
-              <div class="info">
-                <div class="ttl">Email send domain</div>
-                <div class="ds">SPF, DKIM, DMARC must verify. Currently: <code>${escapeHtml(state.settings.emailDomain)}</code></div>
-              </div>
-              <input id="email-domain" value="${escapeHtml(state.settings.emailDomain)}" style="width: 200px; height: 34px; border: 1px solid var(--border); border-radius: 8px; padding: 0 10px; background: var(--surface); color: var(--text-strong); font: 13px var(--font-mono);" />
-            </div>
-          </div>
-          <div class="sec">
-            <h3>API tokens</h3>
-            <p class="sb">Personal access tokens for scripts and CI. Tokens scoped to your account; rotate quarterly.</p>
-            <div class="tok-row" style="font: 500 11px var(--font-sans); color: var(--text-subtle); letter-spacing: 0.06em; text-transform: uppercase;">
-              <span>Name</span><span>Prefix</span><span>Scope</span><span>Last used</span><span></span>
-            </div>
-            <div class="tok-row">
-              <span class="nm">CI · deploy bot</span>
-              <span class="key">huc_ci_94a8…</span>
-              <span class="scope">read:audit, write:users</span>
-              <span class="date">2 min ago</span>
-              <button class="rev" data-tok="ci">Revoke</button>
-            </div>
-            <div class="tok-row">
-              <span class="nm">Local dev (Tendai)</span>
-              <span class="key">huc_dev_11f2…</span>
-              <span class="scope">read:*</span>
-              <span class="date">Today 09:14</span>
-              <button class="rev" data-tok="dev">Revoke</button>
-            </div>
-            <div class="tok-row">
-              <span class="nm">Zoho sync</span>
-              <span class="key">huc_app_72bc…</span>
-              <span class="scope">read:sales, write:gl</span>
-              <span class="date">23:55 nightly</span>
-              <button class="rev" data-tok="zoho">Revoke</button>
-            </div>
-            <button class="add-btn" id="new-token" style="margin-top: 14px; width: auto; padding: 8px 14px;"><span data-icon="plus" data-icon-size="13"></span> Generate new token</button>
-          </div>
+          `)}
         </div>
+      </div>
+      <div class="settings-savebar">
+        <button class="btn sec" id="settings-cancel">Cancel</button>
+        <button class="btn pri" id="settings-save"><span data-icon="check" data-icon-size="14"></span> Save changes</button>
       </div>
     </section>
   `;
@@ -3813,8 +3825,15 @@ function wireIntegrations() {
   $$('[data-cat]').forEach(b => b.addEventListener('click', () => {
     state.integrationCat = b.dataset.cat; render();
   }));
-  $$('[data-int]').forEach(b => b.addEventListener('click', () => {
+  $$('[data-int]').forEach(b => b.addEventListener('click', (e) => {
+    if (e.target.closest('[data-int-btn]')) return; // let the button handler take it
     state.integrationOpen = b.dataset.int;
+    state.userPanel = null; state.inviteOpen = false;
+    render();
+  }));
+  $$('[data-int-btn]').forEach(b => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    state.integrationOpen = b.dataset.intBtn;
     state.userPanel = null; state.inviteOpen = false;
     render();
   }));
@@ -3874,10 +3893,28 @@ function wireIntegrations() {
 
 /* === Settings wiring === */
 function wireSettings() {
-  const td = $('#t-dark'); if (td) td.addEventListener('click', () => {
-    state.settings.darkTheme = !state.settings.darkTheme;
-    document.body.classList.toggle('dark-theme', state.settings.darkTheme);
-    render();
+  const sv = $('#settings-save'); if (sv) sv.addEventListener('click', () => { persist(); toast('Settings saved', 'success'); });
+  const cn = $('#settings-cancel'); if (cn) cn.addEventListener('click', () => { toast('Changes discarded', 'default'); render(); });
+  const soAll = $('#signout-all-btn'); if (soAll) soAll.addEventListener('click', () => {
+    openConfirm({
+      title: 'Sign out everywhere?',
+      body: 'You will be signed out on every device — this one, your phone, and anywhere else you are signed in.',
+      confirmLabel: 'Sign out',
+      danger: true,
+      onConfirm: () => {
+        state.authed = false; state.authStep = 'credentials';
+        persist(); render(); toast('Signed out of all devices', 'success');
+      }
+    });
+  });
+  const ct = $('#close-tenant-btn'); if (ct) ct.addEventListener('click', () => {
+    openConfirm({
+      title: `Close ${state.tenant.name}?`,
+      body: `All data is removed after 30 days. You can&rsquo;t undo this.`,
+      confirmLabel: 'Close business',
+      danger: true,
+      onConfirm: () => toast('Request sent. Owner must confirm via email.', 'warn'),
+    });
   });
   const t2 = $('#t-2fa'); if (t2) t2.addEventListener('click', () => {
     state.settings.twoFactor = !state.settings.twoFactor;
@@ -4349,12 +4386,8 @@ function init() {
   }
   const r = (location.hash.replace(/^#\/?/, '') || 'dashboard');
   if (NAV.some(n => n.route === r)) state.route = r;
-  // Pre-select a couple of users so bulk bar shows by default
-  state.userSelected.add('u_001');
-  state.userSelected.add('u_004');
-  state.userSelected.add('u_006');
-  // Apply theme from state
-  document.body.classList.toggle('dark-theme', state.settings.darkTheme);
+  // Dark-mode-only portal
+  document.body.classList.add('dark-theme');
   render();
 }
 
