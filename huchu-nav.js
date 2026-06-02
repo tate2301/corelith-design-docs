@@ -44,6 +44,8 @@
       match: /\/(patterns|x-[a-z-]+)\.html$/ },
     { label: 'Guides',      href: ROOT + 'system/guides.html',
       match: /\/(guides|guide-[a-z-]+)\.html$/ },
+    { label: 'Kits',        href: ROOT + 'kits/overview.html',
+      match: /\/kits\// },
     { label: 'Solutions',   href: ROOT + 'portals/index.html',
       match: /\/(portals|verticals)\// },
   ];
