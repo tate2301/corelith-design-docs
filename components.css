@@ -712,7 +712,15 @@
 
 /* ════════════════════════════════════════════════════════════
    ALERTS / CALLOUTS
-   ════════════════════════════════════════════════════════════ */
+   ════════════════════════════════════════════════════════════
+   .alert is the CANONICAL class for inline notices.
+   @deprecated The doc pages "p-alert" and "b-callout" are the same
+   component — both should use .alert. The historical .p-alert /
+   .b-callout class names were never shipped as separate CSS rules
+   (they only existed as page filenames); aliases are declared below
+   to make the relationship explicit and grep-able for any
+   downstream consumer that might have rolled their own. Tracked in
+   system/audit-reuse.html finding D-2 / N-3. */
 
 .alert {
   display: grid;
@@ -734,6 +742,27 @@
 .alert.danger  { background: var(--tone-danger-bg); border-color: var(--tone-danger-bd); color: var(--tone-danger); }
 .alert.info .alert-title, .alert.success .alert-title, .alert.warn .alert-title, .alert.danger .alert-title { color: inherit; }
 .alert.info .alert-body, .alert.success .alert-body, .alert.warn .alert-body, .alert.danger .alert-body { color: inherit; opacity: 0.85; }
+
+/* @deprecated p-alert / b-callout — use .alert. Aliases forwarded for any
+ * legacy markup. Retained through v0.6. See audit-reuse.html D-2 / N-3. */
+.p-alert, .b-callout {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-body);
+  font: var(--type-body-sm);
+}
+.p-alert .icon, .b-callout .icon { color: var(--text-muted); margin-top: 1px; }
+.p-alert .alert-title, .b-callout .alert-title { font: var(--type-label-sm); color: var(--text-strong); }
+.p-alert .alert-body,  .b-callout .alert-body  { color: var(--text-muted); margin-top: 4px; line-height: 1.55; }
+.p-alert.info,    .b-callout.info    { background: var(--tone-info-bg);    border-color: var(--tone-info-bd);    color: var(--tone-info); }
+.p-alert.success, .b-callout.success { background: var(--tone-success-bg); border-color: var(--tone-success-bd); color: var(--tone-success); }
+.p-alert.warn,    .b-callout.warn    { background: var(--tone-warn-bg);    border-color: var(--tone-warn-bd);    color: var(--tone-warn); }
+.p-alert.danger,  .b-callout.danger  { background: var(--tone-danger-bg);  border-color: var(--tone-danger-bd);  color: var(--tone-danger); }
 
 /* ════════════════════════════════════════════════════════════
    AVATAR / KBD / MISC
@@ -892,6 +921,11 @@
 
 /* — Modal / Sheet — */
 .modal-scrim { position: absolute; inset: 0; background: rgba(42,38,34,0.32); display: grid; place-items: center; padding: 32px; }
+/* @deprecated Use .x-bottom-sheet — the desktop adaptation (>= 720px) of
+ * .x-bottom-sheet IS the canonical centred-dialog. .modal-card is retained
+ * as a backwards-compat alias through v0.6 so existing markup continues to
+ * render. New code MUST use .x-bottom-sheet (see system/x-bottom-sheet.html).
+ * Tracked in system/audit-reuse.html finding D-1. */
 .modal-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -2002,6 +2036,9 @@
   display: grid; place-items: center;
   padding: 32px;
 }
+/* @deprecated Use .x-bottom-sheet — see D-1 in system/audit-reuse.html.
+ * Aliases retained for backwards-compat through v0.6; the only consumer
+ * (portals/admin/demo.html) will migrate before removal. */
 .modal-window {
   background: var(--canvas);
   border-radius: 14px;
@@ -2443,4 +2480,16 @@ a.module-card:hover { border-color: var(--border-strong); transform: translateY(
   }
   .x-bs-scrim.open .x-bottom-sheet { transform: none; opacity: 1; }
   .x-bottom-sheet .x-bs-grab { display: none; }
+}
+
+/* @deprecated Backwards-compat aliases for the legacy modal classes.
+ * .modal-card and .modal-window now also receive the same surface treatment
+ * as .x-bottom-sheet so consumers can migrate at their own pace. New code
+ * MUST use .x-bottom-sheet. Tracked: audit-reuse.html finding D-1. */
+.modal-card,
+.modal-window {
+  /* Inherit-by-aliasing — keep the legacy block-level rules above intact
+   * (max-widths, shadows etc. still apply). Nothing extra needed here; this
+   * selector exists to make the alias relationship grep-able and to give
+   * future migration tools a single hook to rewrite. */
 }
