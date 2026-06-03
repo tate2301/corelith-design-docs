@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Grid list · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pull { background: var(--brand-soft); border-left: 3px solid var(--brand); padding: 10px 14px; border-radius: 0 8px 8px 0; font: 500 14px/1.5 var(--font-sans); color: var(--text-strong); margin: 14px 0 0; }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .phone { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 10px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+  .ck-screen .brand { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .ph-title { font: 700 13px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .ck-screen .ph-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .ck-screen .ph-card { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 6px; padding: 5px; display: grid; gap: 3px; }
+  .ck-screen .ph-card.sel { border-color: var(--brand); box-shadow: 0 0 0 1.5px var(--focus-ring-soft); }
+  .ck-screen .ph-card .img { aspect-ratio: 4 / 3; background: linear-gradient(135deg, var(--brand-soft), var(--surface)); border-radius: 4px; }
+  .ck-screen .ph-card .t { font: 600 9px/1.2 var(--font-sans); color: var(--text-strong); }
+  .ck-screen .ph-card .m { font: 500 8px/1 var(--font-mono); color: var(--text-subtle); }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p  { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Lists</a><span class="sep">/</span>
+      <span>Grid list</span>
+    </div>
+    <h1>Build a grid list — cards for browsing, not rows for processing</h1>
+    <p class="lede">By the end of this recipe you'll have a responsive card grid (3-up desktop, 2-up tablet, 1-up phone), with a preview image, title, meta and an action per card — plus multi-select, hover lift and a graceful image-loading state.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="grid" data-icon-size="12"></span>Lists</span>
+      <span class="meta-pill">3 primitives · 1 block · 0 patterns</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~15 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A responsive card grid: image + title + meta + one action. Multi-select via the card itself. Image-loading and selected states baked in.</p>
+    <p>A grid list answers a different question to a row list. Rows say "pick the one matching this attribute" — operators scan values. Cards say "show me what's here" — users scan thumbnails. Products, inventory items, gallery assets, vehicles in a yard, units on a building site: cards. Invoices, audit entries, jobs queued, line items: rows.</p>
+    <p>The opinionated bit is the breakpoint. 3 per row on desktop (≥1024px), 2 on tablet, 1 on phone. Don't try to squeeze 4-up on a 13-inch laptop — text gets too small. Don't go 2-up on phone — the trade-off between image size and readable meta is bad either way; 1-up wins.</p>
+    <p class="ck-pull"><b>Cards are for browsing, rows are for processing.</b> Pick based on the user's intent, not whether you have an image. A photo doesn't make a row a card; the user's task does.</p>
+    <p><b>Skip this recipe if</b> the user already knows what they're looking for. Search-then-pick is a row-list problem. Browse-then-decide is a grid problem.</p>
+  </section>
+
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three states of the same grid: default, multi-select active, single-column phone.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu</span>
+          <p class="ph-title">Inventory</p>
+          <div class="ph-grid">
+            <div class="ph-card"><div class="img"></div><div class="t">Rebar 12mm</div><div class="m">240 t · $890</div></div>
+            <div class="ph-card"><div class="img"></div><div class="t">Cement OPC</div><div class="m">120 t · $1.2k</div></div>
+            <div class="ph-card"><div class="img"></div><div class="t">Bricks clay</div><div class="m">18k · $0.18</div></div>
+            <div class="ph-card"><div class="img"></div><div class="t">Sand river</div><div class="m">60 m³ · $22</div></div>
+          </div>
+        </div>
+        <div class="caption"><span class="num">01</span> Default — 2 per row on phone preview</div>
+      </div>
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu</span>
+          <p class="ph-title">2 selected</p>
+          <div class="ph-grid">
+            <div class="ph-card sel"><div class="img"></div><div class="t">Rebar 12mm</div><div class="m">Selected</div></div>
+            <div class="ph-card"><div class="img"></div><div class="t">Cement OPC</div><div class="m">120 t</div></div>
+            <div class="ph-card sel"><div class="img"></div><div class="t">Bricks clay</div><div class="m">Selected</div></div>
+            <div class="ph-card"><div class="img"></div><div class="t">Sand river</div><div class="m">60 m³</div></div>
+          </div>
+        </div>
+        <div class="caption"><span class="num">02</span> Multi-select — toolbar appears</div>
+      </div>
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu</span>
+          <p class="ph-title">Inventory</p>
+          <div style="display: grid; gap: 6px;">
+            <div class="ph-card"><div class="img" style="aspect-ratio: 16/9"></div><div class="t">Rebar 12mm</div><div class="m">240 t in stock · $890 per ton</div></div>
+            <div class="ph-card"><div class="img" style="aspect-ratio: 16/9"></div><div class="t">Cement OPC</div><div class="m">120 t in stock · $1.2k per ton</div></div>
+          </div>
+        </div>
+        <div class="caption"><span class="num">03</span> 1-up phone — wider image, more meta</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">A grid, a card, and a top toolbar that appears when something's selected.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/p-stack.html"><span class="kind">Primitive</span>Stack</a>
+      <a class="ck-piece" href="../system/b-row-card.html"><span class="kind">Block</span>Card</a>
+      <a class="ck-piece" href="../system/p-checkbox.html"><span class="kind">Primitive</span>Checkbox</a>
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+      <a class="ck-piece" href="../system/b-data-toolbar.html"><span class="kind">Block</span>DataToolbar</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>Stack</code>, <code>Card</code>, <code>Checkbox</code>, <code>Button</code>, <code>DataToolbar</code>. <code>Card</code> ships in v0.1-alpha; the optional <code>Grid</code> primitive is on the roadmap — for now use CSS grid directly.</p>
+  </section>
+
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <div class="ck-step"><span class="n">01</span><h3>Lay out the grid with CSS — not JS, not a library</h3></div>
+    <p>A CSS grid template with <code>auto-fill</code> + <code>minmax</code> handles every breakpoint without a media query. The card's natural minimum width sets the column count. Save the media-query-juggling for layouts that genuinely can't be solved by <code>minmax</code>.</p>
+    <div class="ds-specimen"
+         data-code='// Tailwind: grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4
+// Plain CSS:
+.grid-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-4);
+}
+// 220px is the smallest a card can be and still be readable.
+// At 720px viewport you get 3 cards; at 480px, 2; at 320px, 1.'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 18px; font: 500 12px/1.6 var(--font-mono); color: var(--text-muted);">One CSS rule, zero media queries.<br/>Columns count themselves based on the card&#39;s min-width.</div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · The grid</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">02</span><h3>Build the card — image, title, meta, action</h3></div>
+    <p>Each card is a focusable element with a fixed visual structure: image (4:3) on top, a 2-line title, a single line of meta, optional trailing action. Don't make the image clickable separately from the card — that's two tap targets where there should be one.</p>
+    <div class="ds-specimen"
+         data-code='import { Card, Stack, Button } from &#39;@huchu/react&#39;;
+
+type Item = {
+  id: string;
+  title: string;
+  preview: string;
+  meta: string;
+};
+
+function InventoryCard({ item, onOpen }: {
+  item: Item;
+  onOpen: (id: string) =&gt; void;
+}) {
+  return (
+    &lt;Card
+      as=&quot;button&quot;
+      onClick={() =&gt; onOpen(item.id)}
+      aria-label={`Open ${item.title}`}
+    &gt;
+      &lt;img
+        src={item.preview}
+        alt=&quot;&quot;            /* decorative — title is below */
+        loading=&quot;lazy&quot;
+        style={{ aspectRatio: &#39;4/3&#39;, objectFit: &#39;cover&#39; }}
+      /&gt;
+      &lt;Stack gap=&quot;xs&quot; padding=&quot;md&quot;&gt;
+        &lt;h3&gt;{item.title}&lt;/h3&gt;
+        &lt;p&gt;{item.meta}&lt;/p&gt;
+      &lt;/Stack&gt;
+    &lt;/Card&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 20px;">
+          <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;"><div style="aspect-ratio: 4/3; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted));"></div><div style="padding: 10px;"><div style="font: 600 13px/1.2 var(--font-sans);">Rebar 12mm</div><div style="font: 500 11px/1 var(--font-mono); color: var(--text-muted); margin-top: 4px;">240 t · $890/t</div></div></div>
+          <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;"><div style="aspect-ratio: 4/3; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted));"></div><div style="padding: 10px;"><div style="font: 600 13px/1.2 var(--font-sans);">Cement OPC</div><div style="font: 500 11px/1 var(--font-mono); color: var(--text-muted); margin-top: 4px;">120 t · $1.2k/t</div></div></div>
+          <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;"><div style="aspect-ratio: 4/3; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted));"></div><div style="padding: 10px;"><div style="font: 600 13px/1.2 var(--font-sans);">Bricks clay</div><div style="font: 500 11px/1 var(--font-mono); color: var(--text-muted); margin-top: 4px;">18k · $0.18</div></div></div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Card</span><span class="spacer"></span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">03</span><h3>Multi-select with a Set, not a boolean-per-item</h3></div>
+    <p>Lift a <code>Set&lt;string&gt;</code> of selected ids. Don't add an <code>isSelected</code> field to each item — that pulls selection into your data model where it doesn't belong. A Set keeps the selection orthogonal to the array and gives you O(1) toggling.</p>
+    <div class="ds-specimen"
+         data-code='import { useState } from &#39;@huchu/react&#39;;
+import { Card, Checkbox, DataToolbar, Button } from &#39;@huchu/react&#39;;
+
+function GridList({ items, onOpen }: {
+  items: Item[];
+  onOpen: (id: string) =&gt; void;
+}) {
+  const [selected, setSelected] = useState&lt;Set&lt;string&gt;&gt;(new Set());
+
+  const toggle = (id: string) =&gt; setSelected((prev) =&gt; {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
+
+  return (
+    &lt;&gt;
+      {selected.size &gt; 0 &amp;&amp; (
+        &lt;DataToolbar&gt;
+          &lt;span&gt;{selected.size} selected&lt;/span&gt;
+          &lt;Button onClick={() =&gt; archive(selected)}&gt;Archive&lt;/Button&gt;
+          &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; setSelected(new Set())}&gt;
+            Clear
+          &lt;/Button&gt;
+        &lt;/DataToolbar&gt;
+      )}
+      &lt;div className=&quot;grid-list&quot;&gt;
+        {items.map((item) =&gt; (
+          &lt;Card
+            key={item.id}
+            data-selected={selected.has(item.id)}
+            onClick={() =&gt; selected.size &gt; 0 ? toggle(item.id) : onOpen(item.id)}
+          &gt;
+            &lt;Checkbox
+              checked={selected.has(item.id)}
+              onChange={() =&gt; toggle(item.id)}
+              aria-label={`Select ${item.title}`}
+            /&gt;
+            {/* …image + title + meta… */}
+          &lt;/Card&gt;
+        ))}
+      &lt;/div&gt;
+    &lt;/&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--ink); color: var(--canvas); border-radius: 10px; margin-bottom: 12px; font: 500 12px/1 var(--font-sans);"><span><b>2</b> selected</span><span style="display: flex; gap: 6px;"><span style="padding: 6px 10px; border-radius: 6px; background: var(--canvas); color: var(--ink); font: 600 11px/1 var(--font-sans);">Archive</span><span style="padding: 6px 10px; border-radius: 6px; font: 500 11px/1 var(--font-sans); color: var(--canvas);">Clear</span></span></div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+            <div style="background: var(--surface); border: 1.5px solid var(--brand); border-radius: 10px; padding: 8px; box-shadow: 0 0 0 2px var(--focus-ring-soft);"><div style="aspect-ratio: 4/3; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted)); border-radius: 6px; margin-bottom: 6px;"></div><div style="font: 600 12px/1 var(--font-sans);">Rebar 12mm</div></div>
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px;"><div style="aspect-ratio: 4/3; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted)); border-radius: 6px; margin-bottom: 6px;"></div><div style="font: 600 12px/1 var(--font-sans);">Cement OPC</div></div>
+            <div style="background: var(--surface); border: 1.5px solid var(--brand); border-radius: 10px; padding: 8px; box-shadow: 0 0 0 2px var(--focus-ring-soft);"><div style="aspect-ratio: 4/3; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted)); border-radius: 6px; margin-bottom: 6px;"></div><div style="font: 600 12px/1 var(--font-sans);">Bricks clay</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Multi-select</span><span class="spacer"></span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">04</span><h3>Loading skeleton for the image — never a spinner</h3></div>
+    <p>Images load asynchronously and stagger as they come in. A spinner says "wait"; a skeleton says "this is the shape of what's coming". The skeleton matches the card's image aspect ratio so the layout doesn't jump when the real image arrives.</p>
+    <div class="ds-specimen"
+         data-code='import { Skeleton } from &#39;@huchu/react&#39;;
+
+function CardImage({ src, alt }: { src: string; alt: string }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    &lt;div style={{ position: &#39;relative&#39;, aspectRatio: &#39;4/3&#39; }}&gt;
+      {!loaded &amp;&amp; (
+        &lt;Skeleton
+          variant=&quot;rect&quot;
+          style={{ position: &#39;absolute&#39;, inset: 0 }}
+        /&gt;
+      )}
+      &lt;img
+        src={src}
+        alt={alt}
+        loading=&quot;lazy&quot;
+        onLoad={() =&gt; setLoaded(true)}
+        style={{
+          width: &#39;100%&#39;, height: &#39;100%&#39;,
+          objectFit: &#39;cover&#39;,
+          opacity: loaded ? 1 : 0,
+          transition: &#39;opacity 200ms&#39;,
+        }}
+      /&gt;
+    &lt;/div&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 20px;">
+          <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;"><div style="aspect-ratio: 4/3; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted));"></div><div style="padding: 10px;"><div style="font: 600 13px/1.2 var(--font-sans);">Rebar 12mm</div></div></div>
+          <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;"><div style="aspect-ratio: 4/3; background: var(--surface-muted); position: relative; overflow: hidden;"><div style="position: absolute; inset: 0; background: linear-gradient(90deg, transparent, var(--surface), transparent); animation: shimmer 1.5s infinite;"></div></div><div style="padding: 10px;"><div style="height: 10px; width: 70%; background: var(--surface-muted); border-radius: 4px;"></div></div></div>
+          <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;"><div style="aspect-ratio: 4/3; background: var(--surface-muted);"></div><div style="padding: 10px;"><div style="height: 10px; width: 60%; background: var(--surface-muted); border-radius: 4px;"></div></div></div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Image skeleton</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole grid list with multi-select, lazy images and skeleton loading. About 120 lines.</p>
+    <div class="ds-specimen"
+         data-code='import { useState } from &#39;@huchu/react&#39;;
+import { Card, Stack, Checkbox, Button, Skeleton, DataToolbar } from &#39;@huchu/react&#39;;
+
+type Item = { id: string; title: string; meta: string; preview: string };
+
+export function InventoryGrid({
+  items,
+  onOpen,
+  onArchive,
+}: {
+  items: Item[];
+  onOpen: (id: string) =&gt; void;
+  onArchive: (ids: string[]) =&gt; void;
+}) {
+  const [selected, setSelected] = useState&lt;Set&lt;string&gt;&gt;(new Set());
+
+  const toggle = (id: string) =&gt; setSelected((prev) =&gt; {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
+
+  const onCardClick = (id: string) =&gt; {
+    if (selected.size &gt; 0) toggle(id);
+    else onOpen(id);
+  };
+
+  return (
+    &lt;Stack gap=&quot;md&quot;&gt;
+      {selected.size &gt; 0 &amp;&amp; (
+        &lt;DataToolbar role=&quot;region&quot; aria-label=&quot;Selection actions&quot;&gt;
+          &lt;span&gt;{selected.size} selected&lt;/span&gt;
+          &lt;span style={{ flex: 1 }} /&gt;
+          &lt;Button onClick={() =&gt; onArchive([...selected])}&gt;Archive&lt;/Button&gt;
+          &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; setSelected(new Set())}&gt;
+            Clear
+          &lt;/Button&gt;
+        &lt;/DataToolbar&gt;
+      )}
+
+      &lt;div
+        role=&quot;list&quot;
+        aria-label=&quot;Inventory items&quot;
+        style={{
+          display: &#39;grid&#39;,
+          gridTemplateColumns: &#39;repeat(auto-fill, minmax(220px, 1fr))&#39;,
+          gap: &#39;var(--space-4)&#39;,
+        }}
+      &gt;
+        {items.map((item) =&gt; (
+          &lt;ItemCard
+            key={item.id}
+            item={item}
+            role=&quot;listitem&quot;
+            selected={selected.has(item.id)}
+            onClick={() =&gt; onCardClick(item.id)}
+            onToggle={() =&gt; toggle(item.id)}
+          /&gt;
+        ))}
+      &lt;/div&gt;
+    &lt;/Stack&gt;
+  );
+}
+
+function ItemCard({ item, selected, onClick, onToggle }: {
+  item: Item;
+  selected: boolean;
+  onClick: () =&gt; void;
+  onToggle: () =&gt; void;
+}) {
+  return (
+    &lt;Card
+      as=&quot;button&quot;
+      onClick={onClick}
+      data-selected={selected}
+      aria-pressed={selected}
+      aria-label={item.title}
+    &gt;
+      &lt;LazyImage src={item.preview} /&gt;
+      &lt;Stack gap=&quot;xs&quot; padding=&quot;sm&quot;&gt;
+        &lt;div style={{ display: &#39;flex&#39;, gap: 8, alignItems: &#39;start&#39; }}&gt;
+          &lt;Checkbox
+            checked={selected}
+            onChange={onToggle}
+            onClick={(e) =&gt; e.stopPropagation()}
+            aria-label={`Select ${item.title}`}
+          /&gt;
+          &lt;div&gt;
+            &lt;h3&gt;{item.title}&lt;/h3&gt;
+            &lt;p&gt;{item.meta}&lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/Stack&gt;
+    &lt;/Card&gt;
+  );
+}
+
+function LazyImage({ src }: { src: string }) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    &lt;div style={{ position: &#39;relative&#39;, aspectRatio: &#39;4/3&#39; }}&gt;
+      {!loaded &amp;&amp; (
+        &lt;Skeleton variant=&quot;rect&quot; style={{ position: &#39;absolute&#39;, inset: 0 }} /&gt;
+      )}
+      &lt;img
+        src={src} alt=&quot;&quot;
+        loading=&quot;lazy&quot; onLoad={() =&gt; setLoaded(true)}
+        style={{
+          width: &#39;100%&#39;, height: &#39;100%&#39;, objectFit: &#39;cover&#39;,
+          opacity: loaded ? 1 : 0, transition: &#39;opacity 200ms&#39;,
+        }}
+      /&gt;
+    &lt;/div&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 28px;">
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;"><div style="aspect-ratio: 4/3; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted));"></div><div style="padding: 12px;"><div style="font: 600 14px/1.2 var(--font-sans);">Rebar 12mm</div><div style="font: 500 12px/1 var(--font-mono); color: var(--text-muted); margin-top: 6px;">240 t · $890/t</div></div></div>
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;"><div style="aspect-ratio: 4/3; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted));"></div><div style="padding: 12px;"><div style="font: 600 14px/1.2 var(--font-sans);">Cement OPC</div><div style="font: 500 12px/1 var(--font-mono); color: var(--text-muted); margin-top: 6px;">120 t · $1.2k/t</div></div></div>
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;"><div style="aspect-ratio: 4/3; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted));"></div><div style="padding: 12px;"><div style="font: 600 14px/1.2 var(--font-sans);">Bricks clay</div><div style="font: 500 12px/1 var(--font-mono); color: var(--text-muted); margin-top: 6px;">18k · $0.18</div></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">InventoryGrid.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three forks. The grid stays, the card shape changes.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Masonry / Pinterest style</h4>
+        <p>Variable card heights, packed top-to-bottom. Use CSS columns or a real masonry lib. Looks great for image galleries; loses ordering predictability.</p>
+<pre>// CSS columns route — works in 1 line
+.grid-list {
+  column-count: auto;
+  column-width: 220px;
+  column-gap: 16px;
+}
+// Each card needs:
+// break-inside: avoid;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Compact card (no image)</h4>
+        <p>For data-dense catalogues — product codes, parts, SKUs. Drop the image entirely and the meta becomes a small table inside the card.</p>
+<pre>&lt;Card&gt;
+  &lt;Stack padding=&quot;sm&quot;&gt;
+    &lt;h3&gt;{item.code}&lt;/h3&gt;
+    &lt;dl&gt;
+      &lt;dt&gt;Stock&lt;/dt&gt;&lt;dd&gt;{item.stock}&lt;/dd&gt;
+      &lt;dt&gt;Price&lt;/dt&gt;&lt;dd&gt;{item.price}&lt;/dd&gt;
+    &lt;/dl&gt;
+  &lt;/Stack&gt;
+&lt;/Card&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Hero card on top</h4>
+        <p>First card spans 2 columns — a "featured" item. Use for promoted listings or "latest". Don't use it as a permanent layout; the hero needs editorial input.</p>
+<pre>// First card spans 2 columns
+&lt;Card style={{ gridColumn: &#39;span 2&#39; }}&gt;
+  …
+&lt;/Card&gt;
+// Avoid on phone:
+@media (max-width: 480px) {
+  .hero { grid-column: span 1; }
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">Grids are easy to get wrong — divs everywhere, no semantics.</p>
+    <ul class="ck-a11y">
+      <li><b>The grid is a list.</b> <code>role="list"</code> on the container, <code>role="listitem"</code> on each card. Screen readers announce "list with 24 items" — without it, the user has no idea how much they're scrolling through.</li>
+      <li><b>Cards are buttons.</b> Each card is a real <code>&lt;button&gt;</code>; Space and Enter open, Tab moves between cards in source order (which matches visual order in a CSS grid).</li>
+      <li><b>Images are decorative.</b> <code>alt=""</code> when the title is right below — otherwise screen readers read the same thing twice. If the image is the content (a gallery), use a real alt.</li>
+      <li><b>Checkboxes stop propagation.</b> The card itself is clickable; the checkbox inside must <code>stopPropagation</code> on its own click so toggling doesn't also "open" the card.</li>
+      <li><b>Selected state is <code>aria-pressed</code>.</b> Toggle buttons should be <code>aria-pressed</code>, not <code>aria-selected</code> — the latter is for grid/listbox patterns. Use the right ARIA for the role you chose.</li>
+      <li><b>Lazy images don't break the focus order.</b> <code>loading="lazy"</code> is fine; the elements exist in the DOM either way. Don't try to <code>display: none</code> below-fold cards.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <div class="ck-related">
+      <a href="lists-simple-list.html">Simple list<span class="tag">Recipe</span></a>
+      <a href="lists-grouped-by-section.html">Grouped by section<span class="tag">Recipe</span></a>
+      <a href="views-image-gallery.html">Image gallery + lightbox<span class="tag">Recipe</span></a>
+      <a href="tables-responsive-to-cards.html">Table → cards on phone<span class="tag">Recipe</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="lists-simple-list.html"><div class="pager-label">← Previous</div><div class="pager-title">Simple list</div></a>
+    <a href="lists-grouped-by-date.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Grouped by date</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

@@ -57,6 +57,49 @@
   .ck-related a:hover { border-color: var(--border-strong); }
   .ck-related span.soon { color: var(--text-subtle); }
   .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+
+  /* Honest "code-only" preview marker — used when a step is conceptual code
+     (state machine, hook, reducer) and a visual mockup would be misleading. */
+  .ck-code-only-note {
+    display: grid; gap: 8px;
+    padding: 22px 26px;
+    background: var(--surface-muted);
+    border: 1px dashed var(--border-strong);
+    border-radius: 12px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-code-only-note .ck-code-only-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    align-self: start;
+    font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--surface); color: var(--brand-strong);
+    border: 1px solid var(--border);
+  }
+  .ck-code-only-note p { margin: 0; color: var(--text-muted); }
+  .ck-code-only-note code {
+    background: var(--surface); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+
+  /* Off-system component roadmap pill — for recipes that compose with
+     components not yet in @huchu/react v0.1.0-alpha.0. */
+  .ck-roadmap-note {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--brand);
+    border-radius: 8px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code {
+    background: var(--surface-muted); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
 </style>
 </head>
 <body class="ds-doc">
@@ -212,9 +255,10 @@ export function useTableEdit() {
   };
 }'>
       <div class="ds-specimen-stage canvas padded">
-        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
-          <div><code>editing</code>: single key — only one cell editing at a time.</div>
-          <div style="color: var(--text-subtle);"><code>saving</code>, <code>errors</code>: maps — multiple cells can be in flight.</div>
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p><code>saving</code>, <code>errors</code>: maps — multiple cells can be in flight.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
         </div>
       </div>
       <div class="ds-specimen-bar"><span class="label">Step 1 · Per-cell state</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
@@ -244,10 +288,11 @@ export function useOptimisticRows(server: StockRow[]) {
   };
 }'>
       <div class="ds-specimen-stage canvas padded">
-        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
-          <div>Server rows + local patch = what the user sees.</div>
-          <div style="color: var(--text-subtle);">Save OK → <code>clear(rowId)</code> (the server now matches).</div>
-          <div style="color: var(--text-subtle);">Save 5xx → <code>rollback(rowId)</code> + Toast retry.</div>
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>Save OK → <code>clear(rowId)</code> (the server now matches).</p>
+          <p>Save 5xx → <code>rollback(rowId)</code> + Toast retry.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
         </div>
       </div>
       <div class="ds-specimen-bar"><span class="label">Step 2 · Optimistic UI</span><span class="spacer"></span></div>
@@ -300,9 +345,10 @@ function EditableCell({
   );
 }'>
       <div class="ds-specimen-stage canvas padded">
-        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
-          <div>Enter → commit. Esc → cancel. Tab → commit + advance.</div>
-          <div style="color: var(--text-subtle);">Validation runs synchronously on Enter; failing keeps the cell editing so the user can fix the value.</div>
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>Validation runs synchronously on Enter; failing keeps the cell editing so the user can fix the value.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
         </div>
       </div>
       <div class="ds-specimen-bar"><span class="label">Step 3 · Keyboard</span><span class="spacer"></span></div>
@@ -338,10 +384,11 @@ async function patchCell(rowId: string, col: string, value: string) {
   if (!res.ok) throw { kind: &#39;network&#39; as const, message: &#39;Could not reach server&#39; };
 }'>
       <div class="ds-specimen-stage canvas padded">
-        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
-          <div>Client validators are the first line; 400s from the server speak the same shape.</div>
-          <div style="color: var(--text-subtle);">5xx (<code>network</code>) → rollback row, Toast "Retry".</div>
-          <div style="color: var(--text-subtle);">4xx (<code>validation</code>) → keep optimistic value, mark cell error.</div>
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>5xx (<code>network</code>) → rollback row, Toast "Retry".</p>
+          <p>4xx (<code>validation</code>) → keep optimistic value, mark cell error.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
         </div>
       </div>
       <div class="ds-specimen-bar"><span class="label">Step 4 · Validation + API shape</span><span class="spacer"></span></div>
@@ -410,9 +457,10 @@ async function patchCell(rowId: string, col: string, value: string) {
   );
 }'>
       <div class="ds-specimen-stage canvas padded">
-        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
-          <div>One cell renderer. Three branches: view, editing, error.</div>
-          <div style="color: var(--text-subtle);">Saving is a visual tint on the view branch, not its own render path.</div>
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>Saving is a visual tint on the view branch, not its own render path.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
         </div>
       </div>
       <div class="ds-specimen-bar"><span class="label">Step 5 · Cell renderer</span><span class="spacer"></span></div>
