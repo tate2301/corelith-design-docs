@@ -77,12 +77,12 @@
       ['Shells ·  Mobile bottom-tab shell', ROOT + 'cookbook/shells-mobile-bottom-tab.html',  'shells-mobile-bottom-tab',  'New'],
       ['Shells ·  Command-palette nav',     '#',                '__', 'Soon'],
       // ── Forms ───────────────────────────────────────────────
-      ['Forms ·  Multi-step wizard',        '#',                '__', 'Soon'],
-      ['Forms ·  Autosave drawer form',     '#',                '__', 'Soon'],
-      ['Forms ·  Inline edit on row',       '#',                '__', 'Soon'],
+      ['Forms ·  Multi-step wizard',        ROOT + 'cookbook/forms-multi-step-wizard.html',     'forms-multi-step-wizard',     'New'],
+      ['Forms ·  Autosave drawer form',     ROOT + 'cookbook/forms-autosave-drawer.html',       'forms-autosave-drawer',       'New'],
+      ['Forms ·  Inline edit on row',       ROOT + 'cookbook/forms-inline-edit-row.html',       'forms-inline-edit-row',       'New'],
       // ── Lists & detail ──────────────────────────────────────
-      ['Lists ·  Filterable data table',    '#',                '__', 'Soon'],
-      ['Lists ·  Master–detail page',       '#',                '__', 'Soon'],
+      ['Lists ·  Filterable data table',    ROOT + 'cookbook/lists-filterable-data-table.html', 'lists-filterable-data-table', 'New'],
+      ['Lists ·  Master–detail page',       ROOT + 'cookbook/lists-master-detail.html',         'lists-master-detail',         'New'],
       ['Lists ·  Day-grouped mobile list',  '#',                '__', 'Soon'],
       // ── Dashboards ──────────────────────────────────────────
       ['Dashboards ·  Operator overview',   ROOT + 'cookbook/dashboards-operator-overview.html', 'dashboards-operator-overview', 'New'],

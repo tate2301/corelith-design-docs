@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Multi-step wizard form · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 10px; border-radius: 9999px;
+    background: var(--surface); border: 1px solid var(--border);
+    font: 500 12px/1 var(--font-sans); color: var(--text-strong);
+    text-decoration: none;
+  }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind {
+    font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-subtle);
+    padding-right: 6px; border-right: 1px solid var(--border);
+  }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen {
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 14px;
+    display: grid; gap: 10px;
+  }
+  .ck-screen .phone {
+    aspect-ratio: 9 / 16;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 16px;
+    display: flex; flex-direction: column; gap: 10px;
+    overflow: hidden;
+  }
+  .ck-screen .brand { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .ph-title { font: 700 14px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .ck-screen .ph-sub { font: 500 11px/1.4 var(--font-sans); color: var(--text-muted); margin: 0; }
+  .ck-screen .ph-stepper { display: flex; gap: 4px; }
+  .ck-screen .ph-stepper i { flex: 1; height: 4px; border-radius: 2px; background: var(--surface-muted); border: 1px solid var(--border); }
+  .ck-screen .ph-stepper i.on { background: var(--brand); border-color: var(--brand); }
+  .ck-screen .ph-input { height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--surface); }
+  .ck-screen .ph-input.focused { border-color: var(--brand); box-shadow: 0 0 0 2px var(--focus-ring-soft); }
+  .ck-screen .ph-row { display: flex; gap: 4px; }
+  .ck-screen .ph-row .ph-input { flex: 1; }
+  .ck-screen .ph-btn { margin-top: auto; height: 30px; border-radius: 6px; background: var(--ink); color: var(--canvas); display: grid; place-items: center; font: 600 11px/1 var(--font-sans); }
+  .ck-screen .ph-btn.ghost { background: transparent; color: var(--text-strong); border: 1px solid var(--border-strong); }
+  .ck-screen .ph-review { display: grid; gap: 4px; font: 500 10px/1.3 var(--font-sans); color: var(--text-strong); }
+  .ck-screen .ph-review .lab { color: var(--text-subtle); font: 500 9px/1 var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p  { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Forms</a><span class="sep">/</span>
+      <span>Multi-step wizard</span>
+    </div>
+    <h1>Build a multi-step wizard that never loses what the user typed</h1>
+    <p class="lede">By the end of this recipe you'll have a four-step wizard — type, dates, cover, review — with persistent progress, per-step validation, a branching path, "save &amp; resume later", and a guarantee that going back never wipes a field.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="layers" data-icon-size="12"></span>Forms</span>
+      <span class="meta-pill">5 primitives · 0 blocks · 1 pattern</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~35 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A four-step flow: <b>type</b> → <b>dates</b> → <b>cover</b> → <b>review</b>. One reducer drives the whole machine; the back button is just <code>step − 1</code> with the form data still in scope.</p>
+    <p>Wizards exist for one reason: the form is long enough that a single scroll-down page feels intimidating, and short enough that you can't justify a multi-page route. The staff leave-request flow is the canonical SMB example — type, dates, cover, notes — where every field has a reason to be there and every step has a reason to be its own screen. Branching matters too: if the request is a half-day, the cover step is skipped entirely.</p>
+    <p>The opinionated bit is that the wizard owns <i>one</i> <code>formData</code> object from step one, and every step reads/writes into the same shape. Going back never unmounts the data; it just rewinds the visible step. "Save &amp; resume later" is a single localStorage write of that same object, keyed by user.</p>
+    <p><b>Skip this recipe if</b> your form fits in fewer than six fields. Use a single <code>Form</code> with sectioned <code>Stack</code>s — a wizard for a six-field form is friction theatre.</p>
+  </section>
+
+  <!-- WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three of the four screens. The fourth — review — is just a read-only render of the same <code>formData</code>.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · Leave</span>
+          <div class="ph-stepper"><i class="on"></i><i></i><i></i><i></i></div>
+          <p class="ph-title">What kind of leave?</p>
+          <p class="ph-sub">Step 1 of 4</p>
+          <div class="ph-input focused"></div>
+          <div class="ph-input"></div>
+          <div class="ph-input"></div>
+          <div class="ph-btn">Next: Dates</div>
+        </div>
+        <div class="caption"><span class="num">01</span> Type — branching answer</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · Leave</span>
+          <div class="ph-stepper"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+          <p class="ph-title">When?</p>
+          <p class="ph-sub">Step 2 of 4</p>
+          <div class="ph-row"><div class="ph-input focused"></div><div class="ph-input"></div></div>
+          <div class="ph-input"></div>
+          <div class="ph-btn ghost">Back</div>
+          <div class="ph-btn">Next: Cover</div>
+        </div>
+        <div class="caption"><span class="num">02</span> Dates — back keeps everything</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · Leave</span>
+          <div class="ph-stepper"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+          <p class="ph-title">Review &amp; submit</p>
+          <p class="ph-sub">Step 4 of 4</p>
+          <div class="ph-review"><span class="lab">Type</span>Annual leave</div>
+          <div class="ph-review"><span class="lab">Dates</span>25–27 Jun · 3 days</div>
+          <div class="ph-review"><span class="lab">Cover</span>Anesu Sibanda</div>
+          <div class="ph-btn">Submit request</div>
+        </div>
+        <div class="caption"><span class="num">03</span> Review — last chance to tap "Back"</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/p-stepper.html"><span class="kind">Primitive</span>Stepper</a>
+      <a class="ck-piece" href="../system/p-input.html"><span class="kind">Primitive</span>Input &amp; field</a>
+      <a class="ck-piece" href="../system/p-select.html"><span class="kind">Primitive</span>Select</a>
+      <a class="ck-piece" href="../system/p-date-picker.html"><span class="kind">Primitive</span>Date picker</a>
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+      <a class="ck-piece" href="../system/p-alert.html"><span class="kind">Primitive</span>Alert</a>
+      <a class="ck-piece" href="../system/x-form-shell.html"><span class="kind">Pattern</span>Form shell</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>Stack</code>, <code>Form</code>, <code>Field</code>, <code>Input</code>, <code>Select</code>, <code>DatePicker</code>, <code>Button</code>, <code>Alert</code>, <code>Stepper</code>. Keep the names — Phase 2 recipes copy them.</p>
+  </section>
+
+  <!-- STEP-BY-STEP -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <!-- Step 1 -->
+    <div class="ck-step"><span class="n">01</span><h3>Model the wizard as <code>{ step, data, errors }</code> — one reducer for everything</h3></div>
+    <p>The mistake is one component per step with its own local <code>useState</code>. Then "back" is a navigation event and your data lives in three places. Instead, hoist a single reducer up to the wizard: every step is a pure projection of <code>state.data</code>, and <code>NEXT</code> / <code>BACK</code> just slide <code>state.step</code>.</p>
+    <div class="ds-specimen"
+         data-code='import { useReducer } from &#39;@huchu/react&#39;;
+
+type Step = 1 | 2 | 3 | 4;
+
+type Data = {
+  type: &#39;annual&#39; | &#39;sick&#39; | &#39;study&#39; | &#39;compassionate&#39; | &#39;&#39;;
+  halfDay: boolean;
+  from: string;            // ISO date
+  to: string;              // ISO date
+  cover: string;           // staff id
+  notes: string;
+};
+
+type Errors = Partial&lt;Record&lt;keyof Data, string&gt;&gt;;
+
+type State = { step: Step; data: Data; errors: Errors; submitting: boolean };
+
+type Action =
+  | { type: &#39;PATCH&#39;; patch: Partial&lt;Data&gt; }
+  | { type: &#39;NEXT&#39;; errors?: Errors }
+  | { type: &#39;BACK&#39; }
+  | { type: &#39;JUMP&#39;; step: Step }
+  | { type: &#39;SUBMIT_START&#39; }
+  | { type: &#39;SUBMIT_FAIL&#39;; errors: Errors };
+
+const empty: Data = {
+  type: &#39;&#39;, halfDay: false, from: &#39;&#39;, to: &#39;&#39;, cover: &#39;&#39;, notes: &#39;&#39;,
+};
+const initial: State = { step: 1, data: empty, errors: {}, submitting: false };
+
+function reducer(s: State, a: Action): State {
+  switch (a.type) {
+    case &#39;PATCH&#39;:        return { ...s, data: { ...s.data, ...a.patch }, errors: {} };
+    case &#39;NEXT&#39;:
+      if (a.errors &amp;&amp; Object.keys(a.errors).length) return { ...s, errors: a.errors };
+      // BRANCH: half-day skips the cover step (3) and lands on review (4).
+      if (s.step === 2 &amp;&amp; s.data.halfDay) return { ...s, step: 4, errors: {} };
+      return { ...s, step: (s.step + 1) as Step, errors: {} };
+    case &#39;BACK&#39;:
+      if (s.step === 4 &amp;&amp; s.data.halfDay) return { ...s, step: 2, errors: {} };
+      return { ...s, step: Math.max(1, s.step - 1) as Step, errors: {} };
+    case &#39;JUMP&#39;:         return { ...s, step: a.step, errors: {} };
+    case &#39;SUBMIT_START&#39;: return { ...s, submitting: true, errors: {} };
+    case &#39;SUBMIT_FAIL&#39;:  return { ...s, submitting: false, errors: a.errors };
+  }
+}
+
+export function useLeaveWizard() {
+  return useReducer(reducer, initial);
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 10px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div><b style="color: var(--brand-strong);">step 1</b> Type → <b style="color: var(--brand-strong);">step 2</b> Dates → <b style="color: var(--brand-strong);">step 3</b> Cover → <b style="color: var(--tone-success);">step 4</b> Review</div>
+          <div style="color: var(--text-subtle);">half-day = true: step 2 jumps to step 4 (cover irrelevant).</div>
+          <div style="color: var(--text-subtle);">PATCH never clears the step. BACK never clears <code>data</code>.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Reducer</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="ck-step"><span class="n">02</span><h3>Validate per step, not per field — and never on every keystroke</h3></div>
+    <p>Run each step's validator only when the user taps "Next". Live validation on keystroke is jumpy, especially for date ranges where "from" and "to" are mutually dependent. The validator returns a partial <code>Errors</code> map — empty means the step passes and the reducer advances.</p>
+    <div class="ds-specimen"
+         data-code='type Validator = (d: Data) =&gt; Errors;
+
+const stepValidators: Record&lt;Step, Validator&gt; = {
+  1: (d) =&gt; ({
+    ...(d.type ? {} : { type: &#39;Pick a leave type.&#39; }),
+  }),
+  2: (d) =&gt; ({
+    ...(d.from ? {} : { from: &#39;Choose a start date.&#39; }),
+    ...(d.to ? {} : { to: &#39;Choose an end date.&#39; }),
+    ...(d.from &amp;&amp; d.to &amp;&amp; d.to &lt; d.from
+      ? { to: &#39;End date must be on or after the start date.&#39; }
+      : {}),
+  }),
+  3: (d) =&gt; ({
+    ...(d.cover ? {} : { cover: &#39;Choose someone to cover.&#39; }),
+  }),
+  4: () =&gt; ({}),
+};
+
+export function tryNext(state: State, dispatch: (a: Action) =&gt; void) {
+  const errs = stepValidators[state.step](state.data);
+  dispatch({ type: &#39;NEXT&#39;, errors: errs });
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div>Per-step validator returns a partial map.</div>
+          <div style="color: var(--text-subtle);">Empty map → reducer advances. Non-empty → reducer stays put and writes errors.</div>
+          <div style="color: var(--text-subtle);">No keystroke validation. Errors render below the field, not in a banner.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Validation</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="ck-step"><span class="n">03</span><h3>Render the current step — and surface the stepper so the user can JUMP back</h3></div>
+    <p>The <code>Stepper</code> primitive is more than decoration. Clicking a previous dot dispatches <code>JUMP</code>, which is the cheapest way to give "let me change my answer on step 1" without throwing away steps 2 and 3. You don't let the user jump <em>forward</em> past an unfilled step — that's what "Next" is for.</p>
+    <div class="ds-specimen"
+         data-code='import { Stepper, Stack, Form, Field, Select, Checkbox, Button, Alert } from &#39;@huchu/react&#39;;
+
+const STEPS = [
+  { id: 1, label: &#39;Type&#39; },
+  { id: 2, label: &#39;Dates&#39; },
+  { id: 3, label: &#39;Cover&#39; },
+  { id: 4, label: &#39;Review&#39; },
+];
+
+function StepHeader({ state, dispatch }: { state: State; dispatch: (a: Action) =&gt; void }) {
+  return (
+    &lt;Stepper
+      steps={STEPS}
+      current={state.step}
+      // only allow JUMP backwards — never forward past a gate
+      onJump={(id) =&gt; { if (id &lt; state.step) dispatch({ type: &#39;JUMP&#39;, step: id as Step }); }}
+    /&gt;
+  );
+}
+
+function StepType({ state, dispatch }: { state: State; dispatch: (a: Action) =&gt; void }) {
+  return (
+    &lt;Stack gap=&quot;md&quot;&gt;
+      &lt;h2&gt;What kind of leave?&lt;/h2&gt;
+      &lt;Field
+        label=&quot;Leave type&quot;
+        name=&quot;type&quot;
+        error={state.errors.type}
+      &gt;
+        &lt;Select
+          value={state.data.type}
+          onChange={(v) =&gt; dispatch({ type: &#39;PATCH&#39;, patch: { type: v as Data[&#39;type&#39;] } })}
+          options={[
+            { value: &#39;annual&#39;, label: &#39;Annual leave&#39; },
+            { value: &#39;sick&#39;, label: &#39;Sick leave&#39; },
+            { value: &#39;study&#39;, label: &#39;Study leave&#39; },
+            { value: &#39;compassionate&#39;, label: &#39;Compassionate&#39; },
+          ]}
+        /&gt;
+      &lt;/Field&gt;
+      &lt;Checkbox
+        checked={state.data.halfDay}
+        onChange={(v) =&gt; dispatch({ type: &#39;PATCH&#39;, patch: { halfDay: v } })}
+      &gt;
+        This is a half-day request
+      &lt;/Checkbox&gt;
+    &lt;/Stack&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="width: 360px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px;">
+            <div style="display: flex; gap: 6px; margin-bottom: 16px;">
+              <div style="flex: 1; height: 6px; border-radius: 3px; background: var(--brand);"></div>
+              <div style="flex: 1; height: 6px; border-radius: 3px; background: var(--surface-muted); border: 1px solid var(--border);"></div>
+              <div style="flex: 1; height: 6px; border-radius: 3px; background: var(--surface-muted); border: 1px solid var(--border);"></div>
+              <div style="flex: 1; height: 6px; border-radius: 3px; background: var(--surface-muted); border: 1px solid var(--border);"></div>
+            </div>
+            <h3 style="font: 700 16px/1.2 var(--font-sans); margin: 0 0 12px;">What kind of leave?</h3>
+            <div style="font: 500 11px/1 var(--font-sans); color: var(--text-muted); margin-bottom: 4px;">Leave type</div>
+            <div style="height: 36px; border-radius: 8px; border: 1px solid var(--brand); box-shadow: 0 0 0 2px var(--focus-ring-soft); padding: 0 10px; display: flex; align-items: center; font: var(--type-body-sm); color: var(--text-strong); margin-bottom: 10px;">Annual leave</div>
+            <label style="display: flex; gap: 8px; align-items: center; font: var(--type-body-sm); color: var(--text-muted); margin-bottom: 14px;"><input type="checkbox" /> This is a half-day request</label>
+            <div style="display: flex; gap: 8px;">
+              <div style="flex: 1; background: var(--surface); color: var(--text-strong); border: 1px solid var(--border-strong); height: 36px; border-radius: 8px; display: grid; place-items: center; font: 600 13px/1 var(--font-sans);">Back</div>
+              <div style="flex: 1; background: var(--ink); color: var(--canvas); height: 36px; border-radius: 8px; display: grid; place-items: center; font: 600 13px/1 var(--font-sans);">Next: Dates</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Render step + stepper</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="ck-step"><span class="n">04</span><h3>Persist the draft to localStorage so "Save &amp; resume later" is one button</h3></div>
+    <p>Wire a <code>useEffect</code> that writes <code>state.data</code> to <code>localStorage</code> on every change. "Save &amp; resume later" is then just a close button — the draft is already there. On mount, read it back and seed the reducer.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect } from &#39;@huchu/react&#39;;
+
+const KEY = (userId: string) =&gt; `huchu.leave-draft.${userId}`;
+
+function useDraft(userId: string, state: State, dispatch: (a: Action) =&gt; void) {
+  // Restore on mount.
+  useEffect(() =&gt; {
+    const raw = localStorage.getItem(KEY(userId));
+    if (raw) {
+      try {
+        const draft = JSON.parse(raw) as { step: Step; data: Data };
+        dispatch({ type: &#39;PATCH&#39;, patch: draft.data });
+        dispatch({ type: &#39;JUMP&#39;, step: draft.step });
+      } catch { /* ignore corrupt draft */ }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist on every change.
+  useEffect(() =&gt; {
+    localStorage.setItem(KEY(userId), JSON.stringify({ step: state.step, data: state.data }));
+  }, [userId, state.step, state.data]);
+
+  const clearDraft = () =&gt; localStorage.removeItem(KEY(userId));
+  return { clearDraft };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div>Every PATCH/NEXT/BACK triggers a localStorage write.</div>
+          <div style="color: var(--text-subtle);">"Save &amp; resume later" = just close the modal. Draft survives.</div>
+          <div style="color: var(--text-subtle);">On successful submit, call <code>clearDraft()</code> so the next request starts fresh.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Draft persistence</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="ck-step"><span class="n">05</span><h3>Submit from the review step — and roll back to the failed field if the API rejects</h3></div>
+    <p>The review step is the only place that submits. On API failure, map the server's field errors back into <code>errors</code> and <code>JUMP</code> the user to the offending step. Don't show the failure as a generic banner on the review screen — that leaves the user guessing which field to fix.</p>
+    <div class="ds-specimen"
+         data-code='async function submitLeave(data: Data) {
+  const res = await fetch(&#39;/api/leave&#39;, {
+    method: &#39;POST&#39;,
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    // Expect { field: &#39;from&#39;, message: &#39;Conflicts with public holiday.&#39; }
+    const err = await res.json();
+    throw err as { field: keyof Data; message: string };
+  }
+}
+
+async function handleSubmit(state: State, dispatch: (a: Action) =&gt; void, onDone: () =&gt; void) {
+  dispatch({ type: &#39;SUBMIT_START&#39; });
+  try {
+    await submitLeave(state.data);
+    onDone();
+  } catch (e: any) {
+    const fieldToStep: Record&lt;keyof Data, Step&gt; = {
+      type: 1, halfDay: 1, from: 2, to: 2, cover: 3, notes: 4,
+    };
+    dispatch({ type: &#39;SUBMIT_FAIL&#39;, errors: { [e.field]: e.message } });
+    dispatch({ type: &#39;JUMP&#39;, step: fieldToStep[e.field as keyof Data] ?? 4 });
+  }
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div>API rejection routes the user back to the offending step.</div>
+          <div style="color: var(--text-subtle);">Field-to-step map is the only "magic" — keep it next to the reducer.</div>
+          <div style="color: var(--text-subtle);">Generic 500? Stay on review and show an <code>Alert tone="danger"</code>.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 5 · Submit + recovery</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- FINAL COMPOSITION -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole <code>LeaveWizard</code>, assembled. Reducer, branch logic, draft persistence, per-step validation, error-recovery routing.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useReducer } from &#39;@huchu/react&#39;;
+import {
+  Stack, Form, Field, Input, Select, DatePicker, Checkbox,
+  Button, Alert, Stepper,
+} from &#39;@huchu/react&#39;;
+
+// ── Types &amp; reducer (see Step 1) ───────────────────────────────
+type Step = 1 | 2 | 3 | 4;
+type Data = {
+  type: &#39;annual&#39; | &#39;sick&#39; | &#39;study&#39; | &#39;compassionate&#39; | &#39;&#39;;
+  halfDay: boolean; from: string; to: string; cover: string; notes: string;
+};
+type Errors = Partial&lt;Record&lt;keyof Data, string&gt;&gt;;
+type State = { step: Step; data: Data; errors: Errors; submitting: boolean };
+type Action =
+  | { type: &#39;PATCH&#39;; patch: Partial&lt;Data&gt; }
+  | { type: &#39;NEXT&#39;; errors?: Errors }
+  | { type: &#39;BACK&#39; }
+  | { type: &#39;JUMP&#39;; step: Step }
+  | { type: &#39;SUBMIT_START&#39; }
+  | { type: &#39;SUBMIT_FAIL&#39;; errors: Errors };
+
+const empty: Data = { type: &#39;&#39;, halfDay: false, from: &#39;&#39;, to: &#39;&#39;, cover: &#39;&#39;, notes: &#39;&#39; };
+const initial: State = { step: 1, data: empty, errors: {}, submitting: false };
+
+function reducer(s: State, a: Action): State {
+  switch (a.type) {
+    case &#39;PATCH&#39;: return { ...s, data: { ...s.data, ...a.patch }, errors: {} };
+    case &#39;NEXT&#39;:
+      if (a.errors &amp;&amp; Object.keys(a.errors).length) return { ...s, errors: a.errors };
+      if (s.step === 2 &amp;&amp; s.data.halfDay) return { ...s, step: 4, errors: {} };
+      return { ...s, step: (s.step + 1) as Step, errors: {} };
+    case &#39;BACK&#39;:
+      if (s.step === 4 &amp;&amp; s.data.halfDay) return { ...s, step: 2, errors: {} };
+      return { ...s, step: Math.max(1, s.step - 1) as Step, errors: {} };
+    case &#39;JUMP&#39;: return { ...s, step: a.step, errors: {} };
+    case &#39;SUBMIT_START&#39;: return { ...s, submitting: true, errors: {} };
+    case &#39;SUBMIT_FAIL&#39;: return { ...s, submitting: false, errors: a.errors };
+  }
+}
+
+// ── Validation (see Step 2) ────────────────────────────────────
+const stepValidators: Record&lt;Step, (d: Data) =&gt; Errors&gt; = {
+  1: (d) =&gt; (d.type ? {} : { type: &#39;Pick a leave type.&#39; }),
+  2: (d) =&gt; ({
+    ...(d.from ? {} : { from: &#39;Choose a start date.&#39; }),
+    ...(d.to ? {} : { to: &#39;Choose an end date.&#39; }),
+    ...(d.from &amp;&amp; d.to &amp;&amp; d.to &lt; d.from ? { to: &#39;End date must be on or after start.&#39; } : {}),
+  }),
+  3: (d) =&gt; (d.cover ? {} : { cover: &#39;Choose someone to cover.&#39; }),
+  4: () =&gt; ({}),
+};
+
+// ── Component ──────────────────────────────────────────────────
+const STEPS = [
+  { id: 1, label: &#39;Type&#39; },
+  { id: 2, label: &#39;Dates&#39; },
+  { id: 3, label: &#39;Cover&#39; },
+  { id: 4, label: &#39;Review&#39; },
+];
+
+export function LeaveWizard({ userId, coverOptions, onDone }: {
+  userId: string;
+  coverOptions: { value: string; label: string }[];
+  onDone: () =&gt; void;
+}) {
+  const [s, dispatch] = useReducer(reducer, initial);
+
+  // Draft restore + persist (see Step 4)
+  useEffect(() =&gt; {
+    const raw = localStorage.getItem(`huchu.leave-draft.${userId}`);
+    if (raw) {
+      try {
+        const d = JSON.parse(raw) as { step: Step; data: Data };
+        dispatch({ type: &#39;PATCH&#39;, patch: d.data });
+        dispatch({ type: &#39;JUMP&#39;, step: d.step });
+      } catch {}
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() =&gt; {
+    localStorage.setItem(
+      `huchu.leave-draft.${userId}`,
+      JSON.stringify({ step: s.step, data: s.data }),
+    );
+  }, [userId, s.step, s.data]);
+
+  const next = () =&gt; dispatch({ type: &#39;NEXT&#39;, errors: stepValidators[s.step](s.data) });
+
+  const submit = async () =&gt; {
+    dispatch({ type: &#39;SUBMIT_START&#39; });
+    try {
+      const res = await fetch(&#39;/api/leave&#39;, {
+        method: &#39;POST&#39;, body: JSON.stringify(s.data),
+      });
+      if (!res.ok) throw await res.json();
+      localStorage.removeItem(`huchu.leave-draft.${userId}`);
+      onDone();
+    } catch (e: any) {
+      const fieldToStep: Record&lt;string, Step&gt; = {
+        type: 1, halfDay: 1, from: 2, to: 2, cover: 3, notes: 4,
+      };
+      dispatch({ type: &#39;SUBMIT_FAIL&#39;, errors: { [e.field]: e.message } });
+      dispatch({ type: &#39;JUMP&#39;, step: fieldToStep[e.field] ?? 4 });
+    }
+  };
+
+  return (
+    &lt;Form onSubmit={(e) =&gt; { e.preventDefault(); s.step === 4 ? submit() : next(); }}&gt;
+      &lt;Stack gap=&quot;lg&quot;&gt;
+        &lt;Stepper
+          steps={STEPS}
+          current={s.step}
+          onJump={(id) =&gt; { if (id &lt; s.step) dispatch({ type: &#39;JUMP&#39;, step: id as Step }); }}
+        /&gt;
+
+        {s.step === 1 &amp;&amp; (
+          &lt;Stack gap=&quot;md&quot;&gt;
+            &lt;h2&gt;What kind of leave?&lt;/h2&gt;
+            &lt;Field label=&quot;Leave type&quot; name=&quot;type&quot; error={s.errors.type}&gt;
+              &lt;Select
+                value={s.data.type}
+                onChange={(v) =&gt; dispatch({ type: &#39;PATCH&#39;, patch: { type: v as Data[&#39;type&#39;] } })}
+                options={[
+                  { value: &#39;annual&#39;, label: &#39;Annual leave&#39; },
+                  { value: &#39;sick&#39;, label: &#39;Sick leave&#39; },
+                  { value: &#39;study&#39;, label: &#39;Study leave&#39; },
+                  { value: &#39;compassionate&#39;, label: &#39;Compassionate&#39; },
+                ]}
+              /&gt;
+            &lt;/Field&gt;
+            &lt;Checkbox
+              checked={s.data.halfDay}
+              onChange={(v) =&gt; dispatch({ type: &#39;PATCH&#39;, patch: { halfDay: v } })}
+            &gt;
+              This is a half-day request
+            &lt;/Checkbox&gt;
+          &lt;/Stack&gt;
+        )}
+
+        {s.step === 2 &amp;&amp; (
+          &lt;Stack gap=&quot;md&quot;&gt;
+            &lt;h2&gt;When?&lt;/h2&gt;
+            &lt;Field label=&quot;From&quot; name=&quot;from&quot; error={s.errors.from}&gt;
+              &lt;DatePicker
+                value={s.data.from}
+                onChange={(v) =&gt; dispatch({ type: &#39;PATCH&#39;, patch: { from: v } })}
+              /&gt;
+            &lt;/Field&gt;
+            &lt;Field label=&quot;To&quot; name=&quot;to&quot; error={s.errors.to}&gt;
+              &lt;DatePicker
+                value={s.data.to}
+                onChange={(v) =&gt; dispatch({ type: &#39;PATCH&#39;, patch: { to: v } })}
+                min={s.data.from}
+              /&gt;
+            &lt;/Field&gt;
+          &lt;/Stack&gt;
+        )}
+
+        {s.step === 3 &amp;&amp; (
+          &lt;Stack gap=&quot;md&quot;&gt;
+            &lt;h2&gt;Who&#39;s covering for you?&lt;/h2&gt;
+            &lt;Field label=&quot;Cover&quot; name=&quot;cover&quot; error={s.errors.cover}&gt;
+              &lt;Select
+                value={s.data.cover}
+                onChange={(v) =&gt; dispatch({ type: &#39;PATCH&#39;, patch: { cover: v } })}
+                options={coverOptions}
+              /&gt;
+            &lt;/Field&gt;
+          &lt;/Stack&gt;
+        )}
+
+        {s.step === 4 &amp;&amp; (
+          &lt;Stack gap=&quot;md&quot;&gt;
+            &lt;h2&gt;Review &amp; submit&lt;/h2&gt;
+            {Object.values(s.errors).some(Boolean) &amp;&amp; (
+              &lt;Alert tone=&quot;danger&quot;&gt;Fix the highlighted field and resubmit.&lt;/Alert&gt;
+            )}
+            &lt;ReviewRow label=&quot;Type&quot; value={s.data.type} /&gt;
+            &lt;ReviewRow label=&quot;Dates&quot; value={`${s.data.from} → ${s.data.to}`} /&gt;
+            {!s.data.halfDay &amp;&amp; &lt;ReviewRow label=&quot;Cover&quot; value={s.data.cover} /&gt;}
+            &lt;Field label=&quot;Notes (optional)&quot; name=&quot;notes&quot;&gt;
+              &lt;Input
+                value={s.data.notes}
+                onChange={(v) =&gt; dispatch({ type: &#39;PATCH&#39;, patch: { notes: v } })}
+              /&gt;
+            &lt;/Field&gt;
+          &lt;/Stack&gt;
+        )}
+
+        &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot; justify=&quot;between&quot;&gt;
+          &lt;Button
+            type=&quot;button&quot;
+            variant=&quot;ghost&quot;
+            onClick={() =&gt; dispatch({ type: &#39;BACK&#39; })}
+            disabled={s.step === 1}
+          &gt;
+            Back
+          &lt;/Button&gt;
+          &lt;Button type=&quot;submit&quot; variant=&quot;primary&quot; disabled={s.submitting}&gt;
+            {s.step === 4 ? (s.submitting ? &#39;Submitting…&#39; : &#39;Submit request&#39;) : &#39;Next&#39;}
+          &lt;/Button&gt;
+        &lt;/Stack&gt;
+      &lt;/Stack&gt;
+    &lt;/Form&gt;
+  );
+}
+
+function ReviewRow({ label, value }: { label: string; value: string }) {
+  return (
+    &lt;div&gt;
+      &lt;div className=&quot;t-mono t-subtle&quot;&gt;{label}&lt;/div&gt;
+      &lt;div&gt;{value || &lt;span className=&quot;t-subtle&quot;&gt;—&lt;/span&gt;}&lt;/div&gt;
+    &lt;/div&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="width: 380px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px;">
+            <div style="display: flex; gap: 6px; margin-bottom: 18px;">
+              <div style="flex: 1; height: 6px; border-radius: 3px; background: var(--brand);"></div>
+              <div style="flex: 1; height: 6px; border-radius: 3px; background: var(--brand);"></div>
+              <div style="flex: 1; height: 6px; border-radius: 3px; background: var(--brand);"></div>
+              <div style="flex: 1; height: 6px; border-radius: 3px; background: var(--brand);"></div>
+            </div>
+            <h3 style="font: 700 18px/1.2 var(--font-sans); margin: 0 0 14px;">Review &amp; submit</h3>
+            <div style="display: grid; gap: 10px;">
+              <div><div style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Type</div><div style="font: var(--type-body-sm); color: var(--text-strong);">Annual leave</div></div>
+              <div><div style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Dates</div><div style="font: var(--type-body-sm); color: var(--text-strong);">25 Jun → 27 Jun · 3 days</div></div>
+              <div><div style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Cover</div><div style="font: var(--type-body-sm); color: var(--text-strong);">Anesu Sibanda</div></div>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 18px;">
+              <div style="flex: 1; background: var(--surface); color: var(--text-strong); border: 1px solid var(--border-strong); height: 38px; border-radius: 8px; display: grid; place-items: center; font: 600 13px/1 var(--font-sans);">Back</div>
+              <div style="flex: 1; background: var(--ink); color: var(--canvas); height: 38px; border-radius: 8px; display: grid; place-items: center; font: 600 13px/1 var(--font-sans);">Submit request</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">LeaveWizard.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three common forks. Each is a small diff from the final composition.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Linear (no branch)</h4>
+        <p>Every step always runs. Drop the half-day jump so step 2 always advances to step 3.</p>
+<pre>// In reducer NEXT:
+case &#39;NEXT&#39;:
+  if (a.errors &amp;&amp; Object.keys(a.errors).length)
+    return { ...s, errors: a.errors };
+  return { ...s, step: (s.step + 1) as Step, errors: {} };
+// drop the (s.step === 2 &amp;&amp; halfDay) branch</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Skip review</h4>
+        <p>Power users tap "Submit" on step 3 directly. Add a <code>submitOnLast</code> branch that fires the submit handler when the last data step completes.</p>
+<pre>const isLastDataStep = s.step === 3;
+const submitText = isLastDataStep
+  ? &#39;Submit request&#39;
+  : &#39;Next&#39;;
+&lt;Button type=&quot;submit&quot;&gt;{submitText}&lt;/Button&gt;
+// drop the {s.step === 4} review block
+// keep validators 1–3 unchanged</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Server-driven steps</h4>
+        <p>Steps come back from the API (e.g. KYC). Replace the static <code>STEPS</code> array with a fetched list and key validators by step <code>name</code>, not number.</p>
+<pre>const [steps, setSteps] = useState&lt;StepDef[]&gt;([]);
+useEffect(() =&gt; {
+  fetch(&#39;/api/kyc/steps&#39;)
+    .then(r =&gt; r.json())
+    .then(setSteps);
+}, []);
+// validators[steps[s.step - 1].name](s.data)</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCESSIBILITY -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">What this recipe takes care of for you.</p>
+    <ul class="ck-a11y">
+      <li><b>Stepper announces progress.</b> <code>Stepper</code> renders an <code>aria-label="Step 2 of 4: Dates"</code> on the current dot, so screen-reader users hear where they are when the step changes.</li>
+      <li><b>Focus jumps to the new step's heading.</b> When <code>step</code> changes, the wizard moves focus to the step's <code>&lt;h2&gt;</code>. Tabbing then lands on the first field.</li>
+      <li><b>Errors are field-linked, not banner-only.</b> <code>Field error={…}</code> renders an <code>aria-describedby</code> message under the input — screen readers read field + error together.</li>
+      <li><b>Back is a real button.</b> Not a link, not <code>onClick</code> on a div. Keyboard users hit Shift+Tab to it and Enter to fire.</li>
+      <li><b>Submit is <code>type="submit"</code>.</b> Enter inside any field on the review step submits the wizard, same as tapping the button.</li>
+      <li><b>The draft never silently overwrites.</b> If a draft is restored, the wizard renders an <code>Alert tone="info"</code>: "Resumed your last draft from 2 days ago." Users can dismiss without losing data.</li>
+    </ul>
+  </section>
+
+  <!-- RELATED -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">The other Forms &amp; Lists recipes share the same reducer-first instinct.</p>
+    <div class="ck-related">
+      <a href="forms-autosave-drawer.html">Forms · Autosave drawer<span class="tag">New</span></a>
+      <a href="forms-inline-edit-row.html">Forms · Inline edit on row<span class="tag">New</span></a>
+      <a href="lists-filterable-data-table.html">Lists · Filterable data table<span class="tag">New</span></a>
+      <a href="lists-master-detail.html">Lists · Master–detail page<span class="tag">New</span></a>
+      <a href="auth-signin-2fa.html">Auth · Sign in with 2FA</a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="index.html"><div class="pager-label">← Back to</div><div class="pager-title">Cookbook</div></a>
+    <a href="forms-autosave-drawer.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Autosave drawer form</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

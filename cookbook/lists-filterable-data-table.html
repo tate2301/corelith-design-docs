@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Filterable data table · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .phone { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+  .ck-screen .brand { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .ph-title { font: 700 13px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .ck-screen .ph-search { height: 26px; border-radius: 13px; background: var(--surface-muted); border: 1px solid var(--border); padding: 0 8px; display: flex; align-items: center; font: 500 9px/1 var(--font-mono); color: var(--text-subtle); }
+  .ck-screen .ph-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+  .ck-screen .ph-chip { padding: 2px 6px; border-radius: 9999px; background: var(--surface-muted); border: 1px solid var(--border); font: 500 9px/1 var(--font-sans); color: var(--text-muted); }
+  .ck-screen .ph-chip.on { background: var(--brand); color: var(--canvas); border-color: var(--brand); }
+  .ck-screen .ph-tablehead { display: flex; gap: 4px; padding: 4px 6px; background: var(--surface-muted); border-radius: 4px; font: 500 9px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase; }
+  .ck-screen .ph-tablerow { display: flex; gap: 4px; padding: 4px 6px; border-bottom: 1px solid var(--border); font: 500 10px/1.2 var(--font-sans); color: var(--text-strong); }
+  .ck-screen .ph-tablerow.sel { background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-screen .ph-empty { display: grid; place-items: center; padding: 20px 8px; color: var(--text-subtle); font: 500 11px/1.3 var(--font-sans); text-align: center; }
+  .ck-screen .ph-pager { margin-top: auto; display: flex; gap: 4px; align-items: center; justify-content: center; font: 500 9px/1 var(--font-mono); color: var(--text-subtle); }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p  { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Lists</a><span class="sep">/</span>
+      <span>Filterable data table</span>
+    </div>
+    <h1>Build a filterable data table whose filters live in the URL</h1>
+    <p class="lede">By the end of this recipe you'll have a paginated, sortable, server-side-filtered table with chip filters, a debounced search, row + bulk actions, saved views, and every filter mirrored in the query string so a shared link recreates the exact view.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="filter" data-icon-size="12"></span>Lists</span>
+      <span class="meta-pill">2 primitives · 3 blocks · 1 pattern</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~40 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A data-table view with a single source of truth: the URL. Search, chips, sort and page all live in the query string, so refreshing or sharing a link recreates the exact same screen.</p>
+    <p>Operators live in these tables — admin users, finance invoices, ops job-cards. The first thing a senior staffer does on Monday is pull up "everything overdue, assigned to me, sorted by oldest" — and they want to bookmark it. If the filter state lives in component state only, that bookmark doesn't survive a refresh and the workflow falls apart. URL-sync turns saved views into one-liners: a view is just a stored query string.</p>
+    <p>The opinionated bit is server-side everything. Client-side filter + sort feels great on 50 rows and falls over on 5,000. Run filter, sort and paginate on the server, return a count, and render exactly the page you asked for. Loading and empty states are first-class — not afterthoughts.</p>
+    <p><b>Skip this recipe if</b> your dataset is fixed and small (under a few hundred rows that never grow). Plain <code>useState</code> + client-side <code>filter()</code> is fine, and you can ignore URL-sync.</p>
+  </section>
+
+  <!-- WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three states: a normal filtered view, a loading view, and a zero-results state with one-click clearing.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · Admin</span>
+          <p class="ph-title">Users</p>
+          <div class="ph-search">tendai</div>
+          <div class="ph-chips">
+            <span class="ph-chip on">Active 18</span>
+            <span class="ph-chip">Invited 3</span>
+            <span class="ph-chip">All 24</span>
+          </div>
+          <div class="ph-tablehead">Name · Email · Role</div>
+          <div class="ph-tablerow sel">Tendai M. · tendai@</div>
+          <div class="ph-tablerow">Tendai N. · tendai.n@</div>
+          <div class="ph-pager">1 of 4 ‹ ›</div>
+        </div>
+        <div class="caption"><span class="num">01</span> Filtered + searched</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · Admin</span>
+          <p class="ph-title">Users</p>
+          <div class="ph-search">…</div>
+          <div class="ph-chips">
+            <span class="ph-chip on">Active</span>
+          </div>
+          <div class="ph-tablehead">Loading…</div>
+          <div class="ph-tablerow" style="opacity: 0.4;">▓▓▓▓ · ▓▓▓▓▓▓</div>
+          <div class="ph-tablerow" style="opacity: 0.3;">▓▓▓▓ · ▓▓▓▓▓▓</div>
+          <div class="ph-tablerow" style="opacity: 0.2;">▓▓▓▓ · ▓▓▓▓▓▓</div>
+        </div>
+        <div class="caption"><span class="num">02</span> Loading — skeleton rows</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · Admin</span>
+          <p class="ph-title">Users</p>
+          <div class="ph-search">zzzqq</div>
+          <div class="ph-chips">
+            <span class="ph-chip on">Active</span>
+          </div>
+          <div class="ph-empty">No users match.<br/><span style="text-decoration: underline;">Clear filters</span></div>
+        </div>
+        <div class="caption"><span class="num">03</span> Zero results — clear is one tap</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/x-data-table.html"><span class="kind">Pattern</span>Data table</a>
+      <a class="ck-piece" href="../system/b-data-toolbar.html"><span class="kind">Block</span>Data toolbar</a>
+      <a class="ck-piece" href="../system/b-filter-chips.html"><span class="kind">Block</span>Filter chips</a>
+      <a class="ck-piece" href="../system/b-row-card.html"><span class="kind">Block</span>Row card</a>
+      <a class="ck-piece" href="../system/p-input.html"><span class="kind">Primitive</span>Input &amp; field</a>
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+      <a class="ck-piece" href="../system/p-empty-state.html"><span class="kind">Primitive</span>Empty state</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>DataTable</code>, <code>FilterChips</code>, <code>RowCard</code>, <code>Stack</code>, <code>Input</code>, <code>Button</code>, <code>EmptyState</code>, <code>Toast</code>. We also introduce the <code>useFilters</code> hook — it owns the URL sync and the debounce.</p>
+  </section>
+
+  <!-- STEP-BY-STEP -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <!-- Step 1 -->
+    <div class="ck-step"><span class="n">01</span><h3>One filter object, URL-synced — that's the source of truth</h3></div>
+    <p>Don't keep <code>search</code>, <code>status</code>, <code>sort</code> and <code>page</code> in four separate <code>useState</code>s. Hoist them into one <code>filters</code> object and write it to the URL. The browser's back button now navigates filter history for free, and a shared link recreates the exact view.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useState } from &#39;@huchu/react&#39;;
+
+export type Filters = {
+  q: string;                                // search
+  status: &#39;active&#39; | &#39;invited&#39; | &#39;all&#39;;
+  sort: { col: &#39;name&#39; | &#39;email&#39; | &#39;lastSeen&#39;; dir: &#39;asc&#39; | &#39;desc&#39; };
+  page: number;
+  pageSize: number;
+};
+
+const DEFAULT: Filters = {
+  q: &#39;&#39;, status: &#39;active&#39;,
+  sort: { col: &#39;name&#39;, dir: &#39;asc&#39; }, page: 1, pageSize: 25,
+};
+
+function toQuery(f: Filters) {
+  const p = new URLSearchParams();
+  if (f.q) p.set(&#39;q&#39;, f.q);
+  if (f.status !== DEFAULT.status) p.set(&#39;status&#39;, f.status);
+  if (f.sort.col !== DEFAULT.sort.col || f.sort.dir !== DEFAULT.sort.dir) {
+    p.set(&#39;sort&#39;, `${f.sort.col}:${f.sort.dir}`);
+  }
+  if (f.page !== 1) p.set(&#39;page&#39;, String(f.page));
+  return p.toString();
+}
+function fromQuery(qs: string): Filters {
+  const p = new URLSearchParams(qs);
+  const sortRaw = p.get(&#39;sort&#39;)?.split(&#39;:&#39;);
+  return {
+    q: p.get(&#39;q&#39;) ?? &#39;&#39;,
+    status: (p.get(&#39;status&#39;) as Filters[&#39;status&#39;]) ?? DEFAULT.status,
+    sort: sortRaw
+      ? { col: sortRaw[0] as Filters[&#39;sort&#39;][&#39;col&#39;], dir: sortRaw[1] as &#39;asc&#39; | &#39;desc&#39; }
+      : DEFAULT.sort,
+    page: Number(p.get(&#39;page&#39;) ?? 1),
+    pageSize: DEFAULT.pageSize,
+  };
+}
+
+export function useFilters() {
+  const [filters, setFilters] = useState&lt;Filters&gt;(() =&gt; fromQuery(location.search));
+
+  // Push filter changes to the URL (replaceState, not pushState — sort
+  // and page changes shouldn&#39;t spam history).
+  useEffect(() =&gt; {
+    const qs = toQuery(filters);
+    const url = qs ? `${location.pathname}?${qs}` : location.pathname;
+    history.replaceState(null, &#39;&#39;, url);
+  }, [filters]);
+
+  // Browser back/forward → sync state back.
+  useEffect(() =&gt; {
+    const handler = () =&gt; setFilters(fromQuery(location.search));
+    window.addEventListener(&#39;popstate&#39;, handler);
+    return () =&gt; window.removeEventListener(&#39;popstate&#39;, handler);
+  }, []);
+
+  const update = (patch: Partial&lt;Filters&gt;) =&gt;
+    setFilters((f) =&gt; ({ ...f, ...patch, page: patch.page ?? 1 }));
+
+  return [filters, update] as const;
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div>One <code>filters</code> object → one URL query string.</div>
+          <div style="color: var(--text-subtle);">Every change but page/sort resets to page 1 — otherwise users land on an empty page 4 after typing a search.</div>
+          <div style="color: var(--text-subtle);"><code>replaceState</code> not <code>pushState</code> — typing shouldn't bloat history.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · useFilters hook</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="ck-step"><span class="n">02</span><h3>Fetch on filter change — debounce only the search, not the chips</h3></div>
+    <p>Chip clicks should fire immediately; the user just decided. Search keystrokes should debounce 300&nbsp;ms; otherwise you fire a request per letter. A simple <code>AbortController</code> cancels stale fetches so the last response always wins.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useState } from &#39;@huchu/react&#39;;
+
+type ListResponse&lt;T&gt; = { rows: T[]; total: number };
+
+export function useTableData&lt;T&gt;(endpoint: string, filters: Filters) {
+  const [data, setData] = useState&lt;ListResponse&lt;T&gt;&gt;({ rows: [], total: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState&lt;string | null&gt;(null);
+
+  useEffect(() =&gt; {
+    const ac = new AbortController();
+    // Debounce search; everything else fires now.
+    const delay = 300;
+    const t = setTimeout(async () =&gt; {
+      setLoading(true);
+      setError(null);
+      try {
+        const qs = new URLSearchParams({
+          q: filters.q,
+          status: filters.status,
+          sort: `${filters.sort.col}:${filters.sort.dir}`,
+          page: String(filters.page),
+          pageSize: String(filters.pageSize),
+        }).toString();
+        const res = await fetch(`${endpoint}?${qs}`, { signal: ac.signal });
+        if (!res.ok) throw new Error(`Server returned ${res.status}`);
+        setData(await res.json());
+      } catch (e: any) {
+        if (e.name !== &#39;AbortError&#39;) setError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    }, filters.q ? delay : 0);
+
+    return () =&gt; { clearTimeout(t); ac.abort(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [endpoint, JSON.stringify(filters)]);
+
+  return { data, loading, error };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div>Search debounce: 300ms. Chips: immediate.</div>
+          <div style="color: var(--text-subtle);"><code>AbortController</code> guarantees the latest filters win even if an older request is slower.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Data hook</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="ck-step"><span class="n">03</span><h3>Render the toolbar: search + chips + bulk-action zone</h3></div>
+    <p>The toolbar is sticky on scroll and morphs when rows are selected — chips collapse and bulk actions take their place. That's not decoration; it tells the user the toolbar is now acting on the selection, not the whole list.</p>
+    <div class="ds-specimen"
+         data-code='import { Stack, Input, FilterChips, Button } from &#39;@huchu/react&#39;;
+
+function Toolbar({
+  filters, setFilters, total, selection, onBulkArchive,
+}: {
+  filters: Filters;
+  setFilters: (p: Partial&lt;Filters&gt;) =&gt; void;
+  total: number;
+  selection: string[];
+  onBulkArchive: () =&gt; void;
+}) {
+  if (selection.length &gt; 0) {
+    return (
+      &lt;Stack direction=&quot;row&quot; align=&quot;center&quot; gap=&quot;sm&quot; className=&quot;sticky&quot;&gt;
+        &lt;b&gt;{selection.length} selected&lt;/b&gt;
+        &lt;Button variant=&quot;ghost&quot; onClick={onBulkArchive}&gt;Archive…&lt;/Button&gt;
+        &lt;span className=&quot;t-mono t-subtle&quot;&gt;Esc to clear&lt;/span&gt;
+      &lt;/Stack&gt;
+    );
+  }
+  return (
+    &lt;Stack direction=&quot;row&quot; align=&quot;center&quot; gap=&quot;sm&quot; className=&quot;sticky&quot;&gt;
+      &lt;Input
+        placeholder=&quot;Search users…&quot;
+        value={filters.q}
+        onChange={(q) =&gt; setFilters({ q })}
+        aria-label=&quot;Search users&quot;
+        leadingIcon=&quot;search&quot;
+      /&gt;
+      &lt;FilterChips
+        value={filters.status}
+        onChange={(status) =&gt; setFilters({ status: status as Filters[&#39;status&#39;] })}
+        options={[
+          { value: &#39;active&#39;,  label: &#39;Active&#39;  },
+          { value: &#39;invited&#39;, label: &#39;Invited&#39; },
+          { value: &#39;all&#39;,     label: &#39;All&#39;     },
+        ]}
+      /&gt;
+      &lt;span className=&quot;t-mono t-subtle&quot;&gt;{total} total&lt;/span&gt;
+    &lt;/Stack&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="width: 440px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: flex; gap: 10px; align-items: center;">
+            <div style="flex: 1; height: 32px; border-radius: 8px; border: 1px solid var(--border-strong); padding: 0 10px; display: flex; align-items: center; font: var(--type-body-sm); color: var(--text-subtle);">tendai</div>
+            <div style="display: flex; gap: 4px;">
+              <div style="padding: 4px 10px; border-radius: 9999px; background: var(--brand); color: var(--canvas); font: 500 11px/1 var(--font-sans);">Active 18</div>
+              <div style="padding: 4px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); font: 500 11px/1 var(--font-sans);">Invited 3</div>
+              <div style="padding: 4px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); font: 500 11px/1 var(--font-sans);">All 24</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Toolbar</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="ck-step"><span class="n">04</span><h3>Render the table — and never skip the empty state</h3></div>
+    <p>Three render branches: <code>loading</code>, <code>rows.length === 0</code>, and the table itself. The empty state must offer "Clear filters" — otherwise users with a typo end up convinced the system is broken. Loading shows skeleton rows, not a spinner; the user can already see the shape of what's coming.</p>
+    <div class="ds-specimen"
+         data-code='import { DataTable, EmptyState, Button } from &#39;@huchu/react&#39;;
+
+function Body&lt;T extends { id: string }&gt;({
+  loading, rows, columns, selection, onSelect, sort, onSort, onClear,
+}: {
+  loading: boolean;
+  rows: T[];
+  columns: { key: keyof T; label: string; sortable?: boolean }[];
+  selection: string[];
+  onSelect: (ids: string[]) =&gt; void;
+  sort: Filters[&#39;sort&#39;];
+  onSort: (s: Filters[&#39;sort&#39;]) =&gt; void;
+  onClear: () =&gt; void;
+}) {
+  if (!loading &amp;&amp; rows.length === 0) {
+    return (
+      &lt;EmptyState
+        icon=&quot;search&quot;
+        title=&quot;No results&quot;
+        body=&quot;Try a broader search, or clear filters.&quot;
+        action={&lt;Button onClick={onClear}&gt;Clear filters&lt;/Button&gt;}
+      /&gt;
+    );
+  }
+  return (
+    &lt;DataTable
+      loading={loading}
+      rows={rows}
+      columns={columns}
+      selectable
+      selection={selection}
+      onSelection={onSelect}
+      sort={sort}
+      onSort={onSort}
+      rowActions={(r) =&gt; [
+        { label: &#39;Open&#39;,   onClick: () =&gt; window.location.hash = `#/users/${r.id}` },
+        { label: &#39;Archive&#39;, onClick: () =&gt; archive(r.id), tone: &#39;danger&#39; },
+      ]}
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div><code>loading</code> → skeleton rows inside <code>DataTable</code>.</div>
+          <div style="color: var(--text-subtle);"><code>rows.length === 0</code> → <code>EmptyState</code> with a real "Clear filters" action.</div>
+          <div style="color: var(--text-subtle);">Per-row actions hang off a kebab in the last column.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Table render</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="ck-step"><span class="n">05</span><h3>Saved views = stored query strings</h3></div>
+    <p>Power users want "My open requests" and "All Park Centre, sorted by oldest" one tap away. A saved view is just a name + a query string in localStorage; clicking it calls <code>setFilters(fromQuery(view.qs))</code>. No new state shape, no view-aware fetcher — the URL is the contract.</p>
+    <div class="ds-specimen"
+         data-code='type SavedView = { id: string; name: string; qs: string };
+const VIEWS_KEY = (scope: string) =&gt; `huchu.savedViews.${scope}`;
+
+export function useSavedViews(scope: string) {
+  const [views, setViews] = useState&lt;SavedView[]&gt;(() =&gt; {
+    const raw = localStorage.getItem(VIEWS_KEY(scope));
+    return raw ? JSON.parse(raw) : [];
+  });
+  const persist = (next: SavedView[]) =&gt; {
+    localStorage.setItem(VIEWS_KEY(scope), JSON.stringify(next));
+    setViews(next);
+  };
+  return {
+    views,
+    save: (name: string) =&gt;
+      persist([...views, { id: crypto.randomUUID(), name, qs: location.search.slice(1) }]),
+    remove: (id: string) =&gt; persist(views.filter((v) =&gt; v.id !== id)),
+    apply: (v: SavedView, setFilters: (f: Filters) =&gt; void) =&gt;
+      setFilters(fromQuery(v.qs)),
+  };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div>A saved view is just <code>{ name, qs }</code>.</div>
+          <div style="color: var(--text-subtle);">Apply = parse qs back into filters, fetch runs naturally.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 5 · Saved views</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- FINAL COMPOSITION -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The <code>UsersTable</code> page, assembled. URL-sync, debounced search, server fetch, loading/empty states, bulk actions, saved views.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useState } from &#39;@huchu/react&#39;;
+import {
+  Stack, Input, FilterChips, Button, DataTable, EmptyState, Toast,
+} from &#39;@huchu/react&#39;;
+import { useFilters, fromQuery, Filters } from &#39;./useFilters&#39;;
+import { useTableData } from &#39;./useTableData&#39;;
+import { useSavedViews } from &#39;./useSavedViews&#39;;
+
+type User = { id: string; name: string; email: string; role: string; status: string; lastSeen: string };
+
+const COLUMNS = [
+  { key: &#39;name&#39;,     label: &#39;Name&#39;,      sortable: true  },
+  { key: &#39;email&#39;,    label: &#39;Email&#39;,     sortable: false },
+  { key: &#39;role&#39;,     label: &#39;Role&#39;,      sortable: false },
+  { key: &#39;lastSeen&#39;, label: &#39;Last seen&#39;, sortable: true  },
+] as const;
+
+export function UsersTable() {
+  const [filters, setFilters] = useFilters();
+  const { data, loading, error } = useTableData&lt;User&gt;(&#39;/api/users&#39;, filters);
+  const [selection, setSelection] = useState&lt;string[]&gt;([]);
+  const { views, save, remove, apply } = useSavedViews(&#39;users&#39;);
+
+  // Clear selection whenever filters change — old ids no longer apply.
+  useEffect(() =&gt; { setSelection([]); }, [filters]);
+
+  const bulkArchive = async () =&gt; {
+    await fetch(&#39;/api/users/bulk-archive&#39;, {
+      method: &#39;POST&#39;, body: JSON.stringify({ ids: selection }),
+    });
+    Toast.show(`${selection.length} archived`);
+    setSelection([]);
+    setFilters({}); // re-fetch
+  };
+
+  return (
+    &lt;Stack gap=&quot;md&quot;&gt;
+      &lt;Stack direction=&quot;row&quot; justify=&quot;between&quot; align=&quot;center&quot;&gt;
+        &lt;h1&gt;Users&lt;/h1&gt;
+        &lt;Stack direction=&quot;row&quot; gap=&quot;xs&quot;&gt;
+          {views.map((v) =&gt; (
+            &lt;Button key={v.id} variant=&quot;ghost&quot; size=&quot;sm&quot;
+                    onClick={() =&gt; setFilters(fromQuery(v.qs))}&gt;
+              {v.name}
+            &lt;/Button&gt;
+          ))}
+          &lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot;
+                  onClick={() =&gt; { const n = prompt(&#39;Name this view&#39;); if (n) save(n); }}&gt;
+            + Save current view
+          &lt;/Button&gt;
+        &lt;/Stack&gt;
+      &lt;/Stack&gt;
+
+      {selection.length &gt; 0 ? (
+        &lt;Stack direction=&quot;row&quot; align=&quot;center&quot; gap=&quot;sm&quot; className=&quot;sticky&quot;&gt;
+          &lt;b&gt;{selection.length} selected&lt;/b&gt;
+          &lt;Button variant=&quot;ghost&quot; onClick={bulkArchive}&gt;Archive…&lt;/Button&gt;
+          &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; setSelection([])}&gt;Cancel&lt;/Button&gt;
+        &lt;/Stack&gt;
+      ) : (
+        &lt;Stack direction=&quot;row&quot; align=&quot;center&quot; gap=&quot;sm&quot; className=&quot;sticky&quot;&gt;
+          &lt;Input
+            placeholder=&quot;Search users…&quot;
+            value={filters.q}
+            onChange={(q) =&gt; setFilters({ q })}
+            aria-label=&quot;Search users&quot;
+            leadingIcon=&quot;search&quot;
+          /&gt;
+          &lt;FilterChips
+            value={filters.status}
+            onChange={(status) =&gt; setFilters({ status: status as Filters[&#39;status&#39;] })}
+            options={[
+              { value: &#39;active&#39;,  label: &#39;Active&#39;  },
+              { value: &#39;invited&#39;, label: &#39;Invited&#39; },
+              { value: &#39;all&#39;,     label: &#39;All&#39;     },
+            ]}
+          /&gt;
+          &lt;span className=&quot;t-mono t-subtle&quot;&gt;{data.total} total&lt;/span&gt;
+        &lt;/Stack&gt;
+      )}
+
+      {error &amp;&amp; (
+        &lt;EmptyState
+          tone=&quot;danger&quot;
+          icon=&quot;alert&quot;
+          title=&quot;Couldn&#39;t load users&quot;
+          body={error}
+          action={&lt;Button onClick={() =&gt; setFilters({})}&gt;Retry&lt;/Button&gt;}
+        /&gt;
+      )}
+
+      {!error &amp;&amp; !loading &amp;&amp; data.rows.length === 0 &amp;&amp; (
+        &lt;EmptyState
+          icon=&quot;search&quot;
+          title=&quot;No users match&quot;
+          body=&quot;Try a broader search or clear the filters.&quot;
+          action={&lt;Button onClick={() =&gt; setFilters({ q: &#39;&#39;, status: &#39;all&#39;, page: 1 })}&gt;Clear filters&lt;/Button&gt;}
+        /&gt;
+      )}
+
+      {!error &amp;&amp; (loading || data.rows.length &gt; 0) &amp;&amp; (
+        &lt;DataTable
+          loading={loading}
+          rows={data.rows}
+          columns={COLUMNS}
+          selectable
+          selection={selection}
+          onSelection={setSelection}
+          sort={filters.sort}
+          onSort={(s) =&gt; setFilters({ sort: s })}
+          rowActions={(r) =&gt; [
+            { label: &#39;Open&#39;,    onClick: () =&gt; location.hash = `#/users/${r.id}` },
+            { label: &#39;Archive&#39;, onClick: () =&gt; archive(r.id), tone: &#39;danger&#39; },
+          ]}
+          pagination={{
+            page: filters.page,
+            pageSize: filters.pageSize,
+            total: data.total,
+            onPage: (page) =&gt; setFilters({ page }),
+          }}
+          // Phones: collapse to RowCard via this prop
+          mobileVariant=&quot;cards&quot;
+        /&gt;
+      )}
+    &lt;/Stack&gt;
+  );
+}
+
+async function archive(id: string) {
+  await fetch(`/api/users/${id}/archive`, { method: &#39;POST&#39; });
+  Toast.show(&#39;Archived&#39;);
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="width: 520px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h2 style="font: 700 18px/1.2 var(--font-sans); margin: 0;">Users</h2>
+              <div style="display: flex; gap: 4px;">
+                <div style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface-muted); font: 500 11px/1 var(--font-sans); color: var(--text-muted);">My open</div>
+                <div style="padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface-muted); font: 500 11px/1 var(--font-sans); color: var(--text-muted);">+ Save view</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px;">
+              <div style="flex: 1; height: 32px; border-radius: 8px; border: 1px solid var(--border-strong); padding: 0 10px; display: flex; align-items: center; font: var(--type-body-sm); color: var(--text-subtle);">tendai</div>
+              <div style="padding: 4px 10px; border-radius: 9999px; background: var(--brand); color: var(--canvas); font: 500 11px/1 var(--font-sans);">Active 18</div>
+              <div style="padding: 4px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); font: 500 11px/1 var(--font-sans);">Invited 3</div>
+              <span style="font: 500 11px/1 var(--font-mono); color: var(--text-subtle);">24 total</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 8px; background: var(--surface-muted); border-radius: 6px; font: 500 10px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase;">
+              <span>Name</span><span>Email</span><span>Role</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 10px 8px; border-bottom: 1px solid var(--border); font: var(--type-body-sm); color: var(--text-strong);">
+              <span>Tendai Moyo</span><span>tendai@mukamba.co</span><span>Owner</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 10px 8px; border-bottom: 1px solid var(--border); font: var(--type-body-sm); color: var(--text-strong);">
+              <span>Tendai Ncube</span><span>tendai.n@mukamba.co</span><span>Manager</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">UsersTable.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three forks. Each a small diff off the final composition.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Infinite scroll (no pager)</h4>
+        <p>Phone-first feeds (notifications, timeline). Swap pagination for an <code>IntersectionObserver</code> that bumps <code>page</code>.</p>
+<pre>const loader = useRef&lt;HTMLDivElement&gt;(null);
+useEffect(() =&gt; {
+  const io = new IntersectionObserver(([e]) =&gt; {
+    if (e.isIntersecting) setFilters({ page: filters.page + 1 });
+  });
+  if (loader.current) io.observe(loader.current);
+  return () =&gt; io.disconnect();
+}, [filters.page]);</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Client-only (no server)</h4>
+        <p>Fixed dataset, no API. Skip <code>useTableData</code>; filter and sort in <code>useMemo</code>. URL-sync still works.</p>
+<pre>const rows = useMemo(() =&gt; {
+  return ALL_USERS
+    .filter(u =&gt; matches(u, filters))
+    .sort(byCol(filters.sort))
+    .slice((filters.page - 1) * 25, filters.page * 25);
+}, [filters]);
+const total = ALL_USERS.length;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Multi-select chips</h4>
+        <p>Status is a set, not a single value. <code>FilterChips</code> takes <code>multiple</code> and an array of strings.</p>
+<pre>type Filters = { ..., status: string[] };
+&lt;FilterChips
+  multiple
+  value={filters.status}
+  onChange={(status) =&gt;
+    setFilters({ status: status as string[] })}
+  options={...}
+/&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCESSIBILITY -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">What this recipe takes care of for you.</p>
+    <ul class="ck-a11y">
+      <li><b>Search input has a real label.</b> The visible placeholder is supplemented by <code>aria-label="Search users"</code> so a screen reader doesn't say "edit text".</li>
+      <li><b>Sortable headers are buttons.</b> <code>DataTable</code> renders sort triggers as <code>&lt;button&gt;</code> with <code>aria-sort="ascending"</code>/<code>"descending"</code> so the current column and direction are announced.</li>
+      <li><b>Bulk-mode toolbar announces itself.</b> Toggling selection swaps the toolbar; the new region uses <code>role="status"</code> + <code>aria-live="polite"</code> so screen-reader users hear "2 selected".</li>
+      <li><b>Loading state is honest.</b> <code>DataTable loading</code> renders a skeleton with <code>aria-busy="true"</code> on the table so assistive tech announces "loading users" instead of reading garbage rows.</li>
+      <li><b>Empty state has an action, not just text.</b> "No results" is useless without "Clear filters" — keyboard and screen-reader users get a real button, not a styled link.</li>
+      <li><b>Filter chips are real radios under the hood.</b> Arrow keys move between chips; Space toggles. <code>FilterChips</code> renders the right ARIA — don't substitute styled <code>div</code>s.</li>
+      <li><b>Selection persists across pages.</b> When the user pages forward, the previous page's selection is kept. The selection summary in the toolbar always tells the truth.</li>
+    </ul>
+  </section>
+
+  <!-- RELATED -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">The other Forms &amp; Lists recipes in this batch.</p>
+    <div class="ck-related">
+      <a href="lists-master-detail.html">Lists · Master–detail page<span class="tag">New</span></a>
+      <a href="forms-inline-edit-row.html">Forms · Inline edit on row<span class="tag">New</span></a>
+      <a href="forms-autosave-drawer.html">Forms · Autosave drawer<span class="tag">New</span></a>
+      <a href="forms-multi-step-wizard.html">Forms · Multi-step wizard<span class="tag">New</span></a>
+      <a href="auth-signin-2fa.html">Auth · Sign in with 2FA</a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="forms-autosave-drawer.html"><div class="pager-label">← Previous</div><div class="pager-title">Autosave drawer</div></a>
+    <a href="lists-master-detail.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Master–detail page</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>
