@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Pie chart · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../system.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../system-shell.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+  .ck-pull { margin: 16px 0; padding: 14px 18px; border-left: 3px solid var(--brand); background: var(--brand-soft); border-radius: 0 8px 8px 0; font: 500 15px/1.55 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-chart-stage { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 24px; margin: 14px 0; }
+  .ck-chart-stage svg { width: 100%; height: auto; display: block; }
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+  .ck-roadmap-note { margin-top: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+  .ck-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .ck-context-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; margin-top: 12px; }
+  .ck-context-card .h { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+  .ck-context-card .h .t { font: 600 14px/1 var(--font-sans); color: var(--text-strong); }
+  .ck-context-card .h .s { font: 500 11px/1 var(--font-mono); color: var(--text-subtle); letter-spacing: 0.05em; text-transform: uppercase; }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../../index.html">Home</a><span class="sep">/</span>
+      <a href="../index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Charts</a><span class="sep">/</span>
+      <span>Pie</span>
+    </div>
+    <h1>Show a share-of-total with a pie chart</h1>
+    <p class="lede">By the end of this recipe you'll have a clean 4-slice pie with an outside-label-and-leader-line legend — the right shape for "what proportion went where, totalling 100%?".</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="chart" data-icon-size="12"></span>Charts</span>
+      <span class="meta-pill">Intermediate</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~10 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">Slices of a circle summing to one. Each slice's angle is its share of the total. The legend names what each colour means.</p>
+    <p>Pies answer "who got what fraction of one whole?" — sales mix by region, vote share, time spent per category. They're the chart most often misused — usually because the data wasn't really a parts-of-whole. If your values don't sum to a meaningful whole, a bar chart is more honest.</p>
+    <p><b>Skip pies</b> above 4 slices (small-angle reads are unreliable), when slice sizes are within a few percentage points of each other (bars beat pies for fine comparison), or when there's no headline number — at that point switch to a donut and use the centre.</p>
+    <p class="ck-pull"><b>Default opinion:</b> if you can write the value next to the slice without crowding, you have a usable pie. If you can't, you have too many slices.</p>
+  </section>
+
+  <section id="chart">
+    <h2 class="ds-h2">The chart</h2>
+    <p class="ds-h2-sub">Sales share by region this quarter. Four slices, labelled outside with their share.</p>
+    <div class="ck-chart-stage">
+      <svg viewBox="0 0 640 320" role="img" aria-labelledby="pi-title pi-desc">
+        <title id="pi-title">Sales by region, Q2</title>
+        <desc id="pi-desc">Four slices: Harare 42%, Bulawayo 26%, Mutare 19%, Other 13%.</desc>
+
+        <g transform="translate(220,160)">
+          <!-- r=110. Starting angle -90 (top). Slices sum to 360. -->
+          <!-- Harare 42% = 151.2 deg, end angle -90+151.2 = 61.2 -->
+          <!-- end at (cos(61.2deg)*110, sin(61.2deg)*110) = (52.97, 96.45) -->
+          <path d="M0,0 L0,-110 A110,110 0 0,1 53,96 Z" fill="var(--brand)" />
+          <!-- Bulawayo 26% = 93.6 deg, end angle 61.2+93.6 = 154.8. end = (-99.5, 47.0) -->
+          <path d="M0,0 L53,96 A110,110 0 0,1 -100,47 Z" fill="var(--brand-300)" />
+          <!-- Mutare 19% = 68.4 deg, end angle 154.8+68.4 = 223.2. end = (-80.2, -75.3) -->
+          <path d="M0,0 L-100,47 A110,110 0 0,1 -80,-75 Z" fill="var(--tone-success)" />
+          <!-- Other 13% = 46.8 deg, end angle 223.2+46.8 = 270 (-90). end = (0,-110) -->
+          <path d="M0,0 L-80,-75 A110,110 0 0,1 0,-110 Z" fill="var(--text-muted)" />
+
+          <!-- Slice labels — outside, leader lines -->
+          <g font-family="var(--font-mono)" font-size="11" fill="var(--text-strong)">
+            <!-- Harare label (right side) -->
+            <line x1="80" y1="50" x2="130" y2="50" stroke="var(--border)" />
+            <text x="135" y="54">Harare · 42%</text>
+            <!-- Bulawayo label (bottom right) -->
+            <line x1="-30" y1="105" x2="-30" y2="135" stroke="var(--border)" />
+            <text x="-25" y="148" text-anchor="start">Bulawayo · 26%</text>
+            <!-- Mutare label (left) -->
+            <line x1="-95" y1="-15" x2="-130" y2="-15" stroke="var(--border)" />
+            <text x="-135" y="-12" text-anchor="end">Mutare · 19%</text>
+            <!-- Other label (top) -->
+            <line x1="-50" y1="-95" x2="-50" y2="-125" stroke="var(--border)" />
+            <text x="-55" y="-130" text-anchor="end">Other · 13%</text>
+          </g>
+        </g>
+
+        <!-- Right side: values table -->
+        <g transform="translate(420,90)" font-family="var(--font-sans)" font-size="13" fill="var(--text-strong)">
+          <text x="0" y="0" font-weight="600">Region totals</text>
+          <g transform="translate(0,28)"><rect x="0" y="-10" width="12" height="12" rx="2" fill="var(--brand)"/><text x="20" y="0">Harare</text><text x="180" y="0" text-anchor="end" font-family="var(--font-mono)" fill="var(--text-muted)">$42,000</text></g>
+          <g transform="translate(0,52)"><rect x="0" y="-10" width="12" height="12" rx="2" fill="var(--brand-300)"/><text x="20" y="0">Bulawayo</text><text x="180" y="0" text-anchor="end" font-family="var(--font-mono)" fill="var(--text-muted)">$26,000</text></g>
+          <g transform="translate(0,76)"><rect x="0" y="-10" width="12" height="12" rx="2" fill="var(--tone-success)"/><text x="20" y="0">Mutare</text><text x="180" y="0" text-anchor="end" font-family="var(--font-mono)" fill="var(--text-muted)">$19,000</text></g>
+          <g transform="translate(0,100)"><rect x="0" y="-10" width="12" height="12" rx="2" fill="var(--text-muted)"/><text x="20" y="0">Other</text><text x="180" y="0" text-anchor="end" font-family="var(--font-mono)" fill="var(--text-muted)">$13,000</text></g>
+          <line x1="0" y1="120" x2="180" y2="120" stroke="var(--border)" />
+          <g transform="translate(0,140)"><text x="0" y="0" font-weight="600">Total</text><text x="180" y="0" text-anchor="end" font-family="var(--font-mono)" font-weight="700">$100,000</text></g>
+        </g>
+      </svg>
+    </div>
+    <span class="ck-sr-only">Harare leads at $42,000 (42%); Bulawayo $26,000; Mutare $19,000; the remaining smaller regions combined $13,000.</span>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">From <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart</a>
+      <a class="ck-piece" href="../../system/b-card.html"><span class="kind">Block</span>Card</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended exports used here:</b> <code>Chart.Pie</code>, <code>Chart.Legend</code>.</p>
+    <div class="ck-roadmap-note">
+      <b>Roadmap.</b> <code>Chart.Pie</code> ships in <code>@huchu/react v0.2</code>.
+    </div>
+  </section>
+
+  <section id="snippet">
+    <h2 class="ds-h2">The React snippet</h2>
+    <p class="ds-h2-sub">Same prop shape as <code>Chart.Donut</code> minus the centre slot.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart } from &#39;@huchu/react&#39;;
+
+const slices = [
+  { region: &#39;Harare&#39;,   sales: 42000, color: &#39;brand&#39; },
+  { region: &#39;Bulawayo&#39;, sales: 26000, color: &#39;brand-300&#39; },
+  { region: &#39;Mutare&#39;,   sales: 19000, color: &#39;success&#39; },
+  { region: &#39;Other&#39;,    sales: 13000, color: &#39;muted&#39; },
+];
+
+export function SalesByRegion() {
+  return (
+    &lt;Chart.Pie
+      data={slices}
+      labelAccessor=&quot;region&quot;
+      valueAccessor=&quot;sales&quot;
+      colorAccessor=&quot;color&quot;
+      height={280}
+      legend=&quot;right&quot;
+      labels=&quot;outside&quot;     {/* &quot;outside&quot; | &quot;inside&quot; | &quot;none&quot; */}
+      yFormat={(v) =&gt; `$${(v / 1000).toFixed(0)}k`}
+      aria-label=&quot;Sales by region, Q2&quot;
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 18px; display:grid; place-items:center;">
+          <svg viewBox="0 0 240 240" role="img" aria-label="Preview" style="width:220px; height:220px; display:block;">
+            <g transform="translate(120,120)">
+              <path d="M0,0 L0,-90 A90,90 0 0,1 43,79 Z" fill="var(--brand)"/>
+              <path d="M0,0 L43,79 A90,90 0 0,1 -82,38 Z" fill="var(--brand-300)"/>
+              <path d="M0,0 L-82,38 A90,90 0 0,1 -66,-62 Z" fill="var(--tone-success)"/>
+              <path d="M0,0 L-66,-62 A90,90 0 0,1 0,-90 Z" fill="var(--text-muted)"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">SalesByRegion.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="customising">
+    <h2 class="ds-h2">Customising</h2>
+    <p class="ds-h2-sub">Three forks.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Inside labels</h4>
+        <p>Put percentages inside the slices when the chart sits next to a legend that already names them.</p>
+<pre>&lt;Chart.Pie
+  data={slices}
+  labels=&quot;inside&quot;
+  labelFormat={(s) =&gt; `${Math.round(s.pct * 100)}%`}
+  height={280}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Sort slices</h4>
+        <p>Largest slice at the top, then clockwise descending. The reader's eye reads ranking before names.</p>
+<pre>&lt;Chart.Pie
+  data={slices.sort((a, b) =&gt; b.sales - a.sales)}
+  startAngle={-90}     {/* top */}
+  height={280}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Highlight one slice</h4>
+        <p>Pull the focal slice outward by a few pixels. Reserve for the slice the page is actually about.</p>
+<pre>&lt;Chart.Pie
+  data={slices}
+  emphasis=&quot;Harare&quot;
+  emphasisOffset={8}
+  height={280}
+/&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="in-context">
+    <h2 class="ds-h2">In context</h2>
+    <p class="ds-h2-sub">Inside a row card on a tablet report — pie + legend share one row.</p>
+    <div class="ck-context-card">
+      <div class="h">
+        <div class="t">Sales by region · Q2</div>
+        <div class="s">$100k total</div>
+      </div>
+      <div style="display: grid; grid-template-columns: 160px 1fr; gap: 24px; align-items: center;">
+        <svg viewBox="0 0 160 160" role="img" aria-label="Hero pie" style="width:160px; height:160px; display:block;">
+          <g transform="translate(80,80)">
+            <path d="M0,0 L0,-60 A60,60 0 0,1 29,53 Z" fill="var(--brand)"/>
+            <path d="M0,0 L29,53 A60,60 0 0,1 -55,25 Z" fill="var(--brand-300)"/>
+            <path d="M0,0 L-55,25 A60,60 0 0,1 -44,-41 Z" fill="var(--tone-success)"/>
+            <path d="M0,0 L-44,-41 A60,60 0 0,1 0,-60 Z" fill="var(--text-muted)"/>
+          </g>
+        </svg>
+        <div style="font: var(--type-body-sm); color: var(--text-muted); line-height: 1.6;">
+          Harare alone accounts for <b style="color: var(--text-strong);">42%</b> of Q2 sales. Combined, the three named cities cover <b style="color: var(--text-strong);">87%</b>.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">Pies are radial — same a11y headaches as donuts.</p>
+    <ul class="ck-a11y">
+      <li><b>Role and label.</b> Root <code>&lt;svg&gt;</code> uses <code>role="img"</code> + <code>aria-labelledby</code> on <code>&lt;title&gt;</code> + <code>&lt;desc&gt;</code>.</li>
+      <li><b>Per-slice labels.</b> Each <code>&lt;path&gt;</code> sits in a <code>&lt;g aria-label="Harare: 42 percent, $42,000"&gt;</code>.</li>
+      <li><b>SR summary.</b> A <code>.ck-sr-only</code> paragraph ranks slices and notes the long tail.</li>
+      <li><b>Leader lines repeat the legend.</b> Don't rely on colour alone — every slice has a written percentage either inside or via a leader line.</li>
+      <li><b>Keyboard.</b> Each slice is <code>tabindex="0"</code>; Arrow keys walk clockwise.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related charts</h2>
+    <div class="ck-related">
+      <a href="donut.html">Donut<span class="tag">Charts</span></a>
+      <a href="progress-ring.html">Progress ring<span class="tag">Charts</span></a>
+      <a href="bar-horizontal.html">Horizontal bars<span class="tag">Charts</span></a>
+      <a href="../auth-signin-2fa.html">Sign in with 2FA<span class="tag">Canonical</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="donut.html"><div class="pager-label">← Previous</div><div class="pager-title">Donut</div></a>
+    <a href="progress-ring.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Progress ring</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#chart">The chart</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#snippet">The React snippet</a></li>
+    <li><a href="#customising">Customising</a></li>
+    <li><a href="#in-context">In context</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related charts</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Vertical bars · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../system.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../system-shell.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+  .ck-pull { margin: 16px 0; padding: 14px 18px; border-left: 3px solid var(--brand); background: var(--brand-soft); border-radius: 0 8px 8px 0; font: 500 15px/1.55 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-chart-stage { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 24px; margin: 14px 0; }
+  .ck-chart-stage svg { width: 100%; height: auto; display: block; }
+  .ck-chart-stage .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; font: 500 12px/1 var(--font-sans); color: var(--text-muted); }
+  .ck-chart-stage .legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+  .ck-roadmap-note { margin-top: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+  .ck-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .ck-context-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; margin-top: 12px; }
+  .ck-context-card .h { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+  .ck-context-card .h .t { font: 600 14px/1 var(--font-sans); color: var(--text-strong); }
+  .ck-context-card .h .s { font: 500 11px/1 var(--font-mono); color: var(--text-subtle); letter-spacing: 0.05em; text-transform: uppercase; }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../../index.html">Home</a><span class="sep">/</span>
+      <a href="../index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Charts</a><span class="sep">/</span>
+      <span>Vertical bars</span>
+    </div>
+    <h1>Compare buckets with a vertical bar chart</h1>
+    <p class="lede">By the end of this recipe you'll have a clean column chart with categorical x-axis, value labels on demand, and one bar quietly highlighted for the day's takeaway.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="chart" data-icon-size="12"></span>Charts</span>
+      <span class="meta-pill">Intermediate</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~8 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">One bar per bucket. Heights compare directly because they share a baseline. The reader's eye does the maths for you.</p>
+    <p>Vertical bars answer "how big is each?" — pours per shift, orders per weekday, signups per product. They beat lines whenever the x-axis is discrete and unordered, or when you want the reader to compare individual values rather than read a trend.</p>
+    <p><b>Skip vertical bars</b> if your category labels are long ("Premium plan with priority support" wraps and looks terrible vertical) — go horizontal instead. Skip if your bars are showing a continuous time series — that's a line chart's job.</p>
+    <p class="ck-pull"><b>Default opinion:</b> sort by value, not by label. The reader's eye reads ranking before it reads names.</p>
+  </section>
+
+  <section id="chart">
+    <h2 class="ds-h2">The chart</h2>
+    <p class="ds-h2-sub">Daily pours at the gold mine clerk's window. Thursday gets the highlight because that's the day worth talking about.</p>
+    <div class="ck-chart-stage">
+      <svg viewBox="0 0 640 320" role="img" aria-labelledby="bv-title bv-desc">
+        <title id="bv-title">Pours per shift, last seven days</title>
+        <desc id="bv-desc">Bar chart showing pour counts by weekday. Thursday is the highest at 47; Monday is the lowest at 12.</desc>
+
+        <g stroke="var(--border-subtle)">
+          <line x1="56" y1="60"  x2="616" y2="60"  />
+          <line x1="56" y1="120" x2="616" y2="120" />
+          <line x1="56" y1="180" x2="616" y2="180" />
+          <line x1="56" y1="240" x2="616" y2="240" />
+        </g>
+        <g font-family="var(--font-mono)" font-size="11" fill="var(--text-muted)" text-anchor="end">
+          <text x="48" y="64">60</text><text x="48" y="124">40</text><text x="48" y="184">20</text><text x="48" y="244">0</text>
+        </g>
+
+        <!-- Bars: Mon=12 Tue=22 Wed=33 Thu=47 (hi) Fri=38 Sat=28 Sun=18 -->
+        <g>
+          <rect x="86"  y="204" width="52" height="36"  rx="3" fill="var(--brand)" opacity="0.55" />
+          <rect x="158" y="174" width="52" height="66"  rx="3" fill="var(--brand)" opacity="0.55" />
+          <rect x="230" y="141" width="52" height="99"  rx="3" fill="var(--brand)" opacity="0.55" />
+          <rect x="302" y="99"  width="52" height="141" rx="3" fill="var(--brand)" />
+          <rect x="374" y="126" width="52" height="114" rx="3" fill="var(--brand)" opacity="0.55" />
+          <rect x="446" y="156" width="52" height="84"  rx="3" fill="var(--brand)" opacity="0.55" />
+          <rect x="518" y="186" width="52" height="54"  rx="3" fill="var(--brand)" opacity="0.55" />
+        </g>
+
+        <!-- Value labels -->
+        <g font-family="var(--font-mono)" font-size="11" fill="var(--text-muted)" text-anchor="middle">
+          <text x="112" y="196">12</text>
+          <text x="184" y="166">22</text>
+          <text x="256" y="133">33</text>
+          <text x="328" y="91" fill="var(--brand-strong)" font-weight="700">47</text>
+          <text x="400" y="118">38</text>
+          <text x="472" y="148">28</text>
+          <text x="544" y="178">18</text>
+        </g>
+
+        <!-- X-axis -->
+        <line x1="56" y1="240" x2="616" y2="240" stroke="var(--border)" />
+        <g font-family="var(--font-mono)" font-size="11" fill="var(--text-muted)" text-anchor="middle">
+          <text x="112" y="262">Mon</text>
+          <text x="184" y="262">Tue</text>
+          <text x="256" y="262">Wed</text>
+          <text x="328" y="262" fill="var(--text-strong)" font-weight="600">Thu</text>
+          <text x="400" y="262">Fri</text>
+          <text x="472" y="262">Sat</text>
+          <text x="544" y="262">Sun</text>
+        </g>
+      </svg>
+      <div class="legend">
+        <span><span class="dot" style="background: var(--brand);"></span>Pours</span>
+        <span style="color: var(--brand-strong);"><span class="dot" style="background: var(--brand); opacity: 1;"></span>Highest day</span>
+      </div>
+    </div>
+    <span class="ck-sr-only">Thursday at 47 pours, more than triple Monday's 12. Friday a moderate 38; weekend declines to 18 on Sunday.</span>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">From <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart</a>
+      <a class="ck-piece" href="../../system/b-card.html"><span class="kind">Block</span>Card</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended exports used here:</b> <code>Chart.Bar</code>.</p>
+    <div class="ck-roadmap-note">
+      <b>Roadmap.</b> <code>Chart.Bar</code> ships in <code>@huchu/react v0.2</code>.
+    </div>
+  </section>
+
+  <section id="snippet">
+    <h2 class="ds-h2">The React snippet</h2>
+    <p class="ds-h2-sub">Same shape as <code>Chart.Line</code>. Highlight one bar by returning a colour from a per-datum function.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart } from &#39;@huchu/react&#39;;
+
+const data = [
+  { day: &#39;Mon&#39;, pours: 12 },
+  { day: &#39;Tue&#39;, pours: 22 },
+  { day: &#39;Wed&#39;, pours: 33 },
+  { day: &#39;Thu&#39;, pours: 47 },
+  { day: &#39;Fri&#39;, pours: 38 },
+  { day: &#39;Sat&#39;, pours: 28 },
+  { day: &#39;Sun&#39;, pours: 18 },
+];
+
+export function PoursPerShift() {
+  return (
+    &lt;Chart.Bar
+      data={data}
+      xAccessor=&quot;day&quot;
+      yAccessor=&quot;pours&quot;
+      color={(d) =&gt; d.pours === Math.max(...data.map(x =&gt; x.pours)) ? &#39;brand&#39; : &#39;brand-soft&#39;}
+      height={260}
+      showValues
+      aria-label=&quot;Pours per shift, last seven days&quot;
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 18px;">
+          <svg viewBox="0 0 640 240" role="img" aria-label="Preview" style="width:100%; height:auto; display:block;">
+            <g stroke="var(--border-subtle)"><line x1="40" y1="60" x2="620" y2="60"/><line x1="40" y1="120" x2="620" y2="120"/><line x1="40" y1="180" x2="620" y2="180"/></g>
+            <rect x="60" y="160" width="60" height="40" rx="3" fill="var(--brand)" opacity="0.45"/>
+            <rect x="140" y="130" width="60" height="70" rx="3" fill="var(--brand)" opacity="0.45"/>
+            <rect x="220" y="100" width="60" height="100" rx="3" fill="var(--brand)" opacity="0.45"/>
+            <rect x="300" y="60" width="60" height="140" rx="3" fill="var(--brand)"/>
+            <rect x="380" y="90" width="60" height="110" rx="3" fill="var(--brand)" opacity="0.45"/>
+            <rect x="460" y="120" width="60" height="80" rx="3" fill="var(--brand)" opacity="0.45"/>
+            <rect x="540" y="150" width="60" height="50" rx="3" fill="var(--brand)" opacity="0.45"/>
+          </svg>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">PoursPerShift.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="customising">
+    <h2 class="ds-h2">Customising</h2>
+    <p class="ds-h2-sub">Three forks.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Recolour per tone</h4>
+        <p>Use a tone function when each bucket has a qualitative sense — success/danger/neutral — and the colour repeats that sense.</p>
+<pre>&lt;Chart.Bar
+  data={data}
+  color={(d) =&gt;
+    d.pours &gt; 30 ? &#39;success&#39; :
+    d.pours &lt; 15 ? &#39;danger&#39; : &#39;brand&#39;}
+  height={260}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Sort + flip</h4>
+        <p>Sort by value descending so the eye reads ranking. Flip the y-domain (or the bar direction) for a "lower is better" metric.</p>
+<pre>&lt;Chart.Bar
+  data={data.sort((a, b) =&gt; b.pours - a.pours)}
+  xAccessor=&quot;day&quot;
+  yAccessor=&quot;pours&quot;
+  height={260}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Animate from baseline</h4>
+        <p>Grow each bar from the x-axis on first mount. Keep the stagger short (40–80ms) — long stagger reads as a loading state.</p>
+<pre>&lt;Chart.Bar
+  data={data}
+  animate=&quot;grow&quot;
+  animateStaggerMs={60}
+  height={260}
+/&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="in-context">
+    <h2 class="ds-h2">In context</h2>
+    <p class="ds-h2-sub">Inside a report layout — pours-per-shift with the totals on the left.</p>
+    <div class="ck-context-card">
+      <div class="h">
+        <div class="t">Pours per shift</div>
+        <div class="s">196 total</div>
+      </div>
+      <svg viewBox="0 0 640 180" role="img" aria-label="Pours in report" style="width:100%; height:auto; display:block;">
+        <g stroke="var(--border-subtle)"><line x1="0" y1="40" x2="640" y2="40"/><line x1="0" y1="90" x2="640" y2="90"/><line x1="0" y1="140" x2="640" y2="140"/></g>
+        <rect x="20" y="120" width="70" height="30" rx="3" fill="var(--brand)" opacity="0.45"/>
+        <rect x="110" y="100" width="70" height="50" rx="3" fill="var(--brand)" opacity="0.45"/>
+        <rect x="200" y="75" width="70" height="75" rx="3" fill="var(--brand)" opacity="0.45"/>
+        <rect x="290" y="40" width="70" height="110" rx="3" fill="var(--brand)"/>
+        <rect x="380" y="60" width="70" height="90" rx="3" fill="var(--brand)" opacity="0.45"/>
+        <rect x="470" y="85" width="70" height="65" rx="3" fill="var(--brand)" opacity="0.45"/>
+        <rect x="560" y="110" width="70" height="40" rx="3" fill="var(--brand)" opacity="0.45"/>
+      </svg>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">Bars are forgiving — labels do most of the work, you just have to attach them.</p>
+    <ul class="ck-a11y">
+      <li><b>Role and label.</b> Root <code>&lt;svg&gt;</code> uses <code>role="img"</code> + <code>aria-labelledby</code> on inline <code>&lt;title&gt;</code> + <code>&lt;desc&gt;</code>.</li>
+      <li><b>Per-bar labels.</b> Wrap each <code>&lt;rect&gt;</code> in a <code>&lt;g aria-label="Thursday: 47 pours"&gt;</code> so the screen reader names the value.</li>
+      <li><b>Screen-reader summary.</b> A visually-hidden paragraph (<code>.ck-sr-only</code>) names the highest, the lowest, the total and any obvious pattern.</li>
+      <li><b>Highlight repeats the message.</b> The highlighted bar is full opacity, but the value above it is also bold and brand-coloured — colour is never the only signal.</li>
+      <li><b>Keyboard.</b> Each bar is <code>tabindex="0"</code>; Arrow keys walk the buckets, Home/End jump to the extremes.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related charts</h2>
+    <div class="ck-related">
+      <a href="bar-horizontal.html">Horizontal bars<span class="tag">Charts</span></a>
+      <a href="bar-grouped.html">Grouped bars<span class="tag">Charts</span></a>
+      <a href="bar-stacked.html">Stacked bars<span class="tag">Charts</span></a>
+      <a href="../auth-signin-2fa.html">Sign in with 2FA<span class="tag">Canonical</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="area-stacked.html"><div class="pager-label">← Previous</div><div class="pager-title">Stacked area</div></a>
+    <a href="bar-horizontal.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Horizontal bars</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#chart">The chart</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#snippet">The React snippet</a></li>
+    <li><a href="#customising">Customising</a></li>
+    <li><a href="#in-context">In context</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related charts</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Grouped bars · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../system.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../system-shell.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+  .ck-pull { margin: 16px 0; padding: 14px 18px; border-left: 3px solid var(--brand); background: var(--brand-soft); border-radius: 0 8px 8px 0; font: 500 15px/1.55 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-chart-stage { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 24px; margin: 14px 0; }
+  .ck-chart-stage svg { width: 100%; height: auto; display: block; }
+  .ck-chart-stage .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; font: 500 12px/1 var(--font-sans); color: var(--text-muted); }
+  .ck-chart-stage .legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+  .ck-roadmap-note { margin-top: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+  .ck-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .ck-context-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; margin-top: 12px; }
+  .ck-context-card .h { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+  .ck-context-card .h .t { font: 600 14px/1 var(--font-sans); color: var(--text-strong); }
+  .ck-context-card .h .s { font: 500 11px/1 var(--font-mono); color: var(--text-subtle); letter-spacing: 0.05em; text-transform: uppercase; }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../../index.html">Home</a><span class="sep">/</span>
+      <a href="../index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Charts</a><span class="sep">/</span>
+      <span>Grouped bars</span>
+    </div>
+    <h1>Compare two metrics per bucket with a grouped bar chart</h1>
+    <p class="lede">By the end of this recipe you'll have a paired-bar chart that puts target and actual side-by-side per bucket — the gap between them is the story.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="chart" data-icon-size="12"></span>Charts</span>
+      <span class="meta-pill">Intermediate</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~10 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">Two-to-three bars per category, side-by-side. The reader compares within a bucket (target vs actual) and across buckets (which week was worst).</p>
+    <p>Grouped bars are for the "comparison of comparisons" question — actual vs target by week, this year vs last year by quarter, branch A vs branch B by product. The trick is that the eye does two reads at once: same colour across buckets, different colours within one. Both reads have to be obvious.</p>
+    <p><b>Skip grouped bars</b> with more than three series per bucket — the cluster becomes visual noise. Above three, switch to small multiples (one little chart per series) or a line chart if the x-axis is ordered.</p>
+    <p class="ck-pull"><b>Default opinion:</b> two series is the sweet spot. Three works; four turns the chart into a barcode.</p>
+  </section>
+
+  <section id="chart">
+    <h2 class="ds-h2">The chart</h2>
+    <p class="ds-h2-sub">Weekly target vs. actual, five weeks. Week 4 is the only one we missed — the gap is doing the work.</p>
+    <div class="ck-chart-stage">
+      <svg viewBox="0 0 640 320" role="img" aria-labelledby="bg-title bg-desc">
+        <title id="bg-title">Target vs actual, five weeks</title>
+        <desc id="bg-desc">Five bucket-groups of two bars. Actual met or beat target in four weeks; missed in week four.</desc>
+
+        <g stroke="var(--border-subtle)">
+          <line x1="56" y1="60"  x2="616" y2="60"  />
+          <line x1="56" y1="120" x2="616" y2="120" />
+          <line x1="56" y1="180" x2="616" y2="180" />
+          <line x1="56" y1="240" x2="616" y2="240" />
+        </g>
+        <g font-family="var(--font-mono)" font-size="11" fill="var(--text-muted)" text-anchor="end">
+          <text x="48" y="64">$80k</text><text x="48" y="124">$60k</text><text x="48" y="184">$40k</text><text x="48" y="244">$20k</text>
+        </g>
+
+        <!-- Five groups. Each group: target (brand-300), actual (brand). Group width ~96, bars 40 each. -->
+        <!-- W1 t=50 a=55 -->
+        <g transform="translate(80,0)"><rect x="0"  y="90" width="40" height="150" rx="3" fill="var(--brand-300)" /><rect x="44" y="75" width="40" height="165" rx="3" fill="var(--brand)" /></g>
+        <!-- W2 t=55 a=62 -->
+        <g transform="translate(192,0)"><rect x="0"  y="75" width="40" height="165" rx="3" fill="var(--brand-300)" /><rect x="44" y="54" width="40" height="186" rx="3" fill="var(--brand)" /></g>
+        <!-- W3 t=60 a=64 -->
+        <g transform="translate(304,0)"><rect x="0"  y="60" width="40" height="180" rx="3" fill="var(--brand-300)" /><rect x="44" y="48" width="40" height="192" rx="3" fill="var(--brand)" /></g>
+        <!-- W4 t=65 a=48  MISS — actual red -->
+        <g transform="translate(416,0)"><rect x="0"  y="45" width="40" height="195" rx="3" fill="var(--brand-300)" /><rect x="44" y="96" width="40" height="144" rx="3" fill="var(--tone-danger)" /></g>
+        <!-- W5 t=70 a=78 -->
+        <g transform="translate(528,0)"><rect x="0"  y="30" width="40" height="210" rx="3" fill="var(--brand-300)" /><rect x="44" y="6"  width="40" height="234" rx="3" fill="var(--brand)" /></g>
+
+        <line x1="56" y1="240" x2="616" y2="240" stroke="var(--border)" />
+        <g font-family="var(--font-mono)" font-size="11" fill="var(--text-muted)" text-anchor="middle">
+          <text x="122" y="262">W1</text>
+          <text x="234" y="262">W2</text>
+          <text x="346" y="262">W3</text>
+          <text x="458" y="262" fill="var(--tone-danger)" font-weight="700">W4</text>
+          <text x="570" y="262">W5</text>
+        </g>
+      </svg>
+      <div class="legend">
+        <span><span class="dot" style="background: var(--brand-300);"></span>Target</span>
+        <span><span class="dot" style="background: var(--brand);"></span>Actual</span>
+        <span style="color: var(--tone-danger);"><span class="dot" style="background: var(--tone-danger);"></span>Below target</span>
+      </div>
+    </div>
+    <span class="ck-sr-only">Weeks 1, 2, 3 and 5 hit or exceeded target. Week 4 missed: target $65k, actual $48k — a $17k gap.</span>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">From <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart</a>
+      <a class="ck-piece" href="../../system/b-card.html"><span class="kind">Block</span>Card</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended exports used here:</b> <code>Chart.Bar</code> with <code>group</code>.</p>
+    <div class="ck-roadmap-note">
+      <b>Roadmap.</b> Grouped mode ships with <code>Chart.Bar</code> in <code>@huchu/react v0.2</code>.
+    </div>
+  </section>
+
+  <section id="snippet">
+    <h2 class="ds-h2">The React snippet</h2>
+    <p class="ds-h2-sub">Pass <code>series</code> instead of <code>yAccessor</code>. Conditional colour catches the miss.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart } from &#39;@huchu/react&#39;;
+
+const data = [
+  { week: &#39;W1&#39;, target: 50, actual: 55 },
+  { week: &#39;W2&#39;, target: 55, actual: 62 },
+  { week: &#39;W3&#39;, target: 60, actual: 64 },
+  { week: &#39;W4&#39;, target: 65, actual: 48 },
+  { week: &#39;W5&#39;, target: 70, actual: 78 },
+];
+
+export function TargetVsActual() {
+  return (
+    &lt;Chart.Bar
+      data={data}
+      xAccessor=&quot;week&quot;
+      group
+      series={[
+        { key: &#39;target&#39;, label: &#39;Target&#39;, color: &#39;brand-300&#39; },
+        {
+          key: &#39;actual&#39;, label: &#39;Actual&#39;,
+          color: (d) =&gt; d.actual &lt; d.target ? &#39;danger&#39; : &#39;brand&#39;,
+        },
+      ]}
+      height={280}
+      legend=&quot;top&quot;
+      yFormat={(v) =&gt; `$${v}k`}
+      aria-label=&quot;Target versus actual, last five weeks&quot;
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 18px;">
+          <svg viewBox="0 0 640 240" role="img" aria-label="Preview" style="width:100%; height:auto; display:block;">
+            <g transform="translate(40,0)"><rect x="0" y="120" width="40" height="100" rx="3" fill="var(--brand-300)"/><rect x="44" y="100" width="40" height="120" rx="3" fill="var(--brand)"/></g>
+            <g transform="translate(160,0)"><rect x="0" y="100" width="40" height="120" rx="3" fill="var(--brand-300)"/><rect x="44" y="70" width="40" height="150" rx="3" fill="var(--brand)"/></g>
+            <g transform="translate(280,0)"><rect x="0" y="80" width="40" height="140" rx="3" fill="var(--brand-300)"/><rect x="44" y="60" width="40" height="160" rx="3" fill="var(--brand)"/></g>
+            <g transform="translate(400,0)"><rect x="0" y="60" width="40" height="160" rx="3" fill="var(--brand-300)"/><rect x="44" y="130" width="40" height="90" rx="3" fill="var(--tone-danger)"/></g>
+            <g transform="translate(520,0)"><rect x="0" y="40" width="40" height="180" rx="3" fill="var(--brand-300)"/><rect x="44" y="20" width="40" height="200" rx="3" fill="var(--brand)"/></g>
+          </svg>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">TargetVsActual.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="customising">
+    <h2 class="ds-h2">Customising</h2>
+    <p class="ds-h2-sub">Three forks.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Overlay target as a tick</h4>
+        <p>When target is constant, replace the second bar with a thin tick line. The chart reads cleaner — same information, less ink.</p>
+<pre>series={[
+  { key: &#39;actual&#39;, color: &#39;brand&#39; },
+  { key: &#39;target&#39;, render: &#39;tick&#39; },
+]}</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Add a third series</h4>
+        <p>Three is the upper bound. Keep colours far apart on the wheel (brand, success, danger) so the eye can sort them in the cluster.</p>
+<pre>series={[
+  { key: &#39;target&#39;, color: &#39;brand-300&#39; },
+  { key: &#39;actual&#39;, color: &#39;brand&#39; },
+  { key: &#39;forecast&#39;, color: &#39;success&#39; },
+]}</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Annotate the miss</h4>
+        <p>Drop a tiny in-chart label on the bar that missed. Reads better than dropping it in a footnote.</p>
+<pre>&lt;Chart.Bar
+  data={data}
+  group
+  annotations={[
+    { week: &#39;W4&#39;, text: &#39;Holiday week&#39; },
+  ]}
+  height={280}
+/&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="in-context">
+    <h2 class="ds-h2">In context</h2>
+    <p class="ds-h2-sub">Inside a weekly-review card. The chart sits next to a takeaway block.</p>
+    <div class="ck-context-card">
+      <div class="h">
+        <div class="t">Week 4 missed target</div>
+        <div class="s">−$17k</div>
+      </div>
+      <svg viewBox="0 0 640 160" role="img" aria-label="Weekly review" style="width:100%; height:auto; display:block;">
+        <g transform="translate(40,0)"><rect x="0" y="80" width="32" height="60" rx="3" fill="var(--brand-300)"/><rect x="36" y="68" width="32" height="72" rx="3" fill="var(--brand)"/></g>
+        <g transform="translate(160,0)"><rect x="0" y="70" width="32" height="70" rx="3" fill="var(--brand-300)"/><rect x="36" y="50" width="32" height="90" rx="3" fill="var(--brand)"/></g>
+        <g transform="translate(280,0)"><rect x="0" y="58" width="32" height="82" rx="3" fill="var(--brand-300)"/><rect x="36" y="42" width="32" height="98" rx="3" fill="var(--brand)"/></g>
+        <g transform="translate(400,0)"><rect x="0" y="44" width="32" height="96" rx="3" fill="var(--brand-300)"/><rect x="36" y="86" width="32" height="54" rx="3" fill="var(--tone-danger)"/></g>
+        <g transform="translate(520,0)"><rect x="0" y="32" width="32" height="108" rx="3" fill="var(--brand-300)"/><rect x="36" y="20" width="32" height="120" rx="3" fill="var(--brand)"/></g>
+      </svg>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">Grouped means two reads — make both possible without colour.</p>
+    <ul class="ck-a11y">
+      <li><b>Role and label.</b> Root <code>&lt;svg&gt;</code> uses <code>role="img"</code> + <code>aria-labelledby</code> on inline <code>&lt;title&gt;</code> + <code>&lt;desc&gt;</code>.</li>
+      <li><b>Group + bar labels.</b> Wrap each cluster in <code>&lt;g aria-label="W4: target $65k, actual $48k, missed by $17k"&gt;</code>; wrap each bar individually too.</li>
+      <li><b>Miss is more than colour.</b> The danger bar carries a <code>data-state="miss"</code> + a small "miss" label so the message survives if the colour rule fails.</li>
+      <li><b>SR summary.</b> A <code>.ck-sr-only</code> paragraph lists hits and misses in order: "weeks 1, 2, 3, 5 met or beat target; week 4 missed by $17k".</li>
+      <li><b>Keyboard.</b> Arrow left/right walks between clusters; Arrow up/down walks between bars within one cluster.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related charts</h2>
+    <div class="ck-related">
+      <a href="bar-vertical.html">Vertical bars<span class="tag">Charts</span></a>
+      <a href="bar-stacked.html">Stacked bars<span class="tag">Charts</span></a>
+      <a href="line-multi.html">Multi-series line<span class="tag">Charts</span></a>
+      <a href="../auth-signin-2fa.html">Sign in with 2FA<span class="tag">Canonical</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="bar-horizontal.html"><div class="pager-label">← Previous</div><div class="pager-title">Horizontal bars</div></a>
+    <a href="bar-stacked.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Stacked bars</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#chart">The chart</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#snippet">The React snippet</a></li>
+    <li><a href="#customising">Customising</a></li>
+    <li><a href="#in-context">In context</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related charts</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

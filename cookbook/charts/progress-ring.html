@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Progress ring · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../system.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../system-shell.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+  .ck-pull { margin: 16px 0; padding: 14px 18px; border-left: 3px solid var(--brand); background: var(--brand-soft); border-radius: 0 8px 8px 0; font: 500 15px/1.55 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-chart-stage { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 24px; margin: 14px 0; }
+  .ck-chart-stage svg { width: 100%; height: auto; display: block; }
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+  .ck-roadmap-note { margin-top: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+  .ck-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .ck-context-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; margin-top: 12px; }
+  .ck-context-card .h { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+  .ck-context-card .h .t { font: 600 14px/1 var(--font-sans); color: var(--text-strong); }
+  .ck-context-card .h .s { font: 500 11px/1 var(--font-mono); color: var(--text-subtle); letter-spacing: 0.05em; text-transform: uppercase; }
+
+  /* Multi-ring grid for the chart section. */
+  .ring-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 6px; }
+  @media (max-width: 720px) { .ring-grid { grid-template-columns: 1fr; } }
+  .ring-tile { display: grid; place-items: center; gap: 6px; }
+  .ring-tile svg { width: 160px; height: 160px; display: block; }
+  .ring-tile .lab { font: 500 12px/1 var(--font-sans); color: var(--text-muted); }
+  .ring-tile .lab b { color: var(--text-strong); display: block; font: 600 13px/1.4 var(--font-sans); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../../index.html">Home</a><span class="sep">/</span>
+      <a href="../index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Charts</a><span class="sep">/</span>
+      <span>Progress ring</span>
+    </div>
+    <h1>Show one bounded value with a progress ring</h1>
+    <p class="lede">By the end of this recipe you'll have a circular progress indicator with a centre label — the right chart whenever you have one number that lives between 0 and a known target.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="chart" data-icon-size="12"></span>Charts</span>
+      <span class="meta-pill">Intermediate</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~8 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">One value vs. one target. The ring fills clockwise from 12 o'clock; the centre carries the headline number.</p>
+    <p>Progress rings are the KPI card's favourite companion. The ring gives an instant "how far through" read; the centre carries the precise value. Use them for completion against a target — bookings vs. capacity, payments vs. invoiced, runners against a step count, cash on hand vs. payroll-week need.</p>
+    <p><b>Skip the ring</b> when there's no real target (a raw count belongs in a stat card, no chart needed), or when you have more than one value to show — at that point a donut handles composition better, or a small set of rings side-by-side handle multiple goals.</p>
+    <p class="ck-pull"><b>Default opinion:</b> the ring tells you "yes/almost/no" at a glance. The centre tells you the exact number. Both jobs, one component, no confusion.</p>
+  </section>
+
+  <section id="chart">
+    <h2 class="ds-h2">The chart</h2>
+    <p class="ds-h2-sub">Three goals on one row. The colour reflects the status — brand for on-pace, success when met, danger when behind.</p>
+    <div class="ck-chart-stage">
+      <div class="ring-grid">
+        <div class="ring-tile">
+          <svg viewBox="0 0 160 160" role="img" aria-labelledby="r1-title r1-desc">
+            <title id="r1-title">Monthly revenue progress</title>
+            <desc id="r1-desc">$32,400 of $40,000 target — 81 percent.</desc>
+            <g transform="translate(80,80)">
+              <!-- Track. r=64, circumference = 2*pi*64 ≈ 402 -->
+              <circle r="64" fill="none" stroke="var(--surface-sunken)" stroke-width="14" />
+              <!-- Progress 81% = 326 -->
+              <circle r="64" fill="none" stroke="var(--brand)" stroke-width="14"
+                      stroke-linecap="round" stroke-dasharray="326 402" transform="rotate(-90)" />
+              <text text-anchor="middle" y="-2" font-family="var(--font-sans)" font-size="28" font-weight="700" fill="var(--text-strong)">81%</text>
+              <text text-anchor="middle" y="18" font-family="var(--font-sans)" font-size="11" fill="var(--text-muted)">of goal</text>
+            </g>
+          </svg>
+          <div class="lab"><b>Revenue</b>$32,400 of $40,000</div>
+        </div>
+
+        <div class="ring-tile">
+          <svg viewBox="0 0 160 160" role="img" aria-labelledby="r2-title r2-desc">
+            <title id="r2-title">Collection rate progress</title>
+            <desc id="r2-desc">$48,210 of $52,400 invoiced — 92 percent, target met.</desc>
+            <g transform="translate(80,80)">
+              <circle r="64" fill="none" stroke="var(--surface-sunken)" stroke-width="14" />
+              <!-- 92% = 370 — success colour because target is 90%+ -->
+              <circle r="64" fill="none" stroke="var(--tone-success)" stroke-width="14"
+                      stroke-linecap="round" stroke-dasharray="370 402" transform="rotate(-90)" />
+              <text text-anchor="middle" y="-2" font-family="var(--font-sans)" font-size="28" font-weight="700" fill="var(--text-strong)">92%</text>
+              <text text-anchor="middle" y="18" font-family="var(--font-sans)" font-size="11" fill="var(--tone-success)">on target</text>
+            </g>
+          </svg>
+          <div class="lab"><b>Collection</b>$48,210 of $52,400</div>
+        </div>
+
+        <div class="ring-tile">
+          <svg viewBox="0 0 160 160" role="img" aria-labelledby="r3-title r3-desc">
+            <title id="r3-title">Cash on hand vs. payroll</title>
+            <desc id="r3-desc">$14,200 of $24,000 payroll need — 59 percent, behind.</desc>
+            <g transform="translate(80,80)">
+              <circle r="64" fill="none" stroke="var(--surface-sunken)" stroke-width="14" />
+              <!-- 59% = 237 — danger -->
+              <circle r="64" fill="none" stroke="var(--tone-danger)" stroke-width="14"
+                      stroke-linecap="round" stroke-dasharray="237 402" transform="rotate(-90)" />
+              <text text-anchor="middle" y="-2" font-family="var(--font-sans)" font-size="28" font-weight="700" fill="var(--text-strong)">59%</text>
+              <text text-anchor="middle" y="18" font-family="var(--font-sans)" font-size="11" fill="var(--tone-danger)">at risk</text>
+            </g>
+          </svg>
+          <div class="lab"><b>Cash for payroll</b>$14,200 of $24,000</div>
+        </div>
+      </div>
+    </div>
+    <span class="ck-sr-only">Revenue at 81%, on pace. Collection rate 92%, target met. Cash for payroll only 59% — at risk.</span>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">From <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart</a>
+      <a class="ck-piece" href="../../system/p-progress.html"><span class="kind">Primitive</span>Progress</a>
+      <a class="ck-piece" href="../../system/b-stat-hero.html"><span class="kind">Block</span>Stat hero</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended exports used here:</b> <code>Chart.ProgressRing</code>.</p>
+    <div class="ck-roadmap-note">
+      <b>Roadmap.</b> <code>Chart.ProgressRing</code> ships in <code>@huchu/react v0.2</code>. Today, <code>Progress</code> already renders a linear bar with the same prop shape.
+    </div>
+  </section>
+
+  <section id="snippet">
+    <h2 class="ds-h2">The React snippet</h2>
+    <p class="ds-h2-sub">One value, one max, one optional status function. The component picks its own colour.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart } from &#39;@huchu/react&#39;;
+
+export function CollectionRing() {
+  const value = 48210;
+  const max   = 52400;
+
+  return (
+    &lt;Chart.ProgressRing
+      value={value}
+      max={max}
+      size={160}
+      thickness={14}
+      tone={(pct) =&gt;
+        pct &gt;= 0.9 ? &#39;success&#39; :
+        pct &lt; 0.6  ? &#39;danger&#39;  : &#39;brand&#39;}
+      label={`${Math.round((value / max) * 100)}%`}
+      sub=&quot;collection rate&quot;
+      aria-label={`Collection rate: ${value} of ${max}`}
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 18px; display:grid; place-items:center;">
+          <svg viewBox="0 0 160 160" role="img" aria-label="Preview" style="width:160px; height:160px; display:block;">
+            <g transform="translate(80,80)">
+              <circle r="64" fill="none" stroke="var(--surface-sunken)" stroke-width="14"/>
+              <circle r="64" fill="none" stroke="var(--tone-success)" stroke-width="14" stroke-linecap="round" stroke-dasharray="370 402" transform="rotate(-90)"/>
+              <text text-anchor="middle" y="-2" font-family="var(--font-sans)" font-size="28" font-weight="700" fill="var(--text-strong)">92%</text>
+              <text text-anchor="middle" y="18" font-family="var(--font-sans)" font-size="11" fill="var(--text-muted)">collected</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">CollectionRing.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="customising">
+    <h2 class="ds-h2">Customising</h2>
+    <p class="ds-h2-sub">Three forks.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Half-ring gauge</h4>
+        <p>Render only the top semicircle for an exec-friendly gauge look. Same data; less ink.</p>
+<pre>&lt;Chart.ProgressRing
+  value={value}
+  max={max}
+  variant=&quot;gauge&quot;     {/* 0–180° arc */}
+  size={200}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Stacked rings</h4>
+        <p>Layer 2–3 metrics in concentric rings — Apple-watch style. Each ring keeps its own tone.</p>
+<pre>&lt;Chart.ProgressRing
+  rings={[
+    { value: 32, max: 40, tone: &#39;brand&#39; },
+    { value: 48, max: 52, tone: &#39;success&#39; },
+    { value: 14, max: 24, tone: &#39;danger&#39; },
+  ]}
+  size={180}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Indeterminate</h4>
+        <p>When the value is unknown but the action is in flight, switch to a spinning indeterminate ring.</p>
+<pre>&lt;Chart.ProgressRing
+  indeterminate
+  size={48}
+  thickness={4}
+  aria-label=&quot;Syncing&quot;
+/&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="in-context">
+    <h2 class="ds-h2">In context</h2>
+    <p class="ds-h2-sub">A KPI hero card. The ring sits to the left; the supporting numbers explain it.</p>
+    <div class="ck-context-card">
+      <div class="h">
+        <div class="t">Collection rate · May</div>
+        <div class="s">target 90%</div>
+      </div>
+      <div style="display: grid; grid-template-columns: 160px 1fr; gap: 24px; align-items: center;">
+        <svg viewBox="0 0 160 160" role="img" aria-label="Collection ring" style="width:160px; height:160px; display:block;">
+          <g transform="translate(80,80)">
+            <circle r="64" fill="none" stroke="var(--surface-sunken)" stroke-width="14"/>
+            <circle r="64" fill="none" stroke="var(--tone-success)" stroke-width="14" stroke-linecap="round" stroke-dasharray="370 402" transform="rotate(-90)"/>
+            <text text-anchor="middle" y="-2" font-family="var(--font-sans)" font-size="32" font-weight="700" fill="var(--text-strong)">92%</text>
+            <text text-anchor="middle" y="18" font-family="var(--font-sans)" font-size="11" fill="var(--tone-success)">on target</text>
+          </g>
+        </svg>
+        <div>
+          <div style="font: 700 26px/1 var(--font-sans); color: var(--text-strong); margin-bottom: 4px;">$48,210</div>
+          <div style="font: 500 13px/1.4 var(--font-sans); color: var(--text-muted); margin-bottom: 12px;">of $52,400 invoiced</div>
+          <div style="font: 500 12px/1.5 var(--font-sans); color: var(--tone-success); display:flex; gap:6px; align-items:center;">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background: var(--tone-success);"></span>
+            +4 pts vs. last month
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">A progress ring is a <code>progressbar</code> in disguise — give the assistive layer what it expects.</p>
+    <ul class="ck-a11y">
+      <li><b>Real progressbar role.</b> Root <code>&lt;svg&gt;</code> carries <code>role="progressbar"</code> + <code>aria-valuenow</code> + <code>aria-valuemin</code> + <code>aria-valuemax</code> + <code>aria-valuetext</code> ("48,210 of 52,400 invoiced").</li>
+      <li><b>Centre is decorative.</b> The big number in the middle is <code>aria-hidden="true"</code> — the same value is already on the root via <code>aria-valuetext</code>, so it isn't read twice.</li>
+      <li><b>Tone is more than colour.</b> The status word ("on target", "at risk") is rendered as text below the percentage, so colour-blind readers see the message.</li>
+      <li><b>Keyboard.</b> Rings are not focusable by default — they don't have an action. Wrap one in a link or button if the ring is clickable.</li>
+      <li><b>Reduced motion.</b> <code>prefers-reduced-motion: reduce</code> disables the fill animation on mount.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related charts</h2>
+    <div class="ck-related">
+      <a href="donut.html">Donut<span class="tag">Charts</span></a>
+      <a href="pie.html">Pie<span class="tag">Charts</span></a>
+      <a href="bar-vertical.html">Vertical bars<span class="tag">Charts</span></a>
+      <a href="../auth-signin-2fa.html">Sign in with 2FA<span class="tag">Canonical</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="pie.html"><div class="pager-label">← Previous</div><div class="pager-title">Pie</div></a>
+    <a href="index.html" class="next"><div class="pager-label">Back to →</div><div class="pager-title">Charts hub</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#chart">The chart</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#snippet">The React snippet</a></li>
+    <li><a href="#customising">Customising</a></li>
+    <li><a href="#in-context">In context</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related charts</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

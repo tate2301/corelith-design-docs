@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Donut chart · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../system.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../system-shell.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+  .ck-pull { margin: 16px 0; padding: 14px 18px; border-left: 3px solid var(--brand); background: var(--brand-soft); border-radius: 0 8px 8px 0; font: 500 15px/1.55 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-chart-stage { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 24px; margin: 14px 0; }
+  .ck-chart-stage svg { width: 100%; height: auto; display: block; }
+  .ck-chart-stage .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; font: 500 12px/1 var(--font-sans); color: var(--text-muted); }
+  .ck-chart-stage .legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+  .ck-roadmap-note { margin-top: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+  .ck-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .ck-context-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; margin-top: 12px; }
+  .ck-context-card .h { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+  .ck-context-card .h .t { font: 600 14px/1 var(--font-sans); color: var(--text-strong); }
+  .ck-context-card .h .s { font: 500 11px/1 var(--font-mono); color: var(--text-subtle); letter-spacing: 0.05em; text-transform: uppercase; }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../../index.html">Home</a><span class="sep">/</span>
+      <a href="../index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Charts</a><span class="sep">/</span>
+      <span>Donut</span>
+    </div>
+    <h1>Pair a composition with a focal stat — donut chart</h1>
+    <p class="lede">By the end of this recipe you'll have a donut chart with a centre-label slot — the ring shows the mix, the centre shows the headline number.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="chart" data-icon-size="12"></span>Charts</span>
+      <span class="meta-pill">Intermediate</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~10 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A pie chart with the centre punched out. The hole is real estate — that's where the headline number lives.</p>
+    <p>Donuts work where pies don't quite, because the centre is a built-in slot for the focal stat. The reader gets two things at once: a composition read (the slices) and an aggregate read (the number in the hole). Use them when the headline number and the mix are equally important — collection rate by source, conversion rate by channel, payments by method.</p>
+    <p><b>Skip donuts</b> for more than 4–5 slices (humans cannot read fine angles), or when you need precise comparison between similar-sized slices (bars beat any radial chart for that). Two slices = "use a progress ring instead, you're not really comparing two things".</p>
+    <p class="ck-pull"><b>Default opinion:</b> the centre is the point. If you don't have a focal number to put there, you don't have a donut — you have a pie with a hole.</p>
+  </section>
+
+  <section id="chart">
+    <h2 class="ds-h2">The chart</h2>
+    <p class="ds-h2-sub">Payments collected by method this month. The centre carries the collection rate — the slices say where the money came from.</p>
+    <div class="ck-chart-stage">
+      <svg viewBox="0 0 640 320" role="img" aria-labelledby="dn-title dn-desc">
+        <title id="dn-title">Payments by method, May</title>
+        <desc id="dn-desc">Donut: EcoCash 48%, card 28%, cash 18%, bank transfer 6%. Centre shows 92% collection rate.</desc>
+
+        <g transform="translate(220,160)">
+          <!-- Background ring -->
+          <circle r="92" fill="none" stroke="var(--surface-sunken)" stroke-width="36" />
+          <!-- Slices via stroke-dasharray. Circumference = 2*pi*92 ≈ 578. -->
+          <!-- EcoCash 48% = 277 -->
+          <circle r="92" fill="none" stroke="var(--brand)" stroke-width="36"
+                  stroke-dasharray="277 578" transform="rotate(-90)" />
+          <!-- Card 28% = 162, offset -277 -->
+          <circle r="92" fill="none" stroke="var(--brand-300)" stroke-width="36"
+                  stroke-dasharray="162 578" stroke-dashoffset="-277" transform="rotate(-90)" />
+          <!-- Cash 18% = 104, offset -439 -->
+          <circle r="92" fill="none" stroke="var(--tone-success)" stroke-width="36"
+                  stroke-dasharray="104 578" stroke-dashoffset="-439" transform="rotate(-90)" />
+          <!-- Bank 6% = 35, offset -543 -->
+          <circle r="92" fill="none" stroke="var(--text-muted)" stroke-width="36"
+                  stroke-dasharray="35 578" stroke-dashoffset="-543" transform="rotate(-90)" />
+
+          <!-- Centre text -->
+          <text text-anchor="middle" y="-6" font-family="var(--font-sans)" font-size="40" font-weight="700" fill="var(--text-strong)">92%</text>
+          <text text-anchor="middle" y="20" font-family="var(--font-sans)" font-size="13" fill="var(--text-muted)">collection rate</text>
+          <text text-anchor="middle" y="40" font-family="var(--font-mono)" font-size="11" fill="var(--text-subtle)">$48,210 / $52,400</text>
+        </g>
+
+        <!-- Right-side legend with values -->
+        <g transform="translate(380,80)" font-family="var(--font-sans)" font-size="13" fill="var(--text-strong)">
+          <g><rect x="0" y="0" width="14" height="14" rx="2" fill="var(--brand)" /><text x="22" y="11">EcoCash</text><text x="220" y="11" text-anchor="end" font-family="var(--font-mono)" fill="var(--text-muted)">48% · $23,100</text></g>
+          <g transform="translate(0,36)"><rect x="0" y="0" width="14" height="14" rx="2" fill="var(--brand-300)" /><text x="22" y="11">Card</text><text x="220" y="11" text-anchor="end" font-family="var(--font-mono)" fill="var(--text-muted)">28% · $13,500</text></g>
+          <g transform="translate(0,72)"><rect x="0" y="0" width="14" height="14" rx="2" fill="var(--tone-success)" /><text x="22" y="11">Cash</text><text x="220" y="11" text-anchor="end" font-family="var(--font-mono)" fill="var(--text-muted)">18% · $8,680</text></g>
+          <g transform="translate(0,108)"><rect x="0" y="0" width="14" height="14" rx="2" fill="var(--text-muted)" /><text x="22" y="11">Bank transfer</text><text x="220" y="11" text-anchor="end" font-family="var(--font-mono)" fill="var(--text-muted)">6% · $2,930</text></g>
+        </g>
+      </svg>
+    </div>
+    <span class="ck-sr-only">$48,210 collected of $52,400 due — 92%. EcoCash drives nearly half; card and cash together another 46%; bank transfer the small tail.</span>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">From <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart</a>
+      <a class="ck-piece" href="../../system/b-stat-hero.html"><span class="kind">Block</span>Stat hero</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended exports used here:</b> <code>Chart.Donut</code>, <code>Chart.Legend</code>.</p>
+    <div class="ck-roadmap-note">
+      <b>Roadmap.</b> <code>Chart.Donut</code> ships in <code>@huchu/react v0.2</code>.
+    </div>
+  </section>
+
+  <section id="snippet">
+    <h2 class="ds-h2">The React snippet</h2>
+    <p class="ds-h2-sub">Pass slices and a centre slot. The centre is just a React node so you can put anything in it.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart } from &#39;@huchu/react&#39;;
+
+const slices = [
+  { label: &#39;EcoCash&#39;,       value: 23100, color: &#39;brand&#39; },
+  { label: &#39;Card&#39;,          value: 13500, color: &#39;brand-300&#39; },
+  { label: &#39;Cash&#39;,          value:  8680, color: &#39;success&#39; },
+  { label: &#39;Bank transfer&#39;, value:  2930, color: &#39;muted&#39; },
+];
+
+const collected = slices.reduce((s, x) =&gt; s + x.value, 0);
+const due = 52400;
+
+export function PaymentsByMethod() {
+  return (
+    &lt;Chart.Donut
+      data={slices}
+      valueAccessor=&quot;value&quot;
+      colorAccessor=&quot;color&quot;
+      height={300}
+      legend=&quot;right&quot;
+      centre={
+        &lt;&gt;
+          &lt;strong&gt;{Math.round((collected / due) * 100)}%&lt;/strong&gt;
+          &lt;span&gt;collection rate&lt;/span&gt;
+        &lt;/&gt;
+      }
+      aria-label=&quot;Payments collected by method, May&quot;
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 18px; display: grid; place-items: center;">
+          <svg viewBox="0 0 280 220" role="img" aria-label="Preview" style="width:280px; max-width:100%; height:auto; display:block;">
+            <g transform="translate(140,110)">
+              <circle r="70" fill="none" stroke="var(--surface-sunken)" stroke-width="26"/>
+              <circle r="70" fill="none" stroke="var(--brand)" stroke-width="26" stroke-dasharray="211 440" transform="rotate(-90)"/>
+              <circle r="70" fill="none" stroke="var(--brand-300)" stroke-width="26" stroke-dasharray="123 440" stroke-dashoffset="-211" transform="rotate(-90)"/>
+              <circle r="70" fill="none" stroke="var(--tone-success)" stroke-width="26" stroke-dasharray="79 440" stroke-dashoffset="-334" transform="rotate(-90)"/>
+              <text text-anchor="middle" y="-4" font-family="var(--font-sans)" font-size="28" font-weight="700" fill="var(--text-strong)">92%</text>
+              <text text-anchor="middle" y="14" font-family="var(--font-sans)" font-size="10" fill="var(--text-muted)">collected</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">PaymentsByMethod.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="customising">
+    <h2 class="ds-h2">Customising</h2>
+    <p class="ds-h2-sub">Three forks.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Thicker ring</h4>
+        <p>For dashboards where the donut is the hero, push the stroke width up so the slices read at a glance.</p>
+<pre>&lt;Chart.Donut
+  data={slices}
+  thickness={48}
+  height={320}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Highlight one slice</h4>
+        <p>Pop one slice outward as an emphasis when the data deserves it. Reserve for one slice at a time.</p>
+<pre>&lt;Chart.Donut
+  data={slices}
+  emphasis=&quot;EcoCash&quot;   {/* slice label */}
+  height={300}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Gauge mode</h4>
+        <p>Render as a half-donut (0–180°) when the value is a single ratio against a target.</p>
+<pre>&lt;Chart.Donut
+  data={[{ value: 0.92 }]}
+  variant=&quot;gauge&quot;
+  centre={&lt;&gt;92%&lt;/&gt;}
+  height={220}
+/&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="in-context">
+    <h2 class="ds-h2">In context</h2>
+    <p class="ds-h2-sub">Inside a stat-hero card. The big number anchors the page; the donut is the supporting detail.</p>
+    <div class="ck-context-card">
+      <div class="h">
+        <div class="t">Collection rate · May</div>
+        <div class="s">$48,210 of $52,400</div>
+      </div>
+      <div style="display: grid; grid-template-columns: 200px 1fr; gap: 24px; align-items: center;">
+        <svg viewBox="0 0 200 200" role="img" aria-label="Hero donut" style="width:200px; height:200px; display:block;">
+          <g transform="translate(100,100)">
+            <circle r="76" fill="none" stroke="var(--surface-sunken)" stroke-width="22"/>
+            <circle r="76" fill="none" stroke="var(--brand)" stroke-width="22" stroke-dasharray="229 478" transform="rotate(-90)"/>
+            <circle r="76" fill="none" stroke="var(--brand-300)" stroke-width="22" stroke-dasharray="134 478" stroke-dashoffset="-229" transform="rotate(-90)"/>
+            <circle r="76" fill="none" stroke="var(--tone-success)" stroke-width="22" stroke-dasharray="86 478" stroke-dashoffset="-363" transform="rotate(-90)"/>
+            <text text-anchor="middle" y="-4" font-family="var(--font-sans)" font-size="34" font-weight="700" fill="var(--text-strong)">92%</text>
+            <text text-anchor="middle" y="18" font-family="var(--font-sans)" font-size="11" fill="var(--text-muted)">collected</text>
+          </g>
+        </svg>
+        <div style="font: var(--type-body-sm); color: var(--text-muted); line-height: 1.6;">
+          EcoCash continues to dominate at <b style="color: var(--text-strong);">48%</b> of receipts, followed by card at <b style="color: var(--text-strong);">28%</b>. Cash is in slow decline; bank transfer is the small tail.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">Radial charts are the hardest for assistive tech — the legend earns its keep here.</p>
+    <ul class="ck-a11y">
+      <li><b>Role and label.</b> Root <code>&lt;svg&gt;</code> uses <code>role="img"</code> + <code>aria-labelledby</code> on <code>&lt;title&gt;</code> + <code>&lt;desc&gt;</code>.</li>
+      <li><b>Centre is a label, not decoration.</b> The big number inside the donut has <code>aria-hidden="true"</code> and the same value is included in the <code>&lt;desc&gt;</code> — screen readers hear it once.</li>
+      <li><b>Per-slice labels.</b> Each slice gets a <code>&lt;g aria-label="EcoCash: 48 percent, $23,100"&gt;</code> so the percentages and currency are announced.</li>
+      <li><b>SR summary.</b> A <code>.ck-sr-only</code> paragraph reads the ranking and the collection rate plain.</li>
+      <li><b>Keyboard.</b> Each slice is <code>tabindex="0"</code>; Arrow keys walk clockwise around the ring.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related charts</h2>
+    <div class="ck-related">
+      <a href="pie.html">Pie<span class="tag">Charts</span></a>
+      <a href="progress-ring.html">Progress ring<span class="tag">Charts</span></a>
+      <a href="bar-stacked.html">Stacked bars<span class="tag">Charts</span></a>
+      <a href="../auth-signin-2fa.html">Sign in with 2FA<span class="tag">Canonical</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="bar-stacked.html"><div class="pager-label">← Previous</div><div class="pager-title">Stacked bars</div></a>
+    <a href="pie.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Pie</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#chart">The chart</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#snippet">The React snippet</a></li>
+    <li><a href="#customising">Customising</a></li>
+    <li><a href="#in-context">In context</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related charts</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

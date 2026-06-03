@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Stacked bars · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../system.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../system-shell.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+  .ck-pull { margin: 16px 0; padding: 14px 18px; border-left: 3px solid var(--brand); background: var(--brand-soft); border-radius: 0 8px 8px 0; font: 500 15px/1.55 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-chart-stage { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 24px; margin: 14px 0; }
+  .ck-chart-stage svg { width: 100%; height: auto; display: block; }
+  .ck-chart-stage .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; font: 500 12px/1 var(--font-sans); color: var(--text-muted); }
+  .ck-chart-stage .legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+  .ck-roadmap-note { margin-top: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+  .ck-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .ck-context-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; margin-top: 12px; }
+  .ck-context-card .h { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+  .ck-context-card .h .t { font: 600 14px/1 var(--font-sans); color: var(--text-strong); }
+  .ck-context-card .h .s { font: 500 11px/1 var(--font-mono); color: var(--text-subtle); letter-spacing: 0.05em; text-transform: uppercase; }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../../index.html">Home</a><span class="sep">/</span>
+      <a href="../index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Charts</a><span class="sep">/</span>
+      <span>Stacked bars</span>
+    </div>
+    <h1>Show parts-of-whole per bucket with a stacked bar chart</h1>
+    <p class="lede">By the end of this recipe you'll have stacked vertical bars — one bucket per category, the bar height is the total, the segments are the components.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="chart" data-icon-size="12"></span>Charts</span>
+      <span class="meta-pill">Intermediate</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~10 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">One bar per bucket. Each bar is split into segments that sum to the total. The bottom segment is the only one with a true baseline.</p>
+    <p>Stacked bars are the discrete cousin of stacked areas. Use them for "what mix produced this total in each period?" — revenue by channel per month, hours by task per project, inventory by status per branch. The shared baseline lets the reader compare totals; the segments tell the mix story underneath.</p>
+    <p><b>Skip stacked bars</b> if you actually want to compare the middle segments — they don't share a baseline so the eye can't read them precisely. Use grouped bars for that, or a multi-line if the x-axis is ordered.</p>
+    <p class="ck-pull"><b>Default opinion:</b> only the bottom segment is readable for value. Put your most-important segment at the bottom of the stack.</p>
+  </section>
+
+  <section id="chart">
+    <h2 class="ds-h2">The chart</h2>
+    <p class="ds-h2-sub">Monthly revenue by channel — POS, online, wholesale — for the last six months.</p>
+    <div class="ck-chart-stage">
+      <svg viewBox="0 0 640 320" role="img" aria-labelledby="bs-title bs-desc">
+        <title id="bs-title">Revenue by channel, last six months</title>
+        <desc id="bs-desc">Six stacked bars. POS holds the steady base; online grows month-on-month; wholesale appears in month four.</desc>
+
+        <g stroke="var(--border-subtle)">
+          <line x1="56" y1="60"  x2="616" y2="60"  />
+          <line x1="56" y1="120" x2="616" y2="120" />
+          <line x1="56" y1="180" x2="616" y2="180" />
+          <line x1="56" y1="240" x2="616" y2="240" />
+        </g>
+        <g font-family="var(--font-mono)" font-size="11" fill="var(--text-muted)" text-anchor="end">
+          <text x="48" y="64">$120k</text><text x="48" y="124">$90k</text><text x="48" y="184">$60k</text><text x="48" y="244">$30k</text>
+        </g>
+
+        <!-- 6 bars, ~64w each, 28w stacks -->
+        <!-- M1: pos 30 onl 8 wh 0 -> tot 38 -->
+        <g transform="translate(80,0)"><rect x="0" y="156" width="56" height="84" rx="3" fill="var(--brand)" /><rect x="0" y="132" width="56" height="24" fill="var(--brand-300)" /></g>
+        <!-- M2: 32+12 -->
+        <g transform="translate(168,0)"><rect x="0" y="150" width="56" height="90" rx="3" fill="var(--brand)" /><rect x="0" y="116" width="56" height="34" fill="var(--brand-300)" /></g>
+        <!-- M3: 34+18 -->
+        <g transform="translate(256,0)"><rect x="0" y="144" width="56" height="96" rx="3" fill="var(--brand)" /><rect x="0" y="96" width="56" height="48" fill="var(--brand-300)" /></g>
+        <!-- M4: 36+24+8 -->
+        <g transform="translate(344,0)"><rect x="0" y="138" width="56" height="102" rx="3" fill="var(--brand)" /><rect x="0" y="78" width="56" height="60" fill="var(--brand-300)" /><rect x="0" y="60" width="56" height="18" fill="var(--brand-100)" /></g>
+        <!-- M5: 38+30+18 -->
+        <g transform="translate(432,0)"><rect x="0" y="132" width="56" height="108" rx="3" fill="var(--brand)" /><rect x="0" y="60" width="56" height="72" fill="var(--brand-300)" /><rect x="0" y="32" width="56" height="28" fill="var(--brand-100)" /></g>
+        <!-- M6: 40+38+28 -->
+        <g transform="translate(520,0)"><rect x="0" y="124" width="56" height="116" rx="3" fill="var(--brand)" /><rect x="0" y="36" width="56" height="88" fill="var(--brand-300)" /><rect x="0" y="6" width="56" height="30" fill="var(--brand-100)" /></g>
+
+        <line x1="56" y1="240" x2="616" y2="240" stroke="var(--border)" />
+        <g font-family="var(--font-mono)" font-size="11" fill="var(--text-muted)" text-anchor="middle">
+          <text x="108" y="262">Jan</text>
+          <text x="196" y="262">Feb</text>
+          <text x="284" y="262">Mar</text>
+          <text x="372" y="262">Apr</text>
+          <text x="460" y="262">May</text>
+          <text x="548" y="262" fill="var(--text-strong)" font-weight="600">Jun</text>
+        </g>
+      </svg>
+      <div class="legend">
+        <span><span class="dot" style="background: var(--brand);"></span>POS</span>
+        <span><span class="dot" style="background: var(--brand-300);"></span>Online</span>
+        <span><span class="dot" style="background: var(--brand-100);"></span>Wholesale</span>
+      </div>
+    </div>
+    <span class="ck-sr-only">Totals: Jan $38k, Feb $44k, Mar $52k, Apr $68k, May $86k, Jun $106k. POS grows steadily; online overtakes POS by Jun; wholesale starts Apr and ramps.</span>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">From <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart</a>
+      <a class="ck-piece" href="../../system/b-card.html"><span class="kind">Block</span>Card</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended exports used here:</b> <code>Chart.Bar</code> with <code>stack</code>.</p>
+    <div class="ck-roadmap-note">
+      <b>Roadmap.</b> Stacked mode ships with <code>Chart.Bar</code> in <code>@huchu/react v0.2</code>.
+    </div>
+  </section>
+
+  <section id="snippet">
+    <h2 class="ds-h2">The React snippet</h2>
+    <p class="ds-h2-sub">Same shape as grouped bars; flip <code>group</code> to <code>stack</code>.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart } from &#39;@huchu/react&#39;;
+
+const data = [
+  { month: &#39;Jan&#39;, pos: 30, online:  8, wholesale:  0 },
+  { month: &#39;Feb&#39;, pos: 32, online: 12, wholesale:  0 },
+  { month: &#39;Mar&#39;, pos: 34, online: 18, wholesale:  0 },
+  { month: &#39;Apr&#39;, pos: 36, online: 24, wholesale:  8 },
+  { month: &#39;May&#39;, pos: 38, online: 30, wholesale: 18 },
+  { month: &#39;Jun&#39;, pos: 40, online: 38, wholesale: 28 },
+];
+
+export function RevenueByChannel() {
+  return (
+    &lt;Chart.Bar
+      data={data}
+      xAccessor=&quot;month&quot;
+      stack
+      series={[
+        { key: &#39;pos&#39;,       label: &#39;POS&#39;,       color: &#39;brand&#39; },
+        { key: &#39;online&#39;,    label: &#39;Online&#39;,    color: &#39;brand-300&#39; },
+        { key: &#39;wholesale&#39;, label: &#39;Wholesale&#39;, color: &#39;brand-100&#39; },
+      ]}
+      height={280}
+      legend=&quot;top&quot;
+      yFormat={(v) =&gt; `$${v}k`}
+      aria-label=&quot;Revenue by channel, last six months&quot;
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 18px;">
+          <svg viewBox="0 0 640 240" role="img" aria-label="Preview" style="width:100%; height:auto; display:block;">
+            <g transform="translate(40,0)"><rect x="0" y="140" width="60" height="80" fill="var(--brand)"/><rect x="0" y="120" width="60" height="20" fill="var(--brand-300)"/></g>
+            <g transform="translate(140,0)"><rect x="0" y="130" width="60" height="90" fill="var(--brand)"/><rect x="0" y="100" width="60" height="30" fill="var(--brand-300)"/></g>
+            <g transform="translate(240,0)"><rect x="0" y="120" width="60" height="100" fill="var(--brand)"/><rect x="0" y="80" width="60" height="40" fill="var(--brand-300)"/></g>
+            <g transform="translate(340,0)"><rect x="0" y="110" width="60" height="110" fill="var(--brand)"/><rect x="0" y="60" width="60" height="50" fill="var(--brand-300)"/><rect x="0" y="46" width="60" height="14" fill="var(--brand-100)"/></g>
+            <g transform="translate(440,0)"><rect x="0" y="100" width="60" height="120" fill="var(--brand)"/><rect x="0" y="40" width="60" height="60" fill="var(--brand-300)"/><rect x="0" y="20" width="60" height="20" fill="var(--brand-100)"/></g>
+            <g transform="translate(540,0)"><rect x="0" y="90" width="60" height="130" fill="var(--brand)"/><rect x="0" y="20" width="60" height="70" fill="var(--brand-300)"/><rect x="0" y="0" width="60" height="20" fill="var(--brand-100)"/></g>
+          </svg>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">RevenueByChannel.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="customising">
+    <h2 class="ds-h2">Customising</h2>
+    <p class="ds-h2-sub">Three forks.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Percent-stacked</h4>
+        <p>If the question is "what's the share?" instead of "what's the total?", normalise to 100% per bar.</p>
+<pre>&lt;Chart.Bar
+  data={data}
+  stack=&quot;percent&quot;
+  series={mySeries}
+  yFormat={(v) =&gt; `${Math.round(v * 100)}%`}
+  height={280}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Show segment labels</h4>
+        <p>Print the value inside each segment when there's room. Auto-hide on the segments smaller than ~28px tall.</p>
+<pre>&lt;Chart.Bar
+  data={data}
+  stack
+  segmentLabels=&quot;auto&quot;
+  height={300}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Diverging stack</h4>
+        <p>Put positive segments above the axis and negative ones below — perfect for "added vs removed inventory".</p>
+<pre>&lt;Chart.Bar
+  data={data}
+  stack=&quot;diverging&quot;
+  series={[
+    { key: &#39;added&#39;,   color: &#39;success&#39; },
+    { key: &#39;removed&#39;, color: &#39;danger&#39;, sign: -1 },
+  ]}
+/&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="in-context">
+    <h2 class="ds-h2">In context</h2>
+    <p class="ds-h2-sub">Inside a monthly review card.</p>
+    <div class="ck-context-card">
+      <div class="h">
+        <div class="t">Revenue mix · last 6 months</div>
+        <div class="s">$394k total</div>
+      </div>
+      <svg viewBox="0 0 640 160" role="img" aria-label="Monthly review" style="width:100%; height:auto; display:block;">
+        <g transform="translate(40,0)"><rect x="0" y="100" width="48" height="50" fill="var(--brand)"/><rect x="0" y="85" width="48" height="15" fill="var(--brand-300)"/></g>
+        <g transform="translate(120,0)"><rect x="0" y="92" width="48" height="58" fill="var(--brand)"/><rect x="0" y="70" width="48" height="22" fill="var(--brand-300)"/></g>
+        <g transform="translate(200,0)"><rect x="0" y="84" width="48" height="66" fill="var(--brand)"/><rect x="0" y="56" width="48" height="28" fill="var(--brand-300)"/></g>
+        <g transform="translate(280,0)"><rect x="0" y="76" width="48" height="74" fill="var(--brand)"/><rect x="0" y="40" width="48" height="36" fill="var(--brand-300)"/><rect x="0" y="30" width="48" height="10" fill="var(--brand-100)"/></g>
+        <g transform="translate(360,0)"><rect x="0" y="68" width="48" height="82" fill="var(--brand)"/><rect x="0" y="28" width="48" height="40" fill="var(--brand-300)"/><rect x="0" y="14" width="48" height="14" fill="var(--brand-100)"/></g>
+        <g transform="translate(440,0)"><rect x="0" y="60" width="48" height="90" fill="var(--brand)"/><rect x="0" y="14" width="48" height="46" fill="var(--brand-300)"/><rect x="0" y="0"  width="48" height="14" fill="var(--brand-100)"/></g>
+      </svg>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">Three colours sharing one bar is the rough patch — labels and order do the lifting.</p>
+    <ul class="ck-a11y">
+      <li><b>Role and label.</b> Root <code>&lt;svg&gt;</code> uses <code>role="img"</code> + <code>aria-labelledby</code>.</li>
+      <li><b>Segment-level labels.</b> Each <code>&lt;rect&gt;</code> sits in a <code>&lt;g aria-label="Jun · POS: $40k"&gt;</code>; the screen reader can walk the chart segment by segment.</li>
+      <li><b>SR summary.</b> A <code>.ck-sr-only</code> paragraph names the total trajectory and which segment dominates.</li>
+      <li><b>Order matters.</b> The legend lists segments bottom-to-top so it matches the chart's visual order — bottom in the stack is first in the legend.</li>
+      <li><b>Keyboard.</b> Arrow left/right walks the buckets; Arrow up/down walks the stack.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related charts</h2>
+    <div class="ck-related">
+      <a href="bar-grouped.html">Grouped bars<span class="tag">Charts</span></a>
+      <a href="area-stacked.html">Stacked area<span class="tag">Charts</span></a>
+      <a href="bar-vertical.html">Vertical bars<span class="tag">Charts</span></a>
+      <a href="../auth-signin-2fa.html">Sign in with 2FA<span class="tag">Canonical</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="bar-grouped.html"><div class="pager-label">← Previous</div><div class="pager-title">Grouped bars</div></a>
+    <a href="donut.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Donut</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#chart">The chart</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#snippet">The React snippet</a></li>
+    <li><a href="#customising">Customising</a></li>
+    <li><a href="#in-context">In context</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related charts</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

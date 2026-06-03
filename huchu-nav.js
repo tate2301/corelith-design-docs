@@ -112,6 +112,17 @@
       // ── Approvals & queues ──────────────────────────────────
       ['Approvals ·  Leave-request workflow',ROOT + 'cookbook/approvals-leave-request.html', 'approvals-leave-request', 'New'],
       ['Approvals ·  Inbox + bulk actions', '#',                '__', 'Soon'],
+      // ── Charts ──────────────────────────────────────────────
+      ['Charts ·  Single-series line',      ROOT + 'cookbook/charts/line-simple.html',    'charts-line-simple',    'New'],
+      ['Charts ·  Multi-series line',       ROOT + 'cookbook/charts/line-multi.html',     'charts-line-multi',     'New'],
+      ['Charts ·  Stacked area',            ROOT + 'cookbook/charts/area-stacked.html',   'charts-area-stacked',   'New'],
+      ['Charts ·  Vertical bars',           ROOT + 'cookbook/charts/bar-vertical.html',   'charts-bar-vertical',   'New'],
+      ['Charts ·  Horizontal bars',         ROOT + 'cookbook/charts/bar-horizontal.html', 'charts-bar-horizontal', 'New'],
+      ['Charts ·  Grouped bars',            ROOT + 'cookbook/charts/bar-grouped.html',    'charts-bar-grouped',    'New'],
+      ['Charts ·  Stacked bars',            ROOT + 'cookbook/charts/bar-stacked.html',    'charts-bar-stacked',    'New'],
+      ['Charts ·  Donut',                   ROOT + 'cookbook/charts/donut.html',          'charts-donut',          'New'],
+      ['Charts ·  Pie',                     ROOT + 'cookbook/charts/pie.html',            'charts-pie',            'New'],
+      ['Charts ·  Progress ring',           ROOT + 'cookbook/charts/progress-ring.html',  'charts-progress-ring',  'New'],
     ]},
     // Reference was previously one monolithic super-group with "X ·  "-prefixed
     // labels. We split it into sibling collapsible groups (each its own
