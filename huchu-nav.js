@@ -217,7 +217,7 @@
       ['Page header',        ROOT + 'system/b-page-header.html',  'b-page-header'],
       ['Stat card',          ROOT + 'system/b-stat-card.html',    'b-stat-card'],
       ['Stat hero',          ROOT + 'system/b-stat-hero.html',    'b-stat-hero',   'New'],
-      ['KPI grid',           ROOT + 'system/b-kpi-grid.html',     'b-kpi-grid'],
+      ['KPI grid',           ROOT + 'system/b-kpi-grid.html',     'b-kpi-grid',    'Deprecated'],
       ['Module matrix',      ROOT + 'system/b-module-matrix.html','b-module-matrix'],
       ['Card & panel',       ROOT + 'system/b-card.html',         'b-card'],
       ['Data toolbar',       ROOT + 'system/b-data-toolbar.html', 'b-data-toolbar'],
