@@ -103,6 +103,8 @@
     // original href is preserved; nothing here is a new page.
     { label: 'Reference', items: [
       ['Reuse audit',       ROOT + 'system/audit-reuse.html',   'audit-reuse', 'New'],
+      ['Roadmap',           ROOT + 'system/roadmap.html',       'roadmap',     'New'],
+      ['Contributing',      ROOT + 'CONTRIBUTING.md',           '__'],
       // ── Foundations ─────────────────────────────────────────
       ['Foundations',       ROOT + 'system/foundations.html',   'foundations'],
       ['Colors',            ROOT + 'system/colors.html',        'colors'],
