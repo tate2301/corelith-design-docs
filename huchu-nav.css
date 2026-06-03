@@ -259,6 +259,9 @@ body.hx-nav-mounted {
 .hx-sidebar-body {
   flex: 1;
   overflow-y: auto;
+  /* Long item labels must never trigger a horizontal scrollbar — rows
+     truncate via ellipsis instead (see .hx-side-link below). */
+  overflow-x: hidden;
   padding: 12px 10px 32px;
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong) transparent;
@@ -454,6 +457,11 @@ body.hx-nav-mounted {
   flex: 1;
   min-width: 0;
   min-height: 36px;
+  /* Truncate any long label cleanly inside the row — never force the row
+     wider than the drawer (which would cause horizontal scroll). */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .hx-side-link .hx-side-ic {
   width: 18px; height: 18px;
@@ -485,6 +493,10 @@ body.hx-nav-mounted {
   color: var(--text-subtle);
   cursor: pointer;
   opacity: 0;
+  /* When invisible, the pin button must NOT eat pointer events — otherwise
+     clicks on the right edge of a row hit the invisible button instead of
+     the link, and the link doesn't navigate (the 2-click bug). */
+  pointer-events: none;
   transition: opacity 120ms ease, color 120ms ease, background-color 120ms ease;
   flex: none;
   align-self: center;
@@ -492,7 +504,7 @@ body.hx-nav-mounted {
 }
 .hx-side-row:hover .hx-side-pin,
 .hx-side-row:focus-within .hx-side-pin,
-.hx-side-row.is-pinned .hx-side-pin { opacity: 1; }
+.hx-side-row.is-pinned .hx-side-pin { opacity: 1; pointer-events: auto; }
 .hx-side-pin:hover { background: var(--surface); color: var(--text-strong); }
 .hx-side-pin:focus-visible {
   outline: 2px solid var(--brand);
