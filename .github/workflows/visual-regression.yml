@@ -1,0 +1,113 @@
+# =====================================================================
+#  Corelith / Huchu docs — Visual regression
+# =====================================================================
+#  Catches the silent "components.css change rebroke the date picker"
+#  failures by screenshotting a curated set of surfaces at mobile and
+#  desktop sizes and diffing against committed baselines in
+#  /visual-baselines/.
+#
+#  HOW THIS WORKS
+#  --------------
+#  1. Boots a local static server (python3 -m http.server 8888) over
+#     the repo root.
+#  2. Runs `scripts/visual-diff.mjs`, which uses Playwright (chromium
+#     only — Firefox/Webkit pixel deltas dwarf any real regression) to
+#     load each surface at 390×844 and 1280×800, screenshots the
+#     viewport, and compares pixel-by-pixel against the matching
+#     baseline image in /visual-baselines/.
+#  3. Fails the job if any surface's diff exceeds 0.5% of total pixels.
+#     Diff images for every failing surface are uploaded as a workflow
+#     artifact so reviewers can see exactly what changed.
+#
+#  SOFT-FAIL UNTIL BASELINES EXIST
+#  -------------------------------
+#  The very first run on a clean repo (or any run where a new surface
+#  has been added without a baseline) is treated as a warning — the
+#  diff script writes the missing baseline and exits 0. Once committed,
+#  the next run hard-fails on real diffs.
+#
+#  REGENERATING BASELINES
+#  ----------------------
+#  After a deliberate visual change:
+#    node scripts/visual-baseline.mjs
+#    git add visual-baselines/
+#    git commit -m "Visual: refresh baselines after <reason>"
+#
+#  CHROMATIC ALTERNATIVE
+#  ---------------------
+#  If you prefer hosted visual review (PR-attached diff UI, reviewer
+#  comments, baseline blessing in-browser), swap this whole file for
+#  the official Chromatic action and point it at the React package's
+#  Storybook:
+#
+#    - name: Chromatic
+#      uses: chromaui/action@latest
+#      with:
+#        projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+#        workingDir: packages/react
+#        storybookBuildDir: storybook-static
+#
+#  We deliberately default to the Playwright path because the docs site
+#  is static HTML that Chromatic can't introspect without Storybook,
+#  and the surfaces under review are whole pages, not components.
+# =====================================================================
+name: visual-regression
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  visual-diff:
+    name: Playwright snapshots
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install playwright + pixelmatch
+        run: |
+          npm install --no-save playwright@^1.60.0 pixelmatch@^7.1.0 pngjs@^7.0.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local static server
+        run: |
+          python3 -m http.server 8888 >/tmp/server.log 2>&1 &
+          echo $! > /tmp/server.pid
+          # Wait until it answers, then move on.
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            if curl -fsS http://localhost:8888/ -o /dev/null; then break; fi
+            sleep 0.5
+          done
+
+      - name: Run visual diff
+        id: vdiff
+        run: node scripts/visual-diff.mjs
+        env:
+          VISUAL_BASE_URL: http://localhost:8888
+          VISUAL_DIFF_THRESHOLD: '0.005'
+          # When 1, missing baselines are written + the run exits 0.
+          # When 0 (default), a missing baseline is a hard failure.
+          VISUAL_ALLOW_MISSING: '1'
+
+      - name: Upload diff artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diffs
+          path: |
+            visual-baselines/__diffs/**
+            visual-baselines/__actual/**
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Stop local static server
+        if: always()
+        run: |
+          if [ -f /tmp/server.pid ]; then kill "$(cat /tmp/server.pid)" || true; fi

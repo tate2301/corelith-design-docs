@@ -120,6 +120,9 @@
       ['Settings ·  Notification preferences', ROOT + 'cookbook/settings-notification-preferences.html', 'settings-notification-preferences', 'New'],
       ['Settings ·  Profile & security',    '#',                '__', 'Soon'],
       ['Settings ·  Team & roles',          '#',                '__', 'Soon'],
+      // ── International ───────────────────────────────────────
+      ['International ·  Localised app',    ROOT + 'cookbook/i18n-localized-app.html', 'i18n-localized-app', 'New'],
+      ['International ·  RTL layout audit', '#',                '__', 'Soon'],
       // ── Approvals & queues ──────────────────────────────────
       ['Approvals ·  Leave-request workflow',ROOT + 'cookbook/approvals-leave-request.html', 'approvals-leave-request', 'New'],
       ['Approvals ·  Inbox + bulk actions', '#',                '__', 'Soon'],
@@ -160,6 +163,7 @@
       ['Accessibility',     ROOT + 'system/accessibility.html', 'accessibility', 'New'],
       ['Token reference',   ROOT + 'system/tokens.html',        'tokens'],
       ['Tokens (JSON)',     ROOT + 'tokens/README.md',          '__',            'New'],
+      ['Internationalisation (i18n)', ROOT + 'i18n/index.html',  '__',            'New'],
       ['Voice & tone',      ROOT + 'system/voice.html',         'voice'],
       ['Writing guidelines',ROOT + 'system/content.html',       'content'],
     ]},
