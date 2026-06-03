@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Cookbook · Huchu DS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  body { background: var(--canvas); }
+
+  /* "Start here" rail — three big recipes for first-timers. */
+  .ck-start { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 8px; }
+  @media (max-width: 900px) { .ck-start { grid-template-columns: 1fr; } }
+  .ck-start-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 22px;
+    display: grid; gap: 10px;
+    text-decoration: none; color: inherit;
+    transition: border-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+  }
+  .ck-start-card:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+  .ck-start-card .num { font: 500 11px/1 var(--font-mono); color: var(--text-subtle); letter-spacing: 0.06em; }
+  .ck-start-card h3 { font: 600 17px/1.25 var(--font-sans); color: var(--text-strong); margin: 0; letter-spacing: -0.005em; }
+  .ck-start-card .ds { font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; margin: 0; }
+  .ck-start-card .arrow {
+    margin-top: 4px; font: 500 13px/1 var(--font-sans);
+    color: var(--brand-strong); display: inline-flex; align-items: center; gap: 5px;
+  }
+  .ck-start-card.is-soon { opacity: 0.7; cursor: default; }
+  .ck-start-card.is-soon:hover { transform: none; border-color: var(--border); }
+  .ck-start-card.is-soon .arrow { color: var(--text-subtle); }
+
+  /* Theme grid — 8 cards organised by recipe category. */
+  .ck-theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 8px; }
+  @media (max-width: 1100px) { .ck-theme-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px)  { .ck-theme-grid { grid-template-columns: 1fr; } }
+
+  .ck-theme {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: grid; gap: 12px;
+  }
+  .ck-theme .hd { display: flex; align-items: center; gap: 10px; }
+  .ck-theme .ic {
+    width: 32px; height: 32px; border-radius: 9px;
+    display: grid; place-items: center;
+    background: var(--brand-soft); color: var(--brand-strong);
+    flex: none;
+  }
+  .ck-theme h3 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-theme .ds { font: var(--type-caption); color: var(--text-muted); line-height: 1.5; margin: 0; }
+  .ck-theme ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+  .ck-theme li { margin: 0; }
+  .ck-theme a, .ck-theme span.soon {
+    display: flex; align-items: center; gap: 8px;
+    font: 500 13px/1.3 var(--font-sans);
+    text-decoration: none; color: var(--text-strong);
+    padding: 6px 8px; margin: 0 -8px;
+    border-radius: 6px;
+  }
+  .ck-theme a:hover { background: var(--surface-muted); color: var(--brand-strong); }
+  .ck-theme span.soon { color: var(--text-subtle); cursor: default; }
+  .ck-theme .tag {
+    margin-left: auto;
+    font: 500 10px/1 var(--font-sans);
+    letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 3px 7px; border-radius: 9999px;
+    background: var(--surface-muted); color: var(--text-subtle);
+  }
+  .ck-theme .tag.new { background: var(--tone-success-bg); color: var(--tone-success); }
+
+  /* "How recipes work" three-up explainer. */
+  .ck-how { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 8px; }
+  @media (max-width: 900px) { .ck-how { grid-template-columns: 1fr; } }
+  .ck-how-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    display: grid; gap: 8px;
+  }
+  .ck-how-card .step { font: 500 11px/1 var(--font-mono); color: var(--brand-strong); letter-spacing: 0.06em; }
+  .ck-how-card h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-how-card p { font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; margin: 0; }
+
+  /* Cross-link rail to the Reference catalogue. */
+  .ck-xref { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 8px; }
+  @media (max-width: 900px) { .ck-xref { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .ck-xref { grid-template-columns: 1fr; } }
+  .ck-xref a {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none; color: var(--text-strong);
+    font: 500 13px/1.2 var(--font-sans);
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+  .ck-xref a:hover { border-color: var(--border-strong); }
+  .ck-xref .nm { display: block; font: 600 14px/1.2 var(--font-sans); }
+  .ck-xref .sub { display: block; font: var(--type-caption); color: var(--text-muted); margin-top: 2px; }
+  .ck-xref .ic { width: 28px; height: 28px; border-radius: 7px; background: var(--surface-muted); color: var(--text-muted); display: grid; place-items: center; flex: none; }
+</style>
+</head>
+<body>
+
+<div class="hub-wrap">
+  <section class="hub-hero anim-fade-up">
+    <div class="breadcrumb">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <span>Cookbook</span>
+    </div>
+    <h1>Cookbook · <em>how to build the features you actually ship</em></h1>
+    <p class="lede">The Huchu cookbook is a "how to build X" book, not a catalogue. Every recipe walks you through one end-to-end feature — state, data, interactions, edge cases — using primitives, blocks and patterns from the Huchu reference. Start with a goal ("Build a sign-in with 2FA flow", "Build a leave-request workflow"), copy the React, ship.</p>
+    <div class="meta-pills">
+      <span class="meta-pill brand">Cookbook · v0.1</span>
+      <span class="meta-pill"><span data-icon="check" data-icon-size="11"></span>1 recipe live · 18+ coming</span>
+      <span class="meta-pill"><code>@huchu/react</code></span>
+      <span class="meta-pill">Press <kbd>/</kbd> to search</span>
+    </div>
+  </section>
+
+  <!-- ────────────────────────────────────────────────────────
+       1.  Start here — three essential recipes for first-timers
+  ──────────────────────────────────────────────────────── -->
+  <section class="hub-section">
+    <span class="label">Start here</span>
+    <h2>If it's your first time, build these three</h2>
+    <p class="sub">Every Huchu app needs sign-in, a shell to live in, and a way to capture data. Build these three recipes in order and you'll have shipped the spine of an app — everything else is more screens.</p>
+
+    <div class="ck-start">
+      <a class="ck-start-card" href="auth-signin-2fa.html">
+        <span class="num">01 · Auth</span>
+        <h3>Sign in with 2-step verification</h3>
+        <p class="ds">Email + password, then a 6-digit OTP. Resend countdown, trust-this-device, error states. The canonical Huchu auth flow.</p>
+        <span class="arrow">Open recipe <span data-icon="arrow" data-icon-size="12"></span></span>
+      </a>
+
+      <div class="ck-start-card is-soon" aria-disabled="true">
+        <span class="num">02 · Shells</span>
+        <h3>App shell with sidebar nav</h3>
+        <p class="ds">The standard operator shell — top bar, collapsible sidebar, content area, keyboard nav. Drop your pages inside and you're done.</p>
+        <span class="arrow">Coming soon</span>
+      </div>
+
+      <div class="ck-start-card is-soon" aria-disabled="true">
+        <span class="num">03 · Forms</span>
+        <h3>Multi-step wizard with autosave</h3>
+        <p class="ds">A 3-step form with validation per step, autosave between steps, and a sticky footer. The pattern most "create" flows want.</p>
+        <span class="arrow">Coming soon</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────────────────────────────────────────────────────
+       2.  Theme grid — 8 themes, 1-3 recipes each
+  ──────────────────────────────────────────────────────── -->
+  <section class="hub-section">
+    <span class="label">All themes</span>
+    <h2>Browse by what you're building</h2>
+    <p class="sub">Each theme groups recipes that share the same shape — same primitives, same state machine, same edge cases. If you can't find your feature by name, you'll find a recipe with the right scaffolding here.</p>
+
+    <div class="ck-theme-grid">
+      <article class="ck-theme">
+        <div class="hd"><div class="ic" data-icon="lock" data-icon-size="16"></div><h3>Auth</h3></div>
+        <p class="ds">Sign in, sign up, recover, verify. Everything that gates the front door.</p>
+        <ul>
+          <li><a href="auth-signin-2fa.html">Sign in with 2FA<span class="tag new">New</span></a></li>
+          <li><span class="soon">Forgot password<span class="tag">Soon</span></span></li>
+          <li><span class="soon">Sign up + email verify<span class="tag">Soon</span></span></li>
+        </ul>
+      </article>
+
+      <article class="ck-theme">
+        <div class="hd"><div class="ic" data-icon="sidebar" data-icon-size="16"></div><h3>Shells &amp; nav</h3></div>
+        <p class="ds">The frame around your app — sidebars, tab bars, command palettes.</p>
+        <ul>
+          <li><span class="soon">App shell with sidebar<span class="tag">Soon</span></span></li>
+          <li><span class="soon">Mobile bottom-tab shell<span class="tag">Soon</span></span></li>
+          <li><span class="soon">Command-palette nav<span class="tag">Soon</span></span></li>
+        </ul>
+      </article>
+
+      <article class="ck-theme">
+        <div class="hd"><div class="ic" data-icon="edit" data-icon-size="16"></div><h3>Forms</h3></div>
+        <p class="ds">Capture data without losing the user halfway through.</p>
+        <ul>
+          <li><span class="soon">Multi-step wizard<span class="tag">Soon</span></span></li>
+          <li><span class="soon">Autosave drawer form<span class="tag">Soon</span></span></li>
+          <li><span class="soon">Inline edit on row<span class="tag">Soon</span></span></li>
+        </ul>
+      </article>
+
+      <article class="ck-theme">
+        <div class="hd"><div class="ic" data-icon="grid" data-icon-size="16"></div><h3>Lists &amp; detail</h3></div>
+        <p class="ds">Show many things, then dig into one. The bread and butter of an operator app.</p>
+        <ul>
+          <li><span class="soon">Filterable data table<span class="tag">Soon</span></span></li>
+          <li><span class="soon">Master–detail page<span class="tag">Soon</span></span></li>
+          <li><span class="soon">Day-grouped mobile list<span class="tag">Soon</span></span></li>
+        </ul>
+      </article>
+
+      <article class="ck-theme">
+        <div class="hd"><div class="ic" data-icon="chart" data-icon-size="16"></div><h3>Dashboards</h3></div>
+        <p class="ds">KPIs at a glance, with a clear path from number to detail.</p>
+        <ul>
+          <li><span class="soon">Operator overview<span class="tag">Soon</span></span></li>
+          <li><span class="soon">KPI hero + drilldown<span class="tag">Soon</span></span></li>
+        </ul>
+      </article>
+
+      <article class="ck-theme">
+        <div class="hd"><div class="ic" data-icon="sparkles" data-icon-size="16"></div><h3>States</h3></div>
+        <p class="ds">Empty, loading, error, optimistic. The states that decide whether your app feels alive.</p>
+        <ul>
+          <li><span class="soon">Empty, loading, error<span class="tag">Soon</span></span></li>
+          <li><span class="soon">Optimistic + rollback<span class="tag">Soon</span></span></li>
+        </ul>
+      </article>
+
+      <article class="ck-theme">
+        <div class="hd"><div class="ic" data-icon="user" data-icon-size="16"></div><h3>Settings</h3></div>
+        <p class="ds">Profile, security, team — the long-tail of an account.</p>
+        <ul>
+          <li><span class="soon">Profile &amp; security<span class="tag">Soon</span></span></li>
+          <li><span class="soon">Team &amp; roles<span class="tag">Soon</span></span></li>
+        </ul>
+      </article>
+
+      <article class="ck-theme">
+        <div class="hd"><div class="ic" data-icon="check" data-icon-size="16"></div><h3>Approvals &amp; queues</h3></div>
+        <p class="ds">Inboxes of work that someone has to act on. Approve, reject, escalate.</p>
+        <ul>
+          <li><span class="soon">Leave-request workflow<span class="tag">Soon</span></span></li>
+          <li><span class="soon">Inbox + bulk actions<span class="tag">Soon</span></span></li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <!-- ────────────────────────────────────────────────────────
+       3.  How recipes work — three-up explainer
+  ──────────────────────────────────────────────────────── -->
+  <section class="hub-section">
+    <span class="label">How recipes work</span>
+    <h2>Each recipe is a working build, not a feature list</h2>
+    <p class="sub">A recipe is what a senior engineer would walk a junior through if they had an hour. Crisp rationale, real React, full composition at the end. You copy the code; you don't read about the code.</p>
+
+    <div class="ck-how">
+      <div class="ck-how-card">
+        <span class="step">01</span>
+        <h4>End-to-end React using <code>@huchu/react</code></h4>
+        <p>Every snippet imports from <code>@huchu/react</code> — the intended npm surface for the design system. State stays in <code>useState</code> / <code>useReducer</code>. No extra libraries, no hidden magic.</p>
+      </div>
+      <div class="ck-how-card">
+        <span class="step">02</span>
+        <h4>Required pieces are listed up front</h4>
+        <p>Each recipe opens with the primitives, blocks, patterns and shells it needs — linked to the reference page so you can study any one in depth before you start.</p>
+      </div>
+      <div class="ck-how-card">
+        <span class="step">03</span>
+        <h4>One final composition you can copy</h4>
+        <p>The last section of every recipe is the whole component, assembled. Realistic state machine, error states, variations called out. That's the file you ship.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────────────────────────────────────────────────────
+       4.  Cross-link rail to Reference
+  ──────────────────────────────────────────────────────── -->
+  <section class="hub-section">
+    <span class="label">Need depth on one piece?</span>
+    <h2>The reference is right next door</h2>
+    <p class="sub">Recipes are about the build. The reference is about the parts. Jump to a single primitive, block, pattern or shell — props, variants, do/don't — whenever a recipe mentions one.</p>
+
+    <div class="ck-xref">
+      <a href="../system/primitives.html">
+        <div class="ic" data-icon="grid" data-icon-size="14"></div>
+        <div><span class="nm">Primitives</span><span class="sub">Buttons, inputs, dialogs</span></div>
+      </a>
+      <a href="../system/blocks.html">
+        <div class="ic" data-icon="layers" data-icon-size="14"></div>
+        <div><span class="nm">Blocks</span><span class="sub">Composed UI units</span></div>
+      </a>
+      <a href="../system/patterns.html">
+        <div class="ic" data-icon="sparkles" data-icon-size="14"></div>
+        <div><span class="nm">Patterns</span><span class="sub">Recurring page shapes</span></div>
+      </a>
+      <a href="../system/shells.html">
+        <div class="ic" data-icon="sidebar" data-icon-size="14"></div>
+        <div><span class="nm">Shells</span><span class="sub">App frames</span></div>
+      </a>
+    </div>
+  </section>
+</div>
+
+</body>
+</html>

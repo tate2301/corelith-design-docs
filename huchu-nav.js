@@ -31,31 +31,33 @@
   const CURRENT_FILE = (PATH.split('/').pop() || '').replace('.html', '');
 
   // -------- Single-source-of-truth link config ----------------------------
-  // Top-level main nav. Four super-sections instead of ten flat links so the
-  // user always knows which "neighbourhood" they're in:
-  //   Design system · Components · Apps · Catalogs
+  // Top-level main nav. Four super-sections — cookbook-first IA so people
+  // building a feature land in recipes (the "how to build X" book), and
+  // only drop into Reference when they need depth on a single piece.
+  //   Get started · Cookbook · Reference · Apps
   const SECTIONS = [
-    { label: 'Design',     href: ROOT + 'system/foundations.html',
-      match: /\/(get-started|install|changelog|foundations|colors|typography|spacing|elevation|motion|iconography|principles|accessibility|content|voice|tokens)\.html$/ },
-    { label: 'Build',      href: ROOT + 'system/primitives.html',
-      match: /\/(primitives|p-[a-z-]+|blocks|b-[a-z-]+|patterns|x-[a-z-]+|shells|pages|guides|guide-[a-z-]+)\.html$/ },
-    { label: 'Apps',       href: ROOT + 'portals/index.html',
-      match: /\/portals\// },
-    { label: 'Catalogs',   href: ROOT + 'kits/overview.html',
-      match: /\/(kits|verticals)\// },
+    { label: 'Get started', href: ROOT + 'system/get-started.html',
+      match: /\/(get-started|install|changelog|principles)\.html$/ },
+    { label: 'Cookbook',    href: ROOT + 'cookbook/index.html',
+      match: /\/cookbook\// },
+    { label: 'Reference',   href: ROOT + 'system/foundations.html',
+      match: /\/(foundations|colors|typography|spacing|elevation|motion|iconography|accessibility|content|voice|tokens|primitives|p-[a-z-]+|blocks|b-[a-z-]+|patterns|x-[a-z-]+|shells|pages|guides|guide-[a-z-]+)\.html$/ },
+    { label: 'Apps',        href: ROOT + 'portals/index.html',
+      match: /\/(portals|kits|verticals)\// },
   ];
 
-  // Sidebar (full IA, single source of truth). Reorganised into four
-  // intuitive super-sections so the drawer is scannable on phones:
+  // Sidebar (full IA, single source of truth). Cookbook-first IA:
   //   Get started   – overview, install, principles, changelog
-  //   Design system – foundations, tokens, content, accessibility
-  //   Build with    – components, blocks, patterns, shells, templates, guides
+  //   Cookbook      – recipes by theme (auth, shells, forms, lists, …)
+  //   Reference     – every design-system page, kept reachable but folded
+  //                   into one super-group so the drawer scans cleanly
   //   Apps          – the 9 live portal demos (apps you can sign into)
   //   Catalogs      – kits + verticals (UI catalogues, not apps)
-  //   Reference     – sitemap + repo
+  //   Resources     – sitemap + repo
   //
-  // Groups render as <details> in the drawer so users can collapse what they
-  // don't need. The active group auto-expands. See renderSidebar().
+  // Phase 1: only `auth-signin-2fa` is real. Everything else in the cookbook
+  // group is a placeholder with href '#' and the side-tag "Soon" so future
+  // agents can swap the href + drop the tag once the recipe ships.
   const SIDEBAR = [
     { label: 'Get started', items: [
       ['Overview',          ROOT + 'index.html',                'index'],
@@ -64,7 +66,43 @@
       ['Principles',        ROOT + 'system/principles.html',    'principles'],
       ['Changelog',         ROOT + 'system/changelog.html',     'changelog', 'v0.5'],
     ]},
-    { label: 'Design system', items: [
+    { label: 'Cookbook', items: [
+      ['All recipes',       ROOT + 'cookbook/index.html',       'cookbook-index'],
+      // ── Auth ────────────────────────────────────────────────
+      ['Auth ·  Sign in with 2FA',          ROOT + 'cookbook/auth-signin-2fa.html', 'auth-signin-2fa', 'New'],
+      ['Auth ·  Forgot password',           '#',                '__', 'Soon'],
+      ['Auth ·  Sign up + email verify',    '#',                '__', 'Soon'],
+      // ── Shells & nav ────────────────────────────────────────
+      ['Shells ·  App shell with sidebar',  '#',                '__', 'Soon'],
+      ['Shells ·  Mobile bottom-tab shell', '#',                '__', 'Soon'],
+      ['Shells ·  Command-palette nav',     '#',                '__', 'Soon'],
+      // ── Forms ───────────────────────────────────────────────
+      ['Forms ·  Multi-step wizard',        '#',                '__', 'Soon'],
+      ['Forms ·  Autosave drawer form',     '#',                '__', 'Soon'],
+      ['Forms ·  Inline edit on row',       '#',                '__', 'Soon'],
+      // ── Lists & detail ──────────────────────────────────────
+      ['Lists ·  Filterable data table',    '#',                '__', 'Soon'],
+      ['Lists ·  Master–detail page',       '#',                '__', 'Soon'],
+      ['Lists ·  Day-grouped mobile list',  '#',                '__', 'Soon'],
+      // ── Dashboards ──────────────────────────────────────────
+      ['Dashboards ·  Operator overview',   '#',                '__', 'Soon'],
+      ['Dashboards ·  KPI hero + drilldown','#',                '__', 'Soon'],
+      // ── States ──────────────────────────────────────────────
+      ['States ·  Empty, loading, error',   '#',                '__', 'Soon'],
+      ['States ·  Optimistic + rollback',   '#',                '__', 'Soon'],
+      // ── Settings ────────────────────────────────────────────
+      ['Settings ·  Profile & security',    '#',                '__', 'Soon'],
+      ['Settings ·  Team & roles',          '#',                '__', 'Soon'],
+      // ── Approvals & queues ──────────────────────────────────
+      ['Approvals ·  Leave-request workflow','#',               '__', 'Soon'],
+      ['Approvals ·  Inbox + bulk actions', '#',                '__', 'Soon'],
+    ]},
+    // Reference = the entire existing design-system catalogue, folded into one
+    // super-group. Sub-categories are signalled by the "X ·  " label prefix so
+    // the sidebar's flat list still scans like a table of contents. Every
+    // original href is preserved; nothing here is a new page.
+    { label: 'Reference', items: [
+      // ── Foundations ─────────────────────────────────────────
       ['Foundations',       ROOT + 'system/foundations.html',   'foundations'],
       ['Colors',            ROOT + 'system/colors.html',        'colors'],
       ['Typography',        ROOT + 'system/typography.html',    'typography'],
@@ -76,72 +114,68 @@
       ['Token reference',   ROOT + 'system/tokens.html',        'tokens'],
       ['Voice & tone',      ROOT + 'system/voice.html',         'voice'],
       ['Writing guidelines',ROOT + 'system/content.html',       'content'],
-    ]},
-    { label: 'Components', items: [
-      ['Button',            ROOT + 'system/p-button.html',      'p-button'],
-      ['Button group',      ROOT + 'system/p-button-group.html','p-button-group'],
-      ['Segmented control', ROOT + 'system/p-segmented-control.html', 'p-segmented-control'],
-      ['Input & field',     ROOT + 'system/p-input.html',       'p-input'],
-      ['Input group',       ROOT + 'system/p-input-group.html', 'p-input-group'],
-      ['Input OTP',         ROOT + 'system/p-input-otp.html',   'p-input-otp'],
-      ['Select & combobox', ROOT + 'system/p-select.html',      'p-select'],
-      ['Combobox',          ROOT + 'system/p-combobox.html',    'p-combobox'],
-      ['Date picker',       ROOT + 'system/p-date-picker.html', 'p-date-picker'],
-      ['Calendar',          ROOT + 'system/p-calendar.html',    'p-calendar'],
-      ['Checkbox & radio',  ROOT + 'system/p-checkbox.html',    'p-checkbox'],
-      ['Switch & toggle',   ROOT + 'system/p-switch.html',      'p-switch'],
-      ['Accordion',         ROOT + 'system/p-accordion.html',   'p-accordion'],
-      ['Badge & pill',      ROOT + 'system/p-badge.html',       'p-badge'],
-      ['Status indicator',  ROOT + 'system/p-status.html',      'p-status'],
-      ['Avatar',            ROOT + 'system/p-avatar.html',      'p-avatar'],
-      ['Chip & tag',        ROOT + 'system/p-chip.html',        'p-chip'],
-      ['Tooltip',           ROOT + 'system/p-tooltip.html',     'p-tooltip'],
-      ['Kbd',               ROOT + 'system/p-kbd.html',         'p-kbd'],
-      ['Alert',             ROOT + 'system/p-alert.html',       'p-alert'],
-      ['Alert dialog',      ROOT + 'system/p-alert-dialog.html','p-alert-dialog'],
-      ['Dropdown menu',     ROOT + 'system/p-dropdown-menu.html','p-dropdown-menu'],
-      ['Popover',           ROOT + 'system/p-popover.html',     'p-popover'],
-      ['Hover card',        ROOT + 'system/p-hover-card.html',  'p-hover-card'],
-      ['Command palette',   ROOT + 'system/p-command.html',     'p-command'],
-      ['Progress & meter',  ROOT + 'system/p-progress.html',    'p-progress'],
-      ['Spinner & skeleton',ROOT + 'system/p-spinner.html',     'p-spinner'],
-      ['Mobile list',       ROOT + 'system/p-mobile-list.html', 'p-mobile-list'],
-      ['Mobile action bar', ROOT + 'system/p-mobile-action-bar.html', 'p-mobile-action-bar'],
-      ['Item row',          ROOT + 'system/p-item.html',        'p-item'],
-    ]},
-    { label: 'Blocks', items: [
-      ['Page header',       ROOT + 'system/b-page-header.html', 'b-page-header'],
-      ['Stat card',         ROOT + 'system/b-stat-card.html',   'b-stat-card'],
-      ['Stat hero',         ROOT + 'system/b-stat-hero.html',   'b-stat-hero', 'New'],
-      ['KPI grid',          ROOT + 'system/b-kpi-grid.html',    'b-kpi-grid'],
-      ['Module matrix',     ROOT + 'system/b-module-matrix.html','b-module-matrix'],
-      ['Card & panel',      ROOT + 'system/b-card.html',        'b-card'],
-      ['Data toolbar',      ROOT + 'system/b-data-toolbar.html','b-data-toolbar'],
-      ['Filter chips',      ROOT + 'system/b-filter-chips.html','b-filter-chips', 'New'],
-      ['Bottom tabs',       ROOT + 'system/b-bottom-tabs.html', 'b-bottom-tabs', 'New'],
-      ['Row card',          ROOT + 'system/b-row-card.html',    'b-row-card',    'New'],
-      ['Day list',          ROOT + 'system/b-day-list.html',    'b-day-list',    'New'],
-      ['Empty state',       ROOT + 'system/b-empty-state.html', 'b-empty-state'],
-      ['Callout',           ROOT + 'system/b-callout.html',     'b-callout'],
-    ]},
-    { label: 'Patterns', items: [
-      ['App shell',         ROOT + 'system/x-app-shell.html',   'x-app-shell'],
-      ['Data table',        ROOT + 'system/x-data-table.html',  'x-data-table'],
-      ['Detail view',       ROOT + 'system/x-detail-view.html', 'x-detail-view'],
-      ['Modal & sheet',     ROOT + 'system/x-modal.html',       'x-modal'],
-      ['Bottom sheet',      ROOT + 'system/x-bottom-sheet.html','x-bottom-sheet', 'New'],
-      ['Auth flow',         ROOT + 'system/x-auth.html',        'x-auth'],
-      ['Command palette',   ROOT + 'system/x-command-palette.html', 'x-command-palette'],
-      ['All shells',        ROOT + 'system/shells.html',        'shells'],
-      ['All page templates',ROOT + 'system/pages.html',         'pages'],
-    ]},
-    { label: 'Guides', items: [
-      ['All guides',        ROOT + 'system/guides.html',        'guides', 'New'],
-      ['Compose a page',    ROOT + 'system/guide-compose-page.html',     'guide-compose-page'],
-      ['Compose a pattern', ROOT + 'system/guide-compose-pattern.html',  'guide-compose-pattern'],
-      ['New feature module',ROOT + 'system/guide-new-feature.html',      'guide-new-feature'],
-      ['Block vs. pattern', ROOT + 'system/guide-block-vs-pattern.html', 'guide-block-vs-pattern'],
-      ['Mobile adaptation', ROOT + 'system/guide-mobile-adaptation.html','guide-mobile-adaptation'],
+      // ── Primitives (components) ─────────────────────────────
+      ['Primitive ·  Button',            ROOT + 'system/p-button.html',      'p-button'],
+      ['Primitive ·  Button group',      ROOT + 'system/p-button-group.html','p-button-group'],
+      ['Primitive ·  Segmented control', ROOT + 'system/p-segmented-control.html', 'p-segmented-control'],
+      ['Primitive ·  Input & field',     ROOT + 'system/p-input.html',       'p-input'],
+      ['Primitive ·  Input group',       ROOT + 'system/p-input-group.html', 'p-input-group'],
+      ['Primitive ·  Input OTP',         ROOT + 'system/p-input-otp.html',   'p-input-otp'],
+      ['Primitive ·  Select & combobox', ROOT + 'system/p-select.html',      'p-select'],
+      ['Primitive ·  Combobox',          ROOT + 'system/p-combobox.html',    'p-combobox'],
+      ['Primitive ·  Date picker',       ROOT + 'system/p-date-picker.html', 'p-date-picker'],
+      ['Primitive ·  Calendar',          ROOT + 'system/p-calendar.html',    'p-calendar'],
+      ['Primitive ·  Checkbox & radio',  ROOT + 'system/p-checkbox.html',    'p-checkbox'],
+      ['Primitive ·  Switch & toggle',   ROOT + 'system/p-switch.html',      'p-switch'],
+      ['Primitive ·  Accordion',         ROOT + 'system/p-accordion.html',   'p-accordion'],
+      ['Primitive ·  Badge & pill',      ROOT + 'system/p-badge.html',       'p-badge'],
+      ['Primitive ·  Status indicator',  ROOT + 'system/p-status.html',      'p-status'],
+      ['Primitive ·  Avatar',            ROOT + 'system/p-avatar.html',      'p-avatar'],
+      ['Primitive ·  Chip & tag',        ROOT + 'system/p-chip.html',        'p-chip'],
+      ['Primitive ·  Tooltip',           ROOT + 'system/p-tooltip.html',     'p-tooltip'],
+      ['Primitive ·  Kbd',               ROOT + 'system/p-kbd.html',         'p-kbd'],
+      ['Primitive ·  Alert',             ROOT + 'system/p-alert.html',       'p-alert'],
+      ['Primitive ·  Alert dialog',      ROOT + 'system/p-alert-dialog.html','p-alert-dialog'],
+      ['Primitive ·  Dropdown menu',     ROOT + 'system/p-dropdown-menu.html','p-dropdown-menu'],
+      ['Primitive ·  Popover',           ROOT + 'system/p-popover.html',     'p-popover'],
+      ['Primitive ·  Hover card',        ROOT + 'system/p-hover-card.html',  'p-hover-card'],
+      ['Primitive ·  Command palette',   ROOT + 'system/p-command.html',     'p-command'],
+      ['Primitive ·  Progress & meter',  ROOT + 'system/p-progress.html',    'p-progress'],
+      ['Primitive ·  Spinner & skeleton',ROOT + 'system/p-spinner.html',     'p-spinner'],
+      ['Primitive ·  Mobile list',       ROOT + 'system/p-mobile-list.html', 'p-mobile-list'],
+      ['Primitive ·  Mobile action bar', ROOT + 'system/p-mobile-action-bar.html', 'p-mobile-action-bar'],
+      ['Primitive ·  Item row',          ROOT + 'system/p-item.html',        'p-item'],
+      // ── Blocks ──────────────────────────────────────────────
+      ['Block ·  Page header',           ROOT + 'system/b-page-header.html', 'b-page-header'],
+      ['Block ·  Stat card',             ROOT + 'system/b-stat-card.html',   'b-stat-card'],
+      ['Block ·  Stat hero',             ROOT + 'system/b-stat-hero.html',   'b-stat-hero', 'New'],
+      ['Block ·  KPI grid',              ROOT + 'system/b-kpi-grid.html',    'b-kpi-grid'],
+      ['Block ·  Module matrix',         ROOT + 'system/b-module-matrix.html','b-module-matrix'],
+      ['Block ·  Card & panel',          ROOT + 'system/b-card.html',        'b-card'],
+      ['Block ·  Data toolbar',          ROOT + 'system/b-data-toolbar.html','b-data-toolbar'],
+      ['Block ·  Filter chips',          ROOT + 'system/b-filter-chips.html','b-filter-chips', 'New'],
+      ['Block ·  Bottom tabs',           ROOT + 'system/b-bottom-tabs.html', 'b-bottom-tabs', 'New'],
+      ['Block ·  Row card',              ROOT + 'system/b-row-card.html',    'b-row-card',    'New'],
+      ['Block ·  Day list',              ROOT + 'system/b-day-list.html',    'b-day-list',    'New'],
+      ['Block ·  Empty state',           ROOT + 'system/b-empty-state.html', 'b-empty-state'],
+      ['Block ·  Callout',               ROOT + 'system/b-callout.html',     'b-callout'],
+      // ── Patterns & shells ───────────────────────────────────
+      ['Pattern ·  App shell',           ROOT + 'system/x-app-shell.html',   'x-app-shell'],
+      ['Pattern ·  Data table',          ROOT + 'system/x-data-table.html',  'x-data-table'],
+      ['Pattern ·  Detail view',         ROOT + 'system/x-detail-view.html', 'x-detail-view'],
+      ['Pattern ·  Modal & sheet',       ROOT + 'system/x-modal.html',       'x-modal'],
+      ['Pattern ·  Bottom sheet',        ROOT + 'system/x-bottom-sheet.html','x-bottom-sheet', 'New'],
+      ['Pattern ·  Auth flow',           ROOT + 'system/x-auth.html',        'x-auth'],
+      ['Pattern ·  Command palette',     ROOT + 'system/x-command-palette.html', 'x-command-palette'],
+      ['Shells ·  All shells',           ROOT + 'system/shells.html',        'shells'],
+      ['Pages ·  All page templates',    ROOT + 'system/pages.html',         'pages'],
+      // ── Guides ──────────────────────────────────────────────
+      ['Guide ·  All guides',            ROOT + 'system/guides.html',        'guides', 'New'],
+      ['Guide ·  Compose a page',        ROOT + 'system/guide-compose-page.html',     'guide-compose-page'],
+      ['Guide ·  Compose a pattern',     ROOT + 'system/guide-compose-pattern.html',  'guide-compose-pattern'],
+      ['Guide ·  New feature module',    ROOT + 'system/guide-new-feature.html',      'guide-new-feature'],
+      ['Guide ·  Block vs. pattern',     ROOT + 'system/guide-block-vs-pattern.html', 'guide-block-vs-pattern'],
+      ['Guide ·  Mobile adaptation',     ROOT + 'system/guide-mobile-adaptation.html','guide-mobile-adaptation'],
     ]},
     // Apps = live, sign-in-able portal demos. One CTA per row: open the app.
     // The portal index page is the "hub" — accessed via the All apps link.
@@ -177,7 +211,7 @@
       ['Multisite',         ROOT + 'verticals/multisite/index.html','__'],
       ['Thrift',            ROOT + 'verticals/thrift/index.html','__'],
     ]},
-    { label: 'Reference', items: [
+    { label: 'Resources', items: [
       ['Sitemap',           ROOT + 'sitemap.html',              'sitemap'],
       ['GitHub',            'https://github.com/tate2301/huchu','__'],
     ]},
@@ -455,17 +489,19 @@
         if (key && key !== '__' && key === CURRENT_FILE) return group.label;
       }
     }
-    // 2. Catalog/prefix matching for component-style pages.
+    // 2. Catalog/prefix matching for component-style pages. With the cookbook-
+    //    first IA, everything design-system rolls up into one Reference group.
     const f = CURRENT_FILE;
-    if (/^p-/.test(f) || f === 'primitives') return 'Components';
-    if (/^b-/.test(f) || f === 'blocks')     return 'Blocks';
-    if (/^x-/.test(f) || f === 'patterns' || /^pg-/.test(f) || f === 'pages' || f === 'shells') return 'Patterns';
-    if (/^guide-/.test(f) || f === 'guides') return 'Guides';
-    if (['colors','typography','spacing','elevation','motion','iconography','accessibility','principles','foundations','voice','content','tokens'].includes(f)) return 'Design system';
-    if (['get-started','install','changelog'].includes(f)) return 'Get started';
+    if (/\/cookbook\//.test(PATH))           return 'Cookbook';
+    if (/^p-/.test(f) || f === 'primitives') return 'Reference';
+    if (/^b-/.test(f) || f === 'blocks')     return 'Reference';
+    if (/^x-/.test(f) || f === 'patterns' || /^pg-/.test(f) || f === 'pages' || f === 'shells') return 'Reference';
+    if (/^guide-/.test(f) || f === 'guides') return 'Reference';
+    if (['colors','typography','spacing','elevation','motion','iconography','accessibility','foundations','voice','content','tokens'].includes(f)) return 'Reference';
+    if (['get-started','install','changelog','principles'].includes(f)) return 'Get started';
     if (/\/portals\//.test(PATH))             return 'Apps';
     if (/\/(kits|verticals)\//.test(PATH))    return 'Catalogs';
-    if (f === 'sitemap')                      return 'Reference';
+    if (f === 'sitemap')                      return 'Resources';
     return null;
   }
 
