@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Deep-link state restore · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .phone { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 16px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+  .ck-screen .brand { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .url { background: var(--surface-muted); border-radius: 6px; padding: 6px 8px; font: 500 9px/1.3 var(--font-mono); color: var(--text-subtle); word-break: break-all; border: 1px solid var(--border); }
+  .ck-screen .url b { color: var(--brand-strong); }
+  .ck-screen .ph-title { font: 700 14px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .ck-screen .ph-sub { font: 500 11px/1.4 var(--font-sans); color: var(--text-muted); margin: 0; }
+  .ck-screen .ph-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+  .ck-screen .ph-chips span { font: 500 10px/1 var(--font-sans); padding: 4px 7px; border: 1px solid var(--border); border-radius: 9999px; color: var(--text-muted); }
+  .ck-screen .ph-chips span.on { background: var(--ink); color: var(--canvas); border-color: var(--ink); }
+  .ck-screen .ph-row { display: flex; gap: 6px; align-items: center; padding: 6px 8px; background: var(--surface-muted); border-radius: 6px; font: 500 10px/1.2 var(--font-sans); color: var(--text-strong); }
+  .ck-screen .ph-row.sel { background: var(--brand-soft); border: 1px solid var(--brand); }
+  .ck-screen .ph-share { background: var(--ink); color: var(--canvas); padding: 6px 10px; border-radius: 6px; display: inline-flex; gap: 6px; align-items: center; font: 600 10px/1 var(--font-sans); align-self: start; }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+
+  .ck-pull { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; padding: 14px 16px; margin: 14px 0 0; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+
+  .ck-table { width: 100%; border-collapse: collapse; margin-top: 12px; font: var(--type-body-sm); }
+  .ck-table th, .ck-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .ck-table th { font: 600 12px/1 var(--font-sans); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .ck-table td code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Shells</a><span class="sep">/</span>
+      <span>Deep-link state restore</span>
+    </div>
+    <h1>Build pages where reload doesn't erase what the user was doing</h1>
+    <p class="lede">By the end of this recipe you'll have a list page where filter chips, search query, selected row, and expanded sections all serialise to the URL, re-hydrate on mount, and copy clean to "share this view" — so a refresh, a back-button, or a pasted link all land the user exactly where they were.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="link" data-icon-size="12"></span>Shells</span>
+      <span class="meta-pill">2 primitives · 0 blocks · 0 patterns</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~25 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">Every "open" / "selected" / "expanded" state writes to the URL via <code>useUrlState</code>. On mount, the component reads the URL and hydrates its initial state. A "Share this view" button copies the current URL to the clipboard. That's the whole pattern.</p>
+    <p>SMB operators live in two browser tabs and a half-dozen WhatsApp threads. They will reload your page, hit back, and send links to their bookkeeper at 2am. If "reload" wipes the four filters they spent forty seconds setting, they will not blame the browser — they will blame you, and rightly so. Persisting state through the URL is the bare minimum a serious app can do.</p>
+    <p class="ck-pull"><b>If reload erases it, the user loses trust.</b> Every "open" / "selected" / "expanded" UI state belongs in the URL. Local state is for transient things — keystrokes mid-typing, hover affordances, drag previews. Everything else is a query param.</p>
+    <p>The mechanism is one hook (<code>useUrlState</code>) with a schema. The schema declares each param's type and parser. The hook reads from <code>location.search</code> on mount, writes back with <code>history.replaceState</code> on change (so the back button doesn't pile up history entries for filter toggles), and exposes a typed <code>[state, setState]</code> tuple. No router needed.</p>
+    <p><b>Skip this recipe if</b> your page is a single-purpose form (sign-up, sign-in, settings) — there's nothing to share, nothing to restore. Those pages should not be URL-stateful.</p>
+  </section>
+
+  <!-- WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three states: fresh load with filters from URL, share button, restored after reload.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Suppliers</span>
+          <p class="url">/suppliers?<b>tier=A&amp;q=acme&amp;sel=acme-metals&amp;open=billing</b></p>
+          <p class="ph-title">Suppliers</p>
+          <div class="ph-chips"><span class="on">Tier A</span><span>Tier B</span><span>Tier C</span></div>
+          <p class="ph-sub">Search: "acme"</p>
+          <div class="ph-row sel">Acme Metals — billing open</div>
+          <div class="ph-row">Acme Hardware</div>
+        </div>
+        <div class="caption"><span class="num">01</span> Mount — read URL, hydrate state</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Suppliers</span>
+          <p class="ph-title">Suppliers</p>
+          <div class="ph-chips"><span class="on">Tier A</span><span>Tier B</span></div>
+          <div class="ph-share"><span data-icon="link" data-icon-size="10"></span>Share this view</div>
+          <p class="ph-sub" style="margin-top: 4px;">Copied to clipboard:</p>
+          <p class="url">huchu.app/suppliers?tier=A&amp;q=acme&amp;sel=acme-metals&amp;open=billing</p>
+        </div>
+        <div class="caption"><span class="num">02</span> Share — clipboard copy of canonical URL</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Suppliers</span>
+          <p class="ph-sub">Reloaded · same state</p>
+          <p class="url">/suppliers?<b>tier=A&amp;q=acme&amp;sel=acme-metals&amp;open=billing</b></p>
+          <div class="ph-chips"><span class="on">Tier A</span><span>Tier B</span></div>
+          <div class="ph-row sel">Acme Metals — billing open</div>
+          <div class="ph-row">Acme Hardware</div>
+          <p class="ph-sub" style="margin-top: auto;">Reload key F5 → no loss</p>
+        </div>
+        <div class="caption"><span class="num">03</span> Restored — F5 lands here, not blank</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/b-filter-chips.html"><span class="kind">Block</span>Filter chips</a>
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>useUrlState</code>, <code>FilterChips</code>, <code>Button</code>, <code>useToast</code>. Everything else is plain React.</p>
+
+    <h3 style="margin-top: 22px; font: 600 16px/1.2 var(--font-sans);">What goes in the URL, what stays in state</h3>
+    <table class="ck-table">
+      <thead><tr><th>Kind of state</th><th>URL?</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Active filter chips</td><td>yes</td><td>Shared, bookmarked, restored.</td></tr>
+        <tr><td>Search query</td><td>yes</td><td>Same — "show me what they're looking at".</td></tr>
+        <tr><td>Sort column / direction</td><td>yes</td><td>Affects what's on screen.</td></tr>
+        <tr><td>Selected row id</td><td>yes</td><td>Master-detail deep-link.</td></tr>
+        <tr><td>Expanded sections</td><td>yes</td><td>"What were you reading?"</td></tr>
+        <tr><td>Pagination cursor</td><td>yes</td><td>Bookmark page 4.</td></tr>
+        <tr><td>Mid-typing input value</td><td>no</td><td>Per-keystroke writes pollute history.</td></tr>
+        <tr><td>Hover / focus ring</td><td>no</td><td>Transient — not part of "the view".</td></tr>
+        <tr><td>Drag preview position</td><td>no</td><td>Local-only animation state.</td></tr>
+        <tr><td>Toast queue</td><td>no</td><td>Session-scoped, dismissed on reload.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- STEP-BY-STEP -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <!-- Step 1 -->
+    <div class="ck-step"><span class="n">01</span><h3>Declare the URL schema once</h3></div>
+    <p>The schema is a typed dictionary: each key maps to a <code>type</code> (string, number, boolean, string[]) and an optional default. <code>useUrlState</code> uses the schema both to parse on mount and to serialise on change — so an unknown query param just gets dropped, and a missing one falls back to the default.</p>
+    <div class="ds-specimen"
+         data-code='import { useUrlState } from &#39;@huchu/react&#39;;
+
+export type SuppliersUrlState = {
+  q: string;             // search query
+  tier: string[];        // multi-select filter
+  sel: string | null;    // selected row id
+  open: string | null;   // expanded section id on the selected row
+  sort: &#39;name&#39; | &#39;tier&#39; | &#39;updatedAt&#39;;
+  dir: &#39;asc&#39; | &#39;desc&#39;;
+};
+
+export function useSuppliersUrlState() {
+  return useUrlState&lt;SuppliersUrlState&gt;({
+    q:    { type: &#39;string&#39;,        default: &#39;&#39; },
+    tier: { type: &#39;string[]&#39;,      default: [] },
+    sel:  { type: &#39;string-or-null&#39;,default: null },
+    open: { type: &#39;string-or-null&#39;,default: null },
+    sort: { type: &#39;enum&#39;,          values: [&#39;name&#39;, &#39;tier&#39;, &#39;updatedAt&#39;], default: &#39;name&#39; },
+    dir:  { type: &#39;enum&#39;,          values: [&#39;asc&#39;, &#39;desc&#39;], default: &#39;asc&#39; },
+  });
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.5 var(--font-mono); color: var(--text-muted);">
+          <div>URL: <b style="color: var(--brand-strong);">?q=acme&amp;tier=A,B&amp;sel=acme-metals&amp;open=billing&amp;sort=name&amp;dir=asc</b></div>
+          <div style="color: var(--text-subtle);">Unknown params → ignored. Missing params → defaults.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Schema</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="ck-step"><span class="n">02</span><h3>Read once, write on intent</h3></div>
+    <p>The hook does a <code>history.replaceState</code> on every <code>setState</code> — not <code>pushState</code>. That's deliberate: each filter toggle would otherwise add a back-button entry, and pressing Back would walk the user through every keystroke. Use <code>pushState</code> only for genuine page transitions (open a record, leave a record).</p>
+    <div class="ds-specimen"
+         data-code='function SuppliersPage() {
+  const [s, setS] = useSuppliersUrlState();
+
+  // Toggling one filter
+  const toggleTier = (id: string) =&gt; {
+    setS({
+      ...s,
+      tier: s.tier.includes(id)
+        ? s.tier.filter((t) =&gt; t !== id)
+        : [...s.tier, id],
+    });
+  };
+
+  // Genuinely a new page → push (so Back goes to the list).
+  const openRecord = (id: string) =&gt; {
+    setS({ ...s, sel: id, open: null }, { history: &#39;push&#39; });
+  };
+
+  return /* … */;
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.5 var(--font-mono); color: var(--text-muted);">
+          <div><b style="color: var(--brand-strong);">replaceState</b> for filter toggles → Back goes to last real page</div>
+          <div><b style="color: var(--brand-strong);">pushState</b> for "open a record" → Back closes the record</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · replace vs push</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="ck-step"><span class="n">03</span><h3>Debounce the search input</h3></div>
+    <p>The search input is the one place where local state matters — you don't want a URL write per keystroke. Keep a local <code>query</code> for typing, push it to the URL after 250ms of quiet. On Back/Forward, sync local back to URL so the input doesn't show stale text.</p>
+    <div class="ds-specimen"
+         data-code='function SearchField() {
+  const [s, setS] = useSuppliersUrlState();
+  const [draft, setDraft] = useState(s.q);
+
+  // Push to URL after 250ms of quiet
+  useEffect(() =&gt; {
+    if (draft === s.q) return;
+    const id = setTimeout(() =&gt; setS({ ...s, q: draft }), 250);
+    return () =&gt; clearTimeout(id);
+  }, [draft]);
+
+  // When URL changes externally (Back/Forward), sync local
+  useEffect(() =&gt; { setDraft(s.q); }, [s.q]);
+
+  return (
+    &lt;input
+      value={draft}
+      onChange={(e) =&gt; setDraft(e.target.value)}
+      placeholder=&quot;Search suppliers…&quot;
+      aria-label=&quot;Search&quot;
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.5 var(--font-mono); color: var(--text-muted);">
+          <div><b style="color: var(--brand-strong);">draft</b> → typed text (local)</div>
+          <div><b style="color: var(--brand-strong);">s.q</b> → URL truth (debounced 250ms)</div>
+          <div style="color: var(--text-subtle);">URL → draft sync handles Back/Forward.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Debounce</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="ck-step"><span class="n">04</span><h3>Add "Share this view"</h3></div>
+    <p>One button, one <code>navigator.clipboard.writeText(location.href)</code>, one confirmation toast. Make sure the URL is canonical first — strip empty/default values so the link doesn't have <code>?q=&amp;tier=&amp;dir=asc</code> noise. <code>useUrlState</code> already does this when you serialise, so the address bar matches the share link.</p>
+    <div class="ds-specimen"
+         data-code='import { Button, useToast } from &#39;@huchu/react&#39;;
+
+function ShareViewButton() {
+  const toast = useToast();
+  const onShare = async () =&gt; {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.show({ tone: &#39;success&#39;, title: &#39;Link copied&#39;,
+        description: &#39;Paste it to share this exact view.&#39; });
+    } catch {
+      // Fallback for non-secure contexts / older mobile browsers
+      const ta = document.createElement(&#39;textarea&#39;);
+      ta.value = window.location.href; document.body.appendChild(ta);
+      ta.select(); document.execCommand(&#39;copy&#39;); ta.remove();
+      toast.show({ tone: &#39;success&#39;, title: &#39;Link copied&#39; });
+    }
+  };
+
+  return (
+    &lt;Button variant=&quot;ghost&quot; onClick={onShare} leadingIcon=&quot;link&quot;&gt;
+      Share this view
+    &lt;/Button&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="display: inline-flex; gap: 10px; align-items: center; padding: 8px 14px; border-radius: 8px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd);">
+            <span data-icon="check" data-icon-size="14" style="color: var(--tone-success);"></span>
+            <div style="font: var(--type-body-sm); color: var(--text-strong);"><b>Link copied.</b> Paste it to share this exact view.</div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Share</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- FINAL COMPOSITION -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole <code>SuppliersList</code> page: URL schema, debounced search, filter chips, selected row, share button.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useState, useMemo } from &#39;@huchu/react&#39;;
+import { FilterChips, Button, useToast, useUrlState } from &#39;@huchu/react&#39;;
+
+// ── URL schema ─────────────────────────────────────────────────
+export type SuppliersUrlState = {
+  q: string;
+  tier: string[];
+  sel: string | null;
+  open: string | null;
+  sort: &#39;name&#39; | &#39;tier&#39; | &#39;updatedAt&#39;;
+  dir: &#39;asc&#39; | &#39;desc&#39;;
+};
+
+function useSuppliersUrlState() {
+  return useUrlState&lt;SuppliersUrlState&gt;({
+    q:    { type: &#39;string&#39;,         default: &#39;&#39; },
+    tier: { type: &#39;string[]&#39;,       default: [] },
+    sel:  { type: &#39;string-or-null&#39;, default: null },
+    open: { type: &#39;string-or-null&#39;, default: null },
+    sort: { type: &#39;enum&#39;, values: [&#39;name&#39;, &#39;tier&#39;, &#39;updatedAt&#39;], default: &#39;name&#39; },
+    dir:  { type: &#39;enum&#39;, values: [&#39;asc&#39;, &#39;desc&#39;], default: &#39;asc&#39; },
+  });
+}
+
+// ── Page ───────────────────────────────────────────────────────
+export function SuppliersList({
+  suppliers,
+}: {
+  suppliers: Array&lt;{ id: string; name: string; tier: &#39;A&#39; | &#39;B&#39; | &#39;C&#39;; updatedAt: string }&gt;;
+}) {
+  const [s, setS] = useSuppliersUrlState();
+  const toast = useToast();
+
+  // Debounced search input
+  const [draft, setDraft] = useState(s.q);
+  useEffect(() =&gt; {
+    if (draft === s.q) return;
+    const id = setTimeout(() =&gt; setS({ ...s, q: draft }), 250);
+    return () =&gt; clearTimeout(id);
+  }, [draft]);
+  useEffect(() =&gt; { setDraft(s.q); }, [s.q]);
+
+  // Derived view: filter + sort, computed from URL state
+  const view = useMemo(() =&gt; {
+    let rows = suppliers;
+    if (s.q) rows = rows.filter((r) =&gt; r.name.toLowerCase().includes(s.q.toLowerCase()));
+    if (s.tier.length) rows = rows.filter((r) =&gt; s.tier.includes(r.tier));
+    rows = [...rows].sort((a, b) =&gt; {
+      const cmp = a[s.sort] &lt; b[s.sort] ? -1 : a[s.sort] &gt; b[s.sort] ? 1 : 0;
+      return s.dir === &#39;asc&#39; ? cmp : -cmp;
+    });
+    return rows;
+  }, [suppliers, s]);
+
+  // Restore selected row scroll position on mount
+  useEffect(() =&gt; {
+    if (!s.sel) return;
+    const el = document.getElementById(`row-${s.sel}`);
+    el?.scrollIntoView({ block: &#39;center&#39;, behavior: &#39;instant&#39; as ScrollBehavior });
+  }, []);
+
+  const share = async () =&gt; {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.show({ tone: &#39;success&#39;, title: &#39;Link copied&#39;,
+        description: &#39;Paste it to share this exact view.&#39; });
+    } catch {
+      toast.show({ tone: &#39;danger&#39;, title: &#39;Couldn&#39;t copy. Long-press the URL bar.&#39; });
+    }
+  };
+
+  return (
+    &lt;div&gt;
+      &lt;header style={{ display: &#39;flex&#39;, gap: 12, alignItems: &#39;center&#39; }}&gt;
+        &lt;h1&gt;Suppliers&lt;/h1&gt;
+        &lt;Button variant=&quot;ghost&quot; onClick={share} leadingIcon=&quot;link&quot;&gt;
+          Share this view
+        &lt;/Button&gt;
+      &lt;/header&gt;
+
+      &lt;input
+        value={draft}
+        onChange={(e) =&gt; setDraft(e.target.value)}
+        placeholder=&quot;Search suppliers…&quot;
+        aria-label=&quot;Search suppliers&quot;
+      /&gt;
+
+      &lt;FilterChips
+        groups={[
+          { name: &#39;tier&#39;, label: &#39;Tier&#39;, multi: true,
+            options: [
+              { value: &#39;A&#39;, label: &#39;Tier A&#39; },
+              { value: &#39;B&#39;, label: &#39;Tier B&#39; },
+              { value: &#39;C&#39;, label: &#39;Tier C&#39; },
+            ] },
+        ]}
+        value={{ tier: s.tier }}
+        onChange={(v) =&gt; setS({ ...s, tier: v.tier ?? [] })}
+      /&gt;
+
+      &lt;ul role=&quot;list&quot;&gt;
+        {view.map((r) =&gt; (
+          &lt;li
+            key={r.id}
+            id={`row-${r.id}`}
+            aria-selected={s.sel === r.id}
+            onClick={() =&gt; setS({ ...s, sel: r.id, open: null }, { history: &#39;push&#39; })}
+          &gt;
+            &lt;span&gt;{r.name}&lt;/span&gt;
+            &lt;span&gt;Tier {r.tier}&lt;/span&gt;
+            {s.sel === r.id &amp;&amp; (
+              &lt;Details
+                openId={s.open}
+                onToggle={(id) =&gt; setS({ ...s, open: s.open === id ? null : id })}
+              /&gt;
+            )}
+          &lt;/li&gt;
+        ))}
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  );
+}
+
+function Details({ openId, onToggle }: {
+  openId: string | null;
+  onToggle: (id: string) =&gt; void;
+}) {
+  return (
+    &lt;div&gt;
+      {[&#39;profile&#39;, &#39;billing&#39;, &#39;activity&#39;].map((id) =&gt; (
+        &lt;section key={id}&gt;
+          &lt;button
+            aria-expanded={openId === id}
+            onClick={() =&gt; onToggle(id)}
+          &gt;
+            {id}
+          &lt;/button&gt;
+          {openId === id &amp;&amp; &lt;div&gt;{/* …panel… */}&lt;/div&gt;}
+        &lt;/section&gt;
+      ))}
+    &lt;/div&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="width: 460px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px;">
+            <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px;">
+              <h2 style="font: 700 18px/1.2 var(--font-sans); margin: 0; flex: 1;">Suppliers</h2>
+              <div style="display: inline-flex; gap: 6px; align-items: center; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font: 600 12px/1 var(--font-sans);"><span data-icon="link" data-icon-size="12"></span>Share this view</div>
+            </div>
+            <div style="height: 32px; border-radius: 6px; border: 1px solid var(--border-strong); padding: 0 10px; display: flex; align-items: center; font: 500 12px/1 var(--font-mono); color: var(--text-muted); margin-bottom: 10px;">acme</div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;">
+              <span style="font: 500 12px/1 var(--font-sans); padding: 4px 8px; background: var(--ink); color: var(--canvas); border-radius: 9999px;">Tier A</span>
+              <span style="font: 500 12px/1 var(--font-sans); padding: 4px 8px; border: 1px solid var(--border); border-radius: 9999px; color: var(--text-muted);">Tier B</span>
+              <span style="font: 500 12px/1 var(--font-sans); padding: 4px 8px; border: 1px solid var(--border); border-radius: 9999px; color: var(--text-muted);">Tier C</span>
+            </div>
+            <div style="display: grid; gap: 6px;">
+              <div style="padding: 10px 12px; background: var(--brand-soft); border: 1px solid var(--brand); border-radius: 6px; font: 500 13px/1 var(--font-sans); color: var(--text-strong);">Acme Metals — billing</div>
+              <div style="padding: 10px 12px; background: var(--surface-muted); border-radius: 6px; font: 500 13px/1 var(--font-sans); color: var(--text-strong);">Acme Hardware</div>
+            </div>
+            <div style="margin-top: 12px; padding: 8px 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 6px; font: 500 11px/1.3 var(--font-mono); color: var(--text-subtle); word-break: break-all;">/suppliers?<b style="color: var(--brand-strong);">tier=A&amp;q=acme&amp;sel=acme-metals&amp;open=billing</b></div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">SuppliersList.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three forks.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Hash routing</h4>
+        <p>If your backend can't route arbitrary paths, put everything after <code>#</code>. <code>useUrlState</code> reads <code>location.hash</code> instead of <code>location.search</code>.</p>
+<pre>useUrlState&lt;State&gt;(schema, {
+  source: &#39;hash&#39;, // default is &#39;search&#39;
+});
+// URL: /suppliers#tier=A&amp;sel=acme</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Saved views</h4>
+        <p>Let users name a view. Persist <code>{name, url}</code> pairs to the backend; render a "My views" menu in the page header.</p>
+<pre>const saveView = async () =&gt; {
+  const name = prompt(&#39;Name this view&#39;);
+  if (!name) return;
+  await fetch(&#39;/api/views&#39;, { method: &#39;POST&#39;,
+    body: JSON.stringify({ name,
+      path: window.location.pathname + window.location.search }) });
+};</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Browser-only persistence</h4>
+        <p>For private state that shouldn't end up in a shared URL — e.g. a draft note — mirror to <code>sessionStorage</code> instead. Same hook shape, different write target.</p>
+<pre>useUrlState&lt;State&gt;(schema, {
+  source: &#39;sessionStorage&#39;,
+  key: &#39;huchu:suppliers:draft&#39;,
+});
+// Survives reload, not shareable.</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCESSIBILITY -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">What this recipe takes care of for you.</p>
+    <ul class="ck-a11y">
+      <li><b>Reload restores focus.</b> If the URL has <code>sel=acme-metals</code>, the matching row gets <code>scrollIntoView</code> + focus on mount — a keyboard user lands exactly where they were.</li>
+      <li><b>Selected row exposes state.</b> <code>aria-selected={s.sel === r.id}</code> on the row, so screen readers say "Acme Metals, selected" without you needing a separate label.</li>
+      <li><b>Expanded sections are real disclosures.</b> <code>aria-expanded={openId === id}</code> on the toggle button; assistive tech announces "billing, expanded" / "billing, collapsed".</li>
+      <li><b>Share button confirms via live region.</b> The success toast uses <code>role="status"</code> + <code>aria-live="polite"</code> so users hear "Link copied" without a visual cue.</li>
+      <li><b>Back/Forward update state announce-ably.</b> The URL sync triggers a re-render; if the filter chips change, their <code>aria-pressed</code> updates and screen readers pick it up.</li>
+      <li><b>Filter and search labels are explicit.</b> <code>aria-label="Search suppliers"</code> on the input; FilterChips groups carry a <code>role="group"</code> with the group name.</li>
+      <li><b>Clipboard fallback works without HTTPS.</b> If <code>navigator.clipboard</code> isn't available (insecure context on older Android), the recipe falls back to a hidden <code>textarea</code> + <code>execCommand</code>.</li>
+    </ul>
+  </section>
+
+  <!-- RELATED -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">More shell + state patterns.</p>
+    <div class="ck-related">
+      <a href="shells-multi-tenant-switcher.html">Shells · Multi-tenant switcher<span class="tag">New</span></a>
+      <a href="lists-activity-log.html">Lists · Activity log<span class="tag">New</span></a>
+      <a href="forms-date-range-picker.html">Forms · Date-range picker<span class="tag">New</span></a>
+      <a href="lists-filterable-data-table.html">Lists · Filterable data table</a>
+      <a href="lists-master-detail.html">Lists · Master–detail</a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="states-optimistic-mutations.html"><div class="pager-label">← Previous</div><div class="pager-title">Optimistic mutations</div></a>
+    <a href="index.html" class="next"><div class="pager-label">All recipes →</div><div class="pager-title">Browse by theme</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>
