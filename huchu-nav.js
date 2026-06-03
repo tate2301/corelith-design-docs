@@ -68,6 +68,7 @@
     ]},
     { label: 'Cookbook', items: [
       ['All recipes',       ROOT + 'cookbook/index.html',       'cookbook-index'],
+      ['Playground',        ROOT + 'playground/index.html',     'playground', 'New'],
       // ── Onboarding ──────────────────────────────────────────
       ['Onboarding ·  First-run checklist', ROOT + 'cookbook/onboarding-checklist.html',      'onboarding-checklist',      'New'],
       // ── Auth ────────────────────────────────────────────────
@@ -121,6 +122,7 @@
       ['Iconography',       ROOT + 'system/iconography.html',   'iconography'],
       ['Accessibility',     ROOT + 'system/accessibility.html', 'accessibility', 'New'],
       ['Token reference',   ROOT + 'system/tokens.html',        'tokens'],
+      ['Tokens (JSON)',     ROOT + 'tokens/README.md',          '__',           'New'],
       ['Voice & tone',      ROOT + 'system/voice.html',         'voice'],
       ['Writing guidelines',ROOT + 'system/content.html',       'content'],
       // ── Primitives (components) ─────────────────────────────
