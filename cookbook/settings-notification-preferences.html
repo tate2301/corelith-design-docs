@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Notification preferences · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .panel { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 10px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+  .ck-screen .matrix-row { display: grid; grid-template-columns: 1.4fr repeat(4, 1fr); gap: 4px; font: 500 8px/1.2 var(--font-sans); align-items: center; }
+  .ck-screen .matrix-row.head { color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; font-size: 7px; }
+  .ck-screen .dot { width: 10px; height: 10px; border-radius: 3px; border: 1px solid var(--border-strong); margin: 0 auto; }
+  .ck-screen .dot.on { background: var(--brand); border-color: var(--brand); }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p  { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+
+  .ck-pull { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; padding: 14px 16px; margin: 14px 0 0; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Settings</a><span class="sep">/</span>
+      <span>Notification preferences</span>
+    </div>
+    <h1>Build a notification preferences matrix</h1>
+    <p class="lede">By the end of this recipe you'll have a settings page that lets a user pick which event types reach them on which channels (Email · Push · In-app · SMS), with a master "Pause for X hours" toggle, quiet-hours schedule, and a matrix where rows are events and columns are channels — saved per change without a Save button.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="settings" data-icon-size="12"></span>Settings</span>
+      <span class="meta-pill">3 primitives · 1 block · 1 pattern</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~35 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A grid of switches. Rows are events ("Order placed", "Refund issued"). Columns are channels. Each cell is one boolean.</p>
+    <p>Notification settings are a tax on the user; the goal is to keep that tax small. A flat matrix beats a wizard because the user can see every choice at once and find their event without scrolling-and-toggling. The recipe persists each switch as you click — no Save button — and offers a master "Pause all" plus quiet hours for the common cases ("I'm asleep" / "I'm in the field"). Granularity is the win; channel-level defaults are an opt-in opinion you make, not a switch the user has to find.</p>
+    <p class="ck-pull"><b>Notification settings should NEVER have a "Resubscribe to marketing emails" trap.</b> Granular by default; subscribing is opt-in only. The dark pattern of pre-ticking marketing categories is the single fastest way to lose trust.</p>
+    <p><b>Skip this recipe if</b> your app has one channel and three notifications. A single switch beats a matrix; matrices are for apps that have grown enough to feel noisy.</p>
+  </section>
+
+  <!-- WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three screens: the matrix, the master pause, and quiet hours.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="panel">
+          <div class="matrix-row head"><span>Event</span><span style="text-align: center;">Email</span><span style="text-align: center;">Push</span><span style="text-align: center;">App</span><span style="text-align: center;">SMS</span></div>
+          <div class="matrix-row"><span>Order placed</span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span><span class="dot"></span></div>
+          <div class="matrix-row"><span>Refund issued</span><span class="dot on"></span><span class="dot"></span><span class="dot on"></span><span class="dot"></span></div>
+          <div class="matrix-row"><span>Low stock</span><span class="dot"></span><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span></div>
+          <div class="matrix-row"><span>Mention</span><span class="dot"></span><span class="dot on"></span><span class="dot on"></span><span class="dot"></span></div>
+          <div class="matrix-row"><span>Weekly report</span><span class="dot on"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        </div>
+        <div class="caption"><span class="num">01</span> Matrix — events × channels</div>
+      </div>
+      <div class="ck-screen">
+        <div class="panel">
+          <div style="font: 600 10px/1 var(--font-sans); color: var(--text-strong);">Pause notifications</div>
+          <div style="font: 500 9px/1.4 var(--font-sans); color: var(--text-muted);">All channels go quiet for the next…</div>
+          <div style="display: flex; gap: 4px; margin-top: 4px;">
+            <div style="flex: 1; background: var(--brand-soft); color: var(--brand-strong); padding: 4px; text-align: center; border-radius: 4px; font: 600 9px/1 var(--font-sans);">1 h</div>
+            <div style="flex: 1; background: var(--surface-muted); padding: 4px; text-align: center; border-radius: 4px; font: 600 9px/1 var(--font-sans);">2 h</div>
+            <div style="flex: 1; background: var(--surface-muted); padding: 4px; text-align: center; border-radius: 4px; font: 600 9px/1 var(--font-sans);">4 h</div>
+            <div style="flex: 1; background: var(--surface-muted); padding: 4px; text-align: center; border-radius: 4px; font: 600 9px/1 var(--font-sans);">24 h</div>
+          </div>
+          <div style="margin-top: 8px; font: 500 9px/1.4 var(--font-sans); color: var(--brand-strong);">Paused until 15:42</div>
+        </div>
+        <div class="caption"><span class="num">02</span> Pause — quick durations</div>
+      </div>
+      <div class="ck-screen">
+        <div class="panel">
+          <div style="font: 600 10px/1 var(--font-sans); color: var(--text-strong);">Quiet hours</div>
+          <div style="font: 500 9px/1.4 var(--font-sans); color: var(--text-muted);">Don't disturb between</div>
+          <div style="display: flex; gap: 6px; align-items: center; margin-top: 4px;">
+            <div style="background: var(--surface-muted); border: 1px solid var(--border-strong); padding: 4px 8px; border-radius: 4px; font: 600 9px/1 var(--font-mono);">22:00</div>
+            <span style="font: 500 9px/1 var(--font-sans); color: var(--text-muted);">→</span>
+            <div style="background: var(--surface-muted); border: 1px solid var(--border-strong); padding: 4px 8px; border-radius: 4px; font: 600 9px/1 var(--font-mono);">06:00</div>
+          </div>
+          <div style="margin-top: 6px; font: 500 9px/1.4 var(--font-sans); color: var(--text-subtle);">Critical alerts still ring through.</div>
+        </div>
+        <div class="caption"><span class="num">03</span> Quiet hours — daily window</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">A small surface. Most of the work is the data model.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/p-switch.html"><span class="kind">Primitive</span>Switch</a>
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+      <a class="ck-piece" href="../system/p-input.html"><span class="kind">Primitive</span>Input</a>
+      <a class="ck-piece" href="../system/b-toast.html"><span class="kind">Block</span>Toast</a>
+      <a class="ck-piece" href="../system/x-prefs.html"><span class="kind">Pattern</span>Preferences page</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>NotificationMatrix</code>, <code>usePreferences</code>, <code>Switch</code>, <code>Button</code>, <code>Input</code>, <code>Stack</code>, <code>Card</code>, <code>Toast</code>, <code>useToast</code>.</p>
+  </section>
+
+  <!-- STEPS -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <div class="ck-step"><span class="n">01</span><h3>Model preferences as one normalised record</h3></div>
+    <p>Events × channels is a 2D matrix; store it as a flat <code>Record&lt;`${eventId}:${channel}`, boolean&gt;</code>. That key shape makes diffing trivial ("which event:channel pairs changed?") and the API surface is one field name per row in the audit table. Don't model the matrix as nested objects — you'll re-write the persistence code three times before you get it right.</p>
+    <div class="ds-specimen"
+         data-code='type Channel = &#39;email&#39; | &#39;push&#39; | &#39;app&#39; | &#39;sms&#39;;
+
+type Event = {
+  id: string;
+  label: string;
+  description?: string;
+  critical?: boolean;   // bypasses quiet hours
+};
+
+type Prefs = {
+  // Flat map: &quot;order_placed:email&quot; → true
+  matrix: Record&lt;string, boolean&gt;;
+  // Master pause
+  pauseUntil: string | null;
+  // Daily quiet window (24h local)
+  quietHours: { from: string; to: string } | null;
+};
+
+type Action =
+  | { type: &#39;TOGGLE&#39;; eventId: string; channel: Channel; value: boolean }
+  | { type: &#39;PAUSE&#39;;  until: string }
+  | { type: &#39;RESUME&#39; }
+  | { type: &#39;QUIET&#39;;  hours: Prefs[&#39;quietHours&#39;] };
+
+const key = (e: string, c: Channel) =&gt; `${e}:${c}`;
+
+function reducer(s: Prefs, a: Action): Prefs {
+  switch (a.type) {
+    case &#39;TOGGLE&#39;:
+      return { ...s, matrix: { ...s.matrix, [key(a.eventId, a.channel)]: a.value } };
+    case &#39;PAUSE&#39;:  return { ...s, pauseUntil: a.until };
+    case &#39;RESUME&#39;: return { ...s, pauseUntil: null };
+    case &#39;QUIET&#39;:  return { ...s, quietHours: a.hours };
+  }
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 10px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div>matrix: <b style="color: var(--brand-strong);">{ "order_placed:email": true, … }</b></div>
+          <div>pauseUntil: ISO string or null</div>
+          <div style="color: var(--text-subtle);">Flat keys diff cleanly. Audit logs one row per toggle.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Model</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">02</span><h3>Render the matrix as a real table</h3></div>
+    <p>A real <code>&lt;table&gt;</code> with <code>&lt;th scope="col"&gt;</code> for the channels and <code>&lt;th scope="row"&gt;</code> for the events gives you free a11y. Each cell holds a <code>Switch</code> with an <code>aria-label</code> like "Email when order is placed". The toggle dispatches and persists in one go.</p>
+    <div class="ds-specimen"
+         data-code='import { Switch } from &#39;@huchu/react&#39;;
+
+const CHANNELS: { id: Channel; label: string }[] = [
+  { id: &#39;email&#39;, label: &#39;Email&#39; },
+  { id: &#39;push&#39;,  label: &#39;Push&#39; },
+  { id: &#39;app&#39;,   label: &#39;In-app&#39; },
+  { id: &#39;sms&#39;,   label: &#39;SMS&#39; },
+];
+
+function Matrix({ events, prefs, dispatch }: {
+  events: Event[];
+  prefs: Prefs;
+  dispatch: React.Dispatch&lt;Action&gt;;
+}) {
+  return (
+    &lt;table className=&quot;prefs-matrix&quot;&gt;
+      &lt;caption className=&quot;sr-only&quot;&gt;
+        Notification preferences. Rows are events, columns are channels.
+      &lt;/caption&gt;
+      &lt;thead&gt;
+        &lt;tr&gt;
+          &lt;th scope=&quot;col&quot;&gt;Event&lt;/th&gt;
+          {CHANNELS.map((c) =&gt; (
+            &lt;th scope=&quot;col&quot; key={c.id}&gt;{c.label}&lt;/th&gt;
+          ))}
+        &lt;/tr&gt;
+      &lt;/thead&gt;
+      &lt;tbody&gt;
+        {events.map((e) =&gt; (
+          &lt;tr key={e.id}&gt;
+            &lt;th scope=&quot;row&quot;&gt;
+              {e.label}
+              {e.critical &amp;&amp; &lt;span className=&quot;tag critical&quot;&gt;Critical&lt;/span&gt;}
+              {e.description &amp;&amp; &lt;p&gt;{e.description}&lt;/p&gt;}
+            &lt;/th&gt;
+            {CHANNELS.map((c) =&gt; {
+              const k = `${e.id}:${c.id}`;
+              return (
+                &lt;td key={c.id}&gt;
+                  &lt;Switch
+                    checked={prefs.matrix[k] ?? false}
+                    onChange={(v) =&gt; dispatch({
+                      type: &#39;TOGGLE&#39;, eventId: e.id, channel: c.id, value: v,
+                    })}
+                    aria-label={`${c.label} when ${e.label.toLowerCase()}`}
+                  /&gt;
+                &lt;/td&gt;
+              );
+            })}
+          &lt;/tr&gt;
+        ))}
+      &lt;/tbody&gt;
+    &lt;/table&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="width: 480px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px;">
+            <div style="display: grid; grid-template-columns: 2fr repeat(4, 1fr); gap: 8px; font: 600 11px/1 var(--font-sans); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; padding-bottom: 8px; border-bottom: 1px solid var(--border);"><div>Event</div><div style="text-align: center;">Email</div><div style="text-align: center;">Push</div><div style="text-align: center;">App</div><div style="text-align: center;">SMS</div></div>
+            <div style="display: grid; grid-template-columns: 2fr repeat(4, 1fr); gap: 8px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font: 500 13px/1.4 var(--font-sans);">
+              <div><b>Order placed</b><div style="font: 500 11px/1.3 var(--font-sans); color: var(--text-muted);">When a sale rings up</div></div>
+              <div style="text-align: center;"><div style="width: 28px; height: 16px; background: var(--brand); border-radius: 999px; margin: 0 auto;"></div></div>
+              <div style="text-align: center;"><div style="width: 28px; height: 16px; background: var(--brand); border-radius: 999px; margin: 0 auto;"></div></div>
+              <div style="text-align: center;"><div style="width: 28px; height: 16px; background: var(--brand); border-radius: 999px; margin: 0 auto;"></div></div>
+              <div style="text-align: center;"><div style="width: 28px; height: 16px; background: var(--border-strong); border-radius: 999px; margin: 0 auto;"></div></div>
+            </div>
+            <div style="display: grid; grid-template-columns: 2fr repeat(4, 1fr); gap: 8px; align-items: center; padding: 10px 0; font: 500 13px/1.4 var(--font-sans);">
+              <div><b>Refund issued</b><span style="margin-left: 6px; font: 500 9px/1 var(--font-sans); color: var(--tone-danger); padding: 2px 5px; background: var(--tone-danger-bg); border: 1px solid var(--tone-danger-bd); border-radius: 9999px; text-transform: uppercase;">Critical</span></div>
+              <div style="text-align: center;"><div style="width: 28px; height: 16px; background: var(--brand); border-radius: 999px; margin: 0 auto;"></div></div>
+              <div style="text-align: center;"><div style="width: 28px; height: 16px; background: var(--border-strong); border-radius: 999px; margin: 0 auto;"></div></div>
+              <div style="text-align: center;"><div style="width: 28px; height: 16px; background: var(--brand); border-radius: 999px; margin: 0 auto;"></div></div>
+              <div style="text-align: center;"><div style="width: 28px; height: 16px; background: var(--border-strong); border-radius: 999px; margin: 0 auto;"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Matrix table</span><span class="spacer"></span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">03</span><h3>Add the master pause with quick durations</h3></div>
+    <p>The most-requested feature on a notification page is "shut up for the next hour". Provide preset durations (1h, 2h, 4h, 24h) and a "Until I turn it back on". Compute the resume time once on click; don't store a duration and recompute every render.</p>
+    <div class="ds-specimen"
+         data-code='import { Button, Stack } from &#39;@huchu/react&#39;;
+
+const PRESETS = [
+  { label: &#39;1 h&#39;,    minutes: 60 },
+  { label: &#39;2 h&#39;,    minutes: 120 },
+  { label: &#39;4 h&#39;,    minutes: 240 },
+  { label: &#39;Until tomorrow&#39;, minutes: 24 * 60 },
+];
+
+function PauseCard({ prefs, dispatch }: {
+  prefs: Prefs;
+  dispatch: React.Dispatch&lt;Action&gt;;
+}) {
+  const paused = prefs.pauseUntil &amp;&amp; new Date(prefs.pauseUntil) &gt; new Date();
+
+  if (paused) {
+    return (
+      &lt;Card aria-live=&quot;polite&quot;&gt;
+        &lt;Stack gap=&quot;sm&quot;&gt;
+          &lt;h3&gt;Paused until {new Date(prefs.pauseUntil!).toLocaleTimeString()}&lt;/h3&gt;
+          &lt;p&gt;Critical alerts (refunds, security) still come through.&lt;/p&gt;
+          &lt;Button variant=&quot;primary&quot; onClick={() =&gt; dispatch({ type: &#39;RESUME&#39; })}&gt;
+            Resume now
+          &lt;/Button&gt;
+        &lt;/Stack&gt;
+      &lt;/Card&gt;
+    );
+  }
+
+  return (
+    &lt;Card&gt;
+      &lt;Stack gap=&quot;sm&quot;&gt;
+        &lt;h3&gt;Pause notifications&lt;/h3&gt;
+        &lt;p&gt;All channels go quiet for the chosen window. Critical alerts still ring.&lt;/p&gt;
+        &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot;&gt;
+          {PRESETS.map((p) =&gt; (
+            &lt;Button
+              key={p.label}
+              variant=&quot;ghost&quot;
+              onClick={() =&gt; dispatch({
+                type: &#39;PAUSE&#39;,
+                until: new Date(Date.now() + p.minutes * 60_000).toISOString(),
+              })}
+            &gt;{p.label}&lt;/Button&gt;
+          ))}
+        &lt;/Stack&gt;
+      &lt;/Stack&gt;
+    &lt;/Card&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="width: 400px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px;">
+            <h3 style="font: 700 14px/1.2 var(--font-sans); margin: 0 0 4px;">Pause notifications</h3>
+            <p style="font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); margin: 0 0 12px;">All channels go quiet for the chosen window. Critical alerts still ring.</p>
+            <div style="display: flex; gap: 6px;">
+              <div style="background: var(--brand-soft); color: var(--brand-strong); padding: 6px 10px; border-radius: 6px; font: 600 12px/1 var(--font-sans);">1 h</div>
+              <div style="background: var(--surface-muted); color: var(--text-strong); padding: 6px 10px; border-radius: 6px; font: 600 12px/1 var(--font-sans);">2 h</div>
+              <div style="background: var(--surface-muted); color: var(--text-strong); padding: 6px 10px; border-radius: 6px; font: 600 12px/1 var(--font-sans);">4 h</div>
+              <div style="background: var(--surface-muted); color: var(--text-strong); padding: 6px 10px; border-radius: 6px; font: 600 12px/1 var(--font-sans);">Tomorrow</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Master pause</span><span class="spacer"></span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">04</span><h3>Persist per toggle — no Save button</h3></div>
+    <p>Each toggle calls <code>PATCH /me/preferences</code> with the single delta. Show a tiny "Saved" toast on success; rollback the optimistic value on failure. No Save button means the user never wonders "did this take effect?" — closing the tab is always safe.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useReducer } from &#39;@huchu/react&#39;;
+import { Toast, useToast } from &#39;@huchu/react&#39;;
+
+export function usePreferences(initial: Prefs) {
+  const [prefs, raw] = useReducer(reducer, initial);
+  const toast = useToast();
+
+  const dispatch = (a: Action) =&gt; {
+    const before = prefs;
+    raw(a);
+
+    // Build the patch from the single action.
+    let patch: Record&lt;string, unknown&gt; | null = null;
+    if (a.type === &#39;TOGGLE&#39;) patch = { [`matrix.${key(a.eventId, a.channel)}`]: a.value };
+    if (a.type === &#39;PAUSE&#39;)  patch = { pauseUntil: a.until };
+    if (a.type === &#39;RESUME&#39;) patch = { pauseUntil: null };
+    if (a.type === &#39;QUIET&#39;)  patch = { quietHours: a.hours };
+
+    if (patch) {
+      fetch(&#39;/me/preferences&#39;, { method: &#39;PATCH&#39;, body: JSON.stringify(patch) })
+        .then((res) =&gt; {
+          if (!res.ok) throw new Error(&#39;Save failed&#39;);
+          toast.show({ tone: &#39;success&#39;, title: &#39;Saved&#39;, ttl: 1200 });
+        })
+        .catch(() =&gt; {
+          // Rollback by re-applying the previous state.
+          raw({ type: &#39;__rollback&#39; as any, prev: before } as any);
+          toast.show({ tone: &#39;danger&#39;, title: &#39;Could not save preference&#39; });
+        });
+    }
+  };
+
+  return [prefs, dispatch] as const;
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--elev-2); padding: 10px 14px; display: flex; gap: 10px; align-items: center;"><span data-icon="check" data-icon-size="14" style="color: var(--tone-success);"></span><div><div style="font: 600 13px/1 var(--font-sans);">Saved</div><div style="font: 500 11px/1.2 var(--font-sans); color: var(--text-muted);">Push notifications for "Low stock" turned on</div></div></div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Persist per toggle</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- FINAL -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole settings page — matrix, pause, quiet hours, optimistic persistence.</p>
+    <div class="ds-specimen"
+         data-code='import { useReducer } from &#39;@huchu/react&#39;;
+import {
+  NotificationMatrix, usePreferences,
+  Switch, Button, Input, Card, Stack, Toast, useToast,
+} from &#39;@huchu/react&#39;;
+
+type Channel = &#39;email&#39; | &#39;push&#39; | &#39;app&#39; | &#39;sms&#39;;
+
+type Event = {
+  id: string; label: string;
+  description?: string; critical?: boolean;
+};
+
+type Prefs = {
+  matrix: Record&lt;string, boolean&gt;;
+  pauseUntil: string | null;
+  quietHours: { from: string; to: string } | null;
+};
+
+const CHANNELS: { id: Channel; label: string }[] = [
+  { id: &#39;email&#39;, label: &#39;Email&#39; },
+  { id: &#39;push&#39;,  label: &#39;Push&#39; },
+  { id: &#39;app&#39;,   label: &#39;In-app&#39; },
+  { id: &#39;sms&#39;,   label: &#39;SMS&#39; },
+];
+
+const EVENTS: Event[] = [
+  { id: &#39;order_placed&#39;,   label: &#39;Order placed&#39;,   description: &#39;When a sale rings up.&#39; },
+  { id: &#39;refund_issued&#39;,  label: &#39;Refund issued&#39;,  critical: true, description: &#39;A till refunded a customer.&#39; },
+  { id: &#39;low_stock&#39;,      label: &#39;Low stock&#39;,      description: &#39;A SKU dropped below its reorder level.&#39; },
+  { id: &#39;mention&#39;,         label: &#39;Mention&#39;,        description: &#39;Someone @-mentioned you.&#39; },
+  { id: &#39;weekly_report&#39;,   label: &#39;Weekly report&#39;,  description: &#39;Friday close summary.&#39; },
+];
+
+const PRESETS = [
+  { label: &#39;1 h&#39;,    minutes: 60 },
+  { label: &#39;2 h&#39;,    minutes: 120 },
+  { label: &#39;4 h&#39;,    minutes: 240 },
+  { label: &#39;Until tomorrow&#39;, minutes: 24 * 60 },
+];
+
+const key = (e: string, c: Channel) =&gt; `${e}:${c}`;
+
+export function NotificationPreferences({ initial }: { initial: Prefs }) {
+  const [prefs, dispatch] = usePreferences(initial);
+  const paused = prefs.pauseUntil &amp;&amp; new Date(prefs.pauseUntil) &gt; new Date();
+
+  return (
+    &lt;Stack gap=&quot;lg&quot;&gt;
+      &lt;header&gt;
+        &lt;h1&gt;Notifications&lt;/h1&gt;
+        &lt;p&gt;Choose what reaches you and how. Changes save as you flip them.&lt;/p&gt;
+      &lt;/header&gt;
+
+      &lt;Card aria-live=&quot;polite&quot;&gt;
+        {paused ? (
+          &lt;Stack gap=&quot;sm&quot;&gt;
+            &lt;h2&gt;Paused until {new Date(prefs.pauseUntil!).toLocaleTimeString()}&lt;/h2&gt;
+            &lt;p&gt;Critical alerts (refunds, security) still come through.&lt;/p&gt;
+            &lt;Button variant=&quot;primary&quot; onClick={() =&gt; dispatch({ type: &#39;RESUME&#39; })}&gt;Resume now&lt;/Button&gt;
+          &lt;/Stack&gt;
+        ) : (
+          &lt;Stack gap=&quot;sm&quot;&gt;
+            &lt;h2&gt;Pause notifications&lt;/h2&gt;
+            &lt;p&gt;All channels go quiet for the chosen window. Critical alerts still ring.&lt;/p&gt;
+            &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot; wrap&gt;
+              {PRESETS.map((p) =&gt; (
+                &lt;Button key={p.label} variant=&quot;ghost&quot; onClick={() =&gt; dispatch({
+                  type: &#39;PAUSE&#39;,
+                  until: new Date(Date.now() + p.minutes * 60_000).toISOString(),
+                })}&gt;{p.label}&lt;/Button&gt;
+              ))}
+            &lt;/Stack&gt;
+          &lt;/Stack&gt;
+        )}
+      &lt;/Card&gt;
+
+      &lt;Card&gt;
+        &lt;Stack gap=&quot;sm&quot;&gt;
+          &lt;h2&gt;Quiet hours&lt;/h2&gt;
+          &lt;p&gt;Don&#39;t disturb in this daily window. Critical alerts still ring.&lt;/p&gt;
+          &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot; align=&quot;center&quot;&gt;
+            &lt;Input
+              type=&quot;time&quot;
+              value={prefs.quietHours?.from ?? &#39;&#39;}
+              aria-label=&quot;Quiet hours start&quot;
+              onChange={(from) =&gt; dispatch({
+                type: &#39;QUIET&#39;,
+                hours: { from, to: prefs.quietHours?.to ?? &#39;06:00&#39; },
+              })}
+            /&gt;
+            &lt;span&gt;to&lt;/span&gt;
+            &lt;Input
+              type=&quot;time&quot;
+              value={prefs.quietHours?.to ?? &#39;&#39;}
+              aria-label=&quot;Quiet hours end&quot;
+              onChange={(to) =&gt; dispatch({
+                type: &#39;QUIET&#39;,
+                hours: { from: prefs.quietHours?.from ?? &#39;22:00&#39;, to },
+              })}
+            /&gt;
+            {prefs.quietHours &amp;&amp; (
+              &lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot; onClick={() =&gt; dispatch({ type: &#39;QUIET&#39;, hours: null })}&gt;
+                Clear
+              &lt;/Button&gt;
+            )}
+          &lt;/Stack&gt;
+        &lt;/Stack&gt;
+      &lt;/Card&gt;
+
+      &lt;Card&gt;
+        &lt;Stack gap=&quot;sm&quot;&gt;
+          &lt;h2&gt;What sends to where&lt;/h2&gt;
+          &lt;p&gt;Off by default. Pick the channels you want for each event.&lt;/p&gt;
+          &lt;table className=&quot;prefs-matrix&quot;&gt;
+            &lt;caption className=&quot;sr-only&quot;&gt;Notification preferences. Rows are events, columns are channels.&lt;/caption&gt;
+            &lt;thead&gt;
+              &lt;tr&gt;
+                &lt;th scope=&quot;col&quot;&gt;Event&lt;/th&gt;
+                {CHANNELS.map((c) =&gt; &lt;th scope=&quot;col&quot; key={c.id}&gt;{c.label}&lt;/th&gt;)}
+              &lt;/tr&gt;
+            &lt;/thead&gt;
+            &lt;tbody&gt;
+              {EVENTS.map((e) =&gt; (
+                &lt;tr key={e.id}&gt;
+                  &lt;th scope=&quot;row&quot;&gt;
+                    &lt;b&gt;{e.label}&lt;/b&gt;
+                    {e.critical &amp;&amp; &lt;span className=&quot;tag critical&quot;&gt;Critical&lt;/span&gt;}
+                    {e.description &amp;&amp; &lt;p&gt;{e.description}&lt;/p&gt;}
+                  &lt;/th&gt;
+                  {CHANNELS.map((c) =&gt; {
+                    const k = key(e.id, c.id);
+                    return (
+                      &lt;td key={c.id}&gt;
+                        &lt;Switch
+                          checked={prefs.matrix[k] ?? false}
+                          onChange={(v) =&gt; dispatch({
+                            type: &#39;TOGGLE&#39;, eventId: e.id, channel: c.id, value: v,
+                          })}
+                          aria-label={`${c.label} when ${e.label.toLowerCase()}`}
+                        /&gt;
+                      &lt;/td&gt;
+                    );
+                  })}
+                &lt;/tr&gt;
+              ))}
+            &lt;/tbody&gt;
+          &lt;/table&gt;
+        &lt;/Stack&gt;
+      &lt;/Card&gt;
+    &lt;/Stack&gt;
+  );
+}
+
+function reducer(s: Prefs, a: any): Prefs {
+  switch (a.type) {
+    case &#39;TOGGLE&#39;:
+      return { ...s, matrix: { ...s.matrix, [key(a.eventId, a.channel)]: a.value } };
+    case &#39;PAUSE&#39;:    return { ...s, pauseUntil: a.until };
+    case &#39;RESUME&#39;:   return { ...s, pauseUntil: null };
+    case &#39;QUIET&#39;:    return { ...s, quietHours: a.hours };
+    case &#39;__rollback&#39;: return a.prev;
+    default: return s;
+  }
+}
+
+function usePreferencesImpl(initial: Prefs) {
+  const [prefs, raw] = useReducer(reducer, initial);
+  const toast = useToast();
+
+  const dispatch = (a: any) =&gt; {
+    const before = prefs;
+    raw(a);
+    fetch(&#39;/me/preferences&#39;, {
+      method: &#39;PATCH&#39;,
+      body: JSON.stringify(diffFromAction(a)),
+    }).then((res) =&gt; {
+      if (!res.ok) throw new Error(&#39;Save failed&#39;);
+      toast.show({ tone: &#39;success&#39;, title: &#39;Saved&#39;, ttl: 1200 });
+    }).catch(() =&gt; {
+      raw({ type: &#39;__rollback&#39;, prev: before });
+      toast.show({ tone: &#39;danger&#39;, title: &#39;Could not save preference&#39; });
+    });
+  };
+
+  return [prefs, dispatch] as const;
+}
+
+function diffFromAction(a: any) {
+  if (a.type === &#39;TOGGLE&#39;) return { [`matrix.${key(a.eventId, a.channel)}`]: a.value };
+  if (a.type === &#39;PAUSE&#39;)  return { pauseUntil: a.until };
+  if (a.type === &#39;RESUME&#39;) return { pauseUntil: null };
+  if (a.type === &#39;QUIET&#39;)  return { quietHours: a.hours };
+  return {};
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="width: 540px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px;">
+            <h2 style="font: 700 18px/1.2 var(--font-sans); margin: 0 0 4px;">Notifications</h2>
+            <p style="font: 500 13px/1.5 var(--font-sans); color: var(--text-muted); margin: 0 0 18px;">Choose what reaches you and how. Changes save as you flip them.</p>
+            <div style="background: var(--surface-muted); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 14px;">
+              <div style="font: 600 14px/1.2 var(--font-sans); margin-bottom: 4px;">Pause notifications</div>
+              <div style="font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); margin-bottom: 10px;">All channels go quiet. Critical alerts still ring.</div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <div style="background: var(--brand-soft); color: var(--brand-strong); padding: 6px 12px; border-radius: 6px; font: 600 12px/1 var(--font-sans);">1 h</div>
+                <div style="background: var(--surface); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font: 600 12px/1 var(--font-sans);">2 h</div>
+                <div style="background: var(--surface); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font: 600 12px/1 var(--font-sans);">4 h</div>
+                <div style="background: var(--surface); border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font: 600 12px/1 var(--font-sans);">Until tomorrow</div>
+              </div>
+            </div>
+            <div style="font: 600 14px/1.2 var(--font-sans); margin-bottom: 10px;">What sends to where</div>
+            <div style="display: grid; grid-template-columns: 2fr repeat(4, 1fr); gap: 8px; font: 600 11px/1 var(--font-sans); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; padding-bottom: 8px; border-bottom: 1px solid var(--border);"><div>Event</div><div style="text-align: center;">Email</div><div style="text-align: center;">Push</div><div style="text-align: center;">App</div><div style="text-align: center;">SMS</div></div>
+            <div style="display: grid; grid-template-columns: 2fr repeat(4, 1fr); gap: 8px; align-items: center; padding: 10px 0; font: 500 13px/1.4 var(--font-sans);">
+              <div><b>Order placed</b></div>
+              <div style="text-align: center;"><div style="width: 28px; height: 16px; background: var(--brand); border-radius: 999px; margin: 0 auto;"></div></div>
+              <div style="text-align: center;"><div style="width: 28px; height: 16px; background: var(--brand); border-radius: 999px; margin: 0 auto;"></div></div>
+              <div style="text-align: center;"><div style="width: 28px; height: 16px; background: var(--brand); border-radius: 999px; margin: 0 auto;"></div></div>
+              <div style="text-align: center;"><div style="width: 28px; height: 16px; background: var(--border-strong); border-radius: 999px; margin: 0 auto;"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">NotificationPreferences.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three forks. Each is a small diff from the final composition.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Per-role defaults</h4>
+        <p>Admins should hear about refunds; cashiers should not. Seed the matrix from the user's role before merging their personal overrides.</p>
+<pre>const role = currentUser.role;
+const seeded = {
+  ...ROLE_DEFAULTS[role],
+  ...storedPrefs.matrix,
+};
+return &lt;NotificationPreferences
+  initial={{ ...storedPrefs,
+             matrix: seeded }} /&gt;;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Channel ordering by preference</h4>
+        <p>If a user never picks SMS, push it to the rightmost column. Reorder the <code>CHANNELS</code> array by usage count.</p>
+<pre>const usage = useChannelUsage();
+const ordered = [...CHANNELS]
+  .sort((a, b) =&gt;
+    (usage[b.id] ?? 0) - (usage[a.id] ?? 0));
+// Pass `ordered` into the table head.</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Bulk "Off for this column"</h4>
+        <p>Click a column header to turn that channel off for every event. Single dispatch, batched patch.</p>
+<pre>const offAll = (c: Channel) =&gt; {
+  EVENTS.forEach((e) =&gt; dispatch({
+    type: &#39;TOGGLE&#39;,
+    eventId: e.id, channel: c,
+    value: false,
+  }));
+};</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- A11Y -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">A matrix is the worst-case for screen readers if you build it as a div-grid. Use a real table and the work is done.</p>
+    <ul class="ck-a11y">
+      <li><b>Real <code>&lt;table&gt;</code> with scope.</b> <code>&lt;th scope="col"&gt;</code> on channels, <code>&lt;th scope="row"&gt;</code> on events — screen readers read "Email, Order placed, on" without you naming each cell.</li>
+      <li><b>Switches carry <code>aria-label</code>.</b> Each label combines the channel and event so the announcement is unambiguous: "SMS when refund issued, off".</li>
+      <li><b>Critical events are marked.</b> A visible tag <em>and</em> an SR-only "Critical event" string — colour is never the only signal.</li>
+      <li><b>"Saved" toast is live but quiet.</b> A polite live region announces "Saved" after each toggle without stealing focus.</li>
+      <li><b>Pause state is announced.</b> The pause card carries <code>aria-live="polite"</code> so flipping to paused is read.</li>
+      <li><b>Quiet-hours inputs have real labels.</b> "Quiet hours start" and "Quiet hours end" — never relying on a visible "to" between two unlabelled inputs.</li>
+      <li><b>Caption explains the grid.</b> A visually-hidden <code>&lt;caption&gt;</code> says "Rows are events, columns are channels" so SR users know the structure on enter.</li>
+    </ul>
+  </section>
+
+  <!-- RELATED -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">Other settings/preference recipes, plus the canonical state machine.</p>
+    <div class="ck-related">
+      <a href="views-print-friendly.html">Views ·  Print-friendly views<span class="tag">New</span></a>
+      <a href="views-image-gallery.html">Views ·  Image gallery + lightbox<span class="tag">New</span></a>
+      <a href="lists-kanban-board.html">Lists ·  Kanban board<span class="tag">New</span></a>
+      <a href="communication-comments-thread.html">Communication ·  Comments thread<span class="tag">New</span></a>
+      <a href="auth-signin-2fa.html">Auth ·  Sign in with 2FA<span class="tag">Canonical</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="index.html"><div class="pager-label">← Back to</div><div class="pager-title">Cookbook</div></a>
+    <a href="views-image-gallery.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Image gallery + lightbox</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

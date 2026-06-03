@@ -93,6 +93,12 @@
       ['Lists ·  Filterable data table',    ROOT + 'cookbook/lists-filterable-data-table.html', 'lists-filterable-data-table', 'New'],
       ['Lists ·  Master–detail page',       ROOT + 'cookbook/lists-master-detail.html',         'lists-master-detail',         'New'],
       ['Lists ·  Activity log',             ROOT + 'cookbook/lists-activity-log.html',          'lists-activity-log',          'New'],
+      ['Lists ·  Kanban board',             ROOT + 'cookbook/lists-kanban-board.html',          'lists-kanban-board',          'New'],
+      // ── Views ───────────────────────────────────────────────
+      ['Views ·  Print-friendly views',     ROOT + 'cookbook/views-print-friendly.html',        'views-print-friendly',        'New'],
+      ['Views ·  Image gallery + lightbox', ROOT + 'cookbook/views-image-gallery.html',         'views-image-gallery',         'New'],
+      // ── Communication ───────────────────────────────────────
+      ['Communication ·  Comments thread',  ROOT + 'cookbook/communication-comments-thread.html', 'communication-comments-thread', 'New'],
       // ── Dashboards ──────────────────────────────────────────
       ['Dashboards ·  Operator overview',   ROOT + 'cookbook/dashboards-operator-overview.html', 'dashboards-operator-overview', 'New'],
       ['Dashboards ·  KPI hero + drilldown',ROOT + 'cookbook/dashboards-kpi-hero-drilldown.html', 'dashboards-kpi-hero-drilldown', 'New'],
@@ -101,6 +107,7 @@
       ['States ·  Toasts + notifications',  ROOT + 'cookbook/notifications-toasts.html',       'notifications-toasts',       'New'],
       ['States ·  Optimistic mutations',    ROOT + 'cookbook/states-optimistic-mutations.html', 'states-optimistic-mutations', 'New'],
       // ── Settings ────────────────────────────────────────────
+      ['Settings ·  Notification preferences', ROOT + 'cookbook/settings-notification-preferences.html', 'settings-notification-preferences', 'New'],
       ['Settings ·  Profile & security',    '#',                '__', 'Soon'],
       ['Settings ·  Team & roles',          '#',                '__', 'Soon'],
       // ── Approvals & queues ──────────────────────────────────

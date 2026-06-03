@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Print-friendly views · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .paper { aspect-ratio: 9 / 16; background: #fff; color: #111; border: 1px solid var(--border); border-radius: 6px; padding: 14px 12px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; font: 500 9px/1.35 var(--font-mono); }
+  .ck-screen .paper h4 { font: 700 11px/1.2 var(--font-mono); margin: 0; letter-spacing: 0.04em; }
+  .ck-screen .paper .row { display: flex; justify-content: space-between; }
+  .ck-screen .paper hr { border: 0; border-top: 1px dashed #999; margin: 4px 0; width: 100%; }
+  .ck-screen .paper .total { font-weight: 700; border-top: 1px solid #111; padding-top: 4px; margin-top: auto; }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p  { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+
+  .ck-pull { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; padding: 14px 16px; margin: 14px 0 0; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Views</a><span class="sep">/</span>
+      <span>Print-friendly views</span>
+    </div>
+    <h1>Build a print-friendly receipt and report</h1>
+    <p class="lede">By the end of this recipe you'll have a record view that prints — or exports to PDF via the browser's print dialog — at the same quality as the on-screen experience, with controlled page breaks, a header on every page, a monochrome palette, and zero leftover chrome.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="receipt" data-icon-size="12"></span>Views</span>
+      <span class="meta-pill">2 primitives · 1 block · 1 pattern</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~30 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A printable view is a second view of the same record. Same data, different layout, same care.</p>
+    <p>The recipe takes a record (a sale, an invoice, a report) and gives you a second rendering that the browser's print pipeline can turn into paper or PDF. It uses a <code>@media print</code> stylesheet to drop the nav and sidebar, swap to a serif body, force a monochrome palette, and control where the page breaks. A "Print" button calls <code>window.print()</code> — no PDF library required.</p>
+    <p class="ck-pull"><b>Never use the browser default.</b> Always design the print version with the same care as the screen version. Customers see the receipt; treat it as marketing.</p>
+    <p><b>Skip this recipe if</b> your receipts and reports already live in a server-rendered PDF pipeline. Browser-printed PDFs are perfect for SMB volumes; if you're issuing 50k tax invoices a night, use a real PDF renderer.</p>
+  </section>
+
+  <!-- WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three print artefacts from the same React tree, each tuned to its medium.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="paper">
+          <h4>MUKAMBA GROUP</h4>
+          <div style="font-size: 8px; color: #555;">Receipt #00184 · 03 Jun 2026</div>
+          <hr/>
+          <div class="row"><span>2× Coke 500ml</span><span>$3.00</span></div>
+          <div class="row"><span>1× Bread</span><span>$1.20</span></div>
+          <div class="row"><span>3× Eggs</span><span>$2.10</span></div>
+          <div class="total row"><span>Total</span><span>$6.30</span></div>
+        </div>
+        <div class="caption"><span class="num">01</span> Receipt — 80mm thermal width</div>
+      </div>
+      <div class="ck-screen">
+        <div class="paper">
+          <h4>SALES REPORT</h4>
+          <div style="font-size: 8px; color: #555;">May 2026 · Mukamba Group</div>
+          <hr/>
+          <div class="row"><span>Gross</span><span>$48,212</span></div>
+          <div class="row"><span>Refunds</span><span>-$612</span></div>
+          <div class="row"><span>Discounts</span><span>-$1,940</span></div>
+          <div class="row"><span>Net</span><span>$45,660</span></div>
+          <div style="margin-top: 4px; font-size: 8px;">Page 1 of 4</div>
+        </div>
+        <div class="caption"><span class="num">02</span> Report — A4 with running header</div>
+      </div>
+      <div class="ck-screen">
+        <div class="paper">
+          <h4>INVOICE</h4>
+          <div style="font-size: 8px; color: #555;">INV-2026-0019 · Due 17 Jun</div>
+          <hr/>
+          <div style="font-size: 8px;">Bill to: Zimworx Pvt Ltd</div>
+          <hr/>
+          <div class="row"><span>Consulting · 12 hr</span><span>$960</span></div>
+          <div class="row"><span>VAT 14.5%</span><span>$139.20</span></div>
+          <div class="total row"><span>Due</span><span>$1,099.20</span></div>
+        </div>
+        <div class="caption"><span class="num">03</span> Invoice — itemised, VAT-aware</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">A small surface — most of the work is the <code>@media print</code> stylesheet, not new components.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+      <a class="ck-piece" href="../system/p-card.html"><span class="kind">Primitive</span>Card</a>
+      <a class="ck-piece" href="../system/x-print.html"><span class="kind">Pattern</span>Print view</a>
+      <a class="ck-piece" href="../system/b-page-header.html"><span class="kind">Block</span>Page header</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>Button</code>, <code>Card</code>, <code>Stack</code>. Plus a regular CSS file with <code>@media print</code> rules.</p>
+  </section>
+
+  <!-- STEPS -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <div class="ck-step"><span class="n">01</span><h3>Mark which DOM is printable and which isn't</h3></div>
+    <p>The screen view contains chrome — sidebar, toolbar, action menus — that shouldn't print. Tag every printable region with <code>data-print="region"</code> and everything else with <code>data-print="hide"</code>. That single attribute is what the print stylesheet will key off; no className wrangling.</p>
+    <div class="ds-specimen"
+         data-code='// ReceiptView.tsx
+export function ReceiptView({ sale }: { sale: Sale }) {
+  return (
+    &lt;div className=&quot;page&quot;&gt;
+      &lt;header data-print=&quot;hide&quot;&gt;
+        &lt;Button onClick={() =&gt; window.print()}&gt;Print&lt;/Button&gt;
+        &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; history.back()}&gt;Back&lt;/Button&gt;
+      &lt;/header&gt;
+
+      &lt;article data-print=&quot;region&quot;&gt;
+        &lt;ReceiptHeader sale={sale} /&gt;
+        &lt;LineItems items={sale.items} /&gt;
+        &lt;Totals sale={sale} /&gt;
+        &lt;ReceiptFooter sale={sale} /&gt;
+      &lt;/article&gt;
+    &lt;/div&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 10px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div><b style="color: var(--brand-strong);">data-print="hide"</b> → CSS removes from printed page</div>
+          <div><b style="color: var(--brand-strong);">data-print="region"</b> → CSS gives full page width</div>
+          <div style="color: var(--text-subtle);">No JS branch for print — same React tree, two stylesheets.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Tag the DOM</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">02</span><h3>Write the print stylesheet</h3></div>
+    <p>Reset margins on <code>@page</code>, drop the nav, force monochrome, and choose a paper-friendly type. The order matters: <code>@page</code> first, then root resets, then component-specific overrides. Keep the file under 80 lines — anything more and you're redesigning, not adapting.</p>
+    <div class="ds-specimen"
+         data-code='/* print.css — loaded only when printing */
+@media print {
+  @page {
+    size: A4;
+    margin: 16mm 14mm;
+  }
+
+  /* Drop the harness. */
+  [data-print=&quot;hide&quot;],
+  .app-shell .sidebar,
+  .app-shell .toolbar,
+  .ds-nav,
+  .ck-pieces,
+  nav { display: none !important; }
+
+  /* Reset to paper colours. */
+  html, body {
+    background: #fff !important;
+    color: #111 !important;
+    font: 400 11pt/1.45 &quot;Times New Roman&quot;, Georgia, serif;
+  }
+
+  [data-print=&quot;region&quot;] {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+    border: 0;
+  }
+
+  /* Avoid orphaned headers and split totals. */
+  h1, h2, h3, h4 { page-break-after: avoid; }
+  table, .line-items { page-break-inside: avoid; }
+  .totals, .signature { page-break-inside: avoid; }
+
+  /* Show the URL behind any link except internal ones. */
+  a[href]:not([href^=&quot;#&quot;])::after {
+    content: &quot; (&quot; attr(href) &quot;)&quot;;
+    font: 400 9pt/1 monospace; color: #555;
+  }
+
+  /* Thermal-receipt mode: trigger with a class on &lt;html&gt;. */
+  html.print-thermal @page { size: 80mm auto; margin: 4mm; }
+  html.print-thermal body { font: 400 9pt/1.35 monospace; }
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="background: #fff; color: #111; border: 1px solid var(--border); border-radius: 6px; padding: 24px; font: 400 12px/1.5 Georgia, serif; max-width: 480px; margin: 0 auto;">
+          <div style="text-align: center; font: 700 14px/1.2 var(--font-mono); letter-spacing: 0.08em;">MUKAMBA GROUP</div>
+          <div style="text-align: center; font: 500 10px/1.2 var(--font-mono); color: #555; margin-bottom: 12px;">Receipt #00184 · 03 Jun 2026</div>
+          <hr style="border: 0; border-top: 1px dashed #999;" />
+          <div style="display: flex; justify-content: space-between;"><span>2× Coke 500ml</span><span>$3.00</span></div>
+          <div style="display: flex; justify-content: space-between;"><span>1× Bread</span><span>$1.20</span></div>
+          <div style="display: flex; justify-content: space-between;"><span>3× Eggs</span><span>$2.10</span></div>
+          <div style="display: flex; justify-content: space-between; border-top: 1px solid #111; padding-top: 4px; margin-top: 6px; font-weight: 700;"><span>Total</span><span>$6.30</span></div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · print.css</span><span class="spacer"></span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">03</span><h3>Add a running header and footer for multi-page reports</h3></div>
+    <p>For a one-page receipt you're done; reports need a brand mark and page number on every page. <code>position: fixed</code> on a sub-tree inside <code>@media print</code> behaves as a running header. Combine with <code>page-break-before: always</code> on section titles to control where pages break.</p>
+    <div class="ds-specimen"
+         data-code='// PrintHeader.tsx — appears once in the DOM, repeats on every printed page
+export function PrintHeader({ workspace, title }: { workspace: string; title: string }) {
+  return (
+    &lt;div className=&quot;print-running-header&quot; data-print=&quot;running&quot;&gt;
+      &lt;span&gt;{workspace}&lt;/span&gt;
+      &lt;span&gt;{title}&lt;/span&gt;
+    &lt;/div&gt;
+  );
+}
+
+/* print.css — added to step 2 */
+@media print {
+  .print-running-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between;
+    font: 500 9pt/1 monospace;
+    border-bottom: 1px solid #111;
+    padding-bottom: 4mm;
+  }
+  /* Reserve space at the top so content doesn&#39;t overlap. */
+  @page { margin-top: 24mm; }
+
+  /* Force a break before every &lt;section className=&quot;report-page&quot;&gt;. */
+  section.report-page { page-break-before: always; }
+  section.report-page:first-of-type { page-break-before: avoid; }
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="background: #fff; color: #111; border: 1px solid var(--border); border-radius: 6px; padding: 16px 20px; font: 400 11px/1.5 Georgia, serif; max-width: 540px; margin: 0 auto;">
+          <div style="display: flex; justify-content: space-between; font: 500 9px/1 var(--font-mono); border-bottom: 1px solid #111; padding-bottom: 6px; margin-bottom: 10px;"><span>MUKAMBA GROUP</span><span>SALES REPORT · MAY 2026</span></div>
+          <div style="font-weight: 700; font-size: 14px;">May 2026 sales summary</div>
+          <p style="margin: 6px 0 0;">Gross sales for May rose 4.2% against April, driven by the Bulawayo outlet's weekend trading days. The pages that follow break out branches, categories, and refunds.</p>
+          <div style="margin-top: 10px; font: 500 9px/1 var(--font-mono); color: #555;">Page 1 of 4</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Running header</span><span class="spacer"></span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">04</span><h3>Trigger print from a button and reset the trigger</h3></div>
+    <p>The print button calls <code>window.print()</code> directly. For the thermal-receipt mode you add a class to <code>&lt;html&gt;</code> before printing, then remove it in the <code>afterprint</code> event. Don't try to detect "did the user actually print?" — you can't.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect } from &#39;@huchu/react&#39;;
+import { Button } from &#39;@huchu/react&#39;;
+
+export function PrintButton({ mode = &#39;a4&#39; }: { mode?: &#39;a4&#39; | &#39;thermal&#39; }) {
+  useEffect(() =&gt; {
+    const cleanup = () =&gt; document.documentElement.classList.remove(&#39;print-thermal&#39;);
+    window.addEventListener(&#39;afterprint&#39;, cleanup);
+    return () =&gt; window.removeEventListener(&#39;afterprint&#39;, cleanup);
+  }, []);
+
+  const handle = () =&gt; {
+    if (mode === &#39;thermal&#39;) {
+      document.documentElement.classList.add(&#39;print-thermal&#39;);
+    }
+    // Wait one paint so the class takes effect before the dialog opens.
+    requestAnimationFrame(() =&gt; window.print());
+  };
+
+  return (
+    &lt;Button onClick={handle} variant=&quot;primary&quot;&gt;
+      Print {mode === &#39;thermal&#39; ? &#39;receipt&#39; : &#39;report&#39;}
+    &lt;/Button&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="display: flex; gap: 10px;">
+            <div style="background: var(--ink); color: var(--canvas); padding: 8px 14px; border-radius: 8px; font: 600 13px/1 var(--font-sans);">Print receipt</div>
+            <div style="background: var(--surface); color: var(--text-strong); border: 1px solid var(--border-strong); padding: 8px 14px; border-radius: 8px; font: 600 13px/1 var(--font-sans);">Save as PDF</div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Trigger + cleanup</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- FINAL -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole <code>ReceiptView</code> + <code>print.css</code>. Drop both into your app; the rest of your shell stays as-is.</p>
+    <div class="ds-specimen"
+         data-code='// ReceiptView.tsx
+import { useEffect } from &#39;@huchu/react&#39;;
+import { Button, Card, Stack } from &#39;@huchu/react&#39;;
+
+type LineItem = { sku: string; name: string; qty: number; unit: number };
+type Sale = {
+  id: string;
+  number: string;
+  issuedAt: string;
+  workspace: string;
+  items: LineItem[];
+  vatRate: number;
+};
+
+export function ReceiptView({ sale, mode = &#39;a4&#39; }: { sale: Sale; mode?: &#39;a4&#39; | &#39;thermal&#39; }) {
+  useEffect(() =&gt; {
+    const cleanup = () =&gt; document.documentElement.classList.remove(&#39;print-thermal&#39;);
+    window.addEventListener(&#39;afterprint&#39;, cleanup);
+    return () =&gt; window.removeEventListener(&#39;afterprint&#39;, cleanup);
+  }, []);
+
+  const print = () =&gt; {
+    if (mode === &#39;thermal&#39;) document.documentElement.classList.add(&#39;print-thermal&#39;);
+    requestAnimationFrame(() =&gt; window.print());
+  };
+
+  const subtotal = sale.items.reduce((n, i) =&gt; n + i.qty * i.unit, 0);
+  const vat = subtotal * sale.vatRate;
+  const total = subtotal + vat;
+
+  return (
+    &lt;div className=&quot;receipt-page&quot;&gt;
+      &lt;div data-print=&quot;hide&quot; className=&quot;receipt-toolbar&quot;&gt;
+        &lt;Button onClick={print} variant=&quot;primary&quot;&gt;Print&lt;/Button&gt;
+        &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; history.back()}&gt;Back&lt;/Button&gt;
+      &lt;/div&gt;
+
+      &lt;article data-print=&quot;region&quot; className=&quot;receipt&quot;&gt;
+        &lt;header className=&quot;receipt-head&quot;&gt;
+          &lt;h1&gt;{sale.workspace}&lt;/h1&gt;
+          &lt;dl&gt;
+            &lt;div&gt;&lt;dt&gt;Receipt&lt;/dt&gt;&lt;dd&gt;{sale.number}&lt;/dd&gt;&lt;/div&gt;
+            &lt;div&gt;&lt;dt&gt;Issued&lt;/dt&gt;&lt;dd&gt;{sale.issuedAt}&lt;/dd&gt;&lt;/div&gt;
+          &lt;/dl&gt;
+        &lt;/header&gt;
+
+        &lt;table className=&quot;line-items&quot;&gt;
+          &lt;thead&gt;
+            &lt;tr&gt;&lt;th&gt;Item&lt;/th&gt;&lt;th&gt;Qty&lt;/th&gt;&lt;th&gt;Unit&lt;/th&gt;&lt;th&gt;Amount&lt;/th&gt;&lt;/tr&gt;
+          &lt;/thead&gt;
+          &lt;tbody&gt;
+            {sale.items.map((i) =&gt; (
+              &lt;tr key={i.sku}&gt;
+                &lt;td&gt;{i.name}&lt;/td&gt;
+                &lt;td&gt;{i.qty}&lt;/td&gt;
+                &lt;td&gt;{i.unit.toFixed(2)}&lt;/td&gt;
+                &lt;td&gt;{(i.qty * i.unit).toFixed(2)}&lt;/td&gt;
+              &lt;/tr&gt;
+            ))}
+          &lt;/tbody&gt;
+        &lt;/table&gt;
+
+        &lt;section className=&quot;totals&quot;&gt;
+          &lt;div&gt;&lt;span&gt;Subtotal&lt;/span&gt;&lt;span&gt;${subtotal.toFixed(2)}&lt;/span&gt;&lt;/div&gt;
+          &lt;div&gt;&lt;span&gt;VAT ({(sale.vatRate * 100).toFixed(1)}%)&lt;/span&gt;&lt;span&gt;${vat.toFixed(2)}&lt;/span&gt;&lt;/div&gt;
+          &lt;div className=&quot;grand&quot;&gt;&lt;span&gt;Total&lt;/span&gt;&lt;span&gt;${total.toFixed(2)}&lt;/span&gt;&lt;/div&gt;
+        &lt;/section&gt;
+
+        &lt;footer className=&quot;receipt-foot&quot;&gt;
+          &lt;p&gt;Thank you. Return within 7 days with this receipt.&lt;/p&gt;
+        &lt;/footer&gt;
+      &lt;/article&gt;
+    &lt;/div&gt;
+  );
+}
+
+/* print.css — load globally */
+@media print {
+  @page { size: A4; margin: 16mm 14mm; }
+
+  [data-print=&quot;hide&quot;], nav, .ds-nav, aside { display: none !important; }
+  html, body {
+    background: #fff !important; color: #111 !important;
+    font: 400 11pt/1.45 Georgia, &quot;Times New Roman&quot;, serif;
+  }
+  [data-print=&quot;region&quot;] { width: 100%; max-width: none; padding: 0; margin: 0; box-shadow: none; border: 0; }
+  h1, h2, h3 { page-break-after: avoid; }
+  table, .totals { page-break-inside: avoid; }
+
+  .receipt-head h1 { font: 700 18pt/1.1 monospace; letter-spacing: 0.04em; margin: 0 0 4mm; }
+  .receipt-head dl { display: grid; grid-template-columns: auto 1fr; gap: 1mm 6mm; font: 500 9pt/1.3 monospace; margin: 0 0 6mm; }
+  .receipt-head dt { color: #555; }
+  table.line-items { width: 100%; border-collapse: collapse; font: 400 10pt/1.4 Georgia, serif; }
+  table.line-items th { text-align: left; font-weight: 600; border-bottom: 1px solid #111; padding: 2mm 1mm; }
+  table.line-items td { padding: 1.5mm 1mm; border-bottom: 1px dashed #999; }
+  .totals { margin-top: 4mm; display: grid; gap: 1mm; font: 500 10pt/1.4 Georgia, serif; }
+  .totals div { display: flex; justify-content: space-between; }
+  .totals .grand { border-top: 2px solid #111; padding-top: 2mm; margin-top: 1mm; font-weight: 700; font-size: 12pt; }
+  .receipt-foot { margin-top: 8mm; font: 400 9pt/1.4 Georgia, serif; color: #444; }
+
+  html.print-thermal @page { size: 80mm auto; margin: 4mm; }
+  html.print-thermal body { font: 400 9pt/1.35 monospace; }
+  html.print-thermal .receipt-head h1 { font-size: 11pt; }
+  html.print-thermal table.line-items { font-size: 8.5pt; }
+  html.print-thermal .totals .grand { font-size: 10pt; }
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="background: #fff; color: #111; border: 1px solid var(--border); border-radius: 6px; padding: 28px 32px; font: 400 12px/1.5 Georgia, serif; width: 380px;">
+            <div style="font: 700 16px/1.1 var(--font-mono); letter-spacing: 0.04em;">MUKAMBA GROUP</div>
+            <div style="display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; font: 500 10px/1.3 var(--font-mono); color: #555; margin: 6px 0 12px;"><div>Receipt</div><div style="color: #111;">#00184</div><div>Issued</div><div style="color: #111;">03 Jun 2026 14:22</div></div>
+            <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+              <thead><tr style="border-bottom: 1px solid #111;"><th style="text-align: left; padding: 4px 0;">Item</th><th style="text-align: right; padding: 4px 0;">Amount</th></tr></thead>
+              <tbody>
+                <tr style="border-bottom: 1px dashed #999;"><td style="padding: 4px 0;">2× Coke 500ml</td><td style="text-align: right;">$3.00</td></tr>
+                <tr style="border-bottom: 1px dashed #999;"><td style="padding: 4px 0;">1× Bread</td><td style="text-align: right;">$1.20</td></tr>
+                <tr style="border-bottom: 1px dashed #999;"><td style="padding: 4px 0;">3× Eggs</td><td style="text-align: right;">$2.10</td></tr>
+              </tbody>
+            </table>
+            <div style="border-top: 2px solid #111; padding-top: 6px; margin-top: 8px; display: flex; justify-content: space-between; font-weight: 700;"><span>Total</span><span>$6.30</span></div>
+            <p style="margin: 14px 0 0; font-size: 10px; color: #444;">Thank you. Return within 7 days with this receipt.</p>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">ReceiptView.tsx + print.css</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three forks. Each is a small diff from the final composition.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>PDF export via window.print()</h4>
+        <p>The "Save as PDF" option in every browser's print dialog is already a PDF exporter. Label the button accordingly; the file the user gets is genuinely a PDF.</p>
+<pre>// Just rename the button
+&lt;Button onClick={print} variant=&quot;primary&quot;&gt;
+  Save as PDF
+&lt;/Button&gt;
+{/* The browser dialog already
+    offers PDF as a destination. */}</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Printable invoice with VAT</h4>
+        <p>An invoice differs from a receipt only by metadata and signature block. Reuse the same view, hide payment lines, and add a "Bill to" panel.</p>
+<pre>// Reuse ReceiptView, swap header
+&lt;header className=&quot;invoice-head&quot;&gt;
+  &lt;h1&gt;INVOICE&lt;/h1&gt;
+  &lt;BillTo party={sale.buyer} /&gt;
+&lt;/header&gt;
+// add to print.css
+.invoice-head h1 { font: 700 22pt/1 monospace; }</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Batch print of records</h4>
+        <p>Print N receipts back-to-back. Each receipt gets a hard page break before; the print dialog still opens once.</p>
+<pre>// BatchPrint.tsx
+{sales.map((s) =&gt; (
+  &lt;section className=&quot;report-page&quot; key={s.id}&gt;
+    &lt;ReceiptView sale={s} /&gt;
+  &lt;/section&gt;
+))}
+// print.css already breaks per .report-page</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- A11Y -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">Print accessibility is the same problem as screen accessibility — semantic markup that survives whatever rendering pipeline the browser picks.</p>
+    <ul class="ck-a11y">
+      <li><b>The receipt is a real <code>&lt;article&gt;</code> with a real <code>&lt;table&gt;</code>.</b> Screen readers and PDF accessibility checkers can both read the structure. No "div soup" line items.</li>
+      <li><b>Numeric columns use <code>&lt;th scope="col"&gt;</code>.</b> The totals row uses <code>&lt;th scope="row"&gt;Total&lt;/th&gt;</code> so the row label is announced with the amount.</li>
+      <li><b>Print button is a real <code>&lt;button&gt;</code>.</b> Keyboard activates it; it lives in the document order, not behind a hover menu.</li>
+      <li><b>Link URLs print.</b> <code>a[href]::after { content: " (" attr(href) ")" }</code> means a printed copy is still useful when the link can't be clicked.</li>
+      <li><b>Colour is never load-bearing.</b> The monochrome stylesheet means anyone printing on a B/W laser still sees the same hierarchy.</li>
+      <li><b>Focus is preserved across <code>afterprint</code>.</b> The button that triggered the dialog remains focused — Tab order picks up where it left off.</li>
+    </ul>
+  </section>
+
+  <!-- RELATED -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">Other Views, and the canonical state-machine pattern these recipes share.</p>
+    <div class="ck-related">
+      <a href="views-image-gallery.html">Views ·  Image gallery + lightbox<span class="tag">New</span></a>
+      <a href="lists-kanban-board.html">Lists ·  Kanban board<span class="tag">New</span></a>
+      <a href="communication-comments-thread.html">Communication ·  Comments thread<span class="tag">New</span></a>
+      <a href="settings-notification-preferences.html">Settings ·  Notification preferences<span class="tag">New</span></a>
+      <a href="auth-signin-2fa.html">Auth ·  Sign in with 2FA<span class="tag">Canonical</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="index.html"><div class="pager-label">← Back to</div><div class="pager-title">Cookbook</div></a>
+    <a href="views-image-gallery.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Image gallery + lightbox</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

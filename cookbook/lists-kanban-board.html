@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Kanban board · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .board { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 12px 10px; display: flex; gap: 6px; overflow: hidden; }
+  .ck-screen .col { flex: 1; background: var(--surface-muted); border-radius: 8px; padding: 6px 4px; display: flex; flex-direction: column; gap: 4px; }
+  .ck-screen .col h5 { font: 600 9px/1 var(--font-sans); margin: 2px 0 4px; color: var(--text-muted); letter-spacing: 0.04em; text-transform: uppercase; text-align: center; }
+  .ck-screen .card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 4px 5px; font: 500 8px/1.2 var(--font-sans); color: var(--text-strong); }
+  .ck-screen .card.drag { border: 1px dashed var(--brand); background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p  { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+
+  .ck-pull { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; padding: 14px 16px; margin: 14px 0 0; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Lists</a><span class="sep">/</span>
+      <span>Kanban board</span>
+    </div>
+    <h1>Build a drag-and-drop kanban board</h1>
+    <p class="lede">By the end of this recipe you'll have a three-column kanban (Backlog → In progress → Done) with HTML5 drag-and-drop on desktop, a long-press fallback on touch, a "Move to" menu on every card for mobile users, WIP limits with warning badges, and an add/edit modal driven by a single reducer.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="list" data-icon-size="12"></span>Lists</span>
+      <span class="meta-pill">3 primitives · 2 blocks · 1 pattern</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~45 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">Columns hold cards, cards move between columns, columns warn when over their WIP limit. One reducer holds the lot.</p>
+    <p>Kanban is the queue-with-stages pattern: a record moves from "not started" through "in progress" to "done", and the visualisation makes the bottleneck obvious. For an SMB workflow — a service-request queue, a sales pipeline, a daily prep list — kanban gives ops a glanceable picture of what's stuck where. The recipe uses HTML5 drag-and-drop (no library), a column-level WIP limit, and a "Move to" menu so the board is fully usable on phones.</p>
+    <p class="ck-pull"><b>Dragging is for desktop power users.</b> Always provide a "Move to" menu on each card so mobile users can move things too. Drag-and-drop alone fails accessibility and fails fingers.</p>
+    <p><b>Skip this recipe if</b> your workflow has fewer than three states or the order within a column doesn't matter — a simple status filter on a data table is cheaper and clearer.</p>
+  </section>
+
+  <!-- WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three states of the same board: idle, mid-drag, and an over-limit warning.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="board">
+          <div class="col">
+            <h5>Backlog</h5>
+            <div class="card">Restock honey</div>
+            <div class="card">Call Jabu re: order</div>
+            <div class="card">Audit Bulawayo float</div>
+          </div>
+          <div class="col">
+            <h5>Doing</h5>
+            <div class="card">Hire weekend cashier</div>
+            <div class="card">Reprint price tags</div>
+          </div>
+          <div class="col">
+            <h5>Done</h5>
+            <div class="card">Refund Tendai</div>
+          </div>
+        </div>
+        <div class="caption"><span class="num">01</span> Idle — three columns, six cards</div>
+      </div>
+      <div class="ck-screen">
+        <div class="board">
+          <div class="col">
+            <h5>Backlog</h5>
+            <div class="card">Restock honey</div>
+            <div class="card">Audit Bulawayo float</div>
+          </div>
+          <div class="col" style="background: var(--brand-soft); border: 1px dashed var(--brand);">
+            <h5 style="color: var(--brand-strong);">Doing</h5>
+            <div class="card">Hire weekend cashier</div>
+            <div class="card">Reprint price tags</div>
+            <div class="card drag">Call Jabu re: order</div>
+          </div>
+          <div class="col">
+            <h5>Done</h5>
+            <div class="card">Refund Tendai</div>
+          </div>
+        </div>
+        <div class="caption"><span class="num">02</span> Drag — column shows a drop indicator</div>
+      </div>
+      <div class="ck-screen">
+        <div class="board">
+          <div class="col">
+            <h5>Backlog</h5>
+            <div class="card">Restock honey</div>
+          </div>
+          <div class="col">
+            <h5 style="color: var(--tone-warning);">Doing · 4/3</h5>
+            <div class="card">Hire weekend cashier</div>
+            <div class="card">Reprint price tags</div>
+            <div class="card">Call Jabu re: order</div>
+            <div class="card">Audit Bulawayo float</div>
+          </div>
+          <div class="col">
+            <h5>Done</h5>
+            <div class="card">Refund Tendai</div>
+          </div>
+        </div>
+        <div class="caption"><span class="num">03</span> Over limit — warn, don't block</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">A small surface — the heavy lifting is the reducer and the drag handlers.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+      <a class="ck-piece" href="../system/p-menu.html"><span class="kind">Primitive</span>Menu</a>
+      <a class="ck-piece" href="../system/p-drawer.html"><span class="kind">Primitive</span>Drawer</a>
+      <a class="ck-piece" href="../system/b-row-card.html"><span class="kind">Block</span>RowCard</a>
+      <a class="ck-piece" href="../system/x-kanban.html"><span class="kind">Pattern</span>Kanban board</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>KanbanBoard</code>, <code>useKanban</code>, <code>RowCard</code>, <code>Menu</code>, <code>Drawer</code>, <code>Button</code>, <code>Form</code>, <code>Field</code>, <code>Input</code>, <code>TextArea</code>.</p>
+  </section>
+
+  <!-- STEPS -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <div class="ck-step"><span class="n">01</span><h3>Model the board with a reducer, not nested arrays</h3></div>
+    <p>The board is a map of <code>columnId → orderedCardIds[]</code> plus a separate map of <code>cardId → Card</code>. That normalised shape makes "move card X to column Y at index I" a single, replayable action. Don't store the cards inside the columns — moving becomes a deep splice and the bugs that follow are diabolical.</p>
+    <div class="ds-specimen"
+         data-code='import { useReducer } from &#39;@huchu/react&#39;;
+
+type ColumnId = &#39;backlog&#39; | &#39;doing&#39; | &#39;done&#39;;
+type Card = { id: string; title: string; assignee?: string; due?: string };
+
+type State = {
+  cards: Record&lt;string, Card&gt;;
+  order: Record&lt;ColumnId, string[]&gt;;
+  limits: Record&lt;ColumnId, number | null&gt;;
+};
+
+type Action =
+  | { type: &#39;MOVE&#39;; cardId: string; to: ColumnId; index: number }
+  | { type: &#39;ADD&#39;;  card: Card; to: ColumnId }
+  | { type: &#39;EDIT&#39;; card: Card }
+  | { type: &#39;DELETE&#39;; cardId: string };
+
+function reducer(s: State, a: Action): State {
+  switch (a.type) {
+    case &#39;MOVE&#39;: {
+      const next = { ...s.order };
+      // Remove from wherever it lived.
+      (Object.keys(next) as ColumnId[]).forEach((c) =&gt; {
+        next[c] = next[c].filter((id) =&gt; id !== a.cardId);
+      });
+      // Insert at the requested index.
+      const col = [...next[a.to]];
+      col.splice(a.index, 0, a.cardId);
+      next[a.to] = col;
+      return { ...s, order: next };
+    }
+    case &#39;ADD&#39;:
+      return {
+        ...s,
+        cards: { ...s.cards, [a.card.id]: a.card },
+        order: { ...s.order, [a.to]: [...s.order[a.to], a.card.id] },
+      };
+    case &#39;EDIT&#39;:
+      return { ...s, cards: { ...s.cards, [a.card.id]: a.card } };
+    case &#39;DELETE&#39;: {
+      const { [a.cardId]: _, ...cards } = s.cards;
+      const order = Object.fromEntries(
+        (Object.keys(s.order) as ColumnId[]).map((c) =&gt; [
+          c, s.order[c].filter((id) =&gt; id !== a.cardId),
+        ]),
+      ) as State[&#39;order&#39;];
+      return { ...s, cards, order };
+    }
+  }
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 10px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div>cards: <b style="color: var(--brand-strong);">Record&lt;id, Card&gt;</b></div>
+          <div>order: <b style="color: var(--brand-strong);">Record&lt;ColumnId, id[]&gt;</b></div>
+          <div style="color: var(--text-subtle);">MOVE is one action — works for both DnD and the "Move to" menu.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Reducer</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">02</span><h3>Wire HTML5 drag-and-drop with a single column drop zone</h3></div>
+    <p>Each card sets <code>draggable</code> and writes its id to <code>dataTransfer</code> on <code>dragstart</code>. Each column listens for <code>dragover</code> (to allow the drop) and <code>drop</code> (to dispatch). Compute the drop index from the cursor's Y position against each card's mid-line — don't try to use sub-zones.</p>
+    <div class="ds-specimen"
+         data-code='// Column.tsx — drop target
+function Column({
+  id, title, cardIds, limit, cards, onMove, onAdd,
+}: {
+  id: ColumnId; title: string; cardIds: string[];
+  limit: number | null;
+  cards: Record&lt;string, Card&gt;;
+  onMove: (cardId: string, to: ColumnId, index: number) =&gt; void;
+  onAdd: (to: ColumnId) =&gt; void;
+}) {
+  const over = limit !== null &amp;&amp; cardIds.length &gt; limit;
+
+  const handleDragOver = (e: React.DragEvent) =&gt; { e.preventDefault(); };
+
+  const handleDrop = (e: React.DragEvent) =&gt; {
+    e.preventDefault();
+    const cardId = e.dataTransfer.getData(&#39;text/x-card-id&#39;);
+    const index = computeDropIndex(e.currentTarget, e.clientY);
+    onMove(cardId, id, index);
+  };
+
+  return (
+    &lt;section className=&quot;col&quot;
+      role=&quot;list&quot; aria-label={`${title} column`}
+      onDragOver={handleDragOver} onDrop={handleDrop}&gt;
+      &lt;header&gt;
+        &lt;h3&gt;{title}&lt;/h3&gt;
+        &lt;span className={over ? &#39;count over&#39; : &#39;count&#39;}&gt;
+          {cardIds.length}{limit !== null &amp;&amp; ` / ${limit}`}
+        &lt;/span&gt;
+      &lt;/header&gt;
+      {cardIds.map((cid, i) =&gt; (
+        &lt;CardItem key={cid} card={cards[cid]}
+          onMove={(to) =&gt; onMove(cid, to, 0)} /&gt;
+      ))}
+      &lt;button className=&quot;col-add&quot; onClick={() =&gt; onAdd(id)}&gt;+ Add card&lt;/button&gt;
+    &lt;/section&gt;
+  );
+}
+
+function computeDropIndex(col: HTMLElement, y: number): number {
+  const cards = col.querySelectorAll&lt;HTMLElement&gt;(&#39;[data-card]&#39;);
+  for (let i = 0; i &lt; cards.length; i++) {
+    const r = cards[i].getBoundingClientRect();
+    if (y &lt; r.top + r.height / 2) return i;
+  }
+  return cards.length;
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="display: flex; gap: 10px; width: 460px;">
+            <div style="flex: 1; background: var(--surface-muted); border-radius: 10px; padding: 10px;">
+              <div style="font: 600 11px/1 var(--font-sans); color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.06em;">Backlog · 3</div>
+              <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px; font: 500 12px/1.3 var(--font-sans); margin-bottom: 6px;">Restock honey</div>
+              <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px; font: 500 12px/1.3 var(--font-sans); margin-bottom: 6px;">Call Jabu</div>
+              <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px; font: 500 12px/1.3 var(--font-sans);">Audit float</div>
+            </div>
+            <div style="flex: 1; background: var(--brand-soft); border: 1px dashed var(--brand); border-radius: 10px; padding: 10px;">
+              <div style="font: 600 11px/1 var(--font-sans); color: var(--brand-strong); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.06em;">Doing · 2</div>
+              <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px; font: 500 12px/1.3 var(--font-sans); margin-bottom: 6px;">Hire cashier</div>
+              <div style="border: 1px dashed var(--brand); background: rgba(0,0,0,0); border-radius: 6px; height: 20px; margin-bottom: 6px;"></div>
+              <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 8px; font: 500 12px/1.3 var(--font-sans);">Price tags</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Drag &amp; drop</span><span class="spacer"></span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">03</span><h3>Add a "Move to" menu so phones work too</h3></div>
+    <p>Touch devices don't fire HTML5 drag events reliably. Every card exposes a <code>Menu</code> with one item per destination column — the same MOVE action handles both paths. This is the difference between "looks good in a demo" and "people actually use it".</p>
+    <div class="ds-specimen"
+         data-code='import { Menu, Button } from &#39;@huchu/react&#39;;
+
+const COLUMNS: { id: ColumnId; title: string }[] = [
+  { id: &#39;backlog&#39;, title: &#39;Backlog&#39; },
+  { id: &#39;doing&#39;,   title: &#39;In progress&#39; },
+  { id: &#39;done&#39;,    title: &#39;Done&#39; },
+];
+
+function CardItem({ card, currentColumn, onMove, onOpen }: {
+  card: Card;
+  currentColumn: ColumnId;
+  onMove: (to: ColumnId) =&gt; void;
+  onOpen: () =&gt; void;
+}) {
+  const handleDragStart = (e: React.DragEvent) =&gt; {
+    e.dataTransfer.setData(&#39;text/x-card-id&#39;, card.id);
+    e.dataTransfer.effectAllowed = &#39;move&#39;;
+  };
+
+  return (
+    &lt;article
+      data-card
+      draggable
+      role=&quot;listitem&quot;
+      tabIndex={0}
+      onDragStart={handleDragStart}
+      onClick={onOpen}
+      onKeyDown={(e) =&gt; { if (e.key === &#39;Enter&#39;) onOpen(); }}
+    &gt;
+      &lt;h4&gt;{card.title}&lt;/h4&gt;
+      {card.assignee &amp;&amp; &lt;p&gt;{card.assignee}&lt;/p&gt;}
+
+      &lt;Menu trigger={&lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot;&gt;Move…&lt;/Button&gt;}&gt;
+        {COLUMNS
+          .filter((c) =&gt; c.id !== currentColumn)
+          .map((c) =&gt; (
+            &lt;Menu.Item key={c.id} onSelect={() =&gt; onMove(c.id)}&gt;
+              Move to {c.title}
+            &lt;/Menu.Item&gt;
+          ))}
+      &lt;/Menu&gt;
+    &lt;/article&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="width: 240px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px;">
+            <div style="font: 600 13px/1.3 var(--font-sans); color: var(--text-strong);">Call Jabu re: order</div>
+            <div style="font: 500 11px/1 var(--font-sans); color: var(--text-muted); margin-top: 4px;">Assigned to Tendai · Due Fri</div>
+            <div style="margin-top: 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 6px; overflow: hidden;">
+              <div style="padding: 6px 10px; font: 500 11px/1.3 var(--font-sans); color: var(--text-strong); border-bottom: 1px solid var(--border);">→ Move to In progress</div>
+              <div style="padding: 6px 10px; font: 500 11px/1.3 var(--font-sans); color: var(--text-strong);">→ Move to Done</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Move-to menu</span><span class="spacer"></span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">04</span><h3>Show WIP limits as warnings, never blocks</h3></div>
+    <p>Hard limits ("you can't add another card") force people to lie about state — they leave the card in the previous column. Soft limits surface the bottleneck instead. Show a count badge in amber once <code>limit</code> is exceeded; an aria-live region announces the warning.</p>
+    <div class="ds-specimen"
+         data-code='function ColumnHeader({ title, count, limit }: {
+  title: string;
+  count: number;
+  limit: number | null;
+}) {
+  const over = limit !== null &amp;&amp; count &gt; limit;
+
+  return (
+    &lt;header className=&quot;col-head&quot;&gt;
+      &lt;h3&gt;{title}&lt;/h3&gt;
+      &lt;span
+        className={over ? &#39;count over&#39; : &#39;count&#39;}
+        role=&quot;status&quot;
+        aria-live={over ? &#39;polite&#39; : &#39;off&#39;}
+      &gt;
+        {count}{limit !== null &amp;&amp; ` / ${limit}`}
+      &lt;/span&gt;
+      {over &amp;&amp; (
+        &lt;span className=&quot;wip-warn&quot;&gt;Over WIP limit&lt;/span&gt;
+      )}
+    &lt;/header&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 280px; padding: 8px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;">
+            <div style="font: 600 13px/1 var(--font-sans); color: var(--text-strong);">In progress</div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <span style="font: 600 11px/1 var(--font-mono); color: var(--tone-warning); padding: 4px 8px; background: var(--tone-warning-bg); border: 1px solid var(--tone-warning-bd); border-radius: 9999px;">4 / 3</span>
+              <span style="font: 500 10px/1 var(--font-sans); color: var(--tone-warning); text-transform: uppercase; letter-spacing: 0.04em;">Over WIP</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · WIP warnings</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- FINAL -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole board with reducer, drag-and-drop, move-to menu, WIP limits, and the add/edit drawer.</p>
+    <div class="ds-specimen"
+         data-code='import { useReducer, useState } from &#39;@huchu/react&#39;;
+import {
+  KanbanBoard, useKanban, RowCard, Menu, Drawer,
+  Button, Form, Field, Input, TextArea, Stack,
+} from &#39;@huchu/react&#39;;
+
+type ColumnId = &#39;backlog&#39; | &#39;doing&#39; | &#39;done&#39;;
+type Card = { id: string; title: string; assignee?: string; due?: string; notes?: string };
+
+type State = {
+  cards: Record&lt;string, Card&gt;;
+  order: Record&lt;ColumnId, string[]&gt;;
+  limits: Record&lt;ColumnId, number | null&gt;;
+};
+
+type Action =
+  | { type: &#39;MOVE&#39;;   cardId: string; to: ColumnId; index: number }
+  | { type: &#39;ADD&#39;;    card: Card; to: ColumnId }
+  | { type: &#39;EDIT&#39;;   card: Card }
+  | { type: &#39;DELETE&#39;; cardId: string };
+
+function reducer(s: State, a: Action): State {
+  switch (a.type) {
+    case &#39;MOVE&#39;: {
+      const next = { ...s.order };
+      (Object.keys(next) as ColumnId[]).forEach((c) =&gt; {
+        next[c] = next[c].filter((id) =&gt; id !== a.cardId);
+      });
+      const col = [...next[a.to]];
+      col.splice(a.index, 0, a.cardId);
+      next[a.to] = col;
+      return { ...s, order: next };
+    }
+    case &#39;ADD&#39;:
+      return {
+        ...s,
+        cards: { ...s.cards, [a.card.id]: a.card },
+        order: { ...s.order, [a.to]: [...s.order[a.to], a.card.id] },
+      };
+    case &#39;EDIT&#39;:
+      return { ...s, cards: { ...s.cards, [a.card.id]: a.card } };
+    case &#39;DELETE&#39;: {
+      const { [a.cardId]: _, ...cards } = s.cards;
+      const order = Object.fromEntries(
+        (Object.keys(s.order) as ColumnId[]).map((c) =&gt; [
+          c, s.order[c].filter((id) =&gt; id !== a.cardId),
+        ]),
+      ) as State[&#39;order&#39;];
+      return { ...s, cards, order };
+    }
+  }
+}
+
+const COLUMNS: { id: ColumnId; title: string }[] = [
+  { id: &#39;backlog&#39;, title: &#39;Backlog&#39; },
+  { id: &#39;doing&#39;,   title: &#39;In progress&#39; },
+  { id: &#39;done&#39;,    title: &#39;Done&#39; },
+];
+
+export function TaskBoard({ initial }: { initial: State }) {
+  const [s, dispatch] = useReducer(reducer, initial);
+  const [editing, setEditing] = useState&lt;{ card: Card | null; column: ColumnId } | null&gt;(null);
+
+  const findColumn = (cardId: string): ColumnId =&gt;
+    (Object.keys(s.order) as ColumnId[]).find((c) =&gt; s.order[c].includes(cardId))!;
+
+  return (
+    &lt;&gt;
+      &lt;div className=&quot;board&quot;&gt;
+        {COLUMNS.map((c) =&gt; (
+          &lt;Column
+            key={c.id}
+            id={c.id}
+            title={c.title}
+            cardIds={s.order[c.id]}
+            limit={s.limits[c.id]}
+            cards={s.cards}
+            onMove={(cardId, to, index) =&gt; dispatch({ type: &#39;MOVE&#39;, cardId, to, index })}
+            onAdd={() =&gt; setEditing({ card: null, column: c.id })}
+            onOpen={(card) =&gt; setEditing({ card, column: c.id })}
+          /&gt;
+        ))}
+      &lt;/div&gt;
+
+      &lt;Drawer
+        open={editing !== null}
+        onClose={() =&gt; setEditing(null)}
+        title={editing?.card ? &#39;Edit card&#39; : &#39;Add card&#39;}
+      &gt;
+        {editing &amp;&amp; (
+          &lt;CardForm
+            initial={editing.card}
+            onSubmit={(card) =&gt; {
+              if (editing.card) dispatch({ type: &#39;EDIT&#39;, card });
+              else              dispatch({ type: &#39;ADD&#39;, card, to: editing.column });
+              setEditing(null);
+            }}
+            onDelete={editing.card ? () =&gt; {
+              dispatch({ type: &#39;DELETE&#39;, cardId: editing.card!.id });
+              setEditing(null);
+            } : undefined}
+          /&gt;
+        )}
+      &lt;/Drawer&gt;
+    &lt;/&gt;
+  );
+}
+
+function Column({ id, title, cardIds, limit, cards, onMove, onAdd, onOpen }: {
+  id: ColumnId; title: string; cardIds: string[];
+  limit: number | null;
+  cards: Record&lt;string, Card&gt;;
+  onMove: (cardId: string, to: ColumnId, index: number) =&gt; void;
+  onAdd: () =&gt; void;
+  onOpen: (card: Card) =&gt; void;
+}) {
+  const over = limit !== null &amp;&amp; cardIds.length &gt; limit;
+
+  const handleDrop = (e: React.DragEvent) =&gt; {
+    e.preventDefault();
+    const cardId = e.dataTransfer.getData(&#39;text/x-card-id&#39;);
+    if (!cardId) return;
+    const index = computeDropIndex(e.currentTarget as HTMLElement, e.clientY);
+    onMove(cardId, id, index);
+  };
+
+  return (
+    &lt;section
+      className={over ? &#39;col over&#39; : &#39;col&#39;}
+      role=&quot;list&quot; aria-label={`${title} column`}
+      onDragOver={(e) =&gt; e.preventDefault()}
+      onDrop={handleDrop}
+    &gt;
+      &lt;header className=&quot;col-head&quot;&gt;
+        &lt;h3&gt;{title}&lt;/h3&gt;
+        &lt;span
+          className={over ? &#39;count over&#39; : &#39;count&#39;}
+          role=&quot;status&quot;
+          aria-live={over ? &#39;polite&#39; : &#39;off&#39;}
+        &gt;
+          {cardIds.length}{limit !== null &amp;&amp; ` / ${limit}`}
+        &lt;/span&gt;
+      &lt;/header&gt;
+
+      {cardIds.map((cid) =&gt; (
+        &lt;CardItem
+          key={cid}
+          card={cards[cid]}
+          currentColumn={id}
+          onMove={(to) =&gt; onMove(cid, to, 0)}
+          onOpen={() =&gt; onOpen(cards[cid])}
+        /&gt;
+      ))}
+
+      &lt;button className=&quot;col-add&quot; onClick={onAdd}&gt;+ Add card&lt;/button&gt;
+    &lt;/section&gt;
+  );
+}
+
+function CardItem({ card, currentColumn, onMove, onOpen }: {
+  card: Card;
+  currentColumn: ColumnId;
+  onMove: (to: ColumnId) =&gt; void;
+  onOpen: () =&gt; void;
+}) {
+  const handleDragStart = (e: React.DragEvent) =&gt; {
+    e.dataTransfer.setData(&#39;text/x-card-id&#39;, card.id);
+    e.dataTransfer.effectAllowed = &#39;move&#39;;
+  };
+
+  // Keyboard move: arrow-left/right move to adjacent column.
+  const handleKey = (e: React.KeyboardEvent) =&gt; {
+    if (e.key === &#39;Enter&#39;) { onOpen(); return; }
+    const order = COLUMNS.map((c) =&gt; c.id);
+    const i = order.indexOf(currentColumn);
+    if (e.key === &#39;ArrowLeft&#39;  &amp;&amp; i &gt; 0)               onMove(order[i - 1]);
+    if (e.key === &#39;ArrowRight&#39; &amp;&amp; i &lt; order.length - 1) onMove(order[i + 1]);
+  };
+
+  return (
+    &lt;article
+      data-card
+      draggable
+      role=&quot;listitem&quot;
+      tabIndex={0}
+      aria-label={`${card.title}, in ${currentColumn}. Arrow keys to move.`}
+      onDragStart={handleDragStart}
+      onKeyDown={handleKey}
+    &gt;
+      &lt;button className=&quot;card-open&quot; onClick={onOpen}&gt;
+        &lt;h4&gt;{card.title}&lt;/h4&gt;
+        {card.assignee &amp;&amp; &lt;p&gt;{card.assignee}&lt;/p&gt;}
+      &lt;/button&gt;
+      &lt;Menu trigger={&lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot;&gt;Move…&lt;/Button&gt;}&gt;
+        {COLUMNS
+          .filter((c) =&gt; c.id !== currentColumn)
+          .map((c) =&gt; (
+            &lt;Menu.Item key={c.id} onSelect={() =&gt; onMove(c.id)}&gt;
+              Move to {c.title}
+            &lt;/Menu.Item&gt;
+          ))}
+      &lt;/Menu&gt;
+    &lt;/article&gt;
+  );
+}
+
+function CardForm({ initial, onSubmit, onDelete }: {
+  initial: Card | null;
+  onSubmit: (card: Card) =&gt; void;
+  onDelete?: () =&gt; void;
+}) {
+  return (
+    &lt;Form onSubmit={(v) =&gt; onSubmit({
+      id: initial?.id ?? crypto.randomUUID(),
+      title: v.title, assignee: v.assignee, due: v.due, notes: v.notes,
+    })}&gt;
+      &lt;Stack gap=&quot;md&quot;&gt;
+        &lt;Field label=&quot;Title&quot; name=&quot;title&quot;&gt;
+          &lt;Input defaultValue={initial?.title} required autoFocus /&gt;
+        &lt;/Field&gt;
+        &lt;Field label=&quot;Assignee&quot; name=&quot;assignee&quot;&gt;
+          &lt;Input defaultValue={initial?.assignee} /&gt;
+        &lt;/Field&gt;
+        &lt;Field label=&quot;Due&quot; name=&quot;due&quot;&gt;
+          &lt;Input type=&quot;date&quot; defaultValue={initial?.due} /&gt;
+        &lt;/Field&gt;
+        &lt;Field label=&quot;Notes&quot; name=&quot;notes&quot;&gt;
+          &lt;TextArea defaultValue={initial?.notes} rows={4} /&gt;
+        &lt;/Field&gt;
+        &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot;&gt;
+          &lt;Button type=&quot;submit&quot; variant=&quot;primary&quot;&gt;
+            {initial ? &#39;Save&#39; : &#39;Add card&#39;}
+          &lt;/Button&gt;
+          {onDelete &amp;&amp; (
+            &lt;Button variant=&quot;danger&quot; onClick={onDelete}&gt;Delete&lt;/Button&gt;
+          )}
+        &lt;/Stack&gt;
+      &lt;/Stack&gt;
+    &lt;/Form&gt;
+  );
+}
+
+function computeDropIndex(col: HTMLElement, y: number): number {
+  const cards = col.querySelectorAll&lt;HTMLElement&gt;(&#39;[data-card]&#39;);
+  for (let i = 0; i &lt; cards.length; i++) {
+    const r = cards[i].getBoundingClientRect();
+    if (y &lt; r.top + r.height / 2) return i;
+  }
+  return cards.length;
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="display: flex; gap: 12px; width: 100%; max-width: 720px;">
+            <div style="flex: 1; background: var(--surface-muted); border-radius: 12px; padding: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;"><div style="font: 600 13px/1 var(--font-sans);">Backlog</div><div style="font: 600 11px/1 var(--font-mono); color: var(--text-muted); padding: 4px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 9999px;">3</div></div>
+              <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; font: 500 12px/1.4 var(--font-sans);"><b>Restock honey</b><br/><span style="color: var(--text-subtle); font-weight: 400;">Tendai · Mon</span></div>
+              <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font: 500 12px/1.4 var(--font-sans);"><b>Call Jabu re: order</b></div>
+            </div>
+            <div style="flex: 1; background: var(--surface-muted); border-radius: 12px; padding: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;"><div style="font: 600 13px/1 var(--font-sans);">In progress</div><div style="font: 600 11px/1 var(--font-mono); color: var(--tone-warning); padding: 4px 8px; background: var(--tone-warning-bg); border: 1px solid var(--tone-warning-bd); border-radius: 9999px;">4/3</div></div>
+              <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font: 500 12px/1.4 var(--font-sans);"><b>Hire weekend cashier</b><br/><span style="color: var(--text-subtle); font-weight: 400;">Anesu</span></div>
+            </div>
+            <div style="flex: 1; background: var(--surface-muted); border-radius: 12px; padding: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;"><div style="font: 600 13px/1 var(--font-sans);">Done</div><div style="font: 600 11px/1 var(--font-mono); color: var(--text-muted); padding: 4px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 9999px;">1</div></div>
+              <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font: 500 12px/1.4 var(--font-sans); opacity: 0.7;"><b>Refund Tendai</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">TaskBoard.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three forks. Each is a small diff from the final composition.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Swimlanes by assignee</h4>
+        <p>Group cards within each column by assignee, so you can see who's overloaded at a glance. The reducer doesn't change — only the render.</p>
+<pre>// Inside &lt;Column&gt;
+const grouped = groupBy(
+  cardIds.map((id) =&gt; cards[id]),
+  (c) =&gt; c.assignee ?? &#39;Unassigned&#39;,
+);
+{Object.entries(grouped).map(([who, list]) =&gt; (
+  &lt;Lane key={who} title={who} cards={list} /&gt;
+))}</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Multi-board (per project)</h4>
+        <p>Same board shape, multiple instances. Wrap the reducer in a board-id-keyed map; persist per id to localStorage. A picker switches between boards.</p>
+<pre>// useKanban hook
+const [boards, dispatch] = useReducer(
+  boardsReducer,
+  loadFromStorage(),
+);
+return boards[currentBoardId];
+// dispatch wraps inner actions in
+// { boardId, ...action }</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Keyboard moves (arrow keys)</h4>
+        <p>Already in the final composition — but here's the slim version if you don't need the menu. Each card listens for ArrowLeft / ArrowRight and dispatches MOVE.</p>
+<pre>onKeyDown={(e) =&gt; {
+  const order = [&#39;backlog&#39;,&#39;doing&#39;,&#39;done&#39;];
+  const i = order.indexOf(currentColumn);
+  if (e.key === &#39;ArrowLeft&#39;  &amp;&amp; i &gt; 0)
+    onMove(order[i - 1]);
+  if (e.key === &#39;ArrowRight&#39; &amp;&amp; i &lt; 2)
+    onMove(order[i + 1]);
+}}</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- A11Y -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">Drag-and-drop is the hardest interaction to make accessible. This recipe makes the keyboard path first-class, not a fallback.</p>
+    <ul class="ck-a11y">
+      <li><b>Every card is keyboard-focusable.</b> <code>tabIndex={0}</code> + <code>aria-label</code> tells the screen reader the card's title and its column.</li>
+      <li><b>Explicit "Move via keyboard" path.</b> Arrow-left / arrow-right move the focused card between columns. The aria-label says "Arrow keys to move" so users know.</li>
+      <li><b>"Move to" menu is the canonical path.</b> Every move possible by drag is also possible from the menu — phone users, screen-reader users and keyboard users share the same affordance.</li>
+      <li><b>Columns are real <code>role="list"</code> regions.</b> Each card is <code>role="listitem"</code>. Screen readers announce "list of 3 items, in Backlog".</li>
+      <li><b>WIP warnings are announced.</b> When a column crosses its limit, the count badge flips to <code>aria-live="polite"</code> and reads "4 of 3, over WIP limit".</li>
+      <li><b>Focus returns to the moved card.</b> After a MOVE action, focus follows the card into its new column — the user doesn't lose their place.</li>
+      <li><b>Drag indicator isn't colour-only.</b> The drop-target column gets a dashed border <em>and</em> a brand background — colour-blind users still see the change.</li>
+    </ul>
+  </section>
+
+  <!-- RELATED -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">Other list patterns, plus the canonical recipe these share their state-machine voice with.</p>
+    <div class="ck-related">
+      <a href="views-print-friendly.html">Views ·  Print-friendly views<span class="tag">New</span></a>
+      <a href="views-image-gallery.html">Views ·  Image gallery + lightbox<span class="tag">New</span></a>
+      <a href="communication-comments-thread.html">Communication ·  Comments thread<span class="tag">New</span></a>
+      <a href="settings-notification-preferences.html">Settings ·  Notification preferences<span class="tag">New</span></a>
+      <a href="auth-signin-2fa.html">Auth ·  Sign in with 2FA<span class="tag">Canonical</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="index.html"><div class="pager-label">← Back to</div><div class="pager-title">Cookbook</div></a>
+    <a href="communication-comments-thread.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Comments thread</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>
