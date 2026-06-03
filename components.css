@@ -77,11 +77,11 @@
 /* Claude Code's "Delete account" is dark warm grey, not red —
    for serious-but-reversible destructive actions. */
 .btn-destructive-soft {
-  background: #6B655A;
+  background: var(--action-destructive-soft-bg);
   color: var(--canvas);
-  border-color: #6B655A;
+  border-color: var(--action-destructive-soft-bg);
 }
-.btn-destructive-soft:hover { background: #57524A; border-color: #57524A; }
+.btn-destructive-soft:hover { background: var(--action-destructive-soft-hover); border-color: var(--action-destructive-soft-hover); }
 
 .btn-link {
   background: transparent;
@@ -199,7 +199,7 @@
 }
 .textarea { height: auto; padding: 12px 14px; min-height: 84px; resize: vertical; line-height: 1.55; }
 .input::placeholder, .textarea::placeholder { color: var(--text-subtle); }
-.input:hover, .textarea:hover, .select:hover { border-color: #BFB9A8; }
+.input:hover, .textarea:hover, .select:hover { border-color: var(--border-hover); }
 .input:focus-visible, .textarea:focus-visible, .select:focus-visible {
   border-color: var(--focus-ring);
   box-shadow: 0 0 0 3px var(--focus-ring-soft);
@@ -220,7 +220,7 @@
   transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
 }
 .hero-input:focus-within {
-  border-color: #BFB9A8;
+  border-color: var(--border-hover);
   box-shadow: 0 0 0 3px rgba(42,38,34,0.04);
 }
 .hero-input textarea {
@@ -254,7 +254,7 @@
   top: 2px; left: 2px;
   width: 18px; height: 18px; border-radius: 50%;
   background: #fff;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.18);
+  box-shadow: var(--shadow-thumb);
   transition: left var(--dur-fast) var(--ease-out);
 }
 .switch:checked { background: var(--tone-info); }
@@ -362,7 +362,7 @@
 .segmented-item.active {
   background: var(--surface);
   color: var(--text-strong);
-  box-shadow: 0 1px 0 rgba(42,38,34,0.06), 0 0 0 1px var(--border);
+  box-shadow: var(--shadow-inset-rest), 0 0 0 1px var(--border);
 }
 
 /* Sidebar navigation items */
@@ -904,7 +904,7 @@
   cursor: pointer;
 }
 .seg-tabs button:hover { color: var(--text-strong); }
-.seg-tabs button.active { background: var(--surface); color: var(--text-strong); box-shadow: 0 1px 2px rgba(42,38,34,0.06); }
+.seg-tabs button.active { background: var(--surface); color: var(--text-strong); box-shadow: var(--shadow-inset-soft); }
 
 /* — Tooltip — */
 .tooltip {
@@ -945,6 +945,130 @@
 .empty-state .ic { width: 44px; height: 44px; background: var(--surface-muted); border-radius: 10px; display: grid; place-items: center; color: var(--text-muted); margin-bottom: 6px; }
 .empty-state h3 { font: var(--type-section-title); margin: 0; color: var(--text-strong); }
 .empty-state p { font: var(--type-body); color: var(--text-muted); margin: 0; max-width: 44ch; }
+
+/* — Inline empty state (for inside a card) — small, single-row, under 80px tall —
+   Use when the parent surface is already a card; .empty-state's 56px padding
+   is too heavy for that case (see audit M-3). */
+.p-empty-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 10px;
+  background: var(--surface-muted);
+  color: var(--text-muted);
+}
+.p-empty-inline .ic {
+  flex: none;
+  width: 24px; height: 24px;
+  display: grid; place-items: center;
+  color: var(--text-subtle);
+}
+.p-empty-inline .msg {
+  flex: 1; min-width: 0;
+  font: var(--type-body-sm);
+  color: var(--text-body);
+}
+.p-empty-inline .msg strong { font-weight: 500; color: var(--text-strong); }
+.p-empty-inline .cta { flex: none; }
+
+/* — Sticky save bar (form panel / page footer) — slides up when dirty,
+   sits flush to the bottom of its scroll container. Honour the iOS
+   safe-area inset so on-phone forms don't end under the home indicator.
+   See audit M-1. */
+.p-save-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+  background: var(--surface);
+  border-top: 1px solid var(--border-strong);
+  box-shadow: 0 -6px 16px -8px rgba(22, 24, 29, 0.18);
+  transform: translateY(110%);
+  transition: transform 240ms cubic-bezier(0.2, 0, 0.1, 1);
+  z-index: 5;
+}
+.p-save-bar.dirty { transform: translateY(0); }
+.p-save-bar .label { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.p-save-bar .label .title { font: 500 13px/1.3 var(--font-sans); color: var(--text-strong); }
+.p-save-bar .label .summary { font: var(--type-body-sm); color: var(--text-muted); }
+.p-save-bar .actions { display: flex; gap: 8px; flex: none; }
+@media (max-width: 720px) {
+  .p-save-bar { padding-left: 12px; padding-right: 12px; }
+  .p-save-bar .label .summary { display: none; }
+}
+
+/* — Pagination row (lifts .pg + count + page-size into a single primitive) —
+   See audit M-2. */
+.p-pagination {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  font: var(--type-body-sm);
+  color: var(--text-muted);
+}
+.p-pagination .pg-count { color: var(--text-muted); }
+.p-pagination .pg-count strong { color: var(--text-strong); font-weight: 500; }
+.p-pagination .pg-size { display: inline-flex; align-items: center; gap: 8px; }
+.p-pagination .pg-spacer { flex: 1; }
+.p-pagination .pg-nav { display: inline-flex; align-items: center; gap: 2px; }
+.p-pagination .pg-nav button,
+.p-pagination .pg-nav .pn {
+  min-width: 30px; height: 30px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  font: 500 13px/1 var(--font-sans);
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  padding: 0 8px;
+}
+.p-pagination .pg-nav button:hover,
+.p-pagination .pg-nav .pn:hover { background: var(--surface-muted); color: var(--text-strong); }
+.p-pagination .pg-nav .pn.current,
+.p-pagination .pg-nav button[aria-current="page"] {
+  background: var(--brand); color: #fff;
+}
+.p-pagination .pg-nav .pn.dot { cursor: default; }
+.p-pagination .pg-nav button[disabled] { color: var(--text-subtle); cursor: not-allowed; }
+@media (max-width: 720px) {
+  .p-pagination { flex-wrap: wrap; gap: 10px; }
+  .p-pagination .pg-size { display: none; }
+}
+
+/* — Drag handle / grabber — two rows of dots; cursor hints the affordance.
+   Drag logic is the consumer's; this is presentation only. See audit M-4. */
+.p-grabber {
+  display: inline-grid;
+  grid-template-columns: repeat(2, 3px);
+  grid-template-rows: repeat(3, 3px);
+  gap: 2px;
+  width: 8px;
+  padding: 6px 4px;
+  cursor: grab;
+  color: var(--text-subtle);
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+}
+.p-grabber::before,
+.p-grabber {
+  /* dots are drawn via background-image on the children pseudo */
+}
+.p-grabber > i,
+.p-grabber > span {
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  display: block;
+}
+.p-grabber:hover { color: var(--text-muted); background: var(--surface-muted); }
+.p-grabber:active { cursor: grabbing; }
+.p-grabber:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 
 /* — File upload zone — */
 .upload-zone {
@@ -1076,16 +1200,24 @@
   text-transform: uppercase;
   white-space: nowrap;
 }
+/* Canonical tone modifiers — match the .x.tone-* shape used across the system.
+   Domain-word modifiers (.sold, .assigned…) are kept as forwards-compatible
+   aliases. Verticals own their own status→tone map (see audit O-1). */
+.erp-pill.tone-info,
 .erp-pill.on-site    { background: var(--brand-50); color: var(--brand-strong); }
-.erp-pill.sold       { background: var(--tone-success-bg); color: var(--tone-success); }
-.erp-pill.pending    { background: var(--tone-warn-bg); color: var(--tone-warn); }
-.erp-pill.committed  { background: var(--tone-success-bg); color: var(--tone-success); }
-.erp-pill.mapping    { background: var(--surface-muted); color: var(--text-muted); }
-.erp-pill.anomaly    { background: var(--tone-warn-bg); color: var(--tone-warn); }
-.erp-pill.assigned   { background: var(--tone-success-bg); color: var(--tone-success); }
+.erp-pill.tone-success,
+.erp-pill.sold,
+.erp-pill.committed,
+.erp-pill.assigned,
 .erp-pill.mapped     { background: var(--tone-success-bg); color: var(--tone-success); }
+.erp-pill.tone-warn,
+.erp-pill.pending,
+.erp-pill.anomaly,
 .erp-pill.unmapped   { background: var(--tone-warn-bg); color: var(--tone-warn); }
+.erp-pill.tone-danger,
 .erp-pill.failed     { background: var(--tone-danger-bg); color: var(--tone-danger); }
+.erp-pill.tone-neutral,
+.erp-pill.mapping    { background: var(--surface-muted); color: var(--text-muted); }
 .erp-pill.with-dot::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; margin-right: 6px; }
 
 /* — Switch (legacy alias kept) — */
@@ -1126,7 +1258,7 @@
   white-space: nowrap;
 }
 .iconstrip-tab:hover { color: var(--text-strong); }
-.iconstrip-tab.active { background: var(--surface); color: var(--text-strong); box-shadow: 0 1px 2px rgba(42,38,34,0.06), 0 0 0 1px var(--border); }
+.iconstrip-tab.active { background: var(--surface); color: var(--text-strong); box-shadow: var(--shadow-inset-soft), 0 0 0 1px var(--border); }
 .iconstrip-tab svg { width: 16px; height: 16px; color: var(--text-muted); }
 .iconstrip-tab.active svg { color: var(--brand); }
 
@@ -1349,10 +1481,10 @@
 .diff-line .code { padding: 4px 12px; color: var(--text-body); white-space: pre; }
 .diff-line.add { background: rgba(94, 142, 84, 0.08); }
 .diff-line.add .code::before { content: "+ "; color: var(--tone-success); font-weight: 600; }
-.diff-line.add .code { color: #2E5526; }
+.diff-line.add .code { color: var(--tone-success-strong); }
 .diff-line.rem { background: rgba(184, 58, 42, 0.08); }
 .diff-line.rem .code::before { content: "- "; color: var(--tone-danger); font-weight: 600; }
-.diff-line.rem .code { color: #7A2419; }
+.diff-line.rem .code { color: var(--tone-danger-strong); }
 
 /* 9 — Star rating */
 .rating { display: inline-flex; gap: 2px; color: var(--surface-deep); font-size: 18px; line-height: 1; }
@@ -1959,9 +2091,17 @@
   font-size: 22px;
   letter-spacing: -0.02em;
 }
+/* Tonal marks — consumers pick the icon, the system picks the tone.
+   Domain-named variants (.gem, .ledger, .person) stay as forwards-compatible
+   aliases (see audit O-2). */
+.detail-hero .dh-mark.tone-warn,
 .detail-hero .dh-mark.gem    { background: linear-gradient(135deg, #FEF4DA, #F4C15B); color: #6B5119; }
+.detail-hero .dh-mark.tone-info,
 .detail-hero .dh-mark.ledger { background: linear-gradient(135deg, var(--brand-soft), var(--brand-100)); color: var(--brand-strong); }
+.detail-hero .dh-mark.tone-neutral,
 .detail-hero .dh-mark.person { background: var(--surface-muted); color: var(--text-strong); }
+.detail-hero .dh-mark.tone-success { background: var(--tone-success-bg); color: var(--tone-success); }
+.detail-hero .dh-mark.tone-danger  { background: var(--tone-danger-bg);  color: var(--tone-danger); }
 .detail-hero .dh-eyebrow { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
 .detail-hero h1 {
   font: var(--type-display-sm);
@@ -2157,7 +2297,7 @@ a.module-card:hover { border-color: var(--border-strong); transform: translateY(
   display: flex; align-items: stretch;
   background: var(--surface);
   border-top: 1px solid var(--border);
-  box-shadow: 0 -6px 18px -8px rgba(22, 24, 29, 0.10);
+  box-shadow: var(--shadow-bar-bottom);
 }
 .b-bottom-tabs button,
 .b-bottom-tabs a {
@@ -2166,7 +2306,8 @@ a.module-card:hover { border-color: var(--border-strong); transform: translateY(
   gap: 3px; padding: 4px 0;
   border: 0; background: transparent; cursor: pointer; text-decoration: none;
   color: var(--text-subtle);
-  font: 500 10.5px/1 var(--font-sans);
+  /* Caption-tier label under each tab icon — uses --type-eyebrow size (11px). */
+  font: 500 11px/1 var(--font-sans);
   border-radius: 10px;
   position: relative;
 }
@@ -2207,7 +2348,8 @@ a.module-card:hover { border-color: var(--border-strong); transform: translateY(
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 9999px;
-  font: 500 12.5px/1 var(--font-sans);
+  /* Caption tier (12px) — matches --type-caption. */
+  font: 500 12px/1 var(--font-sans);
   color: var(--text-strong);
   white-space: nowrap;
   cursor: pointer;
@@ -2269,7 +2411,8 @@ a.module-card:hover { border-color: var(--border-strong); transform: translateY(
   font-variant-numeric: tabular-nums;
 }
 .b-row-card .b-rc-delta {
-  font: 500 12.5px/1 var(--font-sans);
+  /* Caption tier — matches --type-caption (12px). */
+  font: 500 12px/1 var(--font-sans);
   color: var(--text-muted);
   margin-top: 4px;
 }
@@ -2279,7 +2422,8 @@ a.module-card:hover { border-color: var(--border-strong); transform: translateY(
   display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px;
 }
 .b-row-card .b-rc-meta .b-rc-m-l {
-  font: 500 10.5px/1 var(--font-sans);
+  /* Eyebrow tier — matches --type-eyebrow size (11px). */
+  font: 500 11px/1 var(--font-sans);
   letter-spacing: 0.07em; text-transform: uppercase;
   color: var(--text-subtle);
 }
@@ -2409,7 +2553,7 @@ a.module-card:hover { border-color: var(--border-strong); transform: translateY(
   border-top-left-radius: 18px;
   border-top-right-radius: 18px;
   display: flex; flex-direction: column;
-  box-shadow: 0 -20px 40px -10px rgba(22, 24, 29, 0.30);
+  box-shadow: var(--shadow-sheet-bottom);
   transform: translateY(100%);
   transition: transform 260ms cubic-bezier(0.2, 0, 0.1, 1);
   padding-bottom: env(safe-area-inset-bottom);
@@ -2452,7 +2596,16 @@ a.module-card:hover { border-color: var(--border-strong); transform: translateY(
   background: var(--surface);
   flex: none;
 }
-.x-bottom-sheet .x-bs-foot button {
+/* @deprecated Bespoke .x-bs-foot button rules removed (audit-reuse A-4).
+ * Footer buttons must carry .btn (and .btn-primary / .btn-secondary /
+ * .btn-destructive) so tone-token updates propagate everywhere. The legacy
+ * .primary / .alt / .danger flat-button classes are kept as thin aliases
+ * below for one release so old markup keeps rendering. New code MUST use
+ * <button class="btn btn-primary">. */
+.x-bottom-sheet .x-bs-foot .btn { flex: 1; min-height: 44px; }
+.x-bottom-sheet .x-bs-foot button:not(.btn) {
+  /* Legacy shape — same metrics .btn would give, retained so portal demos
+   * shipping <button class="primary"> in a sheet footer don't regress. */
   flex: 1; min-height: 44px;
   padding: 0 14px; border-radius: 10px;
   font: 600 14px/1 var(--font-sans);
@@ -2492,6 +2645,230 @@ a.module-card:hover { border-color: var(--border-strong); transform: translateY(
    * (max-widths, shadows etc. still apply). Nothing extra needed here; this
    * selector exists to make the alias relationship grep-able and to give
    * future migration tools a single hook to rewrite. */
+}
+
+/* ============================================================
+   Canonical tone vocabulary (audit-reuse N-1).
+   ---------------------------------------------------------------
+   One shape across every tonable primitive:
+     .x.tone-success / .tone-warn / .tone-danger / .tone-info
+   matching the --tone-* token names. Legacy postfix
+   (.badge-success) and compound (.alert.success) variants are
+   retained above as backwards-compat aliases — see the
+   `@deprecated` comments next to each.
+   New code MUST use .tone-*. Tracked: audit-reuse.html finding N-1.
+   ============================================================ */
+
+/* ── badge ───────────────────────────────────────────────── */
+.badge.tone-neutral { background: var(--surface-muted); color: var(--text-muted); }
+.badge.tone-info    { background: var(--tone-info-bg);    color: var(--tone-info); }
+.badge.tone-success { background: var(--tone-success-bg); color: var(--tone-success); }
+.badge.tone-warn    { background: var(--tone-warn-bg);    color: var(--tone-warn); }
+.badge.tone-danger  { background: var(--tone-danger-bg);  color: var(--tone-danger); }
+
+/* ── alert ───────────────────────────────────────────────── */
+.alert.tone-info    { background: var(--tone-info-bg);    border-color: var(--tone-info-bd);    color: var(--tone-info); }
+.alert.tone-success { background: var(--tone-success-bg); border-color: var(--tone-success-bd); color: var(--tone-success); }
+.alert.tone-warn    { background: var(--tone-warn-bg);    border-color: var(--tone-warn-bd);    color: var(--tone-warn); }
+.alert.tone-danger  { background: var(--tone-danger-bg);  border-color: var(--tone-danger-bd);  color: var(--tone-danger); }
+.alert.tone-info .alert-title,
+.alert.tone-success .alert-title,
+.alert.tone-warn .alert-title,
+.alert.tone-danger .alert-title { color: inherit; }
+.alert.tone-info .alert-body,
+.alert.tone-success .alert-body,
+.alert.tone-warn .alert-body,
+.alert.tone-danger .alert-body { color: inherit; opacity: 0.85; }
+
+/* ── donut ───────────────────────────────────────────────── */
+.donut.tone-success { --fill: var(--tone-success); }
+.donut.tone-warn    { --fill: var(--tone-warn); }
+.donut.tone-danger  { --fill: var(--tone-danger); }
+.donut.tone-info    { --fill: var(--tone-info); }
+
+/* ── progress ────────────────────────────────────────────── */
+.progress.tone-success > span { background: var(--tone-success); }
+.progress.tone-warn    > span { background: var(--tone-warn); }
+.progress.tone-danger  > span { background: var(--tone-danger); }
+.progress.tone-info    > span { background: var(--tone-info); }
+
+/* ── toast ───────────────────────────────────────────────── */
+.toast.tone-success { background: var(--tone-success); }
+.toast.tone-warn    { background: var(--tone-warn); }
+.toast.tone-danger  { background: var(--tone-danger); }
+.toast.tone-info    { background: var(--tone-info); }
+
+/* ── sparkline ───────────────────────────────────────────── */
+.sparkline.tone-success path.line { stroke: var(--tone-success); }
+.sparkline.tone-success path.fill { fill:   var(--tone-success); }
+.sparkline.tone-warn    path.line { stroke: var(--tone-warn); }
+.sparkline.tone-warn    path.fill { fill:   var(--tone-warn); }
+.sparkline.tone-danger  path.line { stroke: var(--tone-danger); }
+.sparkline.tone-danger  path.fill { fill:   var(--tone-danger); }
+.sparkline.tone-info    path.line { stroke: var(--tone-info); }
+.sparkline.tone-info    path.fill { fill:   var(--tone-info); }
+
+/* ── erp-pill ────────────────────────────────────────────── */
+.erp-pill.tone-info    { background: var(--tone-info-bg);    color: var(--tone-info); }
+.erp-pill.tone-success { background: var(--tone-success-bg); color: var(--tone-success); }
+.erp-pill.tone-warn    { background: var(--tone-warn-bg);    color: var(--tone-warn); }
+.erp-pill.tone-danger  { background: var(--tone-danger-bg);  color: var(--tone-danger); }
+.erp-pill.tone-neutral { background: var(--surface-muted);   color: var(--text-muted); }
+
+/* ── pill (generic; primitive not yet defined — this is a
+   forward declaration so any future .pill ships with the
+   same vocabulary out of the box) ─────────────────────────── */
+.pill.tone-info    { background: var(--tone-info-bg);    color: var(--tone-info); }
+.pill.tone-success { background: var(--tone-success-bg); color: var(--tone-success); }
+.pill.tone-warn    { background: var(--tone-warn-bg);    color: var(--tone-warn); }
+.pill.tone-danger  { background: var(--tone-danger-bg);  color: var(--tone-danger); }
+.pill.tone-neutral { background: var(--surface-muted);   color: var(--text-muted); }
+
+/* ── dh-mark (detail-hero brand mark) ─────────────────────── */
+.detail-hero .dh-mark.tone-warn    { background: linear-gradient(135deg, #FEF4DA, #F4C15B); color: #6B5119; }
+.detail-hero .dh-mark.tone-info    { background: linear-gradient(135deg, var(--brand-soft), var(--brand-100)); color: var(--brand-strong); }
+.detail-hero .dh-mark.tone-neutral { background: var(--surface-muted); color: var(--text-strong); }
+.detail-hero .dh-mark.tone-success { background: var(--tone-success-bg); color: var(--tone-success); }
+.detail-hero .dh-mark.tone-danger  { background: var(--tone-danger-bg);  color: var(--tone-danger); }
+
+/* ── btn (action-tone overlay so .btn.tone-danger reads as
+   destructive even if the consumer hasn't typed .btn-destructive) */
+.btn.tone-danger  { background: var(--tone-danger); color: #fff; border-color: transparent; }
+.btn.tone-danger:hover { background: var(--tone-danger); filter: brightness(0.95); }
+.btn.tone-warn    { background: var(--tone-warn);    color: #fff; border-color: transparent; }
+.btn.tone-success { background: var(--tone-success); color: #fff; border-color: transparent; }
+.btn.tone-info    { background: var(--tone-info);    color: #fff; border-color: transparent; }
+
+/* ── Legacy compound-class forwards (@deprecated — use .tone-*).
+   Keep historic markup rendering identically. The original
+   .badge-success / .alert.success / .donut.success rules above
+   are also retained; these add the alternate compound shapes
+   (.badge.success, etc.) some portals already ship. Removal of
+   both shapes is a v0.6 follow-up. */
+/* @deprecated .badge.success → use .badge.tone-success */
+.badge.success { background: var(--tone-success-bg); color: var(--tone-success); }
+/* @deprecated .badge.warn → use .badge.tone-warn */
+.badge.warn    { background: var(--tone-warn-bg);    color: var(--tone-warn); }
+/* @deprecated .badge.danger → use .badge.tone-danger */
+.badge.danger  { background: var(--tone-danger-bg);  color: var(--tone-danger); }
+/* @deprecated .badge.info → use .badge.tone-info */
+.badge.info    { background: var(--tone-info-bg);    color: var(--tone-info); }
+/* @deprecated .badge.neutral → use .badge.tone-neutral */
+.badge.neutral { background: var(--surface-muted);   color: var(--text-muted); }
+
+/* @deprecated Filter-chip aliases — use .b-filter-chips / .b-fc.
+ * Audit-reuse.html D-4 chose b-filter-chips as the canonical mobile pill row.
+ * Legacy markup (.filter-chips / .chip-bar / .hist-filter) keeps working by
+ * inheriting the same horizontal scroll-row layout; their inner pills inherit
+ * .fchip styling. New code MUST use .b-filter-chips > .b-fc.
+ * Retained through v0.6. */
+.filter-chips,
+.chip-bar,
+.hist-filter {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 4px 0;
+}
+.filter-chips::-webkit-scrollbar,
+.chip-bar::-webkit-scrollbar,
+.hist-filter::-webkit-scrollbar { display: none; }
+.filter-chips > *,
+.chip-bar > *,
+.hist-filter > * { flex: none; }
+
+/* @deprecated Dropdown menu aliases — use .dropdown (documented on
+ * p-dropdown-menu.html). .menu, .context-menu and .user-menu remain as
+ * working CSS earlier in this file so existing markup keeps rendering; new
+ * code MUST use .dropdown with .dropdown--compact / .dropdown--user
+ * modifiers. The no-op selector below exists so migration tooling has a
+ * single grep hook. Tracked: audit-reuse.html finding D-5. */
+.menu,
+.context-menu,
+.user-menu {
+  /* Inherit-by-aliasing — see earlier rules. */
+}
+
+/* @deprecated Popover aliases — use .popover (documented on p-popover.html).
+ * Audit-reuse.html D-5 picks .popover as the canonical rich-content floating
+ * surface. .hover-card and .pop-card from legacy portal demos forward to the
+ * same surface treatment. Retained through v0.6. */
+.hover-card,
+.pop-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-popover);
+  padding: 16px;
+  max-width: 320px;
+  font: var(--type-body-sm);
+  color: var(--text-body);
+}
+
+/* @deprecated Table alias — .dtable is canonical for full-feature data
+ * tables (consume via x-data-table). .table remains as the bare HTML
+ * semantic primitive (documented on p-table.html). Audit-reuse.html D-6
+ * keeps both but documents the relationship: simple list = .table;
+ * rich data grid with sort/select/pagination = .dtable.
+ * The .data-table alias below is a no-op grep hook for migration tooling. */
+.data-table {
+  /* Inherit-by-aliasing — apply class="dtable data-table" and the existing
+   * .dtable rules take over. */
+}
+
+/* @deprecated Tab-strip aliases — use .p-tabs (documented on p-tabs.html,
+ * which folds .seg-tabs / .iconstrip / .under-tabs into three variants of
+ * one Tabs primitive). .kit-tab / .tabs / .tabstrip from older portal demos
+ * forward to .under-tabs styling so visuals stay consistent.
+ * Audit-reuse.html D-7. */
+.kit-tab,
+.tabs,
+.tabstrip {
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid var(--border);
+  padding: 0 4px;
+}
+.kit-tab > a,
+.kit-tab > button,
+.tabs > a,
+.tabs > button,
+.tabstrip > a,
+.tabstrip > button {
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 10px 2px;
+  font: 500 13px/1 var(--font-sans);
+  color: var(--text-muted);
+  cursor: pointer;
+  text-decoration: none;
+}
+.kit-tab > .active,
+.kit-tab > [aria-selected="true"],
+.tabs > .active,
+.tabs > [aria-selected="true"],
+.tabstrip > .active,
+.tabstrip > [aria-selected="true"] {
+  color: var(--text-strong);
+  border-bottom-color: var(--brand);
+}
+
+/* @deprecated .kpi-grid — audit-reuse.html D-3 picks .b-stat-hero (one lead
+ * + N secondary tiles) and .b-stat-card (single tile) as the canonical stat
+ * surfaces. .kpi-grid is just a CSS grid wrapper around stat cards; new
+ * code SHOULD write `display: grid; gap: 12px; grid-template-columns:
+ * repeat(N, 1fr);` directly with .b-stat-card children. The selector below
+ * preserves the layout for existing markup. */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+@media (max-width: 720px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* ============================================================
@@ -2605,4 +2982,157 @@ textarea:focus-visible:not(.textarea) {
     scroll-behavior: auto !important;
   }
   .ds-skip-link { transition: none; }
+}
+
+/* ════════════════════════════════════════════════════════════
+   RECIPE-DRIVEN ADDITIONS (audit findings R-1..R-4)
+   Small, tokenised additions extracted from in-flight cookbook
+   recipes so authors stop re-inventing them inline. Each is
+   intentionally small — the variant story is on the doc page.
+   ════════════════════════════════════════════════════════════ */
+
+/* R-1 — Stepper primitive. The visual indicator at the top of a
+   wizard ("step 2 of 4"). Renders horizontally as a row of pill
+   segments. See system/p-stepper.html. */
+.p-stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+.p-stepper .p-step {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  transition: background var(--dur-fast) var(--ease-out),
+              border-color var(--dur-fast) var(--ease-out);
+}
+.p-stepper .p-step.done    { background: var(--brand); border-color: var(--brand); }
+.p-stepper .p-step.current { background: var(--brand); border-color: var(--brand); }
+.p-stepper .p-step.pending { background: var(--surface-muted); border-color: var(--border); }
+.p-stepper.p-stepper--labelled {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 8px;
+}
+.p-stepper.p-stepper--labelled .p-step {
+  height: auto;
+  padding: 8px 10px;
+  border-radius: 8px;
+  display: flex; align-items: center; gap: 8px;
+  font: var(--type-label-sm); color: var(--text-muted);
+}
+.p-stepper.p-stepper--labelled .p-step.current { color: var(--brand-deeper); }
+.p-stepper.p-stepper--labelled .p-step.done    { color: var(--text-strong); }
+
+/* R-2 — Inline edit wrapper. The "tap to edit, Enter to save,
+   Esc to cancel" pattern used by inline-editable table cells and
+   inline-rename fields. See cookbook/forms-inline-edit-row.html. */
+.p-inline-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--brand);
+  box-shadow: 0 0 0 2px var(--focus-ring-soft);
+}
+.p-inline-edit input {
+  flex: 1 1 auto;
+  min-width: 80px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  color: var(--text-strong);
+  padding: 2px 4px;
+}
+.p-inline-edit .p-inline-edit-save,
+.p-inline-edit .p-inline-edit-cancel {
+  display: inline-grid; place-items: center;
+  width: 22px; height: 22px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.p-inline-edit .p-inline-edit-save:hover   { background: var(--tone-success-bg); color: var(--tone-success); }
+.p-inline-edit .p-inline-edit-cancel:hover { background: var(--surface-muted); color: var(--text-strong); }
+
+/* R-3 — Transient toast tone. Used for short-lived optimistic
+   confirmations ("Saved — Undo"). Same shape as .toast but fades
+   faster and gives the action button the loudest weight. The
+   actual scheduling lives in the toast manager — this class is
+   the visual signal. */
+.toast.tone-transient {
+  background: var(--surface);
+  color: var(--text-strong);
+  border: 1px solid var(--border);
+  animation: p-toast-transient-fade 1.5s var(--ease-out) forwards;
+  animation-delay: 1.5s;
+}
+.toast.tone-transient .t-title { color: var(--text-strong); }
+.toast.tone-transient .t-body  { color: var(--text-muted); opacity: 1; }
+.toast.tone-transient .x       { color: var(--text-subtle); }
+.toast.tone-transient .x:hover { color: var(--text-strong); }
+.toast.tone-transient button.action,
+.toast.tone-transient .t-action {
+  font: 600 13px/1 var(--font-sans);
+  color: var(--brand-strong);
+  background: var(--brand-soft);
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.toast.tone-transient button.action:hover,
+.toast.tone-transient .t-action:hover {
+  background: var(--brand);
+  color: #fff;
+}
+@keyframes p-toast-transient-fade {
+  from { opacity: 1; }
+  to   { opacity: 0; visibility: hidden; }
+}
+
+/* R-4 — Role switcher primitive. The "Clerk | Manager" segmented
+   toggle. Generic for any role enum: pass any number of buttons,
+   mark the active one with aria-pressed="true". See
+   system/p-role-switcher.html. */
+.p-role-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+}
+.p-role-switcher button {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font: 500 13px/1 var(--font-sans);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out),
+              color var(--dur-fast) var(--ease-out);
+}
+.p-role-switcher button:hover { color: var(--text-strong); }
+.p-role-switcher button[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--text-strong);
+  border-color: var(--border);
+  box-shadow: var(--shadow-inset-rest);
+}
+.p-role-switcher button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
