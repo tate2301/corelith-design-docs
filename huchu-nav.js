@@ -102,6 +102,7 @@
     // the sidebar's flat list still scans like a table of contents. Every
     // original href is preserved; nothing here is a new page.
     { label: 'Reference', items: [
+      ['Reuse audit',       ROOT + 'system/audit-reuse.html',   'audit-reuse', 'New'],
       // ── Foundations ─────────────────────────────────────────
       ['Foundations',       ROOT + 'system/foundations.html',   'foundations'],
       ['Colors',            ROOT + 'system/colors.html',        'colors'],
