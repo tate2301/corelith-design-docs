@@ -1014,13 +1014,36 @@ function renderRoute() {
   wireRoute();
 }
 
+/* ===== Fullscreen ===== */
+function toggleFullscreen() {
+  const isFs = !!document.fullscreenElement || document.body.classList.contains('is-fullscreen');
+  if (isFs) {
+    document.exitFullscreen && document.exitFullscreen().catch(()=>{});
+    document.body.classList.remove('is-fullscreen');
+  } else {
+    document.body.classList.add('is-fullscreen');
+    document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(()=>{});
+  }
+  render();
+}
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) document.body.classList.remove('is-fullscreen');
+  render();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.body.classList.contains('is-fullscreen') && !document.fullscreenElement) {
+    document.body.classList.remove('is-fullscreen');
+    render();
+  }
+});
+
 function wireShell() {
   $$('[data-go]').forEach(b => b.addEventListener('click', (e) => {
     const r = b.dataset.go; if (!r) return;
     if (!canSee(r)) { toast('Manager only — switch role at the top', 'warn'); return; }
     state.route = r; location.hash = '#/' + r; render();
   }));
-  const fs = $('#bar-fs'); if (fs) fs.addEventListener('click', () => document.body.classList.toggle('is-fullscreen'));
+  const fs = $('#bar-fs'); if (fs) fs.addEventListener('click', toggleFullscreen);
   const bp = $('#bar-pour'); if (bp) bp.addEventListener('click', () => { state.route = 'pour-log'; location.hash = '#/pour-log'; render(); });
   $$('.gd-bar [data-role]').forEach(b => b.addEventListener('click', () => {
     state.role = b.dataset.role;

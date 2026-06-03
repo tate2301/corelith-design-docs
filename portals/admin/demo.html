@@ -2161,8 +2161,26 @@ function go(route) {
 }
 
 function toggleFullscreen() {
-  document.body.classList.toggle('is-fullscreen');
+  const isFs = !!document.fullscreenElement || document.body.classList.contains('is-fullscreen');
+  if (isFs) {
+    document.exitFullscreen && document.exitFullscreen().catch(()=>{});
+    document.body.classList.remove('is-fullscreen');
+  } else {
+    document.body.classList.add('is-fullscreen');
+    document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(()=>{});
+  }
+  render();
 }
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) document.body.classList.remove('is-fullscreen');
+  render();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.body.classList.contains('is-fullscreen') && !document.fullscreenElement) {
+    document.body.classList.remove('is-fullscreen');
+    render();
+  }
+});
 
 /* ============================================================
    Render — main shell
