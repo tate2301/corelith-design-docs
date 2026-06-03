@@ -5,6 +5,7 @@
 <link rel="stylesheet" href="../tokens.css" />
 <link rel="stylesheet" href="../components.css" />
 <link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
 <script src="../icons.js" defer></script>
 <script src="../system-shell.js" defer></script>
 <style>
@@ -15,6 +16,54 @@
   .comp-h .when { display: inline-flex; flex-direction: column; gap: 6px; font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); padding: 10px 12px; background: var(--surface-muted); border-radius: 8px; min-width: 220px; max-width: 280px; }
   .comp-h .when b { color: var(--text-strong); font-weight: 500; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
   .comp-box { background: var(--canvas); border: 1px solid var(--border); border-radius: 14px; padding: 28px; overflow: hidden; }
+
+  /* ── Wireframe primitives (greyscale, structure-only) ────────── */
+  .wf-frame { border: 1px dashed var(--border-strong); border-radius: 12px; padding: 12px; background: var(--canvas); position: relative; overflow: hidden; }
+  .wf-frame .wf-cap { position: absolute; top: 8px; right: 10px; font: 500 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); }
+  .wf-page { position: relative; background: var(--surface-muted); border-radius: 8px; height: 220px; opacity: 0.5; padding: 10px; display: grid; gap: 6px; }
+  .wf-line { height: 6px; background: var(--canvas); border-radius: 3px; }
+  .wf-modal {
+    position: absolute; background: var(--canvas);
+    border: 1px dashed var(--border-strong); border-radius: 10px;
+    padding: 10px; display: grid; gap: 6px;
+  }
+  .wf-modal .wf-line { background: var(--surface-muted); }
+  .wf-modal-center { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70%; }
+  .wf-modal-bottom { bottom: 0; left: 0; right: 0; border-radius: 10px 10px 0 0; }
+  .wf-modal-side { top: 0; bottom: 0; right: 0; width: 55%; border-radius: 0; }
+  .wf-block { height: 26px; background: var(--surface-muted); border-radius: 4px; }
+  .wf-btns { display: flex; gap: 6px; justify-content: flex-end; margin-top: 4px; }
+  .wf-btn { height: 18px; width: 50px; background: var(--surface-muted); border-radius: 4px; }
+  .wf-btn.primary { background: var(--border); }
+  .wf-mobile { width: 160px; margin: 0 auto; }
+  .wf-mobile .wf-page { height: 260px; }
+  .wf-tablet { max-width: 280px; margin: 0 auto; }
+
+  .wf-trio { display: grid; grid-template-columns: 1fr 1.2fr 1.6fr; gap: 14px; align-items: stretch; }
+  @media (max-width: 800px) { .wf-trio { grid-template-columns: 1fr; } }
+  .wf-trio-col { display: grid; gap: 8px; }
+  .wf-trio-col .label { font: 500 10px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); }
+
+  /* Skeleton composition stage */
+  .skel-modal { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); box-shadow: var(--shadow-modal); margin: 0 auto; padding: 0; overflow: hidden; }
+  .skel-modal .skel-body { padding: 22px 24px; display: grid; gap: 10px; }
+  .skel-modal .skel-foot { padding: 12px 22px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; background: var(--surface); }
+  .skel-line { height: 6px; background: var(--surface-muted); border-radius: 3px; }
+  .skel-line.title { width: 60%; height: 14px; background: var(--border); }
+  .skel-line.sub { width: 80%; }
+  .skel-input { height: 32px; background: var(--surface-muted); border: 1px dashed var(--border); border-radius: 6px; }
+  .skel-btn { height: 28px; width: 76px; background: var(--surface-muted); border-radius: 6px; border: 1px dashed var(--border); }
+  .skel-btn.primary { background: var(--border); border-color: var(--border-strong); }
+  .skel-stage-list { background: var(--canvas); padding: 14px 16px; display: grid; gap: 8px; opacity: 0.45; }
+  .skel-stage-list .row { height: 26px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
+  .skel-side { position: absolute; top: 0; right: 0; bottom: 0; background: var(--surface); border-left: 1px solid var(--border); box-shadow: var(--shadow-modal); display: flex; flex-direction: column; }
+  .skel-side .skel-side-head { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .skel-side .skel-side-body { padding: 16px 20px; flex: 1; display: grid; gap: 10px; }
+  .skel-side .skel-side-foot { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+  .live-examples { margin: 56px 0 8px; }
+  .live-examples h2 { font: 600 18px/1.2 var(--font-sans); color: var(--text-strong); margin: 0 0 6px; }
+  .live-examples p { font: 14px/1.5 var(--font-sans); color: var(--text-muted); margin: 0 0 14px; }
 </style>
 </head>
 <body class="ds-doc">
@@ -36,79 +85,257 @@
       <span class="meta-pill">5 compositions</span>
     </div>
   </header>
-  
-    <div class="comp-h">
-      <div>
-        <div class="num">COMPOSITION 01</div>
-        <h3>Confirm modal · standard</h3>
-        <p>Title + body + Cancel/Primary buttons. The lightest pattern.</p>
+
+  <section style="margin-top: 16px;">
+    <h2 class="ds-h2">Shell at every breakpoint</h2>
+    <p class="ds-h2-sub">The overlay reflows by viewport — bottom-anchored on mobile, centred on tablet, side-anchored or centred on desktop. Greyscale wireframes — structure only.</p>
+    <div class="wf-trio">
+      <div class="wf-trio-col">
+        <div class="label">Mobile · bottom sheet</div>
+        <div class="wf-frame wf-mobile"><span class="wf-cap">SM</span>
+          <div class="wf-page">
+            <div class="wf-line" style="width: 80%;"></div>
+            <div class="wf-line" style="width: 60%;"></div>
+            <div class="wf-line" style="width: 75%;"></div>
+            <div class="wf-modal wf-modal-bottom">
+              <div class="wf-line" style="width: 50%;"></div>
+              <div class="wf-block"></div>
+              <div class="wf-btns"><div class="wf-btn"></div><div class="wf-btn primary"></div></div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="when"><b>Use when</b>The action is reversible but the operator should pause to confirm — close shift, archive record, send broadcast.</div>
+      <div class="wf-trio-col">
+        <div class="label">Tablet · centred modal</div>
+        <div class="wf-frame wf-tablet"><span class="wf-cap">MD</span>
+          <div class="wf-page">
+            <div class="wf-line" style="width: 80%;"></div>
+            <div class="wf-line" style="width: 60%;"></div>
+            <div class="wf-line" style="width: 75%;"></div>
+            <div class="wf-line" style="width: 70%;"></div>
+            <div class="wf-modal wf-modal-center">
+              <div class="wf-line" style="width: 60%;"></div>
+              <div class="wf-block"></div>
+              <div class="wf-btns"><div class="wf-btn"></div><div class="wf-btn primary"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="wf-trio-col">
+        <div class="label">Desktop · side sheet</div>
+        <div class="wf-frame"><span class="wf-cap">LG</span>
+          <div class="wf-page">
+            <div class="wf-line" style="width: 80%;"></div>
+            <div class="wf-line" style="width: 60%;"></div>
+            <div class="wf-line" style="width: 75%;"></div>
+            <div class="wf-line" style="width: 70%;"></div>
+            <div class="wf-modal wf-modal-side">
+              <div class="wf-line" style="width: 70%;"></div>
+              <div class="wf-block"></div>
+              <div class="wf-block"></div>
+              <div class="wf-btns"><div class="wf-btn"></div><div class="wf-btn primary"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="comp-box"
-               data-code='import { Modal, Button, Input } from &#39;@corelith/design-system&#39;;
-import { useState } from &#39;react&#39;;
+  </section>
+
+  <section class="live-examples">
+    <h2>Live examples</h2>
+    <p>Where to see this shell in action — reference docs, cookbook recipes, and live demos.</p>
+    <div class="surface-grid">
+      <a class="surface-card" href="x-bottom-sheet.html">
+        <span class="num">REFERENCE</span>
+        <span class="nm">Bottom sheet</span>
+        <span class="ds">The canonical successor — one component, two layouts.</span>
+        <span class="arrow">Open reference →</span>
+      </a>
+      <a class="surface-card" href="../cookbook/forms-autosave-drawer.html">
+        <span class="num">COOKBOOK</span>
+        <span class="nm">Autosave drawer</span>
+        <span class="ds">Side-sheet recipe with autosave + dirty-state handling.</span>
+        <span class="arrow">Open recipe →</span>
+      </a>
+      <a class="surface-card" href="../kits/employee-detail.html">
+        <span class="num">KIT · LIVE</span>
+        <span class="nm">Employee detail</span>
+        <span class="ds">Modals and side sheets used inside a shipped kit.</span>
+        <span class="arrow">Open live →</span>
+      </a>
+    </div>
+  </section>
+
+  <div class="comp-h">
+    <div>
+      <div class="num">COMPOSITION 01</div>
+      <h3>Confirm modal · standard</h3>
+      <p>Title + body + Cancel/Primary buttons. The lightest pattern.</p>
+    </div>
+    <div class="when"><b>Use when</b>The action is reversible but the operator should pause to confirm — close shift, archive record, send broadcast.</div>
+  </div>
+  <div class="comp-box"
+             data-code='import { Modal, Button } from &#39;@corelith/design-system&#39;;
 
 export function Example() {
-  const [open, setOpen] = useState(true);
   return (
-    &lt;Modal
-      open={open}
-      onOpenChange={setOpen}
-      title=&quot;New receipt&quot;
-      description=&quot;Park Centre · Mukamba Group&quot;
-      footer={
-        &lt;&gt;
-          &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; setOpen(false)}&gt;Cancel&lt;/Button&gt;
-          &lt;Button variant=&quot;primary&quot;&gt;Post — $ 1,840.00&lt;/Button&gt;
-        &lt;/&gt;
-      }
-    &gt;
-      &lt;Input label=&quot;Customer&quot; placeholder=&quot;Walk-in&quot; /&gt;
+    &lt;Modal title=&quot;Confirm action?&quot; description=&quot;Explain what happens.&quot;&gt;
+      &lt;Modal.Footer&gt;
+        &lt;Button variant=&quot;ghost&quot;&gt;Cancel&lt;/Button&gt;
+        &lt;Button variant=&quot;primary&quot;&gt;Confirm&lt;/Button&gt;
+      &lt;/Modal.Footer&gt;
     &lt;/Modal&gt;
   );
-}'><div style="background: var(--surface); border-radius: 14px; box-shadow: var(--shadow-modal); width: 440px; margin: 0 auto;"><div style="padding: 24px 24px 16px;"><h2 style="font: 600 18px/1.3 var(--font-sans); margin: 0 0 6px;">Close shift S-2841?</h2><p style="font: var(--type-body); color: var(--text-muted); margin: 0;">This will reconcile cash and lock Till 02. You can’t reopen a closed shift — only the next day.</p></div><div style="padding: 14px 22px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px;"><button class="btn btn-ghost">Cancel</button><button class="btn btn-primary">Close shift</button></div></div></div>
-  
-    <div class="comp-h">
-      <div>
-        <div class="num">COMPOSITION 02</div>
-        <h3>Destructive modal · with typed confirm</h3>
-        <p>For irreversible actions — delete workspace, archive a year. Requires typing the record name to confirm.</p>
+}'>
+    <div class="skel-modal" style="width: 440px;">
+      <div class="skel-body">
+        <div class="skel-line title"></div>
+        <div class="skel-line sub"></div>
+        <div class="skel-line" style="width: 70%;"></div>
       </div>
-      <div class="when"><b>Use when</b>The action is permanent or deletes data. Typing the name forces the operator to read the warning.</div>
-    </div>
-    <div class="comp-box"><div style="background: var(--surface); border-radius: 14px; box-shadow: var(--shadow-modal); width: 480px; margin: 0 auto; border-top: 4px solid var(--tone-danger);"><div style="padding: 24px;"><div style="display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px; background: var(--tone-danger-bg); color: var(--tone-danger); border-radius: 9999px; font: 500 11px/1 var(--font-sans); margin-bottom: 12px;">●  Permanent</div><h2 style="font: 600 18px/1.3 var(--font-sans); margin: 0 0 8px;">Delete workspace Mukamba Group?</h2><p style="font: var(--type-body); color: var(--text-muted); margin: 0 0 14px;">5 sites · 2,418 SKUs · 184 employees · 18,420 receipts. This can’t be undone. Type <code class="inline">mukamba-group</code> to confirm.</p><input class="input" placeholder="mukamba-group" /></div><div style="padding: 12px 22px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px;"><button class="btn btn-ghost">Cancel</button><button class="btn btn-destructive">Delete workspace</button></div></div></div>
-  
-    <div class="comp-h">
-      <div>
-        <div class="num">COMPOSITION 03</div>
-        <h3>Side sheet · quick edit</h3>
-        <p>Slides from the right. Lets the operator edit a record without leaving the list.</p>
+      <div class="skel-foot">
+        <div class="skel-btn"></div>
+        <div class="skel-btn primary"></div>
       </div>
-      <div class="when"><b>Use when</b>The operator is in a list and wants to edit one row's details without losing list context. Single-record edits.</div>
     </div>
-    <div class="comp-box"><div style="position: relative; height: 380px; background: var(--canvas); border-radius: 12px; overflow: clip; border: 1px solid var(--border);"><div style="padding: 16px 20px; opacity: 0.5;"><div style="font: 600 14px/1.3 var(--font-sans); margin-bottom: 8px;">Students · list behind</div><div style="display: grid; gap: 6px;"><div style="height: 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px;"></div><div style="height: 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px;"></div><div style="height: 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px;"></div><div style="height: 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px;"></div><div style="height: 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px;"></div><div style="height: 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px;"></div></div></div><div style="position: absolute; top: 0; right: 0; bottom: 0; width: 460px; background: var(--surface); border-left: 1px solid var(--border); box-shadow: var(--shadow-modal); display: flex; flex-direction: column;"><div style="padding: 16px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px;"><h2 style="font: 600 16px/1.2 var(--font-sans); margin: 0; flex: 1;">Edit · Tariro Moyo</h2><button class="btn btn-quiet btn-icon"><span data-icon="x" data-icon-size="14"></span></button></div><div style="padding: 18px 22px; flex: 1; display: grid; gap: 12px;"><div class="field"><label class="field-label">Full name</label><input class="input" value="Tariro Moyo" /></div><div class="field"><label class="field-label">Form</label><select class="select"><option>4F · Faraday</option></select></div><div class="field"><label class="field-label">Boarding</label><select class="select"><option>Full board</option></select></div></div><div style="padding: 14px 22px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px;"><button class="btn btn-ghost">Cancel</button><button class="btn btn-primary">Save</button></div></div></div></div>
-  
-    <div class="comp-h">
-      <div>
-        <div class="num">COMPOSITION 04</div>
-        <h3>Modal · embedded form</h3>
-        <p>The new-record dialog. More form fields than a confirmation; fewer than a full page.</p>
+  </div>
+
+  <div class="comp-h">
+    <div>
+      <div class="num">COMPOSITION 02</div>
+      <h3>Destructive modal · with typed confirm</h3>
+      <p>For irreversible actions. Requires typing the record name to confirm.</p>
+    </div>
+    <div class="when"><b>Use when</b>The action is permanent or deletes data. Typing the name forces the operator to read the warning.</div>
+  </div>
+  <div class="comp-box">
+    <div class="skel-modal" style="width: 480px; border-top: 4px solid var(--border-strong);">
+      <div class="skel-body">
+        <div class="skel-line" style="width: 30%; height: 10px; background: var(--border); border-radius: 9999px;"></div>
+        <div class="skel-line title" style="width: 70%;"></div>
+        <div class="skel-line sub"></div>
+        <div class="skel-line" style="width: 60%;"></div>
+        <div class="skel-input"></div>
       </div>
-      <div class="when"><b>Use when</b>Creating a small new record from inside a list — supplier, vehicle, payment method.</div>
-    </div>
-    <div class="comp-box"><div style="background: var(--surface); border-radius: 14px; box-shadow: var(--shadow-modal); width: 480px; margin: 0 auto;"><div style="padding: 22px 24px 16px; border-bottom: 1px solid var(--border-subtle);"><h2 style="font: 600 18px/1.3 var(--font-sans); margin: 0 0 4px;">New supplier</h2><p style="font: var(--type-body-sm); color: var(--text-muted); margin: 0;">Capture identity and KYC docs. Bank details can be added later.</p></div><div style="padding: 20px 24px; display: grid; gap: 14px;"><div class="field"><label class="field-label">Name</label><input class="input" placeholder="Sipho Moyo" /></div><div class="field"><label class="field-label">National ID</label><input class="input" placeholder="00-000000-A-00" style="font-family: var(--font-mono);" /></div><div class="field"><label class="field-label">Phone</label><input class="input" placeholder="+263 77 …" /></div><div class="field"><label class="field-label">Type</label><select class="select"><option>Individual scrap supplier</option></select></div></div><div style="padding: 14px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px;"><button class="btn btn-ghost">Cancel</button><button class="btn btn-secondary">Save &amp; new</button><button class="btn btn-primary">Save</button></div></div></div>
-  
-    <div class="comp-h">
-      <div>
-        <div class="num">COMPOSITION 05</div>
-        <h3>Side sheet · audit detail</h3>
-        <p>Read-only sheet showing the diff for a single audit event.</p>
+      <div class="skel-foot">
+        <div class="skel-btn"></div>
+        <div class="skel-btn primary" style="background: var(--border-strong);"></div>
       </div>
-      <div class="when"><b>Use when</b>The operator clicks an audit row to inspect what changed. Read-only, no edit.</div>
     </div>
-    <div class="comp-box"><div style="position: relative; height: 380px; background: var(--canvas); border-radius: 12px; overflow: clip; border: 1px solid var(--border);"><div style="padding: 16px 20px; opacity: 0.5; font: 500 14px/1.3 var(--font-sans);">[ Audit log behind ]</div><div style="position: absolute; top: 0; right: 0; bottom: 0; width: 520px; background: var(--surface); border-left: 1px solid var(--border); box-shadow: var(--shadow-modal); display: flex; flex-direction: column;"><div style="padding: 16px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: center;"><h2 style="font: 600 16px/1.3 var(--font-sans); margin: 0; flex: 1;">Audit event · AUD-1842</h2><button class="btn btn-quiet btn-icon"><span data-icon="x" data-icon-size="14"></span></button></div><div style="padding: 18px 22px; flex: 1;"><div style="margin-bottom: 12px;"><div style="display: flex; gap: 8px; align-items: center; font: var(--type-body-sm);"><span style="font-weight: 500; color: var(--text-strong);">Stanford Kuda</span><span style="color: var(--text-muted);">edited</span><span style="font-weight: 500; color: var(--text-strong);">pour P-2840</span></div><div style="font: 12px/1.3 var(--font-mono); color: var(--text-subtle); margin-top: 4px;">Today 14:18:42 · ip 196.43.81.4</div></div><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: clip;"><div style="padding: 14px 16px; background: var(--tone-danger-bg); border-right: 1px solid var(--border);"><div style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--tone-danger); margin-bottom: 10px;">Before</div><div style="font: var(--type-body-sm);"><div style="padding: 4px 0;"><span style="color: var(--text-muted);">Fineness:</span> <span style="font-family: var(--font-mono);">95.0 %</span></div><div style="padding: 4px 0;"><span style="color: var(--text-muted);">Weight:</span> <span style="font-family: var(--font-mono);">3.218 kg</span></div></div></div><div style="padding: 14px 16px; background: var(--tone-success-bg);"><div style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--tone-success); margin-bottom: 10px;">After</div><div style="font: var(--type-body-sm);"><div style="padding: 4px 0;"><span style="color: var(--text-muted);">Fineness:</span> <span style="font-family: var(--font-mono);">94.7 %</span></div><div style="padding: 4px 0;"><span style="color: var(--text-muted);">Weight:</span> <span style="font-family: var(--font-mono);">3.218 kg</span></div></div></div></div></div></div></div></div>
-  
+  </div>
+
+  <div class="comp-h">
+    <div>
+      <div class="num">COMPOSITION 03</div>
+      <h3>Side sheet · quick edit</h3>
+      <p>Slides from the right. Lets the operator edit a record without leaving the list.</p>
+    </div>
+    <div class="when"><b>Use when</b>The operator is in a list and wants to edit one row's details without losing list context. Single-record edits.</div>
+  </div>
+  <div class="comp-box">
+    <div style="position: relative; height: 380px; background: var(--canvas); border-radius: 12px; overflow: clip; border: 1px solid var(--border);">
+      <div class="skel-stage-list">
+        <div class="skel-line title" style="width: 25%;"></div>
+        <div class="row"></div>
+        <div class="row"></div>
+        <div class="row"></div>
+        <div class="row"></div>
+        <div class="row"></div>
+        <div class="row"></div>
+      </div>
+      <div class="skel-side" style="width: 460px;">
+        <div class="skel-side-head">
+          <div class="skel-line title" style="width: 50%; flex: 1;"></div>
+          <div class="skel-btn" style="width: 28px;"></div>
+        </div>
+        <div class="skel-side-body">
+          <div class="skel-line sub" style="width: 30%;"></div>
+          <div class="skel-input"></div>
+          <div class="skel-line sub" style="width: 30%;"></div>
+          <div class="skel-input"></div>
+          <div class="skel-line sub" style="width: 30%;"></div>
+          <div class="skel-input"></div>
+        </div>
+        <div class="skel-side-foot">
+          <div class="skel-btn"></div>
+          <div class="skel-btn primary"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="comp-h">
+    <div>
+      <div class="num">COMPOSITION 04</div>
+      <h3>Modal · embedded form</h3>
+      <p>The new-record dialog. More form fields than a confirmation; fewer than a full page.</p>
+    </div>
+    <div class="when"><b>Use when</b>Creating a small new record from inside a list — supplier, vehicle, payment method.</div>
+  </div>
+  <div class="comp-box">
+    <div class="skel-modal" style="width: 480px;">
+      <div class="skel-body" style="border-bottom: 1px solid var(--border-subtle);">
+        <div class="skel-line title"></div>
+        <div class="skel-line sub"></div>
+      </div>
+      <div class="skel-body">
+        <div class="skel-line sub" style="width: 25%;"></div>
+        <div class="skel-input"></div>
+        <div class="skel-line sub" style="width: 25%;"></div>
+        <div class="skel-input"></div>
+        <div class="skel-line sub" style="width: 25%;"></div>
+        <div class="skel-input"></div>
+      </div>
+      <div class="skel-foot">
+        <div class="skel-btn"></div>
+        <div class="skel-btn"></div>
+        <div class="skel-btn primary"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="comp-h">
+    <div>
+      <div class="num">COMPOSITION 05</div>
+      <h3>Side sheet · audit detail</h3>
+      <p>Read-only sheet showing the diff for a single audit event.</p>
+    </div>
+    <div class="when"><b>Use when</b>The operator clicks an audit row to inspect what changed. Read-only, no edit.</div>
+  </div>
+  <div class="comp-box">
+    <div style="position: relative; height: 380px; background: var(--canvas); border-radius: 12px; overflow: clip; border: 1px solid var(--border);">
+      <div class="skel-stage-list">
+        <div class="skel-line title" style="width: 22%;"></div>
+        <div class="row"></div>
+        <div class="row"></div>
+        <div class="row"></div>
+        <div class="row"></div>
+      </div>
+      <div class="skel-side" style="width: 520px;">
+        <div class="skel-side-head">
+          <div class="skel-line title" style="width: 50%; flex: 1;"></div>
+          <div class="skel-btn" style="width: 28px;"></div>
+        </div>
+        <div class="skel-side-body">
+          <div class="skel-line sub" style="width: 50%;"></div>
+          <div class="skel-line" style="width: 35%; height: 4px;"></div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
+            <div style="padding: 12px; background: var(--surface-muted); border: 1px dashed var(--border); border-radius: 8px; display: grid; gap: 6px;">
+              <div class="skel-line" style="width: 40%;"></div>
+              <div class="skel-line" style="width: 70%;"></div>
+              <div class="skel-line" style="width: 60%;"></div>
+            </div>
+            <div style="padding: 12px; background: var(--surface-muted); border: 1px dashed var(--border); border-radius: 8px; display: grid; gap: 6px;">
+              <div class="skel-line" style="width: 40%;"></div>
+              <div class="skel-line" style="width: 70%;"></div>
+              <div class="skel-line" style="width: 60%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <section style="margin-top: 72px;">
     <h2 class="ds-h2">Shared rules</h2>
     <p class="ds-h2-sub">What every composition obeys.</p>
