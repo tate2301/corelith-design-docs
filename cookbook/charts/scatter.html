@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Scatter · Huchu Charts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../system.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../system-shell.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+  .ck-pull { margin: 14px 0; padding: 14px 18px; background: var(--brand-soft); border-left: 3px solid var(--brand); border-radius: 8px; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-roadmap-note { margin-top: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+  .ck-chart-stage { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; display: grid; place-items: center; }
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../../index.html">Home</a><span class="sep">/</span>
+      <a href="../index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Charts</a><span class="sep">/</span>
+      <span>Scatter</span>
+    </div>
+    <h1>Scatter plot with regression</h1>
+    <p class="lede">Two continuous variables, one dot per observation, an optional regression line. The chart that answers "are these two things related?" — yes, no, or "kind of, with outliers".</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="chart" data-icon-size="12"></span>Charts · 15 of 20</span>
+      <span class="meta-pill">1 primitive · <code>Chart.Scatter</code></span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~15 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">Two continuous axes, one dot per data point, an optional fit line and confidence band. The fastest way to spot a relationship — or refute one.</p>
+    <p>Scatter plots answer correlation questions: does this go up when that goes up? They also reveal what other chart types hide: outliers (the dots that don't sit on the line), clusters (clumps that suggest sub-populations), and heteroscedasticity (spread that grows with the value). A regression line on top tells you the direction and steepness; a confidence band tells you how confident the data is in that fit.</p>
+    <p>Reach for it for any two-variable comparison with more than 20 observations — operator output vs. shift length, household size vs. monthly spend, package weight vs. delivery cost. Skip it for time series (use a line), for category counts (use bars), or for under 10 points (just print the numbers).</p>
+    <div class="ck-pull"><b>The opinion:</b> show the regression line by default, but always state the R² nearby. A confident-looking line with R² of 0.08 is a lie; the chart should call out its own weakness.</div>
+  </section>
+
+  <section id="chart">
+    <h2 class="ds-h2">The chart</h2>
+    <p class="ds-h2-sub">Operator shift-length vs. entries logged. Positive correlation with a clear ceiling around 11 hours.</p>
+    <div class="ck-chart-stage">
+      <svg width="520" height="280" viewBox="0 0 520 280" role="img" aria-label="Scatter of shift length vs. entries, positive correlation R squared 0.62">
+        <title>Shift length vs. entries logged</title>
+        <desc>40 observations of operator shifts. R² of 0.62 — strong positive correlation. Outliers cluster above 9-hour shifts where entries plateau.</desc>
+        <!-- axes -->
+        <line x1="48" y1="240" x2="500" y2="240" stroke="var(--border)" />
+        <line x1="48" y1="20" x2="48" y2="240" stroke="var(--border)" />
+        <!-- y ticks/labels -->
+        <g font-family="var(--font-sans)" font-size="10" fill="var(--text-muted)">
+          <text x="40" y="244" text-anchor="end">0</text>
+          <text x="40" y="190" text-anchor="end">20</text>
+          <text x="40" y="136" text-anchor="end">40</text>
+          <text x="40" y="82" text-anchor="end">60</text>
+          <text x="40" y="28" text-anchor="end">80</text>
+          <text x="48" y="260" text-anchor="middle">4h</text>
+          <text x="160" y="260" text-anchor="middle">6h</text>
+          <text x="272" y="260" text-anchor="middle">8h</text>
+          <text x="384" y="260" text-anchor="middle">10h</text>
+          <text x="496" y="260" text-anchor="middle">12h</text>
+        </g>
+        <!-- confidence band -->
+        <polygon points="60,210 480,40 480,80 60,250" fill="var(--brand)" opacity="0.08" />
+        <!-- regression line -->
+        <line x1="60" y1="220" x2="480" y2="60" stroke="var(--brand-strong)" stroke-width="2" stroke-dasharray="5 3" />
+        <!-- 40 data points -->
+        <g fill="var(--brand)">
+          <circle cx="64"  cy="220" r="4" /><circle cx="78" cy="214" r="4" /><circle cx="92" cy="208" r="4" /><circle cx="108" cy="204" r="4" /><circle cx="124" cy="196" r="4" /><circle cx="142" cy="188" r="4" /><circle cx="160" cy="182" r="4" /><circle cx="178" cy="172" r="4" /><circle cx="198" cy="166" r="4" /><circle cx="216" cy="158" r="4" />
+          <circle cx="232" cy="148" r="4" /><circle cx="248" cy="142" r="4" /><circle cx="264" cy="132" r="4" /><circle cx="282" cy="124" r="4" /><circle cx="298" cy="116" r="4" /><circle cx="316" cy="108" r="4" /><circle cx="332" cy="98" r="4" /><circle cx="348" cy="90" r="4" /><circle cx="364" cy="84" r="4" /><circle cx="380" cy="76" r="4" />
+          <circle cx="78" cy="200" r="4" opacity="0.7" /><circle cx="102" cy="190" r="4" opacity="0.7" /><circle cx="148" cy="174" r="4" opacity="0.7" /><circle cx="170" cy="158" r="4" opacity="0.7" /><circle cx="202" cy="148" r="4" opacity="0.7" /><circle cx="228" cy="132" r="4" opacity="0.7" /><circle cx="258" cy="116" r="4" opacity="0.7" /><circle cx="290" cy="100" r="4" opacity="0.7" /><circle cx="324" cy="88" r="4" opacity="0.7" /><circle cx="360" cy="68" r="4" opacity="0.7" />
+          <circle cx="118" cy="230" r="4" opacity="0.55" /><circle cx="166" cy="218" r="4" opacity="0.55" /><circle cx="212" cy="200" r="4" opacity="0.55" /><circle cx="252" cy="172" r="4" opacity="0.55" /><circle cx="294" cy="152" r="4" opacity="0.55" /><circle cx="338" cy="124" r="4" opacity="0.55" /><circle cx="374" cy="98" r="4" opacity="0.55" /><circle cx="408" cy="78" r="4" opacity="0.55" />
+        </g>
+        <!-- two outliers in red -->
+        <g fill="var(--tone-danger)">
+          <circle cx="442" cy="180" r="5" /><circle cx="466" cy="194" r="5" />
+        </g>
+        <!-- R² label -->
+        <g transform="translate(60,30)">
+          <rect width="100" height="34" rx="6" fill="var(--surface-sunken)" />
+          <text x="50" y="16" text-anchor="middle" font-family="var(--font-sans)" font-size="10" fill="var(--text-muted)">R² = 0.62</text>
+          <text x="50" y="28" text-anchor="middle" font-family="var(--font-sans)" font-size="10" fill="var(--text-muted)">n = 40</text>
+        </g>
+        <!-- axis titles -->
+        <text x="270" y="278" text-anchor="middle" font-family="var(--font-sans)" font-size="11" fill="var(--text-strong)" font-weight="600">Shift length</text>
+        <text x="12" y="130" font-family="var(--font-sans)" font-size="11" fill="var(--text-strong)" font-weight="600" transform="rotate(-90 12,130)">Entries logged</text>
+      </svg>
+    </div>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart.Scatter</a>
+      <a class="ck-piece" href="../../system/p-tooltip.html"><span class="kind">Primitive</span>Tooltip</a>
+    </div>
+    <div class="ck-roadmap-note"><b>Roadmap:</b> <code>Chart.Scatter</code> with built-in OLS regression and outlier detection ships in v0.2. v0.1 users compute regression server-side and pass the fit line as a sibling.</div>
+  </section>
+
+  <section id="snippet">
+    <h2 class="ds-h2">React snippet</h2>
+    <p class="ds-h2-sub">Pass <code>data</code> with <code>x</code> and <code>y</code>; the chart fits the regression.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart } from &#39;@huchu/react&#39;;
+
+type Shift = { x: number; y: number; outlier?: boolean };
+
+export function ShiftScatter({ data }: { data: Shift[] }) {
+  return (
+    &lt;Chart.Scatter
+      data={data}
+      xAccessor=&quot;x&quot;
+      yAccessor=&quot;y&quot;
+      xLabel=&quot;Shift length (hours)&quot;
+      yLabel=&quot;Entries logged&quot;
+      regression=&quot;linear&quot;
+      showR2
+      highlight={(d) =&gt; d.outlier}
+      width={520}
+      height={280}
+      aria-label=&quot;Shift length vs. entries, R squared 0.62&quot;
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <svg width="100%" height="200" viewBox="0 0 520 200" role="img" preserveAspectRatio="xMidYMid meet">
+          <line x1="40" y1="170" x2="500" y2="170" stroke="var(--border)" />
+          <line x1="40" y1="20" x2="40" y2="170" stroke="var(--border)" />
+          <line x1="50" y1="160" x2="490" y2="40" stroke="var(--brand-strong)" stroke-width="2" stroke-dasharray="5 3" />
+          <g fill="var(--brand)"><circle cx="60" cy="156" r="3" /><circle cx="100" cy="146" r="3" /><circle cx="140" cy="138" r="3" /><circle cx="180" cy="124" r="3" /><circle cx="220" cy="116" r="3" /><circle cx="260" cy="100" r="3" /><circle cx="300" cy="88" r="3" /><circle cx="340" cy="72" r="3" /><circle cx="380" cy="60" r="3" /><circle cx="420" cy="50" r="3" /></g>
+        </svg>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Chart.Scatter</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="customise">
+    <h2 class="ds-h2">Customising</h2>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Bubble (third dimension as size)</h4>
+        <p>Encode a third numeric variable as dot radius. Useful for "value, frequency, recency"-style three-axis comparisons.</p>
+<pre>&lt;Chart.Scatter
+  data={data}
+  xAccessor=&quot;x&quot;
+  yAccessor=&quot;y&quot;
+  sizeAccessor=&quot;count&quot;
+  variant=&quot;bubble&quot;
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Grouped by category</h4>
+        <p>Colour-code dots by a categorical variable — region, role, age band. Reveals whether the relationship varies by group.</p>
+<pre>&lt;Chart.Scatter
+  data={data}
+  colorAccessor=&quot;region&quot;
+  legend
+  regression=&quot;per-group&quot;
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>No regression line</h4>
+        <p>Sometimes you just want the cloud — for exploration, before you commit to a fit.</p>
+<pre>&lt;Chart.Scatter
+  data={data}
+  regression={false}
+  pointOpacity={0.5}
+/&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="in-context">
+    <h2 class="ds-h2">In context</h2>
+    <p class="ds-h2-sub">Inside an exec dashboard row card. Title and R² in a stat-card-style header; the scatter sits underneath.</p>
+    <div class="ck-chart-stage" style="padding: 18px;">
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; width: 100%; max-width: 720px;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px;">
+          <div>
+            <div style="font: 600 14px/1 var(--font-sans); color: var(--text-strong);">Shift length × Entries</div>
+            <div style="font: var(--type-caption); color: var(--text-muted);">40 shifts · October</div>
+          </div>
+          <div style="font: 500 11px/1 var(--font-mono); color: var(--brand-strong); background: var(--brand-soft); padding: 4px 8px; border-radius: 9999px;">R² 0.62 · strong</div>
+        </div>
+        <svg width="100%" height="220" viewBox="0 0 600 220" preserveAspectRatio="xMidYMid meet" role="img">
+          <line x1="40" y1="190" x2="580" y2="190" stroke="var(--border)" />
+          <line x1="40" y1="20" x2="40" y2="190" stroke="var(--border)" />
+          <line x1="50" y1="180" x2="570" y2="40" stroke="var(--brand-strong)" stroke-width="2" stroke-dasharray="5 3" />
+          <g fill="var(--brand)"><circle cx="60" cy="174" r="4" /><circle cx="90" cy="166" r="4" /><circle cx="130" cy="158" r="4" /><circle cx="170" cy="148" r="4" /><circle cx="210" cy="138" r="4" /><circle cx="250" cy="126" r="4" /><circle cx="290" cy="114" r="4" /><circle cx="330" cy="102" r="4" /><circle cx="370" cy="92" r="4" /><circle cx="410" cy="80" r="4" /><circle cx="450" cy="68" r="4" /><circle cx="490" cy="58" r="4" /><circle cx="520" cy="50" r="4" /></g>
+          <g fill="var(--tone-danger)"><circle cx="540" cy="140" r="5" /><circle cx="560" cy="155" r="5" /></g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">Hundreds of dots and a fit line are nearly impossible to read non-visually without a summary statement. Lead with the statistics.</p>
+    <ul class="ck-a11y">
+      <li><b>One <code>role="img"</code> per scatter.</b> Inside, <code>&lt;title&gt;</code> names it and <code>&lt;desc&gt;</code> states n, R², slope, and any obvious clusters or outliers.</li>
+      <li><b>Aria-label leads with the verdict.</b> "Shift length vs. entries logged, positive correlation, R squared 0.62, two outliers above 10 hours" — not "Scatter plot with 40 dots".</li>
+      <li><b>Outliers carry a non-colour cue.</b> Red dots are also labelled "outlier" in the desc and listed in the fallback table; colour-blind users hear them by name.</li>
+      <li><b>Hidden numeric table.</b> Every data point appears with its x, y, group, and "outlier" flag in an <code>sr-only</code> <code>&lt;table&gt;</code>.</li>
+      <li><b>Keyboard nav by data point.</b> Tab enters the chart; left/right arrows move to the next-nearest point along x; the value is announced.</li>
+      <li><b>R² is text, not a colour.</b> "R² = 0.62 · strong" appears as a visible badge so screen readers and colour-blind users get the confidence without the chart shape.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related charts</h2>
+    <div class="ck-related">
+      <a href="../charts/chart-line-multi.html">Multi-series line<span class="tag">Chart</span></a>
+      <a href="heatmap.html">Heatmap<span class="tag">Chart</span></a>
+      <a href="radar.html">Radar<span class="tag">Chart</span></a>
+      <a href="bullet.html">Bullet<span class="tag">Chart</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="funnel.html"><div class="pager-label">← Previous</div><div class="pager-title">Funnel</div></a>
+    <a href="radar.html" class="next"><div class="pager-label">Next chart →</div><div class="pager-title">Radar / spider</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#chart">The chart</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#snippet">React snippet</a></li>
+    <li><a href="#customise">Customising</a></li>
+    <li><a href="#in-context">In context</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related charts</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

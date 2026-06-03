@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Candlestick · Huchu Charts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../system.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../system-shell.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+  .ck-pull { margin: 14px 0; padding: 14px 18px; background: var(--brand-soft); border-left: 3px solid var(--brand); border-radius: 8px; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-roadmap-note { margin-top: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+  .ck-chart-stage { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; display: grid; place-items: center; }
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../../index.html">Home</a><span class="sep">/</span>
+      <a href="../index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Charts</a><span class="sep">/</span>
+      <span>Candlestick</span>
+    </div>
+    <h1>Candlestick (OHLC)</h1>
+    <p class="lede">A wick from low to high, a body from open to close, one per period. The chart traders learned to read in their sleep — and the only chart that packs four values into a single glyph.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="chart" data-icon-size="12"></span>Charts · 20 of 20</span>
+      <span class="meta-pill">1 primitive · <code>Chart.Candlestick</code></span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~15 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">Each candle encodes a period's open, high, low and close. Green when close &gt; open, red when close &lt; open. The wick is the range, the body is the move.</p>
+    <p>The candlestick is a remarkable bit of information design — four numbers per period, compressed into a glyph that reads at a glance once you know the convention. Body height tells you the magnitude of the move; wick length tells you the volatility around it; colour tells you direction. Stacked at a constant interval (daily, hourly), they reveal trend, indecision, and reversal patterns that line charts smooth away.</p>
+    <p>Reach for it for price-like data with a meaningful open/high/low/close — trading screens, mining grade by shift, manufacturing yield by run, even per-day temperature. Skip it for any other shape — you'll be teaching the user a new convention with nothing to gain.</p>
+    <div class="ck-pull"><b>The opinion:</b> candlesticks live and die by the y-axis precision. Always include the right-hand price ladder; without it the chart is a sequence of green and red blobs.</div>
+  </section>
+
+  <section id="chart">
+    <h2 class="ds-h2">The chart</h2>
+    <p class="ds-h2-sub">Daily gold price in USD/oz across two trading weeks. Run of green into a doji, then a sharp red day.</p>
+    <div class="ck-chart-stage">
+      <svg width="640" height="300" viewBox="0 0 640 300" role="img" aria-label="Two weeks of daily gold price candles, ending red after a doji">
+        <title>Gold · 10 trading days</title>
+        <desc>Ten daily OHLC candles. Opens between 1880 and 1940, closes between 1890 and 1950. Trend up early, doji on day 7, reversal on day 8.</desc>
+        <!-- axes -->
+        <line x1="60" y1="20" x2="60" y2="260" stroke="var(--border)" />
+        <line x1="60" y1="260" x2="600" y2="260" stroke="var(--border)" />
+        <!-- y labels (price ladder) -->
+        <g font-family="var(--font-sans)" font-size="10" fill="var(--text-muted)">
+          <text x="54" y="264" text-anchor="end">1850</text>
+          <text x="54" y="204" text-anchor="end">1880</text>
+          <text x="54" y="144" text-anchor="end">1910</text>
+          <text x="54" y="84" text-anchor="end">1940</text>
+          <text x="54" y="28" text-anchor="end">1970</text>
+        </g>
+        <!-- horizontal grid -->
+        <g stroke="var(--border)" stroke-dasharray="2 4" opacity="0.4">
+          <line x1="60" y1="200" x2="600" y2="200" /><line x1="60" y1="140" x2="600" y2="140" /><line x1="60" y1="80" x2="600" y2="80" />
+        </g>
+        <!-- 10 candles, width 24, gap 28 -->
+        <!-- Day 1: O 1880, H 1900, L 1870, C 1895 (green) -->
+        <g stroke="var(--tone-success)" stroke-width="1.5"><line x1="84" y1="140" x2="84" y2="200" /></g>
+        <rect x="72" y="150" width="24" height="20" fill="var(--tone-success)" />
+        <!-- Day 2: O 1895 -> C 1915 (green) -->
+        <g stroke="var(--tone-success)" stroke-width="1.5"><line x1="136" y1="110" x2="136" y2="170" /></g>
+        <rect x="124" y="120" width="24" height="30" fill="var(--tone-success)" />
+        <!-- Day 3: O 1915 C 1905 (red, small) -->
+        <g stroke="var(--tone-danger)" stroke-width="1.5"><line x1="188" y1="100" x2="188" y2="150" /></g>
+        <rect x="176" y="120" width="24" height="20" fill="var(--tone-danger)" />
+        <!-- Day 4: O 1905 C 1935 (green) -->
+        <g stroke="var(--tone-success)" stroke-width="1.5"><line x1="240" y1="70" x2="240" y2="140" /></g>
+        <rect x="228" y="80" width="24" height="40" fill="var(--tone-success)" />
+        <!-- Day 5: O 1935 C 1945 (green) -->
+        <g stroke="var(--tone-success)" stroke-width="1.5"><line x1="292" y1="50" x2="292" y2="100" /></g>
+        <rect x="280" y="60" width="24" height="20" fill="var(--tone-success)" />
+        <!-- Day 6: O 1945 C 1955 (green) -->
+        <g stroke="var(--tone-success)" stroke-width="1.5"><line x1="344" y1="38" x2="344" y2="80" /></g>
+        <rect x="332" y="50" width="24" height="20" fill="var(--tone-success)" />
+        <!-- Day 7: doji - O ~ C 1950 -->
+        <g stroke="var(--text-strong)" stroke-width="1.5"><line x1="396" y1="42" x2="396" y2="90" /></g>
+        <rect x="384" y="65" width="24" height="3" fill="var(--text-strong)" />
+        <!-- Day 8: O 1950 C 1900 (big red) -->
+        <g stroke="var(--tone-danger)" stroke-width="1.5"><line x1="448" y1="60" x2="448" y2="170" /></g>
+        <rect x="436" y="70" width="24" height="80" fill="var(--tone-danger)" />
+        <!-- Day 9: O 1900 C 1890 (red) -->
+        <g stroke="var(--tone-danger)" stroke-width="1.5"><line x1="500" y1="140" x2="500" y2="200" /></g>
+        <rect x="488" y="150" width="24" height="20" fill="var(--tone-danger)" />
+        <!-- Day 10: O 1890 C 1905 (green) -->
+        <g stroke="var(--tone-success)" stroke-width="1.5"><line x1="552" y1="130" x2="552" y2="180" /></g>
+        <rect x="540" y="140" width="24" height="30" fill="var(--tone-success)" />
+        <!-- x labels -->
+        <g font-family="var(--font-sans)" font-size="9" fill="var(--text-muted)" text-anchor="middle">
+          <text x="84" y="278">Mon</text><text x="136" y="278">Tue</text><text x="188" y="278">Wed</text><text x="240" y="278">Thu</text><text x="292" y="278">Fri</text><text x="344" y="278">Mon</text><text x="396" y="278">Tue</text><text x="448" y="278">Wed</text><text x="500" y="278">Thu</text><text x="552" y="278">Fri</text>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart.Candlestick</a>
+      <a class="ck-piece" href="../../system/p-tooltip.html"><span class="kind">Primitive</span>Tooltip</a>
+    </div>
+    <div class="ck-roadmap-note"><b>Roadmap:</b> <code>Chart.Candlestick</code> in v0.2 supports tick patterns, volume overlay, and crosshair tooltips. v0.1-alpha users emit the wick line and rect pair manually.</div>
+  </section>
+
+  <section id="snippet">
+    <h2 class="ds-h2">React snippet</h2>
+    <p class="ds-h2-sub">Pass <code>data</code> with <code>{date, open, high, low, close}</code>; colour rules ship as defaults.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart } from &#39;@huchu/react&#39;;
+
+type Candle = { date: string; open: number; high: number; low: number; close: number };
+
+export function GoldCandlestick({ data }: { data: Candle[] }) {
+  return (
+    &lt;Chart.Candlestick
+      data={data}
+      width={640}
+      height={300}
+      yLabel=&quot;USD / oz&quot;
+      grid
+      tooltip={(c) =&gt;
+        `O ${c.open} · H ${c.high} · L ${c.low} · C ${c.close}`
+      }
+      aria-label=&quot;Gold daily price, last 10 sessions&quot;
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <svg width="100%" height="200" viewBox="0 0 640 200" preserveAspectRatio="xMidYMid meet" role="img">
+          <line x1="40" y1="180" x2="620" y2="180" stroke="var(--border)" />
+          <line x1="40" y1="20" x2="40" y2="180" stroke="var(--border)" />
+          <g><line x1="76" y1="100" x2="76" y2="150" stroke="var(--tone-success)" stroke-width="1.5" /><rect x="68" y="110" width="16" height="20" fill="var(--tone-success)" />
+            <line x1="124" y1="80" x2="124" y2="130" stroke="var(--tone-success)" stroke-width="1.5" /><rect x="116" y="90" width="16" height="22" fill="var(--tone-success)" />
+            <line x1="172" y1="70" x2="172" y2="120" stroke="var(--tone-danger)" stroke-width="1.5" /><rect x="164" y="82" width="16" height="18" fill="var(--tone-danger)" />
+            <line x1="220" y1="50" x2="220" y2="100" stroke="var(--tone-success)" stroke-width="1.5" /><rect x="212" y="60" width="16" height="28" fill="var(--tone-success)" />
+            <line x1="268" y1="40" x2="268" y2="80" stroke="var(--tone-success)" stroke-width="1.5" /><rect x="260" y="50" width="16" height="20" fill="var(--tone-success)" />
+            <line x1="316" y1="30" x2="316" y2="70" stroke="var(--tone-success)" stroke-width="1.5" /><rect x="308" y="40" width="16" height="20" fill="var(--tone-success)" />
+            <line x1="364" y1="30" x2="364" y2="80" stroke="var(--text-strong)" stroke-width="1.5" /><rect x="356" y="54" width="16" height="3" fill="var(--text-strong)" />
+            <line x1="412" y1="50" x2="412" y2="140" stroke="var(--tone-danger)" stroke-width="1.5" /><rect x="404" y="60" width="16" height="65" fill="var(--tone-danger)" />
+            <line x1="460" y1="120" x2="460" y2="160" stroke="var(--tone-danger)" stroke-width="1.5" /><rect x="452" y="130" width="16" height="20" fill="var(--tone-danger)" />
+            <line x1="508" y1="110" x2="508" y2="150" stroke="var(--tone-success)" stroke-width="1.5" /><rect x="500" y="118" width="16" height="22" fill="var(--tone-success)" />
+          </g>
+        </svg>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Chart.Candlestick</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="customise">
+    <h2 class="ds-h2">Customising</h2>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>With volume bars</h4>
+        <p>A second panel underneath showing volume. The chart standard for any trading-screen embed.</p>
+<pre>&lt;Chart.Candlestick
+  data={candles}
+  panels={[
+    &#39;price&#39;,
+    { type: &#39;volume&#39;,
+      accessor: &#39;vol&#39; }
+  ]}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Heikin-Ashi smoothing</h4>
+        <p>Smoothed candles that show trend more clearly at the cost of exact OHLC values. Good for screen embeds.</p>
+<pre>&lt;Chart.Candlestick
+  data={candles}
+  variant=&quot;heikin-ashi&quot;
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>OHLC bars (no body)</h4>
+        <p>Hollow Western-style bars — open tick left, close tick right, vertical line low-to-high. Lower ink, same data.</p>
+<pre>&lt;Chart.Candlestick
+  data={candles}
+  variant=&quot;ohlc-bars&quot;
+  width={640}
+/&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="in-context">
+    <h2 class="ds-h2">In context</h2>
+    <p class="ds-h2-sub">Embedded in a gold-mine clerk's "today's spot" tile — last close prominent, ten-day candle history beneath, a small change badge to the side.</p>
+    <div class="ck-chart-stage" style="padding: 18px;">
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; width: 100%; max-width: 720px;">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px;">
+          <div>
+            <div style="font: 500 11px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase;">Gold · spot · USD/oz</div>
+            <div style="font: 700 26px/1.1 var(--font-sans); color: var(--text-strong); margin-top: 4px;">1,905.20</div>
+          </div>
+          <div style="font: 600 13px/1 var(--font-sans); color: var(--tone-danger); background: var(--tone-danger-bg); padding: 6px 10px; border-radius: 9999px;">−1.6% · 10 sess.</div>
+        </div>
+        <svg width="100%" height="200" viewBox="0 0 640 200" preserveAspectRatio="xMidYMid meet" role="img">
+          <line x1="20" y1="180" x2="620" y2="180" stroke="var(--border)" />
+          <line x1="76" y1="100" x2="76" y2="150" stroke="var(--tone-success)" stroke-width="1.5" /><rect x="68" y="110" width="16" height="20" fill="var(--tone-success)" />
+          <line x1="124" y1="80" x2="124" y2="130" stroke="var(--tone-success)" stroke-width="1.5" /><rect x="116" y="90" width="16" height="22" fill="var(--tone-success)" />
+          <line x1="172" y1="70" x2="172" y2="120" stroke="var(--tone-danger)" stroke-width="1.5" /><rect x="164" y="82" width="16" height="18" fill="var(--tone-danger)" />
+          <line x1="220" y1="50" x2="220" y2="100" stroke="var(--tone-success)" stroke-width="1.5" /><rect x="212" y="60" width="16" height="28" fill="var(--tone-success)" />
+          <line x1="268" y1="40" x2="268" y2="80" stroke="var(--tone-success)" stroke-width="1.5" /><rect x="260" y="50" width="16" height="20" fill="var(--tone-success)" />
+          <line x1="316" y1="30" x2="316" y2="70" stroke="var(--tone-success)" stroke-width="1.5" /><rect x="308" y="40" width="16" height="20" fill="var(--tone-success)" />
+          <line x1="364" y1="30" x2="364" y2="80" stroke="var(--text-strong)" stroke-width="1.5" /><rect x="356" y="54" width="16" height="3" fill="var(--text-strong)" />
+          <line x1="412" y1="50" x2="412" y2="140" stroke="var(--tone-danger)" stroke-width="1.5" /><rect x="404" y="60" width="16" height="65" fill="var(--tone-danger)" />
+          <line x1="460" y1="120" x2="460" y2="160" stroke="var(--tone-danger)" stroke-width="1.5" /><rect x="452" y="130" width="16" height="20" fill="var(--tone-danger)" />
+          <line x1="508" y1="110" x2="508" y2="150" stroke="var(--tone-success)" stroke-width="1.5" /><rect x="500" y="118" width="16" height="22" fill="var(--tone-success)" />
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">Each candle is four numbers and a colour. The non-visual story has to spell them out per period.</p>
+    <ul class="ck-a11y">
+      <li><b>One <code>role="img"</code> per chart.</b> <code>&lt;title&gt;</code> names the instrument and period; <code>&lt;desc&gt;</code> summarises the trend, range, and any notable candle (doji, large reversal).</li>
+      <li><b>Aria-label is a sentence, not a list.</b> "Gold price, 10 daily candles, up 4% early then a sharp reversal on Wednesday" — not "10 candles".</li>
+      <li><b>Direction not colour-only.</b> The fallback table has up/down/doji glyphs (▲ ▼ –) in a "direction" column alongside the OHLC values.</li>
+      <li><b>Doji has a distinct shape.</b> Open ≈ close is rendered with an ink-coloured thin bar — not the green/red palette — so it reads as "indecision" even monochrome.</li>
+      <li><b>Each candle is a tab target.</b> Aria-label includes date, OHLC and direction: "Wednesday, open 1950, high 1955, low 1900, close 1900, down 50".</li>
+      <li><b>Hidden OHLC table.</b> One row per period with date / O / H / L / C / direction; sorted by date ascending.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related charts</h2>
+    <div class="ck-related">
+      <a href="../charts/chart-line-simple.html">Single-series line<span class="tag">Chart</span></a>
+      <a href="../charts/chart-area-stacked.html">Stacked area<span class="tag">Chart</span></a>
+      <a href="../charts/chart-bar-vertical.html">Vertical bars<span class="tag">Chart</span></a>
+      <a href="sparkline.html">Sparkline<span class="tag">Chart</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="waterfall.html"><div class="pager-label">← Previous</div><div class="pager-title">Waterfall</div></a>
+    <a href="index.html" class="next"><div class="pager-label">Done →</div><div class="pager-title">Charts hub</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#chart">The chart</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#snippet">React snippet</a></li>
+    <li><a href="#customise">Customising</a></li>
+    <li><a href="#in-context">In context</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related charts</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

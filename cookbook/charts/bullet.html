@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Bullet · Huchu Charts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../system.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../system-shell.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+  .ck-pull { margin: 14px 0; padding: 14px 18px; background: var(--brand-soft); border-left: 3px solid var(--brand); border-radius: 8px; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-roadmap-note { margin-top: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+  .ck-chart-stage { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; display: grid; place-items: center; }
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../../index.html">Home</a><span class="sep">/</span>
+      <a href="../index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Charts</a><span class="sep">/</span>
+      <span>Bullet</span>
+    </div>
+    <h1>Bullet chart (actual vs. target)</h1>
+    <p class="lede">One bar, one target marker, three qualitative bands behind. Dense, honest, and the chart Edward Tufte would let you ship — perfect for a "we're 72% of the way to the term's goal" KPI.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="chart" data-icon-size="12"></span>Charts · 12 of 20</span>
+      <span class="meta-pill">1 primitive · <code>Chart.Bullet</code></span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~10 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A horizontal bar plus a target line, layered over qualitative bands. Reads as "where we are, where we're aiming, and whether that's good".</p>
+    <p>The bullet chart was Stephen Few's answer to the gauge: same job (one bounded score), a tenth of the ink, and you can stack ten of them in the space a single dial would take. The dark inner bar is the <em>actual</em>; a vertical tick is the <em>target</em>; faint shaded bands behind label the qualitative ranges — poor / good / great. The viewer reads three facts in one glance.</p>
+    <p>Reach for it when you need to compare progress to a target across many similar metrics — sales by region, attainment by team, term goals by subject. Skip it for a single hero KPI (use a stat hero), and skip it for trends over time (use a line).</p>
+    <div class="ck-pull"><b>The opinion:</b> bullets beat gauges every single time. They scale linearly, stack vertically, and the eye reads bar length more accurately than arc angle. The only reason gauges survive is muscle memory from car dashboards.</div>
+  </section>
+
+  <section id="chart">
+    <h2 class="ds-h2">The chart</h2>
+    <p class="ds-h2-sub">Q3 revenue vs. target. Bands are poor / on-track / stretch; the dark bar is actual; the red tick is target.</p>
+    <div class="ck-chart-stage">
+      <svg width="520" height="80" viewBox="0 0 520 80" role="img" aria-label="Q3 revenue actual $72k of $90k target, in on-track band">
+        <title>Q3 revenue vs. target</title>
+        <desc>Actual revenue of $72k sits inside the on-track band (60–90k). Target marker is at $90k. Stretch band extends to $120k.</desc>
+        <text x="0" y="14" font-family="var(--font-sans)" font-size="12" font-weight="600" fill="var(--text-strong)">Q3 revenue</text>
+        <text x="500" y="14" text-anchor="end" font-family="var(--font-sans)" font-size="11" fill="var(--text-muted)">$72k / $90k target</text>
+        <rect x="0" y="24" width="240" height="30" fill="var(--tone-danger-bg)" />
+        <rect x="240" y="24" width="120" height="30" fill="var(--surface-sunken)" />
+        <rect x="360" y="24" width="160" height="30" fill="var(--brand-100)" />
+        <rect x="0" y="33" width="288" height="12" fill="var(--text-strong)" />
+        <line x1="360" y1="20" x2="360" y2="58" stroke="var(--tone-danger)" stroke-width="2.5" />
+        <text x="120" y="74" text-anchor="middle" font-family="var(--font-sans)" font-size="10" fill="var(--text-muted)">poor · &lt;$60k</text>
+        <text x="300" y="74" text-anchor="middle" font-family="var(--font-sans)" font-size="10" fill="var(--text-muted)">on track</text>
+        <text x="440" y="74" text-anchor="middle" font-family="var(--font-sans)" font-size="10" fill="var(--text-muted)">stretch</text>
+      </svg>
+    </div>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">A single named export. Pair it with a row card for the label and figure.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart.Bullet</a>
+      <a class="ck-piece" href="../../system/b-stat-card.html"><span class="kind">Block</span>Stat card</a>
+    </div>
+    <div class="ck-roadmap-note"><b>Roadmap:</b> <code>Chart.Bullet</code> ships in v0.2. For v0.1-alpha, use the inline SVG above — the data props (<code>value</code>, <code>target</code>, <code>bands</code>) match the future API.</div>
+  </section>
+
+  <section id="snippet">
+    <h2 class="ds-h2">React snippet</h2>
+    <p class="ds-h2-sub">Pass <code>value</code>, <code>target</code>, and three <code>bands</code>. Tone defaults are computed from where the value falls.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart, Card } from &#39;@huchu/react&#39;;
+
+export function Q3RevenueBullet() {
+  return (
+    &lt;Card&gt;
+      &lt;Chart.Bullet
+        label=&quot;Q3 revenue&quot;
+        value={72000}
+        target={90000}
+        max={120000}
+        bands={[
+          { to: 60000,  tone: &#39;poor&#39;,    label: &#39;below plan&#39; },
+          { to: 90000,  tone: &#39;ok&#39;,      label: &#39;on track&#39; },
+          { to: 120000, tone: &#39;great&#39;,   label: &#39;stretch&#39; },
+        ]}
+        format={(v) =&gt; `$${(v/1000).toFixed(0)}k`}
+        aria-label=&quot;Q3 revenue actual $72k of $90k target, in on-track band&quot;
+      /&gt;
+    &lt;/Card&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <svg width="520" height="80" viewBox="0 0 520 80" role="img" style="max-width: 100%;">
+          <text x="0" y="14" font-family="var(--font-sans)" font-size="12" font-weight="600" fill="var(--text-strong)">Q3 revenue</text>
+          <text x="500" y="14" text-anchor="end" font-family="var(--font-sans)" font-size="11" fill="var(--text-muted)">$72k / $90k</text>
+          <rect x="0" y="24" width="240" height="30" fill="var(--tone-danger-bg)" />
+          <rect x="240" y="24" width="120" height="30" fill="var(--surface-sunken)" />
+          <rect x="360" y="24" width="160" height="30" fill="var(--brand-100)" />
+          <rect x="0" y="33" width="288" height="12" fill="var(--text-strong)" />
+          <line x1="360" y1="20" x2="360" y2="58" stroke="var(--tone-danger)" stroke-width="2.5" />
+        </svg>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Chart.Bullet</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="customise">
+    <h2 class="ds-h2">Customising</h2>
+    <p class="ds-h2-sub">Three small forks.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Comparative (vs. last period)</h4>
+        <p>Add a second tick for last quarter's actual. Reads as "we're ahead of where we were, behind where we want to be".</p>
+<pre>&lt;Chart.Bullet
+  value={72000}
+  target={90000}
+  comparison={{ value: 64000,
+                label: &#39;Q2 actual&#39; }}
+  bands={[...]}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Vertical orientation</h4>
+        <p>Stack vertically when the chart sits in a narrow column. Same data, rotated 90°.</p>
+<pre>&lt;Chart.Bullet
+  orientation=&quot;vertical&quot;
+  value={72000}
+  target={90000}
+  width={80}
+  height={200}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Stacked rows (small multiples)</h4>
+        <p>Five bullets in a column, sharing a single x-axis. Compare attainment across teams in one glance.</p>
+<pre>{teams.map(t =&gt; (
+  &lt;Chart.Bullet
+    key={t.id}
+    label={t.name}
+    value={t.actual}
+    target={t.target}
+    sharedScale
+  /&gt;
+))}</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="in-context">
+    <h2 class="ds-h2">In context</h2>
+    <p class="ds-h2-sub">Five bullets stacked in a "Term attainment" card. Sharing a scale makes the comparison instant — the worst-performing subject is the shortest dark bar.</p>
+    <div class="ck-chart-stage" style="padding: 18px;">
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; width: 100%; max-width: 560px;">
+        <div style="font: 600 14px/1 var(--font-sans); color: var(--text-strong); margin-bottom: 4px;">Term attainment by subject</div>
+        <div style="font: var(--type-caption); color: var(--text-muted); margin-bottom: 14px;">Target 80% · stretch 95%</div>
+        <div style="display: grid; gap: 12px;">
+          <!-- 5 rows -->
+          <div style="display: grid; grid-template-columns: 90px 1fr 40px; gap: 10px; align-items: center;">
+            <div style="font: 500 12px/1 var(--font-sans); color: var(--text-strong);">Mathematics</div>
+            <svg width="100%" height="22" viewBox="0 0 300 22" preserveAspectRatio="none"><rect x="0" y="0" width="180" height="22" fill="var(--tone-danger-bg)" /><rect x="180" y="0" width="60" height="22" fill="var(--surface-sunken)" /><rect x="240" y="0" width="60" height="22" fill="var(--brand-100)" /><rect x="0" y="7" width="222" height="8" fill="var(--text-strong)" /><line x1="240" y1="-2" x2="240" y2="24" stroke="var(--tone-danger)" stroke-width="2" /></svg>
+            <div style="font: 600 12px/1 var(--font-mono); color: var(--text-strong); text-align: right;">74%</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 90px 1fr 40px; gap: 10px; align-items: center;">
+            <div style="font: 500 12px/1 var(--font-sans); color: var(--text-strong);">English</div>
+            <svg width="100%" height="22" viewBox="0 0 300 22" preserveAspectRatio="none"><rect x="0" y="0" width="180" height="22" fill="var(--tone-danger-bg)" /><rect x="180" y="0" width="60" height="22" fill="var(--surface-sunken)" /><rect x="240" y="0" width="60" height="22" fill="var(--brand-100)" /><rect x="0" y="7" width="255" height="8" fill="var(--text-strong)" /><line x1="240" y1="-2" x2="240" y2="24" stroke="var(--tone-danger)" stroke-width="2" /></svg>
+            <div style="font: 600 12px/1 var(--font-mono); color: var(--text-strong); text-align: right;">85%</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 90px 1fr 40px; gap: 10px; align-items: center;">
+            <div style="font: 500 12px/1 var(--font-sans); color: var(--text-strong);">Science</div>
+            <svg width="100%" height="22" viewBox="0 0 300 22" preserveAspectRatio="none"><rect x="0" y="0" width="180" height="22" fill="var(--tone-danger-bg)" /><rect x="180" y="0" width="60" height="22" fill="var(--surface-sunken)" /><rect x="240" y="0" width="60" height="22" fill="var(--brand-100)" /><rect x="0" y="7" width="195" height="8" fill="var(--text-strong)" /><line x1="240" y1="-2" x2="240" y2="24" stroke="var(--tone-danger)" stroke-width="2" /></svg>
+            <div style="font: 600 12px/1 var(--font-mono); color: var(--text-strong); text-align: right;">65%</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 90px 1fr 40px; gap: 10px; align-items: center;">
+            <div style="font: 500 12px/1 var(--font-sans); color: var(--text-strong);">History</div>
+            <svg width="100%" height="22" viewBox="0 0 300 22" preserveAspectRatio="none"><rect x="0" y="0" width="180" height="22" fill="var(--tone-danger-bg)" /><rect x="180" y="0" width="60" height="22" fill="var(--surface-sunken)" /><rect x="240" y="0" width="60" height="22" fill="var(--brand-100)" /><rect x="0" y="7" width="276" height="8" fill="var(--text-strong)" /><line x1="240" y1="-2" x2="240" y2="24" stroke="var(--tone-danger)" stroke-width="2" /></svg>
+            <div style="font: 600 12px/1 var(--font-mono); color: var(--text-strong); text-align: right;">92%</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 90px 1fr 40px; gap: 10px; align-items: center;">
+            <div style="font: 500 12px/1 var(--font-sans); color: var(--text-strong);">Geography</div>
+            <svg width="100%" height="22" viewBox="0 0 300 22" preserveAspectRatio="none"><rect x="0" y="0" width="180" height="22" fill="var(--tone-danger-bg)" /><rect x="180" y="0" width="60" height="22" fill="var(--surface-sunken)" /><rect x="240" y="0" width="60" height="22" fill="var(--brand-100)" /><rect x="0" y="7" width="234" height="8" fill="var(--text-strong)" /><line x1="240" y1="-2" x2="240" y2="24" stroke="var(--tone-danger)" stroke-width="2" /></svg>
+            <div style="font: 600 12px/1 var(--font-mono); color: var(--text-strong); text-align: right;">78%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">Bullet charts have four pieces of meaning layered on one bar. Each one needs a non-visual story.</p>
+    <ul class="ck-a11y">
+      <li><b>Every bullet is <code>role="img"</code>.</b> Inside the SVG, <code>&lt;title&gt;</code> names the chart and <code>&lt;desc&gt;</code> spells out actual, target and the band the value falls in.</li>
+      <li><b>The <code>aria-label</code> tells the whole story.</b> "Q3 revenue actual $72k of $90k target, in on-track band" — three numbers and a qualitative judgement.</li>
+      <li><b>Bands are labelled in text, not just colour.</b> "Poor / on track / stretch" appears as visible text below the bar so colour-blind users see the same categories.</li>
+      <li><b>Target marker has a non-positional cue.</b> The marker is red <em>and</em> the aria-label says "target". Don't rely on the vertical line alone.</li>
+      <li><b>Keyboard focus lands on the bar.</b> One Tab stop per chart; arrow keys move between data points if the chart is part of a small-multiples grid.</li>
+      <li><b>Numeric fallback table.</b> A visually hidden <code>&lt;table&gt;</code> with actual / target / band columns is rendered next to every bullet for screen-reader-only use.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related charts</h2>
+    <div class="ck-related">
+      <a href="../charts/chart-progress-ring.html">Progress ring<span class="tag">Chart</span></a>
+      <a href="../charts/gauge.html">Gauge<span class="tag">Chart</span></a>
+      <a href="../charts/chart-bar-horizontal.html">Horizontal bars<span class="tag">Chart</span></a>
+      <a href="../charts/sparkline.html">Sparkline<span class="tag">Chart</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="sparkline.html"><div class="pager-label">← Previous</div><div class="pager-title">Sparkline</div></a>
+    <a href="heatmap.html" class="next"><div class="pager-label">Next chart →</div><div class="pager-title">Calendar heatmap</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#chart">The chart</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#snippet">React snippet</a></li>
+    <li><a href="#customise">Customising</a></li>
+    <li><a href="#in-context">In context</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related charts</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Sparkline · Huchu Charts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../system.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../system-shell.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+  .ck-pull { margin: 14px 0; padding: 14px 18px; background: var(--brand-soft); border-left: 3px solid var(--brand); border-radius: 8px; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-roadmap-note { margin-top: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+  .ck-chart-stage { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; display: grid; place-items: center; }
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+  .ck-kpi-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; min-width: 160px; }
+  .ck-kpi-tile .l { font: 500 11px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.04em; text-transform: uppercase; }
+  .ck-kpi-tile .v { font: 700 22px/1.1 var(--font-sans); color: var(--text-strong); margin: 6px 0 4px; letter-spacing: -0.01em; }
+  .ck-kpi-tile .d { font: 500 11px/1 var(--font-sans); color: var(--tone-success); }
+  .ck-kpi-tile .d.dn { color: var(--tone-danger); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../../index.html">Home</a><span class="sep">/</span>
+      <a href="../index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Charts</a><span class="sep">/</span>
+      <span>Sparkline</span>
+    </div>
+    <h1>Sparkline (KPI inline)</h1>
+    <p class="lede">A tiny 60×24 line with no axes that lives inside a KPI tile — the trend chip that lets a number tell two stories at once: how big, and which way it's heading.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="chart" data-icon-size="12"></span>Charts · 11 of 20</span>
+      <span class="meta-pill">1 primitive · <code>Chart.Sparkline</code></span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~10 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">What it is, when you'd reach for it, and when you wouldn't.</p>
+    <p>A sparkline is a chart with everything stripped out except the line. No axes, no gridlines, no labels — just a 60-pixel-wide trace next to a number. The number tells you <em>how big</em>; the sparkline tells you <em>how we got here</em>. Inside a KPI tile, on a row card, in a table cell — anywhere a single trend belongs but a full chart would overwhelm.</p>
+    <p>Reach for it when you have 7–60 data points and the shape of the trend matters more than any single value. Skip it if exact numbers matter (the user can't read tick values); use a bar chart with labels instead. Also skip if the series is shorter than 4 points — at that size, two number deltas tell the same story with less ink.</p>
+    <div class="ck-pull"><b>The opinion:</b> a sparkline without a baseline number above it is just decoration. Always pair it with the figure it explains, and use colour to encode direction — green for up-is-good, red for up-is-bad.</div>
+  </section>
+
+  <section id="chart">
+    <h2 class="ds-h2">The chart</h2>
+    <p class="ds-h2-sub">14 daily revenue points, rendered at the size you'd actually ship — small enough to sit beside a 24-pixel number.</p>
+    <div class="ck-chart-stage">
+      <div class="ck-kpi-tile">
+        <div class="l">Revenue · 14d</div>
+        <div class="v">$ 4,820</div>
+        <svg width="160" height="40" viewBox="0 0 160 40" role="img" aria-label="Revenue trend over 14 days, up 18%">
+          <title>Revenue · 14 days</title>
+          <desc>Daily revenue rising from $3,200 to $4,820 across 14 days.</desc>
+          <polyline fill="none" stroke="var(--tone-success)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+            points="4,30 16,28 28,32 40,26 52,28 64,22 76,24 88,18 100,20 112,14 124,16 136,10 148,12 156,6" />
+          <polygon fill="var(--tone-success)" opacity="0.12"
+            points="4,30 16,28 28,32 40,26 52,28 64,22 76,24 88,18 100,20 112,14 124,16 136,10 148,12 156,6 156,38 4,38" />
+          <circle cx="156" cy="6" r="2.5" fill="var(--tone-success)" />
+        </svg>
+        <div class="d">+18% vs. prior 14d</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">One named export from <code>@huchu/react</code>. The KPI tile around it is just a <code>Card</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart.Sparkline</a>
+      <a class="ck-piece" href="../../system/b-stat-card.html"><span class="kind">Block</span>Stat card</a>
+      <a class="ck-piece" href="../../system/b-row-card.html"><span class="kind">Block</span>Row card</a>
+    </div>
+    <div class="ck-roadmap-note"><b>Roadmap:</b> <code>Chart.Sparkline</code> ships in v0.2. In v0.1-alpha, drop the inline SVG below into your KPI tile — the API is intentionally identical so the swap is a 4-line diff when the component lands.</div>
+  </section>
+
+  <section id="snippet">
+    <h2 class="ds-h2">React snippet</h2>
+    <p class="ds-h2-sub">Minimal API: <code>data</code> as a number array, an explicit <code>tone</code>, the rest is opinionated defaults.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart, Card, Stat } from &#39;@huchu/react&#39;;
+
+const revenue14d = [3200, 3340, 3120, 3580, 3460, 3920, 3780, 4180, 4040, 4460, 4320, 4680, 4540, 4820];
+
+export function RevenueTile() {
+  return (
+    &lt;Card&gt;
+      &lt;Stat
+        label=&quot;Revenue · 14d&quot;
+        value=&quot;$ 4,820&quot;
+        delta=&quot;+18% vs. prior 14d&quot;
+        deltaTone=&quot;success&quot;
+      /&gt;
+      &lt;Chart.Sparkline
+        data={revenue14d}
+        tone=&quot;success&quot;
+        width={160}
+        height={40}
+        area
+        endpoint
+        aria-label=&quot;Revenue trend over 14 days, up 18%&quot;
+      /&gt;
+    &lt;/Card&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-kpi-tile" style="margin: 0 auto;">
+          <div class="l">Revenue · 14d</div>
+          <div class="v">$ 4,820</div>
+          <svg width="160" height="40" viewBox="0 0 160 40" role="img" aria-label="Revenue trend, up 18%">
+            <polyline fill="none" stroke="var(--tone-success)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" points="4,30 16,28 28,32 40,26 52,28 64,22 76,24 88,18 100,20 112,14 124,16 136,10 148,12 156,6" />
+            <polygon fill="var(--tone-success)" opacity="0.12" points="4,30 16,28 28,32 40,26 52,28 64,22 76,24 88,18 100,20 112,14 124,16 136,10 148,12 156,6 156,38 4,38" />
+            <circle cx="156" cy="6" r="2.5" fill="var(--tone-success)" />
+          </svg>
+          <div class="d">+18% vs. prior 14d</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Chart.Sparkline</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="customise">
+    <h2 class="ds-h2">Customising</h2>
+    <p class="ds-h2-sub">Three forks. Each is a 6-line diff from the snippet above.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Bar sparkline</h4>
+        <p>For discrete-bucket trends — pours per day, tickets per hour — bars read more honestly than a smoothed line.</p>
+<pre>&lt;Chart.Sparkline
+  data={pours}
+  variant=&quot;bar&quot;
+  tone=&quot;brand&quot;
+  width={160}
+  height={40}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Win/loss sparkline</h4>
+        <p>Up-or-down ticks anchored to a baseline. Use for binary outcomes — wins vs. losses, on-time vs. late.</p>
+<pre>&lt;Chart.Sparkline
+  data={wins}
+  variant=&quot;winloss&quot;
+  baseline={0}
+  width={160}
+  height={24}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>With min/max markers</h4>
+        <p>Dot the high and low so the user can read the range without an axis. Skip the area fill — it competes with the dots.</p>
+<pre>&lt;Chart.Sparkline
+  data={latency}
+  tone=&quot;danger&quot;
+  markers=&quot;extrema&quot;
+  area={false}
+  width={160}
+/&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="in-context">
+    <h2 class="ds-h2">In context</h2>
+    <p class="ds-h2-sub">Three sparklines in a row of KPI tiles. The trend is the second-class citizen — the number leads.</p>
+    <div class="ck-chart-stage" style="padding: 18px;">
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; max-width: 720px;">
+        <div class="ck-kpi-tile">
+          <div class="l">Revenue · 14d</div>
+          <div class="v">$ 4,820</div>
+          <svg width="100%" height="32" viewBox="0 0 160 32" preserveAspectRatio="none" role="img" aria-label="Revenue up 18%">
+            <polyline fill="none" stroke="var(--tone-success)" stroke-width="1.8" points="4,24 20,22 36,26 52,18 68,20 84,14 100,16 116,10 132,12 148,6 156,4" />
+          </svg>
+          <div class="d">+18%</div>
+        </div>
+        <div class="ck-kpi-tile">
+          <div class="l">Orders · 14d</div>
+          <div class="v">128</div>
+          <svg width="100%" height="32" viewBox="0 0 160 32" preserveAspectRatio="none" role="img" aria-label="Orders down 6%">
+            <polyline fill="none" stroke="var(--tone-danger)" stroke-width="1.8" points="4,10 20,12 36,16 52,14 68,18 84,16 100,20 116,18 132,22 148,24 156,22" />
+          </svg>
+          <div class="d dn">−6%</div>
+        </div>
+        <div class="ck-kpi-tile">
+          <div class="l">Cash on hand</div>
+          <div class="v">$ 12,940</div>
+          <svg width="100%" height="32" viewBox="0 0 160 32" preserveAspectRatio="none" role="img" aria-label="Cash up 2%">
+            <polyline fill="none" stroke="var(--tone-success)" stroke-width="1.8" points="4,20 20,18 36,16 52,14 68,16 84,12 100,14 116,10 132,8 148,10 156,6" />
+          </svg>
+          <div class="d">+2%</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">Sparklines are the hardest chart to make accessible because they're small — and they're often used to convey direction by colour alone. Every item below is mandatory.</p>
+    <ul class="ck-a11y">
+      <li><b>Every sparkline is <code>role="img"</code>.</b> Even though the SVG is the size of a glyph, screen readers must treat it as a single image with a meaning, not 14 invisible polygons.</li>
+      <li><b>The <code>aria-label</code> summarises the trend.</b> "Revenue up 18% across 14 days" — direction, magnitude, span. Not "Sparkline chart".</li>
+      <li><b>Direction is never colour-only.</b> The delta text below (<code>+18%</code> / <code>−6%</code>) carries the same information. A monochrome screen reads the same story.</li>
+      <li><b>The data is in a hidden <code>&lt;table&gt;</code>.</b> Sparklines are sketches; users who need the numbers get a real table with <code>sr-only</code> wrapping.</li>
+      <li><b>No tooltip-only data.</b> If a value matters, put it next to the sparkline — touch users and keyboard users can't hover.</li>
+      <li><b>Reduced motion respected.</b> The optional draw-in animation honours <code>prefers-reduced-motion: reduce</code> and shows the final path immediately.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related charts</h2>
+    <div class="ck-related">
+      <a href="../charts/chart-line-simple.html">Single-series line<span class="tag">Chart</span></a>
+      <a href="../charts/bullet.html">Bullet chart<span class="tag">Chart</span></a>
+      <a href="../charts/chart-progress-ring.html">Progress ring<span class="tag">Chart</span></a>
+      <a href="../../system/b-stat-card.html">Stat card<span class="tag">Block</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="index.html"><div class="pager-label">← Back to</div><div class="pager-title">Charts hub</div></a>
+    <a href="bullet.html" class="next"><div class="pager-label">Next chart →</div><div class="pager-title">Bullet (actual vs. target)</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#chart">The chart</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#snippet">React snippet</a></li>
+    <li><a href="#customise">Customising</a></li>
+    <li><a href="#in-context">In context</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related charts</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

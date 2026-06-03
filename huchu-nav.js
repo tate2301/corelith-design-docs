@@ -134,6 +134,16 @@
       ['Charts ·  Donut',                   ROOT + 'cookbook/charts/donut.html',          'charts-donut',          'New'],
       ['Charts ·  Pie',                     ROOT + 'cookbook/charts/pie.html',            'charts-pie',            'New'],
       ['Charts ·  Progress ring',           ROOT + 'cookbook/charts/progress-ring.html',  'charts-progress-ring',  'New'],
+      ['Charts ·  Sparkline (KPI inline)',  ROOT + 'cookbook/charts/sparkline.html',      'charts-sparkline',      'New'],
+      ['Charts ·  Bullet',                  ROOT + 'cookbook/charts/bullet.html',         'charts-bullet',         'New'],
+      ['Charts ·  Calendar heatmap',        ROOT + 'cookbook/charts/heatmap.html',        'charts-heatmap',        'New'],
+      ['Charts ·  Conversion funnel',       ROOT + 'cookbook/charts/funnel.html',         'charts-funnel',         'New'],
+      ['Charts ·  Scatter',                 ROOT + 'cookbook/charts/scatter.html',        'charts-scatter',        'New'],
+      ['Charts ·  Radar / spider',          ROOT + 'cookbook/charts/radar.html',          'charts-radar',          'New'],
+      ['Charts ·  Treemap',                 ROOT + 'cookbook/charts/treemap.html',        'charts-treemap',        'New'],
+      ['Charts ·  Gauge',                   ROOT + 'cookbook/charts/gauge.html',          'charts-gauge',          'New'],
+      ['Charts ·  Waterfall',               ROOT + 'cookbook/charts/waterfall.html',      'charts-waterfall',      'New'],
+      ['Charts ·  Candlestick (OHLC)',      ROOT + 'cookbook/charts/candlestick.html',    'charts-candlestick',    'New'],
     ]},
     // Reference was previously one monolithic super-group with "X ·  "-prefixed
     // labels. We split it into sibling collapsible groups (each its own
@@ -192,6 +202,7 @@
       ['Toast',              ROOT + 'system/p-toast.html',            'p-toast',      'New'],
       ['Skeleton',           ROOT + 'system/p-skeleton.html',         'p-skeleton',   'New'],
       ['Pagination',         ROOT + 'system/p-pagination.html',       'p-pagination', 'New'],
+      ['Chart',              ROOT + 'system/p-chart.html',            'p-chart',      'New'],
     ]},
     { label: 'Blocks', items: [
       ['Page header',        ROOT + 'system/b-page-header.html',  'b-page-header'],

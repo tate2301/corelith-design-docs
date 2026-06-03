@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Treemap · Huchu Charts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../system.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../system-shell.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+  .ck-pull { margin: 14px 0; padding: 14px 18px; background: var(--brand-soft); border-left: 3px solid var(--brand); border-radius: 8px; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-roadmap-note { margin-top: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+  .ck-chart-stage { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; display: grid; place-items: center; }
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../../index.html">Home</a><span class="sep">/</span>
+      <a href="../index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Charts</a><span class="sep">/</span>
+      <span>Treemap</span>
+    </div>
+    <h1>Treemap by area</h1>
+    <p class="lede">Nested rectangles whose areas encode share of a total. The chart that turns "where is the budget going?" into a single, scannable picture — even when there are 30 categories.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="chart" data-icon-size="12"></span>Charts · 17 of 20</span>
+      <span class="meta-pill">1 primitive · <code>Chart.Treemap</code></span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~15 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">Each rectangle's area is its proportion of the whole. Rectangles tile a fixed canvas, so the chart never needs an axis.</p>
+    <p>A treemap solves the problem pie charts can't: hierarchies with too many slices. Where a pie melts beyond five wedges, a treemap stays legible at 50 — the eye reads rectangle area very accurately, and labels sit inside the largest cells without overflow. The hierarchy is built in: parent rectangles contain child rectangles, so "Operations / Salaries / Senior" is one drill-down away.</p>
+    <p>Reach for it when you have a flat or shallow hierarchy of 10–100 leaves and the question is composition — budget by department, sales by SKU, time logged by project. Skip it for small hierarchies (use a stacked bar) and for time series (always a line). Avoid it when categories are similar in size — the rectangles collapse to a uniform grid and the visual story dies.</p>
+    <div class="ck-pull"><b>The opinion:</b> always label the four or five biggest rectangles inline; smaller ones get a tooltip and a row in the legend. Hover-only labels make the chart feel like a riddle.</div>
+  </section>
+
+  <section id="chart">
+    <h2 class="ds-h2">The chart</h2>
+    <p class="ds-h2-sub">Operating expenses for the quarter, by department. Salaries dominate; rent and utilities form a band; everything else is the long tail.</p>
+    <div class="ck-chart-stage">
+      <svg width="560" height="360" viewBox="0 0 560 360" role="img" aria-label="Treemap of operating expenses by department, salaries 48% of total">
+        <title>Q3 opex by department</title>
+        <desc>Salaries 48%, rent 14%, utilities 9%, marketing 8%, supplies 7%, software 6%, travel 4%, professional fees 2%, other 2%.</desc>
+        <!-- Salaries (huge top-left) -->
+        <g>
+          <rect x="0" y="0" width="320" height="240" fill="var(--brand)" />
+          <text x="20" y="36" font-family="var(--font-sans)" font-size="20" font-weight="700" fill="var(--text-inverse)">Salaries</text>
+          <text x="20" y="58" font-family="var(--font-sans)" font-size="13" fill="var(--text-inverse)" opacity="0.85">$ 482k · 48%</text>
+        </g>
+        <!-- Rent -->
+        <g>
+          <rect x="322" y="0" width="238" height="124" fill="var(--brand)" opacity="0.78" />
+          <text x="338" y="32" font-family="var(--font-sans)" font-size="15" font-weight="600" fill="var(--text-inverse)">Rent</text>
+          <text x="338" y="50" font-family="var(--font-sans)" font-size="11" fill="var(--text-inverse)" opacity="0.85">$ 140k · 14%</text>
+        </g>
+        <!-- Utilities -->
+        <g>
+          <rect x="322" y="126" width="148" height="114" fill="var(--brand)" opacity="0.62" />
+          <text x="338" y="156" font-family="var(--font-sans)" font-size="13" font-weight="600" fill="var(--text-inverse)">Utilities</text>
+          <text x="338" y="172" font-family="var(--font-sans)" font-size="11" fill="var(--text-inverse)" opacity="0.85">$ 90k · 9%</text>
+        </g>
+        <!-- Marketing -->
+        <g>
+          <rect x="472" y="126" width="88" height="114" fill="var(--brand)" opacity="0.55" />
+          <text x="484" y="154" font-family="var(--font-sans)" font-size="11" font-weight="600" fill="var(--text-inverse)">Marketing</text>
+          <text x="484" y="170" font-family="var(--font-sans)" font-size="10" fill="var(--text-inverse)" opacity="0.85">$ 80k · 8%</text>
+        </g>
+        <!-- Supplies -->
+        <g>
+          <rect x="0" y="242" width="200" height="118" fill="var(--brand)" opacity="0.5" />
+          <text x="14" y="270" font-family="var(--font-sans)" font-size="13" font-weight="600" fill="var(--text-inverse)">Supplies</text>
+          <text x="14" y="286" font-family="var(--font-sans)" font-size="11" fill="var(--text-inverse)" opacity="0.85">$ 70k · 7%</text>
+        </g>
+        <!-- Software -->
+        <g>
+          <rect x="202" y="242" width="180" height="118" fill="var(--brand)" opacity="0.42" />
+          <text x="216" y="270" font-family="var(--font-sans)" font-size="13" font-weight="600" fill="var(--text-inverse)">Software</text>
+          <text x="216" y="286" font-family="var(--font-sans)" font-size="11" fill="var(--text-inverse)" opacity="0.85">$ 60k · 6%</text>
+        </g>
+        <!-- Travel -->
+        <g>
+          <rect x="384" y="242" width="120" height="78" fill="var(--brand)" opacity="0.34" />
+          <text x="394" y="268" font-family="var(--font-sans)" font-size="11" font-weight="600" fill="var(--text-strong)">Travel</text>
+          <text x="394" y="282" font-family="var(--font-sans)" font-size="10" fill="var(--text-strong)" opacity="0.75">$ 40k · 4%</text>
+        </g>
+        <!-- Prof. fees -->
+        <g>
+          <rect x="506" y="242" width="54" height="78" fill="var(--brand)" opacity="0.26" />
+        </g>
+        <!-- Other -->
+        <g>
+          <rect x="384" y="322" width="176" height="38" fill="var(--brand)" opacity="0.18" />
+          <text x="394" y="348" font-family="var(--font-sans)" font-size="11" font-weight="600" fill="var(--text-strong)">Other · $ 20k</text>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart.Treemap</a>
+      <a class="ck-piece" href="../../system/p-tooltip.html"><span class="kind">Primitive</span>Tooltip</a>
+    </div>
+    <div class="ck-roadmap-note"><b>Roadmap:</b> <code>Chart.Treemap</code> uses squarified-tile layout in v0.2. v0.1-alpha users compute coordinates server-side using <code>d3-hierarchy</code> equivalents and emit <code>&lt;rect&gt;</code>s.</div>
+  </section>
+
+  <section id="snippet">
+    <h2 class="ds-h2">React snippet</h2>
+    <p class="ds-h2-sub">Pass a nested tree of <code>{label, value, children?}</code>.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart } from &#39;@huchu/react&#39;;
+
+const opex = {
+  label: &#39;Q3 opex&#39;,
+  children: [
+    { label: &#39;Salaries&#39;,        value: 482000 },
+    { label: &#39;Rent&#39;,            value: 140000 },
+    { label: &#39;Utilities&#39;,       value:  90000 },
+    { label: &#39;Marketing&#39;,       value:  80000 },
+    { label: &#39;Supplies&#39;,        value:  70000 },
+    { label: &#39;Software&#39;,        value:  60000 },
+    { label: &#39;Travel&#39;,          value:  40000 },
+    { label: &#39;Professional&#39;,    value:  20000 },
+    { label: &#39;Other&#39;,           value:  20000 },
+  ],
+};
+
+export function OpexTreemap() {
+  return (
+    &lt;Chart.Treemap
+      data={opex}
+      width={560}
+      height={360}
+      labelMinArea={6000}
+      colorScale=&quot;brand-by-rank&quot;
+      format={(v) =&gt; `$${(v/1000).toFixed(0)}k`}
+      tooltip
+      aria-label=&quot;Q3 opex by department, salaries 48% of total&quot;
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <svg width="100%" height="240" viewBox="0 0 560 240" preserveAspectRatio="xMidYMid meet" role="img">
+          <rect x="0" y="0" width="320" height="160" fill="var(--brand)" />
+          <rect x="322" y="0" width="238" height="80" fill="var(--brand)" opacity="0.7" />
+          <rect x="322" y="82" width="148" height="78" fill="var(--brand)" opacity="0.55" />
+          <rect x="472" y="82" width="88" height="78" fill="var(--brand)" opacity="0.45" />
+          <rect x="0" y="162" width="200" height="78" fill="var(--brand)" opacity="0.4" />
+          <rect x="202" y="162" width="180" height="78" fill="var(--brand)" opacity="0.32" />
+          <rect x="384" y="162" width="176" height="78" fill="var(--brand)" opacity="0.22" />
+        </svg>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Chart.Treemap</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="customise">
+    <h2 class="ds-h2">Customising</h2>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Drill-down on click</h4>
+        <p>Tap a rectangle to zoom into its children. Use for two-level hierarchies — department → cost centre.</p>
+<pre>&lt;Chart.Treemap
+  data={opex}
+  onDrillDown={(node) =&gt;
+    setFocus(node.label)
+  }
+  showBreadcrumb
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Diverging colour</h4>
+        <p>Use a red-to-green scale when the colour represents change vs. prior period, not absolute value.</p>
+<pre>&lt;Chart.Treemap
+  data={opex}
+  colorAccessor=&quot;deltaPct&quot;
+  colorScale=&quot;diverging&quot;
+  midpoint={0}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Sub-grouped (two-level)</h4>
+        <p>Show parent boundaries with a thicker stroke so the hierarchy reads at a glance.</p>
+<pre>&lt;Chart.Treemap
+  data={nested}
+  parentStroke=&quot;var(--ink)&quot;
+  parentStrokeWidth={2}
+  showParentLabels
+/&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="in-context">
+    <h2 class="ds-h2">In context</h2>
+    <p class="ds-h2-sub">Inside a "Spend overview" stat hero — the total leads, the treemap shows where it goes, a top-3 legend repeats the biggest items as text.</p>
+    <div class="ck-chart-stage" style="padding: 18px;">
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; width: 100%; max-width: 720px;">
+        <div style="font: 500 11px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase;">Q3 operating spend</div>
+        <div style="font: 700 28px/1.1 var(--font-sans); color: var(--text-strong); margin: 4px 0 14px;">$ 1.00M</div>
+        <div style="display: grid; grid-template-columns: 1fr 180px; gap: 16px; align-items: stretch;">
+          <svg width="100%" height="260" viewBox="0 0 560 260" preserveAspectRatio="xMidYMid meet" role="img">
+            <rect x="0" y="0" width="320" height="174" fill="var(--brand)" />
+            <text x="16" y="32" font-family="var(--font-sans)" font-size="18" font-weight="700" fill="var(--text-inverse)">Salaries</text>
+            <text x="16" y="52" font-family="var(--font-sans)" font-size="12" fill="var(--text-inverse)" opacity="0.85">$ 482k · 48%</text>
+            <rect x="322" y="0" width="238" height="88" fill="var(--brand)" opacity="0.75" />
+            <text x="336" y="28" font-family="var(--font-sans)" font-size="13" font-weight="600" fill="var(--text-inverse)">Rent · $140k</text>
+            <rect x="322" y="90" width="148" height="84" fill="var(--brand)" opacity="0.6" />
+            <text x="336" y="118" font-family="var(--font-sans)" font-size="12" font-weight="600" fill="var(--text-inverse)">Utilities · $90k</text>
+            <rect x="472" y="90" width="88" height="84" fill="var(--brand)" opacity="0.5" />
+            <text x="484" y="118" font-family="var(--font-sans)" font-size="10" font-weight="600" fill="var(--text-inverse)">Marketing</text>
+            <rect x="0" y="176" width="200" height="84" fill="var(--brand)" opacity="0.42" /><text x="14" y="204" font-size="12" font-family="var(--font-sans)" font-weight="600" fill="var(--text-inverse)">Supplies · $70k</text>
+            <rect x="202" y="176" width="180" height="84" fill="var(--brand)" opacity="0.34" /><text x="216" y="204" font-size="12" font-family="var(--font-sans)" font-weight="600" fill="var(--text-inverse)">Software · $60k</text>
+            <rect x="384" y="176" width="176" height="48" fill="var(--brand)" opacity="0.26" /><text x="394" y="200" font-size="11" font-family="var(--font-sans)" font-weight="600" fill="var(--text-strong)">Travel · $40k</text>
+            <rect x="384" y="226" width="176" height="34" fill="var(--brand)" opacity="0.16" /><text x="394" y="246" font-size="11" font-family="var(--font-sans)" font-weight="600" fill="var(--text-strong)">Other · $40k</text>
+          </svg>
+          <div style="display: grid; gap: 6px; align-content: start; font: 500 12px/1.4 var(--font-sans);">
+            <div style="font: 500 10px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px;">Top categories</div>
+            <div style="display: flex; justify-content: space-between;"><span>Salaries</span><b>48%</b></div>
+            <div style="display: flex; justify-content: space-between;"><span>Rent</span><b>14%</b></div>
+            <div style="display: flex; justify-content: space-between;"><span>Utilities</span><b>9%</b></div>
+            <div style="display: flex; justify-content: space-between;"><span>Marketing</span><b>8%</b></div>
+            <div style="display: flex; justify-content: space-between; color: var(--text-muted);"><span>Other</span><b>21%</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">A treemap is hard to parse non-visually because the rectangles' layout is computed. The fallback is a sorted table.</p>
+    <ul class="ck-a11y">
+      <li><b>One <code>role="img"</code> per treemap.</b> The <code>&lt;title&gt;</code> names the chart; the <code>&lt;desc&gt;</code> lists categories sorted by share.</li>
+      <li><b>Aria-label states the headline share.</b> "Operating expenses by department, salaries 48% of total" — the dominant rectangle gets the spoken summary.</li>
+      <li><b>Inline labels for big rectangles, table for small ones.</b> Anything taking less than 5% of canvas area gets a tooltip — but every value is in the fallback table.</li>
+      <li><b>Hidden table is sorted by value descending.</b> Screen-reader users read in importance order, not layout order.</li>
+      <li><b>Rectangles are tab targets.</b> Each has an aria-label with name and exact share; arrow keys move between adjacent rectangles in reading order.</li>
+      <li><b>Drill-down has a breadcrumb.</b> If the user can zoom in, the breadcrumb reads "Q3 opex · Salaries · Senior engineers" so they always know where they are.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related charts</h2>
+    <div class="ck-related">
+      <a href="../charts/chart-pie.html">Pie<span class="tag">Chart</span></a>
+      <a href="../charts/chart-donut.html">Donut<span class="tag">Chart</span></a>
+      <a href="../charts/chart-bar-stacked.html">Stacked bars<span class="tag">Chart</span></a>
+      <a href="heatmap.html">Heatmap<span class="tag">Chart</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="radar.html"><div class="pager-label">← Previous</div><div class="pager-title">Radar</div></a>
+    <a href="gauge.html" class="next"><div class="pager-label">Next chart →</div><div class="pager-title">Gauge</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#chart">The chart</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#snippet">React snippet</a></li>
+    <li><a href="#customise">Customising</a></li>
+    <li><a href="#in-context">In context</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related charts</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>
