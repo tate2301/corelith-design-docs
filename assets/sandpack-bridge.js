@@ -200,16 +200,25 @@ export function AuthShell({ brand, workspace, children }) {
   }
 
   // ── SandpackClient loader (cached) ───────────────────────────
+  // sandpack-client v2 replaced `new SandpackClient(...)` with an async
+  // factory `loadSandpackClient(iframe, content, options)`. We probe both
+  // shapes so a future SDK change doesn't break the bridge silently.
   let clientPromise = null;
   function loadClient() {
     if (!clientPromise) {
-      clientPromise = import(CLIENT_URL).then((m) => m.SandpackClient || m.default && m.default.SandpackClient || m.default);
+      clientPromise = import(CLIENT_URL).then((m) => {
+        const root = m.default && typeof m.default === 'object' ? { ...m.default, ...m } : m;
+        return {
+          loadSandpackClient: root.loadSandpackClient || (m.default && m.default.loadSandpackClient),
+          SandpackClient: root.SandpackClient || (m.default && m.default.SandpackClient),
+        };
+      });
     }
     return clientPromise;
   }
 
   async function mountInto(host, files) {
-    const SandpackClient = await loadClient();
+    const { loadSandpackClient, SandpackClient } = await loadClient();
     host.innerHTML = '';
     const iframe = document.createElement('iframe');
     iframe.style.width = '100%';
@@ -219,14 +228,24 @@ export function AuthShell({ brand, workspace, children }) {
     iframe.title = 'Live preview';
     host.appendChild(iframe);
 
-    const client = new SandpackClient(iframe, {
+    const content = {
       files,
       template: 'react-ts',
       dependencies: { react: '^18.0.0', 'react-dom': '^18.0.0' },
-    }, {
+    };
+    const options = {
       showOpenInCodeSandbox: true,
       showLoadingScreen: true,
-    });
+    };
+
+    let client;
+    if (typeof loadSandpackClient === 'function') {
+      client = await loadSandpackClient(iframe, content, options);
+    } else if (typeof SandpackClient === 'function') {
+      client = new SandpackClient(iframe, content, options);
+    } else {
+      throw new Error('@codesandbox/sandpack-client exposes neither loadSandpackClient nor SandpackClient — check the CDN bundle.');
+    }
     host._sandpackClient = client;
     return client;
   }
