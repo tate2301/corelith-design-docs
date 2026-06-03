@@ -1,0 +1,819 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>KPI hero + drilldown · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 10px; border-radius: 9999px;
+    background: var(--surface); border: 1px solid var(--border);
+    font: 500 12px/1 var(--font-sans); color: var(--text-strong);
+    text-decoration: none;
+  }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind {
+    font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-subtle);
+    padding-right: 6px; border-right: 1px solid var(--border);
+  }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen {
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 14px;
+    display: grid; gap: 10px;
+  }
+  .ck-screen .phone {
+    aspect-ratio: 9 / 16;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 14px;
+    display: flex; flex-direction: column; gap: 10px;
+    overflow: hidden;
+  }
+  .ck-screen .brand {
+    display: inline-flex; align-items: center; gap: 6px;
+    font: 600 11px/1 var(--font-sans); color: var(--brand-strong);
+  }
+  .ck-screen .hero-pill {
+    background: var(--brand-soft); color: var(--brand-strong);
+    border: 1px solid var(--brand-soft-bd, var(--brand));
+    border-radius: 10px; padding: 10px;
+    display: grid; gap: 4px;
+  }
+  .ck-screen .hero-pill .l { font: 500 9px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; }
+  .ck-screen .hero-pill .v { font: 700 18px/1 var(--font-sans); }
+  .ck-screen .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .ck-screen .stat {
+    background: var(--surface-muted); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px;
+    display: grid; gap: 2px;
+  }
+  .ck-screen .stat .l { font: 500 8px/1 var(--font-mono); color: var(--text-subtle); }
+  .ck-screen .stat .v { font: 700 11px/1 var(--font-sans); color: var(--text-strong); }
+  .ck-screen .row {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface-muted); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px;
+  }
+  .ck-screen .row .lb { flex: 1; font: 600 10px/1.2 var(--font-sans); color: var(--text-strong); }
+  .ck-screen .row .vb { font: 500 10px/1 var(--font-mono); color: var(--text-muted); }
+  .ck-screen .row .ch { color: var(--text-subtle); }
+  .ck-screen .empty-art {
+    flex: 1; display: grid; place-items: center; gap: 6px;
+    color: var(--text-subtle); font: 500 10px/1.3 var(--font-sans); text-align: center;
+  }
+  .ck-screen .empty-art .dot { width: 28px; height: 28px; border-radius: 50%; border: 1.5px dashed var(--border-strong); }
+  .ck-screen .caption {
+    font: 500 12px/1.4 var(--font-sans);
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ck-screen .caption .num {
+    font: 600 10px/1 var(--font-mono);
+    padding: 3px 6px; border-radius: 9999px;
+    background: var(--surface); color: var(--brand-strong);
+  }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n {
+    font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--brand-soft); color: var(--brand-strong);
+  }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: grid; gap: 10px;
+  }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p  { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre {
+    background: var(--ink); color: var(--canvas);
+    border-radius: 8px; padding: 12px 14px; margin: 0;
+    font: 500 12px/1.55 var(--font-mono); overflow-x: auto;
+    white-space: pre;
+  }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li {
+    display: grid; grid-template-columns: 20px 1fr; gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5;
+  }
+  .ck-a11y li::before {
+    content: ""; display: block; width: 16px; height: 16px;
+    background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd);
+    border-radius: 4px; margin-top: 1px;
+  }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    font: 500 13px/1.2 var(--font-sans); color: var(--text-strong);
+    text-decoration: none;
+  }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag {
+    font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 3px 7px; border-radius: 9999px;
+    background: var(--surface-muted); color: var(--text-subtle);
+  }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Dashboards</a><span class="sep">/</span>
+      <span>KPI hero + drilldown</span>
+    </div>
+    <h1>Build a KPI hero with drill-down rows</h1>
+    <p class="lede">By the end of this recipe you'll have a mobile dashboard that leads with one brand-tinted hero number, supports it with three secondary KPIs, and lets the operator tap any of four row cards to drill into the matching detail page — with sparklines, deltas, and an honest empty state.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="chart" data-icon-size="12"></span>Dashboards</span>
+      <span class="meta-pill">2 primitives · 4 blocks · 0 patterns</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~30 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- SECTION 2 · OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">One hero KPI, three supporting stats, four drillable rows. The whole page answers one question — "how is the business doing right now?" — and gets out of the way.</p>
+    <p>The owner of a four-branch business opens this on her phone first thing in the morning. She does not want a chart. She wants <b>cash on hand</b>, today's <b>sales</b>, what she's <b>owed</b>, what she <b>owes</b>, then a way to tap into any of them. The hero KPI is brand-tinted because it's the single number that will end the conversation; the supporting three are quieter on purpose so they do not compete. The row cards below are the drill targets — each one shows a live value and a chevron, and tapping routes to the detail page for that line.</p>
+    <p>Deltas are computed against the same period yesterday, not against last close, because "up 4% from yesterday" is the comparison a human reasons about. Sparklines run over the last 7 days, not 30, because a phone is 320px wide and a 30-day spark is just noise.</p>
+    <p><b>Skip this recipe if</b> your dashboard's job is to show one chart and one chart only — a single big KPI card or the <a href="dashboards-operator-overview.html">operator overview</a> are simpler. Use this pattern when the operator's first job is to decide <em>which drilldown to open</em>.</p>
+  </section>
+
+  <!-- SECTION 3 · WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three states of the same page. The hero leads, the rows route, the empty state stays honest.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Today</span>
+          <div class="hero-pill">
+            <span class="l">Cash on hand</span>
+            <span class="v">$48,210</span>
+          </div>
+          <div class="stats">
+            <div class="stat"><span class="l">Sales</span><span class="v">$6.2k</span></div>
+            <div class="stat"><span class="l">Owed</span><span class="v">$12k</span></div>
+            <div class="stat"><span class="l">You owe</span><span class="v">$4.1k</span></div>
+          </div>
+          <div class="row"><span class="lb">Cash on hand</span><span class="vb">$48.2k</span><span class="ch">›</span></div>
+          <div class="row"><span class="lb">Sales today</span><span class="vb">$6.2k</span><span class="ch">›</span></div>
+          <div class="row"><span class="lb">Money owed</span><span class="vb">$12.0k</span><span class="ch">›</span></div>
+          <div class="row"><span class="lb">Money you owe</span><span class="vb">$4.1k</span><span class="ch">›</span></div>
+        </div>
+        <div class="caption"><span class="num">01</span> Loaded — hero, stats, drillable rows</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Today</span>
+          <div class="hero-pill" style="background: var(--surface-muted); color: var(--text-muted); border-color: var(--border);">
+            <span class="l">Cash on hand</span>
+            <span class="v">—</span>
+          </div>
+          <div class="empty-art">
+            <div class="dot"></div>
+            No data yet today.<br/>Open the day to start.
+          </div>
+          <div class="row" style="opacity: 0.5;"><span class="lb">Open today's day</span><span class="ch">›</span></div>
+        </div>
+        <div class="caption"><span class="num">02</span> Empty — no data yet, with primary CTA</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Today</span>
+          <div class="hero-pill">
+            <span class="l">Cash on hand · 7-day</span>
+            <span class="v">$48,210</span>
+          </div>
+          <svg viewBox="0 0 120 28" width="100%" height="36" style="margin: -2px 0 2px;">
+            <polyline fill="none" stroke="var(--brand)" stroke-width="1.5"
+              points="0,18 15,16 30,20 45,12 60,14 75,8 90,10 105,6 120,4" />
+          </svg>
+          <div class="stats">
+            <div class="stat"><span class="l">Sales</span><span class="v">$6.2k</span></div>
+            <div class="stat"><span class="l">Owed</span><span class="v">$12k</span></div>
+            <div class="stat"><span class="l">You owe</span><span class="v">$4.1k</span></div>
+          </div>
+          <div class="row"><span class="lb">Trend</span><span class="vb">+8% wow</span><span class="ch">›</span></div>
+        </div>
+        <div class="caption"><span class="num">03</span> Hero with 7-day sparkline</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 4 · REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>. Open any reference page for props, variants and the do/don't.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/b-stat-hero.html"><span class="kind">Block</span>Stat hero</a>
+      <a class="ck-piece" href="../system/b-kpi-grid.html"><span class="kind">Block</span>KPI grid</a>
+      <a class="ck-piece" href="../system/b-row-card.html"><span class="kind">Block</span>Row card</a>
+      <a class="ck-piece" href="../system/b-empty-state.html"><span class="kind">Block</span>Empty state</a>
+      <a class="ck-piece" href="../system/p-spinner.html"><span class="kind">Primitive</span>Spinner &amp; skeleton</a>
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>Stack</code>, <code>StatHero</code>, <code>KpiGrid</code>, <code>RowCard</code>, <code>EmptyState</code>, <code>Skeleton</code>, <code>Button</code>. The same names appear across every dashboard recipe in this batch — keep them.</p>
+  </section>
+
+  <!-- SECTION 5 · STEP-BY-STEP -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <!-- Step 1 -->
+    <div class="ck-step"><span class="n">01</span><h3>Shape the data once, render it three times</h3></div>
+    <p>The hero, the KPI grid and the row list all read from the same shape — a flat <code>summary</code> object plus a four-row <code>lines</code> array. Compute deltas against yesterday's snapshot in one place so the three views can never disagree.</p>
+    <div class="ds-specimen"
+         data-code='// One shape, three renderers. The dashboard never computes deltas
+// in the JSX — it asks the model for them, and they&#39;re right.
+
+type Money = number; // store cents to avoid floating-point pain
+
+export type DashboardModel = {
+  asOf: string;             // ISO timestamp
+  cashOnHand: Money;
+  cashOnHandDeltaPct: number | null; // null when there&#39;s no baseline
+  sales: Money;
+  salesDeltaPct: number | null;
+  receivable: Money;
+  payable: Money;
+  spark: Money[];           // 7 daily closes, oldest → newest
+  lines: Array&lt;{
+    id: &#39;cash&#39; | &#39;sales&#39; | &#39;ar&#39; | &#39;ap&#39;;
+    label: string;
+    value: Money;
+    href: string;           // route to the drilldown
+  }&gt;;
+};
+
+// Build from your API. The important thing is everything happens HERE,
+// not inside the component tree.
+export function buildDashboardModel(today: Snapshot, yesterday: Snapshot | null): DashboardModel {
+  const pct = (a: number, b: number | undefined) =&gt;
+    b == null || b === 0 ? null : Math.round(((a - b) / b) * 100);
+  return {
+    asOf: today.asOf,
+    cashOnHand: today.cash,
+    cashOnHandDeltaPct: pct(today.cash, yesterday?.cash),
+    sales: today.sales,
+    salesDeltaPct: pct(today.sales, yesterday?.sales),
+    receivable: today.ar,
+    payable: today.ap,
+    spark: today.last7Closes,
+    lines: [
+      { id: &#39;cash&#39;,  label: &#39;Cash on hand&#39;,    value: today.cash,  href: &#39;/cash&#39; },
+      { id: &#39;sales&#39;, label: &#39;Sales today&#39;,     value: today.sales, href: &#39;/sales&#39; },
+      { id: &#39;ar&#39;,    label: &#39;Money owed to you&#39;, value: today.ar,   href: &#39;/ar&#39; },
+      { id: &#39;ap&#39;,    label: &#39;Money you owe&#39;,   value: today.ap,    href: &#39;/ap&#39; },
+    ],
+  };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 10px; padding: 18px; font: 500 12px/1.5 var(--font-mono); color: var(--text-muted);">
+          <div><b style="color: var(--brand-strong);">Snapshot today</b> + <b style="color: var(--brand-strong);">Snapshot yesterday</b> → <b style="color: var(--text-strong);">DashboardModel</b></div>
+          <div style="color: var(--text-subtle);">Deltas computed once. <code>null</code> when there's no baseline — render as "—".</div>
+          <div style="color: var(--text-subtle);">The <code>lines</code> array is the source of truth for both the row list and the KPI grid.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Model</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="ck-step"><span class="n">02</span><h3>Render the hero KPI with delta and a 7-day sparkline</h3></div>
+    <p><code>StatHero</code> takes one big number plus an optional delta and sparkline. Keep the unit ("USD"), the period ("Today, 09:14") and the comparison ("vs yesterday") visible — a naked number on a hero is the kind of thing that ends up screenshotted in the wrong context.</p>
+    <div class="ds-specimen"
+         data-code='import { StatHero } from &#39;@huchu/react&#39;;
+
+function CashHero({ model }: { model: DashboardModel }) {
+  return (
+    &lt;StatHero
+      label=&quot;Cash on hand&quot;
+      value={formatMoney(model.cashOnHand)}
+      unit=&quot;USD&quot;
+      caption={`As of ${formatTime(model.asOf)} · vs yesterday`}
+      delta={model.cashOnHandDeltaPct}
+      tone=&quot;brand&quot;
+      spark={model.spark}
+      sparkLabel=&quot;Last 7 days&quot;
+    /&gt;
+  );
+}
+
+function formatMoney(cents: number) {
+  return new Intl.NumberFormat(&#39;en-US&#39;, {
+    style: &#39;currency&#39;, currency: &#39;USD&#39;, maximumFractionDigits: 0,
+  }).format(cents / 100);
+}
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString(&#39;en-US&#39;, {
+    hour: &#39;numeric&#39;, minute: &#39;2-digit&#39;,
+  });
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 20px;">
+          <div style="width: 320px; background: var(--brand-soft); border: 1px solid var(--brand); border-radius: 14px; padding: 18px;">
+            <div style="font: 500 11px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--brand-strong); margin-bottom: 6px;">Cash on hand</div>
+            <div style="font: 700 28px/1 var(--font-sans); color: var(--brand-strong); letter-spacing: -0.01em;">$48,210<span style="font: 600 12px/1; margin-left: 6px; color: var(--brand-strong); opacity: 0.7;">USD</span></div>
+            <div style="display: flex; gap: 6px; align-items: center; margin-top: 6px;">
+              <span style="font: 600 11px/1 var(--font-mono); color: var(--tone-success);">+4%</span>
+              <span style="font: var(--type-caption); color: var(--text-muted);">As of 09:14 · vs yesterday</span>
+            </div>
+            <svg viewBox="0 0 120 28" width="100%" height="40" style="margin-top: 10px;">
+              <polyline fill="none" stroke="var(--brand)" stroke-width="2" points="0,18 15,16 30,20 45,12 60,14 75,8 90,10 105,6 120,4" />
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Hero</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="ck-step"><span class="n">03</span><h3>Three secondary KPIs in a KpiGrid — quieter on purpose</h3></div>
+    <p>Use the neutral tone, not brand. These three exist to give context to the hero; if they shouted as loudly as the hero, nothing would lead. Show deltas as <code>null</code>-safe — "—" beats a misleading "0%".</p>
+    <div class="ds-specimen"
+         data-code='import { KpiGrid } from &#39;@huchu/react&#39;;
+
+function SupportingKpis({ model }: { model: DashboardModel }) {
+  return (
+    &lt;KpiGrid
+      columns={3}
+      items={[
+        {
+          label: &#39;Sales today&#39;,
+          value: formatMoney(model.sales),
+          delta: model.salesDeltaPct,
+          tone: &#39;neutral&#39;,
+        },
+        {
+          label: &#39;Money owed to you&#39;,
+          value: formatMoney(model.receivable),
+          tone: &#39;neutral&#39;,
+        },
+        {
+          label: &#39;Money you owe&#39;,
+          value: formatMoney(model.payable),
+          tone: &#39;neutral&#39;,
+        },
+      ]}
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 20px;">
+          <div style="width: 320px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px;">
+              <div style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.06em;">Sales</div>
+              <div style="font: 700 16px/1.2 var(--font-sans); color: var(--text-strong); margin-top: 4px;">$6,210</div>
+              <div style="font: 500 10px/1 var(--font-mono); color: var(--tone-success); margin-top: 4px;">+12%</div>
+            </div>
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px;">
+              <div style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.06em;">Owed</div>
+              <div style="font: 700 16px/1.2 var(--font-sans); color: var(--text-strong); margin-top: 4px;">$12,040</div>
+              <div style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle); margin-top: 4px;">—</div>
+            </div>
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px;">
+              <div style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.06em;">You owe</div>
+              <div style="font: 700 16px/1.2 var(--font-sans); color: var(--text-strong); margin-top: 4px;">$4,120</div>
+              <div style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle); margin-top: 4px;">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · KPI grid</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="ck-step"><span class="n">04</span><h3>Map the lines array to RowCards with live values and a chevron</h3></div>
+    <p>One <code>RowCard</code> per drill target. The row's right edge shows the live value, the chevron tells the user it routes, and the whole row is the click target — never just the chevron. If you have a router, hand it the <code>href</code>; if not, <code>RowCard</code> falls back to a plain anchor.</p>
+    <div class="ds-specimen"
+         data-code='import { Stack, RowCard } from &#39;@huchu/react&#39;;
+
+function DrillRows({ model, onNavigate }: {
+  model: DashboardModel;
+  onNavigate: (href: string) =&gt; void;
+}) {
+  return (
+    &lt;Stack gap=&quot;sm&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
+      {model.lines.map((line) =&gt; (
+        &lt;RowCard
+          key={line.id}
+          as=&quot;li&quot;
+          href={line.href}
+          onClick={(e) =&gt; { e.preventDefault(); onNavigate(line.href); }}
+          label={line.label}
+          value={formatMoney(line.value)}
+          trailing=&quot;chevron&quot;
+          aria-label={`${line.label}: ${formatMoney(line.value)}. Open detail.`}
+        /&gt;
+      ))}
+    &lt;/Stack&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 20px;">
+          <div style="width: 320px; display: grid; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;">
+              <span style="flex: 1; font: 600 13px/1.2 var(--font-sans); color: var(--text-strong);">Cash on hand</span>
+              <span style="font: 600 13px/1 var(--font-mono); color: var(--text-strong);">$48,210</span>
+              <span data-icon="chevron" data-icon-size="14" style="color: var(--text-subtle);"></span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;">
+              <span style="flex: 1; font: 600 13px/1.2 var(--font-sans); color: var(--text-strong);">Sales today</span>
+              <span style="font: 600 13px/1 var(--font-mono); color: var(--text-strong);">$6,210</span>
+              <span data-icon="chevron" data-icon-size="14" style="color: var(--text-subtle);"></span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;">
+              <span style="flex: 1; font: 600 13px/1.2 var(--font-sans); color: var(--text-strong);">Money owed to you</span>
+              <span style="font: 600 13px/1 var(--font-mono); color: var(--text-strong);">$12,040</span>
+              <span data-icon="chevron" data-icon-size="14" style="color: var(--text-subtle);"></span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;">
+              <span style="flex: 1; font: 600 13px/1.2 var(--font-sans); color: var(--text-strong);">Money you owe</span>
+              <span style="font: 600 13px/1 var(--font-mono); color: var(--text-strong);">$4,120</span>
+              <span data-icon="chevron" data-icon-size="14" style="color: var(--text-subtle);"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Drill rows</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="ck-step"><span class="n">05</span><h3>Handle the "no data yet" state without faking zero</h3></div>
+    <p>If the day hasn't been opened, every number is genuinely unknown — not zero. Render an <code>EmptyState</code> with a single primary CTA ("Open today's day") instead of stacking four "$0.00" cards that lie. The hero shrinks to a muted shell so the page still has the right shape.</p>
+    <div class="ds-specimen"
+         data-code='import { Stack, StatHero, EmptyState, Button } from &#39;@huchu/react&#39;;
+
+function NoDataYet({ onOpenDay }: { onOpenDay: () =&gt; void }) {
+  return (
+    &lt;Stack gap=&quot;md&quot;&gt;
+      &lt;StatHero
+        label=&quot;Cash on hand&quot;
+        value=&quot;—&quot;
+        caption=&quot;No close yet today&quot;
+        tone=&quot;muted&quot;
+      /&gt;
+      &lt;EmptyState
+        icon=&quot;clock&quot;
+        title=&quot;No data yet today&quot;
+        body=&quot;Open the day to start recording sales, cash and tickets. Yesterday&#39;s totals stay locked.&quot;
+        action={
+          &lt;Button variant=&quot;primary&quot; onClick={onOpenDay}&gt;Open today&#39;s day&lt;/Button&gt;
+        }
+      /&gt;
+    &lt;/Stack&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 20px;">
+          <div style="width: 320px; display: grid; gap: 12px;">
+            <div style="background: var(--surface-muted); border: 1px solid var(--border); border-radius: 14px; padding: 18px;">
+              <div style="font: 500 11px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Cash on hand</div>
+              <div style="font: 700 28px/1 var(--font-sans); color: var(--text-muted);">—</div>
+              <div style="font: var(--type-caption); color: var(--text-subtle); margin-top: 6px;">No close yet today</div>
+            </div>
+            <div style="background: var(--surface); border: 1px dashed var(--border-strong); border-radius: 12px; padding: 20px; text-align: center;">
+              <span data-icon="clock" data-icon-size="22" style="color: var(--text-subtle);"></span>
+              <div style="font: 600 14px/1.2 var(--font-sans); color: var(--text-strong); margin-top: 10px;">No data yet today</div>
+              <div style="font: var(--type-body-sm); color: var(--text-muted); margin: 6px 0 12px;">Open the day to start recording sales, cash and tickets.</div>
+              <div style="background: var(--ink); color: var(--canvas); height: 36px; border-radius: 8px; display: grid; place-items: center; font: 600 13px/1 var(--font-sans);">Open today's day</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 5 · Empty</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- SECTION 6 · FINAL COMPOSITION -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole <code>TodayDashboard</code>, assembled. Loading skeleton, empty branch, error branch, drill routing. Drop it in and wire <code>fetchSnapshots</code> to your API.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useState } from &#39;@huchu/react&#39;;
+import {
+  Stack, StatHero, KpiGrid, RowCard,
+  EmptyState, Skeleton, Alert, Button,
+} from &#39;@huchu/react&#39;;
+
+// ── Types ────────────────────────────────────────────────────────
+type Money = number;
+type Snapshot = {
+  asOf: string;
+  cash: Money; sales: Money; ar: Money; ap: Money;
+  last7Closes: Money[];
+};
+type DashboardModel = {
+  asOf: string;
+  cashOnHand: Money; cashOnHandDeltaPct: number | null;
+  sales: Money;      salesDeltaPct: number | null;
+  receivable: Money; payable: Money;
+  spark: Money[];
+  lines: Array&lt;{ id: string; label: string; value: Money; href: string }&gt;;
+};
+
+// ── Model ────────────────────────────────────────────────────────
+function buildModel(today: Snapshot, yesterday: Snapshot | null): DashboardModel {
+  const pct = (a: number, b: number | undefined) =&gt;
+    b == null || b === 0 ? null : Math.round(((a - b) / b) * 100);
+  return {
+    asOf: today.asOf,
+    cashOnHand: today.cash,
+    cashOnHandDeltaPct: pct(today.cash, yesterday?.cash),
+    sales: today.sales,
+    salesDeltaPct: pct(today.sales, yesterday?.sales),
+    receivable: today.ar,
+    payable: today.ap,
+    spark: today.last7Closes,
+    lines: [
+      { id: &#39;cash&#39;,  label: &#39;Cash on hand&#39;,      value: today.cash,  href: &#39;/cash&#39; },
+      { id: &#39;sales&#39;, label: &#39;Sales today&#39;,       value: today.sales, href: &#39;/sales&#39; },
+      { id: &#39;ar&#39;,    label: &#39;Money owed to you&#39;, value: today.ar,    href: &#39;/ar&#39; },
+      { id: &#39;ap&#39;,    label: &#39;Money you owe&#39;,    value: today.ap,    href: &#39;/ap&#39; },
+    ],
+  };
+}
+
+const fmtMoney = (cents: number) =&gt;
+  new Intl.NumberFormat(&#39;en-US&#39;, {
+    style: &#39;currency&#39;, currency: &#39;USD&#39;, maximumFractionDigits: 0,
+  }).format(cents / 100);
+
+// ── Async stub ──────────────────────────────────────────────────
+type Loaded = { kind: &#39;loaded&#39;; model: DashboardModel };
+type Empty  = { kind: &#39;empty&#39; };
+type State  =
+  | { kind: &#39;loading&#39; }
+  | Loaded
+  | Empty
+  | { kind: &#39;error&#39;; message: string };
+
+async function fetchSnapshots(): Promise&lt;State&gt; {
+  const res = await fetch(&#39;/api/today&#39;);
+  if (!res.ok) throw new Error(&#39;Could not load today.&#39;);
+  const body = await res.json() as { today: Snapshot | null; yesterday: Snapshot | null };
+  if (!body.today) return { kind: &#39;empty&#39; };
+  return { kind: &#39;loaded&#39;, model: buildModel(body.today, body.yesterday) };
+}
+
+// ── Component ───────────────────────────────────────────────────
+export function TodayDashboard({ onNavigate, onOpenDay }: {
+  onNavigate: (href: string) =&gt; void;
+  onOpenDay: () =&gt; void;
+}) {
+  const [state, setState] = useState&lt;State&gt;({ kind: &#39;loading&#39; });
+
+  useEffect(() =&gt; {
+    let cancelled = false;
+    fetchSnapshots()
+      .then((s) =&gt; { if (!cancelled) setState(s); })
+      .catch((e: Error) =&gt; {
+        if (!cancelled) setState({ kind: &#39;error&#39;, message: e.message });
+      });
+    return () =&gt; { cancelled = true; };
+  }, []);
+
+  if (state.kind === &#39;loading&#39;) {
+    return (
+      &lt;Stack gap=&quot;md&quot; aria-busy=&quot;true&quot; aria-live=&quot;polite&quot;&gt;
+        &lt;Skeleton height={108} radius=&quot;lg&quot; /&gt;
+        &lt;Skeleton height={72} radius=&quot;md&quot; /&gt;
+        &lt;Skeleton height={56} radius=&quot;md&quot; count={4} /&gt;
+      &lt;/Stack&gt;
+    );
+  }
+
+  if (state.kind === &#39;error&#39;) {
+    return (
+      &lt;Alert tone=&quot;danger&quot;&gt;
+        {state.message}{&#39; &#39;}
+        &lt;Button variant=&quot;link&quot; onClick={() =&gt; setState({ kind: &#39;loading&#39; })}&gt;
+          Try again
+        &lt;/Button&gt;
+      &lt;/Alert&gt;
+    );
+  }
+
+  if (state.kind === &#39;empty&#39;) {
+    return (
+      &lt;Stack gap=&quot;md&quot;&gt;
+        &lt;StatHero label=&quot;Cash on hand&quot; value=&quot;—&quot;
+                  caption=&quot;No close yet today&quot; tone=&quot;muted&quot; /&gt;
+        &lt;EmptyState
+          icon=&quot;clock&quot;
+          title=&quot;No data yet today&quot;
+          body=&quot;Open the day to start recording sales, cash and tickets.&quot;
+          action={&lt;Button variant=&quot;primary&quot; onClick={onOpenDay}&gt;Open today&#39;s day&lt;/Button&gt;}
+        /&gt;
+      &lt;/Stack&gt;
+    );
+  }
+
+  const m = state.model;
+  return (
+    &lt;Stack gap=&quot;md&quot;&gt;
+      &lt;StatHero
+        label=&quot;Cash on hand&quot;
+        value={fmtMoney(m.cashOnHand)}
+        unit=&quot;USD&quot;
+        caption={`As of ${new Date(m.asOf).toLocaleTimeString()} · vs yesterday`}
+        delta={m.cashOnHandDeltaPct}
+        tone=&quot;brand&quot;
+        spark={m.spark}
+        sparkLabel=&quot;Last 7 days&quot;
+      /&gt;
+
+      &lt;KpiGrid
+        columns={3}
+        items={[
+          { label: &#39;Sales today&#39;,       value: fmtMoney(m.sales),
+            delta: m.salesDeltaPct, tone: &#39;neutral&#39; },
+          { label: &#39;Money owed to you&#39;, value: fmtMoney(m.receivable), tone: &#39;neutral&#39; },
+          { label: &#39;Money you owe&#39;,    value: fmtMoney(m.payable),    tone: &#39;neutral&#39; },
+        ]}
+      /&gt;
+
+      &lt;Stack gap=&quot;sm&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
+        {m.lines.map((line) =&gt; (
+          &lt;RowCard
+            key={line.id}
+            as=&quot;li&quot;
+            href={line.href}
+            onClick={(e) =&gt; { e.preventDefault(); onNavigate(line.href); }}
+            label={line.label}
+            value={fmtMoney(line.value)}
+            trailing=&quot;chevron&quot;
+            aria-label={`${line.label}: ${fmtMoney(line.value)}. Open detail.`}
+          /&gt;
+        ))}
+      &lt;/Stack&gt;
+    &lt;/Stack&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="width: 340px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; display: grid; gap: 12px;">
+            <div style="background: var(--brand-soft); border: 1px solid var(--brand); border-radius: 12px; padding: 14px;">
+              <div style="font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--brand-strong);">Cash on hand</div>
+              <div style="font: 700 26px/1 var(--font-sans); color: var(--brand-strong); margin-top: 4px;">$48,210</div>
+              <div style="font: var(--type-caption); color: var(--brand-strong); opacity: 0.7; margin-top: 4px;">+4% vs yesterday · 09:14</div>
+              <svg viewBox="0 0 120 28" width="100%" height="32" style="margin-top: 6px;">
+                <polyline fill="none" stroke="var(--brand)" stroke-width="1.5" points="0,18 15,16 30,20 45,12 60,14 75,8 90,10 105,6 120,4" />
+              </svg>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+              <div style="background: var(--surface-muted); border: 1px solid var(--border); border-radius: 8px; padding: 8px;"><div style="font: 500 9px/1 var(--font-mono); color: var(--text-subtle);">SALES</div><div style="font: 700 13px/1.2 var(--font-sans); color: var(--text-strong); margin-top: 3px;">$6,210</div></div>
+              <div style="background: var(--surface-muted); border: 1px solid var(--border); border-radius: 8px; padding: 8px;"><div style="font: 500 9px/1 var(--font-mono); color: var(--text-subtle);">OWED</div><div style="font: 700 13px/1.2 var(--font-sans); color: var(--text-strong); margin-top: 3px;">$12,040</div></div>
+              <div style="background: var(--surface-muted); border: 1px solid var(--border); border-radius: 8px; padding: 8px;"><div style="font: 500 9px/1 var(--font-mono); color: var(--text-subtle);">YOU OWE</div><div style="font: 700 13px/1.2 var(--font-sans); color: var(--text-strong); margin-top: 3px;">$4,120</div></div>
+            </div>
+            <div style="display: grid; gap: 6px;">
+              <div style="display: flex; align-items: center; gap: 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;"><span style="flex: 1; font: 600 12px/1.2 var(--font-sans);">Cash on hand</span><span style="font: 600 12px/1 var(--font-mono);">$48,210</span><span style="color: var(--text-subtle);">›</span></div>
+              <div style="display: flex; align-items: center; gap: 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;"><span style="flex: 1; font: 600 12px/1.2 var(--font-sans);">Sales today</span><span style="font: 600 12px/1 var(--font-mono);">$6,210</span><span style="color: var(--text-subtle);">›</span></div>
+              <div style="display: flex; align-items: center; gap: 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;"><span style="flex: 1; font: 600 12px/1.2 var(--font-sans);">Money owed to you</span><span style="font: 600 12px/1 var(--font-mono);">$12,040</span><span style="color: var(--text-subtle);">›</span></div>
+              <div style="display: flex; align-items: center; gap: 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;"><span style="flex: 1; font: 600 12px/1.2 var(--font-sans);">Money you owe</span><span style="font: 600 12px/1 var(--font-mono);">$4,120</span><span style="color: var(--text-subtle);">›</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">TodayDashboard.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- SECTION 7 · VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three common forks. Same model, different surface.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Two heroes side-by-side</h4>
+        <p>For business owners watching both inflow and outflow at once. Cash on hand stays brand-tinted; net cash flow joins it on the right.</p>
+<pre>// Two heroes, equal weight
+&lt;div style={{ display: &#39;grid&#39;,
+              gridTemplateColumns: &#39;1fr 1fr&#39;,
+              gap: 12 }}&gt;
+  &lt;StatHero label=&quot;Cash on hand&quot; tone=&quot;brand&quot;
+            value={fmtMoney(m.cashOnHand)} /&gt;
+  &lt;StatHero label=&quot;Net cash flow&quot; tone=&quot;neutral&quot;
+            value={fmtMoney(m.sales - m.payable)} /&gt;
+&lt;/div&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Branch picker on top</h4>
+        <p>Multi-branch owners filter the whole dashboard via a segmented control above the hero. The model rebuilds when the selection changes.</p>
+<pre>// Branch picker drives the fetch
+const [branch, setBranch] = useState(&#39;all&#39;);
+useEffect(() =&gt; {
+  fetchSnapshots(branch).then(setState);
+}, [branch]);
+
+&lt;SegmentedControl value={branch}
+  options={branches} onChange={setBranch} /&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Polled refresh every 60s</h4>
+        <p>For dashboards left open on a wall display. Use <code>useInterval</code> to refetch quietly and update the hero in-place.</p>
+<pre>// Background refresh, no spinner
+import { useInterval } from &#39;@huchu/react&#39;;
+
+useInterval(() =&gt; {
+  fetchSnapshots().then((s) =&gt; {
+    if (s.kind === &#39;loaded&#39;) setState(s);
+  });
+}, 60_000);</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 8 · ACCESSIBILITY -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">What this recipe takes care of for you.</p>
+    <ul class="ck-a11y">
+      <li><b>The hero is a heading.</b> <code>StatHero</code> renders the label as an <code>h2</code> with the value as its descendant — screen readers read "Cash on hand, forty-eight thousand two hundred ten US dollars" as one unit.</li>
+      <li><b>Deltas read with context.</b> The delta string is rendered after the value with <code>aria-label="up 4 percent vs yesterday"</code>, never as a bare "+4%".</li>
+      <li><b>Null deltas show "—", not zero.</b> A missing baseline is announced as "no comparison", which is honest; "+0%" sounds like a flat day and isn't the same thing.</li>
+      <li><b>Each drill row is a single click target.</b> The whole <code>RowCard</code> is the link — not the chevron — so a 44pt thumb target survives. Tab order matches reading order, top to bottom.</li>
+      <li><b>The loading state is announced.</b> The <code>Skeleton</code> wrapper carries <code>aria-busy="true"</code> and a polite live region, so a screen reader hears "loading" once and not on every shimmer frame.</li>
+      <li><b>The empty state has a real button.</b> "Open today's day" is the only focusable element on the empty branch, so a keyboard user can tab once and act.</li>
+      <li><b>Sparklines have a text fallback.</b> The SVG gets <code>role="img"</code> + <code>aria-label="Cash on hand last 7 days: $42k, $44k, $43k, $46k, $45k, $48k, $48k"</code> so the chart is a sentence for non-sighted users.</li>
+    </ul>
+  </section>
+
+  <!-- SECTION 9 · RELATED RECIPES -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">Other recipes that share the model-then-render approach.</p>
+    <div class="ck-related">
+      <a href="dashboards-operator-overview.html">Dashboards · Operator overview<span class="tag">New</span></a>
+      <a href="approvals-leave-request.html">Approvals · Leave-request workflow<span class="tag">New</span></a>
+      <a href="states-empty-loading-error.html">States · Empty, loading, error<span class="tag">New</span></a>
+      <a href="auth-signin-2fa.html">Auth · Sign in with 2FA<span class="tag">Canonical</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="index.html"><div class="pager-label">← Back to</div><div class="pager-title">Cookbook</div></a>
+    <a href="dashboards-operator-overview.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Operator overview</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

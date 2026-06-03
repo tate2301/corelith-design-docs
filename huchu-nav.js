@@ -86,15 +86,15 @@
       ['Lists ·  Day-grouped mobile list',  '#',                '__', 'Soon'],
       // ── Dashboards ──────────────────────────────────────────
       ['Dashboards ·  Operator overview',   ROOT + 'cookbook/dashboards-operator-overview.html', 'dashboards-operator-overview', 'New'],
-      ['Dashboards ·  KPI hero + drilldown','#',                '__', 'Soon'],
+      ['Dashboards ·  KPI hero + drilldown',ROOT + 'cookbook/dashboards-kpi-hero-drilldown.html', 'dashboards-kpi-hero-drilldown', 'New'],
       // ── States ──────────────────────────────────────────────
-      ['States ·  Empty, loading, error',   '#',                '__', 'Soon'],
+      ['States ·  Empty, loading, error',   ROOT + 'cookbook/states-empty-loading-error.html', 'states-empty-loading-error', 'New'],
       ['States ·  Optimistic + rollback',   '#',                '__', 'Soon'],
       // ── Settings ────────────────────────────────────────────
       ['Settings ·  Profile & security',    '#',                '__', 'Soon'],
       ['Settings ·  Team & roles',          '#',                '__', 'Soon'],
       // ── Approvals & queues ──────────────────────────────────
-      ['Approvals ·  Leave-request workflow','#',               '__', 'Soon'],
+      ['Approvals ·  Leave-request workflow',ROOT + 'cookbook/approvals-leave-request.html', 'approvals-leave-request', 'New'],
       ['Approvals ·  Inbox + bulk actions', '#',                '__', 'Soon'],
     ]},
     // Reference = the entire existing design-system catalogue, folded into one

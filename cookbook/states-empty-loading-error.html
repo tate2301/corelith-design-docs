@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Empty, loading, error · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 10px; border-radius: 9999px;
+    background: var(--surface); border: 1px solid var(--border);
+    font: 500 12px/1 var(--font-sans); color: var(--text-strong);
+    text-decoration: none;
+  }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind {
+    font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-subtle);
+    padding-right: 6px; border-right: 1px solid var(--border);
+  }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen {
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 14px;
+    display: grid; gap: 10px;
+  }
+  .ck-screen .phone {
+    aspect-ratio: 9 / 16;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    display: flex; flex-direction: column; gap: 8px;
+    overflow: hidden;
+  }
+  .ck-screen .head { font: 700 13px/1.2 var(--font-sans); }
+  .ck-screen .skel {
+    background: linear-gradient(90deg, var(--surface-muted) 0%, var(--surface) 50%, var(--surface-muted) 100%);
+    background-size: 200% 100%;
+    border-radius: 6px;
+    height: 14px;
+  }
+  .ck-screen .skel.big { height: 28px; }
+  .ck-screen .skel.row { height: 36px; }
+  .ck-screen .row {
+    background: var(--surface-muted); border: 1px solid var(--border);
+    border-radius: 6px; padding: 7px 9px;
+    font: 600 10px/1.2 var(--font-sans);
+  }
+  .ck-screen .empty-icon {
+    width: 36px; height: 36px; border-radius: 9999px;
+    background: var(--brand-soft); color: var(--brand-strong);
+    display: grid; place-items: center; margin: 6px auto 0;
+  }
+  .ck-screen .center {
+    flex: 1; display: grid; place-items: center;
+    text-align: center; gap: 6px;
+    color: var(--text-muted); font: 500 11px/1.4 var(--font-sans);
+    padding: 8px;
+  }
+  .ck-screen .cta {
+    background: var(--ink); color: var(--canvas);
+    height: 26px; border-radius: 6px;
+    display: grid; place-items: center;
+    font: 600 11px/1 var(--font-sans);
+  }
+  .ck-screen .error-icon {
+    width: 36px; height: 36px; border-radius: 9999px;
+    background: var(--tone-danger-bg); color: var(--tone-danger);
+    display: grid; place-items: center; margin: 6px auto 0;
+  }
+  .ck-screen .caption {
+    font: 500 12px/1.4 var(--font-sans);
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ck-screen .caption .num {
+    font: 600 10px/1 var(--font-mono);
+    padding: 3px 6px; border-radius: 9999px;
+    background: var(--surface); color: var(--brand-strong);
+  }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n {
+    font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--brand-soft); color: var(--brand-strong);
+  }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: grid; gap: 10px;
+  }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p  { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre {
+    background: var(--ink); color: var(--canvas);
+    border-radius: 8px; padding: 12px 14px; margin: 0;
+    font: 500 12px/1.55 var(--font-mono); overflow-x: auto;
+    white-space: pre;
+  }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li {
+    display: grid; grid-template-columns: 20px 1fr; gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5;
+  }
+  .ck-a11y li::before {
+    content: ""; display: block; width: 16px; height: 16px;
+    background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd);
+    border-radius: 4px; margin-top: 1px;
+  }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    font: 500 13px/1.2 var(--font-sans); color: var(--text-strong);
+    text-decoration: none;
+  }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag {
+    font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 3px 7px; border-radius: 9999px;
+    background: var(--surface-muted); color: var(--text-subtle);
+  }
+
+  /* Pull-quote callout for the opinion line. */
+  .ck-pull {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--brand);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 14px 0 0;
+    font: 500 15px/1.5 var(--font-sans);
+    color: var(--text-strong);
+  }
+  .ck-pull b { color: var(--brand-strong); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">States</a><span class="sep">/</span>
+      <span>Empty, loading, error</span>
+    </div>
+    <h1>Build the three states every screen needs</h1>
+    <p class="lede">By the end of this recipe you'll have a single <code>Resource</code> component that handles initial-load skeletons, paginate-more spinners, optimistic create/update, the "we tried and failed" error with retry, and an empty state with a primary CTA — composed so each state looks like the eventual content, not a generic placeholder.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="circle" data-icon-size="12"></span>States</span>
+      <span class="meta-pill">3 primitives · 1 block · 0 patterns</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~25 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- SECTION 2 · OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A discriminated-union state model — <b>loading</b> | <b>empty</b> | <b>loaded</b> | <b>error</b> — and a render branch per state that looks like the same screen, just at a different moment in time.</p>
+    <p>Most apps treat empty, loading and error as afterthoughts. They reach for a generic full-screen spinner, then an emoji-and-tagline empty page, then a red banner — three different layouts, three different mental models, and the user feels every transition as a jolt. The right call is the opposite: design the loaded state first, then derive each other state from it by replacing content with a shimmer, a CTA or an apology. Layout stays put; only content swaps.</p>
+    <p class="ck-pull"><b>Loading screens should look like the eventual content, not a spinner.</b> The shimmer is a row card with no text; the empty state lives where the rows would have been; the error lives in the same slot. The user's eye doesn't relearn the page every time the data changes.</p>
+    <p>Optimistic create gets a fourth state implicitly — the new row appears in the list with a quiet "saving…" caption, and reconciles or rolls back when the response lands. We treat that as a tiny in-list state, not a global one, because the rest of the page is still trustworthy.</p>
+    <p><b>Skip this recipe if</b> your data is local-first or pre-loaded — most of these states collapse to "loaded" and the others never run. Use it anywhere you have a network fetch with a non-trivial chance of being empty or failing.</p>
+  </section>
+
+  <!-- SECTION 3 · WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">One layout, four states. Each state lives in the same rectangle as the loaded view.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <div class="head">Suppliers</div>
+          <div class="skel big" aria-hidden="true"></div>
+          <div class="skel row"></div>
+          <div class="skel row"></div>
+          <div class="skel row"></div>
+          <div class="skel row"></div>
+        </div>
+        <div class="caption"><span class="num">01</span> Loading — skeleton in row shape</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <div class="head">Suppliers</div>
+          <div class="center">
+            <div class="empty-icon"><span data-icon="user" data-icon-size="18"></span></div>
+            <div style="font: 600 13px/1.2 var(--font-sans); color: var(--text-strong);">No suppliers yet</div>
+            <div>Add your first supplier to start logging deliveries.</div>
+            <div class="cta" style="margin-top: 8px; padding: 0 14px;">Add supplier</div>
+          </div>
+        </div>
+        <div class="caption"><span class="num">02</span> Empty — primary CTA</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <div class="head">Suppliers</div>
+          <div class="center">
+            <div class="error-icon"><span data-icon="alert" data-icon-size="18"></span></div>
+            <div style="font: 600 13px/1.2 var(--font-sans); color: var(--text-strong);">We couldn't load</div>
+            <div>The connection dropped. Last sync 12 min ago.</div>
+            <div class="cta" style="margin-top: 8px; padding: 0 14px;">Try again</div>
+          </div>
+        </div>
+        <div class="caption"><span class="num">03</span> Error — retry with last-sync time</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 4 · REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>. Each link opens the reference page.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/b-empty-state.html"><span class="kind">Block</span>Empty state</a>
+      <a class="ck-piece" href="../system/p-spinner.html"><span class="kind">Primitive</span>Spinner &amp; skeleton</a>
+      <a class="ck-piece" href="../system/p-alert.html"><span class="kind">Primitive</span>Alert</a>
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+      <a class="ck-piece" href="../system/b-row-card.html"><span class="kind">Block</span>Row card</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>Stack</code>, <code>Skeleton</code>, <code>Spinner</code>, <code>EmptyState</code>, <code>Alert</code>, <code>Button</code>, <code>RowCard</code>, <code>useToast</code>. Every other recipe in this batch composes <code>Resource</code> from the same parts.</p>
+  </section>
+
+  <!-- SECTION 5 · STEP-BY-STEP -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <!-- Step 1 -->
+    <div class="ck-step"><span class="n">01</span><h3>Model the four states as a discriminated union</h3></div>
+    <p>Two booleans (<code>isLoading</code>, <code>hasError</code>) and a nullable list will get you into "loading + error at the same time" within a week. A discriminated union forces every render branch to be one and only one state, and the compiler tells you when you forgot the empty branch.</p>
+    <div class="ds-specimen"
+         data-code='export type ResourceState&lt;T&gt; =
+  | { kind: &#39;loading&#39; }
+  | { kind: &#39;empty&#39; }
+  | { kind: &#39;loaded&#39;; data: T[]; nextCursor: string | null; updatedAt: number }
+  | { kind: &#39;error&#39;; message: string; lastGood: T[] | null; updatedAt: number | null };
+
+// Helper to fold an API response into a state. The shape of the
+// response — { items, nextCursor } — is shared across the app.
+export function foldResponse&lt;T&gt;(
+  resp: { items: T[]; nextCursor: string | null },
+): ResourceState&lt;T&gt; {
+  if (resp.items.length === 0 &amp;&amp; !resp.nextCursor) {
+    return { kind: &#39;empty&#39; };
+  }
+  return {
+    kind: &#39;loaded&#39;,
+    data: resp.items,
+    nextCursor: resp.nextCursor,
+    updatedAt: Date.now(),
+  };
+}
+
+// Errors carry the last-good state so the screen can degrade gracefully.
+// "We couldn&#39;t load" is better when paired with "but here&#39;s yesterday&#39;s data".
+export function foldError&lt;T&gt;(
+  err: Error,
+  prev: ResourceState&lt;T&gt;,
+): ResourceState&lt;T&gt; {
+  const lastGood = prev.kind === &#39;loaded&#39; ? prev.data : null;
+  const updatedAt = prev.kind === &#39;loaded&#39; ? prev.updatedAt : null;
+  return { kind: &#39;error&#39;, message: err.message, lastGood, updatedAt };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 8px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div><b style="color: var(--brand-strong);">'loading'</b> → success → <b style="color: var(--tone-success);">'loaded' | 'empty'</b></div>
+          <div><b style="color: var(--brand-strong);">'loading'</b> → failure → <b style="color: var(--tone-danger);">'error'</b></div>
+          <div><b style="color: var(--tone-success);">'loaded'</b> → refetch failure → <b style="color: var(--tone-danger);">'error'</b> (with lastGood)</div>
+          <div style="color: var(--text-subtle); margin-top: 4px;">No state is "loading + error". Use the union, not booleans.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · State model</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="ck-step"><span class="n">02</span><h3>Make the loading state look like the eventual content</h3></div>
+    <p>Use the same <code>Skeleton</code> primitive with the row's exact height and corner radius. The page header stays real (because it doesn't depend on data), and the rows shimmer in the shape they'll resolve to. The eye doesn't relearn the layout.</p>
+    <div class="ds-specimen"
+         data-code='import { Stack, Skeleton } from &#39;@huchu/react&#39;;
+
+function SuppliersSkeleton() {
+  return (
+    &lt;Stack gap=&quot;sm&quot; aria-busy=&quot;true&quot; aria-live=&quot;polite&quot;&gt;
+      {/* The header isn&#39;t a skeleton — it&#39;s real and constant. */}
+      &lt;h1 style={{ margin: 0 }}&gt;Suppliers&lt;/h1&gt;
+
+      {/* The toolbar that will hold a search + filter. */}
+      &lt;Skeleton height={36} radius=&quot;md&quot; /&gt;
+
+      {/* Six row-shaped skeletons — same height as the real RowCard. */}
+      {Array.from({ length: 6 }).map((_, i) =&gt; (
+        &lt;Skeleton key={i} height={56} radius=&quot;md&quot; /&gt;
+      ))}
+    &lt;/Stack&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 18px;">
+          <div style="font: 700 18px/1.2 var(--font-sans); color: var(--text-strong); margin-bottom: 12px;">Suppliers</div>
+          <div style="display: grid; gap: 8px;">
+            <div style="height: 32px; border-radius: 8px; background: linear-gradient(90deg, var(--surface-muted) 0%, var(--surface) 50%, var(--surface-muted) 100%);"></div>
+            <div style="height: 48px; border-radius: 8px; background: linear-gradient(90deg, var(--surface-muted) 0%, var(--surface) 50%, var(--surface-muted) 100%);"></div>
+            <div style="height: 48px; border-radius: 8px; background: linear-gradient(90deg, var(--surface-muted) 0%, var(--surface) 50%, var(--surface-muted) 100%);"></div>
+            <div style="height: 48px; border-radius: 8px; background: linear-gradient(90deg, var(--surface-muted) 0%, var(--surface) 50%, var(--surface-muted) 100%);"></div>
+            <div style="height: 48px; border-radius: 8px; background: linear-gradient(90deg, var(--surface-muted) 0%, var(--surface) 50%, var(--surface-muted) 100%);"></div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Loading shape</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="ck-step"><span class="n">03</span><h3>The empty state has exactly one primary CTA</h3></div>
+    <p><code>EmptyState</code> takes an icon, a title, a sentence and a single primary action. No secondary action, no marketing copy. The CTA gets focus on mount so a keyboard user can act immediately.</p>
+    <div class="ds-specimen"
+         data-code='import { EmptyState, Button } from &#39;@huchu/react&#39;;
+
+function SuppliersEmpty({ onCreate }: { onCreate: () =&gt; void }) {
+  return (
+    &lt;EmptyState
+      icon=&quot;user&quot;
+      title=&quot;No suppliers yet&quot;
+      body=&quot;Add your first supplier to start logging deliveries.&quot;
+      action={
+        &lt;Button variant=&quot;primary&quot; autoFocus onClick={onCreate}&gt;
+          Add supplier
+        &lt;/Button&gt;
+      }
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 20px; display: grid; place-items: center;">
+          <div style="background: var(--surface); border: 1px dashed var(--border-strong); border-radius: 12px; padding: 24px; width: 320px; text-align: center;">
+            <div style="width: 48px; height: 48px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; margin: 0 auto 12px;"><span data-icon="user" data-icon-size="22"></span></div>
+            <div style="font: 600 16px/1.2 var(--font-sans); color: var(--text-strong);">No suppliers yet</div>
+            <div style="font: var(--type-body-sm); color: var(--text-muted); margin: 6px 0 16px;">Add your first supplier to start logging deliveries.</div>
+            <div style="background: var(--ink); color: var(--canvas); height: 36px; border-radius: 8px; display: grid; place-items: center; font: 600 13px/1 var(--font-sans);">Add supplier</div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Empty</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="ck-step"><span class="n">04</span><h3>The error state shows what to do, not what went wrong</h3></div>
+    <p>"Network timeout" tells the user nothing they can act on. "We couldn't load — last sync 12 min ago" tells them how stale the screen is and offers Retry. If we have <code>lastGood</code> data, render it underneath with a banner so the page stays useful while the user decides.</p>
+    <div class="ds-specimen"
+         data-code='import { Stack, Alert, Button, EmptyState } from &#39;@huchu/react&#39;;
+
+function SuppliersError({ state, onRetry, render }: {
+  state: Extract&lt;ResourceState&lt;Supplier&gt;, { kind: &#39;error&#39; }&gt;;
+  onRetry: () =&gt; void;
+  render: (data: Supplier[]) =&gt; React.ReactNode;
+}) {
+  // No stale data — full-screen empty-style error.
+  if (!state.lastGood) {
+    return (
+      &lt;EmptyState
+        icon=&quot;alert&quot;
+        tone=&quot;danger&quot;
+        title=&quot;We couldn&#39;t load&quot;
+        body={`${state.message} Check your connection and try again.`}
+        action={
+          &lt;Button variant=&quot;primary&quot; autoFocus onClick={onRetry}&gt;
+            Try again
+          &lt;/Button&gt;
+        }
+      /&gt;
+    );
+  }
+
+  // Stale data — banner + degraded list.
+  return (
+    &lt;Stack gap=&quot;md&quot;&gt;
+      &lt;Alert tone=&quot;warning&quot; action={
+        &lt;Button variant=&quot;link&quot; onClick={onRetry}&gt;Retry&lt;/Button&gt;
+      }&gt;
+        Showing data from {formatRelative(state.updatedAt!)}. {state.message}
+      &lt;/Alert&gt;
+      {render(state.lastGood)}
+    &lt;/Stack&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 20px; display: grid; place-items: center;">
+          <div style="background: var(--surface); border: 1px dashed var(--tone-danger-bd); border-radius: 12px; padding: 24px; width: 320px; text-align: center;">
+            <div style="width: 48px; height: 48px; border-radius: 9999px; background: var(--tone-danger-bg); color: var(--tone-danger); display: grid; place-items: center; margin: 0 auto 12px;"><span data-icon="alert" data-icon-size="22"></span></div>
+            <div style="font: 600 16px/1.2 var(--font-sans); color: var(--text-strong);">We couldn't load</div>
+            <div style="font: var(--type-body-sm); color: var(--text-muted); margin: 6px 0 16px;">The connection dropped. Last sync 12 min ago.</div>
+            <div style="background: var(--ink); color: var(--canvas); height: 36px; border-radius: 8px; display: grid; place-items: center; font: 600 13px/1 var(--font-sans);">Try again</div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Error</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="ck-step"><span class="n">05</span><h3>Optimistic create with rollback on failure</h3></div>
+    <p>When the user adds a row, insert it locally with a temp id and a quiet "saving…" caption. On success, swap the temp id for the server's id; on failure, remove the row and show a <code>useToast</code> message that includes "Try again". The rest of the page never enters a loading state.</p>
+    <div class="ds-specimen"
+         data-code='import { useState } from &#39;@huchu/react&#39;;
+import { useToast } from &#39;@huchu/react&#39;;
+
+type Supplier = { id: string; name: string; pending?: boolean };
+
+function useOptimisticCreate(
+  setData: (fn: (rows: Supplier[]) =&gt; Supplier[]) =&gt; void,
+  post: (name: string) =&gt; Promise&lt;{ id: string }&gt;,
+) {
+  const { showToast } = useToast();
+
+  return async (name: string) =&gt; {
+    const tempId = `tmp_${Date.now()}`;
+    const draft: Supplier = { id: tempId, name, pending: true };
+
+    setData((rows) =&gt; [draft, ...rows]);
+
+    try {
+      const { id } = await post(name);
+      // Swap the temp id; clear the pending flag.
+      setData((rows) =&gt; rows.map((r) =&gt;
+        r.id === tempId ? { id, name } : r));
+    } catch (e) {
+      // Roll back. Don&#39;t leave a phantom row.
+      setData((rows) =&gt; rows.filter((r) =&gt; r.id !== tempId));
+      showToast({
+        tone: &#39;danger&#39;,
+        message: `Could not add ${name}: ${(e as Error).message}`,
+        action: { label: &#39;Try again&#39;, onClick: () =&gt; this(name) },
+      });
+    }
+  };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 20px;">
+          <div style="display: grid; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; opacity: 0.85;">
+              <span style="flex: 1; font: 600 12px/1.2 var(--font-sans);">Mukamba Distributors <span style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle); margin-left: 6px;">saving…</span></span>
+              <span data-icon="spinner" data-icon-size="14" style="color: var(--text-subtle);"></span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;">
+              <span style="flex: 1; font: 600 12px/1.2 var(--font-sans);">Tendai Wholesale</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;">
+              <span style="flex: 1; font: 600 12px/1.2 var(--font-sans);">Bulawayo Foods</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 5 · Optimistic</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- SECTION 6 · FINAL COMPOSITION -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">A reusable <code>Resource</code> component. Pass it a fetcher and a row renderer; it handles loading, empty, loaded, error and "load more". Drop in <code>SuppliersScreen</code> as the shape every list page in the app should follow.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useState } from &#39;@huchu/react&#39;;
+import {
+  Stack, Skeleton, Spinner, EmptyState,
+  Alert, Button, RowCard, useToast,
+} from &#39;@huchu/react&#39;;
+
+// ── State model (see Step 1) ────────────────────────────────────
+type ResourceState&lt;T&gt; =
+  | { kind: &#39;loading&#39; }
+  | { kind: &#39;empty&#39; }
+  | { kind: &#39;loaded&#39;; data: T[]; nextCursor: string | null; updatedAt: number }
+  | { kind: &#39;error&#39;; message: string; lastGood: T[] | null; updatedAt: number | null };
+
+// ── Generic resource component ─────────────────────────────────
+export function Resource&lt;T&gt;({
+  fetcher,
+  renderRow,
+  empty,
+  rowHeight = 56,
+  rowCount = 6,
+  keyOf,
+}: {
+  fetcher: (cursor: string | null) =&gt; Promise&lt;{ items: T[]; nextCursor: string | null }&gt;;
+  renderRow: (item: T) =&gt; React.ReactNode;
+  empty: { icon: string; title: string; body: string; cta: React.ReactNode };
+  rowHeight?: number;
+  rowCount?: number;
+  keyOf: (item: T) =&gt; string;
+}) {
+  const [state, setState] = useState&lt;ResourceState&lt;T&gt;&gt;({ kind: &#39;loading&#39; });
+  const [pagingMore, setPagingMore] = useState(false);
+
+  const load = async (cursor: string | null = null) =&gt; {
+    if (cursor) setPagingMore(true);
+    else setState({ kind: &#39;loading&#39; });
+    try {
+      const resp = await fetcher(cursor);
+      if (cursor) {
+        setState((prev) =&gt; {
+          if (prev.kind !== &#39;loaded&#39;) return prev;
+          return {
+            ...prev,
+            data: [...prev.data, ...resp.items],
+            nextCursor: resp.nextCursor,
+            updatedAt: Date.now(),
+          };
+        });
+      } else if (resp.items.length === 0) {
+        setState({ kind: &#39;empty&#39; });
+      } else {
+        setState({
+          kind: &#39;loaded&#39;,
+          data: resp.items,
+          nextCursor: resp.nextCursor,
+          updatedAt: Date.now(),
+        });
+      }
+    } catch (e) {
+      setState((prev) =&gt; {
+        const lastGood = prev.kind === &#39;loaded&#39; ? prev.data : null;
+        const at = prev.kind === &#39;loaded&#39; ? prev.updatedAt : null;
+        return { kind: &#39;error&#39;, message: (e as Error).message,
+                 lastGood, updatedAt: at };
+      });
+    } finally {
+      setPagingMore(false);
+    }
+  };
+
+  useEffect(() =&gt; { load(null); /* eslint-disable-next-line */ }, []);
+
+  // ── Branches ─────────────────────────────────────────────────
+  if (state.kind === &#39;loading&#39;) {
+    return (
+      &lt;Stack gap=&quot;sm&quot; aria-busy=&quot;true&quot; aria-live=&quot;polite&quot;&gt;
+        {Array.from({ length: rowCount }).map((_, i) =&gt; (
+          &lt;Skeleton key={i} height={rowHeight} radius=&quot;md&quot; /&gt;
+        ))}
+      &lt;/Stack&gt;
+    );
+  }
+
+  if (state.kind === &#39;empty&#39;) {
+    return (
+      &lt;EmptyState
+        icon={empty.icon}
+        title={empty.title}
+        body={empty.body}
+        action={empty.cta}
+      /&gt;
+    );
+  }
+
+  if (state.kind === &#39;error&#39;) {
+    if (!state.lastGood) {
+      return (
+        &lt;EmptyState
+          icon=&quot;alert&quot;
+          tone=&quot;danger&quot;
+          title=&quot;We couldn&#39;t load&quot;
+          body={`${state.message} Check your connection and try again.`}
+          action={&lt;Button variant=&quot;primary&quot; autoFocus
+                          onClick={() =&gt; load(null)}&gt;Try again&lt;/Button&gt;}
+        /&gt;
+      );
+    }
+    return (
+      &lt;Stack gap=&quot;md&quot;&gt;
+        &lt;Alert tone=&quot;warning&quot; action={
+          &lt;Button variant=&quot;link&quot; onClick={() =&gt; load(null)}&gt;Retry&lt;/Button&gt;
+        }&gt;
+          Showing data from {formatRelative(state.updatedAt!)}. {state.message}
+        &lt;/Alert&gt;
+        &lt;Stack gap=&quot;sm&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
+          {state.lastGood.map((it) =&gt; (
+            &lt;li key={keyOf(it)}&gt;{renderRow(it)}&lt;/li&gt;
+          ))}
+        &lt;/Stack&gt;
+      &lt;/Stack&gt;
+    );
+  }
+
+  // Loaded
+  return (
+    &lt;Stack gap=&quot;sm&quot;&gt;
+      &lt;Stack gap=&quot;sm&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
+        {state.data.map((it) =&gt; (
+          &lt;li key={keyOf(it)}&gt;{renderRow(it)}&lt;/li&gt;
+        ))}
+      &lt;/Stack&gt;
+      {state.nextCursor &amp;&amp; (
+        &lt;Button
+          variant=&quot;ghost&quot;
+          onClick={() =&gt; load(state.nextCursor)}
+          disabled={pagingMore}
+        &gt;
+          {pagingMore ? &lt;Spinner size={14} aria-label=&quot;Loading more&quot; /&gt; : &#39;Load more&#39;}
+        &lt;/Button&gt;
+      )}
+    &lt;/Stack&gt;
+  );
+}
+
+// ── Usage ───────────────────────────────────────────────────────
+type Supplier = { id: string; name: string };
+
+export function SuppliersScreen({ onAdd }: { onAdd: () =&gt; void }) {
+  return (
+    &lt;Resource&lt;Supplier&gt;
+      fetcher={(cursor) =&gt; fetchJson(`/api/suppliers?cursor=${cursor ?? &#39;&#39;}`)}
+      keyOf={(s) =&gt; s.id}
+      renderRow={(s) =&gt; &lt;RowCard label={s.name} trailing=&quot;chevron&quot; /&gt;}
+      empty={{
+        icon: &#39;user&#39;,
+        title: &#39;No suppliers yet&#39;,
+        body: &#39;Add your first supplier to start logging deliveries.&#39;,
+        cta: &lt;Button variant=&quot;primary&quot; autoFocus onClick={onAdd}&gt;Add supplier&lt;/Button&gt;,
+      }}
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; padding: 18px;">
+          <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px;">
+            <div style="font: 600 12px/1 var(--font-sans); color: var(--text-muted); margin-bottom: 8px;">loaded</div>
+            <div style="display: grid; gap: 6px;">
+              <div style="background: var(--surface-muted); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font: 600 12px/1.2 var(--font-sans);">Mukamba Distributors</div>
+              <div style="background: var(--surface-muted); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font: 600 12px/1.2 var(--font-sans);">Tendai Wholesale</div>
+              <div style="background: var(--surface-muted); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font: 600 12px/1.2 var(--font-sans);">Bulawayo Foods</div>
+            </div>
+          </div>
+          <div style="background: var(--surface); border: 1px dashed var(--border-strong); border-radius: 12px; padding: 14px; text-align: center;">
+            <div style="font: 600 12px/1 var(--font-sans); color: var(--text-muted); margin-bottom: 8px;">empty</div>
+            <div style="width: 32px; height: 32px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; margin: 6px auto 8px;"><span data-icon="user" data-icon-size="16"></span></div>
+            <div style="font: 600 12px/1.2 var(--font-sans);">No suppliers yet</div>
+            <div style="font: var(--type-caption); color: var(--text-muted); margin: 4px 0 10px;">Add your first to start.</div>
+            <div style="background: var(--ink); color: var(--canvas); height: 26px; border-radius: 6px; display: grid; place-items: center; font: 600 11px/1 var(--font-sans);">Add supplier</div>
+          </div>
+          <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px;">
+            <div style="font: 600 12px/1 var(--font-sans); color: var(--text-muted); margin-bottom: 8px;">loading</div>
+            <div style="display: grid; gap: 6px;">
+              <div style="height: 32px; border-radius: 6px; background: linear-gradient(90deg, var(--surface-muted) 0%, var(--surface) 50%, var(--surface-muted) 100%);"></div>
+              <div style="height: 32px; border-radius: 6px; background: linear-gradient(90deg, var(--surface-muted) 0%, var(--surface) 50%, var(--surface-muted) 100%);"></div>
+              <div style="height: 32px; border-radius: 6px; background: linear-gradient(90deg, var(--surface-muted) 0%, var(--surface) 50%, var(--surface-muted) 100%);"></div>
+            </div>
+          </div>
+          <div style="background: var(--surface); border: 1px dashed var(--tone-danger-bd); border-radius: 12px; padding: 14px; text-align: center;">
+            <div style="font: 600 12px/1 var(--font-sans); color: var(--text-muted); margin-bottom: 8px;">error</div>
+            <div style="width: 32px; height: 32px; border-radius: 9999px; background: var(--tone-danger-bg); color: var(--tone-danger); display: grid; place-items: center; margin: 6px auto 8px;"><span data-icon="alert" data-icon-size="16"></span></div>
+            <div style="font: 600 12px/1.2 var(--font-sans);">We couldn't load</div>
+            <div style="font: var(--type-caption); color: var(--text-muted); margin: 4px 0 10px;">Last sync 12 min ago.</div>
+            <div style="background: var(--ink); color: var(--canvas); height: 26px; border-radius: 6px; display: grid; place-items: center; font: 600 11px/1 var(--font-sans);">Try again</div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Resource.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- SECTION 7 · VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three common forks. Same state model, different surface.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Inline error in a list row</h4>
+        <p>When only one row fails (e.g. a payment that wouldn't confirm), keep it in the list with a danger badge. Don't tip the whole page into the error state.</p>
+<pre>// Per-row error — page stays loaded
+&lt;RowCard
+  label={row.name}
+  tone={row.error ? &#39;danger&#39; : &#39;neutral&#39;}
+  trailing={row.error
+    ? &lt;Button variant=&quot;link&quot;
+        onClick={() =&gt; retry(row.id)}&gt;Retry&lt;/Button&gt;
+    : &#39;chevron&#39;}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Skeleton above the fold only</h4>
+        <p>For long pages, only shimmer what's visible — 4 rows, not 40. The rest reveals as <code>IntersectionObserver</code> pages it in.</p>
+<pre>// Visible-only skeletons
+const visibleRows = 4;
+{Array.from({ length: visibleRows }).map((_, i) =&gt;
+  &lt;Skeleton key={i} height={56} radius=&quot;md&quot; /&gt;
+)}
+// &lt;LoadMoreSentinel /&gt; below the fold</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Offline-first variant</h4>
+        <p>When the API is unreachable, switch the error banner to "Offline — changes will sync when you reconnect" and keep the create flow optimistic. The toast wording changes; the state machine does not.</p>
+<pre>// Detect offline once, branch the message
+const online = useOnlineStatus();
+&lt;Alert tone=&quot;warning&quot;&gt;
+  {online
+    ? `Could not refresh: ${err.message}`
+    : &#39;Offline — changes will sync later.&#39;}
+&lt;/Alert&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 8 · ACCESSIBILITY -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">What this recipe takes care of for you.</p>
+    <ul class="ck-a11y">
+      <li><b>Loading is announced exactly once.</b> The skeleton wrapper carries <code>aria-busy="true"</code> and <code>aria-live="polite"</code>; the live region says "Loading suppliers" on mount and stays quiet for every shimmer frame.</li>
+      <li><b>The CTA on empty gets focus.</b> <code>autoFocus</code> on the primary button means a keyboard user can press Enter immediately after the page renders empty — no extra tab.</li>
+      <li><b>Error keeps the page useful.</b> When <code>lastGood</code> exists we render an <code>Alert tone="warning"</code> with an inline Retry — the screen-reader user hears the staleness and the action together, and the list below is still navigable.</li>
+      <li><b>Spinners have a label.</b> The paginate-more <code>Spinner</code> carries <code>aria-label="Loading more"</code>. Without it, screen readers say nothing and the user can't tell whether their tap registered.</li>
+      <li><b>Optimistic rows are announced as pending.</b> The temporary row carries <code>aria-live="polite"</code> with "saving Mukamba Distributors"; on success the live region updates to "saved", on failure to "could not save".</li>
+      <li><b>State transitions are non-modal.</b> Going from loading to empty to error never opens a dialog. The page region stays focused, the heading stays in the DOM, and Tab order is preserved across the swap.</li>
+      <li><b>Reduced motion respected.</b> When <code>prefers-reduced-motion: reduce</code> is set, <code>Skeleton</code> drops the shimmer and renders a solid muted block. The shape still communicates "loading"; the animation doesn't make anyone seasick.</li>
+    </ul>
+  </section>
+
+  <!-- SECTION 9 · RELATED RECIPES -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">Recipes that compose <code>Resource</code> for their data layer.</p>
+    <div class="ck-related">
+      <a href="dashboards-kpi-hero-drilldown.html">Dashboards · KPI hero + drilldown<span class="tag">New</span></a>
+      <a href="dashboards-operator-overview.html">Dashboards · Operator overview<span class="tag">New</span></a>
+      <a href="approvals-leave-request.html">Approvals · Leave-request workflow<span class="tag">New</span></a>
+      <a href="auth-signin-2fa.html">Auth · Sign in with 2FA<span class="tag">Canonical</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="approvals-leave-request.html"><div class="pager-label">← Previous</div><div class="pager-title">Leave-request workflow</div></a>
+    <a href="index.html" class="next"><div class="pager-label">All recipes →</div><div class="pager-title">Browse by theme</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Leave-request workflow · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 10px; border-radius: 9999px;
+    background: var(--surface); border: 1px solid var(--border);
+    font: 500 12px/1 var(--font-sans); color: var(--text-strong);
+    text-decoration: none;
+  }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind {
+    font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-subtle);
+    padding-right: 6px; border-right: 1px solid var(--border);
+  }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen {
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 14px;
+    display: grid; gap: 10px;
+  }
+  .ck-screen .phone {
+    aspect-ratio: 9 / 16;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    display: flex; flex-direction: column; gap: 8px;
+    overflow: hidden;
+  }
+  .ck-screen h5 { margin: 0; font: 700 13px/1.2 var(--font-sans); color: var(--text-strong); }
+  .ck-screen .chips { display: flex; gap: 4px; flex-wrap: wrap; }
+  .ck-screen .chip {
+    font: 500 9px/1 var(--font-sans); padding: 4px 7px;
+    border-radius: 9999px; background: var(--surface-muted);
+    color: var(--text-subtle); border: 1px solid var(--border);
+  }
+  .ck-screen .chip.on {
+    background: var(--ink); color: var(--canvas); border-color: var(--ink);
+  }
+  .ck-screen .req {
+    background: var(--surface-muted); border: 1px solid var(--border);
+    border-radius: 7px; padding: 7px 9px;
+    display: grid; grid-template-columns: 1fr auto; gap: 4px;
+  }
+  .ck-screen .req .who { font: 600 10px/1.1 var(--font-sans); color: var(--text-strong); }
+  .ck-screen .req .when { font: 500 9px/1 var(--font-mono); color: var(--text-muted); }
+  .ck-screen .req .badge {
+    font: 600 8px/1 var(--font-sans); padding: 3px 6px;
+    border-radius: 9999px; align-self: start;
+  }
+  .ck-screen .req .badge.pending { background: var(--tone-warning-bg); color: var(--tone-warning); }
+  .ck-screen .req .badge.approved { background: var(--tone-success-bg); color: var(--tone-success); }
+  .ck-screen .req .badge.rejected { background: var(--tone-danger-bg); color: var(--tone-danger); }
+  .ck-screen .drawer {
+    flex: 1; background: var(--surface-muted); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px;
+    display: grid; gap: 6px; align-content: start;
+  }
+  .ck-screen .drawer .label { font: 500 8px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase; }
+  .ck-screen .drawer .value { font: 600 11px/1.3 var(--font-sans); color: var(--text-strong); }
+  .ck-screen .drawer .warn {
+    background: var(--tone-warning-bg); color: var(--tone-warning);
+    border: 1px solid var(--tone-warning-bd); border-radius: 6px;
+    padding: 6px 8px; font: 500 9px/1.3 var(--font-sans);
+  }
+  .ck-screen .actions {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: auto;
+  }
+  .ck-screen .actions .b { height: 24px; border-radius: 5px; display: grid; place-items: center; font: 600 10px/1 var(--font-sans); }
+  .ck-screen .actions .b.ok { background: var(--ink); color: var(--canvas); }
+  .ck-screen .actions .b.no { background: var(--surface); color: var(--text-strong); border: 1px solid var(--border); }
+  .ck-screen .toast {
+    background: var(--ink); color: var(--canvas);
+    border-radius: 8px; padding: 8px 10px;
+    font: 500 10px/1.3 var(--font-sans);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .ck-screen .toast .undo { margin-left: auto; font: 600 10px/1 var(--font-sans); color: var(--brand); }
+  .ck-screen .caption {
+    font: 500 12px/1.4 var(--font-sans);
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ck-screen .caption .num {
+    font: 600 10px/1 var(--font-mono);
+    padding: 3px 6px; border-radius: 9999px;
+    background: var(--surface); color: var(--brand-strong);
+  }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n {
+    font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--brand-soft); color: var(--brand-strong);
+  }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: grid; gap: 10px;
+  }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p  { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre {
+    background: var(--ink); color: var(--canvas);
+    border-radius: 8px; padding: 12px 14px; margin: 0;
+    font: 500 12px/1.55 var(--font-mono); overflow-x: auto;
+    white-space: pre;
+  }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li {
+    display: grid; grid-template-columns: 20px 1fr; gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5;
+  }
+  .ck-a11y li::before {
+    content: ""; display: block; width: 16px; height: 16px;
+    background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd);
+    border-radius: 4px; margin-top: 1px;
+  }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    font: 500 13px/1.2 var(--font-sans); color: var(--text-strong);
+    text-decoration: none;
+  }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag {
+    font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 3px 7px; border-radius: 9999px;
+    background: var(--surface-muted); color: var(--text-subtle);
+  }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Approvals</a><span class="sep">/</span>
+      <span>Leave-request workflow</span>
+    </div>
+    <h1>Build a leave-request approval workflow</h1>
+    <p class="lede">By the end of this recipe you'll have an end-to-end leave-request flow: employee submits, manager sees in an inbox with filter chips, opens a drawer with full context — balance, conflicts, history — approves or rejects, batch-approves a Monday-morning queue, and gets a 5-second undo window before anything is sent.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="check" data-icon-size="12"></span>Approvals</span>
+      <span class="meta-pill">2 primitives · 3 blocks · 2 patterns</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~45 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- SECTION 2 · OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">Three views, one state machine on the manager side: <b>pending</b> → <b>approved</b> | <b>rejected</b> | <b>needs-info</b>. The drawer carries enough context that the manager almost never has to leave it.</p>
+    <p>Leave is the highest-volume HR workflow most SMBs run, and most apps get it wrong by hiding the things a manager needs at the decision moment — current balance, who else is off that week, the employee's request history. The cost of getting it wrong is a manager who copies the request into a spreadsheet, decides there, and lets the inbox rot. This recipe puts all of that context inside the drawer so the decision happens in one tap.</p>
+    <p>Batch-approve is for Monday morning: ten weekend requests, all from the same shift, all <span style="white-space: nowrap;">non-conflicting</span> — select-all, approve-all, one action. Undo lives on the toast for 5 seconds because that's the window in which "wait, no" actually happens; after that, the manager is committed and the employee gets notified.</p>
+    <p><b>Skip this recipe if</b> approvals in your domain need a multi-signer chain (e.g. CFO + CEO), an SLA timer or a per-policy escalation tree — those need a proper workflow engine. This recipe assumes one manager, one decision, one notification.</p>
+  </section>
+
+  <!-- SECTION 3 · WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three screens. Inbox, drawer with context, post-decision undo toast.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <h5>Leave inbox</h5>
+          <div class="chips">
+            <span class="chip on">All · 8</span>
+            <span class="chip">Pending · 5</span>
+            <span class="chip">Mine · 2</span>
+          </div>
+          <div class="req"><div><div class="who">Tendai N.</div><div class="when">Mon 9–Wed 11</div></div><span class="badge pending">Pending</span></div>
+          <div class="req"><div><div class="who">Farai M.</div><div class="when">Fri 13</div></div><span class="badge pending">Pending</span></div>
+          <div class="req"><div><div class="who">Sipho D.</div><div class="when">Mon 16–Fri 20</div></div><span class="badge approved">Approved</span></div>
+          <div class="req"><div><div class="who">Chipo R.</div><div class="when">Wed 11</div></div><span class="badge rejected">Rejected</span></div>
+        </div>
+        <div class="caption"><span class="num">01</span> Inbox — filter chips + status badges</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <h5>Tendai N.</h5>
+          <div class="drawer">
+            <span class="label">Dates</span><span class="value">Mon 9 — Wed 11 Jun (3 days)</span>
+            <span class="label">Balance after</span><span class="value">7 days · was 10</span>
+            <div class="warn">⚠ Farai M. is also off Wed 11.</div>
+            <span class="label">History</span><span class="value">3 approved · 0 rejected · last Apr</span>
+          </div>
+          <div class="actions">
+            <div class="b no">Reject</div>
+            <div class="b ok">Approve</div>
+          </div>
+        </div>
+        <div class="caption"><span class="num">02</span> Drawer — full context for one decision</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <h5>Leave inbox</h5>
+          <div class="chips">
+            <span class="chip on">All · 7</span>
+            <span class="chip">Pending · 4</span>
+          </div>
+          <div class="req"><div><div class="who">Tendai N.</div><div class="when">Mon 9–Wed 11</div></div><span class="badge approved">Approved</span></div>
+          <div class="req"><div><div class="who">Farai M.</div><div class="when">Fri 13</div></div><span class="badge pending">Pending</span></div>
+          <div style="flex: 1;"></div>
+          <div class="toast">
+            <span data-icon="check" data-icon-size="12"></span>
+            Approved Tendai N.
+            <span class="undo">Undo · 4s</span>
+          </div>
+        </div>
+        <div class="caption"><span class="num">03</span> Decided — toast with 5s undo</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 4 · REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>. Open any reference page for props, variants and the do/don't.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/b-filter-chips.html"><span class="kind">Block</span>Filter chips</a>
+      <a class="ck-piece" href="../system/b-row-card.html"><span class="kind">Block</span>Row card</a>
+      <a class="ck-piece" href="../system/b-empty-state.html"><span class="kind">Block</span>Empty state</a>
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+      <a class="ck-piece" href="../system/p-alert.html"><span class="kind">Primitive</span>Alert</a>
+      <a class="ck-piece" href="../system/x-modal.html"><span class="kind">Pattern</span>Drawer</a>
+      <a class="ck-piece" href="../system/x-bottom-sheet.html"><span class="kind">Pattern</span>Bottom sheet</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>Stack</code>, <code>FilterChips</code>, <code>RowCard</code>, <code>EmptyState</code>, <code>Button</code>, <code>Alert</code>, <code>Drawer</code>, <code>BottomSheet</code>, <code>Toast</code>, <code>useToast</code>. <code>useToast</code> is what carries the 5-second undo window — every recipe in this batch uses it the same way.</p>
+  </section>
+
+  <!-- SECTION 5 · STEP-BY-STEP -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <!-- Step 1 -->
+    <div class="ck-step"><span class="n">01</span><h3>Model the request as a state machine, not a status string</h3></div>
+    <p>The four states — <code>pending</code>, <code>approved</code>, <code>rejected</code>, <code>needs-info</code> — drive every part of the UI. Encoding them as a discriminated union means the drawer can render the right buttons for the current state with exhaustive type-checking, and the inbox filter chips can count states by name instead of by magic strings.</p>
+    <div class="ds-specimen"
+         data-code='export type RequestState =
+  | { kind: &#39;pending&#39; }
+  | { kind: &#39;approved&#39;;  approvedBy: string;  approvedAt: string }
+  | { kind: &#39;rejected&#39;;  rejectedBy: string;  reason: string; rejectedAt: string }
+  | { kind: &#39;needs-info&#39;; askedBy: string;    question: string };
+
+export type LeaveRequest = {
+  id: string;
+  employee: { id: string; name: string; balance: number };
+  from: string;   // ISO date
+  to: string;     // ISO date inclusive
+  days: number;
+  reason: string;
+  state: RequestState;
+  conflicts: Array&lt;{ id: string; name: string; date: string }&gt;;
+  history: { approved: number; rejected: number; lastDecidedAt?: string };
+};
+
+// Actions a manager can take. Each action is its own type so the drawer
+// can render the right confirm prompt and the audit log records what
+// actually happened (not just "status changed").
+export type ManagerAction =
+  | { kind: &#39;APPROVE&#39; }
+  | { kind: &#39;REJECT&#39;;     reason: string }
+  | { kind: &#39;ASK_INFO&#39;;   question: string };
+
+export function reduceRequest(
+  r: LeaveRequest,
+  a: ManagerAction,
+  actor: string,
+): LeaveRequest {
+  const now = new Date().toISOString();
+  switch (a.kind) {
+    case &#39;APPROVE&#39;:
+      return { ...r, state: { kind: &#39;approved&#39;, approvedBy: actor, approvedAt: now } };
+    case &#39;REJECT&#39;:
+      return { ...r, state: { kind: &#39;rejected&#39;, rejectedBy: actor, reason: a.reason, rejectedAt: now } };
+    case &#39;ASK_INFO&#39;:
+      return { ...r, state: { kind: &#39;needs-info&#39;, askedBy: actor, question: a.question } };
+  }
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 8px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div><b style="color: var(--tone-warning);">'pending'</b> → APPROVE → <b style="color: var(--tone-success);">'approved'</b></div>
+          <div><b style="color: var(--tone-warning);">'pending'</b> → REJECT(reason) → <b style="color: var(--tone-danger);">'rejected'</b></div>
+          <div><b style="color: var(--tone-warning);">'pending'</b> → ASK_INFO(question) → <b style="color: var(--brand-strong);">'needs-info'</b></div>
+          <div style="color: var(--text-subtle); margin-top: 4px;">Approved/rejected are terminal. needs-info returns to pending when the employee replies.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · State machine</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="ck-step"><span class="n">02</span><h3>Render the inbox with filter chips + status-tinted RowCards</h3></div>
+    <p>One <code>FilterChips</code> at the top, one <code>RowCard</code> per request. Tinting the badge — not the whole row — lets the inbox stay scannable while still calling out where work is needed.</p>
+    <div class="ds-specimen"
+         data-code='import { useMemo, useState } from &#39;@huchu/react&#39;;
+import { Stack, FilterChips, RowCard, EmptyState } from &#39;@huchu/react&#39;;
+
+type Filter = &#39;all&#39; | &#39;pending&#39; | &#39;mine&#39;;
+
+function Inbox({ requests, me, onOpen }: {
+  requests: LeaveRequest[];
+  me: string;
+  onOpen: (id: string) =&gt; void;
+}) {
+  const [filter, setFilter] = useState&lt;Filter&gt;(&#39;pending&#39;);
+
+  const counts = useMemo(() =&gt; ({
+    all: requests.length,
+    pending: requests.filter((r) =&gt; r.state.kind === &#39;pending&#39;).length,
+    mine: requests.filter((r) =&gt; r.employee.id === me).length,
+  }), [requests, me]);
+
+  const visible = requests.filter((r) =&gt; {
+    if (filter === &#39;pending&#39;) return r.state.kind === &#39;pending&#39;;
+    if (filter === &#39;mine&#39;)    return r.employee.id === me;
+    return true;
+  });
+
+  return (
+    &lt;Stack gap=&quot;md&quot;&gt;
+      &lt;FilterChips
+        value={filter}
+        onChange={setFilter}
+        options={[
+          { value: &#39;all&#39;,     label: `All · ${counts.all}` },
+          { value: &#39;pending&#39;, label: `Pending · ${counts.pending}` },
+          { value: &#39;mine&#39;,    label: `Mine · ${counts.mine}` },
+        ]}
+      /&gt;
+
+      {visible.length === 0 ? (
+        &lt;EmptyState
+          icon=&quot;inbox&quot;
+          title=&quot;Inbox zero&quot;
+          body=&quot;No requests match this filter.&quot;
+        /&gt;
+      ) : (
+        &lt;Stack gap=&quot;xs&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
+          {visible.map((r) =&gt; (
+            &lt;RowCard
+              key={r.id}
+              as=&quot;li&quot;
+              onClick={() =&gt; onOpen(r.id)}
+              label={r.employee.name}
+              meta={formatRange(r.from, r.to)}
+              trailing={&lt;StateBadge state={r.state} /&gt;}
+            /&gt;
+          ))}
+        &lt;/Stack&gt;
+      )}
+    &lt;/Stack&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 20px;">
+          <div style="display: flex; gap: 6px; margin-bottom: 12px;">
+            <span style="background: var(--ink); color: var(--canvas); padding: 6px 10px; border-radius: 9999px; font: 500 11px/1 var(--font-sans);">All · 8</span>
+            <span style="background: var(--surface); border: 1px solid var(--border); padding: 6px 10px; border-radius: 9999px; font: 500 11px/1 var(--font-sans); color: var(--text-strong);">Pending · 5</span>
+            <span style="background: var(--surface); border: 1px solid var(--border); padding: 6px 10px; border-radius: 9999px; font: 500 11px/1 var(--font-sans); color: var(--text-strong);">Mine · 2</span>
+          </div>
+          <div style="display: grid; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;"><span style="flex: 1; font: 600 12px/1.2 var(--font-sans);">Tendai N.<br/><span style="font: 500 10px/1 var(--font-mono); color: var(--text-muted);">Mon 9 – Wed 11 Jun</span></span><span style="background: var(--tone-warning-bg); color: var(--tone-warning); padding: 3px 8px; border-radius: 9999px; font: 600 10px/1 var(--font-sans);">Pending</span></div>
+            <div style="display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;"><span style="flex: 1; font: 600 12px/1.2 var(--font-sans);">Farai M.<br/><span style="font: 500 10px/1 var(--font-mono); color: var(--text-muted);">Fri 13 Jun</span></span><span style="background: var(--tone-warning-bg); color: var(--tone-warning); padding: 3px 8px; border-radius: 9999px; font: 600 10px/1 var(--font-sans);">Pending</span></div>
+            <div style="display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px;"><span style="flex: 1; font: 600 12px/1.2 var(--font-sans);">Sipho D.<br/><span style="font: 500 10px/1 var(--font-mono); color: var(--text-muted);">Mon 16 – Fri 20 Jun</span></span><span style="background: var(--tone-success-bg); color: var(--tone-success); padding: 3px 8px; border-radius: 9999px; font: 600 10px/1 var(--font-sans);">Approved</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Inbox</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="ck-step"><span class="n">03</span><h3>Open the drawer with full decision context</h3></div>
+    <p>The drawer shows everything the manager would otherwise have to go look up: dates, days, balance after the leave, conflicts with teammates, history. The conflict warning uses <code>Alert tone="warning"</code> because it's an "I-still-might-approve-this" signal, not a hard block.</p>
+    <div class="ds-specimen"
+         data-code='import { Drawer, Stack, Alert, Button } from &#39;@huchu/react&#39;;
+
+function RequestDrawer({ request, onAction, onClose }: {
+  request: LeaveRequest;
+  onAction: (a: ManagerAction) =&gt; void;
+  onClose: () =&gt; void;
+}) {
+  return (
+    &lt;Drawer open onClose={onClose} title={request.employee.name}&gt;
+      &lt;Stack gap=&quot;md&quot;&gt;
+        &lt;Field label=&quot;Dates&quot;&gt;
+          {formatRange(request.from, request.to)} ({request.days} days)
+        &lt;/Field&gt;
+
+        &lt;Field label=&quot;Balance after this leave&quot;&gt;
+          {request.employee.balance - request.days} days{&#39; &#39;}
+          &lt;span style={{ color: &#39;var(--text-muted)&#39; }}&gt;
+            (was {request.employee.balance})
+          &lt;/span&gt;
+        &lt;/Field&gt;
+
+        {request.conflicts.length &gt; 0 &amp;&amp; (
+          &lt;Alert tone=&quot;warning&quot;&gt;
+            {request.conflicts.length === 1
+              ? `${request.conflicts[0].name} is also off ${request.conflicts[0].date}.`
+              : `${request.conflicts.length} teammates are off in this window.`}
+          &lt;/Alert&gt;
+        )}
+
+        &lt;Field label=&quot;Reason&quot;&gt;{request.reason}&lt;/Field&gt;
+
+        &lt;Field label=&quot;History&quot;&gt;
+          {request.history.approved} approved · {request.history.rejected} rejected
+          {request.history.lastDecidedAt
+            &amp;&amp; ` · last ${formatMonth(request.history.lastDecidedAt)}`}
+        &lt;/Field&gt;
+      &lt;/Stack&gt;
+
+      &lt;Drawer.Footer&gt;
+        &lt;Button variant=&quot;ghost&quot;
+                onClick={() =&gt; onAction({ kind: &#39;ASK_INFO&#39;, question: &#39;&#39; })}&gt;
+          Ask for more
+        &lt;/Button&gt;
+        &lt;div style={{ flex: 1 }} /&gt;
+        &lt;Button variant=&quot;secondary&quot;
+                onClick={() =&gt; onAction({ kind: &#39;REJECT&#39;, reason: &#39;&#39; })}&gt;
+          Reject
+        &lt;/Button&gt;
+        &lt;Button variant=&quot;primary&quot;
+                onClick={() =&gt; onAction({ kind: &#39;APPROVE&#39; })}&gt;
+          Approve
+        &lt;/Button&gt;
+      &lt;/Drawer.Footer&gt;
+    &lt;/Drawer&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 20px; display: grid; place-items: center;">
+          <div style="width: 320px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; display: grid; gap: 12px;">
+            <div style="font: 700 16px/1.2 var(--font-sans);">Tendai N.</div>
+            <div><div style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase;">Dates</div><div style="font: 500 12px/1.4 var(--font-sans); margin-top: 4px;">Mon 9 — Wed 11 Jun (3 days)</div></div>
+            <div><div style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase;">Balance after</div><div style="font: 500 12px/1.4 var(--font-sans); margin-top: 4px;">7 days <span style="color: var(--text-muted);">(was 10)</span></div></div>
+            <div style="background: var(--tone-warning-bg); border: 1px solid var(--tone-warning-bd); color: var(--tone-warning); border-radius: 8px; padding: 8px 10px; font: var(--type-body-sm);">Farai M. is also off Wed 11.</div>
+            <div><div style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase;">History</div><div style="font: 500 12px/1.4 var(--font-sans); margin-top: 4px;">3 approved · 0 rejected · last Apr</div></div>
+            <div style="display: flex; gap: 8px; margin-top: 8px;">
+              <div style="flex: 1; background: var(--surface); border: 1px solid var(--border); height: 36px; border-radius: 8px; display: grid; place-items: center; font: 600 13px/1 var(--font-sans); color: var(--text-strong);">Reject</div>
+              <div style="flex: 1; background: var(--ink); color: var(--canvas); height: 36px; border-radius: 8px; display: grid; place-items: center; font: 600 13px/1 var(--font-sans);">Approve</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Drawer</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="ck-step"><span class="n">04</span><h3>Approve optimistically with a 5-second undo window</h3></div>
+    <p>Update local state immediately and fire the API call after a 5-second timer so the manager can undo without server churn. If the timer expires, post to the API and notify the employee; if the user clicks Undo, cancel the timer and revert the local state — no network calls at all.</p>
+    <div class="ds-specimen"
+         data-code='import { useRef } from &#39;@huchu/react&#39;;
+import { useToast } from &#39;@huchu/react&#39;;
+
+const UNDO_MS = 5_000;
+
+function useApproveWithUndo({
+  apply,        // mutate local state immediately
+  revert,       // put it back on undo
+  commit,       // fire the API call after the window closes
+}: {
+  apply:  (a: ManagerAction, r: LeaveRequest) =&gt; void;
+  revert: (r: LeaveRequest) =&gt; void;
+  commit: (a: ManagerAction, r: LeaveRequest) =&gt; Promise&lt;void&gt;;
+}) {
+  const { showToast } = useToast();
+  const timers = useRef&lt;Map&lt;string, ReturnType&lt;typeof setTimeout&gt;&gt;&gt;(new Map());
+
+  return (action: ManagerAction, request: LeaveRequest) =&gt; {
+    apply(action, request);
+
+    const timer = setTimeout(async () =&gt; {
+      timers.current.delete(request.id);
+      try {
+        await commit(action, request);
+      } catch (e) {
+        revert(request);
+        showToast({ tone: &#39;danger&#39;, message: `Could not save: ${(e as Error).message}` });
+      }
+    }, UNDO_MS);
+    timers.current.set(request.id, timer);
+
+    showToast({
+      tone: &#39;success&#39;,
+      message: `${labelFor(action)} ${request.employee.name}.`,
+      duration: UNDO_MS,
+      action: {
+        label: &#39;Undo&#39;,
+        onClick: () =&gt; {
+          const t = timers.current.get(request.id);
+          if (t) { clearTimeout(t); timers.current.delete(request.id); }
+          revert(request);
+        },
+      },
+    });
+  };
+}
+
+function labelFor(a: ManagerAction) {
+  switch (a.kind) {
+    case &#39;APPROVE&#39;:   return &#39;Approved&#39;;
+    case &#39;REJECT&#39;:    return &#39;Rejected&#39;;
+    case &#39;ASK_INFO&#39;:  return &#39;Asked for more from&#39;;
+  }
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 20px; display: grid; place-items: center;">
+          <div style="width: 320px; background: var(--ink); color: var(--canvas); padding: 12px 14px; border-radius: 10px; display: flex; align-items: center; gap: 10px;">
+            <span data-icon="check" data-icon-size="14"></span>
+            <span style="font: 500 13px/1.3 var(--font-sans); flex: 1;">Approved Tendai N.</span>
+            <span style="font: 600 12px/1 var(--font-sans); color: var(--brand);">Undo · 4s</span>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Undo toast</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="ck-step"><span class="n">05</span><h3>Batch-approve from the inbox header</h3></div>
+    <p>Multi-select with a checkbox column reveals a sticky action bar — "Approve all 4" with a single confirm. Each request still passes through the same approve-with-undo helper, so individual undo works even after a batch.</p>
+    <div class="ds-specimen"
+         data-code='import { useState } from &#39;@huchu/react&#39;;
+import { Stack, BottomSheet, Button } from &#39;@huchu/react&#39;;
+
+function BatchActionBar({ selected, requests, onApproveAll, onClear }: {
+  selected: Set&lt;string&gt;;
+  requests: LeaveRequest[];
+  onApproveAll: () =&gt; void;
+  onClear: () =&gt; void;
+}) {
+  if (selected.size === 0) return null;
+  const blockers = requests
+    .filter((r) =&gt; selected.has(r.id) &amp;&amp; r.conflicts.length &gt; 0);
+
+  return (
+    &lt;div
+      role=&quot;region&quot;
+      aria-label={`${selected.size} selected`}
+      style={{
+        position: &#39;sticky&#39;, bottom: 0, padding: 12,
+        background: &#39;var(--surface)&#39;,
+        borderTop: &#39;1px solid var(--border)&#39;,
+        display: &#39;flex&#39;, gap: 8, alignItems: &#39;center&#39;,
+      }}
+    &gt;
+      &lt;span style={{ flex: 1, font: &#39;500 13px/1 var(--font-sans)&#39; }}&gt;
+        {selected.size} selected
+        {blockers.length &gt; 0 &amp;&amp; (
+          &lt;span style={{ color: &#39;var(--tone-warning)&#39;, marginLeft: 8 }}&gt;
+            · {blockers.length} with conflicts
+          &lt;/span&gt;
+        )}
+      &lt;/span&gt;
+      &lt;Button variant=&quot;ghost&quot; onClick={onClear}&gt;Clear&lt;/Button&gt;
+      &lt;Button variant=&quot;primary&quot; onClick={onApproveAll}&gt;
+        Approve all {selected.size}
+      &lt;/Button&gt;
+    &lt;/div&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 20px;">
+          <div style="background: var(--surface); border: 1px solid var(--border); border-top-width: 2px; border-top-color: var(--ink); border-radius: 10px; padding: 12px; display: flex; align-items: center; gap: 8px;">
+            <span style="flex: 1; font: 500 13px/1 var(--font-sans);">4 selected <span style="color: var(--tone-warning);">· 1 with conflicts</span></span>
+            <span style="font: 500 13px/1 var(--font-sans); color: var(--text-muted);">Clear</span>
+            <span style="background: var(--ink); color: var(--canvas); padding: 8px 12px; border-radius: 6px; font: 600 13px/1 var(--font-sans);">Approve all 4</span>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 5 · Batch</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- SECTION 6 · FINAL COMPOSITION -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole <code>LeaveInbox</code>, assembled. Filter chips, multi-select, drawer with context, optimistic decide with 5-second undo, batch approve.</p>
+    <div class="ds-specimen"
+         data-code='import { useMemo, useRef, useState } from &#39;@huchu/react&#39;;
+import {
+  Stack, FilterChips, RowCard, EmptyState,
+  Drawer, Alert, Button, useToast,
+} from &#39;@huchu/react&#39;;
+
+const UNDO_MS = 5_000;
+
+// (LeaveRequest, ManagerAction, reduceRequest — see Step 1)
+
+type Filter = &#39;all&#39; | &#39;pending&#39; | &#39;mine&#39;;
+
+export function LeaveInbox({
+  initial,
+  me,
+  commitAction,
+}: {
+  initial: LeaveRequest[];
+  me: string;
+  commitAction: (a: ManagerAction, r: LeaveRequest) =&gt; Promise&lt;void&gt;;
+}) {
+  const [requests, setRequests] = useState(initial);
+  const [filter,   setFilter]   = useState&lt;Filter&gt;(&#39;pending&#39;);
+  const [openId,   setOpenId]   = useState&lt;string | null&gt;(null);
+  const [selected, setSelected] = useState&lt;Set&lt;string&gt;&gt;(new Set());
+  const { showToast } = useToast();
+  const timers = useRef&lt;Map&lt;string, ReturnType&lt;typeof setTimeout&gt;&gt;&gt;(new Map());
+
+  // ── Optimistic decide with 5s undo ─────────────────────────────
+  const decide = (action: ManagerAction, target: LeaveRequest) =&gt; {
+    const previous = target;
+    setRequests((rs) =&gt; rs.map((r) =&gt;
+      r.id === target.id ? reduceRequest(r, action, me) : r));
+
+    const revert = () =&gt; setRequests((rs) =&gt; rs.map((r) =&gt;
+      r.id === target.id ? previous : r));
+
+    const t = setTimeout(async () =&gt; {
+      timers.current.delete(target.id);
+      try { await commitAction(action, target); }
+      catch (e) {
+        revert();
+        showToast({ tone: &#39;danger&#39;,
+          message: `Could not save: ${(e as Error).message}` });
+      }
+    }, UNDO_MS);
+    timers.current.set(target.id, t);
+
+    showToast({
+      tone: &#39;success&#39;,
+      message: `${labelFor(action)} ${target.employee.name}.`,
+      duration: UNDO_MS,
+      action: {
+        label: &#39;Undo&#39;,
+        onClick: () =&gt; {
+          const tt = timers.current.get(target.id);
+          if (tt) { clearTimeout(tt); timers.current.delete(target.id); }
+          revert();
+        },
+      },
+    });
+  };
+
+  // ── Counts + visible rows ──────────────────────────────────────
+  const counts = useMemo(() =&gt; ({
+    all:     requests.length,
+    pending: requests.filter((r) =&gt; r.state.kind === &#39;pending&#39;).length,
+    mine:    requests.filter((r) =&gt; r.employee.id === me).length,
+  }), [requests, me]);
+
+  const visible = requests.filter((r) =&gt; {
+    if (filter === &#39;pending&#39;) return r.state.kind === &#39;pending&#39;;
+    if (filter === &#39;mine&#39;)    return r.employee.id === me;
+    return true;
+  });
+  const opened = openId
+    ? requests.find((r) =&gt; r.id === openId) ?? null
+    : null;
+
+  // ── Selection helpers ──────────────────────────────────────────
+  const toggle = (id: string) =&gt; {
+    setSelected((s) =&gt; {
+      const next = new Set(s);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+  const clear = () =&gt; setSelected(new Set());
+  const approveAll = () =&gt; {
+    requests.forEach((r) =&gt; {
+      if (selected.has(r.id) &amp;&amp; r.state.kind === &#39;pending&#39;) {
+        decide({ kind: &#39;APPROVE&#39; }, r);
+      }
+    });
+    clear();
+  };
+
+  return (
+    &lt;Stack gap=&quot;md&quot;&gt;
+      &lt;FilterChips
+        value={filter}
+        onChange={setFilter}
+        options={[
+          { value: &#39;all&#39;,     label: `All · ${counts.all}` },
+          { value: &#39;pending&#39;, label: `Pending · ${counts.pending}` },
+          { value: &#39;mine&#39;,    label: `Mine · ${counts.mine}` },
+        ]}
+      /&gt;
+
+      {visible.length === 0 ? (
+        &lt;EmptyState icon=&quot;inbox&quot; title=&quot;Inbox zero&quot;
+                    body=&quot;Nothing matches that filter.&quot; /&gt;
+      ) : (
+        &lt;Stack gap=&quot;xs&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
+          {visible.map((r) =&gt; (
+            &lt;RowCard
+              key={r.id}
+              as=&quot;li&quot;
+              selectable
+              selected={selected.has(r.id)}
+              onSelectChange={() =&gt; toggle(r.id)}
+              onClick={() =&gt; setOpenId(r.id)}
+              label={r.employee.name}
+              meta={formatRange(r.from, r.to)}
+              trailing={&lt;StateBadge state={r.state} /&gt;}
+            /&gt;
+          ))}
+        &lt;/Stack&gt;
+      )}
+
+      {selected.size &gt; 0 &amp;&amp; (
+        &lt;div role=&quot;region&quot; aria-label={`${selected.size} selected`}
+             style={{
+               position: &#39;sticky&#39;, bottom: 0,
+               background: &#39;var(--surface)&#39;,
+               borderTop: &#39;1px solid var(--border)&#39;,
+               padding: 12, display: &#39;flex&#39;, gap: 8,
+             }}&gt;
+          &lt;span style={{ flex: 1 }}&gt;{selected.size} selected&lt;/span&gt;
+          &lt;Button variant=&quot;ghost&quot; onClick={clear}&gt;Clear&lt;/Button&gt;
+          &lt;Button variant=&quot;primary&quot; onClick={approveAll}&gt;
+            Approve all {selected.size}
+          &lt;/Button&gt;
+        &lt;/div&gt;
+      )}
+
+      {opened &amp;&amp; (
+        &lt;Drawer open onClose={() =&gt; setOpenId(null)} title={opened.employee.name}&gt;
+          {/* (see Step 3 for the drawer body) */}
+          &lt;Drawer.Footer&gt;
+            &lt;Button variant=&quot;ghost&quot;
+                    onClick={() =&gt; decide({ kind: &#39;ASK_INFO&#39;, question: &#39;&#39; }, opened)}&gt;
+              Ask for more
+            &lt;/Button&gt;
+            &lt;div style={{ flex: 1 }} /&gt;
+            &lt;Button variant=&quot;secondary&quot;
+                    onClick={() =&gt; { decide({ kind: &#39;REJECT&#39;, reason: &#39;&#39; }, opened); setOpenId(null); }}&gt;
+              Reject
+            &lt;/Button&gt;
+            &lt;Button variant=&quot;primary&quot;
+                    onClick={() =&gt; { decide({ kind: &#39;APPROVE&#39; }, opened); setOpenId(null); }}&gt;
+              Approve
+            &lt;/Button&gt;
+          &lt;/Drawer.Footer&gt;
+        &lt;/Drawer&gt;
+      )}
+    &lt;/Stack&gt;
+  );
+}
+
+function labelFor(a: ManagerAction) {
+  switch (a.kind) {
+    case &#39;APPROVE&#39;:  return &#39;Approved&#39;;
+    case &#39;REJECT&#39;:   return &#39;Rejected&#39;;
+    case &#39;ASK_INFO&#39;: return &#39;Asked for more from&#39;;
+  }
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="width: 340px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px;">
+            <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+              <span style="background: var(--ink); color: var(--canvas); padding: 5px 10px; border-radius: 9999px; font: 500 11px/1 var(--font-sans);">All · 8</span>
+              <span style="background: var(--surface); border: 1px solid var(--border); padding: 5px 10px; border-radius: 9999px; font: 500 11px/1 var(--font-sans);">Pending · 5</span>
+            </div>
+            <div style="display: grid; gap: 6px;">
+              <div style="display: flex; align-items: center; gap: 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;"><span style="flex: 1; font: 600 12px/1.2 var(--font-sans);">Tendai N. <span style="font: 500 10px/1 var(--font-mono); color: var(--text-muted);">· Mon 9 – Wed 11</span></span><span style="background: var(--tone-warning-bg); color: var(--tone-warning); padding: 2px 6px; border-radius: 9999px; font: 600 9px/1 var(--font-sans);">Pending</span></div>
+              <div style="display: flex; align-items: center; gap: 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;"><span style="flex: 1; font: 600 12px/1.2 var(--font-sans);">Farai M. <span style="font: 500 10px/1 var(--font-mono); color: var(--text-muted);">· Fri 13</span></span><span style="background: var(--tone-warning-bg); color: var(--tone-warning); padding: 2px 6px; border-radius: 9999px; font: 600 9px/1 var(--font-sans);">Pending</span></div>
+              <div style="display: flex; align-items: center; gap: 10px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;"><span style="flex: 1; font: 600 12px/1.2 var(--font-sans);">Sipho D. <span style="font: 500 10px/1 var(--font-mono); color: var(--text-muted);">· Mon 16 – Fri 20</span></span><span style="background: var(--tone-success-bg); color: var(--tone-success); padding: 2px 6px; border-radius: 9999px; font: 600 9px/1 var(--font-sans);">Approved</span></div>
+            </div>
+            <div style="margin-top: 12px; background: var(--ink); color: var(--canvas); padding: 10px 12px; border-radius: 8px; display: flex; align-items: center; gap: 8px;">
+              <span data-icon="check" data-icon-size="12"></span>
+              <span style="font: 500 12px/1.3 var(--font-sans); flex: 1;">Approved Tendai N.</span>
+              <span style="font: 600 11px/1 var(--font-sans); color: var(--brand);">Undo · 4s</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">LeaveInbox.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- SECTION 7 · VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three forks. The state machine doesn't change.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Mobile bottom-sheet</h4>
+        <p>On phones the side drawer becomes a bottom sheet. The body and footer markup are identical; only the wrapper swaps.</p>
+<pre>// Phone: BottomSheet, desktop: Drawer
+import { useMediaQuery } from &#39;@huchu/react&#39;;
+const isPhone = useMediaQuery(&#39;(max-width: 720px)&#39;);
+const Shell = isPhone ? BottomSheet : Drawer;
+&lt;Shell open onClose={...} title={...}&gt;
+  {/* same body */}
+&lt;/Shell&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Reject with required reason</h4>
+        <p>For an audited workflow, force a non-empty reason. The reject button opens a small prompt before the optimistic call fires.</p>
+<pre>// Inline reject prompt
+const [why, setWhy] = useState(&#39;&#39;);
+&lt;Button disabled={!why}
+  onClick={() =&gt; decide(
+    { kind: &#39;REJECT&#39;, reason: why }, opened)}&gt;
+  Reject — needs reason
+&lt;/Button&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Auto-approve under N days</h4>
+        <p>Short requests (≤1 day, sufficient balance, no conflicts) can skip the inbox entirely. Surface them as a daily digest instead.</p>
+<pre>// Pre-filter on the server, render a digest card
+if (r.days &lt;= 1
+    &amp;&amp; r.conflicts.length === 0
+    &amp;&amp; r.employee.balance &gt; r.days) {
+  decide({ kind: &#39;APPROVE&#39; }, r);
+  // ↑ runs without the manager ever opening it
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 8 · ACCESSIBILITY -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">What this recipe takes care of for you.</p>
+    <ul class="ck-a11y">
+      <li><b>Filter chips are a radio group.</b> <code>FilterChips</code> renders an <code>aria-radiogroup</code>; arrow keys move the selection, Space commits it. Tab leaves the group at the next element.</li>
+      <li><b>Each request row is one focusable target.</b> The row is the link, the selection checkbox is a sibling control with its own label — Shift+click extends selection; Space toggles when focused.</li>
+      <li><b>Drawer manages focus, then returns it.</b> Opening the drawer moves focus to the first heading, traps Tab inside, and on close returns focus to the row that opened it. Esc closes without a confirm prompt.</li>
+      <li><b>The conflict warning is an alert region.</b> <code>Alert tone="warning"</code> with <code>role="status"</code> so a screen reader announces "Farai M. is also off Wed 11" the moment the drawer opens.</li>
+      <li><b>Undo is keyboard-reachable.</b> The toast traps the next Tab so the user lands on Undo, not on the underlying inbox. After the 5-second window the toast dismisses and focus returns to the inbox.</li>
+      <li><b>Batch action bar announces the count.</b> <code>aria-label="4 selected"</code> updates live, and the conflict suffix ("· 1 with conflicts") is read in the same breath.</li>
+      <li><b>Optimistic state is reversible until the timer fires.</b> Screen-reader users hear "Approved Tendai N. Undo available for 5 seconds" — no surprise once it commits.</li>
+    </ul>
+  </section>
+
+  <!-- SECTION 9 · RELATED RECIPES -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">More approval / inbox-style recipes that share this state-machine pattern.</p>
+    <div class="ck-related">
+      <a href="dashboards-kpi-hero-drilldown.html">Dashboards · KPI hero + drilldown<span class="tag">New</span></a>
+      <a href="dashboards-operator-overview.html">Dashboards · Operator overview<span class="tag">New</span></a>
+      <a href="states-empty-loading-error.html">States · Empty, loading, error<span class="tag">New</span></a>
+      <a href="auth-signin-2fa.html">Auth · Sign in with 2FA<span class="tag">Canonical</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="dashboards-operator-overview.html"><div class="pager-label">← Previous</div><div class="pager-title">Operator overview</div></a>
+    <a href="states-empty-loading-error.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Empty, loading, error</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>
