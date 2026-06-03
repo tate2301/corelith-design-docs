@@ -70,11 +70,11 @@
       ['All recipes',       ROOT + 'cookbook/index.html',       'cookbook-index'],
       // ── Auth ────────────────────────────────────────────────
       ['Auth ·  Sign in with 2FA',          ROOT + 'cookbook/auth-signin-2fa.html', 'auth-signin-2fa', 'New'],
-      ['Auth ·  Forgot password',           '#',                '__', 'Soon'],
-      ['Auth ·  Sign up + email verify',    '#',                '__', 'Soon'],
+      ['Auth ·  Forgot password',           ROOT + 'cookbook/auth-forgot-password.html',      'auth-forgot-password',      'New'],
+      ['Auth ·  Sign up + email verify',    ROOT + 'cookbook/auth-signup-email-verify.html',  'auth-signup-email-verify',  'New'],
       // ── Shells & nav ────────────────────────────────────────
-      ['Shells ·  App shell with sidebar',  '#',                '__', 'Soon'],
-      ['Shells ·  Mobile bottom-tab shell', '#',                '__', 'Soon'],
+      ['Shells ·  App shell with sidebar',  ROOT + 'cookbook/shells-app-shell-sidebar.html',  'shells-app-shell-sidebar',  'New'],
+      ['Shells ·  Mobile bottom-tab shell', ROOT + 'cookbook/shells-mobile-bottom-tab.html',  'shells-mobile-bottom-tab',  'New'],
       ['Shells ·  Command-palette nav',     '#',                '__', 'Soon'],
       // ── Forms ───────────────────────────────────────────────
       ['Forms ·  Multi-step wizard',        '#',                '__', 'Soon'],
@@ -85,7 +85,7 @@
       ['Lists ·  Master–detail page',       '#',                '__', 'Soon'],
       ['Lists ·  Day-grouped mobile list',  '#',                '__', 'Soon'],
       // ── Dashboards ──────────────────────────────────────────
-      ['Dashboards ·  Operator overview',   '#',                '__', 'Soon'],
+      ['Dashboards ·  Operator overview',   ROOT + 'cookbook/dashboards-operator-overview.html', 'dashboards-operator-overview', 'New'],
       ['Dashboards ·  KPI hero + drilldown','#',                '__', 'Soon'],
       // ── States ──────────────────────────────────────────────
       ['States ·  Empty, loading, error',   '#',                '__', 'Soon'],

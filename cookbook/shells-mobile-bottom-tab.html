@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Mobile bottom-tab shell · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  /* Required-pieces badge links. */
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 10px; border-radius: 9999px;
+    background: var(--surface); border: 1px solid var(--border);
+    font: 500 12px/1 var(--font-sans); color: var(--text-strong);
+    text-decoration: none;
+  }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind {
+    font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-subtle);
+    padding-right: 6px; border-right: 1px solid var(--border);
+  }
+
+  /* Phone previews. */
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen {
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 14px;
+    display: grid; gap: 10px;
+  }
+  .ck-screen .phone {
+    aspect-ratio: 9 / 16;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 0;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .ck-screen .phone .body {
+    flex: 1; padding: 14px;
+    display: grid; gap: 8px;
+    background: var(--canvas);
+  }
+  .ck-screen .phone .body .row {
+    height: 12px; background: var(--surface); border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  .ck-screen .phone .body .row.tall { height: 28px; }
+  .ck-screen .phone .tabs {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    padding: 6px 0 14px; /* fake safe-area */
+  }
+  .ck-screen .phone .tabs.five  { grid-template-columns: repeat(5, 1fr); }
+  .ck-screen .phone .tab {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: 4px 0;
+    font: 500 9px/1 var(--font-sans); color: var(--text-muted);
+  }
+  .ck-screen .phone .tab .ic {
+    width: 16px; height: 16px; border-radius: 4px;
+    background: var(--surface-muted);
+    position: relative;
+  }
+  .ck-screen .phone .tab.on {
+    color: var(--brand-strong);
+  }
+  .ck-screen .phone .tab.on .ic {
+    background: var(--brand-soft);
+    box-shadow: inset 0 0 0 1px var(--brand);
+  }
+  .ck-screen .phone .tab .badge {
+    position: absolute; top: -3px; right: -4px;
+    min-width: 10px; height: 10px; padding: 0 2px;
+    border-radius: 9999px;
+    background: var(--tone-danger); color: #fff;
+    font: 600 7px/10px var(--font-sans); text-align: center;
+  }
+  .ck-screen .caption {
+    font: 500 12px/1.4 var(--font-sans);
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ck-screen .caption .num {
+    font: 600 10px/1 var(--font-mono);
+    padding: 3px 6px; border-radius: 9999px;
+    background: var(--surface); color: var(--brand-strong);
+  }
+
+  /* Step header. */
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n {
+    font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--brand-soft); color: var(--brand-strong);
+  }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  /* Variations. */
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: grid; gap: 10px;
+  }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p  { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre {
+    background: var(--ink); color: var(--canvas);
+    border-radius: 8px; padding: 12px 14px; margin: 0;
+    font: 500 12px/1.55 var(--font-mono); overflow-x: auto;
+    white-space: pre;
+  }
+
+  /* Accessibility checklist. */
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li {
+    display: grid; grid-template-columns: 20px 1fr; gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5;
+  }
+  .ck-a11y li::before {
+    content: ""; display: block; width: 16px; height: 16px;
+    background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd);
+    border-radius: 4px; margin-top: 1px;
+  }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  /* Related recipes. */
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    font: 500 13px/1.2 var(--font-sans); color: var(--text-strong);
+    text-decoration: none;
+  }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag {
+    font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 3px 7px; border-radius: 9999px;
+    background: var(--surface-muted); color: var(--text-subtle);
+  }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Shells &amp; nav</a><span class="sep">/</span>
+      <span>Mobile bottom-tab shell</span>
+    </div>
+    <h1>Build a mobile shell with bottom tabs</h1>
+    <p class="lede">By the end of this recipe you'll have the chrome every Huchu mobile portal lives inside — four bottom tabs with brand-pill active state, badge counts, safe-area-inset for the iPhone home bar, slide-up entrance, and a graceful hide when the soft keyboard pushes up.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="sidebar" data-icon-size="12"></span>Shells</span>
+      <span class="meta-pill">2 primitives · 1 block · 0 patterns</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~20 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- SECTION 2 · OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">Four tabs, pinned to the bottom, surviving safe areas and the soft keyboard. One <code>&lt;MobileShell&gt;</code>, one route, one rule: never more than four.</p>
+    <p>The mobile bottom-tab shell is what the parent portal, the cashier app, and the field-ops PWA all share. Bottom tabs win on mobile because they sit under the thumb — the operator can switch surface without re-gripping the phone. They lose the moment you put more than four on screen: the brand-pill active state stops being legible and the user starts hunting. The fifth tab is always "More", and "More" is a half-sheet that opens from the tab strip, not a separate page.</p>
+    <p>The shell handles five responsibilities: <b>layout</b> (header optional, scrollable content, fixed tab strip); <b>safe areas</b> (<code>env(safe-area-inset-bottom)</code> on iOS); <b>active state</b> (brand-pill behind the active icon + label); <b>badges</b> (per-tab unread count from your store); and <b>keyboard awareness</b> (slide the strip out of the way when an input is focused, so it doesn't sit on top of the keyboard). The slide-up entrance is the same motion as the canonical 2FA <code>AuthShell</code>, so the operator feels they're stepping into one app, not three.</p>
+    <p><b>Skip this recipe if</b> your mobile experience is single-screen — a settings PWA, a one-form intake. A tab bar on a single-screen app just steals 56&nbsp;px of real estate.</p>
+  </section>
+
+  <!-- SECTION 3 · WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three configurations of the same shell. The body changes; the strip is identical.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <div class="body">
+            <div class="row tall"></div>
+            <div class="row"></div>
+            <div class="row"></div>
+            <div class="row"></div>
+            <div class="row"></div>
+          </div>
+          <div class="tabs">
+            <div class="tab on"><div class="ic"></div>Home</div>
+            <div class="tab"><div class="ic"></div>Fees</div>
+            <div class="tab"><div class="ic"><span class="badge">3</span></div>Notices</div>
+            <div class="tab"><div class="ic"></div>Profile</div>
+          </div>
+        </div>
+        <div class="caption"><span class="num">01</span> Four tabs with brand-pill active + badge</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <div class="body">
+            <div class="row tall"></div>
+            <div class="row"></div>
+            <div class="row"></div>
+            <div class="row"></div>
+          </div>
+          <div class="tabs five">
+            <div class="tab on"><div class="ic"></div>Home</div>
+            <div class="tab"><div class="ic"></div>Fees</div>
+            <div class="tab"><div class="ic"></div>Notices</div>
+            <div class="tab"><div class="ic"></div>Marks</div>
+            <div class="tab"><div class="ic"></div>More</div>
+          </div>
+        </div>
+        <div class="caption"><span class="num">02</span> Five tabs, last one is "More" → sheet</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <div class="body" style="gap: 6px;">
+            <div class="row tall"></div>
+            <div class="row" style="height: 22px; border: 1px solid var(--brand); box-shadow: 0 0 0 2px var(--focus-ring-soft);"></div>
+            <div class="row"></div>
+            <div class="row"></div>
+            <div class="row"></div>
+            <div class="row"></div>
+            <div style="margin-top: auto; height: 36px; background: var(--surface-muted); border-radius: 4px; border: 1px dashed var(--border-strong); display: grid; place-items: center; font: 500 10px/1 var(--font-mono); color: var(--text-subtle);">[ on-screen keyboard ]</div>
+          </div>
+          <!-- tabs hidden when keyboard up -->
+        </div>
+        <div class="caption"><span class="num">03</span> Keyboard up → tab strip hides</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 4 · REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>. Click any to see its reference page.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/b-bottom-tabs.html"><span class="kind">Block</span>Bottom tabs</a>
+      <a class="ck-piece" href="../system/x-bottom-sheet.html"><span class="kind">Pattern</span>Bottom sheet</a>
+      <a class="ck-piece" href="../system/p-badge.html"><span class="kind">Primitive</span>Badge &amp; pill</a>
+      <a class="ck-piece" href="../system/p-mobile-action-bar.html"><span class="kind">Primitive</span>Mobile action bar</a>
+      <a class="ck-piece" href="../system/x-app-shell.html"><span class="kind">Pattern</span>App shell</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>MobileShell</code>, <code>MobileShell.Header</code>, <code>MobileShell.Body</code>, <code>MobileShell.Tabs</code>, <code>Tab</code>, <code>Badge</code>, <code>BottomSheet</code>. The <code>MobileShell.*</code> dot-namespace mirrors the desktop <a href="shells-app-shell-sidebar.html"><code>AppShell.*</code></a> shape — same mental model, two breakpoints.</p>
+  </section>
+
+  <!-- SECTION 5 · STEP-BY-STEP -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <!-- Step 1 -->
+    <div class="ck-step"><span class="n">01</span><h3>Lay out three rows: header, body, tab strip</h3></div>
+    <p>The shell is a column flex with three children: header (optional), body (scrollable, takes the remaining space), tabs (fixed at the bottom). Use <code>min-height: 100dvh</code> on the root so the iOS URL bar doesn't push your tabs off screen on the first scroll. Pad the strip with <code>env(safe-area-inset-bottom)</code> so the home indicator never overlaps a label.</p>
+    <div class="ds-specimen"
+         data-code='import { MobileShell } from &#39;@huchu/react&#39;;
+
+export function Shell({
+  header,
+  children,
+  tabs,
+}: {
+  header?: React.ReactNode;
+  children: React.ReactNode;
+  tabs: React.ReactNode;
+}) {
+  return (
+    &lt;MobileShell&gt;
+      {header &amp;&amp; &lt;MobileShell.Header&gt;{header}&lt;/MobileShell.Header&gt;}
+      &lt;MobileShell.Body&gt;{children}&lt;/MobileShell.Body&gt;
+      &lt;MobileShell.Tabs&gt;{tabs}&lt;/MobileShell.Tabs&gt;
+    &lt;/MobileShell&gt;
+  );
+}
+
+// MobileShell.Tabs internally applies:
+//   position: sticky; bottom: 0;
+//   padding-bottom: max(8px, env(safe-area-inset-bottom));
+//   transform: translateY(0); transition: transform 180ms ease-out;
+// The Body uses min-height: 100dvh — minus header + tabs — to absorb
+// the iOS URL-bar collapse without jumping.'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 10px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div><b style="color: var(--brand-strong);">&lt;MobileShell&gt;</b> = column flex, three slots.</div>
+          <div style="color: var(--text-subtle);">Body absorbs the safe area at the top; tabs absorb it at the bottom.</div>
+          <div style="color: var(--text-subtle);"><code>100dvh</code> not <code>100vh</code> — survives the iOS URL bar.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Layout + safe area</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="ck-step"><span class="n">02</span><h3>Render four tabs with brand-pill active state and a badge</h3></div>
+    <p>Tabs render as <code>&lt;button&gt;</code>s inside a <code>nav</code>. Active state is a brand-soft rounded background behind icon + label — never just a colour change, which fails for low-vision users. The badge sits on the icon, not the label, so it stays legible even when the tab is wide enough to wrap.</p>
+    <div class="ds-specimen"
+         data-code='import { MobileShell, Tab, Badge } from &#39;@huchu/react&#39;;
+
+type TabDef = {
+  id: string;
+  label: string;
+  icon: string;
+  to: string;
+  badge?: number;
+};
+
+const TABS: TabDef[] = [
+  { id: &#39;home&#39;,    label: &#39;Home&#39;,    icon: &#39;home&#39;,    to: &#39;/&#39; },
+  { id: &#39;fees&#39;,    label: &#39;Fees&#39;,    icon: &#39;receipt&#39;, to: &#39;/fees&#39; },
+  { id: &#39;notices&#39;, label: &#39;Notices&#39;, icon: &#39;bell&#39;,    to: &#39;/notices&#39; },
+  { id: &#39;profile&#39;, label: &#39;Profile&#39;, icon: &#39;user&#39;,    to: &#39;/profile&#39; },
+];
+
+function Tabs({
+  current,
+  badges,
+  onSelect,
+}: {
+  current: string;
+  badges: Record&lt;string, number&gt;;
+  onSelect: (id: string) =&gt; void;
+}) {
+  return (
+    &lt;MobileShell.Tabs aria-label=&quot;Primary&quot;&gt;
+      {TABS.map(t =&gt; (
+        &lt;Tab
+          key={t.id}
+          icon={t.icon}
+          label={t.label}
+          active={current === t.id}
+          onClick={() =&gt; onSelect(t.id)}
+          aria-current={current === t.id ? &#39;page&#39; : undefined}
+        &gt;
+          {badges[t.id] &gt; 0 &amp;&amp; (
+            &lt;Badge tone=&quot;danger&quot; aria-label={`${badges[t.id]} unread`}&gt;
+              {badges[t.id]}
+            &lt;/Badge&gt;
+          )}
+        &lt;/Tab&gt;
+      ))}
+    &lt;/MobileShell.Tabs&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="width: 280px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 8px 0 18px; display: grid; grid-template-columns: repeat(4, 1fr);">
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0; color: var(--brand-strong);">
+              <div style="width: 30px; height: 30px; border-radius: 9px; background: var(--brand-soft); display: grid; place-items: center; color: var(--brand-strong);"><span data-icon="dashboard" data-icon-size="15"></span></div>
+              <div style="font: 600 10px/1 var(--font-sans);">Home</div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0; color: var(--text-muted);">
+              <div style="width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;"><span data-icon="receipt" data-icon-size="15"></span></div>
+              <div style="font: 500 10px/1 var(--font-sans);">Fees</div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0; color: var(--text-muted);">
+              <div style="position: relative; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;"><span data-icon="bell" data-icon-size="15"></span><span style="position: absolute; top: 0; right: 2px; min-width: 14px; height: 14px; padding: 0 3px; border-radius: 9999px; background: var(--tone-danger); color: #fff; font: 600 9px/14px var(--font-sans); text-align: center;">3</span></div>
+              <div style="font: 500 10px/1 var(--font-sans);">Notices</div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0; color: var(--text-muted);">
+              <div style="width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;"><span data-icon="user" data-icon-size="15"></span></div>
+              <div style="font: 500 10px/1 var(--font-sans);">Profile</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Tab strip</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="ck-step"><span class="n">03</span><h3>Hide the strip when the soft keyboard is up</h3></div>
+    <p>On iOS, a focused input pushes the visual viewport upward and your sticky tabs end up floating in the middle of the screen. Listen to <code>visualViewport.resize</code> and translate the strip down by its own height when the viewport shrinks. On Android, focus-in / focus-out on inputs is the more reliable signal — listen to both.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useState } from &#39;@huchu/react&#39;;
+
+function useKeyboardOpen(): boolean {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() =&gt; {
+    // iOS: visual viewport shrinks when keyboard appears.
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () =&gt; {
+      const shrunk = vv.height &lt; window.innerHeight * 0.85;
+      setOpen(shrunk);
+    };
+    vv.addEventListener(&#39;resize&#39;, onResize);
+    return () =&gt; vv.removeEventListener(&#39;resize&#39;, onResize);
+  }, []);
+
+  useEffect(() =&gt; {
+    // Android: focusin / focusout on form fields.
+    const isField = (el: EventTarget | null) =&gt;
+      el instanceof HTMLElement &amp;&amp;
+      [&#39;INPUT&#39;, &#39;TEXTAREA&#39;, &#39;SELECT&#39;].includes(el.tagName);
+    const fin  = (e: FocusEvent) =&gt; { if (isField(e.target)) setOpen(true); };
+    const fout = (e: FocusEvent) =&gt; { if (isField(e.target)) setOpen(false); };
+    document.addEventListener(&#39;focusin&#39;,  fin);
+    document.addEventListener(&#39;focusout&#39;, fout);
+    return () =&gt; {
+      document.removeEventListener(&#39;focusin&#39;,  fin);
+      document.removeEventListener(&#39;focusout&#39;, fout);
+    };
+  }, []);
+
+  return open;
+}
+
+// inside the shell
+const kbOpen = useKeyboardOpen();
+
+&lt;MobileShell.Tabs hidden={kbOpen}&gt;{/* … */}&lt;/MobileShell.Tabs&gt;
+// MobileShell.Tabs translates itself off-screen when hidden=true,
+// using the same 180ms ease-out as the entrance.'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 12px; padding: 24px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted); text-align: center;">
+          <div><b style="color: var(--brand-strong);">visualViewport</b> (iOS) + <b style="color: var(--brand-strong);">focusin/out</b> (Android).</div>
+          <div style="color: var(--text-subtle);"><code>hidden</code> → <code>translateY(100%)</code>, 180 ms.</div>
+          <div style="color: var(--text-subtle);">Keep the listeners at shell-level — never inside individual fields.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Keyboard awareness</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="ck-step"><span class="n">04</span><h3>Spill the 5th+ tab into a "More" bottom sheet</h3></div>
+    <p>The moment your app has five tabs you want to show, drop the 5th into a "More" tab that opens a <code>BottomSheet</code> from the strip. The sheet lists the overflow items as a tall scrolling list and inherits the same active state. Never collapse to fewer-than-4 — three tabs on a phone-wide strip leave dead space the user reads as missing nav.</p>
+    <div class="ds-specimen"
+         data-code='import { useState } from &#39;@huchu/react&#39;;
+import { MobileShell, Tab, BottomSheet, NavItem } from &#39;@huchu/react&#39;;
+
+const PRIMARY = TABS.slice(0, 3);
+const OVERFLOW = TABS.slice(3); // marks, attendance, library, calendar…
+
+function TabsWithMore({
+  current, onSelect,
+}: {
+  current: string;
+  onSelect: (id: string) =&gt; void;
+}) {
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  return (
+    &lt;&gt;
+      &lt;MobileShell.Tabs aria-label=&quot;Primary&quot;&gt;
+        {PRIMARY.map(t =&gt; (
+          &lt;Tab key={t.id} icon={t.icon} label={t.label}
+               active={current === t.id}
+               onClick={() =&gt; onSelect(t.id)} /&gt;
+        ))}
+        &lt;Tab
+          icon=&quot;more&quot;
+          label=&quot;More&quot;
+          active={OVERFLOW.some(t =&gt; t.id === current)}
+          onClick={() =&gt; setMoreOpen(true)}
+        /&gt;
+      &lt;/MobileShell.Tabs&gt;
+
+      &lt;BottomSheet open={moreOpen} onClose={() =&gt; setMoreOpen(false)} title=&quot;More&quot;&gt;
+        {OVERFLOW.map(t =&gt; (
+          &lt;NavItem
+            key={t.id}
+            to={t.to}
+            icon={t.icon}
+            active={current === t.id}
+            onClick={() =&gt; { onSelect(t.id); setMoreOpen(false); }}
+          &gt;
+            {t.label}
+          &lt;/NavItem&gt;
+        ))}
+      &lt;/BottomSheet&gt;
+    &lt;/&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="width: 280px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden;">
+            <div style="padding: 16px; display: grid; gap: 8px; background: var(--canvas);">
+              <div style="height: 14px; background: var(--text-strong); border-radius: 4px; width: 60%;"></div>
+              <div style="font: var(--type-body-sm); color: var(--text-muted); padding: 8px 0;">More</div>
+              <div style="display: flex; gap: 8px; padding: 8px 10px; border-radius: 8px; background: var(--surface-muted); font: 500 12px/1 var(--font-sans);"><span data-icon="chart" data-icon-size="14"></span>Marks</div>
+              <div style="display: flex; gap: 8px; padding: 8px 10px; border-radius: 8px; font: 500 12px/1 var(--font-sans);"><span data-icon="calendar" data-icon-size="14"></span>Attendance</div>
+              <div style="display: flex; gap: 8px; padding: 8px 10px; border-radius: 8px; font: 500 12px/1 var(--font-sans);"><span data-icon="bag" data-icon-size="14"></span>Library</div>
+              <div style="display: flex; gap: 8px; padding: 8px 10px; border-radius: 8px; font: 500 12px/1 var(--font-sans);"><span data-icon="clock" data-icon-size="14"></span>Calendar</div>
+            </div>
+            <div style="padding: 6px 0 14px; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--border);">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--text-muted);"><span data-icon="dashboard" data-icon-size="14"></span><div style="font: 500 9px/1 var(--font-sans);">Home</div></div>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--text-muted);"><span data-icon="receipt" data-icon-size="14"></span><div style="font: 500 9px/1 var(--font-sans);">Fees</div></div>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--text-muted);"><span data-icon="bell" data-icon-size="14"></span><div style="font: 500 9px/1 var(--font-sans);">Notices</div></div>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--brand-strong);"><span data-icon="dots" data-icon-size="14"></span><div style="font: 600 9px/1 var(--font-sans);">More</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · More sheet</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- SECTION 6 · FINAL COMPOSITION -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole <code>MobileShell</code> wrapper, assembled. Slots, tab definitions, keyboard awareness, badge wiring, More-sheet, slide-up entrance.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useState } from &#39;@huchu/react&#39;;
+import {
+  MobileShell, Tab, Badge, BottomSheet, NavItem,
+} from &#39;@huchu/react&#39;;
+
+// ── Tab definitions ────────────────────────────────────────────
+type TabDef = {
+  id: string; label: string; icon: string; to: string;
+};
+
+const PRIMARY: TabDef[] = [
+  { id: &#39;home&#39;,    label: &#39;Home&#39;,    icon: &#39;home&#39;,    to: &#39;/&#39; },
+  { id: &#39;fees&#39;,    label: &#39;Fees&#39;,    icon: &#39;receipt&#39;, to: &#39;/fees&#39; },
+  { id: &#39;notices&#39;, label: &#39;Notices&#39;, icon: &#39;bell&#39;,    to: &#39;/notices&#39; },
+];
+
+const OVERFLOW: TabDef[] = [
+  { id: &#39;marks&#39;,      label: &#39;Marks&#39;,      icon: &#39;chart&#39;,    to: &#39;/marks&#39; },
+  { id: &#39;attendance&#39;, label: &#39;Attendance&#39;, icon: &#39;calendar&#39;, to: &#39;/attendance&#39; },
+  { id: &#39;profile&#39;,    label: &#39;Profile&#39;,    icon: &#39;user&#39;,     to: &#39;/profile&#39; },
+];
+
+// ── Keyboard-open detector ─────────────────────────────────────
+function useKeyboardOpen(): boolean {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() =&gt; {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const onResize = () =&gt; setOpen(vv.height &lt; window.innerHeight * 0.85);
+    vv.addEventListener(&#39;resize&#39;, onResize);
+    return () =&gt; vv.removeEventListener(&#39;resize&#39;, onResize);
+  }, []);
+
+  useEffect(() =&gt; {
+    const isField = (el: EventTarget | null) =&gt;
+      el instanceof HTMLElement &amp;&amp;
+      [&#39;INPUT&#39;, &#39;TEXTAREA&#39;, &#39;SELECT&#39;].includes(el.tagName);
+    const fin  = (e: FocusEvent) =&gt; { if (isField(e.target)) setOpen(true); };
+    const fout = (e: FocusEvent) =&gt; { if (isField(e.target)) setOpen(false); };
+    document.addEventListener(&#39;focusin&#39;,  fin);
+    document.addEventListener(&#39;focusout&#39;, fout);
+    return () =&gt; {
+      document.removeEventListener(&#39;focusin&#39;,  fin);
+      document.removeEventListener(&#39;focusout&#39;, fout);
+    };
+  }, []);
+
+  return open;
+}
+
+// ── Component ──────────────────────────────────────────────────
+export function MobileTabShell({
+  current,
+  badges,
+  header,
+  onSelect,
+  children,
+}: {
+  current: string;
+  badges: Record&lt;string, number&gt;;
+  header?: React.ReactNode;
+  onSelect: (id: string) =&gt; void;
+  children: React.ReactNode;
+}) {
+  const [moreOpen, setMoreOpen] = useState(false);
+  const kbOpen = useKeyboardOpen();
+  const inOverflow = OVERFLOW.some(t =&gt; t.id === current);
+
+  return (
+    &lt;MobileShell entrance=&quot;slide-up&quot;&gt;
+      {header &amp;&amp; &lt;MobileShell.Header&gt;{header}&lt;/MobileShell.Header&gt;}
+
+      &lt;MobileShell.Body&gt;
+        {children}
+      &lt;/MobileShell.Body&gt;
+
+      &lt;MobileShell.Tabs hidden={kbOpen} aria-label=&quot;Primary&quot;&gt;
+        {PRIMARY.map(t =&gt; (
+          &lt;Tab
+            key={t.id}
+            icon={t.icon}
+            label={t.label}
+            active={current === t.id}
+            onClick={() =&gt; onSelect(t.id)}
+            aria-current={current === t.id ? &#39;page&#39; : undefined}
+          &gt;
+            {badges[t.id] &gt; 0 &amp;&amp; (
+              &lt;Badge tone=&quot;danger&quot; aria-label={`${badges[t.id]} unread`}&gt;
+                {badges[t.id]}
+              &lt;/Badge&gt;
+            )}
+          &lt;/Tab&gt;
+        ))}
+        &lt;Tab
+          icon=&quot;more&quot;
+          label=&quot;More&quot;
+          active={inOverflow}
+          onClick={() =&gt; setMoreOpen(true)}
+          aria-expanded={moreOpen}
+        /&gt;
+      &lt;/MobileShell.Tabs&gt;
+
+      &lt;BottomSheet
+        open={moreOpen}
+        onClose={() =&gt; setMoreOpen(false)}
+        title=&quot;More&quot;
+      &gt;
+        {OVERFLOW.map(t =&gt; (
+          &lt;NavItem
+            key={t.id}
+            icon={t.icon}
+            active={current === t.id}
+            onClick={() =&gt; { onSelect(t.id); setMoreOpen(false); }}
+          &gt;
+            {t.label}
+            {badges[t.id] &gt; 0 &amp;&amp; &lt;Badge tone=&quot;danger&quot;&gt;{badges[t.id]}&lt;/Badge&gt;}
+          &lt;/NavItem&gt;
+        ))}
+      &lt;/BottomSheet&gt;
+    &lt;/MobileShell&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="width: 280px; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; overflow: hidden;">
+            <div style="padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px;"><span data-icon="corelith" data-icon-size="16" style="color: var(--brand);"></span><span style="font: 600 13px/1 var(--font-sans);">Mukamba School</span></div>
+            <div style="padding: 14px; background: var(--canvas); display: grid; gap: 10px; min-height: 220px;">
+              <div style="height: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px;"></div>
+              <div style="height: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px;"></div>
+              <div style="height: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px;"></div>
+              <div style="height: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; width: 60%;"></div>
+            </div>
+            <div style="padding: 6px 0 14px; display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid var(--border);">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--brand-strong);"><div style="width: 30px; height: 30px; border-radius: 9px; background: var(--brand-soft); display: grid; place-items: center;"><span data-icon="dashboard" data-icon-size="14"></span></div><div style="font: 600 10px/1 var(--font-sans);">Home</div></div>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--text-muted);"><span data-icon="receipt" data-icon-size="15"></span><div style="font: 500 10px/1 var(--font-sans);">Fees</div></div>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--text-muted);"><div style="position: relative;"><span data-icon="bell" data-icon-size="15"></span><span style="position: absolute; top: -3px; right: -5px; min-width: 12px; height: 12px; padding: 0 2px; border-radius: 9999px; background: var(--tone-danger); color: #fff; font: 600 8px/12px var(--font-sans); text-align: center;">3</span></div><div style="font: 500 10px/1 var(--font-sans);">Notices</div></div>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--text-muted);"><span data-icon="dots" data-icon-size="15"></span><div style="font: 500 10px/1 var(--font-sans);">More</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">MobileTabShell.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- SECTION 7 · VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three forks. Each is a small diff from the final composition — the slot shape stays the same.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Three tabs, no More</h4>
+        <p>App has 3 surfaces, not 5. Drop the overflow + sheet; the strip stretches evenly. Useful for the cashier PWA.</p>
+<pre>// Three primary tabs, no overflow
+const PRIMARY = [
+  { id: &#39;sell&#39;,    icon: &#39;bag&#39;,   to: &#39;/&#39; },
+  { id: &#39;till&#39;,    icon: &#39;cash&#39;,  to: &#39;/till&#39; },
+  { id: &#39;reports&#39;, icon: &#39;chart&#39;, to: &#39;/reports&#39; },
+];</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Floating action tab</h4>
+        <p>The centre tab is a primary action ("New sale", "Add receipt") rather than a route. Render a raised circle that opens a sheet of actions.</p>
+<pre>&lt;Tab
+  icon=&quot;plus&quot;
+  raised
+  onClick={() =&gt; setNewSheet(true)}
+  aria-label=&quot;Add&quot;
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Label-less compact</h4>
+        <p>Five icons, no labels — for a power-user app where the operator knows the icons by heart. Saves 14&nbsp;px of vertical room.</p>
+<pre>&lt;MobileShell.Tabs compact aria-label=&quot;Primary&quot;&gt;
+  {TABS.map(t =&gt; (
+    &lt;Tab key={t.id} icon={t.icon}
+         aria-label={t.label} /&gt;
+  ))}
+&lt;/MobileShell.Tabs&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 8 · ACCESSIBILITY -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">What this recipe takes care of for you. Each item is something a screen-reader or keyboard user will notice if you skip it.</p>
+    <ul class="ck-a11y">
+      <li><b>Tabs are a real nav landmark.</b> <code>MobileShell.Tabs</code> renders <code>&lt;nav aria-label="Primary"&gt;</code> so SR users can jump to it from the rotor.</li>
+      <li><b>Active tab announces "current page".</b> <code>aria-current="page"</code> on the active tab — SR reads "Home, current page" instead of just "Home".</li>
+      <li><b>More tab declares expanded state.</b> <code>aria-expanded={moreOpen}</code> so the SR knows the sheet is open without the user opening it again.</li>
+      <li><b>Badges have a label.</b> <code>Badge</code> renders <code>aria-label="3 unread"</code> — the number alone reads as "3", which gives the user nothing.</li>
+      <li><b>Tabs never sit on top of inputs.</b> Keyboard-open hook moves the strip off-screen so focused inputs aren't obscured by an immovable element.</li>
+      <li><b>Safe-area is respected.</b> <code>padding-bottom: max(8px, env(safe-area-inset-bottom))</code> keeps labels clear of the iPhone home indicator.</li>
+      <li><b>Touch targets are 44 × 44.</b> The smallest tappable area for an icon-only tab clears Apple's HIG and Material's a11y minimum — operators with motor impairment can still hit them.</li>
+    </ul>
+  </section>
+
+  <!-- SECTION 9 · RELATED RECIPES -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">The desktop counterpart and the auth flows that hand off to this shell.</p>
+    <div class="ck-related">
+      <a href="shells-app-shell-sidebar.html">App shell with sidebar<span class="tag">Shells</span></a>
+      <a href="auth-signin-2fa.html">Sign in with 2FA<span class="tag">Auth</span></a>
+      <a href="auth-forgot-password.html">Forgot password<span class="tag">Auth</span></a>
+      <a href="auth-signup-email-verify.html">Sign-up + email verify<span class="tag">Auth</span></a>
+      <span class="soon">Day-grouped mobile list<span class="tag">Soon</span></span>
+      <span class="soon">Mobile action bar + sheet<span class="tag">Soon</span></span>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="shells-app-shell-sidebar.html"><div class="pager-label">← Previous</div><div class="pager-title">App shell with sidebar</div></a>
+    <a href="index.html" class="next"><div class="pager-label">All recipes →</div><div class="pager-title">Browse by theme</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>
