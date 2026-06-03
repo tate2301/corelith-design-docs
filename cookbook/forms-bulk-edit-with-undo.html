@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Bulk edit with undo · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .phone { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 16px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; position: relative; }
+  .ck-screen .brand { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .ph-title { font: 700 14px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .ck-screen .ph-sub { font: 500 11px/1.4 var(--font-sans); color: var(--text-muted); margin: 0; }
+  .ck-screen .ph-row { display: flex; gap: 6px; align-items: center; padding: 6px 8px; background: var(--surface-muted); border-radius: 6px; font: 500 10px/1.2 var(--font-sans); }
+  .ck-screen .ph-row.sel { background: var(--brand-soft); }
+  .ck-screen .ph-row .chk { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--border-strong); background: var(--surface); flex: none; }
+  .ck-screen .ph-row.sel .chk { background: var(--brand); border-color: var(--brand); }
+  .ck-screen .ph-row .nm { color: var(--text-strong); flex: 1; }
+  .ck-screen .ph-row .tag { font: 500 9px/1 var(--font-mono); padding: 2px 5px; border-radius: 3px; background: var(--surface); color: var(--text-subtle); border: 1px solid var(--border); }
+  .ck-screen .ph-row .tag.cur { background: var(--brand-soft); color: var(--brand-strong); border-color: var(--brand); }
+  .ck-screen .ph-bar { background: var(--ink); color: var(--canvas); border-radius: 6px; padding: 8px 10px; display: flex; gap: 6px; align-items: center; font: 500 10px/1.2 var(--font-sans); }
+  .ck-screen .ph-bar .lab { flex: 1; }
+  .ck-screen .ph-bar .act { background: var(--canvas); color: var(--ink); padding: 3px 8px; border-radius: 4px; font: 600 10px/1 var(--font-sans); }
+  .ck-screen .ph-drawer { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 8px; padding: 10px; display: grid; gap: 6px; }
+  .ck-screen .ph-drawer h4 { font: 600 11px/1.2 var(--font-sans); margin: 0; }
+  .ck-screen .ph-drawer .field { font: 500 10px/1 var(--font-sans); color: var(--text-muted); }
+  .ck-screen .ph-drawer .input { height: 22px; border-radius: 4px; border: 1px solid var(--border-strong); background: var(--surface-muted); }
+  .ck-screen .ph-drawer .save { background: var(--ink); color: var(--canvas); height: 24px; border-radius: 4px; display: grid; place-items: center; font: 600 10px/1 var(--font-sans); }
+  .ck-screen .ph-toast { background: var(--surface); border: 1px solid var(--border-strong); border-left: 3px solid var(--tone-success); border-radius: 8px; padding: 8px 10px; display: flex; gap: 8px; align-items: center; font: 500 10px/1.3 var(--font-sans); box-shadow: 0 6px 18px rgba(0,0,0,.14); margin-top: auto; }
+  .ck-screen .ph-toast .lbl { flex: 1; }
+  .ck-screen .ph-toast .ring { font: 600 9px/1 var(--font-mono); color: var(--text-subtle); }
+  .ck-screen .ph-toast .act { font: 600 10px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+
+  .ck-pull { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; padding: 14px 16px; margin: 14px 0 0; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Forms</a><span class="sep">/</span>
+      <span>Bulk edit with undo</span>
+    </div>
+    <h1>Build a bulk-edit flow where Undo is the only confirmation</h1>
+    <p class="lede">By the end of this recipe you'll have a multi-select table, a bulk-edit drawer that changes tag / assign-to / status across N rows, an optimistic UI update, and a five-second "Undo" toast that cancels the API call if the user changes their mind — no "Are you sure?" dialog in sight.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="edit" data-icon-size="12"></span>Forms</span>
+      <span class="meta-pill">3 primitives · 1 block · 2 patterns</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~30 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">Select rows → open the bulk-edit drawer → set the new value → save. The save isn't real for five seconds: the user sees the optimistic update and an Undo toast. If they tap Undo, nothing was sent; otherwise the API call fires.</p>
+    <p>Confirmation dialogs are a tax on power users. "Are you sure you want to assign 12 items to Tendai?" — yes, that's why I clicked Save. The fix is to invert the trust model: assume the action is correct, show it immediately, and give the user a five-second window to take it back. This works for any operation that's reversible client-side; it's how Gmail's archive, Linear's bulk-edit, and every modern productivity tool handles destructive-looking actions.</p>
+    <p class="ck-pull"><b>Undo &gt; confirm dialog, always.</b> Confirms break flow; undos respect it. The 5-second window is hardcoded — recipes are opinionated. Long enough to catch a click-through, short enough to keep the API in sync.</p>
+    <p>The mechanism is a timer. The save call is wrapped in a <code>setTimeout</code>; Undo clears the timer. The optimistic UI is local state mutated immediately; the rollback is the local state stashed before the optimistic write. No queue, no offline sync — just <code>clearTimeout</code> + <code>setState(prev)</code>.</p>
+    <p><b>Skip this recipe if</b> the action is irreversible — payments, deletes that cascade, anything that sends an email. Those still want a confirm. The Undo pattern is for reversible field edits.</p>
+  </section>
+
+  <!-- WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three states: nothing selected, drawer open with 3 rows selected, and the post-save Undo toast.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · Suppliers</span>
+          <p class="ph-title">Suppliers</p>
+          <p class="ph-sub">12 active</p>
+          <div class="ph-row sel"><span class="chk"></span><span class="nm">Acme Metals</span><span class="tag cur">Tier A</span></div>
+          <div class="ph-row sel"><span class="chk"></span><span class="nm">Mukamba Mills</span><span class="tag">Tier B</span></div>
+          <div class="ph-row sel"><span class="chk"></span><span class="nm">Sibanda Co.</span><span class="tag">Tier B</span></div>
+          <div class="ph-row"><span class="chk"></span><span class="nm">Harare Spares</span><span class="tag">Tier C</span></div>
+          <div class="ph-row"><span class="chk"></span><span class="nm">Goldfield</span><span class="tag">Tier B</span></div>
+          <div class="ph-bar"><span data-icon="check" data-icon-size="10"></span><span class="lab">3 selected</span><span class="act">Edit</span></div>
+        </div>
+        <div class="caption"><span class="num">01</span> Select 3 → toolbar appears</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · Suppliers</span>
+          <p class="ph-title">Edit 3 suppliers</p>
+          <p class="ph-sub">Same change across all three</p>
+          <div class="ph-drawer">
+            <h4>Tier</h4>
+            <div class="field">Set tier to</div>
+            <div class="input"></div>
+            <h4 style="margin-top: 4px;">Assign to</h4>
+            <div class="field">Account manager</div>
+            <div class="input"></div>
+            <div class="save" style="margin-top: 6px;">Save 3 changes</div>
+          </div>
+        </div>
+        <div class="caption"><span class="num">02</span> Drawer — fields that apply to all</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · Suppliers</span>
+          <p class="ph-title">Suppliers</p>
+          <p class="ph-sub">12 active</p>
+          <div class="ph-row"><span class="chk"></span><span class="nm">Acme Metals</span><span class="tag cur">Tier A</span></div>
+          <div class="ph-row"><span class="chk"></span><span class="nm">Mukamba Mills</span><span class="tag cur">Tier A</span></div>
+          <div class="ph-row"><span class="chk"></span><span class="nm">Sibanda Co.</span><span class="tag cur">Tier A</span></div>
+          <div class="ph-row"><span class="chk"></span><span class="nm">Harare Spares</span><span class="tag">Tier C</span></div>
+          <div class="ph-toast"><span data-icon="check" data-icon-size="12"></span><div class="lbl"><b>3 suppliers updated</b></div><span class="ring">4s</span><span class="act">Undo</span></div>
+        </div>
+        <div class="caption"><span class="num">03</span> Optimistic + Undo (5s)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/x-bulk-edit.html"><span class="kind">Pattern</span>Bulk edit</a>
+      <a class="ck-piece" href="../system/p-table.html"><span class="kind">Primitive</span>Table</a>
+      <a class="ck-piece" href="../system/p-checkbox.html"><span class="kind">Primitive</span>Checkbox</a>
+      <a class="ck-piece" href="../system/x-bottom-sheet.html"><span class="kind">Pattern</span>Bottom sheet</a>
+      <a class="ck-piece" href="../system/p-toast.html"><span class="kind">Primitive</span>Toast</a>
+      <a class="ck-piece" href="../system/b-row-card.html"><span class="kind">Block</span>Row card</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>Stack</code>, <code>Drawer</code>, <code>BottomSheet</code>, <code>Form</code>, <code>Field</code>, <code>Select</code>, <code>Button</code>, <code>Checkbox</code>, <code>useToast</code>, <code>RowCard</code>. The undo logic lives in a tiny <code>useUndoableCommit</code> hook.</p>
+  </section>
+
+  <!-- STEP-BY-STEP -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <!-- Step 1 -->
+    <div class="ck-step"><span class="n">01</span><h3>Model selection as a Set, not an array of full rows</h3></div>
+    <p>The selection only stores row ids. Looking up the rows themselves happens at render time. That way bulk-editing a 200-row page doesn't re-serialise 200 row objects when the user ticks a checkbox.</p>
+    <div class="ds-specimen"
+         data-code='import { useState, useMemo, useCallback } from &#39;@huchu/react&#39;;
+
+export function useRowSelection&lt;T extends { id: string }&gt;(rows: T[]) {
+  const [ids, setIds] = useState&lt;Set&lt;string&gt;&gt;(() =&gt; new Set());
+
+  const toggle = useCallback((id: string) =&gt; {
+    setIds((prev) =&gt; {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const set = useCallback((id: string, on: boolean) =&gt; {
+    setIds((prev) =&gt; {
+      const next = new Set(prev);
+      if (on) next.add(id); else next.delete(id);
+      return next;
+    });
+  }, []);
+
+  const toggleAll = useCallback(() =&gt; {
+    setIds((prev) =&gt; prev.size === rows.length ? new Set() : new Set(rows.map(r =&gt; r.id)));
+  }, [rows]);
+
+  const clear = useCallback(() =&gt; setIds(new Set()), []);
+
+  const selected = useMemo(() =&gt; rows.filter((r) =&gt; ids.has(r.id)), [rows, ids]);
+
+  return { ids, selected, count: ids.size, toggle, set, toggleAll, clear };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div>Set&lt;string&gt; of ids. Cheap toggle. Fast hasher.</div>
+          <div style="color: var(--text-subtle);"><code>selected</code> derives the row objects at render time.</div>
+          <div style="color: var(--text-subtle);"><code>toggleAll</code> is "select all visible", not all server-side.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Selection state</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="ck-step"><span class="n">02</span><h3>Build the undoable-commit hook — a setTimeout the user can cancel</h3></div>
+    <p>The hook stashes the previous state, applies the optimistic update, and schedules the API call in a 5-second timer. Undo clears the timer and restores the stash. No queue, no offline sync — keep the surface area tiny.</p>
+    <div class="ds-specimen"
+         data-code='import { useCallback, useRef } from &#39;@huchu/react&#39;;
+
+const UNDO_MS = 5000;  // recipe-opinionated. Don&#39;t parameterise.
+
+export function useUndoableCommit&lt;T&gt;({
+  onCommit,
+  onRollback,
+}: {
+  onCommit: () =&gt; Promise&lt;void&gt;;
+  onRollback: () =&gt; void;
+}) {
+  const timer = useRef&lt;ReturnType&lt;typeof setTimeout&gt; | null&gt;(null);
+
+  const schedule = useCallback(() =&gt; {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(async () =&gt; {
+      timer.current = null;
+      try {
+        await onCommit();
+      } catch (e) {
+        // API rejected — roll the UI back. The Undo window is closed.
+        onRollback();
+      }
+    }, UNDO_MS);
+  }, [onCommit, onRollback]);
+
+  const undo = useCallback(() =&gt; {
+    if (timer.current) {
+      clearTimeout(timer.current);
+      timer.current = null;
+    }
+    onRollback();
+  }, [onRollback]);
+
+  const isPending = () =&gt; timer.current !== null;
+
+  return { schedule, undo, isPending };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div><code>setTimeout(commit, 5000)</code>. <code>clearTimeout</code> = Undo.</div>
+          <div style="color: var(--text-subtle);">If the API rejects, we roll the UI back without scaring the user.</div>
+          <div style="color: var(--text-subtle);">No queue, no localStorage. The whole thing fits in 30 lines.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Undoable commit</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="ck-step"><span class="n">03</span><h3>Render the bulk-edit drawer — fields that say "apply to all N"</h3></div>
+    <p>The drawer is a partial form: every field is optional, and the heading says "Edit 3 suppliers" so the user knows the scope. Leaving a field blank means "don't touch this field on any row" — the patch only sends keys with values.</p>
+    <div class="ds-specimen"
+         data-code='import { Drawer, Stack, Form, Field, Select, Button } from &#39;@huchu/react&#39;;
+
+type BulkPatch = {
+  tier?: &#39;A&#39; | &#39;B&#39; | &#39;C&#39;;
+  accountManagerId?: string;
+  status?: &#39;active&#39; | &#39;archived&#39;;
+};
+
+function BulkEditDrawer({
+  open, count, onClose, onSave, managerOptions,
+}: {
+  open: boolean;
+  count: number;
+  onClose: () =&gt; void;
+  onSave: (patch: BulkPatch) =&gt; void;
+  managerOptions: { value: string; label: string }[];
+}) {
+  const [tier, setTier] = useState&lt;string&gt;(&#39;&#39;);
+  const [mgr, setMgr] = useState&lt;string&gt;(&#39;&#39;);
+  const [status, setStatus] = useState&lt;string&gt;(&#39;&#39;);
+
+  const submit = () =&gt; {
+    const patch: BulkPatch = {};
+    if (tier)   patch.tier = tier as BulkPatch[&#39;tier&#39;];
+    if (mgr)    patch.accountManagerId = mgr;
+    if (status) patch.status = status as BulkPatch[&#39;status&#39;];
+    onSave(patch);
+  };
+
+  return (
+    &lt;Drawer open={open} onClose={onClose} side=&quot;right&quot; width={420}&gt;
+      &lt;Form onSubmit={(e) =&gt; { e.preventDefault(); submit(); }}&gt;
+        &lt;Stack gap=&quot;md&quot; padding=&quot;lg&quot;&gt;
+          &lt;h2&gt;Edit {count} {count === 1 ? &#39;supplier&#39; : &#39;suppliers&#39;}&lt;/h2&gt;
+          &lt;p&gt;Only the fields you change will be applied. Leave blank to keep the existing value.&lt;/p&gt;
+
+          &lt;Field label=&quot;Tier&quot; name=&quot;tier&quot;&gt;
+            &lt;Select value={tier} onChange={setTier} options={[
+              { value: &#39;&#39;, label: &#39;— don&#39;t change —&#39; },
+              { value: &#39;A&#39;, label: &#39;Tier A&#39; },
+              { value: &#39;B&#39;, label: &#39;Tier B&#39; },
+              { value: &#39;C&#39;, label: &#39;Tier C&#39; },
+            ]} /&gt;
+          &lt;/Field&gt;
+          &lt;Field label=&quot;Account manager&quot; name=&quot;accountManagerId&quot;&gt;
+            &lt;Select value={mgr} onChange={setMgr} options={[
+              { value: &#39;&#39;, label: &#39;— don&#39;t change —&#39; },
+              ...managerOptions,
+            ]} /&gt;
+          &lt;/Field&gt;
+          &lt;Field label=&quot;Status&quot; name=&quot;status&quot;&gt;
+            &lt;Select value={status} onChange={setStatus} options={[
+              { value: &#39;&#39;, label: &#39;— don&#39;t change —&#39; },
+              { value: &#39;active&#39;, label: &#39;Active&#39; },
+              { value: &#39;archived&#39;, label: &#39;Archived&#39; },
+            ]} /&gt;
+          &lt;/Field&gt;
+
+          &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot; justify=&quot;end&quot;&gt;
+            &lt;Button type=&quot;button&quot; variant=&quot;ghost&quot; onClick={onClose}&gt;Cancel&lt;/Button&gt;
+            &lt;Button
+              type=&quot;submit&quot;
+              variant=&quot;primary&quot;
+              disabled={!tier &amp;&amp; !mgr &amp;&amp; !status}
+            &gt;Save {count} changes&lt;/Button&gt;
+          &lt;/Stack&gt;
+        &lt;/Stack&gt;
+      &lt;/Form&gt;
+    &lt;/Drawer&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="width: 340px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px;">
+            <h3 style="font: 700 17px/1.2 var(--font-sans); margin: 0 0 4px;">Edit 3 suppliers</h3>
+            <p style="font: var(--type-caption); color: var(--text-muted); margin: 0 0 14px;">Only the fields you change will be applied.</p>
+            <div style="display: grid; gap: 12px;">
+              <div><div style="font: 500 11px/1 var(--font-sans); color: var(--text-muted); margin-bottom: 4px;">Tier</div><div style="height: 32px; border-radius: 6px; border: 1px solid var(--border-strong); padding: 0 10px; display: flex; align-items: center; font: var(--type-body-sm);">Tier A</div></div>
+              <div><div style="font: 500 11px/1 var(--font-sans); color: var(--text-muted); margin-bottom: 4px;">Account manager</div><div style="height: 32px; border-radius: 6px; border: 1px solid var(--border-strong); padding: 0 10px; display: flex; align-items: center; font: var(--type-body-sm); color: var(--text-subtle);">— don't change —</div></div>
+              <div style="display: flex; gap: 6px; justify-content: flex-end;"><div style="background: var(--surface); border: 1px solid var(--border-strong); height: 32px; padding: 0 12px; border-radius: 6px; display: grid; place-items: center; font: 600 12px/1 var(--font-sans);">Cancel</div><div style="background: var(--ink); color: var(--canvas); height: 32px; padding: 0 12px; border-radius: 6px; display: grid; place-items: center; font: 600 12px/1 var(--font-sans);">Save 3 changes</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Bulk-edit drawer</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="ck-step"><span class="n">04</span><h3>Wire optimistic + Undo — the timer is the contract</h3></div>
+    <p>On Save: stash <code>prevRows</code>, apply the patch to local state, schedule the API call, fire a toast with an Undo button. The toast's countdown is decorative; the real clock is the timer inside the hook. Undo clears it; otherwise the call goes.</p>
+    <div class="ds-specimen"
+         data-code='function SuppliersPage({ initialRows }: { initialRows: Supplier[] }) {
+  const [rows, setRows] = useState&lt;Supplier[]&gt;(initialRows);
+  const sel = useRowSelection(rows);
+  const { push } = useToast();
+  const [drawer, setDrawer] = useState(false);
+
+  const applyPatch = (patch: BulkPatch) =&gt; {
+    const ids = new Set(sel.selected.map((r) =&gt; r.id));
+    const prev = rows;
+    const next = rows.map((r) =&gt; ids.has(r.id) ? { ...r, ...patch } : r);
+
+    // Optimistic — apply now.
+    setRows(next);
+    sel.clear();
+    setDrawer(false);
+
+    const ctrl = makeUndoableCommit({
+      onCommit: () =&gt; api.bulkPatchSuppliers(Array.from(ids), patch),
+      onRollback: () =&gt; setRows(prev),
+    });
+    ctrl.schedule();
+
+    push({
+      tone: &#39;success&#39;,
+      title: `${ids.size} ${ids.size === 1 ? &#39;supplier&#39; : &#39;suppliers&#39;} updated`,
+      duration: 5_000,
+      action: { label: &#39;Undo&#39;, run: ctrl.undo },
+    });
+  };
+
+  // …render table + selection toolbar + drawer
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div>Apply now. Schedule the API call. Toast with Undo.</div>
+          <div style="color: var(--text-subtle);">Undo = <code>clearTimeout</code> + <code>setRows(prev)</code>. That's it.</div>
+          <div style="color: var(--text-subtle);">The toast duration and the commit timer share the same 5s number.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Wire it up</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- FINAL COMPOSITION -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole <code>SuppliersBulkEdit</code> page, assembled. Table + toolbar + drawer + undoable commit + toast wiring.</p>
+    <div class="ds-specimen"
+         data-code='import { useCallback, useMemo, useRef, useState } from &#39;@huchu/react&#39;;
+import {
+  Stack, Form, Field, Select, Button, Checkbox,
+  Drawer, RowCard, useToast,
+} from &#39;@huchu/react&#39;;
+
+// ── Types ──────────────────────────────────────────────────────
+type Supplier = {
+  id: string; name: string;
+  tier: &#39;A&#39; | &#39;B&#39; | &#39;C&#39;;
+  accountManagerId: string | null;
+  status: &#39;active&#39; | &#39;archived&#39;;
+};
+
+type BulkPatch = Partial&lt;Pick&lt;Supplier, &#39;tier&#39; | &#39;accountManagerId&#39; | &#39;status&#39;&gt;&gt;;
+
+// ── Selection (Step 1) ─────────────────────────────────────────
+function useRowSelection&lt;T extends { id: string }&gt;(rows: T[]) {
+  const [ids, setIds] = useState&lt;Set&lt;string&gt;&gt;(() =&gt; new Set());
+  const set = useCallback((id: string, on: boolean) =&gt; {
+    setIds((prev) =&gt; {
+      const next = new Set(prev);
+      if (on) next.add(id); else next.delete(id);
+      return next;
+    });
+  }, []);
+  const toggleAll = useCallback(() =&gt; {
+    setIds((prev) =&gt; prev.size === rows.length ? new Set() : new Set(rows.map((r) =&gt; r.id)));
+  }, [rows]);
+  const clear = useCallback(() =&gt; setIds(new Set()), []);
+  const selected = useMemo(() =&gt; rows.filter((r) =&gt; ids.has(r.id)), [rows, ids]);
+  return { ids, selected, count: ids.size, set, toggleAll, clear };
+}
+
+// ── Undoable commit (Step 2) ───────────────────────────────────
+const UNDO_MS = 5_000;
+
+function makeUndoableCommit({ onCommit, onRollback }: {
+  onCommit: () =&gt; Promise&lt;void&gt;;
+  onRollback: () =&gt; void;
+}) {
+  let timer: ReturnType&lt;typeof setTimeout&gt; | null = null;
+  return {
+    schedule() {
+      timer = setTimeout(async () =&gt; {
+        timer = null;
+        try { await onCommit(); }
+        catch { onRollback(); }
+      }, UNDO_MS);
+    },
+    undo() {
+      if (timer) { clearTimeout(timer); timer = null; }
+      onRollback();
+    },
+  };
+}
+
+// ── Drawer (Step 3) ────────────────────────────────────────────
+function BulkEditDrawer({
+  open, count, onClose, onSave, managerOptions,
+}: {
+  open: boolean; count: number;
+  onClose: () =&gt; void;
+  onSave: (patch: BulkPatch) =&gt; void;
+  managerOptions: { value: string; label: string }[];
+}) {
+  const [tier, setTier] = useState(&#39;&#39;);
+  const [mgr, setMgr]   = useState(&#39;&#39;);
+  const [status, setStatus] = useState(&#39;&#39;);
+
+  const submit = () =&gt; {
+    const patch: BulkPatch = {};
+    if (tier)   patch.tier = tier as Supplier[&#39;tier&#39;];
+    if (mgr)    patch.accountManagerId = mgr;
+    if (status) patch.status = status as Supplier[&#39;status&#39;];
+    onSave(patch);
+    setTier(&#39;&#39;); setMgr(&#39;&#39;); setStatus(&#39;&#39;);
+  };
+
+  return (
+    &lt;Drawer open={open} onClose={onClose} side=&quot;right&quot; width={420}&gt;
+      &lt;Form onSubmit={(e) =&gt; { e.preventDefault(); submit(); }}&gt;
+        &lt;Stack gap=&quot;md&quot; padding=&quot;lg&quot;&gt;
+          &lt;h2&gt;Edit {count} {count === 1 ? &#39;supplier&#39; : &#39;suppliers&#39;}&lt;/h2&gt;
+          &lt;p&gt;Only the fields you change will be applied to all selected rows.&lt;/p&gt;
+          &lt;Field label=&quot;Tier&quot; name=&quot;tier&quot;&gt;
+            &lt;Select value={tier} onChange={setTier} options={[
+              { value: &#39;&#39;,  label: &#39;— don&#39;t change —&#39; },
+              { value: &#39;A&#39;, label: &#39;Tier A&#39; },
+              { value: &#39;B&#39;, label: &#39;Tier B&#39; },
+              { value: &#39;C&#39;, label: &#39;Tier C&#39; },
+            ]}/&gt;
+          &lt;/Field&gt;
+          &lt;Field label=&quot;Account manager&quot; name=&quot;accountManagerId&quot;&gt;
+            &lt;Select value={mgr} onChange={setMgr} options={[
+              { value: &#39;&#39;, label: &#39;— don&#39;t change —&#39; },
+              ...managerOptions,
+            ]}/&gt;
+          &lt;/Field&gt;
+          &lt;Field label=&quot;Status&quot; name=&quot;status&quot;&gt;
+            &lt;Select value={status} onChange={setStatus} options={[
+              { value: &#39;&#39;,         label: &#39;— don&#39;t change —&#39; },
+              { value: &#39;active&#39;,   label: &#39;Active&#39; },
+              { value: &#39;archived&#39;, label: &#39;Archived&#39; },
+            ]}/&gt;
+          &lt;/Field&gt;
+          &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot; justify=&quot;end&quot;&gt;
+            &lt;Button type=&quot;button&quot; variant=&quot;ghost&quot; onClick={onClose}&gt;Cancel&lt;/Button&gt;
+            &lt;Button type=&quot;submit&quot; variant=&quot;primary&quot;
+                    disabled={!tier &amp;&amp; !mgr &amp;&amp; !status}&gt;
+              Save {count} changes
+            &lt;/Button&gt;
+          &lt;/Stack&gt;
+        &lt;/Stack&gt;
+      &lt;/Form&gt;
+    &lt;/Drawer&gt;
+  );
+}
+
+// ── Page ───────────────────────────────────────────────────────
+export function SuppliersBulkEdit({
+  initialRows, managerOptions, api,
+}: {
+  initialRows: Supplier[];
+  managerOptions: { value: string; label: string }[];
+  api: { bulkPatchSuppliers: (ids: string[], patch: BulkPatch) =&gt; Promise&lt;void&gt; };
+}) {
+  const [rows, setRows] = useState&lt;Supplier[]&gt;(initialRows);
+  const sel = useRowSelection(rows);
+  const [drawer, setDrawer] = useState(false);
+  const { push } = useToast();
+
+  const applyPatch = (patch: BulkPatch) =&gt; {
+    const ids = new Set(sel.selected.map((r) =&gt; r.id));
+    if (ids.size === 0) return;
+    const prev = rows;
+    const next = rows.map((r) =&gt; ids.has(r.id) ? { ...r, ...patch } : r);
+
+    setRows(next);
+    sel.clear();
+    setDrawer(false);
+
+    const ctrl = makeUndoableCommit({
+      onCommit:   () =&gt; api.bulkPatchSuppliers(Array.from(ids), patch),
+      onRollback: () =&gt; setRows(prev),
+    });
+    ctrl.schedule();
+
+    push({
+      tone: &#39;success&#39;,
+      title: `${ids.size} ${ids.size === 1 ? &#39;supplier&#39; : &#39;suppliers&#39;} updated`,
+      duration: UNDO_MS,
+      action: { label: &#39;Undo&#39;, run: ctrl.undo },
+    });
+  };
+
+  return (
+    &lt;Stack gap=&quot;md&quot;&gt;
+      &lt;header&gt;
+        &lt;h1&gt;Suppliers&lt;/h1&gt;
+        &lt;p&gt;{rows.length} active&lt;/p&gt;
+      &lt;/header&gt;
+
+      &lt;table&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;
+            &lt;th&gt;
+              &lt;Checkbox
+                checked={sel.count === rows.length &amp;&amp; rows.length &gt; 0}
+                indeterminate={sel.count &gt; 0 &amp;&amp; sel.count &lt; rows.length}
+                onChange={sel.toggleAll}
+                aria-label=&quot;Select all rows&quot;
+              /&gt;
+            &lt;/th&gt;
+            &lt;th&gt;Supplier&lt;/th&gt;&lt;th&gt;Tier&lt;/th&gt;&lt;th&gt;Manager&lt;/th&gt;&lt;th&gt;Status&lt;/th&gt;
+          &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          {rows.map((r) =&gt; (
+            &lt;tr key={r.id} data-selected={sel.ids.has(r.id) || undefined}&gt;
+              &lt;td&gt;&lt;Checkbox
+                checked={sel.ids.has(r.id)}
+                onChange={(on) =&gt; sel.set(r.id, on)}
+                aria-label={`Select ${r.name}`}
+              /&gt;&lt;/td&gt;
+              &lt;td&gt;{r.name}&lt;/td&gt;
+              &lt;td&gt;Tier {r.tier}&lt;/td&gt;
+              &lt;td&gt;{r.accountManagerId ?? &#39;—&#39;}&lt;/td&gt;
+              &lt;td&gt;{r.status}&lt;/td&gt;
+            &lt;/tr&gt;
+          ))}
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+
+      {sel.count &gt; 0 &amp;&amp; (
+        &lt;div className=&quot;ds-selection-bar&quot; role=&quot;toolbar&quot; aria-label=&quot;Bulk actions&quot;&gt;
+          &lt;span&gt;{sel.count} selected&lt;/span&gt;
+          &lt;Button variant=&quot;link&quot; onClick={sel.clear}&gt;Clear&lt;/Button&gt;
+          &lt;Button variant=&quot;primary&quot; onClick={() =&gt; setDrawer(true)}&gt;Edit&lt;/Button&gt;
+        &lt;/div&gt;
+      )}
+
+      &lt;BulkEditDrawer
+        open={drawer}
+        count={sel.count}
+        onClose={() =&gt; setDrawer(false)}
+        onSave={applyPatch}
+        managerOptions={managerOptions}
+      /&gt;
+    &lt;/Stack&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="width: 420px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px;">
+            <h3 style="font: 700 18px/1.2 var(--font-sans); margin: 0 0 14px;">Suppliers</h3>
+            <div style="display: grid; gap: 6px;">
+              <div style="display: flex; gap: 8px; padding: 8px 10px; background: var(--brand-soft); border-radius: 6px; align-items: center;"><span style="width: 14px; height: 14px; border-radius: 3px; background: var(--brand);"></span><span style="flex: 1; font: var(--type-body-sm); color: var(--brand-strong);">Acme Metals</span><span style="font: 500 11px/1 var(--font-mono); background: var(--surface); color: var(--brand-strong); border: 1px solid var(--brand); padding: 3px 6px; border-radius: 4px;">Tier A</span></div>
+              <div style="display: flex; gap: 8px; padding: 8px 10px; background: var(--brand-soft); border-radius: 6px; align-items: center;"><span style="width: 14px; height: 14px; border-radius: 3px; background: var(--brand);"></span><span style="flex: 1; font: var(--type-body-sm); color: var(--brand-strong);">Mukamba Mills</span><span style="font: 500 11px/1 var(--font-mono); background: var(--surface); color: var(--brand-strong); border: 1px solid var(--brand); padding: 3px 6px; border-radius: 4px;">Tier A</span></div>
+              <div style="display: flex; gap: 8px; padding: 8px 10px; background: var(--brand-soft); border-radius: 6px; align-items: center;"><span style="width: 14px; height: 14px; border-radius: 3px; background: var(--brand);"></span><span style="flex: 1; font: var(--type-body-sm); color: var(--brand-strong);">Sibanda Co.</span><span style="font: 500 11px/1 var(--font-mono); background: var(--surface); color: var(--brand-strong); border: 1px solid var(--brand); padding: 3px 6px; border-radius: 4px;">Tier A</span></div>
+            </div>
+            <div style="margin-top: 14px; background: var(--surface); border: 1px solid var(--border-strong); border-left: 3px solid var(--tone-success); border-radius: 8px; padding: 10px 12px; display: flex; gap: 10px; align-items: center;"><span data-icon="check" data-icon-size="14" style="color: var(--tone-success);"></span><div style="flex: 1; font: 600 13px/1.2 var(--font-sans);">3 suppliers updated</div><span style="font: 500 11px/1 var(--font-mono); color: var(--text-subtle);">4s</span><span style="font: 600 12px/1 var(--font-sans); color: var(--brand-strong);">Undo</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">SuppliersBulkEdit.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three common forks. Each is a small diff from the final composition.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Single-row edit, same hook</h4>
+        <p>The hook works for one row too. Inline-edit a single cell, schedule the commit, surface Undo.</p>
+<pre>const ctrl = makeUndoableCommit({
+  onCommit: () =&gt; api.patchRow(row.id, patch),
+  onRollback: () =&gt; setRow(prev),
+});
+ctrl.schedule();
+push({ ..., action: { label: &#39;Undo&#39;, run: ctrl.undo } });</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Stacked undos</h4>
+        <p>Two rapid edits should each be undoable. Track each commit by id; the toast lists "Edit, Edit · undo last".</p>
+<pre>// Track pending commits in a Map
+const pending = useRef(new Map());
+function schedule(id, ctrl) {
+  pending.current.set(id, ctrl);
+  setTimeout(() =&gt; pending.current.delete(id), UNDO_MS);
+}
+const undoLast = () =&gt; {
+  const [id, ctrl] = [...pending.current].pop();
+  ctrl.undo();
+};</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Server-confirmed bulk progress</h4>
+        <p>If the bulk operation is long-running (200 rows), don't schedule a single commit — fire immediately and show progress in the toast.</p>
+<pre>// Drop UNDO_MS, fire now
+const { progress } = useBulkJob(api.start(ids, patch));
+push({
+  tone: &#39;info&#39;,
+  title: `Updating ${ids.size}…`,
+  description: `${progress}%`,
+  persistent: true,
+});</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCESSIBILITY -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">What this recipe takes care of for you.</p>
+    <ul class="ck-a11y">
+      <li><b>Each row checkbox is labelled.</b> <code>aria-label="Select Acme Metals"</code> — screen readers say the supplier's name on every checkbox.</li>
+      <li><b>The "select all" checkbox knows when it's mixed.</b> <code>indeterminate</code> renders a dash glyph and reads as "mixed" to screen readers.</li>
+      <li><b>The selection toolbar is a toolbar.</b> <code>role="toolbar"</code> + <code>aria-label="Bulk actions"</code>. The 3 / N count lives inside it as a live status.</li>
+      <li><b>The drawer is a dialog.</b> <code>Drawer</code> renders with <code>role="dialog"</code>, traps focus, returns focus to the "Edit" button on close.</li>
+      <li><b>The Undo toast is assertive.</b> <code>aria-live="assertive"</code> so screen-reader users hear the announcement <em>and</em> the Undo affordance immediately — they have the same 5 seconds as sighted users.</li>
+      <li><b>The countdown is visual only.</b> The seconds tick down on screen, but the announcement names the window once ("5 seconds to undo") rather than re-announcing every second.</li>
+      <li><b>The drawer's "don't change" is a real option.</b> Not a placeholder. Selecting it via the keyboard is the only way to clear a field; we don't rely on text-input clearing.</li>
+    </ul>
+  </section>
+
+  <!-- RELATED -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">Other forms + table recipes.</p>
+    <div class="ck-related">
+      <a href="forms-inline-edit-row.html">Forms · Inline edit on row<span class="tag">New</span></a>
+      <a href="forms-autosave-drawer.html">Forms · Autosave drawer<span class="tag">New</span></a>
+      <a href="lists-filterable-data-table.html">Lists · Filterable data table<span class="tag">New</span></a>
+      <a href="notifications-toasts.html">States · Toasts + inbox<span class="tag">New</span></a>
+      <a href="auth-permission-gate.html">Auth · Permission gate<span class="tag">New</span></a>
+      <a href="forms-file-upload.html">Forms · File upload<span class="tag">New</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="auth-permission-gate.html"><div class="pager-label">← Previous</div><div class="pager-title">Permission gate</div></a>
+    <a href="forms-file-upload.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">File upload</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

@@ -68,18 +68,23 @@
     ]},
     { label: 'Cookbook', items: [
       ['All recipes',       ROOT + 'cookbook/index.html',       'cookbook-index'],
+      // ── Onboarding ──────────────────────────────────────────
+      ['Onboarding ·  First-run checklist', ROOT + 'cookbook/onboarding-checklist.html',      'onboarding-checklist',      'New'],
       // ── Auth ────────────────────────────────────────────────
       ['Auth ·  Sign in with 2FA',          ROOT + 'cookbook/auth-signin-2fa.html', 'auth-signin-2fa', 'New'],
       ['Auth ·  Forgot password',           ROOT + 'cookbook/auth-forgot-password.html',      'auth-forgot-password',      'New'],
       ['Auth ·  Sign up + email verify',    ROOT + 'cookbook/auth-signup-email-verify.html',  'auth-signup-email-verify',  'New'],
+      ['Auth ·  Permission gate',           ROOT + 'cookbook/auth-permission-gate.html',      'auth-permission-gate',      'New'],
       // ── Shells & nav ────────────────────────────────────────
       ['Shells ·  App shell with sidebar',  ROOT + 'cookbook/shells-app-shell-sidebar.html',  'shells-app-shell-sidebar',  'New'],
       ['Shells ·  Mobile bottom-tab shell', ROOT + 'cookbook/shells-mobile-bottom-tab.html',  'shells-mobile-bottom-tab',  'New'],
-      ['Shells ·  Command-palette nav',     '#',                '__', 'Soon'],
+      ['Shells ·  Command palette (⌘K)',    ROOT + 'cookbook/commands-cmd-k.html',            'commands-cmd-k',            'New'],
       // ── Forms ───────────────────────────────────────────────
       ['Forms ·  Multi-step wizard',        ROOT + 'cookbook/forms-multi-step-wizard.html',     'forms-multi-step-wizard',     'New'],
       ['Forms ·  Autosave drawer form',     ROOT + 'cookbook/forms-autosave-drawer.html',       'forms-autosave-drawer',       'New'],
       ['Forms ·  Inline edit on row',       ROOT + 'cookbook/forms-inline-edit-row.html',       'forms-inline-edit-row',       'New'],
+      ['Forms ·  Bulk edit with undo',      ROOT + 'cookbook/forms-bulk-edit-with-undo.html',   'forms-bulk-edit-with-undo',   'New'],
+      ['Forms ·  File upload',              ROOT + 'cookbook/forms-file-upload.html',           'forms-file-upload',           'New'],
       // ── Lists & detail ──────────────────────────────────────
       ['Lists ·  Filterable data table',    ROOT + 'cookbook/lists-filterable-data-table.html', 'lists-filterable-data-table', 'New'],
       ['Lists ·  Master–detail page',       ROOT + 'cookbook/lists-master-detail.html',         'lists-master-detail',         'New'],
@@ -89,6 +94,7 @@
       ['Dashboards ·  KPI hero + drilldown',ROOT + 'cookbook/dashboards-kpi-hero-drilldown.html', 'dashboards-kpi-hero-drilldown', 'New'],
       // ── States ──────────────────────────────────────────────
       ['States ·  Empty, loading, error',   ROOT + 'cookbook/states-empty-loading-error.html', 'states-empty-loading-error', 'New'],
+      ['States ·  Toasts + notifications',  ROOT + 'cookbook/notifications-toasts.html',       'notifications-toasts',       'New'],
       ['States ·  Optimistic + rollback',   '#',                '__', 'Soon'],
       // ── Settings ────────────────────────────────────────────
       ['Settings ·  Profile & security',    '#',                '__', 'Soon'],

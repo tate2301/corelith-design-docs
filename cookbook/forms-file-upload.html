@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>File upload · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .phone { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 16px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+  .ck-screen .brand { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .ph-title { font: 700 14px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .ck-screen .ph-sub { font: 500 11px/1.4 var(--font-sans); color: var(--text-muted); margin: 0; }
+  .ck-screen .ph-drop { flex: 1; border: 1.5px dashed var(--border-strong); border-radius: 10px; display: grid; place-items: center; padding: 16px; text-align: center; gap: 6px; }
+  .ck-screen .ph-drop.over { border-color: var(--brand); background: var(--brand-soft); }
+  .ck-screen .ph-drop .ic { width: 28px; height: 28px; border-radius: 50%; background: var(--surface-muted); color: var(--text-muted); display: grid; place-items: center; margin: 0 auto; }
+  .ck-screen .ph-drop.over .ic { background: var(--surface); color: var(--brand-strong); }
+  .ck-screen .ph-drop .t { font: 600 11px/1.3 var(--font-sans); color: var(--text-strong); }
+  .ck-screen .ph-drop .h { font: 500 10px/1.3 var(--font-sans); color: var(--text-subtle); }
+  .ck-screen .ph-files { display: grid; gap: 4px; }
+  .ck-screen .ph-file { display: flex; gap: 6px; align-items: center; padding: 5px 8px; background: var(--surface-muted); border-radius: 5px; font: 500 9px/1.2 var(--font-sans); }
+  .ck-screen .ph-file .nm { color: var(--text-strong); flex: 1; }
+  .ck-screen .ph-file .pct { font: 500 9px/1 var(--font-mono); color: var(--text-subtle); }
+  .ck-screen .ph-file .bar { position: relative; height: 3px; background: var(--surface); border-radius: 2px; overflow: hidden; width: 50px; }
+  .ck-screen .ph-file .bar i { position: absolute; inset: 0 auto 0 0; background: var(--brand); }
+  .ck-screen .ph-file.done .nm { color: var(--text-muted); }
+  .ck-screen .ph-file .ic { width: 12px; height: 12px; color: var(--text-muted); display: grid; place-items: center; }
+  .ck-screen .ph-file.fail .nm { color: var(--tone-danger); }
+  .ck-screen .ph-file .ret { font: 600 9px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .ph-form-row { padding: 6px 8px; background: var(--surface-muted); border-radius: 5px; font: 500 9px/1.2 var(--font-sans); color: var(--text-strong); display: flex; gap: 6px; align-items: center; }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+
+  .ck-pull { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; padding: 14px 16px; margin: 14px 0 0; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Forms</a><span class="sep">/</span>
+      <span>File upload</span>
+    </div>
+    <h1>Build a file-upload field that doesn't block the form</h1>
+    <p class="lede">By the end of this recipe you'll have a drag-drop zone with click-to-browse and paste-image fallback, per-file progress, automatic retry on failure, resumable chunked upload for files over 5MB, and uploads that run in the background so the user keeps typing into the rest of the form.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="upload" data-icon-size="12"></span>Forms</span>
+      <span class="meta-pill">2 primitives · 1 block · 0 patterns</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~35 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A field that accepts files from drag, click, or clipboard paste. Each file gets its own progress, its own retry, and — when large — its own resumable chunked upload. The user keeps interacting with the rest of the form while files upload.</p>
+    <p>Most upload UIs are still blocking: the form sits there with a spinner until every byte is on the server. The fix is to treat upload as a background task, like an autosave. The user picks a file, the upload starts, a progress chip appears, and they can keep filling fields. Submit waits for in-flight uploads to settle — and surfaces a clear "still uploading 2 files" if the user tries to send too early.</p>
+    <p class="ck-pull"><b>Always upload in the background — never block the form.</b> The user's attention is on what they're typing, not on the bytes leaving their browser. A blocked form punishes the careful user; a background upload rewards them.</p>
+    <p>Resumable uploads kick in over 5MB. Below that, the round-trip on a flaky connection is faster than the chunk-coordination overhead. Above it, a dropped connection should pick up where it stopped — nobody wants to re-upload a 40MB PDF because they walked between two access points.</p>
+    <p><b>Skip this recipe if</b> your app uploads small files only (under 1MB) on a server you control. A plain <code>&lt;input type="file"&gt;</code> + a fetch will do; you don't need chunks or retry.</p>
+  </section>
+
+  <!-- WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Empty drop zone, mid-upload with one file failed and one resuming, and the form's other fields stay editable.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · New supplier</span>
+          <p class="ph-title">Attach documents</p>
+          <p class="ph-sub">PDFs and images. Max 50MB.</p>
+          <div class="ph-drop">
+            <div class="ic"><span data-icon="upload" data-icon-size="16"></span></div>
+            <div class="t">Drop files here</div>
+            <div class="h">or <u>click to browse</u> · paste an image</div>
+          </div>
+        </div>
+        <div class="caption"><span class="num">01</span> Empty — drag, click, paste</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · New supplier</span>
+          <p class="ph-title">Attach documents</p>
+          <div class="ph-drop over">
+            <div class="ic"><span data-icon="upload" data-icon-size="16"></span></div>
+            <div class="t">Drop to upload</div>
+          </div>
+          <div class="ph-files">
+            <div class="ph-file done"><span class="ic"><span data-icon="check" data-icon-size="10"></span></span><span class="nm">tax-clearance.pdf</span><span class="pct">Done</span></div>
+            <div class="ph-file"><span class="ic"><span data-icon="upload" data-icon-size="10"></span></span><span class="nm">bank-letter.pdf</span><div class="bar"><i style="width: 64%;"></i></div><span class="pct">64%</span></div>
+            <div class="ph-file fail"><span class="ic"><span data-icon="alert" data-icon-size="10"></span></span><span class="nm">invoice.jpg</span><span class="ret">Retry</span></div>
+          </div>
+        </div>
+        <div class="caption"><span class="num">02</span> Mid-upload — per-file progress</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · New supplier</span>
+          <p class="ph-title">New supplier</p>
+          <div class="ph-form-row"><span data-icon="user" data-icon-size="10"></span>Name · Acme Metals Ltd</div>
+          <div class="ph-form-row"><span data-icon="globe" data-icon-size="10"></span>VAT · ZW 2810 7841 02</div>
+          <div class="ph-form-row"><span data-icon="upload" data-icon-size="10"></span>Files · 3 uploading…</div>
+          <p class="ph-sub" style="margin-top: auto;">User keeps typing while uploads run in the background.</p>
+        </div>
+        <div class="caption"><span class="num">03</span> Form stays editable</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/p-progress.html"><span class="kind">Primitive</span>Progress &amp; meter</a>
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+      <a class="ck-piece" href="../system/p-alert.html"><span class="kind">Primitive</span>Alert</a>
+      <a class="ck-piece" href="../system/b-empty-state.html"><span class="kind">Block</span>Empty state</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>Stack</code>, <code>FileUpload</code>, <code>useUpload</code>, <code>Progress</code>, <code>Button</code>, <code>Alert</code>. <code>useUpload</code> owns the per-file state and the chunk coordinator.</p>
+  </section>
+
+  <!-- STEP-BY-STEP -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <!-- Step 1 -->
+    <div class="ck-step"><span class="n">01</span><h3>Model each file as a state machine</h3></div>
+    <p>Every picked file lives in one of a handful of states. Branch the renderer per state, not per boolean. <code>'failed'</code> carries the retry handle; <code>'uploading'</code> carries progress; <code>'done'</code> carries the server-side id.</p>
+    <div class="ds-specimen"
+         data-code='export type UploadState =
+  | { kind: &#39;queued&#39; }
+  | { kind: &#39;uploading&#39;; progress: number; abort: () =&gt; void }
+  | { kind: &#39;done&#39;; remoteId: string; url: string }
+  | { kind: &#39;failed&#39;; error: string; retry: () =&gt; void }
+  | { kind: &#39;rejected&#39;; reason: string };
+
+export type Upload = {
+  id: string;            // local uuid
+  file: File;            // original picked File
+  name: string;
+  size: number;
+  state: UploadState;
+};
+
+// Client-side reject list. The server re-checks — never trust this.
+const BLOCKED_EXTENSIONS = new Set([
+  &#39;exe&#39;,&#39;bat&#39;,&#39;cmd&#39;,&#39;com&#39;,&#39;scr&#39;,&#39;msi&#39;,&#39;js&#39;,&#39;vbs&#39;,&#39;ps1&#39;,
+]);
+
+export function preflight(file: File): { ok: true } | { ok: false; reason: string } {
+  const ext = file.name.split(&#39;.&#39;).pop()?.toLowerCase() ?? &#39;&#39;;
+  if (BLOCKED_EXTENSIONS.has(ext)) return { ok: false, reason: `${ext} files aren&#39;t allowed.` };
+  if (file.size &gt; 50 * 1024 * 1024) return { ok: false, reason: &#39;Max 50MB per file.&#39; };
+  return { ok: true };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div>queued → uploading → done | failed.</div>
+          <div style="color: var(--text-subtle);">Per-file state. No global isLoading boolean.</div>
+          <div style="color: var(--text-subtle);">Client rejects malware-y extensions. Server re-checks. Both belong.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Upload model</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="ck-step"><span class="n">02</span><h3>Accept files from drop, click, and clipboard paste</h3></div>
+    <p>The drop zone is one component; the input is hidden behind it. <code>onPaste</code> on the document listens for image clipboard data. The same accept handler runs for all three sources, so behaviour is identical no matter how the file arrived.</p>
+    <div class="ds-specimen"
+         data-code='import { useRef, useState, useEffect, useCallback } from &#39;@huchu/react&#39;;
+
+export function useFilePicker(onFiles: (files: File[]) =&gt; void) {
+  const inputRef = useRef&lt;HTMLInputElement&gt;(null);
+  const [over, setOver] = useState(false);
+
+  const browse = () =&gt; inputRef.current?.click();
+
+  const handleInput = (e: React.ChangeEvent&lt;HTMLInputElement&gt;) =&gt; {
+    const fs = Array.from(e.target.files ?? []);
+    if (fs.length) onFiles(fs);
+    e.target.value = &#39;&#39;;  // allow picking the same file twice
+  };
+
+  const handleDrop = (e: React.DragEvent) =&gt; {
+    e.preventDefault();
+    setOver(false);
+    const fs = Array.from(e.dataTransfer.files);
+    if (fs.length) onFiles(fs);
+  };
+
+  // Paste an image anywhere on the page, get it into the field.
+  useEffect(() =&gt; {
+    const onPaste = (e: ClipboardEvent) =&gt; {
+      const fs: File[] = [];
+      for (const it of Array.from(e.clipboardData?.items ?? [])) {
+        if (it.kind === &#39;file&#39;) {
+          const f = it.getAsFile();
+          if (f) fs.push(f);
+        }
+      }
+      if (fs.length) onFiles(fs);
+    };
+    window.addEventListener(&#39;paste&#39;, onPaste);
+    return () =&gt; window.removeEventListener(&#39;paste&#39;, onPaste);
+  }, [onFiles]);
+
+  return {
+    inputRef, over, browse, handleInput, handleDrop,
+    handleDragOver: (e: React.DragEvent) =&gt; { e.preventDefault(); setOver(true); },
+    handleDragLeave: () =&gt; setOver(false),
+  };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div>Drag, click, paste — three inputs, one accept handler.</div>
+          <div style="color: var(--text-subtle);">Paste listens at the window level — works no matter where focus is.</div>
+          <div style="color: var(--text-subtle);">Input is reset after each pick so the same file can be re-picked.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · File picker</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="ck-step"><span class="n">03</span><h3>Upload each file independently — with retry built in</h3></div>
+    <p>Each file owns its own <code>XMLHttpRequest</code> so progress is per-file. <code>onerror</code> moves it to <code>'failed'</code> with a retry handle that re-runs the same upload from scratch. The hook never re-renders the rest of the form when one file's progress changes — uploads live in their own state slice.</p>
+    <div class="ds-specimen"
+         data-code='import { useState, useCallback } from &#39;@huchu/react&#39;;
+
+const RESUMABLE_THRESHOLD = 5 * 1024 * 1024;  // 5MB
+
+export function useUpload({
+  endpoint,
+  resumableEndpoint,
+}: {
+  endpoint: string;
+  resumableEndpoint: string;
+}) {
+  const [uploads, setUploads] = useState&lt;Upload[]&gt;([]);
+
+  const update = (id: string, patch: Partial&lt;Upload&gt; | ((u: Upload) =&gt; Upload)) =&gt; {
+    setUploads((prev) =&gt; prev.map((u) =&gt; u.id === id
+      ? (typeof patch === &#39;function&#39; ? patch(u) : { ...u, ...patch })
+      : u));
+  };
+
+  const uploadOne = (id: string, file: File) =&gt; {
+    if (file.size &gt; RESUMABLE_THRESHOLD) {
+      return uploadResumable(id, file, resumableEndpoint, update);
+    }
+    const xhr = new XMLHttpRequest();
+    xhr.open(&#39;POST&#39;, endpoint);
+    xhr.upload.onprogress = (e) =&gt; {
+      if (!e.lengthComputable) return;
+      update(id, (u) =&gt; ({ ...u, state: { kind: &#39;uploading&#39;, progress: e.loaded / e.total, abort: () =&gt; xhr.abort() } }));
+    };
+    xhr.onerror = () =&gt; update(id, { state: { kind: &#39;failed&#39;, error: &#39;Network error&#39;, retry: () =&gt; uploadOne(id, file) } });
+    xhr.onload = () =&gt; {
+      if (xhr.status &gt;= 200 &amp;&amp; xhr.status &lt; 300) {
+        const res = JSON.parse(xhr.responseText) as { remoteId: string; url: string };
+        update(id, { state: { kind: &#39;done&#39;, ...res } });
+      } else {
+        update(id, { state: { kind: &#39;failed&#39;, error: `Server returned ${xhr.status}`, retry: () =&gt; uploadOne(id, file) } });
+      }
+    };
+    const fd = new FormData();
+    fd.append(&#39;file&#39;, file);
+    xhr.send(fd);
+    update(id, { state: { kind: &#39;uploading&#39;, progress: 0, abort: () =&gt; xhr.abort() } });
+  };
+
+  const add = useCallback((files: File[]) =&gt; {
+    const next: Upload[] = files.map((file) =&gt; {
+      const id = crypto.randomUUID();
+      const pf = preflight(file);
+      const state: UploadState = pf.ok ? { kind: &#39;queued&#39; } : { kind: &#39;rejected&#39;, reason: pf.reason };
+      return { id, file, name: file.name, size: file.size, state };
+    });
+    setUploads((p) =&gt; [...p, ...next]);
+    next.filter((u) =&gt; u.state.kind === &#39;queued&#39;).forEach((u) =&gt; uploadOne(u.id, u.file));
+  }, []);
+
+  const remove = useCallback((id: string) =&gt; {
+    setUploads((p) =&gt; {
+      const u = p.find((x) =&gt; x.id === id);
+      if (u?.state.kind === &#39;uploading&#39;) u.state.abort();
+      return p.filter((x) =&gt; x.id !== id);
+    });
+  }, []);
+
+  return { uploads, add, remove };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div>One XHR per file. Per-file progress.</div>
+          <div style="color: var(--text-subtle);">Files over 5MB go through the resumable path.</div>
+          <div style="color: var(--text-subtle);">Retry is a closure on the original file — same upload, fresh XHR.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Upload + retry</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="ck-step"><span class="n">04</span><h3>Add the resumable path for files over 5MB</h3></div>
+    <p>The server gives us a session URL on first PUT, then we POST chunks of 1MB each with byte-range headers. A dropped connection leaves the session alive on the server; resume re-asks the server "what byte are you at?" and continues from there.</p>
+    <div class="ds-specimen"
+         data-code='const CHUNK = 1024 * 1024;  // 1MB chunks
+
+async function uploadResumable(
+  id: string, file: File, endpoint: string,
+  update: (id: string, patch: Partial&lt;Upload&gt; | ((u: Upload) =&gt; Upload)) =&gt; void,
+) {
+  // 1. Open a session. Server returns a per-upload URL.
+  const init = await fetch(endpoint, {
+    method: &#39;POST&#39;,
+    headers: { &#39;content-type&#39;: &#39;application/json&#39; },
+    body: JSON.stringify({ name: file.name, size: file.size, type: file.type }),
+  });
+  if (!init.ok) {
+    update(id, { state: { kind: &#39;failed&#39;, error: `Couldn&#39;t open session (${init.status})`, retry: () =&gt; uploadResumable(id, file, endpoint, update) } });
+    return;
+  }
+  const { sessionUrl } = await init.json() as { sessionUrl: string };
+
+  // 2. Ask &quot;where should I start?&quot; — supports resume after a drop.
+  const where = await fetch(sessionUrl, { method: &#39;HEAD&#39; });
+  let offset = parseInt(where.headers.get(&#39;upload-offset&#39;) ?? &#39;0&#39;, 10);
+
+  // 3. PUT chunks until done.
+  let aborted = false;
+  update(id, { state: { kind: &#39;uploading&#39;, progress: offset / file.size, abort: () =&gt; { aborted = true; } } });
+
+  while (offset &lt; file.size) {
+    if (aborted) return;
+    const end = Math.min(offset + CHUNK, file.size);
+    const chunk = file.slice(offset, end);
+    const res = await fetch(sessionUrl, {
+      method: &#39;PUT&#39;,
+      headers: { &#39;upload-offset&#39;: String(offset), &#39;content-length&#39;: String(end - offset) },
+      body: chunk,
+    });
+    if (!res.ok) {
+      update(id, { state: { kind: &#39;failed&#39;, error: `Chunk ${offset} failed`, retry: () =&gt; uploadResumable(id, file, endpoint, update) } });
+      return;
+    }
+    offset = end;
+    update(id, (u) =&gt; ({ ...u, state: { kind: &#39;uploading&#39;, progress: offset / file.size, abort: () =&gt; { aborted = true; } } }));
+  }
+
+  // 4. Finalize. Server returns the remote id.
+  const done = await fetch(sessionUrl + &#39;?complete=1&#39;, { method: &#39;POST&#39; });
+  if (!done.ok) {
+    update(id, { state: { kind: &#39;failed&#39;, error: &#39;Finalize failed&#39;, retry: () =&gt; uploadResumable(id, file, endpoint, update) } });
+    return;
+  }
+  const { remoteId, url } = await done.json() as { remoteId: string; url: string };
+  update(id, { state: { kind: &#39;done&#39;, remoteId, url } });
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div>Open session → HEAD for offset → PUT chunks → finalize.</div>
+          <div style="color: var(--text-subtle);">A connection drop just rewinds to the last accepted byte.</div>
+          <div style="color: var(--text-subtle);">Retry re-opens the session URL — same flow, fresh state.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Resumable</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="ck-step"><span class="n">05</span><h3>Block the submit on in-flight uploads — clearly</h3></div>
+    <p>The form's submit is allowed to fire any time. If uploads are still running, the submit handler counts them and surfaces a "still uploading 2 files" alert; it does not silently wait. Users hate silent waits more than they hate clear ones.</p>
+    <div class="ds-specimen"
+         data-code='function SupplierForm() {
+  const { uploads, add, remove } = useUpload({
+    endpoint: &#39;/api/upload&#39;,
+    resumableEndpoint: &#39;/api/upload/resumable&#39;,
+  });
+
+  const inFlight = uploads.filter((u) =&gt; u.state.kind === &#39;uploading&#39; || u.state.kind === &#39;queued&#39;).length;
+  const failed   = uploads.filter((u) =&gt; u.state.kind === &#39;failed&#39;).length;
+  const doneIds  = uploads
+    .filter((u): u is Upload &amp; { state: Extract&lt;UploadState, { kind: &#39;done&#39; }&gt; } =&gt; u.state.kind === &#39;done&#39;)
+    .map((u) =&gt; u.state.remoteId);
+
+  const submit = async (values: SupplierForm) =&gt; {
+    if (inFlight &gt; 0) {
+      // Tell, don&#39;t wait silently.
+      return showInline(`${inFlight} ${inFlight === 1 ? &#39;file is&#39; : &#39;files are&#39;} still uploading. Try again when they finish.`);
+    }
+    if (failed &gt; 0) {
+      return showInline(`Retry the failed upload${failed === 1 ? &#39;&#39; : &#39;s&#39;} before saving.`);
+    }
+    await api.createSupplier({ ...values, attachmentIds: doneIds });
+  };
+  // …render
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 6px; padding: 18px; font: 500 12px/1.4 var(--font-mono); color: var(--text-muted);">
+          <div>Submit reads the upload slice, refuses if in-flight, names the count.</div>
+          <div style="color: var(--text-subtle);">Never a silent wait. Tell the user what's blocking.</div>
+          <div style="color: var(--text-subtle);">The form's other fields keep being editable the whole time.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 5 · Submit gate</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- FINAL COMPOSITION -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole <code>FileUploadField</code>, assembled. Drop zone + click + paste + per-file state + retry + resumable.</p>
+    <div class="ds-specimen"
+         data-code='import { useCallback, useEffect, useRef, useState } from &#39;@huchu/react&#39;;
+import { Stack, Progress, Button, Alert } from &#39;@huchu/react&#39;;
+
+// ── Types (Step 1) ─────────────────────────────────────────────
+export type UploadState =
+  | { kind: &#39;queued&#39; }
+  | { kind: &#39;uploading&#39;; progress: number; abort: () =&gt; void }
+  | { kind: &#39;done&#39;; remoteId: string; url: string }
+  | { kind: &#39;failed&#39;; error: string; retry: () =&gt; void }
+  | { kind: &#39;rejected&#39;; reason: string };
+
+export type Upload = {
+  id: string; file: File; name: string; size: number; state: UploadState;
+};
+
+const BLOCKED = new Set([&#39;exe&#39;,&#39;bat&#39;,&#39;cmd&#39;,&#39;com&#39;,&#39;scr&#39;,&#39;msi&#39;,&#39;js&#39;,&#39;vbs&#39;,&#39;ps1&#39;]);
+const MAX_BYTES = 50 * 1024 * 1024;
+const RESUMABLE = 5 * 1024 * 1024;
+const CHUNK = 1024 * 1024;
+
+function preflight(file: File): { ok: true } | { ok: false; reason: string } {
+  const ext = file.name.split(&#39;.&#39;).pop()?.toLowerCase() ?? &#39;&#39;;
+  if (BLOCKED.has(ext)) return { ok: false, reason: `${ext} files aren&#39;t allowed.` };
+  if (file.size &gt; MAX_BYTES) return { ok: false, reason: &#39;Max 50MB per file.&#39; };
+  return { ok: true };
+}
+
+// ── Upload hook (Steps 3 + 4) ──────────────────────────────────
+export function useUpload({ endpoint, resumableEndpoint }: { endpoint: string; resumableEndpoint: string }) {
+  const [uploads, setUploads] = useState&lt;Upload[]&gt;([]);
+
+  const update = (id: string, patch: Partial&lt;Upload&gt; | ((u: Upload) =&gt; Upload)) =&gt; {
+    setUploads((prev) =&gt; prev.map((u) =&gt; u.id === id
+      ? (typeof patch === &#39;function&#39; ? patch(u) : { ...u, ...patch })
+      : u));
+  };
+
+  const uploadSmall = (id: string, file: File) =&gt; {
+    const xhr = new XMLHttpRequest();
+    xhr.open(&#39;POST&#39;, endpoint);
+    xhr.upload.onprogress = (e) =&gt; {
+      if (!e.lengthComputable) return;
+      update(id, (u) =&gt; ({ ...u, state: { kind: &#39;uploading&#39;, progress: e.loaded / e.total, abort: () =&gt; xhr.abort() } }));
+    };
+    xhr.onerror = () =&gt; update(id, { state: { kind: &#39;failed&#39;, error: &#39;Network error&#39;, retry: () =&gt; uploadSmall(id, file) } });
+    xhr.onload = () =&gt; {
+      if (xhr.status &gt;= 200 &amp;&amp; xhr.status &lt; 300) {
+        const r = JSON.parse(xhr.responseText) as { remoteId: string; url: string };
+        update(id, { state: { kind: &#39;done&#39;, remoteId: r.remoteId, url: r.url } });
+      } else {
+        update(id, { state: { kind: &#39;failed&#39;, error: `HTTP ${xhr.status}`, retry: () =&gt; uploadSmall(id, file) } });
+      }
+    };
+    const fd = new FormData(); fd.append(&#39;file&#39;, file);
+    xhr.send(fd);
+    update(id, { state: { kind: &#39;uploading&#39;, progress: 0, abort: () =&gt; xhr.abort() } });
+  };
+
+  const uploadResumable = async (id: string, file: File) =&gt; {
+    let aborted = false;
+    const init = await fetch(resumableEndpoint, {
+      method: &#39;POST&#39;,
+      headers: { &#39;content-type&#39;: &#39;application/json&#39; },
+      body: JSON.stringify({ name: file.name, size: file.size, type: file.type }),
+    });
+    if (!init.ok) {
+      update(id, { state: { kind: &#39;failed&#39;, error: &#39;Couldn&#39;t open session&#39;, retry: () =&gt; uploadResumable(id, file) } });
+      return;
+    }
+    const { sessionUrl } = await init.json() as { sessionUrl: string };
+
+    const where = await fetch(sessionUrl, { method: &#39;HEAD&#39; });
+    let offset = parseInt(where.headers.get(&#39;upload-offset&#39;) ?? &#39;0&#39;, 10);
+
+    update(id, { state: { kind: &#39;uploading&#39;, progress: offset / file.size, abort: () =&gt; { aborted = true; } } });
+
+    while (offset &lt; file.size) {
+      if (aborted) return;
+      const end = Math.min(offset + CHUNK, file.size);
+      const chunk = file.slice(offset, end);
+      const res = await fetch(sessionUrl, {
+        method: &#39;PUT&#39;,
+        headers: { &#39;upload-offset&#39;: String(offset), &#39;content-length&#39;: String(end - offset) },
+        body: chunk,
+      });
+      if (!res.ok) {
+        update(id, { state: { kind: &#39;failed&#39;, error: `Chunk ${offset}`, retry: () =&gt; uploadResumable(id, file) } });
+        return;
+      }
+      offset = end;
+      update(id, (u) =&gt; ({ ...u, state: { kind: &#39;uploading&#39;, progress: offset / file.size, abort: () =&gt; { aborted = true; } } }));
+    }
+
+    const fin = await fetch(sessionUrl + &#39;?complete=1&#39;, { method: &#39;POST&#39; });
+    if (!fin.ok) {
+      update(id, { state: { kind: &#39;failed&#39;, error: &#39;Finalize failed&#39;, retry: () =&gt; uploadResumable(id, file) } });
+      return;
+    }
+    const r = await fin.json() as { remoteId: string; url: string };
+    update(id, { state: { kind: &#39;done&#39;, remoteId: r.remoteId, url: r.url } });
+  };
+
+  const startUpload = (id: string, file: File) =&gt; {
+    if (file.size &gt; RESUMABLE) uploadResumable(id, file);
+    else                       uploadSmall(id, file);
+  };
+
+  const add = useCallback((files: File[]) =&gt; {
+    const next: Upload[] = files.map((file) =&gt; {
+      const id = crypto.randomUUID();
+      const pf = preflight(file);
+      const state: UploadState = pf.ok ? { kind: &#39;queued&#39; } : { kind: &#39;rejected&#39;, reason: pf.reason };
+      return { id, file, name: file.name, size: file.size, state };
+    });
+    setUploads((p) =&gt; [...p, ...next]);
+    next.filter((u) =&gt; u.state.kind === &#39;queued&#39;).forEach((u) =&gt; startUpload(u.id, u.file));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const remove = useCallback((id: string) =&gt; {
+    setUploads((p) =&gt; {
+      const u = p.find((x) =&gt; x.id === id);
+      if (u?.state.kind === &#39;uploading&#39;) u.state.abort();
+      return p.filter((x) =&gt; x.id !== id);
+    });
+  }, []);
+
+  return { uploads, add, remove };
+}
+
+// ── Component (Steps 2 + 5) ────────────────────────────────────
+export function FileUploadField({
+  label = &#39;Attach documents&#39;,
+  hint = &#39;PDFs and images. Max 50MB.&#39;,
+  endpoint = &#39;/api/upload&#39;,
+  resumableEndpoint = &#39;/api/upload/resumable&#39;,
+}: {
+  label?: string;
+  hint?: string;
+  endpoint?: string;
+  resumableEndpoint?: string;
+}) {
+  const { uploads, add, remove } = useUpload({ endpoint, resumableEndpoint });
+  const inputRef = useRef&lt;HTMLInputElement&gt;(null);
+  const [over, setOver] = useState(false);
+
+  // Paste-image listener — global.
+  useEffect(() =&gt; {
+    const onPaste = (e: ClipboardEvent) =&gt; {
+      const fs: File[] = [];
+      for (const it of Array.from(e.clipboardData?.items ?? [])) {
+        if (it.kind === &#39;file&#39;) { const f = it.getAsFile(); if (f) fs.push(f); }
+      }
+      if (fs.length) add(fs);
+    };
+    window.addEventListener(&#39;paste&#39;, onPaste);
+    return () =&gt; window.removeEventListener(&#39;paste&#39;, onPaste);
+  }, [add]);
+
+  return (
+    &lt;Stack gap=&quot;sm&quot;&gt;
+      &lt;label&gt;
+        &lt;span className=&quot;ds-field-label&quot;&gt;{label}&lt;/span&gt;
+        &lt;span className=&quot;ds-field-hint&quot;&gt;{hint}&lt;/span&gt;
+      &lt;/label&gt;
+      &lt;div
+        className={`ds-drop ${over ? &#39;is-over&#39; : &#39;&#39;}`}
+        role=&quot;button&quot; tabIndex={0}
+        aria-label={`${label}. Drop files here or press Enter to browse.`}
+        onClick={() =&gt; inputRef.current?.click()}
+        onKeyDown={(e) =&gt; { if (e.key === &#39;Enter&#39; || e.key === &#39; &#39;) inputRef.current?.click(); }}
+        onDragOver={(e) =&gt; { e.preventDefault(); setOver(true); }}
+        onDragLeave={() =&gt; setOver(false)}
+        onDrop={(e) =&gt; {
+          e.preventDefault();
+          setOver(false);
+          const fs = Array.from(e.dataTransfer.files);
+          if (fs.length) add(fs);
+        }}
+      &gt;
+        &lt;span data-icon=&quot;upload&quot; data-icon-size=&quot;20&quot; /&gt;
+        &lt;div&gt;Drop files here&lt;/div&gt;
+        &lt;div&gt;or click to browse · paste an image&lt;/div&gt;
+        &lt;input
+          ref={inputRef} type=&quot;file&quot; multiple hidden
+          onChange={(e) =&gt; {
+            const fs = Array.from(e.target.files ?? []);
+            if (fs.length) add(fs);
+            e.target.value = &#39;&#39;;
+          }}
+        /&gt;
+      &lt;/div&gt;
+
+      &lt;ul className=&quot;ds-upload-list&quot;&gt;
+        {uploads.map((u) =&gt; (
+          &lt;li key={u.id}&gt;
+            &lt;span&gt;{u.name}&lt;/span&gt;
+            {u.state.kind === &#39;uploading&#39; &amp;&amp; (
+              &lt;Progress value={u.state.progress * 100} aria-label={`Uploading ${u.name}`} /&gt;
+            )}
+            {u.state.kind === &#39;done&#39; &amp;&amp; &lt;span&gt;Done&lt;/span&gt;}
+            {u.state.kind === &#39;failed&#39; &amp;&amp; (
+              &lt;Button variant=&quot;link&quot; onClick={u.state.retry}&gt;Retry&lt;/Button&gt;
+            )}
+            {u.state.kind === &#39;rejected&#39; &amp;&amp; (
+              &lt;Alert tone=&quot;warning&quot;&gt;{u.state.reason}&lt;/Alert&gt;
+            )}
+            &lt;Button variant=&quot;icon&quot; aria-label={`Remove ${u.name}`} onClick={() =&gt; remove(u.id)}&gt;
+              &lt;span data-icon=&quot;x&quot; data-icon-size=&quot;14&quot; /&gt;
+            &lt;/Button&gt;
+          &lt;/li&gt;
+        ))}
+      &lt;/ul&gt;
+    &lt;/Stack&gt;
+  );
+}
+
+// ── How the parent form uses it (Step 5) ───────────────────────
+export function SupplierForm() {
+  const { uploads, add } = useUpload({ endpoint: &#39;/api/upload&#39;, resumableEndpoint: &#39;/api/upload/resumable&#39; });
+  const inFlight = uploads.filter((u) =&gt; u.state.kind === &#39;uploading&#39; || u.state.kind === &#39;queued&#39;).length;
+  const failed   = uploads.filter((u) =&gt; u.state.kind === &#39;failed&#39;).length;
+
+  const submit = async () =&gt; {
+    if (inFlight &gt; 0) return showInline(`${inFlight} ${inFlight === 1 ? &#39;file is&#39; : &#39;files are&#39;} still uploading.`);
+    if (failed &gt; 0)   return showInline(`Retry the failed upload${failed === 1 ? &#39;&#39; : &#39;s&#39;} first.`);
+    // proceed
+  };
+  // …form JSX
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="width: 380px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px;">
+            <div style="font: 500 11px/1 var(--font-sans); color: var(--text-muted); margin-bottom: 4px;">Attach documents</div>
+            <div style="font: var(--type-caption); color: var(--text-subtle); margin-bottom: 12px;">PDFs and images. Max 50MB.</div>
+            <div style="border: 1.5px dashed var(--brand); background: var(--brand-soft); border-radius: 10px; padding: 22px 14px; text-align: center; margin-bottom: 14px;">
+              <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--surface); color: var(--brand-strong); display: grid; place-items: center; margin: 0 auto 8px;"><span data-icon="upload" data-icon-size="16"></span></div>
+              <div style="font: 600 13px/1.2 var(--font-sans); color: var(--brand-strong);">Drop to upload</div>
+              <div style="font: var(--type-caption); color: var(--text-subtle);">or click to browse · paste an image</div>
+            </div>
+            <div style="display: grid; gap: 6px;">
+              <div style="display: flex; gap: 8px; align-items: center; padding: 8px 10px; background: var(--surface-muted); border-radius: 6px; font: var(--type-body-sm);"><span data-icon="check" data-icon-size="12" style="color: var(--tone-success);"></span><span style="flex: 1; color: var(--text-muted);">tax-clearance.pdf</span><span style="font: var(--type-caption); color: var(--text-subtle);">Done</span></div>
+              <div style="display: flex; gap: 8px; align-items: center; padding: 8px 10px; background: var(--surface-muted); border-radius: 6px; font: var(--type-body-sm);"><span data-icon="upload" data-icon-size="12"></span><span style="flex: 1;">bank-letter.pdf</span><div style="width: 64px; height: 4px; background: var(--surface); border-radius: 2px; overflow: hidden;"><div style="width: 64%; height: 100%; background: var(--brand);"></div></div><span style="font: var(--type-caption); color: var(--text-subtle);">64%</span></div>
+              <div style="display: flex; gap: 8px; align-items: center; padding: 8px 10px; background: var(--surface-muted); border-radius: 6px; font: var(--type-body-sm);"><span data-icon="alert" data-icon-size="12" style="color: var(--tone-danger);"></span><span style="flex: 1; color: var(--tone-danger);">invoice.jpg</span><span style="font: 600 12px/1 var(--font-sans); color: var(--brand-strong);">Retry</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">FileUploadField.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three common forks. Each is a small diff from the final composition.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Single file only</h4>
+        <p>A profile photo or signed document. Cap to one upload and replace any prior file.</p>
+<pre>const add = useCallback((files: File[]) =&gt; {
+  const file = files[0];
+  if (!file) return;
+  // replace existing
+  uploads.forEach(u =&gt; remove(u.id));
+  setUploads([toUpload(file)]);
+}, [uploads]);</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Image-only with preview</h4>
+        <p>Camera roll uploads. Filter by MIME and render an inline thumbnail per file.</p>
+<pre>const accept = (file: File) =&gt;
+  file.type.startsWith(&#39;image/&#39;);
+{u.file.type.startsWith(&#39;image/&#39;) &amp;&amp; (
+  &lt;img
+    src={URL.createObjectURL(u.file)}
+    alt={u.name}
+  /&gt;
+)}</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Direct-to-S3 with presigned URL</h4>
+        <p>Skip your server. Server hands out a presigned PUT URL; the browser uploads straight to S3.</p>
+<pre>// Open session = ask for a presigned URL
+const { putUrl, publicUrl } =
+  await fetch(&#39;/api/sign&#39;)
+    .then(r =&gt; r.json());
+
+await fetch(putUrl, {
+  method: &#39;PUT&#39;, body: file,
+  headers: { &#39;content-type&#39;: file.type },
+});</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCESSIBILITY -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">What this recipe takes care of for you.</p>
+    <ul class="ck-a11y">
+      <li><b>The drop zone is keyboard-actionable.</b> <code>role="button"</code> + <code>tabIndex=0</code> + Enter/Space handler — drag-drop is a sighted-mouse feature, but the same surface opens the file picker via the keyboard.</li>
+      <li><b>The hidden input is reachable too.</b> The <code>&lt;input type="file"&gt;</code> stays in the DOM (hidden, not <code>display: none</code>) so screen-reader users can find it via tab if they prefer.</li>
+      <li><b>Progress is announced.</b> Each <code>Progress</code> bar carries <code>aria-label="Uploading bank-letter.pdf"</code> + <code>aria-valuenow</code>. Screen readers re-announce on milestone changes (10%, 50%, 90%).</li>
+      <li><b>Per-file errors are role="alert".</b> A failed upload renders an inline <code>Alert</code> that is read once, with a labelled <code>Button</code> for retry.</li>
+      <li><b>Rejected files are explained.</b> "exe files aren't allowed" is rendered inline next to the file, not hidden in a toast — it's a permanent state, not a passing event.</li>
+      <li><b>The submit gate names the problem.</b> "2 files are still uploading. Try again when they finish." — never a silent disabled button.</li>
+      <li><b>Paste works without focus on the field.</b> The paste listener is global, so screen-reader users who Ctrl+V from the clipboard get the same outcome as a sighted user pasting into the dropzone.</li>
+    </ul>
+  </section>
+
+  <!-- RELATED -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">Other forms recipes.</p>
+    <div class="ck-related">
+      <a href="forms-autosave-drawer.html">Forms · Autosave drawer<span class="tag">New</span></a>
+      <a href="forms-multi-step-wizard.html">Forms · Multi-step wizard<span class="tag">New</span></a>
+      <a href="forms-inline-edit-row.html">Forms · Inline edit on row<span class="tag">New</span></a>
+      <a href="forms-bulk-edit-with-undo.html">Forms · Bulk edit with undo<span class="tag">New</span></a>
+      <a href="notifications-toasts.html">States · Toasts + inbox<span class="tag">New</span></a>
+      <a href="auth-signin-2fa.html">Auth · Sign in with 2FA</a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="forms-bulk-edit-with-undo.html"><div class="pager-label">← Previous</div><div class="pager-title">Bulk edit with undo</div></a>
+    <a href="index.html" class="next"><div class="pager-label">All recipes →</div><div class="pager-title">Browse by theme</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>
