@@ -2493,3 +2493,96 @@ a.module-card:hover { border-color: var(--border-strong); transform: translateY(
    * selector exists to make the alias relationship grep-able and to give
    * future migration tools a single hook to rewrite. */
 }
+
+/* ============================================================
+   Accessibility safety net (added 2026-06-03 by a11y audit).
+   1. Restore visible focus rings on interactive elements whose
+      built-in outline was suppressed for visual styling reasons.
+      Uses :focus-visible so mouse clicks stay quiet but keyboard
+      navigation always shows a ring. Matches --focus-ring-soft
+      so it reads as part of the system, not a browser default.
+   2. Honour prefers-reduced-motion across all decorative
+      transitions and animations the design system ships.
+   3. Provide a generic .ds-skip-link helper for "skip to main"
+      links — visually hidden until focused.
+   ============================================================ */
+
+:where(.btn-ghost, .btn-text, .icon-btn, .ds-tab-btn, .ds-viewport-btn,
+       .ds-copy-btn, .fchip, .chip, .b-bt-item, .b-fc, .cmdk-input input,
+       .otp input, .tag-input, .hero-input input, .data-toolbar .search-input input)
+       :focus-visible,
+:where(.btn-ghost, .btn-text, .icon-btn, .ds-tab-btn, .ds-viewport-btn,
+       .ds-copy-btn, .fchip, .chip, .b-bt-item, .b-fc,
+       .otp input, .tag-input)
+       :focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Links embedded in a block of text must be distinguishable without colour
+   alone (WCAG 1.4.1). Underline links inside paragraphs, list items and
+   the lede block. Standalone links (in chrome/nav) keep the plain look. */
+p a:not(.btn):not(.badge):not(.tag),
+li a:not(.btn):not(.badge):not(.tag),
+.lede a:not(.btn):not(.badge):not(.tag),
+.au-sec a:not(.btn):not(.badge):not(.tag) {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+/* Generic safety net: anything with role="button", a button or a link
+   gets a visible focus ring when focused via the keyboard. */
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Form fields that have stripped their outline — fall back to the soft
+   ring so the active-field state remains keyboard-visible. */
+input:focus-visible:not(:where(.input, .textarea, .select)),
+select:focus-visible:not(.input):not(.select),
+textarea:focus-visible:not(.textarea) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Skip-to-main helper. Append <a class="ds-skip-link" href="#main">…</a>
+   as the first focusable element on any page. */
+.ds-skip-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 8px 14px;
+  background: var(--surface);
+  color: var(--text-link);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  font: 500 13px/1 var(--font-sans);
+  z-index: 9999;
+  transform: translateY(-150%);
+  transition: transform 120ms ease;
+}
+.ds-skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Reduced-motion expansion: also kill transitions on hover/focus
+   surfaces and the slide-in for the skip link. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .ds-skip-link { transition: none; }
+}

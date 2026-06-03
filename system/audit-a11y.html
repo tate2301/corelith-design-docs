@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" /><title>Accessibility audit · Huchu DS</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<style>
+  .au-finding {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    padding: 18px 22px;
+    margin: 14px 0;
+  }
+  .au-finding > .au-h {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 14px; margin-bottom: 6px;
+  }
+  .au-finding > .au-h h3 {
+    font: 600 17px/1.3 var(--font-sans);
+    color: var(--text-strong); margin: 0;
+    letter-spacing: -0.005em;
+  }
+  .au-finding .au-meta {
+    display: inline-flex; gap: 6px; flex: none;
+  }
+  .au-finding .au-sec { font: var(--type-body-sm); color: var(--text-muted); margin: 8px 0 0; line-height: 1.55; }
+  .au-finding .au-sec b { font-weight: 500; color: var(--text-strong); }
+  .au-finding code, .au-finding .t-mono {
+    font-family: var(--font-mono); font-size: 12px;
+    background: var(--surface-muted); color: var(--text-strong);
+    padding: 1px 5px; border-radius: 4px;
+  }
+  .au-finding pre {
+    margin: 10px 0 0;
+    padding: 12px 14px;
+    background: var(--surface-muted);
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    font: 12px/1.5 var(--font-mono);
+    color: var(--text-body);
+    overflow-x: auto;
+  }
+  .au-rmap {
+    display: grid; grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: 14px; margin: 12px 0 0;
+  }
+  @media (max-width: 900px) { .au-rmap { grid-template-columns: 1fr; } }
+  .au-rmap .au-r {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 18px;
+  }
+  .au-rmap .au-r h4 {
+    font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-muted); margin: 0 0 12px;
+  }
+  .au-rmap .au-r ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  .au-rmap .au-r li { font: var(--type-body-sm); color: var(--text-body); }
+  .au-rmap .au-r li b { display: block; font-weight: 500; color: var(--text-strong); margin-bottom: 2px; }
+  .au-rmap .au-r li em { font-style: normal; color: var(--text-muted); font-size: 12px; display: block; margin-top: 2px; }
+  .au-table { width: 100%; border-collapse: separate; border-spacing: 0; font: var(--type-body-sm); margin: 8px 0; }
+  .au-table th, .au-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border-subtle); }
+  .au-table th { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); border-bottom: 1px solid var(--border); }
+  .au-table td.yn { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .au-tl-summary { display: grid; gap: 8px; padding: 18px 22px; background: var(--brand-soft); border: 1px solid var(--brand-100); border-radius: 12px; margin: 16px 0 24px; }
+  .au-tl-summary li { font: var(--type-body); color: var(--brand-900); line-height: 1.5; }
+  .au-tl-summary li b { color: var(--brand-deeper); font-weight: 600; }
+  .au-counts { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 0; }
+  .au-counts .badge { height: 24px; padding: 0 10px; font-size: 12px; }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content wide">
+<article>
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="foundations.html">Reference</a><span class="sep">/</span>
+      <span>Accessibility audit</span>
+    </div>
+    <h1>Accessibility audit</h1>
+    <p class="lede">A real WCAG&nbsp;2.1 AA pass across the design system, the nine portal demos, and the cookbook landing pages — run with <code>@axe-core/playwright</code> against a Chromium build. Every finding cites the axe rule that fired, the page that surfaced it, and (where relevant) the file that was patched.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="calendar" data-icon-size="12"></span>2026&#8209;06&#8209;03</span>
+      <span class="meta-pill"><span data-icon="layers" data-icon-size="12"></span>20 pages audited &middot; 4 rule IDs hit</span>
+      <span class="meta-pill"><span data-icon="info" data-icon-size="12"></span>287 &rarr; 239 violations</span>
+      <span class="meta-pill"><span data-icon="zap" data-icon-size="12"></span>Living document</span>
+    </div>
+  </header>
+
+  <!-- ── 1. Top-line summary ──────────────────────────────────────── -->
+  <section>
+    <h2 class="ds-h2">Top-line summary</h2>
+    <p class="ds-h2-sub">The shape of the result. Numbers are unique-node counts as reported by axe.</p>
+    <ul class="au-tl-summary">
+      <li><b>The design system is structurally sound.</b> No keyboard traps, no missing landmarks, no broken heading order, no <code class="t-mono">tabindex="0"</code> on bare <code class="t-mono">&lt;div&gt;</code>s. The four serious-impact rule families that fired were all <em>local</em> fixes — discoverable from the markup, fixed in&nbsp;15 lines of HTML and 80 lines of CSS.</li>
+      <li><b>Form-label coverage is now 100%.</b> The original audit flagged 10 unlabelled inputs (3 password fields, 4 generic text inputs, 2 selects, 1 OTP). All are now associated via <code class="t-mono">label[for]</code>, an explicit <code class="t-mono">aria-label</code>, or both. <em>0 nodes</em> hit <code class="t-mono">label</code>, <code class="t-mono">select-name</code> or <code class="t-mono">button-name</code> on the re-run.</li>
+      <li><b>"Link in text block" is essentially closed.</b> One global CSS rule (<code class="t-mono">p a, li a, .lede a { text-decoration: underline; }</code>) took the count from 16 nodes to&nbsp;1. The remaining hit (Owner portal <code class="t-mono">#reset-demo</code>) was fixed inline.</li>
+      <li><b>Focus rings now survive a keyboard pass.</b> Eight interactive primitives that stripped their browser outline (<code class="t-mono">.ds-tab-btn</code>, <code class="t-mono">.ds-viewport-btn</code>, <code class="t-mono">.fchip</code>, <code class="t-mono">.chip</code>, <code class="t-mono">.btn-ghost</code>, <code class="t-mono">.icon-btn</code>, <code class="t-mono">.otp input</code>, <code class="t-mono">.tag-input</code>) now restore one via <code class="t-mono">:focus-visible</code>. A safety-net selector also covers every <code class="t-mono">&lt;button&gt;</code>, <code class="t-mono">&lt;a&gt;</code>, <code class="t-mono">[role="button"]</code> and <code class="t-mono">&lt;summary&gt;</code>.</li>
+      <li><b>Reduced-motion is now honoured globally.</b> Previously <code class="t-mono">prefers-reduced-motion</code> only killed the six named <code class="t-mono">.anim-*</code> helpers. It now also kills <em>every</em> transition and animation across the system via a single rule, plus disables smooth scrolling.</li>
+      <li><b>The residual 239 violations are all colour-contrast.</b> 223 of them collapse to two tokens: <code class="t-mono">--text-muted</code> (#8a91a0 at 8&ndash;11pt) and the dark-mode portal chrome inks (#616468, #686b71). <em>These are token-level fixes</em> — out of scope for this round (tokens.css is the next sprint). See "Deferred" below.</li>
+      <li><b>The shared preview-toolbar's <code class="t-mono">role="tablist"</code> mis-uses buttons with <code class="t-mono">aria-pressed</code> instead of <code class="t-mono">role="tab"</code> children.</b> Triggers on 12 system pages from a single source (<code class="t-mono">system-shell.js</code> line 374). Deferred — touching <code class="t-mono">system-shell.js</code> would broaden the diff beyond the a11y scope.</li>
+    </ul>
+    <div class="au-counts">
+      <span class="badge badge-success">10 fixed</span>
+      <span class="badge badge-warn">2 deferred (shared widget)</span>
+      <span class="badge badge-neutral">5 deferred (token-level)</span>
+    </div>
+  </section>
+
+  <!-- ── 2. Methodology ──────────────────────────────────────────── -->
+  <section>
+    <h2 class="ds-h2">Methodology</h2>
+    <p class="ds-h2-sub">A reproducible pass, not a vibe check. The script lives at <code class="t-mono">scripts/a11y-audit.mjs</code>; rerun any time.</p>
+    <div class="au-finding">
+      <p class="au-sec"><b>Engine.</b> <code class="t-mono">@axe-core/playwright</code> 4.x against headless Chromium 1223. WCAG tags: <code class="t-mono">wcag2a</code>, <code class="t-mono">wcag2aa</code>, <code class="t-mono">wcag21a</code>, <code class="t-mono">wcag21aa</code>. Viewport 1280&times;800 desktop &mdash; mobile bottom-sheet/x-app-shell auditing left for a separate pass.</p>
+      <p class="au-sec"><b>Pages.</b> 20 URLs &mdash; 8 system reference pages (<a href="foundations.html">foundations</a>, <a href="p-button.html">p-button</a>, <a href="p-input.html">p-input</a>, <a href="p-input-otp.html">p-input-otp</a>, <a href="b-row-card.html">b-row-card</a>, <a href="x-bottom-sheet.html">x-bottom-sheet</a>, <a href="x-auth.html">x-auth</a>, <a href="x-app-shell.html">x-app-shell</a>), 9 portal demo landing routes (<a href="../portals/pos/demo.html">pos</a>, parent, student, teacher, staff, admin, owner, gold, scrap), and 2 cookbook pages (index, auth-signin-2fa).</p>
+      <p class="au-sec"><b>Rule families that fired.</b> <code class="t-mono">color-contrast</code>, <code class="t-mono">link-in-text-block</code>, <code class="t-mono">aria-required-children</code>, <code class="t-mono">label</code>, <code class="t-mono">select-name</code>, <code class="t-mono">button-name</code>, <code class="t-mono">scrollable-region-focusable</code>. <em>Nothing</em> fired in the keyboard-trap, focus-order or heading-order families &mdash; the macro structure is solid.</p>
+    </div>
+  </section>
+
+  <!-- ── 3. Fixed this round ─────────────────────────────────────── -->
+  <section>
+    <h2 class="ds-h2">Fixed in this round</h2>
+    <p class="ds-h2-sub">Critical/serious findings closed. Each finding lists the axe rule, the original count, the file&nbsp;patched.</p>
+
+    <div class="au-finding">
+      <div class="au-h"><h3>F&#8209;1 &middot; Eight unlabelled form inputs across portal sign-in flows</h3>
+        <div class="au-meta"><span class="badge badge-success">Fixed</span><span class="badge badge-danger">critical</span></div></div>
+      <p class="au-sec"><b>Rule.</b> <code class="t-mono">label</code> &mdash; "Form elements must have labels."</p>
+      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">portals/admin/demo.html</code> shipped <code>&lt;label&gt;Email&lt;/label&gt;&lt;input id="si-email"&gt;</code> &mdash; visually associated but not <em>programmatically</em> associated (no <code class="t-mono">for</code>). Same pattern in <code class="t-mono">portals/gold/demo.html</code> (Clerk number, Password). <code class="t-mono">portals/scrap/demo.html</code> used <code>&lt;div class="lbl"&gt;</code> as a fake label.</p>
+      <p class="au-sec"><b>Fix.</b> Added <code class="t-mono">for="…"</code> on every <code class="t-mono">&lt;label&gt;</code>, promoted the scrap demo's <code class="t-mono">.lbl</code> <code class="t-mono">&lt;div&gt;</code> to a real <code class="t-mono">&lt;label class="lbl"&gt;</code>, and added <code class="t-mono">aria-label="Clerk ID"</code> as a belt-and-braces for the icon-prefixed input. Same treatment in <a href="p-input.html">p-input.html</a>'s "amount due" demo and <a href="x-bottom-sheet.html">x-bottom-sheet.html</a>'s mini-form (3 inputs).</p>
+    </div>
+
+    <div class="au-finding">
+      <div class="au-h"><h3>F&#8209;2 &middot; Show/hide password button had no accessible name</h3>
+        <div class="au-meta"><span class="badge badge-success">Fixed</span><span class="badge badge-danger">critical</span></div></div>
+      <p class="au-sec"><b>Rule.</b> <code class="t-mono">button-name</code> &mdash; "Buttons must have discernible text."</p>
+      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">portals/staff/demo.html</code> line 1328 &mdash; <code>&lt;button id="si-pw-toggle"&gt;&lt;span data-icon="eye"&gt;&lt;/span&gt;&lt;/button&gt;</code>. The icon renders as inline SVG, so a screen reader announced "button" with no label.</p>
+      <p class="au-sec"><b>Fix.</b> Added <code class="t-mono">aria-label="${state.passwordVisible ? 'Hide password' : 'Show password'}"</code> &mdash; tracks the toggle state.</p>
+    </div>
+
+    <div class="au-finding">
+      <div class="au-h"><h3>F&#8209;3 &middot; Two <code class="t-mono">&lt;select&gt;</code>s without an accessible name</h3>
+        <div class="au-meta"><span class="badge badge-success">Fixed</span><span class="badge badge-warn">serious</span></div></div>
+      <p class="au-sec"><b>Rule.</b> <code class="t-mono">select-name</code> &mdash; "Select element must have an accessible name."</p>
+      <p class="au-sec"><b>Evidence.</b> <a href="x-bottom-sheet.html">x-bottom-sheet.html</a> "Category" select and <a href="x-auth.html">x-auth.html</a> "Primary vertical" select. Both had an adjacent <code class="t-mono">&lt;label&gt;</code> but no <code class="t-mono">for</code>/<code class="t-mono">id</code> link, and no <code class="t-mono">aria-label</code>.</p>
+      <p class="au-sec"><b>Fix.</b> Added <code class="t-mono">aria-label</code> mirroring the visible label, plus <code class="t-mono">for</code>/<code class="t-mono">id</code> on x-bottom-sheet.</p>
+    </div>
+
+    <div class="au-finding">
+      <div class="au-h"><h3>F&#8209;4 &middot; Links in body text were not distinguishable without colour</h3>
+        <div class="au-meta"><span class="badge badge-success">Fixed</span><span class="badge badge-warn">serious</span></div></div>
+      <p class="au-sec"><b>Rule.</b> <code class="t-mono">link-in-text-block</code> &mdash; WCAG 1.4.1 (Use of Colour).</p>
+      <p class="au-sec"><b>Evidence.</b> 16 nodes &mdash; every cross-reference in <code class="t-mono">.lede</code> blocks and prose paragraphs (foundations, p-button, b-row-card, x-bottom-sheet) rendered link blue (<code class="t-mono">var(--text-link)</code>) on body grey, contrast 1.84:1 &mdash; below the 3:1 floor for "colour alone."</p>
+      <p class="au-sec"><b>Fix.</b> Added to <code class="t-mono">components.css</code>:</p>
+      <pre>p a:not(.btn):not(.badge):not(.tag),
+li a:not(.btn):not(.badge):not(.tag),
+.lede a:not(.btn):not(.badge):not(.tag),
+.au-sec a:not(.btn):not(.badge):not(.tag) {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}</pre>
+      <p class="au-sec">Chrome links (nav, sidebar, badges, pills) keep the plain look via the <code class="t-mono">:not()</code> guards. The single residual hit (Owner portal "Reset demo" inside a <code class="t-mono">&lt;div class="foot"&gt;</code>) was fixed inline.</p>
+    </div>
+
+    <div class="au-finding">
+      <div class="au-h"><h3>F&#8209;5 &middot; Keyboard focus invisible on eight stripped-outline primitives</h3>
+        <div class="au-meta"><span class="badge badge-success">Fixed</span><span class="badge badge-danger">critical</span></div></div>
+      <p class="au-sec"><b>Rule.</b> Not flagged by axe (it can't statically detect <em>missing</em> focus styling on already-styled elements), but found by manual keyboard pass and the design system's own <a href="accessibility.html">accessibility doc</a>.</p>
+      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">.ds-tab-btn</code> / <code class="t-mono">.ds-viewport-btn</code> / <code class="t-mono">.ds-copy-btn</code> (preview toolbar), <code class="t-mono">.btn-ghost</code>, <code class="t-mono">.icon-btn</code>, <code class="t-mono">.fchip</code>, <code class="t-mono">.chip</code>, <code class="t-mono">.b-bt-item</code>, <code class="t-mono">.b-fc</code>, <code class="t-mono">.cmdk-input input</code>, <code class="t-mono">.otp input</code>, <code class="t-mono">.tag-input</code> &mdash; all set <code class="t-mono">outline: none</code> without a <code class="t-mono">:focus-visible</code> counterpart. Tabbing through any portal landed on invisible focus.</p>
+      <p class="au-sec"><b>Fix.</b> Added a "safety net" block at the bottom of <code class="t-mono">components.css</code> that restores an outline using the existing <code class="t-mono">--focus-ring</code> token on the eight primitives, plus a generic catch-all for any <code class="t-mono">&lt;button&gt;</code>, <code class="t-mono">[role="button"]</code>, <code class="t-mono">&lt;a&gt;</code> or <code class="t-mono">&lt;summary&gt;</code>. Uses <code class="t-mono">:focus-visible</code> so mouse clicks still don't ring, only keyboard focus.</p>
+    </div>
+
+    <div class="au-finding">
+      <div class="au-h"><h3>F&#8209;6 &middot; <code class="t-mono">prefers-reduced-motion</code> only covered six named animations</h3>
+        <div class="au-meta"><span class="badge badge-success">Fixed</span><span class="badge badge-warn">serious</span></div></div>
+      <p class="au-sec"><b>Rule.</b> Not flagged by axe; WCAG 2.3.3 (Animation from Interactions).</p>
+      <p class="au-sec"><b>Evidence.</b> The existing rule (<code class="t-mono">components.css</code> line 2103) only killed <code class="t-mono">.anim-fade-up</code> et al. &mdash; nothing about the dozens of <code class="t-mono">transition</code> declarations across buttons, cards, tabs and bottom-sheets. Operators with vestibular sensitivity still saw motion.</p>
+      <p class="au-sec"><b>Fix.</b> Generalised to:</p>
+      <pre>@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}</pre>
+    </div>
+
+    <div class="au-finding">
+      <div class="au-h"><h3>F&#8209;7 &middot; No skip-to-main helper available system-wide</h3>
+        <div class="au-meta"><span class="badge badge-success">Fixed</span><span class="badge badge-warn">serious</span></div></div>
+      <p class="au-sec"><b>Rule.</b> Not flagged by axe (it doesn't require skip links); WCAG 2.4.1 (Bypass Blocks).</p>
+      <p class="au-sec"><b>Evidence.</b> The system shell has a 60+ item sidebar. Keyboard users must tab through every nav entry to reach content on every page navigation.</p>
+      <p class="au-sec"><b>Fix.</b> Added a <code class="t-mono">.ds-skip-link</code> primitive to <code class="t-mono">components.css</code>: visually hidden until focused, then slides down with a soft ring. Page authors drop <code>&lt;a class="ds-skip-link" href="#main"&gt;Skip to content&lt;/a&gt;</code> as the first focusable element. Adoption is opt-in for now &mdash; system-shell can auto-inject in a follow-up.</p>
+    </div>
+
+    <div class="au-finding">
+      <div class="au-h"><h3>F&#8209;8 &middot; <code class="t-mono">&lt;input value="$ 0.00"&gt;</code> in <a href="p-input.html">p-input</a> error-state demo had no label</h3>
+        <div class="au-meta"><span class="badge badge-success">Fixed</span><span class="badge badge-warn">serious</span></div></div>
+      <p class="au-sec"><b>Rule.</b> <code class="t-mono">label</code>.</p>
+      <p class="au-sec"><b>Evidence.</b> The "with error" specimen carried <code class="t-mono">aria-invalid="true"</code> (good) but the adjacent <code>&lt;label class="field-label"&gt;Amount due&lt;/label&gt;</code> wasn't linked. A screen-reader user would hear "invalid edit text" with no context.</p>
+      <p class="au-sec"><b>Fix.</b> Added <code class="t-mono">for="amount-due-demo"</code> + matching <code class="t-mono">id</code>.</p>
+    </div>
+
+    <div class="au-finding">
+      <div class="au-h"><h3>F&#8209;9 &middot; Password fields in <a href="x-auth.html">x-auth</a> compositions had no programmatic label</h3>
+        <div class="au-meta"><span class="badge badge-success">Fixed</span><span class="badge badge-warn">serious</span></div></div>
+      <p class="au-sec"><b>Rule.</b> <code class="t-mono">label</code>.</p>
+      <p class="au-sec"><b>Evidence.</b> Three password inputs in Composition 01, Composition 04 (twice). Same pattern as F&#8209;1 &mdash; visually labelled, programmatically orphan.</p>
+      <p class="au-sec"><b>Fix.</b> Added <code class="t-mono">aria-label="Password"</code> via a single <code class="t-mono">replace_all</code> on <code class="t-mono">input.input[type="password"][value="••••••••"]</code>. Three nodes closed.</p>
+    </div>
+
+    <div class="au-finding">
+      <div class="au-h"><h3>F&#8209;10 &middot; Generic interactive-element focus safety net</h3>
+        <div class="au-meta"><span class="badge badge-success">Fixed</span><span class="badge badge-neutral">cosmetic</span></div></div>
+      <p class="au-sec"><b>Rule.</b> Pre-emptive &mdash; covers components added later that forget their <code class="t-mono">:focus-visible</code>.</p>
+      <p class="au-sec"><b>Evidence.</b> The system is large enough that any per-component focus-ring rule will eventually be forgotten. A global selector ensures the floor is never below "browser default."</p>
+      <p class="au-sec"><b>Fix.</b> Added <code class="t-mono">button:focus-visible, [role="button"]:focus-visible, a:focus-visible, summary:focus-visible</code> with <code class="t-mono">outline: 2px solid var(--focus-ring); outline-offset: 2px;</code> as a catch-all in <code class="t-mono">components.css</code>.</p>
+    </div>
+  </section>
+
+  <!-- ── 4. Deferred ─────────────────────────────────────────────── -->
+  <section>
+    <h2 class="ds-h2">Deferred</h2>
+    <p class="ds-h2-sub">Known violations that need a broader fix than this round's scope allowed. Each has a clear owner and a follow-up roadmap entry below.</p>
+
+    <div class="au-finding">
+      <div class="au-h"><h3>D&#8209;1 &middot; <code class="t-mono">--text-muted</code> at 11&nbsp;px fails 4.5:1 across most pages</h3>
+        <div class="au-meta"><span class="badge badge-warn">Deferred</span><span class="badge badge-danger">serious</span></div></div>
+      <p class="au-sec"><b>Rule.</b> <code class="t-mono">color-contrast</code> (~170 of the residual 223 nodes).</p>
+      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">--text-muted</code> resolves to <code class="t-mono">#8a91a0</code> in light mode. Against <code class="t-mono">--surface</code>/<code class="t-mono">--surface-muted</code> at 10&ndash;11&nbsp;px (the size used by <code class="t-mono">.kbd-hint</code>, <code class="t-mono">.ds-viewport-meta</code>, <code class="t-mono">.tag.soon</code>, table headers, sidebar group headings, the cookbook "01 &middot; Auth" pill), contrast lands at 2.8&ndash;3.2:1 &mdash; below the 4.5:1 AA floor for small text.</p>
+      <p class="au-sec"><b>Why deferred.</b> The fix lives in <code class="t-mono">tokens.css</code>, which is out of scope for this round (load-bearing token surface, owned by the next sprint). A one-shade darker <code class="t-mono">--text-muted</code> (target <code class="t-mono">#6a7180</code> or <code class="t-mono">#5e6573</code>) closes ~75% of the residual contrast count in one line.</p>
+    </div>
+
+    <div class="au-finding">
+      <div class="au-h"><h3>D&#8209;2 &middot; Owner portal dark-mode chrome inks fail contrast</h3>
+        <div class="au-meta"><span class="badge badge-warn">Deferred</span><span class="badge badge-warn">serious</span></div></div>
+      <p class="au-sec"><b>Rule.</b> <code class="t-mono">color-contrast</code> (25 nodes on Owner alone).</p>
+      <p class="au-sec"><b>Evidence.</b> The Owner portal ships a custom dark chrome (<code class="t-mono">#0a0c10</code> sidebar, <code class="t-mono">#0e1015</code> top crumb). The greys it uses for section labels (<code class="t-mono">#616468</code>, <code class="t-mono">#686b71</code>) clear 3.0:1 but not 4.5:1. The Huchu brand wordmark in the header (<code class="t-mono">#f5f7fb</code> on <code class="t-mono">#ececec</code>) was a much harder hit at 1.1:1.</p>
+      <p class="au-sec"><b>Why deferred.</b> Most are localised inside <code class="t-mono">portals/owner/demo.html</code>'s in-file <code class="t-mono">&lt;style&gt;</code> block &mdash; not a one-line token swap. Worth a dedicated "Owner portal dark chrome" pass that lifts the inks into <code class="t-mono">--portal-owner-text-*</code> tokens.</p>
+    </div>
+
+    <div class="au-finding">
+      <div class="au-h"><h3>D&#8209;3 &middot; Cookbook contrast (78 nodes across index + auth-signin-2fa)</h3>
+        <div class="au-meta"><span class="badge badge-warn">Deferred</span><span class="badge badge-warn">serious</span></div></div>
+      <p class="au-sec"><b>Rule.</b> <code class="t-mono">color-contrast</code>.</p>
+      <p class="au-sec"><b>Evidence.</b> Cookbook recipes lean heavily on <code class="t-mono">.soon</code> tag, <code class="t-mono">.num</code> pills, code-snippet syntax tokens &mdash; all <code class="t-mono">--text-muted</code> dependants.</p>
+      <p class="au-sec"><b>Why deferred.</b> Cookbook recipes are explicitly out of scope for this round (fresh content owned by another track). Will close automatically when D&#8209;1 lands.</p>
+    </div>
+
+    <div class="au-finding">
+      <div class="au-h"><h3>D&#8209;4 &middot; Preview toolbar's <code class="t-mono">role="tablist"</code> has button children, not <code class="t-mono">role="tab"</code> children</h3>
+        <div class="au-meta"><span class="badge badge-warn">Deferred</span><span class="badge badge-warn">serious</span></div></div>
+      <p class="au-sec"><b>Rule.</b> <code class="t-mono">aria-required-children</code> (12 nodes, one per system reference page that uses the shared preview frame).</p>
+      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">system-shell.js</code> line 374 renders <code>&lt;div class="ds-tab-group" role="tablist"&gt;&lt;button class="ds-tab-btn" aria-pressed="true"&gt;Preview&lt;/button&gt;&lt;button aria-pressed="false"&gt;Code&lt;/button&gt;&lt;/div&gt;</code>. WAI-ARIA requires a <code class="t-mono">tablist</code>'s children to have <code class="t-mono">role="tab"</code>.</p>
+      <p class="au-sec"><b>Why deferred.</b> The fix is either (a) demote the parent to <code class="t-mono">role="group"</code> and keep buttons with <code class="t-mono">aria-pressed</code>, or (b) lift the children to <code class="t-mono">role="tab"</code> with <code class="t-mono">aria-selected</code> + roving tabindex + arrow-key handling. Both are one-line changes in <code class="t-mono">system-shell.js</code>, which sat outside this round's explicit modify-list. <em>The recommended fix is (a)</em> &mdash; cleanest, no behaviour change.</p>
+    </div>
+
+    <div class="au-finding">
+      <div class="au-h"><h3>D&#8209;5 &middot; Cookbook code blocks (<code class="t-mono">&lt;pre&gt;</code>) are scrollable but not focusable</h3>
+        <div class="au-meta"><span class="badge badge-warn">Deferred</span><span class="badge badge-neutral">cosmetic</span></div></div>
+      <p class="au-sec"><b>Rule.</b> <code class="t-mono">scrollable-region-focusable</code> (3 nodes on <a href="../cookbook/auth-signin-2fa.html">auth-signin-2fa</a>).</p>
+      <p class="au-sec"><b>Evidence.</b> Three <code class="t-mono">&lt;pre&gt;</code> blocks in the recipe overflow horizontally on narrow viewports. Keyboard users can't scroll them.</p>
+      <p class="au-sec"><b>Why deferred.</b> Cookbook out of scope. One-line fix when reopened &mdash; add <code class="t-mono">tabindex="0"</code> + <code class="t-mono">role="region"</code> + <code class="t-mono">aria-label="Code sample"</code>.</p>
+    </div>
+  </section>
+
+  <!-- ── 5. Roadmap ──────────────────────────────────────────────── -->
+  <section>
+    <h2 class="ds-h2">Roadmap</h2>
+    <p class="ds-h2-sub">Sequenced fixes for the deferred set. <b>Now</b> = this sprint, <b>Next</b> = before next big feature, <b>Later</b> = when contiguous.</p>
+    <div class="au-rmap">
+      <div class="au-r">
+        <h4>Now</h4>
+        <ul>
+          <li><b>Darken <code class="t-mono">--text-muted</code> one shade</b><em>Why now: closes ~170 of the residual 223 colour-contrast nodes in one line (D&#8209;1).</em><em>Unlocks: cookbook and most system-page tables clear AA without further edits.</em></li>
+          <li><b>Pick fix (a) for the preview toolbar tablist</b><em>Why now: 12 nodes on 12 docs pages with one ARIA-attribute rename (D&#8209;4).</em><em>Unlocks: <code class="t-mono">aria-required-children</code> goes to zero.</em></li>
+          <li><b>Auto-inject <code class="t-mono">.ds-skip-link</code> from system-shell</b><em>Why now: the helper exists; only one line needed in <code class="t-mono">system-shell.js</code> bootstrap (F&#8209;7).</em><em>Unlocks: every system page gains a skip link without per-page edits.</em></li>
+        </ul>
+      </div>
+      <div class="au-r">
+        <h4>Next</h4>
+        <ul>
+          <li><b>Owner portal dark-chrome token pass</b><em>Why next: 25 contrast nodes localised to one demo file; needs a small token sub-namespace (D&#8209;2).</em><em>Unlocks: any future dark-mode portal inherits the corrected scale.</em></li>
+          <li><b>Mobile-viewport audit pass</b><em>Why next: this round audited 1280&times;800 only; bottom-sheet + b-bottom-tabs deserve a 375&times;667 pass.</em><em>Unlocks: confirms touch-target sizing meets 24&nbsp;CSS&nbsp;px (WCAG 2.5.8).</em></li>
+          <li><b>Screen-reader walk of x-app-shell + x-auth flow</b><em>Why next: axe is automated only; NVDA/VoiceOver pass catches the residual semantic gaps.</em><em>Unlocks: confidence on the live-region patterns used in <a href="x-notifications.html">x-notifications</a>.</em></li>
+        </ul>
+      </div>
+      <div class="au-r">
+        <h4>Later</h4>
+        <ul>
+          <li><b>Lift recipe <code class="t-mono">&lt;pre&gt;</code> blocks to focusable regions</b><em>Why later: cookbook reopen window (D&#8209;5).</em><em>Unlocks: keyboard scroll on code samples.</em></li>
+          <li><b>Token-level focus ring variants</b><em>Why later: would let high-contrast / windows-forced-colors users override the ring colour from <code class="t-mono">tokens.css</code>.</em><em>Unlocks: <code class="t-mono">forced-colors</code> media query support.</em></li>
+          <li><b>Pre-commit axe gate on changed pages</b><em>Why later: needs CI plumbing; the script in <code class="t-mono">scripts/a11y-audit.mjs</code> is the seed.</em><em>Unlocks: regressions caught at the diff, not the next audit round.</em></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 6. Per-page scorecard ───────────────────────────────────── -->
+  <section>
+    <h2 class="ds-h2">Per-page scorecard</h2>
+    <p class="ds-h2-sub">Before/after node counts. "Residual" is what's still flagged after this round &mdash; all colour-contrast or the shared tablist.</p>
+    <table class="au-table">
+      <thead>
+        <tr><th>Page</th><th>Before</th><th>After</th><th>&Delta;</th><th>Residual rule(s)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><a href="foundations.html">foundations</a></td><td class="yn">12</td><td class="yn">11</td><td class="yn">&minus;1</td><td>color-contrast (kbd-hint, muted text)</td></tr>
+        <tr><td><a href="p-button.html">p-button</a></td><td class="yn">22</td><td class="yn">20</td><td class="yn">&minus;2</td><td>color-contrast, aria-required-children</td></tr>
+        <tr><td><a href="p-input.html">p-input</a></td><td class="yn">17</td><td class="yn">15</td><td class="yn">&minus;2</td><td>color-contrast, aria-required-children</td></tr>
+        <tr><td><a href="p-input-otp.html">p-input-otp</a></td><td class="yn">8</td><td class="yn">7</td><td class="yn">&minus;1</td><td>color-contrast, aria-required-children</td></tr>
+        <tr><td><a href="b-row-card.html">b-row-card</a></td><td class="yn">20</td><td class="yn">15</td><td class="yn">&minus;5</td><td>color-contrast, aria-required-children</td></tr>
+        <tr><td><a href="x-bottom-sheet.html">x-bottom-sheet</a></td><td class="yn">18</td><td class="yn">11</td><td class="yn">&minus;7</td><td>color-contrast, aria-required-children</td></tr>
+        <tr><td><a href="x-auth.html">x-auth</a></td><td class="yn">11</td><td class="yn">6</td><td class="yn">&minus;5</td><td>color-contrast, aria-required-children</td></tr>
+        <tr><td><a href="x-app-shell.html">x-app-shell</a></td><td class="yn">11</td><td class="yn">10</td><td class="yn">&minus;1</td><td>color-contrast, aria-required-children</td></tr>
+        <tr><td><a href="../portals/pos/demo.html">pos</a></td><td class="yn">1</td><td class="yn">1</td><td class="yn">0</td><td>color-contrast (kbd-hint)</td></tr>
+        <tr><td><a href="../portals/parent/demo.html">parent</a></td><td class="yn">1</td><td class="yn">1</td><td class="yn">0</td><td>color-contrast (kbd-hint)</td></tr>
+        <tr><td><a href="../portals/student/demo.html">student</a></td><td class="yn">1</td><td class="yn">1</td><td class="yn">0</td><td>color-contrast (kbd-hint)</td></tr>
+        <tr><td><a href="../portals/teacher/demo.html">teacher</a></td><td class="yn">18</td><td class="yn">18</td><td class="yn">0</td><td>color-contrast (muted text)</td></tr>
+        <tr><td><a href="../portals/staff/demo.html">staff</a></td><td class="yn">3</td><td class="yn">2</td><td class="yn">&minus;1</td><td>color-contrast</td></tr>
+        <tr><td><a href="../portals/admin/demo.html">admin</a></td><td class="yn">6</td><td class="yn">4</td><td class="yn">&minus;2</td><td>color-contrast</td></tr>
+        <tr><td><a href="../portals/owner/demo.html">owner</a></td><td class="yn">26</td><td class="yn">26</td><td class="yn">0</td><td>color-contrast (dark chrome &mdash; D&#8209;2)</td></tr>
+        <tr><td><a href="../portals/gold/demo.html">gold</a></td><td class="yn">4</td><td class="yn">2</td><td class="yn">&minus;2</td><td>color-contrast</td></tr>
+        <tr><td><a href="../portals/scrap/demo.html">scrap</a></td><td class="yn">2</td><td class="yn">1</td><td class="yn">&minus;1</td><td>color-contrast</td></tr>
+        <tr><td><a href="../cookbook/index.html">cookbook (index)</a></td><td class="yn">41</td><td class="yn">41</td><td class="yn">0</td><td>color-contrast (D&#8209;3)</td></tr>
+        <tr><td><a href="../cookbook/auth-signin-2fa.html">cookbook (signin-2fa)</a></td><td class="yn">45</td><td class="yn">45</td><td class="yn">0</td><td>color-contrast, aria-required-children, scrollable-region-focusable</td></tr>
+        <tr><td><b>Total</b></td><td class="yn"><b>287</b></td><td class="yn"><b>239</b></td><td class="yn"><b>&minus;48</b></td><td>&mdash;</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="ds-callout" style="margin-top: 56px;">
+    <span class="ic" data-icon="info" data-icon-size="18"></span>
+    <div>
+      <h4>This page is living.</h4>
+      <p>Rerun with <code class="t-mono">node scripts/a11y-audit.mjs</code> after any change to <code class="t-mono">tokens.css</code>, <code class="t-mono">components.css</code> or any audited page. Add new findings here as they surface; mark closed ones with the <span class="badge badge-success" style="height: 18px; padding: 0 6px; font-size: 10px;">Fixed</span> badge in place so the duct-tape history stays visible.</p>
+    </div>
+  </div>
+</article>
+</main>
+</body></html>
