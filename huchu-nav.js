@@ -89,10 +89,21 @@
       ['Forms ·  File upload',              ROOT + 'cookbook/forms-file-upload.html',           'forms-file-upload',           'New'],
       ['Forms ·  Date-range picker',        ROOT + 'cookbook/forms-date-range-picker.html',     'forms-date-range-picker',     'New'],
       // ── Lists & detail ──────────────────────────────────────
+      ['Lists ·  Simple list',              ROOT + 'cookbook/lists-simple-list.html',           'lists-simple-list',           'New'],
+      ['Lists ·  Grid list',                ROOT + 'cookbook/lists-grid-list.html',             'lists-grid-list',             'New'],
+      ['Lists ·  Grouped by date',          ROOT + 'cookbook/lists-grouped-by-date.html',       'lists-grouped-by-date',       'New'],
+      ['Lists ·  Grouped by section',       ROOT + 'cookbook/lists-grouped-by-section.html',    'lists-grouped-by-section',    'New'],
+      ['Lists ·  Virtualised long list',    ROOT + 'cookbook/lists-virtualised-long.html',      'lists-virtualised-long',      'New'],
+      ['Lists ·  History feed',             ROOT + 'cookbook/lists-history-feed.html',          'lists-history-feed',          'New'],
       ['Lists ·  Filterable data table',    ROOT + 'cookbook/lists-filterable-data-table.html', 'lists-filterable-data-table', 'New'],
       ['Lists ·  Master–detail page',       ROOT + 'cookbook/lists-master-detail.html',         'lists-master-detail',         'New'],
       ['Lists ·  Activity log',             ROOT + 'cookbook/lists-activity-log.html',          'lists-activity-log',          'New'],
       ['Lists ·  Kanban board',             ROOT + 'cookbook/lists-kanban-board.html',          'lists-kanban-board',          'New'],
+      // ── Tables ──────────────────────────────────────────────
+      ['Tables ·  Server-paginated',        ROOT + 'cookbook/tables-server-paginated.html',     'tables-server-paginated',     'New'],
+      ['Tables ·  Editable cells',          ROOT + 'cookbook/tables-editable-cells.html',       'tables-editable-cells',       'New'],
+      ['Tables ·  Heavy with everything',   ROOT + 'cookbook/tables-heavy-with-everything.html','tables-heavy-with-everything','New'],
+      ['Tables ·  Responsive to cards',     ROOT + 'cookbook/tables-responsive-to-cards.html',  'tables-responsive-to-cards',  'New'],
       // ── Views ───────────────────────────────────────────────
       ['Views ·  Print-friendly views',     ROOT + 'cookbook/views-print-friendly.html',        'views-print-friendly',        'New'],
       ['Views ·  Image gallery + lightbox', ROOT + 'cookbook/views-image-gallery.html',         'views-image-gallery',         'New'],

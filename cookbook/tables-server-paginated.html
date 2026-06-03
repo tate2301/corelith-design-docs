@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Server-paginated table · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pull { background: var(--brand-soft); border-left: 3px solid var(--brand); padding: 10px 14px; border-radius: 0 8px 8px 0; font: 500 14px/1.5 var(--font-sans); color: var(--text-strong); margin: 14px 0 0; }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .phone { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+  .ck-screen .brand { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .ph-title { font: 700 13px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .ck-screen .ph-th { font: 600 9px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding: 4px 4px; border-bottom: 2px solid var(--border); display: grid; grid-template-columns: 1fr 50px 40px; gap: 4px; }
+  .ck-screen .ph-td { display: grid; grid-template-columns: 1fr 50px 40px; gap: 4px; padding: 5px 4px; border-bottom: 1px solid var(--border); font: 500 10px/1.3 var(--font-sans); }
+  .ck-screen .ph-td .num { font: 500 9px/1 var(--font-mono); color: var(--text-muted); text-align: right; }
+  .ck-screen .ph-pag { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding: 6px 4px; border-top: 1px solid var(--border); font: 500 9px/1 var(--font-mono); color: var(--text-subtle); }
+  .ck-screen .ph-pag .btn { padding: 3px 6px; border-radius: 4px; background: var(--surface-muted); color: var(--text-strong); }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p  { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+  .ck-code-only-note { display: grid; gap: 8px; padding: 22px 26px; background: var(--surface-muted); border: 1px dashed var(--border-strong); border-radius: 12px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-code-only-note .ck-code-only-tag { display: inline-flex; align-items: center; gap: 6px; align-self: start; font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 9px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); border: 1px solid var(--border); }
+  .ck-code-only-note p { margin: 0; color: var(--text-muted); }
+  .ck-code-only-note code { background: var(--surface); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+  .ck-roadmap-note { margin-top: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Tables</a><span class="sep">/</span>
+      <span>Server-paginated</span>
+    </div>
+    <h1>Build a server-paginated table — page in the URL, never lost</h1>
+    <p class="lede">By the end of this recipe you'll have a paginated data table whose page number, page size, sort, and filters live in the URL, with server-side sort + filter and a "Page 4 of 12" pager at the bottom.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="table" data-icon-size="12"></span>Tables</span>
+      <span class="meta-pill">3 primitives · 1 block · 1 pattern</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~25 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A table with finite, paged data: the server returns one page at a time, with the total count. The URL holds <code>?page=4&amp;perPage=50&amp;sort=createdAt:desc&amp;status=paid</code> so any state is shareable.</p>
+    <p>The whole point of pagination is honesty — "there are 4,231 rows; here are 50; you're on page 4." Infinite scroll lies about that ("loading…" forever). When users need to bookmark page 7, send a link to a coworker, or come back tomorrow to the same view, pagination is the only fair option.</p>
+    <p class="ck-pull"><b>Pagination is for finite data, infinite scroll is for feeds.</b> A list of all your products is finite; the feed of incoming notifications is a feed. Don't mix the metaphors — your users will get lost.</p>
+    <p><b>Skip this recipe if</b> your dataset is under 200 rows (load all of it, sort/filter on the client) or if your data is fundamentally a feed (use the virtualised list recipe).</p>
+  </section>
+
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Page 1, page 4, and the per-page selector open.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu</span>
+          <p class="ph-title">Invoices</p>
+          <div class="ph-th"><span>Number</span><span class="num" style="text-align: right;">Amount</span><span>St</span></div>
+          <div class="ph-td"><span>INV-0001</span><span class="num">$120</span><span>P</span></div>
+          <div class="ph-td"><span>INV-0002</span><span class="num">$45</span><span>O</span></div>
+          <div class="ph-td"><span>INV-0003</span><span class="num">$1,200</span><span>P</span></div>
+          <div class="ph-td"><span>INV-0004</span><span class="num">$85</span><span>O</span></div>
+          <div class="ph-td"><span>INV-0005</span><span class="num">$330</span><span>P</span></div>
+          <div class="ph-pag"><span class="btn">‹</span><span>Page 1 of 12</span><span class="btn">›</span></div>
+        </div>
+        <div class="caption"><span class="num">01</span> Page 1 of 12 — URL: ?page=1</div>
+      </div>
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu</span>
+          <p class="ph-title">Invoices</p>
+          <div class="ph-th"><span>Number</span><span class="num" style="text-align: right;">Amount</span><span>St</span></div>
+          <div class="ph-td"><span>INV-0301</span><span class="num">$520</span><span>P</span></div>
+          <div class="ph-td"><span>INV-0302</span><span class="num">$45</span><span>O</span></div>
+          <div class="ph-td"><span>INV-0303</span><span class="num">$2,200</span><span>P</span></div>
+          <div class="ph-td"><span>INV-0304</span><span class="num">$85</span><span>O</span></div>
+          <div class="ph-pag"><span class="btn">‹</span><span>Page 4 of 12</span><span class="btn">›</span></div>
+        </div>
+        <div class="caption"><span class="num">02</span> Page 4 — shareable URL</div>
+      </div>
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu</span>
+          <p class="ph-title">Invoices</p>
+          <div class="ph-pag"><span>Per page</span><span class="btn">10</span><span class="btn" style="background: var(--brand); color: white;">25</span><span class="btn">50</span><span class="btn">100</span></div>
+          <div class="ph-th"><span>Number</span><span class="num" style="text-align: right;">Amount</span><span>St</span></div>
+          <div class="ph-td"><span>INV-0001</span><span class="num">$120</span><span>P</span></div>
+          <div class="ph-td"><span>INV-0002</span><span class="num">$45</span><span>O</span></div>
+          <div class="ph-td"><span>INV-0003</span><span class="num">$1,200</span><span>P</span></div>
+        </div>
+        <div class="caption"><span class="num">03</span> Per-page picker — URL: ?perPage=25</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">A table, a pager, a per-page select, and a URL state hook.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/x-data-table.html"><span class="kind">Pattern</span>Data table</a>
+      <a class="ck-piece" href="../system/p-table.html"><span class="kind">Primitive</span>Table</a>
+      <a class="ck-piece" href="../system/p-pagination.html"><span class="kind">Primitive</span>Pagination</a>
+      <a class="ck-piece" href="../system/p-select.html"><span class="kind">Primitive</span>Select</a>
+      <a class="ck-piece" href="../system/b-data-toolbar.html"><span class="kind">Block</span>DataToolbar</a>
+      <a class="ck-piece" href="../system/p-skeleton.html"><span class="kind">Primitive</span>Skeleton</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>Table</code>, <code>Pagination</code>, <code>Select</code>, <code>DataToolbar</code>, <code>Skeleton</code>, <code>useUrlState</code>.</p>
+    <div class="ck-roadmap-note">
+      <b>Roadmap note:</b> a packaged <code>&lt;Table&gt;</code> primitive is planned for <code>@huchu/react</code> — for now use a plain semantic <code>&lt;table&gt;</code> element with the design tokens. <code>useUrlState</code> is also on the roadmap; the hand-rolled version below works today.
+    </div>
+  </section>
+
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <div class="ck-step"><span class="n">01</span><h3>URL state — the source of truth for page, sort, filter</h3></div>
+    <p>Don't keep page/sort/filter in <code>useState</code>. Keep them in the URL. When the user hits Back, they land on the previous page (the actual previous page, not the previous app state). When they share the URL, the recipient lands on the same view.</p>
+    <div class="ds-specimen"
+         data-code='import { useSearchParams } from &#39;react-router-dom&#39;;
+
+type TableQuery = {
+  page: number;
+  perPage: number;
+  sort: { field: string; dir: &#39;asc&#39; | &#39;desc&#39; } | null;
+  status: string | null;
+};
+
+function useTableQuery(): [TableQuery, (next: Partial&lt;TableQuery&gt;) =&gt; void] {
+  const [params, setParams] = useSearchParams();
+  const q: TableQuery = {
+    page:    Math.max(1, Number(params.get(&#39;page&#39;)) || 1),
+    perPage: [10, 25, 50, 100].includes(Number(params.get(&#39;perPage&#39;)))
+               ? Number(params.get(&#39;perPage&#39;)) : 25,
+    sort:    parseSort(params.get(&#39;sort&#39;)),
+    status:  params.get(&#39;status&#39;),
+  };
+  const set = (next: Partial&lt;TableQuery&gt;) =&gt; {
+    const merged = { ...q, ...next };
+    // when filter or sort changes, reset to page 1
+    if (next.sort !== undefined || next.status !== undefined) merged.page = 1;
+    setParams(serialize(merged));
+  };
+  return [q, set];
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>Parse + validate per-page against an allowed set. If the URL says <code>?perPage=999</code> someone is being clever — fall back to the default, don&#39;t trust user input.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · useTableQuery</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">02</span><h3>Fetch — query keyed by the whole TableQuery</h3></div>
+    <p>Every change to query triggers a refetch. Use the query object itself as the cache key. Show a skeleton on initial load, keep the previous rows on subsequent loads — flicker-free page changes are non-negotiable.</p>
+    <div class="ds-specimen"
+         data-code='function useInvoicesPage(q: TableQuery) {
+  const [data, setData] = useState&lt;{ rows: Invoice[]; total: number } | null&gt;(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState&lt;Error | null&gt;(null);
+
+  useEffect(() =&gt; {
+    const ctrl = new AbortController();
+    setLoading(true);
+    fetchInvoices(q, ctrl.signal)
+      .then((r) =&gt; { setData(r); setError(null); })
+      .catch((e) =&gt; { if (e.name !== &#39;AbortError&#39;) setError(e); })
+      .finally(() =&gt; setLoading(false));
+    return () =&gt; ctrl.abort();
+  }, [q.page, q.perPage, q.sort?.field, q.sort?.dir, q.status]);
+
+  return { data, loading, error };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>If you have TanStack Query / SWR / Apollo, use their <code>keepPreviousData</code> equivalent. Same idea — show stale rows while the new page loads.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Fetch</span><span class="spacer"></span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">03</span><h3>Render — table + pager, sort headers wired to URL</h3></div>
+    <p>Sort headers are buttons that toggle the URL. The pager shows total pages computed from <code>total / perPage</code>. Both update the URL — the URL change triggers the refetch.</p>
+    <div class="ds-specimen"
+         data-code='function InvoicesTable() {
+  const [q, setQ] = useTableQuery();
+  const { data, loading, error } = useInvoicesPage(q);
+  const rows = data?.rows ?? [];
+  const total = data?.total ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / q.perPage));
+
+  const toggleSort = (field: string) =&gt; {
+    if (!q.sort || q.sort.field !== field) {
+      setQ({ sort: { field, dir: &#39;asc&#39; } });
+    } else if (q.sort.dir === &#39;asc&#39;) {
+      setQ({ sort: { field, dir: &#39;desc&#39; } });
+    } else {
+      setQ({ sort: null });
+    }
+  };
+
+  return (
+    &lt;div className=&quot;data-table&quot; aria-busy={loading}&gt;
+      &lt;table&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;
+            &lt;th aria-sort={ariaSort(q.sort, &#39;number&#39;)}&gt;
+              &lt;button type=&quot;button&quot; onClick={() =&gt; toggleSort(&#39;number&#39;)}&gt;Number&lt;/button&gt;
+            &lt;/th&gt;
+            &lt;th aria-sort={ariaSort(q.sort, &#39;amount&#39;)}&gt;
+              &lt;button type=&quot;button&quot; onClick={() =&gt; toggleSort(&#39;amount&#39;)}&gt;Amount&lt;/button&gt;
+            &lt;/th&gt;
+            &lt;th&gt;Status&lt;/th&gt;
+          &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          {rows.map(r =&gt; (
+            &lt;tr key={r.id}&gt;
+              &lt;td&gt;{r.number}&lt;/td&gt;
+              &lt;td&gt;${r.amount}&lt;/td&gt;
+              &lt;td&gt;&lt;StatusBadge value={r.status} /&gt;&lt;/td&gt;
+            &lt;/tr&gt;
+          ))}
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+
+      &lt;footer className=&quot;data-table-foot&quot;&gt;
+        &lt;PerPageSelect value={q.perPage} onChange={(perPage) =&gt; setQ({ perPage, page: 1 })} /&gt;
+        &lt;span&gt;Page {q.page} of {pageCount} ({total.toLocaleString()} total)&lt;/span&gt;
+        &lt;Pagination
+          page={q.page} pageCount={pageCount}
+          onChange={(page) =&gt; setQ({ page })}
+        /&gt;
+      &lt;/footer&gt;
+    &lt;/div&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 18px; max-width: 420px; margin: 0 auto;">
+          <table style="width: 100%; border-collapse: collapse; font: 500 13px/1.4 var(--font-sans);">
+            <thead><tr style="border-bottom: 2px solid var(--border);"><th style="text-align: left; padding: 6px; font-weight: 600;">Number</th><th style="text-align: right; padding: 6px; font-weight: 600;">Amount</th><th style="text-align: left; padding: 6px; font-weight: 600;">Status</th></tr></thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid var(--border);"><td style="padding: 6px;">INV-0001</td><td style="padding: 6px; text-align: right; font-family: var(--font-mono);">$120</td><td style="padding: 6px;">Paid</td></tr>
+              <tr style="border-bottom: 1px solid var(--border);"><td style="padding: 6px;">INV-0002</td><td style="padding: 6px; text-align: right; font-family: var(--font-mono);">$45</td><td style="padding: 6px;">Open</td></tr>
+            </tbody>
+          </table>
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 6px; margin-top: 8px; border-top: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-muted);">
+            <span>Per page: 25</span>
+            <span>Page 1 of 12</span>
+            <span>‹ ›</span>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Render</span><span class="spacer"></span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">04</span><h3>Loading + error states — never blank, never deceptive</h3></div>
+    <p>On initial load: skeleton rows. On subsequent: keep showing the previous rows with <code>aria-busy</code>. On error: show the error and a Retry button — don't pretend you've got nothing.</p>
+    <div class="ds-specimen"
+         data-code='if (error) {
+  return (
+    &lt;div role=&quot;alert&quot; className=&quot;data-table-error&quot;&gt;
+      &lt;p&gt;Couldn&#39;t load invoices. {error.message}&lt;/p&gt;
+      &lt;Button onClick={() =&gt; setQ({})}&gt;Retry&lt;/Button&gt;
+    &lt;/div&gt;
+  );
+}
+
+if (loading &amp;&amp; !data) {
+  return (
+    &lt;table&gt;
+      &lt;tbody&gt;
+        {Array.from({ length: q.perPage }).map((_, i) =&gt; (
+          &lt;tr key={i}&gt;
+            &lt;td&gt;&lt;Skeleton width=&quot;80px&quot; /&gt;&lt;/td&gt;
+            &lt;td&gt;&lt;Skeleton width=&quot;60px&quot; /&gt;&lt;/td&gt;
+            &lt;td&gt;&lt;Skeleton width=&quot;40px&quot; /&gt;&lt;/td&gt;
+          &lt;/tr&gt;
+        ))}
+      &lt;/tbody&gt;
+    &lt;/table&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 18px; max-width: 380px; margin: 0 auto;">
+          <div style="display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border);">
+            <div style="height: 12px; width: 60%; background: var(--surface-muted); border-radius: 4px;"></div>
+            <div style="height: 12px; width: 25%; background: var(--surface-muted); border-radius: 4px;"></div>
+            <div style="height: 12px; width: 15%; background: var(--surface-muted); border-radius: 4px;"></div>
+          </div>
+          <div style="display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border);">
+            <div style="height: 12px; width: 60%; background: var(--surface-muted); border-radius: 4px;"></div>
+            <div style="height: 12px; width: 25%; background: var(--surface-muted); border-radius: 4px;"></div>
+            <div style="height: 12px; width: 15%; background: var(--surface-muted); border-radius: 4px;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · States</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">~150 lines including the URL hook. Pagination + sort + filter + URL, no client-side sorting trick.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useState } from &#39;react&#39;;
+import { useSearchParams } from &#39;react-router-dom&#39;;
+import { Pagination, Select, Button, Skeleton } from &#39;@huchu/react&#39;;
+
+type Invoice = { id: string; number: string; amount: number; status: &#39;paid&#39; | &#39;open&#39; | &#39;void&#39; };
+
+export function InvoicesTable() {
+  const [q, setQ] = useTableQuery();
+  const { data, loading, error } = useInvoicesPage(q);
+  const rows = data?.rows ?? [];
+  const total = data?.total ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / q.perPage));
+
+  const toggleSort = (field: string) =&gt; {
+    if (!q.sort || q.sort.field !== field) setQ({ sort: { field, dir: &#39;asc&#39; } });
+    else if (q.sort.dir === &#39;asc&#39;) setQ({ sort: { field, dir: &#39;desc&#39; } });
+    else setQ({ sort: null });
+  };
+
+  if (error) {
+    return (
+      &lt;div role=&quot;alert&quot; className=&quot;data-table-error&quot;&gt;
+        &lt;p&gt;Couldn&#39;t load invoices: {error.message}&lt;/p&gt;
+        &lt;Button onClick={() =&gt; setQ({})}&gt;Retry&lt;/Button&gt;
+      &lt;/div&gt;
+    );
+  }
+
+  return (
+    &lt;div className=&quot;data-table&quot; aria-busy={loading}&gt;
+      &lt;div className=&quot;data-table-toolbar&quot;&gt;
+        &lt;Select label=&quot;Status&quot; value={q.status ?? &#39;all&#39;}
+          onChange={(v) =&gt; setQ({ status: v === &#39;all&#39; ? null : v })}
+          options={[
+            { value: &#39;all&#39;,  label: &#39;All&#39; },
+            { value: &#39;paid&#39;, label: &#39;Paid&#39; },
+            { value: &#39;open&#39;, label: &#39;Open&#39; },
+            { value: &#39;void&#39;, label: &#39;Void&#39; },
+          ]}
+        /&gt;
+      &lt;/div&gt;
+
+      &lt;table&gt;
+        &lt;thead&gt;
+          &lt;tr&gt;
+            {[&#39;number&#39;, &#39;amount&#39;, &#39;status&#39;].map(f =&gt; (
+              &lt;th key={f} aria-sort={ariaSort(q.sort, f)}&gt;
+                &lt;button type=&quot;button&quot; onClick={() =&gt; toggleSort(f)}&gt;
+                  {labelFor(f)}
+                  &lt;SortIndicator dir={q.sort?.field === f ? q.sort.dir : null} /&gt;
+                &lt;/button&gt;
+              &lt;/th&gt;
+            ))}
+          &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;
+          {loading &amp;&amp; !data
+            ? Array.from({ length: q.perPage }).map((_, i) =&gt; (
+                &lt;tr key={i}&gt;
+                  &lt;td&gt;&lt;Skeleton width=&quot;80px&quot; /&gt;&lt;/td&gt;
+                  &lt;td&gt;&lt;Skeleton width=&quot;60px&quot; /&gt;&lt;/td&gt;
+                  &lt;td&gt;&lt;Skeleton width=&quot;40px&quot; /&gt;&lt;/td&gt;
+                &lt;/tr&gt;
+              ))
+            : rows.map(r =&gt; (
+                &lt;tr key={r.id}&gt;
+                  &lt;td&gt;{r.number}&lt;/td&gt;
+                  &lt;td className=&quot;num&quot;&gt;${r.amount.toLocaleString()}&lt;/td&gt;
+                  &lt;td&gt;&lt;StatusBadge value={r.status} /&gt;&lt;/td&gt;
+                &lt;/tr&gt;
+              ))}
+        &lt;/tbody&gt;
+      &lt;/table&gt;
+
+      &lt;footer className=&quot;data-table-foot&quot;&gt;
+        &lt;Select label=&quot;Per page&quot; value={String(q.perPage)}
+          onChange={(v) =&gt; setQ({ perPage: Number(v) })}
+          options={[10, 25, 50, 100].map(n =&gt; ({ value: String(n), label: String(n) }))}
+        /&gt;
+        &lt;span aria-live=&quot;polite&quot;&gt;
+          Page {q.page} of {pageCount} · {total.toLocaleString()} total
+        &lt;/span&gt;
+        &lt;Pagination page={q.page} pageCount={pageCount} onChange={(page) =&gt; setQ({ page })} /&gt;
+      &lt;/footer&gt;
+    &lt;/div&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 18px; max-width: 440px; margin: 0 auto;">
+          <div style="font: 500 12px/1 var(--font-mono); color: var(--text-subtle); padding: 8px 0;">?page=4&amp;perPage=25&amp;sort=amount:desc&amp;status=paid</div>
+          <table style="width: 100%; border-collapse: collapse; font: 500 13px/1.4 var(--font-sans); margin-top: 10px;">
+            <thead><tr style="border-bottom: 2px solid var(--border);"><th style="text-align: left; padding: 6px; font-weight: 600;">Number</th><th style="text-align: right; padding: 6px; font-weight: 600;">Amount ↓</th><th style="text-align: left; padding: 6px; font-weight: 600;">Status</th></tr></thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid var(--border);"><td style="padding: 6px;">INV-0301</td><td style="padding: 6px; text-align: right; font-family: var(--font-mono);">$2,200</td><td style="padding: 6px; color: var(--tone-success);">Paid</td></tr>
+              <tr style="border-bottom: 1px solid var(--border);"><td style="padding: 6px;">INV-0302</td><td style="padding: 6px; text-align: right; font-family: var(--font-mono);">$1,200</td><td style="padding: 6px; color: var(--tone-success);">Paid</td></tr>
+            </tbody>
+          </table>
+          <div style="display: flex; justify-content: space-between; padding: 10px 6px; margin-top: 8px; border-top: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-muted);">
+            <span>25 per page</span><span>Page 4 of 12 · 287 total</span><span>‹ 1 … 4 … 12 ›</span>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">InvoicesTable.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three forks. URL still drives the state.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Cursor-based pagination</h4>
+        <p>For very large or live-changing data, page numbers lie. Switch to a cursor (opaque server-issued token) per page. URL stores the cursor; "Page 4 of 12" becomes "Page 4 of many".</p>
+<pre>// URL: ?after=abc123
+const { rows, nextCursor } = await
+  fetchInvoices({ after: q.after });
+// pager: Prev | Next only,
+// no jump-to-page</pre>
+      </div>
+      <div class="ck-var">
+        <h4>"Load more" instead of pager</h4>
+        <p>Same server query, but append instead of replace. Use when "browsing" beats "jumping to a known page". Don't combine with sort changes — too easy to confuse.</p>
+<pre>const onMore = () =&gt; setQ({
+  page: q.page + 1, append: true
+});
+// inside the fetch:
+setData(d =&gt; ({
+  total: r.total,
+  rows: [...(d?.rows ?? []), ...r.rows]
+}));</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Client-side filter on top of server page</h4>
+        <p>If your server filter is missing a field, you can post-filter the current page client-side — but warn the user that "showing 3 of 25 on this page" is not "3 of total".</p>
+<pre>const visible = rows.filter(r =&gt;
+  r.notes?.includes(clientQuery)
+);
+// add a banner:
+&lt;Alert&gt;Filtering page 4 only.&lt;/Alert&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">Tables get a lot of free a11y if you use real <code>&lt;table&gt;</code> elements.</p>
+    <ul class="ck-a11y">
+      <li><b>Real <code>&lt;table&gt; &lt;th&gt; &lt;td&gt;</code>.</b> Screen readers navigate by row/column. CSS-grid "tables" lose that — every row is an unrelated line of text.</li>
+      <li><b><code>aria-sort</code> on each sortable <code>&lt;th&gt;</code>.</b> Values: "ascending" | "descending" | "none". Only the active sort column has a non-"none" value.</li>
+      <li><b>Sort headers are <code>&lt;button&gt;</code>s.</b> A click handler on a <code>&lt;th&gt;</code> isn't focusable. Wrap the label in a button.</li>
+      <li><b><code>aria-busy="true"</code> during fetches.</b> Lets AT pause announcements until the new rows arrive.</li>
+      <li><b>"Page X of Y" in <code>aria-live="polite"</code>.</b> After paging, the announcement happens automatically — confirms the action.</li>
+      <li><b>The pager is <code>&lt;nav aria-label="Pagination"&gt;</code>.</b> Screen reader users jump to it via the rotor.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <div class="ck-related">
+      <a href="tables-editable-cells.html">Editable cells<span class="tag">Recipe</span></a>
+      <a href="tables-heavy-with-everything.html">Heavy data table<span class="tag">Recipe</span></a>
+      <a href="tables-responsive-to-cards.html">Responsive to cards<span class="tag">Recipe</span></a>
+      <a href="lists-virtualised-long.html">Virtualised long list<span class="tag">Recipe</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="lists-history-feed.html"><div class="pager-label">← Previous</div><div class="pager-title">History feed</div></a>
+    <a href="tables-editable-cells.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Editable cells</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>
