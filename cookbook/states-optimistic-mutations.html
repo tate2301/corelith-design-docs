@@ -640,15 +640,18 @@ for (const i of queue) {
 }</pre>
       </div>
       <div class="ck-var">
-        <h4>Soft-delete with Undo</h4>
-        <p>Delete is optimistic + a 5-second Undo. The API call doesn't fire until the toast expires. See <a href="forms-bulk-edit-with-undo.html">Bulk edit with undo</a>.</p>
+        <h4>Soft-delete with Undo (transient toast)</h4>
+        <p>Delete is optimistic + a short Undo. The API call doesn't fire until the toast fades. Use <code>tone: &#39;transient&#39;</code> — it renders the new <code>.toast.tone-transient</code> variant from <code>components.css</code>: white surface, 1.5s fade after a 1.5s read window, action button (Undo) styled as the loudest element. See <a href="../system/p-toast.html">p-toast</a> and <a href="forms-bulk-edit-with-undo.html">Bulk edit with undo</a>.</p>
 <pre>const remove = (id: string) =&gt; {
   addIntent({ type: &#39;delete&#39;, id });
-  const t = setTimeout(() =&gt; commitDelete(id), 5000);
-  toast.show({ title: &#39;Task removed&#39;,
+  const t = setTimeout(() =&gt; commitDelete(id), 3000);
+  toast.show({
+    tone: &#39;transient&#39;,           // .toast.tone-transient
+    title: &#39;Task removed&#39;,
     action: { label: &#39;Undo&#39;,
       onClick: () =&gt; { clearTimeout(t);
-        addIntent({ type: &#39;restore&#39;, id }); }}});
+        addIntent({ type: &#39;restore&#39;, id }); }},
+  });
 };</pre>
       </div>
     </div>

@@ -354,6 +354,46 @@ function EditableCell({
       <div class="ds-specimen-bar"><span class="label">Step 3 · Keyboard</span><span class="spacer"></span></div>
     </div>
 
+    <!-- Step 3.5 — reusable wrapper -->
+    <div class="ck-step"><span class="n">3.5</span><h3>Reusable inline-edit wrapper — compose with the <code>.p-inline-edit</code> primitive</h3></div>
+    <p>Every editable cell is the same trio: a text input, a save check, a cancel cross. The new <code>.p-inline-edit</code> primitive in <code>components.css</code> ships exactly that shell — focus ring, hover states, padding, and the two icon slots — so your <code>EditableCell</code> stops carrying its own border / focus / icon-button rules. Compose it like this:</p>
+    <div class="ds-specimen"
+         data-code='import { InlineEdit } from &#39;@huchu/react&#39;;
+
+function EditableCellShell({ value, onCommit, onCancel, validate }: {
+  value: string;
+  onCommit: (v: string) =&gt; void;
+  onCancel: () =&gt; void;
+  validate?: (v: string) =&gt; string | null;
+}) {
+  return (
+    &lt;InlineEdit
+      defaultValue={value}
+      validate={validate}
+      onSave={onCommit}
+      onCancel={onCancel}
+    /&gt;
+  );
+}
+
+// Compiles to the tokenised .p-inline-edit shell:
+//   &lt;span class="p-inline-edit"&gt;
+//     &lt;input value="..." /&gt;
+//     &lt;button class="p-inline-edit-save"   aria-label="Save"&gt;✓&lt;/button&gt;
+//     &lt;button class="p-inline-edit-cancel" aria-label="Cancel"&gt;✕&lt;/button&gt;
+//   &lt;/span&gt;'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <span class="p-inline-edit" style="font: 500 13px/1 var(--font-mono);">
+            <input type="text" value="A-3" style="width: 80px;" />
+            <button type="button" class="p-inline-edit-save" aria-label="Save"><span data-icon="check" data-icon-size="12"></span></button>
+            <button type="button" class="p-inline-edit-cancel" aria-label="Cancel"><span data-icon="x" data-icon-size="12"></span></button>
+          </span>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3.5 · .p-inline-edit shell</span><span class="spacer"></span><span class="t-mono">components.css</span></div>
+    </div>
+
     <!-- Step 4 -->
     <div class="ck-step"><span class="n">04</span><h3>Validate per cell, both client- and server-side</h3></div>
     <p>A client-side validator catches the obvious (negative qty, non-numeric, max length); the server is the final word. Both surface as the same per-cell error: red ring + one-line message under the cell. Don't ever silently coerce — "−1" rounding to 0 will lose you a stocktake somewhere.</p>
