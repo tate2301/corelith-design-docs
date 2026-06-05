@@ -277,6 +277,7 @@
       ['Owner / Manager',   ROOT + 'portals/owner/demo.html',   '__', 'Dark', 'chart'],
       ['Gold Mine Clerk',   ROOT + 'portals/gold/demo.html',    '__', null, 'gem'],
       ['Scrap Yard Clerk',  ROOT + 'portals/scrap/demo.html',   '__', 'New', 'recycle'],
+      ['Stash · personal finance', ROOT + 'portals/stash/demo.html',  '__', 'New', 'coins'],
     ]},
     // Catalogs = product UI kits + vertical catalogues. NOT apps — they are
     // libraries of pre-composed pages you can drop into your own product.
@@ -441,6 +442,35 @@
         ['pnl',          'Profit & loss'],
         ['forecast',     'Expected cash'],
         ['demo',         'Owner app'],
+      ],
+    },
+    stash: {
+      label: 'Stash · personal finance', home: 'index.html',
+      // Single-page kit: every screen is a hash route inside demo.html.
+      singlePage: 'demo.html',
+      crumbs: [['Home', ROOT + 'index.html'], ['Portals', ROOT + 'portals/index.html'], ['Stash', null]],
+      screens: [
+        ['sign-in',             'Sign in'],
+        ['home',                'Home'],
+        ['transactions',        'Transactions'],
+        ['transaction-detail',  'Transaction detail'],
+        ['accounts',            'Accounts'],
+        ['account-detail',      'Account detail'],
+        ['add-account',         'Add account'],
+        ['budgets',             'Budgets'],
+        ['budget-detail',       'Budget detail'],
+        ['subscriptions',       'Subscriptions'],
+        ['goals',               'Goals'],
+        ['goal-detail',         'Goal detail'],
+        ['insights',            'Insights'],
+        ['cashflow',            'Cashflow'],
+        ['categories',          'Categories'],
+        ['profile',             'Profile'],
+        ['settings',            'Settings'],
+        ['billing',             'Plan & billing'],
+        ['onboarding',          'Onboarding'],
+        ['notifications',       'Notifications'],
+        ['demo',                'Full demo'],
       ],
     },
     dashboard: {
