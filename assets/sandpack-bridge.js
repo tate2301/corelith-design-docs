@@ -22,110 +22,85 @@
 (function () {
   const CLIENT_URL = 'https://esm.sh/@codesandbox/sandpack-client@2';
 
-  // ── @huchu/react shim ────────────────────────────────────────
-  // Maps the named exports the cookbook recipes import (Stack,
-  // Form, Field, Input, InputOtp, Button, Alert, Checkbox,
-  // AuthShell, useReducer, useState, useEffect, …) onto small
-  // React wrappers around the docs-site CSS classes. It's a
-  // proof-of-pattern shim, not a real component library — it
-  // exists so snippets that import from '@huchu/react' resolve
-  // and render *something* believable in the sandbox.
-  const HUCHU_SHIM = `
-import React, { useState, useEffect, useReducer, useRef, useCallback, useMemo } from 'react';
-export { useState, useEffect, useReducer, useRef, useCallback, useMemo };
+  // ── @huchu/react bridge ──────────────────────────────────────
+  // The package now ships a real IIFE bundle at
+  // `packages/react/dist/cdn.global.js` that hangs every export off
+  // `window.HuchuReact`. We resolve its URL from THIS script's own
+  // src so it works whether the docs site is served from `/`, a
+  // sub-path, or GitHub Pages, then inject a tiny `/huchu-react.js`
+  // shim into each Sandpack sandbox that loads the IIFE inside the
+  // iframe and re-exports its named globals.
+  //
+  // If the IIFE 404s (e.g. fresh checkout without `npm run build`),
+  // we fall back to a hand-coded primitive shim so snippets keep
+  // rendering *something* while you wait for the build.
 
-const cls = (...xs) => xs.filter(Boolean).join(' ');
+  function resolveCdnUrl() {
+    const here = document.currentScript && document.currentScript.src;
+    if (!here) return '/packages/react/dist/cdn.global.js';
+    // /assets/sandpack-bridge.js → /packages/react/dist/cdn.global.js
+    return here.replace(/\/assets\/sandpack-bridge\.js.*$/, '/packages/react/dist/cdn.global.js');
+  }
+  const CDN_URL = resolveCdnUrl();
 
-export function Stack({ gap = 'md', align, children, ...rest }) {
-  const g = { xs: 4, sm: 8, md: 14, lg: 20, xl: 28 }[gap] ?? 14;
-  return React.createElement('div', { style: { display:'grid', gap: g, alignItems: align==='center'?'center':undefined, textAlign: align==='center'?'center':undefined }, ...rest }, children);
-}
-
-export function Form({ onSubmit, children, ...rest }) {
-  return React.createElement('form', {
-    ...rest,
-    onSubmit: (e) => {
-      e.preventDefault();
-      const fd = new FormData(e.currentTarget);
-      const values = Object.fromEntries(fd.entries());
-      onSubmit && onSubmit(values);
-    },
-  }, children);
-}
-
-export function Field({ label, name, children }) {
-  // Inject name onto the first input-like child.
-  const child = React.Children.map(children, (c) =>
-    React.isValidElement(c) ? React.cloneElement(c, { name }) : c
-  );
-  return React.createElement('label', { style: { display:'grid', gap: 4, font: '500 12px/1.2 system-ui', color:'#374151' } },
-    label,
-    child
-  );
-}
-
-export function Input(props) {
-  return React.createElement('input', {
-    ...props,
-    style: { height: 36, padding: '0 10px', border: '1px solid #d1d5db', borderRadius: 8, font: '14px system-ui', ...(props.style||{}) },
-  });
-}
-
-export function InputOtp({ length = 6, value = '', onChange, ...rest }) {
-  const boxes = Array.from({ length }, (_, i) => value[i] || '');
-  return React.createElement('div', { style: { display:'flex', gap: 6 } },
-    boxes.map((d, i) => React.createElement('input', {
-      key: i,
-      value: d,
-      maxLength: 1,
-      inputMode: 'numeric',
-      onChange: (e) => {
-        const next = (value.slice(0,i) + e.target.value + value.slice(i+1)).slice(0,length);
-        onChange && onChange(next);
-      },
-      style: { width: 36, height: 44, textAlign:'center', font:'600 18px/1 ui-monospace,monospace', border:'1px solid #d1d5db', borderRadius: 6 },
-      ...rest,
-    }))
-  );
-}
-
-export function Button({ variant = 'default', size = 'md', children, ...rest }) {
-  const base = { display:'inline-grid', placeItems:'center', height: size==='lg'?40:32, padding:'0 14px', borderRadius: 8, border: 0, cursor: 'pointer', font:'600 13px/1 system-ui' };
-  const skin = variant === 'primary'
-    ? { background: '#16181d', color: '#fff' }
-    : variant === 'ghost'
-    ? { background: 'transparent', color: '#374151', border: '1px solid #e5e7eb' }
-    : variant === 'link'
-    ? { background: 'transparent', color: '#2563eb', padding: 0, height: 'auto', textDecoration: 'underline' }
-    : { background: '#f3f4f6', color: '#111827' };
-  return React.createElement('button', { ...rest, style: { ...base, ...skin, ...(rest.style||{}) } }, children);
-}
-
-export function Alert({ tone = 'info', children, ...rest }) {
-  const colors = tone === 'danger'
-    ? { bg: '#fef2f2', bd: '#fecaca', fg: '#b91c1c' }
-    : tone === 'success'
-    ? { bg: '#ecfdf5', bd: '#a7f3d0', fg: '#047857' }
-    : { bg: '#eff6ff', bd: '#bfdbfe', fg: '#1d4ed8' };
-  return React.createElement('div', { role:'alert', ...rest, style:{ background: colors.bg, border: '1px solid '+colors.bd, color: colors.fg, padding: '8px 10px', borderRadius: 8, font:'13px/1.4 system-ui' } }, children);
-}
-
-export function Checkbox({ checked, onChange, children, ...rest }) {
-  return React.createElement('label', { style: { display:'flex', alignItems:'center', gap: 8, font:'13px/1 system-ui', color:'#374151' } },
-    React.createElement('input', { type:'checkbox', checked: !!checked, onChange: (e) => onChange && onChange(e.target.checked), ...rest }),
-    children
-  );
-}
-
-export function AuthShell({ brand, workspace, children }) {
-  return React.createElement('div', { style: { minHeight:'100vh', display:'grid', placeItems:'center', background:'#f9fafb', padding: 24 } },
-    React.createElement('div', { style: { width: 360, background:'#fff', border:'1px solid #e5e7eb', borderRadius: 14, padding: 28 } },
-      React.createElement('div', { style:{ font:'600 14px/1 system-ui', color:'#16181d', marginBottom: 12 } }, brand || 'Huchu', workspace ? ' · ' + workspace : ''),
-      children
-    )
-  );
-}
-`;
+  // The bridge module inside each Sandpack runs in its own ESM
+  // context. It dynamically loads React + ReactDOM from esm.sh,
+  // then injects the IIFE bundle as a <script> tag, then re-exports
+  // every key off `window.HuchuReact`. Hooks like `useState` are
+  // re-exported straight from React so destructuring imports like
+  // `import { useState } from '@huchu/react'` resolve too.
+  function buildBridgeModule() {
+    return [
+      "import * as React from 'react';",
+      "import * as ReactDOM from 'react-dom';",
+      "import * as ReactDOMClient from 'react-dom/client';",
+      "import * as jsxRuntime from 'react/jsx-runtime';",
+      "",
+      "// Pre-stash React globals so the IIFE can find them.",
+      "window.React = React;",
+      "window.ReactDOM = ReactDOM;",
+      "window.ReactDOMClient = ReactDOMClient;",
+      "window.jsxRuntime = jsxRuntime;",
+      "",
+      "let resolved;",
+      "async function load() {",
+      "  if (window.HuchuReact) return window.HuchuReact;",
+      "  const res = await fetch(" + JSON.stringify(CDN_URL) + ");",
+      "  if (!res.ok) throw new Error('failed to fetch ' + " + JSON.stringify(CDN_URL) + " + ' — ' + res.status);",
+      "  const code = await res.text();",
+      "  // eslint-disable-next-line no-new-func",
+      "  new Function(code)();",
+      "  return window.HuchuReact;",
+      "}",
+      "resolved = await load();",
+      "",
+      "// Re-export every named global off window.HuchuReact plus all",
+      "// of React's hook surface so cookbook snippets that mix",
+      "// `import { Button } from '@huchu/react'` and",
+      "// `import { useState } from '@huchu/react'` both work.",
+      "export const {",
+      "  Alert, AppShell, AuthShell, Avatar, Badge, BottomSheet, BottomTabs,",
+      "  Button, Checkbox, Combobox, CommandPalette, DataTable, DayList, Dialog,",
+      "  Drawer, EmptyState, Field, FilterChips, Form, Grabber, Input, InputOtp,",
+      "  Kbd, Menu, Modal, PageHeader, Pagination, Popover, Radio, RadioGroup,",
+      "  RoleSwitcher, RowCard, SaveBar, Select, Skeleton, Spinner, Stack,",
+      "  StatCard, StatHero, Stepper, Switch, Tabs, Toast, ToastProvider,",
+      "  Tooltip, useFieldContext, useInterval, useMatchMedia, useOptimistic,",
+      "  useToast, useUpload, useUrlState,",
+      "} = resolved;",
+      "",
+      "export const {",
+      "  useState, useEffect, useReducer, useRef, useCallback, useMemo,",
+      "  useContext, useId, useImperativeHandle, useLayoutEffect, useTransition,",
+      "  useDeferredValue, useSyncExternalStore, useInsertionEffect,",
+      "  createContext, forwardRef, Fragment, memo, lazy, Suspense, Children,",
+      "  cloneElement, createElement, isValidElement, startTransition,",
+      "} = React;",
+      "",
+      "export default resolved;",
+    ].join('\n');
+  }
+  const HUCHU_SHIM = buildBridgeModule();
 
   // ── Default starter files for a single-file TSX snippet ──────
   function buildFiles(appCode) {
@@ -156,7 +131,10 @@ export function AuthShell({ brand, workspace, children }) {
     };
   }
 
-  // Map bare-name '@huchu/react' imports onto the inline shim.
+  // Map bare-name '@huchu/react' imports onto the local bridge module
+  // that loads the CDN IIFE at runtime. (Sandpack also accepts an
+  // import-map alternative, but its `react-ts` template already takes
+  // local module paths verbatim — so the local mapping is all we need.)
   const IMPORT_MAP = {
     imports: {
       '@huchu/react': './huchu-react.js',

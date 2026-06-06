@@ -1,138 +1,132 @@
 # `@huchu/react`
 
-Thin React wrappers over the Huchu design-system CSS. Components render the exact class names already shipped in `components.css`, so the cookbook recipes you see in the docs site translate verbatim into your app.
+Thin React wrappers over the Huchu design-system CSS. Components render the exact class names already shipped in `components.css`, so any cookbook recipe in the docs site translates verbatim into your app.
 
-> **Status:** `v0.1.0-alpha.0` — first public scaffold. APIs may shift before `0.1.0`.
+> **Status:** `v0.1.0` — first install-ready release. ~36 components, 5 hooks, full TypeScript types, bundled design-system stylesheet.
 
 ## Install
 
 ```bash
-pnpm add @huchu/react react react-dom
-# or
 npm install @huchu/react react react-dom
+# or
+pnpm add @huchu/react react react-dom
 ```
 
-You also need the design-system stylesheet. Either:
-
-1. Import the docs-site `components.css` + `tokens.css` directly (source of truth), or
-2. Import the package's minimal fallback styles:
+Then import the bundled stylesheet once at the root of your app:
 
 ```ts
 import '@huchu/react/styles.css';
 ```
 
-The package's stylesheet only contains positioning fallbacks for the portal-based components (Toast, BottomSheet) and Stack flex glue. All visual look-and-feel lives in `components.css`.
+That single import pulls in the design-system tokens, `components.css` and the per-component portal-positioning fallbacks the package ships. Nothing else is required — no separate `tokens.css` or font import.
 
-## Quick start
-
-```tsx
-import { ToastProvider, Button, useToast } from '@huchu/react';
-
-export function App() {
-  return (
-    <ToastProvider>
-      <Demo />
-    </ToastProvider>
-  );
-}
-
-function Demo() {
-  const { show } = useToast();
-  return (
-    <Button onClick={() => show({ tone: 'success', title: 'Saved' })}>
-      Save changes
-    </Button>
-  );
-}
-```
-
-## Canonical sign-in (from the `auth-signin-2fa` recipe)
+## 30-second example
 
 ```tsx
-// from the cookbook recipe: cookbook/auth-signin-2fa.html
-import { useEffect, useReducer, useState } from 'react';
 import {
   AuthShell, Form, Field, Stack,
-  Input, InputOtp, Button, Alert,
+  Input, Button, Alert,
 } from '@huchu/react';
-
-type Stage = 'credentials' | 'otp' | 'success';
+import '@huchu/react/styles.css';
 
 export function SignIn() {
-  const [stage, setStage] = useState<Stage>('credentials');
-  const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
-  const [error, setError] = useState<string | null>(null);
-
   return (
     <AuthShell>
-      <AuthShell.Brand logo={<Logo />} product="Huchu" />
+      <AuthShell.Brand product="Huchu" />
       <AuthShell.Card title="Sign in" subtitle="Welcome back">
-        {stage === 'credentials' && (
-          <Form onSubmit={(e) => { e.preventDefault(); setStage('otp'); }}>
-            <Stack gap="md">
-              {error ? <Alert tone="danger">{error}</Alert> : null}
-              <Field label="Email" required>
-                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoFocus />
-              </Field>
-              <Button type="submit" fullWidth>Continue</Button>
-            </Stack>
-          </Form>
-        )}
-
-        {stage === 'otp' && (
-          <Form onSubmit={(e) => { e.preventDefault(); setStage('success'); }}>
-            <Stack gap="md">
-              <Field label="6-digit code" description={`We sent a code to ${email}.`}>
-                <InputOtp value={code} onChange={setCode} autoFocus />
-              </Field>
-              <Button type="submit" fullWidth disabled={code.length < 6}>Verify</Button>
-            </Stack>
-          </Form>
-        )}
-
-        {stage === 'success' && (
-          <Alert tone="success" title="You're in">Redirecting...</Alert>
-        )}
+        <Form onSubmit={(e) => e.preventDefault()}>
+          <Stack gap="md">
+            <Alert tone="info">Use your work email.</Alert>
+            <Field label="Email" required>
+              <Input type="email" autoFocus />
+            </Field>
+            <Field label="Password" required>
+              <Input type="password" />
+            </Field>
+            <Button type="submit" fullWidth>Continue</Button>
+          </Stack>
+        </Form>
       </AuthShell.Card>
     </AuthShell>
   );
 }
-
-function Logo() { return <span aria-hidden>H</span>; }
 ```
 
-## Exports (v0.1)
+## Components
 
-| Primitive       | Sub-parts                                                                                            |
-| --------------- | ----------------------------------------------------------------------------------------------------- |
-| `Button`        | variants `primary | secondary | ghost`, tones `default | success | warn | danger`, sizes `sm | md | lg` |
-| `Field`         | `Field.Label`, `Field.Description`, `Field.Error`                                                     |
-| `Input`         | auto-wires to nearest `Field` via context                                                             |
-| `InputOtp`      | imperative `focus()` via ref, paste handler, auto-advance                                             |
-| `Alert`         | tones `info | success | warn | danger`                                                                |
-| `Stack`         | `direction`, `gap`, `align`, `justify`, `wrap`                                                        |
-| `Form`          | `<form>` with `noValidate`, Enter submit toggle                                                       |
-| `Toast`         | `ToastProvider`, `useToast()` → `{ show, dismiss }`                                                  |
-| `BottomSheet`   | portal + focus trap + Escape + backdrop click                                                         |
-| `RowCard`       | `title`, `sub`, `value`, `delta`, `meta`, `leading`, `trailing`                                       |
-| `FilterChips`   | `value`, `onChange`, `options[]`, `role: radiogroup | tablist | group`                               |
-| `AuthShell`     | `AuthShell.Brand`, `AuthShell.Card`                                                                   |
+### Primitives
 
-## What is NOT in v0.1
+| Component         | Summary                                                                   |
+| ----------------- | ------------------------------------------------------------------------- |
+| `Button`          | Variants (primary/secondary/ghost), tones, sizes, loading, icons          |
+| `Input`           | Auto-wires id, aria-describedby, aria-invalid from nearest `Field`        |
+| `InputOtp`        | Per-digit OTP cells, paste-into-all, `autocomplete="one-time-code"`       |
+| `Field`           | Label + description + error wrapper with `Field.Label/.Description/.Error` |
+| `Form`            | `<form>` with `noValidate`, Enter-submit toggle                           |
+| `Checkbox`        | `.check` styled checkbox + optional label, supports `indeterminate`      |
+| `Radio` + `RadioGroup` | Context-based radio set with shared `name` and `value`               |
+| `Switch`          | Toggle switch with `role="switch"`                                        |
+| `Select`          | Styled `<select>` with optional `options[]` shorthand                     |
+| `Combobox`        | Searchable, group-able listbox                                            |
+| `Badge`           | Tones (neutral/info/success/warn/danger/clay/outline)                     |
+| `Avatar`          | Initials, image, sizes (sm/md/lg), tones (default/clay/ink)               |
+| `Spinner`         | `role="status"`, configurable `label`                                     |
+| `Skeleton`        | Width/height props, optional `lines` for stacked placeholders             |
+| `Tooltip`         | Hover/focus content; wraps a single child                                 |
+| `Kbd`             | Keyboard chip                                                             |
+| `Popover`         | Outside-click + Escape dismissable; optional arrow                        |
+| `Drawer`          | Portal side panel; collapses to bottom-sheet on phone                     |
+| `Tabs`            | `Tabs.List` + `Tabs.Tab` + `Tabs.Panel` with full ARIA wiring             |
+| `Stepper`         | Pill-style progress; `Stepper.Step` or `total`/`current` shorthand        |
+| `RoleSwitcher`    | Pill-shaped segmented toggle, generic over any string enum                |
+| `Pagination`      | Page nav + optional page-size picker                                      |
+| `SaveBar`         | Sticky save bar that slides in when `dirty`                               |
+| `Grabber`         | Drag handle for reorderable rows                                          |
+| `EmptyState`      | `full` (column) and `inline` (banner) variants                            |
+| `Menu`            | `Menu.Item` + `Menu.Label` + `Menu.Divider`                               |
+| `CommandPalette`  | ⌘K modal with search, groups, keyboard navigation                         |
 
-These cookbook imports are intentionally out-of-scope for the alpha and will land in `0.1.0-alpha.1+`:
+### Blocks
 
-- `Checkbox`, `Radio`, `Switch`, `Select`
-- `Drawer`, `Modal`, `Popover`, `Tooltip`
-- `Tabs`, `Steps`, `Wizard`
-- `Table`, `DataTable`
-- Dashboard kit (`KpiTile`, `Sparkline`, `LineChart`)
-- App shells (`AppShellSidebar`, `MobileBottomTab`)
-- `Command` / `CommandPalette`
+| Component     | Summary                                                                     |
+| ------------- | --------------------------------------------------------------------------- |
+| `BottomTabs`  | Mobile bottom-tab nav with active state + optional badge                    |
+| `StatHero`    | Brand-tinted lead stat + secondary tiles row                                |
+| `StatCard`    | Single stat tile with label/value/delta                                     |
+| `DayList`     | Two-column day/value list with optional up/down tone                        |
+| `PageHeader`  | Topbar with optional back button, title, right-side actions slot            |
+| `RowCard`     | Tap-target row card for mobile lists                                        |
+| `FilterChips` | Horizontal scrolling chip row with selection                                |
+| `BottomSheet` | Portal sheet with focus trap + Escape + backdrop dismiss                    |
 
-Recipes that import them currently render in the docs site only; you'll get a TS error if you import them from `@huchu/react` until the next milestone.
+### Patterns
+
+| Component   | Summary                                                                           |
+| ----------- | --------------------------------------------------------------------------------- |
+| `AppShell`  | Desktop sidebar shell: `AppShell.Sidebar` + `AppShell.Main` + `AppShell.TopBar`   |
+| `AuthShell` | Centered-card auth shell: `AuthShell.Brand` + `AuthShell.Card`                    |
+| `DataTable` | `<table class="dtable">` with sortable headers + row selection                    |
+| `Modal`     | Centered dialog with focus trap + Escape; bottom-sheet on phone                   |
+| `Dialog`    | Opinionated `Modal` with built-in confirm/cancel buttons                          |
+| `Toast`     | `ToastProvider` + `useToast()` → `{ show, dismiss }`                              |
+| `Alert`     | Inline banner with tones                                                          |
+| `Stack`     | `direction`, `gap`, `align`, `justify`, `wrap` flex helper                        |
+
+## Hooks
+
+| Hook              | Summary                                                                                            |
+| ----------------- | -------------------------------------------------------------------------------------------------- |
+| `useToast()`      | Returns `{ show(input), dismiss(id) }`. Must be inside `<ToastProvider>`.                          |
+| `useInterval()`   | `setInterval` with always-latest callback, cleanup, and a `paused` option.                         |
+| `useUrlState()`   | Syncs state to `?key=` query param via `history.replaceState`; SSR-safe.                           |
+| `useOptimistic()` | Base / derived / queue mutation pattern. Returns `{ base, derived, mutate, queue }`.               |
+| `useMatchMedia()` | SSR-safe `matchMedia` subscriber.                                                                  |
+| `useUpload()`     | `XMLHttpRequest`-backed file upload with progress fraction and `cancel()`.                         |
+
+## TypeScript
+
+Types are bundled — there's nothing extra to install. Every component exports a named props interface (e.g. `ButtonProps`, `DataTableProps<Row>`). Most components forward refs to the underlying DOM element.
 
 ## Docs
 
-Full docs, do/don't, and live previews: [huchu docs site](../../../README.md).
+Full docs, do/don't, and live previews: [huchu docs site](../../../README.md). Every recipe in `/cookbook/*.html` imports from this package — those recipes are the canonical examples for every component above.
