@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Operator overview · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 10px; border-radius: 9999px;
+    background: var(--surface); border: 1px solid var(--border);
+    font: 500 12px/1 var(--font-sans); color: var(--text-strong);
+    text-decoration: none;
+  }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind {
+    font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-subtle);
+    padding-right: 6px; border-right: 1px solid var(--border);
+  }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen {
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 14px;
+    display: grid; gap: 10px;
+  }
+  .ck-screen .desk {
+    aspect-ratio: 16 / 10;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    display: grid; gap: 6px;
+    grid-template-rows: auto 1fr auto;
+    overflow: hidden;
+  }
+  .ck-screen .strip {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+  }
+  .ck-screen .strip .k {
+    background: var(--surface-muted); border: 1px solid var(--border);
+    border-radius: 5px; padding: 4px 6px;
+    display: grid; gap: 2px;
+  }
+  .ck-screen .strip .k .l { font: 500 7px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase; }
+  .ck-screen .strip .k .v { font: 700 10px/1 var(--font-sans); color: var(--text-strong); }
+  .ck-screen .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .ck-screen .panel {
+    background: var(--surface-muted); border: 1px solid var(--border);
+    border-radius: 5px; padding: 4px;
+    display: grid; gap: 3px;
+  }
+  .ck-screen .panel .h { font: 600 8px/1 var(--font-sans); color: var(--text-strong); }
+  .ck-screen .panel .li {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 3px; height: 8px;
+  }
+  .ck-screen .panel .li.warn { background: var(--tone-warning-bg); border-color: var(--tone-warning-bd); }
+  .ck-screen .activity {
+    background: var(--surface-muted); border: 1px solid var(--border);
+    border-radius: 5px; padding: 4px 6px;
+    font: 500 8px/1.3 var(--font-mono); color: var(--text-subtle);
+  }
+  .ck-screen .caption {
+    font: 500 12px/1.4 var(--font-sans);
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ck-screen .caption .num {
+    font: 600 10px/1 var(--font-mono);
+    padding: 3px 6px; border-radius: 9999px;
+    background: var(--surface); color: var(--brand-strong);
+  }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n {
+    font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--brand-soft); color: var(--brand-strong);
+  }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: grid; gap: 10px;
+  }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p  { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre {
+    background: var(--ink); color: var(--canvas);
+    border-radius: 8px; padding: 12px 14px; margin: 0;
+    font: 500 12px/1.55 var(--font-mono); overflow-x: auto;
+    white-space: pre;
+  }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li {
+    display: grid; grid-template-columns: 20px 1fr; gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5;
+  }
+  .ck-a11y li::before {
+    content: ""; display: block; width: 16px; height: 16px;
+    background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd);
+    border-radius: 4px; margin-top: 1px;
+  }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    font: 500 13px/1.2 var(--font-sans); color: var(--text-strong);
+    text-decoration: none;
+  }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag {
+    font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 3px 7px; border-radius: 9999px;
+    background: var(--surface-muted); color: var(--text-subtle);
+  }
+
+  /* Honest "code-only" preview marker — used when a step is conceptual code
+     (state machine, hook, reducer) and a visual mockup would be misleading. */
+  .ck-code-only-note {
+    display: grid; gap: 8px;
+    padding: 22px 26px;
+    background: var(--surface-muted);
+    border: 1px dashed var(--border-strong);
+    border-radius: 12px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-code-only-note .ck-code-only-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    align-self: start;
+    font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--surface); color: var(--brand-strong);
+    border: 1px solid var(--border);
+  }
+  .ck-code-only-note p { margin: 0; color: var(--text-muted); }
+  .ck-code-only-note code {
+    background: var(--surface); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+
+  /* Off-system component roadmap pill — for recipes that compose with
+     components not yet in @huchu/react v0.1.0-alpha.0. */
+  .ck-roadmap-note {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--brand);
+    border-radius: 8px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code {
+    background: var(--surface-muted); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Dashboards</a><span class="sep">/</span>
+      <span>Operator overview</span>
+    </div>
+    <h1>Build a one-screen operator overview</h1>
+    <p class="lede">By the end of this recipe you'll have a desktop dashboard that fits the whole operator's morning — KPI strip, today's tasks, flagged anomalies, recent activity — into a single viewport, refreshes itself every 30 seconds, and adapts to the user's role so a clerk sees less than a manager.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="grid" data-icon-size="12"></span>Dashboards</span>
+      <span class="meta-pill">3 primitives · 3 blocks · 0 patterns</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~40 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- SECTION 2 · OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A three-band layout: KPI strip up top, two operational panels in the middle, recent activity along the bottom. No scroll on a 1440px display.</p>
+    <p>An operator dashboard is not a report. The job of this screen is to answer "is anything on fire?" in ten seconds, then offer the next action. The KPI strip gives the headline; the two-column panels split into "things I need to do today" (tasks) and "things the system noticed" (flags); the activity strip at the bottom is the read-only proof of work.</p>
+    <p>We poll, not subscribe. A 30-second <code>useInterval</code> refresh covers 95% of dashboards and avoids the WebSocket reconnection logic that bites you every Friday at 5pm. If you genuinely need sub-second updates, swap the hook for a subscription — the model stays the same.</p>
+    <p>Role-based filtering happens at the data layer, not the JSX. A clerk and a manager render the same component; the API returns a different set of panels based on the bearer token. That keeps the front-end honest and stops the "manager view via DevTools" exploit dead.</p>
+    <p><b>Skip this recipe if</b> you're on mobile-first — the <a href="dashboards-kpi-hero-drilldown.html">KPI hero + drilldown</a> recipe is purpose-built for that. Use this one when the operator sits at a desk and needs everything visible at once.</p>
+  </section>
+
+  <!-- SECTION 3 · WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">The same dashboard in three contexts. Whole shape stays; density and content change.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="desk">
+          <div class="strip">
+            <div class="k"><span class="l">Sales</span><span class="v">$12.4k</span></div>
+            <div class="k"><span class="l">Tickets</span><span class="v">48</span></div>
+            <div class="k"><span class="l">Cash</span><span class="v">$3.1k</span></div>
+            <div class="k"><span class="l">Flags</span><span class="v">2</span></div>
+          </div>
+          <div class="panels">
+            <div class="panel"><span class="h">Tasks</span><div class="li"></div><div class="li"></div><div class="li"></div></div>
+            <div class="panel"><span class="h">Flags</span><div class="li warn"></div><div class="li warn"></div><div class="li"></div></div>
+          </div>
+          <div class="activity">09:14 · Tendai opened day · 09:22 · Refund $12 · 09:31 · Stock recount</div>
+        </div>
+        <div class="caption"><span class="num">01</span> Manager view — everything</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="desk">
+          <div class="strip">
+            <div class="k"><span class="l">Sales</span><span class="v">$12.4k</span></div>
+            <div class="k"><span class="l">Tickets</span><span class="v">48</span></div>
+          </div>
+          <div class="panels" style="grid-template-columns: 1fr;">
+            <div class="panel"><span class="h">My tasks</span><div class="li"></div><div class="li"></div></div>
+          </div>
+          <div class="activity">09:22 · Refund $12 · 09:31 · Stock recount</div>
+        </div>
+        <div class="caption"><span class="num">02</span> Clerk view — role-filtered</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="desk">
+          <div class="strip" style="grid-template-columns: repeat(4, 1fr); gap: 2px;">
+            <div class="k" style="padding: 2px 4px;"><span class="l">Sales</span><span class="v">$12k</span></div>
+            <div class="k" style="padding: 2px 4px;"><span class="l">Tk</span><span class="v">48</span></div>
+            <div class="k" style="padding: 2px 4px;"><span class="l">Cash</span><span class="v">$3k</span></div>
+            <div class="k" style="padding: 2px 4px;"><span class="l">Flg</span><span class="v">2</span></div>
+          </div>
+          <div class="panels">
+            <div class="panel"><span class="h">Tasks</span><div class="li" style="height: 4px;"></div><div class="li" style="height: 4px;"></div><div class="li" style="height: 4px;"></div><div class="li" style="height: 4px;"></div><div class="li" style="height: 4px;"></div></div>
+            <div class="panel"><span class="h">Flags</span><div class="li warn" style="height: 4px;"></div><div class="li warn" style="height: 4px;"></div><div class="li" style="height: 4px;"></div><div class="li" style="height: 4px;"></div></div>
+          </div>
+          <div class="activity">More fits.</div>
+        </div>
+        <div class="caption"><span class="num">03</span> Dense view — more rows visible</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3.5 · LIVE IN PORTALS -->
+  <section id="demos">
+    <h2 class="ds-h2">You can see this live in</h2>
+    <p class="ds-h2-sub">Portal demos that wire this operator overview in context. Open one to see the morning view.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../portals/owner/demo.html" target="_blank" rel="noopener"><span class="kind">Demo</span><span data-icon="dashboard" data-icon-size="12"></span>Owner / Manager — See it in action →</a>
+      <a class="ck-piece" href="../portals/staff/demo.html" target="_blank" rel="noopener"><span class="kind">Demo</span><span data-icon="user" data-icon-size="12"></span>Staff portal — See it in action →</a>
+    </div>
+  </section>
+
+  <!-- SECTION 4 · REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>. Each link opens the reference page.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/b-kpi-grid.html"><span class="kind">Block</span>KPI grid</a>
+      <a class="ck-piece" href="../system/b-stat-card.html"><span class="kind">Block</span>Stat card</a>
+      <a class="ck-piece" href="../system/b-row-card.html"><span class="kind">Block</span>Row card</a>
+      <a class="ck-piece" href="../system/b-empty-state.html"><span class="kind">Block</span>Empty state</a>
+      <a class="ck-piece" href="../system/p-alert.html"><span class="kind">Primitive</span>Alert</a>
+      <a class="ck-piece" href="../system/p-spinner.html"><span class="kind">Primitive</span>Spinner &amp; skeleton</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>Stack</code>, <code>KpiGrid</code>, <code>RowCard</code>, <code>EmptyState</code>, <code>Alert</code>, <code>Skeleton</code>, <code>useInterval</code>. <code>useInterval</code> is the first new hook this batch introduces — keep the name.</p>
+  </section>
+
+  <!-- SECTION 5 · STEP-BY-STEP -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <!-- Step 1 -->
+    <div class="ck-step"><span class="n">01</span><h3>Lay out three bands with CSS Grid, not flex stacks</h3></div>
+    <p>Grid lets you declare the row heights — auto, 1fr, auto — so the middle panel absorbs the leftover viewport. A flex column would let the panels overflow and ruin the no-scroll promise. Set <code>min-height: 0</code> on the scrollable children so the grid actually clips.</p>
+    <div class="ds-specimen"
+         data-code='import { Stack } from &#39;@huchu/react&#39;;
+
+function OverviewLayout({ kpi, tasks, flags, activity }: {
+  kpi: React.ReactNode;
+  tasks: React.ReactNode;
+  flags: React.ReactNode;
+  activity: React.ReactNode;
+}) {
+  return (
+    &lt;div
+      style={{
+        display: &#39;grid&#39;,
+        gridTemplateRows: &#39;auto 1fr auto&#39;,
+        gap: 16,
+        height: &#39;calc(100vh - var(--hx-nav-h))&#39;,
+        padding: 16,
+      }}
+    &gt;
+      &lt;div&gt;{kpi}&lt;/div&gt;
+      &lt;div style={{
+        display: &#39;grid&#39;,
+        gridTemplateColumns: &#39;1fr 1fr&#39;,
+        gap: 16,
+        minHeight: 0, // critical — lets children scroll
+      }}&gt;
+        &lt;Panel title=&quot;Today&#39;s tasks&quot;&gt;{tasks}&lt;/Panel&gt;
+        &lt;Panel title=&quot;Flagged anomalies&quot;&gt;{flags}&lt;/Panel&gt;
+      &lt;/div&gt;
+      &lt;div&gt;{activity}&lt;/div&gt;
+    &lt;/div&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p><b style="color: var(--brand-strong);">Row 2: 1fr</b> — task + flag panels absorb leftover height</p>
+          <p><b style="color: var(--brand-strong);">Row 3: auto</b> — activity strip pinned to bottom</p>
+          <p><code>min-height: 0</code> on row 2 children is what makes overflow scroll, not push the page.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Layout</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="ck-step"><span class="n">02</span><h3>Build the KPI strip from one source array</h3></div>
+    <p>Feed <code>KpiGrid</code> a flat array of items and let the role filter remove the ones a clerk shouldn't see. The grid handles spacing, deltas and alignment so you only think about the data.</p>
+    <div class="ds-specimen"
+         data-code='import { KpiGrid } from &#39;@huchu/react&#39;;
+
+type Role = &#39;clerk&#39; | &#39;manager&#39; | &#39;owner&#39;;
+
+type Kpi = {
+  id: string;
+  label: string;
+  value: string;
+  delta?: number | null;
+  minRole: Role;
+};
+
+const ROLE_RANK: Record&lt;Role, number&gt; = { clerk: 0, manager: 1, owner: 2 };
+
+const ALL_KPIS: Kpi[] = [
+  { id: &#39;sales&#39;,    label: &#39;Sales today&#39;,    value: &#39;$12,420&#39;, delta:  6, minRole: &#39;clerk&#39; },
+  { id: &#39;tickets&#39;,  label: &#39;Tickets&#39;,        value: &#39;48&#39;,      delta: -2, minRole: &#39;clerk&#39; },
+  { id: &#39;cash&#39;,     label: &#39;Cash in drawer&#39;, value: &#39;$3,140&#39;,  minRole: &#39;manager&#39; },
+  { id: &#39;flags&#39;,    label: &#39;Open flags&#39;,     value: &#39;2&#39;,       minRole: &#39;manager&#39; },
+];
+
+function KpiStrip({ role }: { role: Role }) {
+  const items = ALL_KPIS
+    .filter((k) =&gt; ROLE_RANK[role] &gt;= ROLE_RANK[k.minRole])
+    .map(({ id: _id, minRole: _r, ...rest }) =&gt; rest);
+
+  return &lt;KpiGrid columns={items.length} items={items} tone=&quot;neutral&quot; /&gt;;
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 18px;">
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px;"><div style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase;">Sales today</div><div style="font: 700 18px/1.2 var(--font-sans); margin-top: 4px;">$12,420</div><div style="font: 500 11px/1 var(--font-mono); color: var(--tone-success); margin-top: 4px;">+6%</div></div>
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px;"><div style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase;">Tickets</div><div style="font: 700 18px/1.2 var(--font-sans); margin-top: 4px;">48</div><div style="font: 500 11px/1 var(--font-mono); color: var(--tone-danger); margin-top: 4px;">−2%</div></div>
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px;"><div style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase;">Cash in drawer</div><div style="font: 700 18px/1.2 var(--font-sans); margin-top: 4px;">$3,140</div></div>
+            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px;"><div style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase;">Open flags</div><div style="font: 700 18px/1.2 var(--font-sans); margin-top: 4px;">2</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · KPI strip</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="ck-step"><span class="n">03</span><h3>Two panels: tasks and flags, both scrollable</h3></div>
+    <p>Each panel is a tiny header plus a vertically-scrolling list of <code>RowCard</code>s. The list — not the whole page — owns the scrollbar, so the KPI strip and the activity bar stay locked in place.</p>
+    <div class="ds-specimen"
+         data-code='import { Stack, RowCard, EmptyState } from &#39;@huchu/react&#39;;
+
+function Panel({ title, children }: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    &lt;section
+      aria-label={title}
+      style={{
+        display: &#39;grid&#39;,
+        gridTemplateRows: &#39;auto 1fr&#39;,
+        minHeight: 0,
+        background: &#39;var(--surface)&#39;,
+        border: &#39;1px solid var(--border)&#39;,
+        borderRadius: 12,
+        padding: 14,
+      }}
+    &gt;
+      &lt;h2 style={{
+        font: &#39;600 14px/1 var(--font-sans)&#39;,
+        margin: &#39;0 0 10px&#39;,
+        color: &#39;var(--text-strong)&#39;,
+      }}&gt;{title}&lt;/h2&gt;
+      &lt;div style={{ overflowY: &#39;auto&#39;, minHeight: 0 }}&gt;
+        {children}
+      &lt;/div&gt;
+    &lt;/section&gt;
+  );
+}
+
+function TasksList({ items }: { items: Task[] }) {
+  if (!items.length) return (
+    &lt;EmptyState
+      icon=&quot;check&quot;
+      title=&quot;Inbox zero&quot;
+      body=&quot;Nothing assigned to you right now.&quot;
+    /&gt;
+  );
+  return (
+    &lt;Stack gap=&quot;xs&quot;&gt;
+      {items.map((t) =&gt; (
+        &lt;RowCard
+          key={t.id}
+          href={t.href}
+          label={t.label}
+          meta={t.due}
+          trailing=&quot;chevron&quot;
+        /&gt;
+      ))}
+    &lt;/Stack&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px;">
+            <div style="font: 600 12px/1 var(--font-sans); color: var(--text-strong); margin-bottom: 8px;">Today's tasks</div>
+            <div style="display: grid; gap: 6px;">
+              <div style="display: flex; align-items: center; gap: 8px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px;"><span style="flex: 1; font: 600 11px/1.2 var(--font-sans);">Approve refund — $42</span><span style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle);">2h</span></div>
+              <div style="display: flex; align-items: center; gap: 8px; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px;"><span style="flex: 1; font: 600 11px/1.2 var(--font-sans);">Close stock count</span><span style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle);">EoD</span></div>
+            </div>
+          </div>
+          <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px;">
+            <div style="font: 600 12px/1 var(--font-sans); color: var(--text-strong); margin-bottom: 8px;">Flagged anomalies</div>
+            <div style="display: grid; gap: 6px;">
+              <div style="display: flex; align-items: center; gap: 8px; background: var(--tone-warning-bg); border: 1px solid var(--tone-warning-bd); border-radius: 6px; padding: 7px 9px;"><span style="flex: 1; font: 600 11px/1.2 var(--font-sans); color: var(--tone-warning);">Drawer over by $18</span></div>
+              <div style="display: flex; align-items: center; gap: 8px; background: var(--tone-warning-bg); border: 1px solid var(--tone-warning-bd); border-radius: 6px; padding: 7px 9px;"><span style="flex: 1; font: 600 11px/1.2 var(--font-sans); color: var(--tone-warning);">Refund &gt; 5% of sales</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Panels</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="ck-step"><span class="n">04</span><h3>Refresh quietly with useInterval — no spinner</h3></div>
+    <p>The first load shows a skeleton, but every subsequent refresh updates in place. Show a tiny "Updated 12s ago" caption so the operator knows the screen is alive without anything moving. Pause the interval when the tab is hidden so you don't drain laptop batteries.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useState } from &#39;@huchu/react&#39;;
+import { useInterval } from &#39;@huchu/react&#39;;
+
+const REFRESH_MS = 30_000;
+
+function useOverview(role: Role) {
+  const [data, setData]   = useState&lt;Overview | null&gt;(null);
+  const [error, setError] = useState&lt;string | null&gt;(null);
+  const [lastFetch, setLastFetch] = useState&lt;number&gt;(0);
+
+  const load = async () =&gt; {
+    try {
+      const res = await fetch(`/api/overview?role=${role}`);
+      if (!res.ok) throw new Error(&#39;Could not refresh.&#39;);
+      setData(await res.json());
+      setError(null);
+      setLastFetch(Date.now());
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
+
+  // Initial load — fires once on mount.
+  useEffect(() =&gt; { load(); /* eslint-disable-next-line */ }, []);
+
+  // Quiet 30-second refresh. useInterval pauses when document.hidden.
+  useInterval(load, REFRESH_MS, { pauseWhenHidden: true });
+
+  return { data, error, lastFetch, reload: load };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p><b style="color: var(--brand-strong);">+30s</b> → <code>load()</code> in background → state updates → React diffs the UI</p>
+          <p>No spinner. The KPI numbers tick up; the rows shuffle. The operator's eye catches it.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Polling</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- SECTION 6 · FINAL COMPOSITION -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole <code>OperatorOverview</code>, assembled. Layout, role filter, 30-second poll, skeleton on first load, inline error.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useState } from &#39;@huchu/react&#39;;
+import {
+  Stack, KpiGrid, RowCard, EmptyState,
+  Alert, Skeleton, Button, useInterval,
+} from &#39;@huchu/react&#39;;
+
+// ── Types ───────────────────────────────────────────────────────
+type Role = &#39;clerk&#39; | &#39;manager&#39; | &#39;owner&#39;;
+type Kpi  = { label: string; value: string; delta?: number | null };
+type Task = { id: string; label: string; due: string; href: string };
+type Flag = { id: string; severity: &#39;warn&#39; | &#39;danger&#39;; label: string; href: string };
+type Activity = { id: string; at: string; text: string };
+type Overview = {
+  asOf: string;
+  kpis: Kpi[];
+  tasks: Task[];
+  flags: Flag[];
+  activity: Activity[];
+};
+
+// ── Data hook ───────────────────────────────────────────────────
+const REFRESH_MS = 30_000;
+
+function useOverview(role: Role) {
+  const [data, setData]   = useState&lt;Overview | null&gt;(null);
+  const [error, setError] = useState&lt;string | null&gt;(null);
+  const [updatedAt, setUpdatedAt] = useState&lt;number&gt;(0);
+
+  const load = async () =&gt; {
+    try {
+      const res = await fetch(`/api/overview?role=${role}`);
+      if (!res.ok) throw new Error(&#39;Could not refresh.&#39;);
+      setData(await res.json());
+      setError(null);
+      setUpdatedAt(Date.now());
+    } catch (e) { setError((e as Error).message); }
+  };
+
+  useEffect(() =&gt; { load(); /* eslint-disable-next-line */ }, [role]);
+  useInterval(load, REFRESH_MS, { pauseWhenHidden: true });
+  return { data, error, updatedAt, reload: load };
+}
+
+// ── Panel shell ─────────────────────────────────────────────────
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    &lt;section aria-label={title}
+      style={{
+        display: &#39;grid&#39;, gridTemplateRows: &#39;auto 1fr&#39;,
+        minHeight: 0, background: &#39;var(--surface)&#39;,
+        border: &#39;1px solid var(--border)&#39;, borderRadius: 12, padding: 14,
+      }}&gt;
+      &lt;h2 style={{ font: &#39;600 14px/1 var(--font-sans)&#39;,
+                   margin: &#39;0 0 10px&#39;, color: &#39;var(--text-strong)&#39; }}&gt;
+        {title}
+      &lt;/h2&gt;
+      &lt;div style={{ overflowY: &#39;auto&#39;, minHeight: 0 }}&gt;{children}&lt;/div&gt;
+    &lt;/section&gt;
+  );
+}
+
+// ── Component ───────────────────────────────────────────────────
+export function OperatorOverview({ role }: { role: Role }) {
+  const { data, error, updatedAt, reload } = useOverview(role);
+
+  if (!data &amp;&amp; !error) {
+    return (
+      &lt;Stack gap=&quot;md&quot; aria-busy=&quot;true&quot;&gt;
+        &lt;Skeleton height={64} radius=&quot;md&quot; /&gt;
+        &lt;Skeleton height={280} radius=&quot;lg&quot; /&gt;
+      &lt;/Stack&gt;
+    );
+  }
+
+  return (
+    &lt;div style={{
+      display: &#39;grid&#39;, gridTemplateRows: &#39;auto 1fr auto&#39;,
+      gap: 16, height: &#39;calc(100vh - var(--hx-nav-h))&#39;, padding: 16,
+    }}&gt;
+      {/* ── KPI strip ───────────────────────────────────────────── */}
+      &lt;div&gt;
+        {error &amp;&amp; (
+          &lt;Alert tone=&quot;warning&quot;&gt;
+            Showing stale data. {error}{&#39; &#39;}
+            &lt;Button variant=&quot;link&quot; onClick={reload}&gt;Retry&lt;/Button&gt;
+          &lt;/Alert&gt;
+        )}
+        &lt;KpiGrid columns={data?.kpis.length ?? 4}
+                 items={data?.kpis ?? []} tone=&quot;neutral&quot; /&gt;
+      &lt;/div&gt;
+
+      {/* ── Two-column panels ──────────────────────────────────── */}
+      &lt;div style={{
+        display: &#39;grid&#39;, gridTemplateColumns: &#39;1fr 1fr&#39;,
+        gap: 16, minHeight: 0,
+      }}&gt;
+        &lt;Panel title=&quot;Today&#39;s tasks&quot;&gt;
+          {(data?.tasks ?? []).length === 0 ? (
+            &lt;EmptyState icon=&quot;check&quot; title=&quot;Inbox zero&quot;
+                        body=&quot;Nothing assigned to you right now.&quot; /&gt;
+          ) : (
+            &lt;Stack gap=&quot;xs&quot;&gt;
+              {data!.tasks.map((t) =&gt; (
+                &lt;RowCard key={t.id} href={t.href}
+                         label={t.label} meta={t.due}
+                         trailing=&quot;chevron&quot; /&gt;
+              ))}
+            &lt;/Stack&gt;
+          )}
+        &lt;/Panel&gt;
+        &lt;Panel title=&quot;Flagged anomalies&quot;&gt;
+          {(data?.flags ?? []).length === 0 ? (
+            &lt;EmptyState icon=&quot;shield&quot; title=&quot;No flags today&quot;
+                        body=&quot;The day looks clean. Keep going.&quot; /&gt;
+          ) : (
+            &lt;Stack gap=&quot;xs&quot;&gt;
+              {data!.flags.map((f) =&gt; (
+                &lt;RowCard key={f.id} href={f.href}
+                         tone={f.severity}
+                         label={f.label}
+                         trailing=&quot;chevron&quot; /&gt;
+              ))}
+            &lt;/Stack&gt;
+          )}
+        &lt;/Panel&gt;
+      &lt;/div&gt;
+
+      {/* ── Activity strip ─────────────────────────────────────── */}
+      &lt;footer style={{
+        display: &#39;flex&#39;, gap: 12, alignItems: &#39;center&#39;,
+        background: &#39;var(--surface)&#39;, border: &#39;1px solid var(--border)&#39;,
+        borderRadius: 10, padding: &#39;8px 12px&#39;,
+        font: &#39;500 12px/1 var(--font-mono)&#39;, color: &#39;var(--text-muted)&#39;,
+        overflow: &#39;hidden&#39;,
+      }}&gt;
+        &lt;span&gt;Recent:&lt;/span&gt;
+        {(data?.activity ?? []).slice(0, 4).map((a) =&gt; (
+          &lt;span key={a.id}&gt;{a.at} · {a.text}&lt;/span&gt;
+        ))}
+        &lt;span style={{ marginLeft: &#39;auto&#39;, color: &#39;var(--text-subtle)&#39; }}&gt;
+          Updated {Math.floor((Date.now() - updatedAt) / 1000)}s ago
+        &lt;/span&gt;
+      &lt;/footer&gt;
+    &lt;/div&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 20px;">
+          <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: grid; grid-template-rows: auto auto auto; gap: 12px;">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+              <div style="background: var(--surface-muted); border: 1px solid var(--border); border-radius: 6px; padding: 8px;"><div style="font: 500 9px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase;">Sales</div><div style="font: 700 14px/1.2 var(--font-sans); margin-top: 3px;">$12,420</div></div>
+              <div style="background: var(--surface-muted); border: 1px solid var(--border); border-radius: 6px; padding: 8px;"><div style="font: 500 9px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase;">Tickets</div><div style="font: 700 14px/1.2 var(--font-sans); margin-top: 3px;">48</div></div>
+              <div style="background: var(--surface-muted); border: 1px solid var(--border); border-radius: 6px; padding: 8px;"><div style="font: 500 9px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase;">Cash</div><div style="font: 700 14px/1.2 var(--font-sans); margin-top: 3px;">$3,140</div></div>
+              <div style="background: var(--surface-muted); border: 1px solid var(--border); border-radius: 6px; padding: 8px;"><div style="font: 500 9px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase;">Flags</div><div style="font: 700 14px/1.2 var(--font-sans); margin-top: 3px;">2</div></div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div style="background: var(--surface-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px;"><div style="font: 600 11px/1 var(--font-sans); margin-bottom: 6px;">Today's tasks</div><div style="display: grid; gap: 4px;"><div style="background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 5px 7px; font: 500 10px/1.2 var(--font-sans);">Approve refund · 2h</div><div style="background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 5px 7px; font: 500 10px/1.2 var(--font-sans);">Close stock count · EoD</div></div></div>
+              <div style="background: var(--surface-muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px;"><div style="font: 600 11px/1 var(--font-sans); margin-bottom: 6px;">Flagged anomalies</div><div style="display: grid; gap: 4px;"><div style="background: var(--tone-warning-bg); border: 1px solid var(--tone-warning-bd); color: var(--tone-warning); border-radius: 4px; padding: 5px 7px; font: 500 10px/1.2 var(--font-sans);">Drawer over by $18</div><div style="background: var(--tone-warning-bg); border: 1px solid var(--tone-warning-bd); color: var(--tone-warning); border-radius: 4px; padding: 5px 7px; font: 500 10px/1.2 var(--font-sans);">Refund &gt; 5%</div></div></div>
+            </div>
+            <div style="background: var(--surface-muted); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font: 500 10px/1 var(--font-mono); color: var(--text-subtle); display: flex; justify-content: space-between;">
+              <span>09:14 · day opened · 09:22 · refund $12 · 09:31 · recount</span>
+              <span>Updated 12s ago</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">OperatorOverview.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- SECTION 7 · VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three forks. Same shape, different volume.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Dense mode</h4>
+        <p>For power users who want more rows visible. Halve the gap and the row padding via a single density flag — every spacing token follows.</p>
+<pre>// Density flag on the wrapper
+&lt;div data-density=&quot;dense&quot; style={{ gap: 8 }}&gt;
+  &lt;KpiGrid items={kpis} density=&quot;dense&quot; /&gt;
+  &lt;Panel density=&quot;dense&quot;&gt;
+    {tasks.map((t) =&gt;
+      &lt;RowCard density=&quot;dense&quot; key={t.id} {...t} /&gt;)}
+  &lt;/Panel&gt;
+&lt;/div&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Single-column on tablet</h4>
+        <p>Below 900px collapse the two panels into one. The bottom activity stays; the KPI strip wraps. No layout-shift on resize because grid handles it.</p>
+<pre>// Just change one grid-template
+const isNarrow = useMediaQuery(&#39;(max-width: 900px)&#39;);
+&lt;div style={{
+  gridTemplateColumns:
+    isNarrow ? &#39;1fr&#39; : &#39;1fr 1fr&#39;,
+}}&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Real-time via subscription</h4>
+        <p>Swap <code>useInterval</code> for an EventSource when sub-second updates matter. Same model in, same JSX out.</p>
+<pre>// Drop-in replacement for useInterval
+useEffect(() =&gt; {
+  const es = new EventSource(&#39;/api/overview/stream&#39;);
+  es.onmessage = (e) =&gt; setData(JSON.parse(e.data));
+  return () =&gt; es.close();
+}, [role]);</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 8 · ACCESSIBILITY -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">What this recipe takes care of for you.</p>
+    <ul class="ck-a11y">
+      <li><b>Each panel is a landmark.</b> The task panel and flag panel use <code>&lt;section aria-label="…"&gt;</code> so a screen-reader user can jump panel-to-panel with the rotor.</li>
+      <li><b>Refresh doesn't steal focus.</b> The 30-second poll mutates state in place. The user's caret stays where it was — typing in a task description doesn't get wiped.</li>
+      <li><b>Tab hidden = polling paused.</b> <code>useInterval</code> with <code>pauseWhenHidden: true</code> stops fetching when the document is backgrounded — fewer requests, longer laptop battery, no surprises when the user returns.</li>
+      <li><b>The stale-data warning is non-modal.</b> When a poll fails we show an <code>Alert tone="warning"</code> at the top of the KPI strip — the operator keeps working off the last-known good data while the retry button is one tab away.</li>
+      <li><b>Density mode keeps the same hit target.</b> "Dense" shrinks the visual padding but keeps a 44px tap area via a transparent before-pseudo — pointer-only operators get more rows, finger-only operators still get a thumb-sized target.</li>
+      <li><b>Role filter is server-enforced.</b> The clerk literally cannot see manager-only KPIs — they're not in the response. JSX-only role guards are theatre.</li>
+    </ul>
+  </section>
+
+  <!-- SECTION 9 · RELATED RECIPES -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">More dashboard and state recipes that fit the same shape.</p>
+    <div class="ck-related">
+      <a href="dashboards-kpi-hero-drilldown.html">Dashboards · KPI hero + drilldown<span class="tag">New</span></a>
+      <a href="approvals-leave-request.html">Approvals · Leave-request workflow<span class="tag">New</span></a>
+      <a href="states-empty-loading-error.html">States · Empty, loading, error<span class="tag">New</span></a>
+      <a href="auth-signin-2fa.html">Auth · Sign in with 2FA<span class="tag">Canonical</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="dashboards-kpi-hero-drilldown.html"><div class="pager-label">← Previous</div><div class="pager-title">KPI hero + drilldown</div></a>
+    <a href="approvals-leave-request.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Leave-request workflow</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#demos">You can see this live in</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Internationalisation (i18n) · Huchu DS</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .i18n-locales { display: grid; gap: 12px; grid-template-columns: repeat(3, 1fr); margin: 18px 0; }
+  @media (max-width: 800px) { .i18n-locales { grid-template-columns: 1fr; } }
+  .i18n-locale {
+    border: 1px solid var(--border); background: var(--surface);
+    border-radius: 12px; padding: 16px 18px; display: grid; gap: 6px;
+  }
+  .i18n-locale h3 { margin: 0; font: 600 16px/1.2 var(--font-sans); color: var(--text-strong); }
+  .i18n-locale .code { font: 500 12px/1 var(--font-mono); color: var(--brand-strong); }
+  .i18n-locale p { margin: 0; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.5; }
+  .i18n-locale .file { margin-top: 6px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+  .i18n-locale .file a { color: var(--brand-strong); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="../system/foundations.html">Reference</a><span class="sep">/</span>
+      <span>Internationalisation</span>
+    </div>
+    <h1>Internationalisation (i18n)</h1>
+    <p class="lede">Every user-visible string lives in a JSON resource file keyed by ICU MessageFormat. The system ships English by default and resource packs for Shona and Ndebele &mdash; the languages an operator on a Zimbabwean shop floor is most likely to read fastest.</p>
+    <div class="meta">
+      <span class="meta-pill">ICU MessageFormat</span>
+      <span class="meta-pill">Locale fallbacks</span>
+      <span class="meta-pill">Native <code>Intl.*</code> for dates &amp; numbers</span>
+    </div>
+  </header>
+
+  <section id="model">
+    <h2 class="ds-h2">The model</h2>
+    <p class="ds-h2-sub">Three rules. They are the whole contract.</p>
+    <ol>
+      <li><strong>Every string is a key.</strong> Hard-coded copy never lands in components. Even a one-word button label is <code class="inline">t("actions.save")</code>.</li>
+      <li><strong>Plurals and inserts go through ICU.</strong> Pluralisation rules differ per language. Don't string-concatenate &mdash; use <code class="inline">{count, plural, one {# item} other {# items}}</code> and let the formatter pick the right branch.</li>
+      <li><strong>Dates, numbers, currencies use <code class="inline">Intl.*</code>.</strong> The resource files carry copy, not formatting. <code class="inline">Intl.DateTimeFormat(locale).format(d)</code> is the one true date renderer.</li>
+    </ol>
+  </section>
+
+  <section id="locales" style="margin-top: 40px;">
+    <h2 class="ds-h2">Supported locales</h2>
+    <p class="ds-h2-sub">English is the default and the source of truth. Any missing key in another locale falls back to English &mdash; never to the raw key.</p>
+    <div class="i18n-locales">
+      <div class="i18n-locale">
+        <h3>English <span class="code">en</span></h3>
+        <p>Default. Source of truth for every key. Every new key lands here first.</p>
+        <p class="file"><a href="en.json">en.json</a></p>
+      </div>
+      <div class="i18n-locale">
+        <h3>ChiShona <span class="code">sn</span></h3>
+        <p>Primary operator language across most of Mashonaland. Falls back to <code class="inline">en</code>.</p>
+        <p class="file"><a href="sn.json">sn.json</a></p>
+      </div>
+      <div class="i18n-locale">
+        <h3>IsiNdebele <span class="code">nd</span></h3>
+        <p>Primary operator language in Matabeleland. Falls back to <code class="inline">en</code>.</p>
+        <p class="file"><a href="nd.json">nd.json</a></p>
+      </div>
+    </div>
+    <p>The resource files include a <code class="inline">$meta</code> block that names the locale, its writing direction, and its fallback. That metadata is what the loader reads to wire up the locale chain &mdash; never hard-code locale codes in your app.</p>
+  </section>
+
+  <section id="usage" style="margin-top: 40px;">
+    <h2 class="ds-h2">Using <code class="inline">t()</code></h2>
+    <p class="ds-h2-sub">One function, one rule: pass a key and an optional values object. Never concatenate.</p>
+    <pre class="ds-code"><span class="c">// In a React component (pre-alpha @huchu/react path)</span>
+import { useT } from <span class="s">'@huchu/react'</span>;
+
+function Welcome({ user }) {
+  const t = useT();
+  return &lt;<span class="k">h1</span>&gt;{t(<span class="s">"auth.welcome"</span>, { name: user.name })}&lt;/<span class="k">h1</span>&gt;;
+}
+
+<span class="c">// Output (en): "Welcome back, Tendai"</span>
+<span class="c">// Output (sn): "Tigashire, Tendai"</span>
+<span class="c">// Output (nd): "Sikwamukela, Tendai"</span></pre>
+
+    <p>For dates, numbers, and currencies, always go through <code class="inline">Intl.*</code> &mdash; never bake formatting into the key.</p>
+    <pre class="ds-code"><span class="c">// Date</span>
+new Intl.DateTimeFormat(locale, { dateStyle: <span class="s">"medium"</span> }).format(receipt.createdAt);
+
+<span class="c">// Currency</span>
+new Intl.NumberFormat(locale, { style: <span class="s">"currency"</span>, currency: <span class="s">"USD"</span> }).format(123.45);
+
+<span class="c">// Relative time</span>
+new Intl.RelativeTimeFormat(locale, { numeric: <span class="s">"auto"</span> }).format(-2, <span class="s">"day"</span>);
+<span class="c">// en: "2 days ago"   sn: "mazuva 2 apfuura"   nd: "ezi-2 ezedlule"</span></pre>
+  </section>
+
+  <section id="fallback" style="margin-top: 40px;">
+    <h2 class="ds-h2">Fallback chain</h2>
+    <p class="ds-h2-sub">A missing key never shows the raw <code class="inline">t("foo.bar")</code> identifier. The loader walks the chain and stops at the first hit.</p>
+    <ol>
+      <li>Look up the key in the active locale's resource (e.g. <code class="inline">sn.json</code>).</li>
+      <li>If absent, follow the <code class="inline">$meta.fallback</code> chain &mdash; for <code class="inline">sn</code> and <code class="inline">nd</code> that's <code class="inline">en</code>.</li>
+      <li>If still absent, log a structured warning in development and return the English string.</li>
+      <li>If the key isn't in any pack, return the key itself surrounded by question marks (e.g. <code class="inline">??auth.signin??</code>) so QA spots it in screenshots.</li>
+    </ol>
+  </section>
+
+  <section id="adding" style="margin-top: 40px;">
+    <h2 class="ds-h2">Adding a string</h2>
+    <p class="ds-h2-sub">The English pack is the source of truth. Every key starts there, then ships to other locales when translated.</p>
+    <ol>
+      <li>Add the key to <code class="inline">i18n/en.json</code> using <code class="inline">scope.snake_name</code> &mdash; e.g. <code class="inline">approvals.escalate_to_owner</code>.</li>
+      <li>Use ICU placeholders for any insert &mdash; <code class="inline">{name}</code>, <code class="inline">{count, plural, one {…} other {…}}</code>.</li>
+      <li>Open a PR. CI runs a check that every key in <code class="inline">en.json</code> exists in <code class="inline">sn.json</code> and <code class="inline">nd.json</code> (untranslated keys are flagged but not blocking &mdash; English fallback covers them).</li>
+      <li>Translators ship the Shona / Ndebele strings in follow-up PRs.</li>
+    </ol>
+  </section>
+
+  <section id="rtl" style="margin-top: 40px;">
+    <h2 class="ds-h2">RTL handling</h2>
+    <p class="ds-h2-sub">Not in scope today &mdash; all three supported locales are LTR.</p>
+    <p>The <code class="inline">$meta.direction</code> field exists so an Arabic or Hebrew pack can declare itself <code class="inline">"rtl"</code> when we get there. <code class="inline">tokens.css</code> uses logical properties (<code class="inline">margin-inline-start</code>, <code class="inline">padding-block</code>) almost everywhere &mdash; see the RTL audit in the <a href="../system/roadmap.html">roadmap</a> for the remaining sweep.</p>
+  </section>
+
+  <section id="cookbook" style="margin-top: 40px;">
+    <h2 class="ds-h2">Cookbook recipe</h2>
+    <p class="ds-h2-sub">For a step-by-step build that wires all of this together &mdash; loader, provider, locale switcher, persisted preference &mdash; read the recipe.</p>
+    <p><a class="btn btn-secondary" href="../cookbook/i18n-localized-app.html">Open the recipe &rarr;</a></p>
+  </section>
+</article>
+</div>
+</main>
+</body></html>

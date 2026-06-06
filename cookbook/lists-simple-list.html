@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Simple list · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pull { background: var(--brand-soft); border-left: 3px solid var(--brand); padding: 10px 14px; border-radius: 0 8px 8px 0; font: 500 14px/1.5 var(--font-sans); color: var(--text-strong); margin: 14px 0 0; }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .phone { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+  .ck-screen .brand { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .ph-title { font: 700 13px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .ck-screen .ph-row { display: flex; align-items: center; gap: 8px; padding: 8px 6px; border-bottom: 1px solid var(--border); font: 500 11px/1.3 var(--font-sans); color: var(--text-strong); }
+  .ck-screen .ph-row .dot { width: 22px; height: 22px; border-radius: 50%; background: var(--surface-muted); display: grid; place-items: center; font: 600 10px/1 var(--font-mono); color: var(--text-subtle); }
+  .ck-screen .ph-row .meta { margin-left: auto; font: 500 9px/1 var(--font-mono); color: var(--text-subtle); }
+  .ck-screen .ph-row.sel { background: var(--brand-soft); }
+  .ck-screen .ph-empty { display: grid; place-items: center; padding: 20px 8px; color: var(--text-subtle); font: 500 11px/1.3 var(--font-sans); text-align: center; flex: 1; }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p  { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+
+  /* Honest "code-only" preview marker — used when a step is conceptual code
+     (state machine, hook, reducer) and a visual mockup would be misleading. */
+  .ck-code-only-note {
+    display: grid; gap: 8px;
+    padding: 22px 26px;
+    background: var(--surface-muted);
+    border: 1px dashed var(--border-strong);
+    border-radius: 12px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-code-only-note .ck-code-only-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    align-self: start;
+    font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--surface); color: var(--brand-strong);
+    border: 1px solid var(--border);
+  }
+  .ck-code-only-note p { margin: 0; color: var(--text-muted); }
+  .ck-code-only-note code {
+    background: var(--surface); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+
+  /* Off-system component roadmap pill — for recipes that compose with
+     components not yet in @huchu/react v0.1.0-alpha.0. */
+  .ck-roadmap-note {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--brand);
+    border-radius: 8px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code {
+    background: var(--surface-muted); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Lists</a><span class="sep">/</span>
+      <span>Simple list</span>
+    </div>
+    <h1>Build a simple list — one row per item, no extras</h1>
+    <p class="lede">By the end of this recipe you'll have the smallest possible list view: an array, a row component, and a tap-to-open detail. No virtualisation, no filters, no toolbar — the floor of "what is a list".</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="list" data-icon-size="12"></span>Lists</span>
+      <span class="meta-pill">2 primitives · 1 block · 0 patterns</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~10 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">An array of items, rendered as rows. Tap a row, you get its detail page. That is the whole recipe.</p>
+    <p>Most apps reach for a data table the moment they have more than three things to show. That's almost always wrong. A list of 8 active job-sites doesn't need a column header, a sort dropdown, a chip filter or page navigation — it needs a row per site and a place to tap. The point of this recipe is to give you a clean stopping point: render the rows, stop building.</p>
+    <p>The opinionated bit is the row component. Use <code>RowCard</code>, not a hand-rolled <code>&lt;div&gt;</code> with flexbox. <code>RowCard</code> already knows how to wrap a title, supporting text, a trailing meta and an action; it already handles tap, keyboard focus and the "press-and-hold to multi-select" gesture if you ever add it. Hand-rolled rows always end up reinventing those three things, badly.</p>
+    <p class="ck-pull"><b>Don't reach for a table for 5 items.</b> A list is fine. Tables exist to compare values across columns; if your "table" only has one column the user actually reads, you have a list — render it as one.</p>
+    <p><b>Skip this recipe if</b> you need any of: filtering, sorting, grouping, pagination, virtualisation, bulk-select. The moment you need one, jump to the right recipe — they each cost more code, and starting here and adding piecemeal is how you ship an inconsistent UI.</p>
+  </section>
+
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three screens. The list, a selected-and-tappable row, and the empty state when the array is empty.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu</span>
+          <p class="ph-title">Active sites</p>
+          <div class="ph-row"><span class="dot">PK</span>Park branch<span class="meta">12 staff</span></div>
+          <div class="ph-row"><span class="dot">CB</span>CBD branch<span class="meta">9 staff</span></div>
+          <div class="ph-row"><span class="dot">MS</span>Msasa yard<span class="meta">4 staff</span></div>
+          <div class="ph-row"><span class="dot">AV</span>Avondale kiosk<span class="meta">2 staff</span></div>
+          <div class="ph-row"><span class="dot">GW</span>Graniteside warehouse<span class="meta">7 staff</span></div>
+        </div>
+        <div class="caption"><span class="num">01</span> List — one row per site</div>
+      </div>
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu</span>
+          <p class="ph-title">Active sites</p>
+          <div class="ph-row"><span class="dot">PK</span>Park branch<span class="meta">12 staff</span></div>
+          <div class="ph-row sel"><span class="dot">CB</span>CBD branch<span class="meta">9 staff</span></div>
+          <div class="ph-row"><span class="dot">MS</span>Msasa yard<span class="meta">4 staff</span></div>
+          <div class="ph-row"><span class="dot">AV</span>Avondale kiosk<span class="meta">2 staff</span></div>
+        </div>
+        <div class="caption"><span class="num">02</span> Tap a row, focus shows</div>
+      </div>
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu</span>
+          <p class="ph-title">Active sites</p>
+          <div class="ph-empty">No active sites yet.<br/><span style="color: var(--brand-strong);">Add your first site</span></div>
+        </div>
+        <div class="caption"><span class="num">03</span> Empty — explain + one CTA</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>. Tiny surface — that's the whole point.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/b-row-card.html"><span class="kind">Block</span>RowCard</a>
+      <a class="ck-piece" href="../system/p-stack.html"><span class="kind">Primitive</span>Stack</a>
+      <a class="ck-piece" href="../system/p-empty-state.html"><span class="kind">Primitive</span>EmptyState</a>
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>Stack</code>, <code>RowCard</code>, <code>EmptyState</code>, <code>Button</code>. All four ship in v0.1-alpha — no roadmap-only pieces.</p>
+  </section>
+
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <div class="ck-step"><span class="n">01</span><h3>Start with the array — no useState, no fetch</h3></div>
+    <p>For the smallest list, your data is just a constant or a prop. Don't add <code>useState</code> "in case you need to mutate later" — when you need to mutate, that's the moment to lift the state. Premature state is how lists turn into 200-line components.</p>
+    <div class="ds-specimen"
+         data-code='type Site = {
+  id: string;
+  name: string;
+  initials: string;
+  staffCount: number;
+};
+
+const SITES: Site[] = [
+  { id: &#39;s1&#39;, name: &#39;Park branch&#39;,      initials: &#39;PK&#39;, staffCount: 12 },
+  { id: &#39;s2&#39;, name: &#39;CBD branch&#39;,       initials: &#39;CB&#39;, staffCount:  9 },
+  { id: &#39;s3&#39;, name: &#39;Msasa yard&#39;,       initials: &#39;MS&#39;, staffCount:  4 },
+  { id: &#39;s4&#39;, name: &#39;Avondale kiosk&#39;,   initials: &#39;AV&#39;, staffCount:  2 },
+  { id: &#39;s5&#39;, name: &#39;Graniteside w/h&#39;,  initials: &#39;GW&#39;, staffCount:  7 },
+];'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>5 items. No fetch, no loading state, no error path. <br/>If your data crosses ~50 items, switch to a paginated table.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · The array</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">02</span><h3>Render with RowCard inside a Stack — not a table, not a flex hack</h3></div>
+    <p><code>Stack</code> handles the inter-row spacing token; <code>RowCard</code> handles the row itself — title, trailing meta, tap target. The whole list is six lines. If you find yourself adding a custom CSS class to the row, stop — the row should look like every other row in the app.</p>
+    <div class="ds-specimen"
+         data-code='import { Stack, RowCard } from &#39;@huchu/react&#39;;
+
+export function SiteList({ sites, onOpen }: {
+  sites: Site[];
+  onOpen: (id: string) =&gt; void;
+}) {
+  return (
+    &lt;Stack gap=&quot;xs&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
+      {sites.map((s) =&gt; (
+        &lt;RowCard
+          key={s.id}
+          as=&quot;li&quot;
+          leading={&lt;Avatar initials={s.initials} /&gt;}
+          title={s.name}
+          trailing={`${s.staffCount} staff`}
+          onClick={() =&gt; onOpen(s.id)}
+        /&gt;
+      ))}
+    &lt;/Stack&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 6px; padding: 18px; max-width: 360px; margin: 0 auto;">
+          <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;"><div style="width: 26px; height: 26px; border-radius: 50%; background: var(--surface-muted); display: grid; place-items: center; font: 600 11px/1 var(--font-mono);">PK</div><span style="font: 500 13px/1 var(--font-sans);">Park branch</span><span style="margin-left: auto; font: 500 11px/1 var(--font-mono); color: var(--text-muted);">12 staff</span></div>
+          <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;"><div style="width: 26px; height: 26px; border-radius: 50%; background: var(--surface-muted); display: grid; place-items: center; font: 600 11px/1 var(--font-mono);">CB</div><span style="font: 500 13px/1 var(--font-sans);">CBD branch</span><span style="margin-left: auto; font: 500 11px/1 var(--font-mono); color: var(--text-muted);">9 staff</span></div>
+          <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;"><div style="width: 26px; height: 26px; border-radius: 50%; background: var(--surface-muted); display: grid; place-items: center; font: 600 11px/1 var(--font-mono);">MS</div><span style="font: 500 13px/1 var(--font-sans);">Msasa yard</span><span style="margin-left: auto; font: 500 11px/1 var(--font-mono); color: var(--text-muted);">4 staff</span></div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Render</span><span class="spacer"></span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">03</span><h3>Handle empty with EmptyState + one CTA — don't render nothing</h3></div>
+    <p>An empty screen is not an empty array — it's a screen that has to teach the user what's missing and tell them how to fix it. One sentence of context plus one action. If you can't think of an action, ask whether the screen should exist at all.</p>
+    <div class="ds-specimen"
+         data-code='import { Stack, RowCard, EmptyState, Button } from &#39;@huchu/react&#39;;
+
+export function SiteList({ sites, onOpen, onAdd }: {
+  sites: Site[];
+  onOpen: (id: string) =&gt; void;
+  onAdd: () =&gt; void;
+}) {
+  if (sites.length === 0) {
+    return (
+      &lt;EmptyState
+        title=&quot;No active sites yet&quot;
+        description=&quot;Add a branch or yard to see it here.&quot;
+        action={&lt;Button onClick={onAdd}&gt;Add your first site&lt;/Button&gt;}
+      /&gt;
+    );
+  }
+  return (
+    &lt;Stack gap=&quot;xs&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
+      {sites.map((s) =&gt; (
+        &lt;RowCard
+          key={s.id}
+          as=&quot;li&quot;
+          leading={&lt;Avatar initials={s.initials} /&gt;}
+          title={s.name}
+          trailing={`${s.staffCount} staff`}
+          onClick={() =&gt; onOpen(s.id)}
+        /&gt;
+      ))}
+    &lt;/Stack&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 30px; text-align: center;">
+          <div style="width: 320px;">
+            <div style="font: 600 16px/1.2 var(--font-sans); color: var(--text-strong); margin-bottom: 6px;">No active sites yet</div>
+            <div style="font: var(--type-body-sm); color: var(--text-muted); margin-bottom: 14px;">Add a branch or yard to see it here.</div>
+            <div style="display: inline-flex; padding: 8px 14px; border-radius: 8px; background: var(--ink); color: var(--canvas); font: 600 13px/1 var(--font-sans);">Add your first site</div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Empty state</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole list component. About 40 lines. If yours is longer, you're probably building a different recipe — go check the others.</p>
+    <div class="ds-specimen"
+         data-code='import { Stack, RowCard, EmptyState, Button } from &#39;@huchu/react&#39;;
+
+type Site = {
+  id: string;
+  name: string;
+  initials: string;
+  staffCount: number;
+};
+
+export function SimpleSiteList({
+  sites,
+  onOpen,
+  onAdd,
+}: {
+  sites: Site[];
+  onOpen: (id: string) =&gt; void;
+  onAdd: () =&gt; void;
+}) {
+  if (sites.length === 0) {
+    return (
+      &lt;EmptyState
+        title=&quot;No active sites yet&quot;
+        description=&quot;Add a branch or yard to see it here.&quot;
+        action={&lt;Button variant=&quot;primary&quot; onClick={onAdd}&gt;
+          Add your first site
+        &lt;/Button&gt;}
+      /&gt;
+    );
+  }
+
+  return (
+    &lt;Stack gap=&quot;xs&quot; as=&quot;ul&quot; role=&quot;list&quot; aria-label=&quot;Active sites&quot;&gt;
+      {sites.map((site) =&gt; (
+        &lt;RowCard
+          key={site.id}
+          as=&quot;li&quot;
+          leading={&lt;Avatar initials={site.initials} /&gt;}
+          title={site.name}
+          trailing={`${site.staffCount} staff`}
+          onClick={() =&gt; onOpen(site.id)}
+        /&gt;
+      ))}
+    &lt;/Stack&gt;
+  );
+}
+
+function Avatar({ initials }: { initials: string }) {
+  return (
+    &lt;span
+      aria-hidden=&quot;true&quot;
+      style={{
+        width: 28, height: 28, borderRadius: &#39;50%&#39;,
+        background: &#39;var(--surface-muted)&#39;,
+        display: &#39;grid&#39;, placeItems: &#39;center&#39;,
+        font: &#39;600 11px/1 var(--font-mono)&#39;,
+      }}
+    &gt;
+      {initials}
+    &lt;/span&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 24px; max-width: 380px; margin: 0 auto;">
+          <h3 style="font: 700 16px/1.2 var(--font-sans); margin: 0 0 12px;">Active sites</h3>
+          <div style="display: grid; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;"><div style="width: 26px; height: 26px; border-radius: 50%; background: var(--surface-muted); display: grid; place-items: center; font: 600 11px/1 var(--font-mono);">PK</div><span style="font: 500 13px/1 var(--font-sans);">Park branch</span><span style="margin-left: auto; font: 500 11px/1 var(--font-mono); color: var(--text-muted);">12 staff</span></div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;"><div style="width: 26px; height: 26px; border-radius: 50%; background: var(--surface-muted); display: grid; place-items: center; font: 600 11px/1 var(--font-mono);">CB</div><span style="font: 500 13px/1 var(--font-sans);">CBD branch</span><span style="margin-left: auto; font: 500 11px/1 var(--font-mono); color: var(--text-muted);">9 staff</span></div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;"><div style="width: 26px; height: 26px; border-radius: 50%; background: var(--surface-muted); display: grid; place-items: center; font: 600 11px/1 var(--font-mono);">MS</div><span style="font: 500 13px/1 var(--font-sans);">Msasa yard</span><span style="margin-left: auto; font: 500 11px/1 var(--font-mono); color: var(--text-muted);">4 staff</span></div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;"><div style="width: 26px; height: 26px; border-radius: 50%; background: var(--surface-muted); display: grid; place-items: center; font: 600 11px/1 var(--font-mono);">AV</div><span style="font: 500 13px/1 var(--font-sans);">Avondale kiosk</span><span style="margin-left: auto; font: 500 11px/1 var(--font-mono); color: var(--text-muted);">2 staff</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">SimpleSiteList.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three forks where the floor still applies. Each is a small swap, not a rewrite.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Read-only list</h4>
+        <p>No detail page — just rows displaying values. Drop the <code>onClick</code> and the row becomes a static cell. Use this for sidebars and summary panels.</p>
+<pre>// remove onClick — RowCard renders
+// without focus ring + tap target
+&lt;RowCard
+  leading={&lt;Avatar /&gt;}
+  title={site.name}
+  trailing={site.staffCount}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>With trailing action</h4>
+        <p>A small icon button on the right (open menu, archive). The whole row still navigates; the icon stops propagation and runs its own thing.</p>
+<pre>&lt;RowCard
+  title={site.name}
+  trailing={
+    &lt;IconButton
+      icon=&quot;more&quot;
+      onClick={(e) =&gt; {
+        e.stopPropagation();
+        openMenu(site.id);
+      }}
+    /&gt;
+  }
+  onClick={() =&gt; onOpen(site.id)}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>With supporting line</h4>
+        <p>Two-line row: title above, dim secondary text below. Use for "address under name" or "status under title" — not for three columns of data.</p>
+<pre>&lt;RowCard
+  title={site.name}
+  description={site.address}
+  trailing={`${site.staffCount}`}
+  onClick={() =&gt; onOpen(site.id)}
+/&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">A simple list is small enough that you have no excuse to skip these.</p>
+    <ul class="ck-a11y">
+      <li><b>The container is a list.</b> <code>&lt;Stack as="ul" role="list"&gt;</code> + <code>RowCard as="li"</code> gives screen readers the "5 items" count up-front so users know how long they're in for.</li>
+      <li><b>Rows are buttons, not divs.</b> <code>RowCard</code> with <code>onClick</code> renders a real <code>&lt;button&gt;</code> internally, so Space and Enter both trigger it, and Tab lands on each row in order.</li>
+      <li><b>Avatar initials are <code>aria-hidden</code>.</b> The name is in the title; reading "PK Park branch" twice in a row is noise. Hide the decoration.</li>
+      <li><b>The list has a label.</b> <code>aria-label="Active sites"</code> on the list so screen-reader users know which list they entered from a heading-jump.</li>
+      <li><b>Empty state owns the action.</b> The "Add your first site" button is the only focusable thing on the empty screen — Tab lands on it, Enter fires it. No hunting.</li>
+      <li><b>No fake clicks.</b> If you add <code>role="button"</code> to a div, you've made the list less accessible than before. Use a real button (which <code>RowCard</code> already does).</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">Where to go when the floor isn't enough.</p>
+    <div class="ck-related">
+      <a href="lists-master-detail.html">Master–detail page<span class="tag">Recipe</span></a>
+      <a href="lists-grid-list.html">Grid list<span class="tag">Recipe</span></a>
+      <a href="lists-grouped-by-section.html">Grouped by section<span class="tag">Recipe</span></a>
+      <a href="lists-filterable-data-table.html">Filterable data table<span class="tag">Recipe</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="index.html"><div class="pager-label">← Back to</div><div class="pager-title">Cookbook</div></a>
+    <a href="lists-grid-list.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Grid list</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

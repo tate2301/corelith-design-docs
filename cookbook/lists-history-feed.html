@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>History feed · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pull { background: var(--brand-soft); border-left: 3px solid var(--brand); padding: 10px 14px; border-radius: 0 8px 8px 0; font: 500 14px/1.5 var(--font-sans); color: var(--text-strong); margin: 14px 0 0; }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .phone { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+  .ck-screen .brand { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .ph-title { font: 700 13px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .ck-screen .ph-hdr { font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); padding: 6px 4px 4px; border-bottom: 1px solid var(--border); margin-top: 4px; }
+  .ck-screen .ph-evt { display: flex; align-items: flex-start; gap: 8px; padding: 6px 4px; border-bottom: 1px solid var(--border); font: 500 10px/1.3 var(--font-sans); color: var(--text-strong); }
+  .ck-screen .ph-evt .ava { width: 18px; height: 18px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 9px/1 var(--font-mono); flex-shrink: 0; }
+  .ck-screen .ph-evt .body { flex: 1; min-width: 0; }
+  .ck-screen .ph-evt .body b { font-weight: 600; }
+  .ck-screen .ph-evt .time { font: 500 8px/1 var(--font-mono); color: var(--text-subtle); margin-top: 2px; }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p  { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+  .ck-code-only-note { display: grid; gap: 8px; padding: 22px 26px; background: var(--surface-muted); border: 1px dashed var(--border-strong); border-radius: 12px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-code-only-note .ck-code-only-tag { display: inline-flex; align-items: center; gap: 6px; align-self: start; font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 9px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); border: 1px solid var(--border); }
+  .ck-code-only-note p { margin: 0; color: var(--text-muted); }
+  .ck-code-only-note code { background: var(--surface); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Lists</a><span class="sep">/</span>
+      <span>History feed</span>
+    </div>
+    <h1>Build a history feed — actor, action, diff, time</h1>
+    <p class="lede">By the end of this recipe you'll have an audit timeline: who did what, when, and what changed — with filter chips, expandable diffs, CSV export, and pull-to-refresh.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>Lists</span>
+      <span class="meta-pill">3 primitives · 2 blocks · 0 patterns</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~25 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A read-only timeline of immutable events: avatar, actor name, verb phrase, target, timestamp. Tap an event to expand a before/after diff. Filter by actor, action, or date range.</p>
+    <p>Every operator app needs an audit log. Customers ask "who changed this?" and the answer has to be uncontested — not "probably Tendai." History gives you that defense, but only if it's read-only. The moment a row is editable, the timeline is no longer evidence.</p>
+    <p class="ck-pull"><b>History is read-only — never edit in place.</b> An editable history breaks the trust contract: if rows can be rewritten, they can't testify. Correct mistakes by appending new events, not by mutating old ones.</p>
+    <p><b>Skip this recipe if</b> what you actually need is a recent-activity widget — that's the simple list recipe. Skip if you need to mutate (then it's a transaction list, not history). History feeds are for legal/compliance, not UX nostalgia.</p>
+  </section>
+
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Default timeline, expanded diff, filter chips.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu</span>
+          <p class="ph-title">Audit log</p>
+          <div class="ph-hdr">Today</div>
+          <div class="ph-evt"><span class="ava">TM</span><div class="body"><b>Tendai</b> approved <b>Leave #438</b><div class="time">09:42</div></div></div>
+          <div class="ph-evt"><span class="ava">RZ</span><div class="body"><b>Rufaro</b> changed price on <b>SKU-12</b><div class="time">09:14</div></div></div>
+          <div class="ph-hdr">Yesterday</div>
+          <div class="ph-evt"><span class="ava">CM</span><div class="body"><b>Chido</b> deleted <b>Tax rule #3</b><div class="time">18:04</div></div></div>
+        </div>
+        <div class="caption"><span class="num">01</span> Default — actor, action, target</div>
+      </div>
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu</span>
+          <p class="ph-title">Audit log</p>
+          <div class="ph-evt" style="background: var(--surface-muted); border-radius: 6px; padding: 6px;"><span class="ava">RZ</span><div class="body"><b>Rufaro</b> changed price on <b>SKU-12</b><div style="font: 500 9px/1.4 var(--font-mono); margin-top: 4px; padding: 4px; background: var(--canvas); border-radius: 4px;">price: <span style="color: var(--tone-danger);">$8.90</span> → <span style="color: var(--tone-success);">$9.40</span></div><div class="time">09:14</div></div></div>
+          <div class="ph-evt"><span class="ava">CM</span><div class="body"><b>Chido</b> deleted Tax rule<div class="time">18:04</div></div></div>
+        </div>
+        <div class="caption"><span class="num">02</span> Expanded — before/after diff</div>
+      </div>
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu</span>
+          <p class="ph-title">Audit log</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 4px; padding: 4px 0;">
+            <span style="font: 600 9px/1 var(--font-mono); padding: 4px 8px; border-radius: 9999px; background: var(--brand); color: white;">Tendai ×</span>
+            <span style="font: 600 9px/1 var(--font-mono); padding: 4px 8px; border-radius: 9999px; background: var(--brand); color: white;">price.changed ×</span>
+            <span style="font: 600 9px/1 var(--font-mono); padding: 4px 8px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-strong);">+ filter</span>
+          </div>
+          <div class="ph-evt"><span class="ava">TM</span><div class="body"><b>Tendai</b> changed price on <b>SKU-44</b><div class="time">Mon 10:20</div></div></div>
+          <div class="ph-evt"><span class="ava">TM</span><div class="body"><b>Tendai</b> changed price on <b>SKU-12</b><div class="time">last week</div></div></div>
+        </div>
+        <div class="caption"><span class="num">03</span> Filtered — chips active</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Avatar, row, filter chips, a button. Date-bucket the rows.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/p-avatar.html"><span class="kind">Primitive</span>Avatar</a>
+      <a class="ck-piece" href="../system/b-row-card.html"><span class="kind">Block</span>RowCard</a>
+      <a class="ck-piece" href="../system/b-filter-chips.html"><span class="kind">Block</span>FilterChips</a>
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+      <a class="ck-piece" href="../system/p-spinner.html"><span class="kind">Primitive</span>Spinner</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>Avatar</code>, <code>RowCard</code>, <code>FilterChips</code>, <code>Button</code>, <code>Spinner</code>. Reuse the bucketing function from the <code>lists-grouped-by-date</code> recipe.</p>
+  </section>
+
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <div class="ck-step"><span class="n">01</span><h3>Model the event — immutable, with a typed action</h3></div>
+    <p>An event has an actor, a verb (the action key), a target, an ISO timestamp, and an optional <code>changes</code> object for the diff. The action is an enum string — never a free-form sentence, because filters need to match on it.</p>
+    <div class="ds-specimen"
+         data-code='type ActionKey =
+  | &#39;leave.approved&#39; | &#39;leave.declined&#39;
+  | &#39;price.changed&#39; | &#39;product.deleted&#39;
+  | &#39;rule.created&#39;  | &#39;rule.deleted&#39;
+  | &#39;day.opened&#39;    | &#39;day.closed&#39;;
+
+type AuditEvent = {
+  id: string;
+  actor: { id: string; name: string; initials: string };
+  action: ActionKey;
+  targetLabel: string;       // human display, not for filter
+  at: string;                // ISO
+  changes?: Array&lt;{ field: string; before: unknown; after: unknown }&gt;;
+};'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>Action is a union, not a string — every new action type is a compile error somewhere until you wire the label. That's the point.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Event shape</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">02</span><h3>Render one row — verb phrase, not template string in JSX</h3></div>
+    <p>Build the sentence in a helper, not inline in the row. A single function maps <code>(action, targetLabel)</code> to the human verb phrase — this is the only place to change copy when product changes their mind about wording.</p>
+    <div class="ds-specimen"
+         data-code='import { Avatar } from &#39;@huchu/react&#39;;
+
+function verbPhrase(a: ActionKey, target: string): React.ReactNode {
+  switch (a) {
+    case &#39;leave.approved&#39;:    return &lt;&gt;approved &lt;b&gt;{target}&lt;/b&gt;&lt;/&gt;;
+    case &#39;leave.declined&#39;:    return &lt;&gt;declined &lt;b&gt;{target}&lt;/b&gt;&lt;/&gt;;
+    case &#39;price.changed&#39;:     return &lt;&gt;changed price on &lt;b&gt;{target}&lt;/b&gt;&lt;/&gt;;
+    case &#39;product.deleted&#39;:   return &lt;&gt;deleted product &lt;b&gt;{target}&lt;/b&gt;&lt;/&gt;;
+    case &#39;rule.created&#39;:      return &lt;&gt;created rule &lt;b&gt;{target}&lt;/b&gt;&lt;/&gt;;
+    case &#39;rule.deleted&#39;:      return &lt;&gt;deleted &lt;b&gt;{target}&lt;/b&gt;&lt;/&gt;;
+    case &#39;day.opened&#39;:        return &lt;&gt;opened the day&lt;/&gt;;
+    case &#39;day.closed&#39;:        return &lt;&gt;closed the day&lt;/&gt;;
+  }
+}
+
+function EventRow({ e, expanded, onToggle }: {
+  e: AuditEvent; expanded: boolean; onToggle: () =&gt; void;
+}) {
+  return (
+    &lt;li className=&quot;event-row&quot;&gt;
+      &lt;button type=&quot;button&quot; onClick={onToggle} className=&quot;event-row-trigger&quot;
+              aria-expanded={expanded}&gt;
+        &lt;Avatar initials={e.actor.initials} size=&quot;sm&quot; /&gt;
+        &lt;div className=&quot;body&quot;&gt;
+          &lt;span&gt;&lt;b&gt;{e.actor.name}&lt;/b&gt; {verbPhrase(e.action, e.targetLabel)}&lt;/span&gt;
+          &lt;time dateTime={e.at}&gt;{formatTime(e.at)}&lt;/time&gt;
+        &lt;/div&gt;
+      &lt;/button&gt;
+      {expanded &amp;&amp; e.changes &amp;&amp; &lt;DiffPanel changes={e.changes} /&gt;}
+    &lt;/li&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 18px; max-width: 360px; margin: 0 auto;">
+          <div style="display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-bottom: 1px solid var(--border);">
+            <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 11px/1 var(--font-mono);">TM</div>
+            <div style="flex: 1; font: 500 13px/1.4 var(--font-sans);"><b>Tendai</b> approved <b>Leave #438</b><div style="font: 500 11px/1 var(--font-mono); color: var(--text-subtle); margin-top: 3px;">09:42</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · EventRow</span><span class="spacer"></span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">03</span><h3>The diff panel — before vs after, no smart truncation</h3></div>
+    <p>For each changed field, show <code>field: before → after</code>. Don't truncate before/after values — if an audit row truncates the change, it's not an audit row. If a field is too long, line-wrap. The user came here for the truth.</p>
+    <div class="ds-specimen"
+         data-code='function DiffPanel({ changes }: {
+  changes: NonNullable&lt;AuditEvent[&#39;changes&#39;]&gt;;
+}) {
+  return (
+    &lt;dl className=&quot;diff-panel&quot;&gt;
+      {changes.map((c) =&gt; (
+        &lt;div key={c.field}&gt;
+          &lt;dt&gt;{c.field}&lt;/dt&gt;
+          &lt;dd&gt;
+            &lt;span className=&quot;before&quot;&gt;{format(c.before)}&lt;/span&gt;
+            &lt;span aria-hidden=&quot;true&quot;&gt; → &lt;/span&gt;
+            &lt;span className=&quot;after&quot;&gt;{format(c.after)}&lt;/span&gt;
+            &lt;span className=&quot;sr-only&quot;&gt; changed to &lt;/span&gt;
+          &lt;/dd&gt;
+        &lt;/div&gt;
+      ))}
+    &lt;/dl&gt;
+  );
+}
+
+function format(v: unknown): string {
+  if (v == null) return &#39;(empty)&#39;;
+  if (typeof v === &#39;string&#39;) return v;
+  return JSON.stringify(v);
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 14px; max-width: 320px; margin: 0 auto;">
+          <div style="background: var(--surface-muted); border-radius: 6px; padding: 10px 12px; font: 500 12px/1.5 var(--font-mono);">
+            <div style="color: var(--text-subtle);">price</div>
+            <div><span style="color: var(--tone-danger); text-decoration: line-through;">$8.90</span> → <span style="color: var(--tone-success);">$9.40</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Diff panel</span><span class="spacer"></span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">04</span><h3>Filter + export — chips drive the predicate, predicate drives CSV</h3></div>
+    <p>One filter state, one predicate, one filtered array. The CSV export writes the same filtered array — so what the user exports matches what they see. Anything else is a footgun ("I exported but only got 3 rows" — yes, your filter was still on).</p>
+    <div class="ds-specimen"
+         data-code='type Filter = { actorIds: Set&lt;string&gt;; actions: Set&lt;ActionKey&gt; };
+
+function passes(e: AuditEvent, f: Filter) {
+  if (f.actorIds.size &amp;&amp; !f.actorIds.has(e.actor.id)) return false;
+  if (f.actions.size  &amp;&amp; !f.actions.has(e.action))   return false;
+  return true;
+}
+
+function exportCsv(events: AuditEvent[]) {
+  const rows = events.map(e =&gt; [
+    e.at, e.actor.name, e.action, e.targetLabel,
+    e.changes?.map(c =&gt; `${c.field}: ${c.before} → ${c.after}`).join(&#39;; &#39;) ?? &#39;&#39;,
+  ]);
+  const csv = [
+    [&#39;timestamp&#39;, &#39;actor&#39;, &#39;action&#39;, &#39;target&#39;, &#39;changes&#39;],
+    ...rows,
+  ].map(r =&gt; r.map(v =&gt; `&quot;${String(v).replace(/&quot;/g, &#39;&quot;&quot;&#39;)}&quot;`).join(&#39;,&#39;))
+   .join(&#39;\n&#39;);
+  const blob = new Blob([csv], { type: &#39;text/csv&#39; });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement(&#39;a&#39;);
+  a.href = url; a.download = `audit-${Date.now()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 18px; font: 500 12px/1.6 var(--font-mono); color: var(--text-muted);">CSV escapes quotes the boring way.<br/>What the user sees = what they export.</div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Filter + CSV</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">~140 lines. Filter chips, day buckets, expandable diff, CSV export. Pull-to-refresh is variant A.</p>
+    <div class="ds-specimen"
+         data-code='import { useState, useMemo } from &#39;react&#39;;
+import { Avatar, RowCard, FilterChips, Button, Spinner } from &#39;@huchu/react&#39;;
+import { bucketByDate, BUCKET_ORDER, BUCKET_LABEL } from &#39;./bucketByDate&#39;;
+
+// Types + verbPhrase from steps 1+2 above
+
+export function HistoryFeed({
+  events, actors, onRefresh, refreshing,
+}: {
+  events: AuditEvent[];
+  actors: Array&lt;{ id: string; name: string }&gt;;
+  onRefresh: () =&gt; void;
+  refreshing: boolean;
+}) {
+  const [filter, setFilter] = useState&lt;Filter&gt;({
+    actorIds: new Set(), actions: new Set(),
+  });
+  const [expanded, setExpanded] = useState&lt;Set&lt;string&gt;&gt;(new Set());
+
+  const filtered = useMemo(
+    () =&gt; events.filter(e =&gt; passes(e, filter)),
+    [events, filter]
+  );
+  const buckets = useMemo(() =&gt; bucketByDate(
+    filtered.map(e =&gt; ({ ...e, at: new Date(e.at) }))
+  ), [filtered]);
+
+  const toggle = (id: string) =&gt; setExpanded(s =&gt; {
+    const n = new Set(s);
+    n.has(id) ? n.delete(id) : n.add(id);
+    return n;
+  });
+
+  return (
+    &lt;div className=&quot;history-feed&quot;&gt;
+      &lt;div className=&quot;history-feed-toolbar&quot;&gt;
+        &lt;FilterChips
+          label=&quot;Actor&quot;
+          options={actors.map(a =&gt; ({ value: a.id, label: a.name }))}
+          value={[...filter.actorIds]}
+          onChange={(v) =&gt; setFilter(f =&gt; ({ ...f, actorIds: new Set(v) }))}
+        /&gt;
+        &lt;FilterChips
+          label=&quot;Action&quot;
+          options={ALL_ACTIONS.map(k =&gt; ({ value: k, label: humanAction(k) }))}
+          value={[...filter.actions]}
+          onChange={(v) =&gt; setFilter(f =&gt; ({ ...f, actions: new Set(v as ActionKey[]) }))}
+        /&gt;
+        &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; exportCsv(filtered)}&gt;Export CSV&lt;/Button&gt;
+        &lt;Button variant=&quot;ghost&quot; onClick={onRefresh} disabled={refreshing}&gt;
+          {refreshing ? &lt;Spinner size=&quot;sm&quot; /&gt; : &#39;Refresh&#39;}
+        &lt;/Button&gt;
+      &lt;/div&gt;
+
+      {BUCKET_ORDER.map(key =&gt; {
+        const rows = buckets[key];
+        if (!rows.length) return null;
+        return (
+          &lt;section key={key} aria-label={BUCKET_LABEL[key]}&gt;
+            &lt;h3 className=&quot;history-bucket&quot;&gt;{BUCKET_LABEL[key]}&lt;/h3&gt;
+            &lt;ul className=&quot;history-list&quot; role=&quot;list&quot;&gt;
+              {rows.map(e =&gt; (
+                &lt;EventRow key={e.id} e={e}
+                  expanded={expanded.has(e.id)}
+                  onToggle={() =&gt; toggle(e.id)}
+                /&gt;
+              ))}
+            &lt;/ul&gt;
+          &lt;/section&gt;
+        );
+      })}
+
+      {filtered.length === 0 &amp;&amp; (
+        &lt;p className=&quot;history-empty&quot;&gt;No events match these filters.&lt;/p&gt;
+      )}
+    &lt;/div&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 20px; max-width: 400px; margin: 0 auto;">
+          <h3 style="font: 700 16px/1.2 var(--font-sans); margin: 0 0 12px;">Audit log</h3>
+          <div style="display: flex; gap: 6px; margin-bottom: 12px;">
+            <span style="font: 600 10px/1 var(--font-mono); padding: 5px 10px; border-radius: 9999px; background: var(--brand); color: white;">Tendai ×</span>
+            <span style="font: 600 10px/1 var(--font-mono); padding: 5px 10px; border-radius: 9999px; background: var(--surface-muted);">+ Action</span>
+          </div>
+          <div style="font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); padding: 8px 6px; border-bottom: 1px solid var(--border);">Today</div>
+          <div style="display: flex; gap: 10px; padding: 10px 6px; border-bottom: 1px solid var(--border);">
+            <div style="width: 26px; height: 26px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 11px/1 var(--font-mono);">TM</div>
+            <div style="flex: 1; font: 500 13px/1.4 var(--font-sans);"><b>Tendai</b> approved <b>Leave #438</b><div style="font: 500 11px/1 var(--font-mono); color: var(--text-subtle); margin-top: 3px;">09:42</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">HistoryFeed.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three forks. Same read-only spirit.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Pull-to-refresh on mobile</h4>
+        <p>A drag handler on the scroll container — if the user pulls 60px past the top, fire <code>onRefresh</code>. Show a spinner in the overscroll area. Don't try to replicate the iOS feel exactly; close enough is fine.</p>
+<pre>const onTouchMove = (e) =&gt; {
+  if (scroll.scrollTop &gt; 0) return;
+  const dy = e.touches[0].clientY - startY;
+  if (dy &gt; 60 &amp;&amp; !refreshing) onRefresh();
+};</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Single-object timeline</h4>
+        <p>When viewing one record, show only its history. Drop the actor filter (probably noise on a single item), keep the action filter, and indent the diff so the field column lines up.</p>
+<pre>&lt;HistoryFeed
+  events={events.filter(
+    e =&gt; e.objectId === id
+  )}
+  // hide actor chips entirely
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Compact mode — no avatars</h4>
+        <p>For dense audit views (compliance review), drop avatars and use a fixed-width actor column. Three lines fit where one used to — useful when scanning hundreds of events.</p>
+<pre>&lt;li className=&quot;evt-compact&quot;&gt;
+  &lt;span className=&quot;actor&quot;&gt;
+    {e.actor.name}
+  &lt;/span&gt;
+  &lt;span&gt;{verbPhrase(…)}&lt;/span&gt;
+  &lt;time&gt;{e.at}&lt;/time&gt;
+&lt;/li&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">Audit logs are evidence — accessibility is non-negotiable.</p>
+    <ul class="ck-a11y">
+      <li><b>Expand toggle is a real button with <code>aria-expanded</code>.</b> Not a div with a click handler — assistive tech needs to know the row is interactive.</li>
+      <li><b><code>&lt;time dateTime&gt;</code> on every timestamp.</b> Machine-readable ISO plus human-readable text; screen readers read both correctly.</li>
+      <li><b>Diff uses <code>&lt;dl&gt; &lt;dt&gt; &lt;dd&gt;</code>.</b> A description list is semantically the right shape for field → value-change pairs.</li>
+      <li><b>Filter chips announce their state.</b> Use <code>aria-pressed</code> on chip buttons so screen readers say "Tendai, pressed" when active.</li>
+      <li><b>Empty filter result speaks.</b> "No events match these filters." in a <code>role="status"</code> region — silent empty states are confusing.</li>
+      <li><b>CSV download is a button, not a link.</b> A button triggers a blob download; a link to <code>#</code> with a JS handler is a focus trap.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <div class="ck-related">
+      <a href="lists-grouped-by-date.html">Grouped by date<span class="tag">Recipe</span></a>
+      <a href="lists-virtualised-long.html">Virtualised long list<span class="tag">Recipe</span></a>
+      <a href="lists-simple-list.html">Simple list<span class="tag">Recipe</span></a>
+      <a href="tables-heavy-with-everything.html">Heavy data table<span class="tag">Recipe</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="lists-virtualised-long.html"><div class="pager-label">← Previous</div><div class="pager-title">Virtualised long list</div></a>
+    <a href="tables-server-paginated.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Server-paginated table</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

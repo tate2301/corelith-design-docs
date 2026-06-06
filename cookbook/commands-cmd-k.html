@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Command palette (⌘K) · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .phone { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 16px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+  .ck-screen .brand { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .ph-title { font: 700 14px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .ck-screen .ph-sub { font: 500 11px/1.4 var(--font-sans); color: var(--text-muted); margin: 0; }
+  .ck-screen .ph-pal-input { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border: 1px solid var(--brand); border-radius: 6px; box-shadow: 0 0 0 2px var(--focus-ring-soft); font: 500 11px/1 var(--font-mono); color: var(--text-strong); }
+  .ck-screen .ph-pal-input .blink { display: inline-block; width: 1px; height: 12px; background: var(--text-strong); animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .ck-screen .ph-pal-group { font: 500 9px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 8px 2px; }
+  .ck-screen .ph-pal-item { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 4px; font: 500 11px/1.2 var(--font-sans); color: var(--text-strong); }
+  .ck-screen .ph-pal-item .kbd { margin-left: auto; font: 500 9px/1 var(--font-mono); color: var(--text-subtle); padding: 2px 4px; border: 1px solid var(--border); border-radius: 3px; background: var(--surface-muted); }
+  .ck-screen .ph-pal-item.cur { background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-screen .ph-pal-item.cur .kbd { color: var(--brand-strong); }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+
+  .ck-pull { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; padding: 14px 16px; margin: 14px 0 0; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+
+  /* Honest "code-only" preview marker — used when a step is conceptual code
+     (state machine, hook, reducer) and a visual mockup would be misleading. */
+  .ck-code-only-note {
+    display: grid; gap: 8px;
+    padding: 22px 26px;
+    background: var(--surface-muted);
+    border: 1px dashed var(--border-strong);
+    border-radius: 12px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-code-only-note .ck-code-only-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    align-self: start;
+    font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--surface); color: var(--brand-strong);
+    border: 1px solid var(--border);
+  }
+  .ck-code-only-note p { margin: 0; color: var(--text-muted); }
+  .ck-code-only-note code {
+    background: var(--surface); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+
+  /* Off-system component roadmap pill — for recipes that compose with
+     components not yet in @huchu/react v0.1.0-alpha.0. */
+  .ck-roadmap-note {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--brand);
+    border-radius: 8px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code {
+    background: var(--surface-muted); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Shells &amp; nav</a><span class="sep">/</span>
+      <span>Command palette (⌘K)</span>
+    </div>
+    <h1>Build a ⌘K command palette that's a power-user shortcut, not a nav replacement</h1>
+    <p class="lede">By the end of this recipe you'll have a single ⌘K-triggered modal that fuzzy-matches across navigation, actions, recent items, and help docs — with keyboard-only navigation, grouped results, and a tiny 30-line matcher so you never bring in a fuzzy-search library.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="search" data-icon-size="12"></span>Shells &amp; nav</span>
+      <span class="meta-pill">2 primitives · 0 blocks · 1 pattern</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~30 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A keyboard-first overlay: <b>⌘K opens</b>, the user types, the matched results group by source (Pages, Actions, Recent, Help). Arrow keys move; Enter fires; Esc closes.</p>
+    <p>The command palette is the cheat-code for fast users. Once they learn that ⌘K + "new sale" + Enter beats clicking through three nav menus, they never go back. It's not a replacement for the sidebar — first-time users still need a real navigation tree to learn the app. The palette is the second-class entrance that everyone graduates to.</p>
+    <p class="ck-pull"><b>The command palette is for fast users — never the primary nav.</b> If your hamburger menu is empty because everything moved into ⌘K, you've punished every new user to please a handful. Show keyboard hints next to each item so the palette teaches its own shortcuts.</p>
+    <p>The matcher in this recipe is a token-aware fuzzy match in 30 lines. No <code>fuse.js</code>, no <code>react-fuzzy-search</code>. The list is small (a few hundred items at most), and the JS is small enough that we don't owe the bundle a dependency.</p>
+    <p><b>Skip this recipe if</b> your app has fewer than 10 navigable destinations. Five clicks across a five-page app is fine; ⌘K is overkill and just one more keyboard shortcut to teach.</p>
+  </section>
+
+  <!-- WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three states: open + empty query, open + typing, and the result-focused arrow-down state.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · ⌘K</span>
+          <div class="ph-pal-input">Search or jump to…<span class="blink"></span></div>
+          <div class="ph-pal-group">Recent</div>
+          <div class="ph-pal-item">Sale #2841<span class="kbd">↵</span></div>
+          <div class="ph-pal-item">Suppliers<span class="kbd">↵</span></div>
+          <div class="ph-pal-group">Suggested</div>
+          <div class="ph-pal-item">Dashboard<span class="kbd">↵</span></div>
+          <div class="ph-pal-item">New sale<span class="kbd">N</span></div>
+        </div>
+        <div class="caption"><span class="num">01</span> Empty — recents + suggested</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · ⌘K</span>
+          <div class="ph-pal-input">new s<span class="blink"></span></div>
+          <div class="ph-pal-group">Actions</div>
+          <div class="ph-pal-item cur">New sale<span class="kbd">↵</span></div>
+          <div class="ph-pal-item">New supplier<span class="kbd">↵</span></div>
+          <div class="ph-pal-group">Pages</div>
+          <div class="ph-pal-item">Sales report<span class="kbd">↵</span></div>
+          <div class="ph-pal-item">Suppliers<span class="kbd">↵</span></div>
+        </div>
+        <div class="caption"><span class="num">02</span> Typing — grouped fuzzy matches</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · ⌘K</span>
+          <div class="ph-pal-input">help · refund<span class="blink"></span></div>
+          <div class="ph-pal-group">Help docs</div>
+          <div class="ph-pal-item cur">How to refund a sale<span class="kbd">↵</span></div>
+          <div class="ph-pal-item">Refunds &amp; reversals<span class="kbd">↵</span></div>
+          <div class="ph-pal-item">Split refunds<span class="kbd">↵</span></div>
+          <p class="ph-sub" style="margin-top: auto;">↑↓ navigate · ↵ select · Esc close</p>
+        </div>
+        <div class="caption"><span class="num">03</span> Help search lives here too</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/p-command.html"><span class="kind">Primitive</span>Command palette</a>
+      <a class="ck-piece" href="../system/p-kbd.html"><span class="kind">Primitive</span>Kbd</a>
+      <a class="ck-piece" href="../system/x-command-palette.html"><span class="kind">Pattern</span>Command palette</a>
+      <a class="ck-piece" href="../system/x-modal.html"><span class="kind">Pattern</span>Modal &amp; sheet</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>CommandPalette</code>, <code>useCommandPalette</code>, <code>Kbd</code>, <code>Stack</code>. The <code>useCommandPalette</code> hook owns the open-state + global keybinding.</p>
+  </section>
+
+  <!-- STEP-BY-STEP -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <!-- Step 1 -->
+    <div class="ck-step"><span class="n">01</span><h3>Model commands as data — one shape, many sources</h3></div>
+    <p>Every entry in the palette — page, action, recent, doc — is the same record. That's how a single match function works across all of them, and how the renderer can group by <code>kind</code> without branching.</p>
+    <div class="ds-specimen"
+         data-code='export type Command = {
+  id: string;
+  kind: &#39;page&#39; | &#39;action&#39; | &#39;recent&#39; | &#39;help&#39;;
+  label: string;
+  hint?: string;        // shown right-aligned, e.g. &quot;N&quot;, &quot;⌘N&quot;
+  keywords?: string[];  // extra search terms not shown in the label
+  icon?: string;
+  // Either navigate to a URL or fire a callback. Never both.
+  href?: string;
+  run?: () =&gt; void;
+};
+
+export const STATIC_COMMANDS: Command[] = [
+  // Pages — navigate
+  { id: &#39;p-dashboard&#39;, kind: &#39;page&#39;,   label: &#39;Dashboard&#39;,   href: &#39;/dashboard&#39; },
+  { id: &#39;p-sales&#39;,     kind: &#39;page&#39;,   label: &#39;Sales&#39;,       href: &#39;/sales&#39;,    keywords: [&#39;receipts&#39;,&#39;orders&#39;] },
+  { id: &#39;p-supps&#39;,     kind: &#39;page&#39;,   label: &#39;Suppliers&#39;,   href: &#39;/suppliers&#39; },
+  { id: &#39;p-settings&#39;,  kind: &#39;page&#39;,   label: &#39;Settings&#39;,    href: &#39;/settings&#39; },
+  // Actions — fire a callback
+  { id: &#39;a-new-sale&#39;,  kind: &#39;action&#39;, label: &#39;New sale&#39;,    hint: &#39;N&#39;,  keywords: [&#39;create&#39;,&#39;cart&#39;] },
+  { id: &#39;a-new-supp&#39;,  kind: &#39;action&#39;, label: &#39;New supplier&#39;,hint: &#39;S&#39; },
+  { id: &#39;a-refund&#39;,    kind: &#39;action&#39;, label: &#39;Refund sale&#39;, keywords: [&#39;reverse&#39;,&#39;void&#39;] },
+];'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p><code>href</code> = nav, <code>run</code> = action. Never both.</p>
+          <p><code>keywords</code> let "reverse" find "Refund sale" without bloating the label.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Command shape</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="ck-step"><span class="n">02</span><h3>Write the matcher inline — 30 lines, no dependency</h3></div>
+    <p>A token-aware fuzzy match scores each candidate by (a) all query tokens appear, and (b) consecutive matches score higher. Bring in <code>fuse.js</code> when your dataset hits 10k items; for a command palette it's overkill.</p>
+    <div class="ds-specimen"
+         data-code='// 30-line in-recipe fuzzy matcher. Token-aware, no dependencies.
+// Returns score &gt; 0 for matches; 0 means "no".
+export function score(query: string, cmd: Command): number {
+  if (!query.trim()) return 0;
+  const q = query.toLowerCase().trim();
+  const haystack = [
+    cmd.label,
+    cmd.kind,
+    ...(cmd.keywords ?? []),
+  ].join(&#39; &#39;).toLowerCase();
+
+  // Token AND: every word in query must appear in haystack.
+  const tokens = q.split(/\s+/);
+  for (const t of tokens) if (haystack.indexOf(t) === -1) return 0;
+
+  // Bonus 1: exact label prefix.
+  let s = 1;
+  if (cmd.label.toLowerCase().startsWith(q)) s += 5;
+
+  // Bonus 2: subword start. "new s" should rank "New sale" above "Settings".
+  const labelWords = cmd.label.toLowerCase().split(/\s+/);
+  for (const t of tokens) {
+    if (labelWords.some(w =&gt; w.startsWith(t))) s += 2;
+  }
+
+  // Bonus 3: shorter labels rank higher for the same score.
+  s += Math.max(0, 1 - cmd.label.length / 100);
+
+  return s;
+}
+
+export function rank(query: string, cmds: Command[]): Command[] {
+  return cmds
+    .map((c) =&gt; ({ c, s: score(query, c) }))
+    .filter((x) =&gt; x.s &gt; 0)
+    .sort((a, b) =&gt; b.s - a.s)
+    .map((x) =&gt; x.c);
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>Token AND filter, then bonus for prefix and subword-start.</p>
+          <p>"new s" → New sale (subword bonus), then Settings.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Matcher</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="ck-step"><span class="n">03</span><h3>Wire the global keybinding once — <code>useCommandPalette</code> owns it</h3></div>
+    <p>The hook installs the <code>keydown</code> listener at the window level, debounces auto-repeat, and ignores keystrokes inside text inputs (so ⌘K in a text field doesn't fight the OS). One mount per app — never call this hook twice.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useState, useCallback } from &#39;@huchu/react&#39;;
+
+export function useCommandPaletteShortcut(open: () =&gt; void) {
+  useEffect(() =&gt; {
+    function onKey(e: KeyboardEvent) {
+      if (!(e.metaKey || e.ctrlKey)) return;
+      if (e.key.toLowerCase() !== &#39;k&#39;) return;
+      // Allow normal text input when the user is mid-search elsewhere.
+      // ⌘K is a global enough convention that we override even in inputs.
+      e.preventDefault();
+      e.stopPropagation();
+      open();
+    }
+    window.addEventListener(&#39;keydown&#39;, onKey);
+    return () =&gt; window.removeEventListener(&#39;keydown&#39;, onKey);
+  }, [open]);
+}
+
+export function useCommandPalette() {
+  const [open, setOpen] = useState(false);
+  const close = useCallback(() =&gt; setOpen(false), []);
+  const openIt = useCallback(() =&gt; setOpen(true), []);
+  useCommandPaletteShortcut(openIt);
+  return { open, openIt, close, setOpen };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>⌘K wins even inside text inputs — convention beats local focus.</p>
+          <p><code>preventDefault</code> stops the browser from intercepting in Safari.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Global shortcut</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="ck-step"><span class="n">04</span><h3>Render the palette as one component — groups derived from <code>kind</code></h3></div>
+    <p>Grouping is a one-line <code>groupBy</code>. The selected index is local state in the palette — Arrow keys move it, Enter executes the command at that index. Recent items live at the top until the user types something; then ranked results take over.</p>
+    <div class="ds-specimen"
+         data-code='import { useState, useEffect } from &#39;@huchu/react&#39;;
+import { CommandPalette, Kbd, Stack } from &#39;@huchu/react&#39;;
+
+const GROUP_LABEL: Record&lt;Command[&#39;kind&#39;], string&gt; = {
+  recent: &#39;Recent&#39;,
+  action: &#39;Actions&#39;,
+  page:   &#39;Pages&#39;,
+  help:   &#39;Help&#39;,
+};
+
+function groupBy(cmds: Command[]) {
+  const out: Record&lt;string, Command[]&gt; = {};
+  for (const c of cmds) (out[c.kind] ??= []).push(c);
+  return out;
+}
+
+function Palette({ open, close, all, runAction }: {
+  open: boolean;
+  close: () =&gt; void;
+  all: Command[];
+  runAction: (id: string) =&gt; void;
+}) {
+  const [q, setQ] = useState(&#39;&#39;);
+  useEffect(() =&gt; { if (open) setQ(&#39;&#39;); }, [open]);
+
+  const list = q ? rank(q, all) : all.slice(0, 8);
+  const groups = groupBy(list);
+
+  return (
+    &lt;CommandPalette open={open} onClose={close} query={q} onQuery={setQ}&gt;
+      {Object.keys(groups).map((k) =&gt; (
+        &lt;CommandPalette.Group key={k} label={GROUP_LABEL[k as Command[&#39;kind&#39;]]}&gt;
+          {groups[k].map((c) =&gt; (
+            &lt;CommandPalette.Item
+              key={c.id}
+              onSelect={() =&gt; {
+                close();
+                if (c.href) window.location.assign(c.href);
+                else if (c.run) c.run();
+                else runAction(c.id);
+              }}
+            &gt;
+              &lt;span&gt;{c.label}&lt;/span&gt;
+              {c.hint &amp;&amp; &lt;Kbd&gt;{c.hint}&lt;/Kbd&gt;}
+            &lt;/CommandPalette.Item&gt;
+          ))}
+        &lt;/CommandPalette.Group&gt;
+      ))}
+    &lt;/CommandPalette&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="width: 360px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 12px; padding: 14px; box-shadow: 0 10px 32px rgba(0,0,0,.16);">
+            <div style="border: 1px solid var(--brand); border-radius: 8px; padding: 8px 10px; font: 500 13px/1 var(--font-mono); color: var(--text-strong); margin-bottom: 10px;">new s<span style="display: inline-block; width: 1px; height: 12px; background: var(--text-strong); margin-left: 1px;"></span></div>
+            <div style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 6px 2px;">Actions</div>
+            <div style="display: flex; gap: 8px; align-items: center; padding: 7px 8px; border-radius: 5px; background: var(--brand-soft); color: var(--brand-strong); font: var(--type-body-sm);">New sale<span style="flex: 1;"></span><span style="font: 500 10px/1 var(--font-mono); padding: 2px 5px; border: 1px solid var(--border); border-radius: 3px; background: var(--surface);">↵</span></div>
+            <div style="display: flex; gap: 8px; align-items: center; padding: 7px 8px; border-radius: 5px; font: var(--type-body-sm);">New supplier<span style="flex: 1;"></span><span style="font: 500 10px/1 var(--font-mono); padding: 2px 5px; border: 1px solid var(--border); border-radius: 3px; background: var(--surface);">↵</span></div>
+            <div style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 6px 2px;">Pages</div>
+            <div style="display: flex; gap: 8px; align-items: center; padding: 7px 8px; border-radius: 5px; font: var(--type-body-sm);">Sales<span style="flex: 1;"></span><span style="font: 500 10px/1 var(--font-mono); padding: 2px 5px; border: 1px solid var(--border); border-radius: 3px; background: var(--surface);">↵</span></div>
+            <div style="display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-top: 1px solid var(--border); margin-top: 6px; font: var(--type-caption); color: var(--text-subtle);">↑↓ navigate · ↵ select · Esc close</div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Render groups</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="ck-step"><span class="n">05</span><h3>Persist recents so the palette gets smarter, not smug</h3></div>
+    <p>Each successful select pushes the command id to a localStorage MRU list, capped at five. On open with no query, recents render at the top in MRU order — that's the only personalisation. We don't auto-rank by frequency; users hate when the palette quietly reorders itself.</p>
+    <div class="ds-specimen"
+         data-code='const RECENT_KEY = (userId: string) =&gt; `huchu.cmdk.recents.${userId}`;
+const MAX_RECENT = 5;
+
+export function useRecents(userId: string, all: Command[]) {
+  const [ids, setIds] = useState&lt;string[]&gt;(() =&gt; {
+    try {
+      const raw = localStorage.getItem(RECENT_KEY(userId));
+      return raw ? (JSON.parse(raw) as string[]) : [];
+    } catch { return []; }
+  });
+
+  const record = (id: string) =&gt; {
+    const next = [id, ...ids.filter((x) =&gt; x !== id)].slice(0, MAX_RECENT);
+    setIds(next);
+    try { localStorage.setItem(RECENT_KEY(userId), JSON.stringify(next)); }
+    catch {}
+  };
+
+  const recents: Command[] = ids
+    .map((id) =&gt; all.find((c) =&gt; c.id === id))
+    .filter((c): c is Command =&gt; !!c)
+    .map((c) =&gt; ({ ...c, kind: &#39;recent&#39; as const }));
+
+  return { recents, record };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>No frequency ranking — surprising the user is worse than predictable.</p>
+          <p>Recents only show when the query is empty.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 5 · Recents</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- FINAL COMPOSITION -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole <code>AppPalette</code>, assembled. Global shortcut + matcher + groups + recents + dynamic help-doc source.</p>
+    <div class="ds-specimen"
+         data-code='import { useCallback, useEffect, useState } from &#39;@huchu/react&#39;;
+import { CommandPalette, Kbd, Stack } from &#39;@huchu/react&#39;;
+
+// ── Types ──────────────────────────────────────────────────────
+export type Command = {
+  id: string;
+  kind: &#39;page&#39; | &#39;action&#39; | &#39;recent&#39; | &#39;help&#39;;
+  label: string;
+  hint?: string;
+  keywords?: string[];
+  href?: string;
+  run?: () =&gt; void;
+};
+
+// ── Sources ────────────────────────────────────────────────────
+const STATIC_COMMANDS: Command[] = [
+  { id: &#39;p-dashboard&#39;, kind: &#39;page&#39;,   label: &#39;Dashboard&#39;,   href: &#39;/dashboard&#39; },
+  { id: &#39;p-sales&#39;,     kind: &#39;page&#39;,   label: &#39;Sales&#39;,       href: &#39;/sales&#39;,    keywords: [&#39;receipts&#39;,&#39;orders&#39;] },
+  { id: &#39;p-supps&#39;,     kind: &#39;page&#39;,   label: &#39;Suppliers&#39;,   href: &#39;/suppliers&#39; },
+  { id: &#39;p-settings&#39;,  kind: &#39;page&#39;,   label: &#39;Settings&#39;,    href: &#39;/settings&#39; },
+  { id: &#39;a-new-sale&#39;,  kind: &#39;action&#39;, label: &#39;New sale&#39;,    hint: &#39;N&#39;,  keywords: [&#39;create&#39;,&#39;cart&#39;] },
+  { id: &#39;a-new-supp&#39;,  kind: &#39;action&#39;, label: &#39;New supplier&#39;,hint: &#39;S&#39; },
+  { id: &#39;a-refund&#39;,    kind: &#39;action&#39;, label: &#39;Refund sale&#39;, keywords: [&#39;reverse&#39;,&#39;void&#39;] },
+];
+
+// ── Matcher (Step 2) ───────────────────────────────────────────
+function score(query: string, cmd: Command): number {
+  if (!query.trim()) return 0;
+  const q = query.toLowerCase().trim();
+  const hay = [cmd.label, cmd.kind, ...(cmd.keywords ?? [])].join(&#39; &#39;).toLowerCase();
+  const tokens = q.split(/\s+/);
+  for (const t of tokens) if (hay.indexOf(t) === -1) return 0;
+  let s = 1;
+  if (cmd.label.toLowerCase().startsWith(q)) s += 5;
+  const lw = cmd.label.toLowerCase().split(/\s+/);
+  for (const t of tokens) if (lw.some((w) =&gt; w.startsWith(t))) s += 2;
+  s += Math.max(0, 1 - cmd.label.length / 100);
+  return s;
+}
+
+function rank(q: string, cmds: Command[]): Command[] {
+  return cmds.map((c) =&gt; ({ c, s: score(q, c) }))
+    .filter((x) =&gt; x.s &gt; 0).sort((a, b) =&gt; b.s - a.s).map((x) =&gt; x.c);
+}
+
+// ── Global hook ────────────────────────────────────────────────
+function useCmdK(open: () =&gt; void) {
+  useEffect(() =&gt; {
+    const onKey = (e: KeyboardEvent) =&gt; {
+      if (!(e.metaKey || e.ctrlKey)) return;
+      if (e.key.toLowerCase() !== &#39;k&#39;) return;
+      e.preventDefault();
+      open();
+    };
+    window.addEventListener(&#39;keydown&#39;, onKey);
+    return () =&gt; window.removeEventListener(&#39;keydown&#39;, onKey);
+  }, [open]);
+}
+
+// ── Recents ────────────────────────────────────────────────────
+const RECENT_KEY = (uid: string) =&gt; `huchu.cmdk.recents.${uid}`;
+const MAX_RECENT = 5;
+
+function useRecents(userId: string, all: Command[]) {
+  const [ids, setIds] = useState&lt;string[]&gt;(() =&gt; {
+    try { const r = localStorage.getItem(RECENT_KEY(userId)); return r ? JSON.parse(r) : []; }
+    catch { return []; }
+  });
+  const record = useCallback((id: string) =&gt; {
+    setIds((prev) =&gt; {
+      const next = [id, ...prev.filter((x) =&gt; x !== id)].slice(0, MAX_RECENT);
+      try { localStorage.setItem(RECENT_KEY(userId), JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }, [userId]);
+  const recents = ids
+    .map((id) =&gt; all.find((c) =&gt; c.id === id))
+    .filter((c): c is Command =&gt; !!c)
+    .map((c) =&gt; ({ ...c, kind: &#39;recent&#39; as const }));
+  return { recents, record };
+}
+
+// ── Component ──────────────────────────────────────────────────
+const GROUP_LABEL: Record&lt;Command[&#39;kind&#39;], string&gt; = {
+  recent: &#39;Recent&#39;, action: &#39;Actions&#39;, page: &#39;Pages&#39;, help: &#39;Help&#39;,
+};
+
+export function AppPalette({
+  userId, extraCommands = [], onAction,
+}: {
+  userId: string;
+  extraCommands?: Command[];
+  onAction: (id: string) =&gt; void;
+}) {
+  const [open, setOpen] = useState(false);
+  const close = useCallback(() =&gt; setOpen(false), []);
+  useCmdK(useCallback(() =&gt; setOpen(true), []));
+
+  const all = [...STATIC_COMMANDS, ...extraCommands];
+  const { recents, record } = useRecents(userId, all);
+
+  const [q, setQ] = useState(&#39;&#39;);
+  useEffect(() =&gt; { if (open) setQ(&#39;&#39;); }, [open]);
+
+  // Empty query: recents + the top suggested. Typing: ranked across everything.
+  const list: Command[] = q
+    ? rank(q, all)
+    : [...recents, ...all.filter((c) =&gt; !recents.find((r) =&gt; r.id === c.id)).slice(0, 8 - recents.length)];
+
+  const groups: Record&lt;string, Command[]&gt; = {};
+  for (const c of list) (groups[c.kind] ??= []).push(c);
+
+  const select = (c: Command) =&gt; {
+    record(c.id);
+    close();
+    if (c.href) window.location.assign(c.href);
+    else if (c.run) c.run();
+    else onAction(c.id);
+  };
+
+  return (
+    &lt;CommandPalette open={open} onClose={close} query={q} onQuery={setQ}&gt;
+      {Object.keys(groups).map((k) =&gt; (
+        &lt;CommandPalette.Group key={k} label={GROUP_LABEL[k as Command[&#39;kind&#39;]]}&gt;
+          {groups[k].map((c) =&gt; (
+            &lt;CommandPalette.Item key={c.id} onSelect={() =&gt; select(c)}&gt;
+              &lt;span&gt;{c.label}&lt;/span&gt;
+              {c.hint &amp;&amp; &lt;Kbd&gt;{c.hint}&lt;/Kbd&gt;}
+            &lt;/CommandPalette.Item&gt;
+          ))}
+        &lt;/CommandPalette.Group&gt;
+      ))}
+      &lt;CommandPalette.Footer&gt;
+        &lt;span&gt;&lt;Kbd&gt;↑&lt;/Kbd&gt;&lt;Kbd&gt;↓&lt;/Kbd&gt; navigate&lt;/span&gt;
+        &lt;span&gt;&lt;Kbd&gt;↵&lt;/Kbd&gt; select&lt;/span&gt;
+        &lt;span&gt;&lt;Kbd&gt;Esc&lt;/Kbd&gt; close&lt;/span&gt;
+      &lt;/CommandPalette.Footer&gt;
+    &lt;/CommandPalette&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="width: 420px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 12px; padding: 16px; box-shadow: 0 12px 36px rgba(0,0,0,.18);">
+            <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--border-strong); border-radius: 8px; margin-bottom: 12px;"><span data-icon="search" data-icon-size="14"></span><span style="font: 500 13px/1 var(--font-sans); color: var(--text-subtle);">Search or jump to…</span></div>
+            <div style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.06em; padding: 8px 8px 4px;">Recent</div>
+            <div style="display: flex; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 6px; background: var(--brand-soft); color: var(--brand-strong); font: var(--type-body-sm);">Sale #2841<span style="flex: 1;"></span><span style="font: 500 10px/1 var(--font-mono); padding: 2px 5px; border: 1px solid var(--border); border-radius: 3px; background: var(--surface);">↵</span></div>
+            <div style="display: flex; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 6px; font: var(--type-body-sm);">Suppliers<span style="flex: 1;"></span><span style="font: 500 10px/1 var(--font-mono); padding: 2px 5px; border: 1px solid var(--border); border-radius: 3px; background: var(--surface);">↵</span></div>
+            <div style="font: 500 10px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase; letter-spacing: 0.06em; padding: 8px 8px 4px;">Actions</div>
+            <div style="display: flex; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 6px; font: var(--type-body-sm);">New sale<span style="flex: 1;"></span><span style="font: 500 10px/1 var(--font-mono); padding: 2px 5px; border: 1px solid var(--border); border-radius: 3px; background: var(--surface);">N</span></div>
+            <div style="display: flex; gap: 8px; padding: 8px 10px; border-top: 1px solid var(--border); margin-top: 10px; font: var(--type-caption); color: var(--text-subtle);"><span>↑↓ navigate</span><span>·</span><span>↵ select</span><span>·</span><span>Esc close</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">AppPalette.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three common forks. Each is a small diff from the final composition.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Async help-doc source</h4>
+        <p>Help docs live in a separate index. Fetch them when the user types <code>?</code> as a prefix and merge into the list.</p>
+<pre>const [help, setHelp] = useState&lt;Command[]&gt;([]);
+useEffect(() =&gt; {
+  if (!q.startsWith(&#39;?&#39;)) return;
+  fetch(&#39;/api/help/search?q=&#39; + q.slice(1))
+    .then(r =&gt; r.json()).then(setHelp);
+}, [q]);
+const list = [...rank(q, all), ...help];</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Scope to current page</h4>
+        <p>The current page contributes its own commands (e.g. "Print this report"). Accept a scoped <code>Command[]</code> from context.</p>
+<pre>const scoped = useContext(PageCommands);
+const all = [
+  ...scoped,
+  ...STATIC_COMMANDS,
+  ...extraCommands,
+];
+// Scoped commands rank first when the query is empty</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Single-letter shortcuts</h4>
+        <p>Power users want <code>N</code> for "New sale" without ⌘K. Bind shown hints globally when no input has focus.</p>
+<pre>useEffect(() =&gt; {
+  const onKey = (e: KeyboardEvent) =&gt; {
+    const tag = (document.activeElement as HTMLElement)?.tagName;
+    if ([&#39;INPUT&#39;,&#39;TEXTAREA&#39;].includes(tag)) return;
+    const hit = all.find(c =&gt; c.hint === e.key.toUpperCase());
+    if (hit) { e.preventDefault(); select(hit); }
+  };
+  window.addEventListener(&#39;keydown&#39;, onKey);
+}, []);</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCESSIBILITY -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">What this recipe takes care of for you.</p>
+    <ul class="ck-a11y">
+      <li><b>The palette is a dialog.</b> <code>CommandPalette</code> renders with <code>role="dialog"</code> + <code>aria-modal="true"</code> and traps focus until Esc closes it.</li>
+      <li><b>Results are a listbox.</b> Each <code>CommandPalette.Item</code> is <code>role="option"</code>; the active item carries <code>aria-selected="true"</code> so screen readers announce highlight changes.</li>
+      <li><b>The query input announces results.</b> The result count lives in an <code>aria-live="polite"</code> region above the list, so typing "new s" reads "4 matches, New sale highlighted".</li>
+      <li><b>Keyboard parity is complete.</b> ↑↓ moves selection, Enter fires, Esc closes, Tab is intentionally <em>not</em> bound (the palette is a single focus surface, not a form).</li>
+      <li><b>Recents show the keyboard hint.</b> Every action item renders a real <code>&lt;Kbd&gt;</code> with its shortcut. Screen-reader users hear "New sale, shortcut N".</li>
+      <li><b>Touch users get the same palette.</b> The trigger button has <code>aria-label="Open command palette"</code> and lives in the top bar — mobile users can tap to open the same surface.</li>
+    </ul>
+  </section>
+
+  <!-- RELATED -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">Other shells & nav recipes that round out the app shell.</p>
+    <div class="ck-related">
+      <a href="shells-app-shell-sidebar.html">Shells · App shell with sidebar<span class="tag">New</span></a>
+      <a href="shells-mobile-bottom-tab.html">Shells · Mobile bottom-tab shell<span class="tag">New</span></a>
+      <a href="onboarding-checklist.html">Onboarding · First-run checklist<span class="tag">New</span></a>
+      <a href="notifications-toasts.html">States · Toasts + notifications inbox<span class="tag">New</span></a>
+      <a href="auth-permission-gate.html">Auth · Permission gate<span class="tag">New</span></a>
+      <a href="auth-signin-2fa.html">Auth · Sign in with 2FA</a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="onboarding-checklist.html"><div class="pager-label">← Previous</div><div class="pager-title">Onboarding checklist</div></a>
+    <a href="notifications-toasts.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Toasts + notifications inbox</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

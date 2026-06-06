@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" /><title>Bottom tabs · Huchu DS</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<style>
+  /* Local preview frame — a phone-sized stage so the fixed bar
+     reads visually without escaping the page. */
+  .bt-stage {
+    position: relative; width: 280px; height: 460px;
+    background: var(--canvas);
+    border: 1px solid var(--border); border-radius: 24px;
+    overflow: hidden; margin: 0 auto;
+  }
+  .bt-stage .bt-body {
+    position: absolute; inset: 0 0 64px 0;
+    padding: 16px;
+    font: var(--type-body-sm); color: var(--text-muted);
+  }
+  .bt-stage .b-bottom-tabs {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    /* Override fixed positioning inside the stage. */
+  }
+  .bt-stage .b-bottom-tabs { display: flex !important; }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs"><a href="../index.html">Home</a><span class="sep">/</span><a href="blocks.html">Blocks</a><span class="sep">/</span><span>Bottom tabs</span></div>
+    <h1>Bottom tabs</h1>
+    <p class="lede">The primary phone-resolution nav for every portal — 3 to 5 thumb-reachable destinations at the bottom of the viewport. Replaces the nine bespoke <code class="t-mono">.gd-tabs</code> / <code class="t-mono">.ow-tabs</code> / <code class="t-mono">.pa-tabs</code> etc. shipped by individual portals.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="check" data-icon-size="12"></span>Stable</span>
+      <span class="meta-pill"><span class="t-mono">.b-bottom-tabs</span></span>
+      <span class="meta-pill">Phone only</span>
+    </div>
+  </header>
+
+  <section id="default">
+    <h2 class="ds-h2">Default</h2>
+    <p class="ds-h2-sub">Four tabs, one active. Each tab is a stacked icon + label, ≥ 52 px tall so the touch target clears the iOS / Android guidance.</p>
+    <div class="ds-specimen"
+         data-code='import { BottomTabs } from &#39;@corelith/design-system&#39;;
+
+export function Example({ route, onRoute }) {
+  return (
+    &lt;BottomTabs
+      value={route}
+      onChange={onRoute}
+      tabs={[
+        { id: &#39;home&#39;,   label: &#39;Home&#39;,   icon: &#39;home&#39; },
+        { id: &#39;fees&#39;,   label: &#39;Fees&#39;,   icon: &#39;wallet&#39;, badge: 2 },
+        { id: &#39;notes&#39;,  label: &#39;Notes&#39;,  icon: &#39;bell&#39;,   badge: 5 },
+        { id: &#39;more&#39;,   label: &#39;More&#39;,   icon: &#39;menu&#39; },
+      ]}
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded" style="display: block;">
+        <div class="bt-stage">
+          <div class="bt-body">A page renders here. Body content gets <code>padding-bottom</code> equal to tab-bar height + safe-area inset so the last row clears the bar.</div>
+          <nav class="b-bottom-tabs" aria-label="Primary">
+            <button class="active" type="button">
+              <span class="b-bt-ic" data-icon="home" data-icon-size="20"></span>
+              Home
+            </button>
+            <button type="button">
+              <span class="b-bt-ic" data-icon="wallet" data-icon-size="20"></span>
+              Fees
+              <span class="b-bt-badge">2</span>
+            </button>
+            <button type="button">
+              <span class="b-bt-ic" data-icon="bell" data-icon-size="20"></span>
+              Notes
+              <span class="b-bt-badge">5</span>
+            </button>
+            <button type="button">
+              <span class="b-bt-ic" data-icon="menu" data-icon-size="20"></span>
+              More
+            </button>
+          </nav>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">4 tabs with badge</span><span class="spacer"></span><span class="t-mono">.b-bottom-tabs</span></div>
+    </div>
+  </section>
+
+  <section id="anatomy">
+    <h2 class="ds-h2">Parts</h2>
+    <table class="ds-props"><thead><tr><th>Property</th><th>Value</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>height</td><td>64 px + safe-area</td><td>Includes <code>env(safe-area-inset-bottom)</code> on iOS</td></tr>
+      <tr><td>min tap target</td><td>52 × 52 px</td><td>iOS HIG floor; Android Material recommends 48</td></tr>
+      <tr><td>tab count</td><td>3–5</td><td>4 is the canonical sweet-spot; 5+ goes into a "More" sheet</td></tr>
+      <tr><td>active colour</td><td>--brand-strong (label), --brand (icon)</td><td>Inherits per-portal theme</td></tr>
+      <tr><td>inactive colour</td><td>--text-subtle</td><td>Hover lifts to --text-strong</td></tr>
+      <tr><td>badge</td><td>--tone-danger pill, top-right</td><td>For unread counts; suppress at 0</td></tr>
+      <tr><td>elevation</td><td>0 -6 18 px -8 ink @ 10%</td><td>Subtle lift off the canvas</td></tr>
+      <tr><td>visibility</td><td>≤ 900 px viewport</td><td>Hidden ≥ 901 px where sidebar takes over</td></tr>
+    </tbody>
+    </table>
+  </section>
+
+  <section id="positioning">
+    <h2 class="ds-h2">Positioning</h2>
+    <p class="ds-h2-sub">The contract for where this block lives in the DOM.</p>
+    <p>This block is <code class="t-mono">position: fixed; left: 0; right: 0; bottom: 0</code>. Place it as a <b>direct child of <code>&lt;body&gt;</code></b> (or the demo phone-stage shell), never nested inside a scrolling container — the fixed positioning needs the viewport as its containing block, and a nested ancestor with <code class="t-mono">transform</code> or <code class="t-mono">filter</code> applied will silently turn the bar into <code class="t-mono">position: absolute</code> relative to that ancestor.</p>
+    <p>For doc-page previews that need to render the bar <em>inside</em> a 280-px stage frame, override locally with <code class="t-mono">position: absolute</code> on the stage child (as this page does). A roadmap modifier (<code class="t-mono">.b-bottom-tabs--inline</code>) is tracked under <a href="audit-reuse.html">audit A-3</a> to ship this as a first-class variant.</p>
+    <p>Pad page content with <code class="t-mono">padding-bottom: calc(64px + env(safe-area-inset-bottom))</code> so the bar never covers the last row.</p>
+  </section>
+
+  <section id="overflow">
+    <h2 class="ds-h2">"More" overflow</h2>
+    <p class="ds-h2-sub">When the portal has 5+ destinations, the fifth tab becomes "More" and opens an <a href="x-bottom-sheet.html">x-bottom-sheet</a> with the remaining items as a list. Never spill past 5 tabs in the bar itself.</p>
+  </section>
+
+  <section id="rules">
+    <h2 class="ds-h2">Do &amp; don't</h2>
+    <div class="ds-rules">
+      <div class="rule do"><span class="tag">Do</span><p>Keep labels to 1 word. "Notes" not "Notifications". The bar must stay scannable in a thumb-flick.</p></div>
+      <div class="rule dont"><span class="tag">Don't</span><p>Pack more than 5 tabs. Touch targets compress, labels truncate. Use a "More" sheet instead.</p></div>
+      <div class="rule do"><span class="tag">Do</span><p>Pad page content with <code>padding-bottom: calc(64px + env(safe-area-inset-bottom))</code> so the bar never covers the last row.</p></div>
+      <div class="rule dont"><span class="tag">Don't</span><p>Show the bar on tablet / desktop. ≥ 901 px the app shell takes over — the bar would compete with the sidebar.</p></div>
+      <div class="rule do"><span class="tag">Do</span><p>Carry unread badges. The bar is the operator's only signal at phone resolution that something needs attention elsewhere in the app.</p></div>
+      <div class="rule dont"><span class="tag">Don't</span><p>Animate the active-state transition. The tap is the feedback; movement is noise.</p></div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <ul class="ds-list">
+      <li>Wrap with <code>&lt;nav aria-label="Primary"&gt;</code> so screen readers announce the landmark.</li>
+      <li>Each tab is a <code>&lt;button&gt;</code> (or <code>&lt;a&gt;</code> if it routes via URL). The active tab carries <code>aria-current="page"</code>.</li>
+      <li>The badge gets a visually-hidden context label: <code>&lt;span class="sr-only"&gt;2 unread&lt;/span&gt;</code>. Pure numbers read as ambiguous out of context.</li>
+      <li>Tabs must be reachable by keyboard tab order even though the bar is phone-first — desktop users still hit it on narrow windows.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related</h2>
+    <ul class="ds-list">
+      <li><a href="x-app-shell.html">App shell</a> — the wider chrome the bar lives inside.</li>
+      <li><a href="x-bottom-sheet.html">Bottom sheet</a> — what the "More" tab opens.</li>
+      <li><a href="p-mobile-action-bar.html">Mobile action bar</a> — sibling pattern for primary action buttons (Pay, Save) that sits above the tab bar.</li>
+    </ul>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="b-empty-state.html"><div class="pager-label">← Previous</div><div class="pager-title">Empty state</div></a>
+    <a href="b-filter-chips.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Filter chips</div></a>
+  </nav>
+</article>
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#default" class="current">Default</a></li>
+    <li><a href="#anatomy">Parts</a></li>
+    <li><a href="#overflow">More overflow</a></li>
+    <li><a href="#rules">Rules</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body></html>

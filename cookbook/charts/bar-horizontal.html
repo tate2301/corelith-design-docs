@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Horizontal bars · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../system.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../system-shell.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+  .ck-pull { margin: 16px 0; padding: 14px 18px; border-left: 3px solid var(--brand); background: var(--brand-soft); border-radius: 0 8px 8px 0; font: 500 15px/1.55 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-chart-stage { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 24px; margin: 14px 0; }
+  .ck-chart-stage svg { width: 100%; height: auto; display: block; }
+  .ck-chart-stage .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; font: 500 12px/1 var(--font-sans); color: var(--text-muted); }
+  .ck-chart-stage .legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+  .ck-roadmap-note { margin-top: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+  .ck-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .ck-context-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; margin-top: 12px; }
+  .ck-context-card .h { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+  .ck-context-card .h .t { font: 600 14px/1 var(--font-sans); color: var(--text-strong); }
+  .ck-context-card .h .s { font: 500 11px/1 var(--font-mono); color: var(--text-subtle); letter-spacing: 0.05em; text-transform: uppercase; }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../../index.html">Home</a><span class="sep">/</span>
+      <a href="../index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Charts</a><span class="sep">/</span>
+      <span>Horizontal bars</span>
+    </div>
+    <h1>Rank long-named categories with a horizontal bar chart</h1>
+    <p class="lede">By the end of this recipe you'll have a sorted horizontal bar chart with labels alongside each bar — perfect for product names, supplier names, branch names, or anything else too long to fit under a vertical column.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="chart" data-icon-size="12"></span>Charts</span>
+      <span class="meta-pill">Intermediate</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~8 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">Bars run left-to-right. Category labels read naturally; the eye scans top-down looking for the longest bar.</p>
+    <p>Horizontal bars are vertical bars rotated by ninety degrees, and that one rotation is enough to make a different chart useful. Long category names that would have rotated 45° under a column now sit clean. Top-N "leaderboard" reads come free, because sort-by-value descends visually down the page.</p>
+    <p><b>Skip horizontal</b> if your x-axis is time (lines and vertical bars own time), or if you've got more than ~15 categories — the page becomes a phone-book and the small differences disappear. For 5–10 ranked items with long names, horizontal is the right shape.</p>
+    <p class="ck-pull"><b>Default opinion:</b> always sort descending. A horizontal bar chart that isn't sorted is just rotated bars — you've thrown away the format's main superpower.</p>
+  </section>
+
+  <section id="chart">
+    <h2 class="ds-h2">The chart</h2>
+    <p class="ds-h2-sub">Top five suppliers by month-to-date spend. Sorted desc; top supplier highlighted.</p>
+    <div class="ck-chart-stage">
+      <svg viewBox="0 0 640 320" role="img" aria-labelledby="bh-title bh-desc">
+        <title id="bh-title">Top suppliers by spend, month-to-date</title>
+        <desc id="bh-desc">Five bars: Mukamba Holdings at $48k, Chivhu Logistics at $36k, Harare Steel at $28k, Bulawayo Cables at $19k, Mutare Packaging at $11k.</desc>
+
+        <!-- Y axis (categories) -->
+        <g font-family="var(--font-sans)" font-size="12" fill="var(--text-strong)" text-anchor="end">
+          <text x="200" y="60">Mukamba Holdings</text>
+          <text x="200" y="108">Chivhu Logistics</text>
+          <text x="200" y="156">Harare Steel</text>
+          <text x="200" y="204">Bulawayo Cables</text>
+          <text x="200" y="252">Mutare Packaging</text>
+        </g>
+
+        <!-- X grid -->
+        <g stroke="var(--border-subtle)">
+          <line x1="216" y1="30"  x2="216" y2="276" />
+          <line x1="316" y1="30"  x2="316" y2="276" />
+          <line x1="416" y1="30"  x2="416" y2="276" />
+          <line x1="516" y1="30"  x2="516" y2="276" />
+          <line x1="600" y1="30"  x2="600" y2="276" />
+        </g>
+
+        <!-- Bars: scale where $50k = 400px, so per $1k = 8px from x=216 -->
+        <g>
+          <rect x="216" y="44"  width="384" height="24" rx="3" fill="var(--brand)" />
+          <rect x="216" y="92"  width="288" height="24" rx="3" fill="var(--brand)" opacity="0.55" />
+          <rect x="216" y="140" width="224" height="24" rx="3" fill="var(--brand)" opacity="0.55" />
+          <rect x="216" y="188" width="152" height="24" rx="3" fill="var(--brand)" opacity="0.55" />
+          <rect x="216" y="236" width="88"  height="24" rx="3" fill="var(--brand)" opacity="0.55" />
+        </g>
+
+        <!-- Value labels (end-of-bar) -->
+        <g font-family="var(--font-mono)" font-size="11" fill="var(--text-strong)" text-anchor="start">
+          <text x="608" y="60" font-weight="700" fill="var(--brand-strong)">$48k</text>
+          <text x="512" y="108">$36k</text>
+          <text x="448" y="156">$28k</text>
+          <text x="376" y="204">$19k</text>
+          <text x="312" y="252">$11k</text>
+        </g>
+
+        <!-- X axis labels -->
+        <g font-family="var(--font-mono)" font-size="11" fill="var(--text-muted)" text-anchor="middle">
+          <text x="216" y="294">$0</text>
+          <text x="316" y="294">$15k</text>
+          <text x="416" y="294">$30k</text>
+          <text x="516" y="294">$45k</text>
+        </g>
+      </svg>
+      <div class="legend">
+        <span><span class="dot" style="background: var(--brand);"></span>Top supplier</span>
+        <span><span class="dot" style="background: var(--brand); opacity: 0.55;"></span>Rest</span>
+      </div>
+    </div>
+    <span class="ck-sr-only">Mukamba Holdings leads at $48k, a third of total spend. Bottom three combined ($58k) outpace the top one.</span>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">From <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart</a>
+      <a class="ck-piece" href="../../system/b-card.html"><span class="kind">Block</span>Card</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended exports used here:</b> <code>Chart.Bar</code> with <code>orientation="horizontal"</code>.</p>
+    <div class="ck-roadmap-note">
+      <b>Roadmap.</b> Horizontal orientation ships with <code>Chart.Bar</code> in <code>@huchu/react v0.2</code>.
+    </div>
+  </section>
+
+  <section id="snippet">
+    <h2 class="ds-h2">The React snippet</h2>
+    <p class="ds-h2-sub">Same component as vertical bars; flip <code>orientation</code> and sort the data on the way in.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart } from &#39;@huchu/react&#39;;
+
+const raw = [
+  { supplier: &#39;Mukamba Holdings&#39;,  spend: 48000 },
+  { supplier: &#39;Chivhu Logistics&#39;,  spend: 36000 },
+  { supplier: &#39;Harare Steel&#39;,      spend: 28000 },
+  { supplier: &#39;Bulawayo Cables&#39;,   spend: 19000 },
+  { supplier: &#39;Mutare Packaging&#39;,  spend: 11000 },
+];
+
+const data = [...raw].sort((a, b) =&gt; b.spend - a.spend);
+
+export function TopSuppliers() {
+  return (
+    &lt;Chart.Bar
+      data={data}
+      xAccessor=&quot;supplier&quot;
+      yAccessor=&quot;spend&quot;
+      orientation=&quot;horizontal&quot;
+      color={(d, i) =&gt; (i === 0 ? &#39;brand&#39; : &#39;brand-soft&#39;)}
+      height={280}
+      showValues
+      yFormat={(v) =&gt; `$${v / 1000}k`}
+      aria-label=&quot;Top suppliers by month-to-date spend&quot;
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 18px;">
+          <svg viewBox="0 0 640 240" role="img" aria-label="Preview" style="width:100%; height:auto; display:block;">
+            <rect x="160" y="20" width="440" height="28" rx="3" fill="var(--brand)"/>
+            <rect x="160" y="60" width="330" height="28" rx="3" fill="var(--brand)" opacity="0.45"/>
+            <rect x="160" y="100" width="260" height="28" rx="3" fill="var(--brand)" opacity="0.45"/>
+            <rect x="160" y="140" width="180" height="28" rx="3" fill="var(--brand)" opacity="0.45"/>
+            <rect x="160" y="180" width="100" height="28" rx="3" fill="var(--brand)" opacity="0.45"/>
+          </svg>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">TopSuppliers.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="customising">
+    <h2 class="ds-h2">Customising</h2>
+    <p class="ds-h2-sub">Three forks.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Tint the top three</h4>
+        <p>Highlight a podium — gold, silver, bronze — so the top tier reads as a group, not just a winner.</p>
+<pre>color={(d, i) =&gt;
+  i === 0 ? &#39;brand&#39; :
+  i === 1 ? &#39;brand-300&#39; :
+  i === 2 ? &#39;brand-100&#39; :
+  &#39;brand-soft&#39;}</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Trim the tail</h4>
+        <p>Cap at top-5 plus an "Other" row containing the long tail. Keeps the chart honest without 30 unreadable bars.</p>
+<pre>const [top, rest] = [
+  data.slice(0, 5),
+  data.slice(5),
+];
+const folded = [...top, {
+  supplier: &#39;Other&#39;,
+  spend: rest.reduce((s, d) =&gt; s + d.spend, 0),
+}];</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Slide-in from left</h4>
+        <p>Animate from <code>width: 0</code> on first paint. The eye reads the order as it draws.</p>
+<pre>&lt;Chart.Bar
+  data={data}
+  orientation=&quot;horizontal&quot;
+  animate=&quot;grow&quot;
+  animateStaggerMs={50}
+  height={280}
+/&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="in-context">
+    <h2 class="ds-h2">In context</h2>
+    <p class="ds-h2-sub">Inside a row card on mobile — supplier name + spend + bar, all on one row.</p>
+    <div class="ck-context-card">
+      <div class="h">
+        <div class="t">Top suppliers</div>
+        <div class="s">MTD · $142k</div>
+      </div>
+      <svg viewBox="0 0 640 200" role="img" aria-label="Supplier rows" style="width:100%; height:auto; display:block;">
+        <g font-family="var(--font-sans)" font-size="11" fill="var(--text-strong)">
+          <text x="0" y="22">Mukamba Holdings</text><rect x="180" y="12" width="380" height="14" rx="3" fill="var(--brand)"/><text x="568" y="22" font-family="var(--font-mono)" fill="var(--brand-strong)" font-weight="700">$48k</text>
+          <text x="0" y="58">Chivhu Logistics</text><rect x="180" y="48" width="290" height="14" rx="3" fill="var(--brand)" opacity="0.45"/><text x="478" y="58" font-family="var(--font-mono)">$36k</text>
+          <text x="0" y="94">Harare Steel</text><rect x="180" y="84" width="225" height="14" rx="3" fill="var(--brand)" opacity="0.45"/><text x="413" y="94" font-family="var(--font-mono)">$28k</text>
+          <text x="0" y="130">Bulawayo Cables</text><rect x="180" y="120" width="150" height="14" rx="3" fill="var(--brand)" opacity="0.45"/><text x="338" y="130" font-family="var(--font-mono)">$19k</text>
+          <text x="0" y="166">Mutare Packaging</text><rect x="180" y="156" width="90" height="14" rx="3" fill="var(--brand)" opacity="0.45"/><text x="278" y="166" font-family="var(--font-mono)">$11k</text>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">Horizontal bars carry their labels in the chart, which means the screen-reader has more to work with — use it.</p>
+    <ul class="ck-a11y">
+      <li><b>Role and label.</b> Root <code>&lt;svg&gt;</code> uses <code>role="img"</code> + <code>aria-labelledby</code> on inline <code>&lt;title&gt;</code> + <code>&lt;desc&gt;</code>.</li>
+      <li><b>Each row is a group.</b> Wrap each bar + label pair in <code>&lt;g aria-label="Mukamba Holdings: $48,000"&gt;</code>. Tabbing reads the chart like a leaderboard.</li>
+      <li><b>Sort is part of the message.</b> Note the sort order in the <code>&lt;desc&gt;</code> ("sorted descending by spend") so the order itself is announced.</li>
+      <li><b>SR summary.</b> A <code>.ck-sr-only</code> paragraph names the leader, the gap to second, and the long-tail share.</li>
+      <li><b>Keyboard.</b> Each bar is <code>tabindex="0"</code>; Arrow keys walk top-to-bottom.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related charts</h2>
+    <div class="ck-related">
+      <a href="bar-vertical.html">Vertical bars<span class="tag">Charts</span></a>
+      <a href="bar-grouped.html">Grouped bars<span class="tag">Charts</span></a>
+      <a href="bar-stacked.html">Stacked bars<span class="tag">Charts</span></a>
+      <a href="../auth-signin-2fa.html">Sign in with 2FA<span class="tag">Canonical</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="bar-vertical.html"><div class="pager-label">← Previous</div><div class="pager-title">Vertical bars</div></a>
+    <a href="bar-grouped.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Grouped bars</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#chart">The chart</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#snippet">The React snippet</a></li>
+    <li><a href="#customising">Customising</a></li>
+    <li><a href="#in-context">In context</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related charts</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

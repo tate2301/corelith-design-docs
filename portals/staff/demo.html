@@ -173,16 +173,6 @@
   .meta-strip .vl { font: 600 13px/1.2 var(--font-sans); color: var(--text-strong); }
   .meta-strip .vl.mono { font-family: var(--font-mono); }
 
-  .big-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-  .big { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
-  .big .lb { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); }
-  .big .vl { font: 700 30px/1 var(--font-sans); font-variant-numeric: tabular-nums; color: var(--text-strong); letter-spacing: -0.02em; }
-  .big .sb { font: 12.5px/1.4 var(--font-sans); color: var(--text-muted); }
-  .big.net { background: linear-gradient(135deg, var(--brand-strong), var(--brand)); border-color: transparent; color: #fff; }
-  .big.net .lb, .big.net .vl, .big.net .sb { color: #fff; }
-  .big.net .lb { opacity: 0.85; }
-  .big.net .sb { opacity: 0.9; }
-
   .ytd-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; padding: 16px 18px; }
   .ytd-cell { display: flex; flex-direction: column; gap: 4px; }
   .ytd-cell .lb { font: 500 10.5px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); }
@@ -253,13 +243,6 @@
   .dir-search .srch input { width: 100%; height: 38px; padding: 0 12px 0 36px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); font: 14px var(--font-sans); color: var(--text-strong); box-sizing: border-box; }
   .dir-search .srch input:focus { outline: 0; border-color: var(--brand); box-shadow: 0 0 0 3px var(--focus-ring-soft); }
   .dir-search .srch [data-icon] { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-subtle); }
-  .chip-bar { display: flex; gap: 6px; flex-wrap: wrap; }
-  .chipd { padding: 5px 12px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12.5px/1 var(--font-sans); color: var(--text-strong); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-  .chipd:hover { background: var(--surface-muted); }
-  .chipd.on { background: var(--brand); color: #fff; border-color: var(--brand); }
-  .chipd .ct { padding: 1px 6px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-muted); font: 500 10.5px/1 var(--font-mono); }
-  .chipd.on .ct { background: rgba(255,255,255,0.18); color: #fff; }
-
   .dir-deck { display: grid; grid-template-columns: 1fr 340px; gap: 16px; }
   .dir-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-content: start; }
   .dcard { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; cursor: pointer; transition: all 120ms; display: flex; flex-direction: column; gap: 10px; }
@@ -320,6 +303,10 @@
 
   /* === Modals === */
   .modal-scrim { position: fixed; inset: 0; background: rgba(22,24,29,0.6); z-index: 100; display: grid; place-items: center; padding: 20px; animation: scrimIn 160ms ease; }
+  /* Allow the new .x-bottom-sheet block to live inside the legacy
+     .modal-scrim host without staying off-screen from its default
+     translateY(100%) (which only resets when paired with .x-bs-scrim.open). */
+  .modal-scrim .x-bottom-sheet { transform: none; animation: modalIn 220ms cubic-bezier(0.2, 0, 0.1, 1); }
   @keyframes scrimIn { from { opacity: 0; } to { opacity: 1; } }
   .modal { background: var(--surface); border-radius: 14px; padding: 22px; width: 100%; max-width: 480px; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.4); animation: modalIn 220ms cubic-bezier(0.2, 0, 0.1, 1); max-height: 90vh; overflow-y: auto; }
   .modal.lg { max-width: 600px; }
@@ -343,8 +330,9 @@
   .toast.out { animation: toastOut 240ms ease forwards; }
   @keyframes toastOut { to { opacity: 0; transform: translateX(20px); } }
 
-  /* === Mobile bottom tabs === */
-  .st-tabs { display: none; }
+  /* === Mobile bottom tabs ===
+     Uses the design-system .b-bottom-tabs block. Hidden by default,
+     shown on phone via the @media (max-width: 720px) rule below. */
 
   /* === Tablet (narrower side rail) === */
   @media (max-width: 1000px) {
@@ -357,7 +345,6 @@
     .form-grid { grid-template-columns: 1fr 1fr; }
     .grid-2, .grid-12 { grid-template-columns: 1fr; }
     .stat-grid, .bal-grid { grid-template-columns: 1fr 1fr; }
-    .big-grid { grid-template-columns: 1fr; }
     .ytd-grid { grid-template-columns: 1fr 1fr; }
     .inbox-grid { grid-template-columns: 1fr; }
     .dir-deck { grid-template-columns: 1fr; }
@@ -371,8 +358,15 @@
     .device-desktop { width: 100vw; height: 100vh; max-width: none; border-radius: 0; box-shadow: none; padding: 0; background: var(--canvas); }
     .device-desktop .chrome { display: none; }
     .pk-nav { display: none !important; }
-    .st-app { grid-template-columns: 1fr; grid-template-rows: 52px 1fr 64px; height: 100vh; height: 100dvh; }
+    /* Push the height chain through the wrapper divs so the flex layout
+       inside .st-main can size .st-top (auto) · .st-body (flex:1, scrolls)
+       · .st-tabs (auto) within the device frame. Without this, #app collapses
+       to content height and .st-body stretches past the bottom-tab nav. */
+    .device-desktop > #app { height: 100%; display: block; }
+    .st-app { grid-template-columns: 1fr; grid-template-rows: 1fr; height: 100%; min-height: 0; }
     .st-nav { display: none; }
+    .st-main { height: 100%; min-height: 0; }
+    .st-body { min-height: 0; }
     .st-top { padding: 12px 16px; gap: 8px; }
     .st-top h1 { font-size: 17px; }
     .st-top .crumbs { display: none; }
@@ -380,7 +374,6 @@
     .st-top .bar-btn { padding: 7px 8px; }
     .st-body { padding: 14px 14px 18px; gap: 14px; }
     .stat-grid, .bal-grid { grid-template-columns: 1fr 1fr; }
-    .big-grid { grid-template-columns: 1fr; }
     .grid-2, .grid-12, .clock-deck, .dir-deck, .prof-grid { grid-template-columns: 1fr; }
     .form-grid { grid-template-columns: 1fr; }
     .field.half, .field.full { grid-column: auto; }
@@ -390,34 +383,250 @@
 
     .modal-scrim { padding: 0; align-items: flex-end; }
     .modal { max-width: 100%; border-bottom-left-radius: 0; border-bottom-right-radius: 0; animation: sheetIn 260ms cubic-bezier(0.2, 0, 0.1, 1); }
+    /* Slide the .x-bottom-sheet up like the legacy mobile modal. */
+    .modal-scrim .x-bottom-sheet { animation: sheetIn 260ms cubic-bezier(0.2, 0, 0.1, 1); }
     @keyframes sheetIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
     .toast-host { top: 60px; right: 12px; left: 12px; }
 
-    /* Mobile bottom tab nav */
-    .st-tabs {
-      display: flex; background: var(--surface);
-      border-top: 1px solid var(--border);
-      padding: 0 4px env(safe-area-inset-bottom, 4px);
+    /* Mobile bottom tab nav — pin .b-bottom-tabs into the .st-main flex
+       column instead of letting it escape via position: fixed. The flex
+       chain (.st-main → .st-body flex:1 → .b-bottom-tabs auto) is what
+       keeps the body scrollable above the bar inside the device frame. */
+    .b-bottom-tabs { position: static; z-index: auto; box-shadow: none; }
+  }
+
+  /* ====== Sign-in gate ====== */
+  .signin-gate { position: absolute; inset: 0; background: linear-gradient(135deg, var(--brand-strong), #08306b 60%, #021a36); display: grid; place-items: center; padding: 24px; z-index: 80; overflow-y: auto; }
+  .signin-card { width: 420px; max-width: 100%; background: var(--surface); border-radius: 16px; padding: 28px; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 14px; }
+  .signin-card .brand-mark { display: inline-flex; align-items: center; gap: 10px; font: 700 16px/1 var(--font-sans); color: var(--text-strong); }
+  .signin-card .brand-mark .mk { width: 32px; height: 32px; border-radius: 8px; background: var(--brand); color: #fff; display: grid; place-items: center; }
+  .signin-card h2 { font: 700 22px/1.2 var(--font-sans); color: var(--text-strong); margin: 6px 0 0; letter-spacing: -0.01em; }
+  .signin-card .sub { font: 13.5px/1.5 var(--font-sans); color: var(--text-muted); margin: 0 0 4px; }
+  .signin-card .err { padding: 10px 12px; background: var(--tone-danger-bg); color: var(--tone-danger); border-radius: 8px; font: 500 13px/1.4 var(--font-sans); display: flex; align-items: center; gap: 8px; }
+  .signin-card .row-link { display: flex; align-items: center; justify-content: space-between; gap: 8px; font: 13px/1 var(--font-sans); }
+  .signin-card .row-link a { color: var(--brand-strong); text-decoration: none; font-weight: 500; }
+  .signin-card .meta-foot { display: flex; gap: 12px; align-items: center; padding-top: 12px; border-top: 1px solid var(--border-subtle); font: 12px/1.4 var(--font-sans); color: var(--text-muted); }
+  .signin-card .meta-foot .ic { width: 22px; height: 22px; border-radius: 6px; background: var(--surface-muted); color: var(--text-strong); display: grid; place-items: center; flex: none; }
+  .signin-card .otp { display: flex; gap: 8px; justify-content: space-between; }
+  .signin-card .otp input { flex: 1; padding: 0; box-sizing: border-box; }
+
+  /* ====== Hamburger ====== */
+  .hamb { width: 32px; height: 32px; border-radius: 7px; background: transparent; border: 0; color: var(--text-strong); display: grid; place-items: center; cursor: pointer; flex: none; }
+  .hamb:hover { background: var(--surface-muted); }
+
+  /* ====== Timesheet ====== */
+  .ts-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+  .ts-cell { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); display: flex; flex-direction: column; gap: 4px; }
+  .ts-cell.head { background: var(--surface-muted); border-color: var(--border-subtle); }
+  .ts-cell .dn { font: 500 10.5px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); }
+  .ts-cell .dt { font: 700 14px/1 var(--font-sans); color: var(--text-strong); margin-top: 2px; }
+  .ts-cell input { width: 100%; height: 30px; padding: 0 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--canvas); font: 600 13px/1 var(--font-mono); color: var(--text-strong); text-align: right; box-sizing: border-box; }
+  .ts-cell input:focus { outline: 0; border-color: var(--brand); box-shadow: 0 0 0 2px var(--focus-ring-soft); }
+  .ts-cell.weekend { background: var(--surface-muted); opacity: 0.7; }
+  .ts-cell.total { background: var(--brand-soft); border-color: var(--brand-100); }
+  .ts-cell.total input { background: transparent; color: var(--brand-strong); font-weight: 700; border-color: transparent; }
+  .ts-row { display: grid; grid-template-columns: 180px 1fr 100px; gap: 8px; padding: 10px 0; align-items: center; }
+  .ts-row .lbl { font: 500 13px/1.3 var(--font-sans); color: var(--text-strong); }
+  .ts-row .lbl .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 1px; }
+  .ts-row .vals { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .ts-row .vals input { width: 100%; height: 32px; padding: 0 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); font: 500 13px/1 var(--font-mono); color: var(--text-strong); text-align: right; box-sizing: border-box; }
+  .ts-row .vals input:focus { outline: 0; border-color: var(--brand); box-shadow: 0 0 0 2px var(--focus-ring-soft); }
+  .ts-row .tot { font: 700 14px/1 var(--font-mono); color: var(--text-strong); text-align: right; padding-right: 6px; font-variant-numeric: tabular-nums; }
+
+  /* ====== Expenses ====== */
+  .exp-tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .exp-tile .lb { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); }
+  .exp-tile .vl { font: 700 22px/1 var(--font-sans); font-variant-numeric: tabular-nums; color: var(--text-strong); letter-spacing: -0.01em; }
+  .exp-tile .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); }
+  .upload-drop { padding: 22px; border: 2px dashed var(--border); border-radius: 10px; text-align: center; background: var(--surface-muted); color: var(--text-muted); font: 13px/1.5 var(--font-sans); cursor: pointer; transition: all 120ms; }
+  .upload-drop:hover { border-color: var(--brand); color: var(--brand-strong); background: var(--brand-soft); }
+  .upload-drop .ic { font-size: 28px; margin-bottom: 6px; color: var(--brand); }
+  .upload-drop.has-file { border-style: solid; border-color: var(--tone-success); background: var(--tone-success-bg); color: var(--tone-success); }
+
+  /* ====== Reviews ====== */
+  .rv-deck { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; align-items: start; }
+  .goal-row { display: grid; grid-template-columns: 1fr 100px; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle); align-items: center; }
+  .goal-row:last-child { border-bottom: 0; }
+  .goal-row .nm { font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .goal-row .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .goal-row .bar { height: 6px; border-radius: 9999px; background: var(--surface-muted); overflow: hidden; margin-top: 8px; }
+  .goal-row .bar > i { display: block; height: 100%; background: var(--brand); }
+  .goal-row .pct { font: 700 14px/1 var(--font-mono); color: var(--text-strong); text-align: right; }
+  .star-row { display: inline-flex; gap: 2px; color: var(--tone-warn); }
+  .star-row .sx { color: var(--border-strong); }
+
+  /* ====== Kudos ====== */
+  .kudos-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .kudos-card .hd { display: flex; align-items: center; gap: 10px; }
+  .kudos-card .av { width: 36px; height: 36px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 12px/1 var(--font-sans); }
+  .kudos-card .nm { font: 600 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .kudos-card .ds { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); }
+  .kudos-card .msg { font: 13.5px/1.5 var(--font-sans); color: var(--text-body); padding: 10px 12px; background: var(--surface-muted); border-radius: 8px; position: relative; }
+  .kudos-card .tags { display: flex; gap: 5px; flex-wrap: wrap; }
+  .kudos-card .tags .tg { padding: 2px 8px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); font: 500 11px/1 var(--font-sans); }
+  .kudos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* ====== Documents ====== */
+  .doc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .doc-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; cursor: pointer; transition: all 120ms; }
+  .doc-card:hover { border-color: var(--brand-200); transform: translateY(-1px); }
+  .doc-card .ic { width: 36px; height: 36px; border-radius: 8px; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; }
+  .doc-card .nm { font: 600 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .doc-card .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); }
+  .doc-card .meta { display: flex; gap: 10px; align-items: center; font: 11px/1 var(--font-mono); color: var(--text-subtle); margin-top: 4px; }
+
+  /* ====== Onboarding ====== */
+  .ob-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+  .ob-progress { display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: var(--brand-soft); border-radius: 12px; }
+  .ob-progress .bar { flex: 1; height: 10px; border-radius: 9999px; background: rgba(255,255,255,0.6); overflow: hidden; }
+  .ob-progress .bar > i { display: block; height: 100%; background: var(--brand); }
+  .ob-progress .pct { font: 700 18px/1 var(--font-mono); color: var(--brand-strong); }
+
+  /* ====== Settings / 2FA ====== */
+  .qr-box { width: 160px; height: 160px; background: var(--surface); border: 2px solid var(--border); border-radius: 8px; padding: 12px; display: grid; place-items: center; margin: 0 auto; }
+  .qr-grid { width: 100%; height: 100%; background-image: repeating-linear-gradient(0deg, var(--text-strong), var(--text-strong) 6px, transparent 6px, transparent 12px), repeating-linear-gradient(90deg, var(--text-strong), var(--text-strong) 6px, transparent 6px, transparent 12px); background-size: 12px 12px; opacity: 0.85; border-radius: 4px; position: relative; }
+  .qr-grid::before, .qr-grid::after { content: ''; position: absolute; width: 30px; height: 30px; border: 6px solid var(--text-strong); background: var(--surface); }
+  .qr-grid::before { top: 0; left: 0; }
+  .qr-grid::after { top: 0; right: 0; }
+
+  /* ====== Empty / loading / error states ====== */
+  .empty-state { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 60px 20px; text-align: center; }
+  .empty-state .ic { width: 56px; height: 56px; border-radius: 14px; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; margin-bottom: 4px; }
+  .empty-state h3 { font: 600 16px/1.3 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .empty-state p { font: 13px/1.5 var(--font-sans); color: var(--text-muted); margin: 0; max-width: 320px; }
+  .empty-state .btn { margin-top: 8px; }
+  .skel { background: linear-gradient(90deg, var(--surface-muted) 0%, var(--surface-sunken) 50%, var(--surface-muted) 100%); background-size: 200% 100%; border-radius: 6px; animation: skelShimmer 1.4s ease-in-out infinite; height: 12px; }
+  @keyframes skelShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  .err-banner { padding: 12px 14px; border-radius: 8px; background: var(--tone-danger-bg); color: var(--tone-danger); font: 500 13px/1.4 var(--font-sans); display: flex; align-items: center; gap: 10px; }
+
+  /* ====== Anniversaries / birthday feed ====== */
+  .ann-row { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; padding: 10px 18px; align-items: center; border-bottom: 1px solid var(--border-subtle); }
+  .ann-row:last-child { border-bottom: 0; }
+  .ann-row .av { width: 32px; height: 32px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 11px/1 var(--font-sans); }
+  .ann-row .nm { font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .ann-row .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 1px; }
+  .ann-row .ic { color: var(--tone-warn); }
+
+  /* ====== FAQ ====== */
+  .faq-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .faq-item summary { padding: 14px 16px; cursor: pointer; font: 500 13.5px/1.4 var(--font-sans); color: var(--text-strong); list-style: none; display: flex; align-items: center; gap: 10px; }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary::after { content: ''; width: 8px; height: 8px; border-right: 2px solid var(--text-muted); border-bottom: 2px solid var(--text-muted); transform: rotate(45deg); margin-left: auto; transition: transform 160ms; }
+  .faq-item[open] summary::after { transform: rotate(-135deg); }
+  .faq-item .ans { padding: 0 16px 16px; font: 13px/1.5 var(--font-sans); color: var(--text-body); }
+
+  /* ===========================================================
+     PHONE (≤ 720px) — aggressive density pass
+     Tighter spacing, smaller typography, full-height sheets,
+     safe-area insets, no horizontal overflow at 320–430 px.
+     Scoped under body[data-kit-nav="staff"] so it stacks
+     ALONGSIDE the existing @media (max-width: 720px) rules
+     above (which include the load-bearing layout chain fix:
+     `.device-desktop > #app { height: 100%; display: block; }`
+     and `.st-app { grid-template-rows: 1fr }`). DO NOT remove
+     or duplicate those rules — this block only adds.
+     =========================================================== */
+  @media (max-width: 720px) {
+    /* === Page gutters tighter 16 → 12 === */
+    body[data-kit-nav="staff"] .st-top { padding: 10px 12px; padding-top: calc(10px + env(safe-area-inset-top)); gap: 8px; position: sticky; top: 0; z-index: 5; }
+    body[data-kit-nav="staff"] .st-body { padding: 12px 12px 16px; gap: 12px; }
+
+    /* === Heading scale === */
+    body[data-kit-nav="staff"] .st-top h1 { font-size: 20px; line-height: 1.2; }
+    body[data-kit-nav="staff"] .panel-h h2 { font-size: 13.5px; }
+    body[data-kit-nav="staff"] .inbox-review .ihero h3,
+    body[data-kit-nav="staff"] .dir-profile .hero h3,
+    body[data-kit-nav="staff"] .prof-side h3,
+    body[data-kit-nav="staff"] .prof-card h3,
+    body[data-kit-nav="staff"] .modal h3,
+    body[data-kit-nav="staff"] .empty-state h3 { font-size: 14px; line-height: 1.2; }
+
+    /* === Stat numbers cap at 22px === */
+    body[data-kit-nav="staff"] .stat .vl,
+    body[data-kit-nav="staff"] .exp-tile .vl { font-size: 22px; line-height: 1.05; }
+    body[data-kit-nav="staff"] .stat { padding: 12px; }
+    body[data-kit-nav="staff"] .exp-tile { padding: 12px; }
+
+    /* === Clock card slightly tighter; keep 48px time visible but trim padding === */
+    body[data-kit-nav="staff"] .clock-card { padding: 18px; gap: 14px; border-radius: 14px; }
+    body[data-kit-nav="staff"] .clock-card .time { font-size: 40px; }
+    body[data-kit-nav="staff"] .clock-card .summary .cv { font-size: 18px; }
+    body[data-kit-nav="staff"] .clock-btn { height: 50px; font-size: 15px; }
+
+    /* === Stat-hero numbers === */
+    body[data-kit-nav="staff"] .b-stat-hero .b-sh-lead { padding: 14px; border-radius: 12px; }
+    body[data-kit-nav="staff"] .b-stat-hero .b-sh-lead .b-sh-v { font-size: 22px; line-height: 1.05; }
+    body[data-kit-nav="staff"] .b-stat-hero .b-sh-s { padding: 10px 12px; border-radius: 10px; }
+    body[data-kit-nav="staff"] .b-stat-hero .b-sh-s .b-sh-v { font-size: 16px; line-height: 1.1; }
+    body[data-kit-nav="staff"] .b-stat-hero { gap: 8px; }
+    body[data-kit-nav="staff"] .b-stat-hero .b-sh-row { gap: 6px; }
+
+    /* === Row cards / filter chips tighter === */
+    body[data-kit-nav="staff"] .b-row-card { padding: 12px; border-radius: 10px; }
+    body[data-kit-nav="staff"] .b-filter-chips { gap: 6px; }
+    body[data-kit-nav="staff"] .b-filter-chips .b-fc { padding: 6px 10px; font-size: 12.5px; min-height: 32px; }
+
+    /* === Body has room for sticky bottom-tabs + safe area === */
+    body[data-kit-nav="staff"] { padding-bottom: 0; }
+    body[data-kit-nav="staff"] .st-body { padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+    body[data-kit-nav="staff"] .b-bottom-tabs { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+    /* === Modal / x-bottom-sheet → 95vh bottom sheet, scrollable body, sticky foot === */
+    body[data-kit-nav="staff"] .modal {
+      max-height: 95vh; height: 95vh;
+      display: flex; flex-direction: column;
+      border-radius: 14px 14px 0 0;
+      padding: 0;
     }
-    .st-tabs button {
-      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 3px; padding: 6px 2px;
-      color: var(--text-subtle); background: transparent; cursor: pointer;
-      font: 500 10px/1 var(--font-sans); border: 0; position: relative;
+    body[data-kit-nav="staff"] .modal h3 { margin: 14px 16px 4px; }
+    body[data-kit-nav="staff"] .modal .sub { margin: 0 16px 12px; }
+    body[data-kit-nav="staff"] .modal > *:not(.acts) { padding-left: 16px; padding-right: 16px; }
+    body[data-kit-nav="staff"] .modal > .acts {
+      position: sticky; bottom: 0;
+      margin-top: auto;
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+      background: var(--surface); border-top: 1px solid var(--border-subtle);
     }
-    .st-tabs button .ic { width: 22px; height: 22px; display: grid; place-items: center; }
-    .st-tabs button.active { color: var(--brand); }
-    .st-tabs button .badge {
-      position: absolute; top: 4px; right: 28%;
-      min-width: 16px; height: 16px; padding: 0 4px;
-      background: var(--brand); color: #fff;
-      border-radius: 9999px;
-      font: 600 10px/16px var(--font-mono); text-align: center;
+    body[data-kit-nav="staff"] .modal .acts button { min-height: 44px; font-size: 13.5px; }
+    body[data-kit-nav="staff"] .x-bottom-sheet {
+      max-height: 95vh;
     }
+    body[data-kit-nav="staff"] .x-bottom-sheet .x-bs-foot {
+      padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+      position: sticky; bottom: 0;
+    }
+
+    /* === Sign-in card cleanly fits === */
+    body[data-kit-nav="staff"] .signin-gate { padding: 16px; }
+    body[data-kit-nav="staff"] .signin-card { padding: 18px; gap: 10px; border-radius: 14px; }
+    body[data-kit-nav="staff"] .signin-card h2 { font-size: 20px; }
+    body[data-kit-nav="staff"] .signin-card .sub { font-size: 13px; }
+    body[data-kit-nav="staff"] .signin-card .otp { gap: 6px; }
+    body[data-kit-nav="staff"] .signin-card .otp input { flex: 1 1 0; min-width: 0; min-height: 48px; font-size: 18px; }
+
+    /* === Bar buttons: keep tap targets ≥ 36px === */
+    body[data-kit-nav="staff"] .st-top .bar-btn { min-width: 36px; min-height: 36px; }
+
+    /* === Hard overflow guard === */
+    body[data-kit-nav="staff"] .device-desktop,
+    body[data-kit-nav="staff"] .st-app,
+    body[data-kit-nav="staff"] .st-main,
+    body[data-kit-nav="staff"] .st-body { max-width: 100vw; overflow-x: hidden; }
+  }
+
+  /* Even tighter at the smallest phones (≤ 360px) */
+  @media (max-width: 360px) {
+    body[data-kit-nav="staff"] .st-top h1 { font-size: 18px; }
+    body[data-kit-nav="staff"] .stat .vl,
+    body[data-kit-nav="staff"] .exp-tile .vl,
+    body[data-kit-nav="staff"] .b-stat-hero .b-sh-lead .b-sh-v { font-size: 20px; }
+    body[data-kit-nav="staff"] .signin-card .otp { gap: 4px; }
+    body[data-kit-nav="staff"] .signin-card .otp input { min-height: 44px; font-size: 17px; }
+    body[data-kit-nav="staff"] .clock-card .time { font-size: 36px; }
   }
 </style>
 </head>
-<body data-kit-nav="staff">
+<body class="hx-no-kit-nav" data-kit-nav="staff">
 
 <div class="device-desktop">
   <div class="chrome">
@@ -460,19 +669,26 @@ const ME = {
 };
 
 const NAV = [
-  { route: 'dashboard', label: 'Home',      icon: 'home' },
-  { route: 'payslip',   label: 'My pay',    icon: 'card' },
-  { route: 'leave',     label: 'Leave',     icon: 'calendar' },
-  { route: 'time',      label: 'Time',      icon: 'clock' },
-  { route: 'directory', label: 'Directory', icon: 'user' },
-  { route: 'inbox',     label: 'Inbox',     icon: 'inbox', manager: true },
-  { route: 'profile',   label: 'Profile',   icon: 'settings' },
+  { route: 'dashboard',  label: 'Home',         icon: 'home' },
+  { route: 'payslip',    label: 'My pay',       icon: 'card' },
+  { route: 'leave',      label: 'Leave',        icon: 'calendar' },
+  { route: 'time',       label: 'Time',         icon: 'clock' },
+  { route: 'timesheet',  label: 'Timesheet',    icon: 'list' },
+  { route: 'expenses',   label: 'Expenses',     icon: 'receipt' },
+  { route: 'reviews',    label: 'Reviews',      icon: 'target' },
+  { route: 'directory',  label: 'Directory',    icon: 'user' },
+  { route: 'kudos',      label: 'Kudos',        icon: 'heart' },
+  { route: 'documents',  label: 'Documents',    icon: 'folder' },
+  { route: 'inbox',      label: 'Approvals',    icon: 'inbox', manager: true },
+  { route: 'profile',    label: 'Profile',      icon: 'user' },
+  { route: 'settings',   label: 'Settings',     icon: 'settings' },
+  { route: 'help',       label: 'Help & FAQ',   icon: 'info' },
 ];
 
 const MOBILE_TABS = [
   { route: 'dashboard', label: 'Home', icon: 'home' },
   { route: 'payslip',   label: 'Pay',  icon: 'card' },
-  { route: 'time',      label: 'Time', icon: 'clock' },
+  { route: 'time',      label: 'Clock', icon: 'clock' },
   { route: 'profile',   label: 'You',  icon: 'user' },
 ];
 
@@ -551,11 +767,83 @@ const PAYSLIPS = {
   },
 };
 
+/* ================== Documents library ================== */
+const DOCUMENTS = [
+  { id: 'D-001', cat: 'Handbook',   nm: 'Mukamba Group employee handbook 2026', sb: 'Updated 14 Apr 2026 · 48 pages',     size: '2.4 MB', icon: 'book' },
+  { id: 'D-002', cat: 'Policy',     nm: 'Leave & time-off policy',              sb: 'Updated 02 Feb 2026 · Labour Act aligned', size: '420 KB', icon: 'shield' },
+  { id: 'D-003', cat: 'Policy',     nm: 'Travel & per-diem claims',             sb: 'Effective 01 Jun 2026 · per branch',  size: '180 KB', icon: 'truck' },
+  { id: 'D-004', cat: 'Policy',     nm: 'Code of conduct & ethics',             sb: 'Updated 12 Jan 2026',                 size: '290 KB', icon: 'scale' },
+  { id: 'D-005', cat: 'Form',       nm: 'Leave request form (offline backup)',  sb: 'PDF · for use when system is down',   size: '90 KB',  icon: 'list' },
+  { id: 'D-006', cat: 'Form',       nm: 'Banking details change form',          sb: 'PDF · countersign required',          size: '110 KB', icon: 'card' },
+  { id: 'D-007', cat: 'Form',       nm: 'Expense claim form',                   sb: 'PDF · attach receipts',               size: '85 KB',  icon: 'receipt' },
+  { id: 'D-008', cat: 'Handbook',   nm: 'Health & safety quick reference',      sb: 'Branch-specific · Park Centre',       size: '640 KB', icon: 'shield' },
+  { id: 'D-009', cat: 'Policy',     nm: 'IT acceptable-use policy',             sb: 'Sign-off required annually',          size: '230 KB', icon: 'pc' },
+];
+
+/* ================== Onboarding tasks ================== */
+const ONBOARDING_TASKS = [
+  { id: 'ob1', nm: 'Sign offer letter & contract',                sb: 'Counter-signed by HR · scan stored on file', done: true,  day: 'Day 1' },
+  { id: 'ob2', nm: 'Submit ID, NSSA card & bank details',         sb: 'Upload to HR portal · masked once verified', done: true,  day: 'Day 1' },
+  { id: 'ob3', nm: 'Complete I-9 / tax registration with ZIMRA',  sb: 'PAYE tax code assigned',                     done: true,  day: 'Day 1' },
+  { id: 'ob4', nm: 'IT setup — laptop, email, MFA enrolment',     sb: 'Ruvimbo Mhlanga · IT support',                done: true,  day: 'Day 2' },
+  { id: 'ob5', nm: 'Branch tour & key handover',                  sb: 'Tendai Moyo will walk you through Park Centre', done: false, day: 'Week 1' },
+  { id: 'ob6', nm: 'Read & acknowledge employee handbook',        sb: 'Required · 48 pages · sign-off tracked',     done: false, day: 'Week 1' },
+  { id: 'ob7', nm: 'Health & safety induction',                   sb: 'Brighton Mhlanga · 30 min',                  done: false, day: 'Week 1' },
+  { id: 'ob8', nm: 'Probation review checkpoint with manager',    sb: 'Tendai Moyo · 30-day review',                done: false, day: 'Day 30' },
+  { id: 'ob9', nm: 'Set up pension & medical aid beneficiaries',  sb: 'Old Mutual + PSMAS forms',                   done: false, day: 'Week 2' },
+];
+
+/* ================== Kudos ================== */
+const KUDOS_RECEIVED = [
+  { id: 'K-001', from: 'Tendai Moyo',       init: 'TM', when: '2 days ago',  msg: 'Outstanding work coordinating the stock-take this fortnight — branch was ready ahead of schedule and the team was set up well.', tags: ['Teamwork', 'Reliability'] },
+  { id: 'K-002', from: 'Faith Moyo',        init: 'FM', when: '1 week ago',  msg: 'Thanks for covering my shift on Tuesday at no notice. You really saved us — appreciate it.', tags: ['Going the extra mile'] },
+  { id: 'K-003', from: 'Rumbidzai Chivasa', init: 'RC', when: '2 weeks ago', msg: 'Great job rolling out the new leave policy at Park Centre. The team understood it clearly.', tags: ['Leadership', 'Communication'] },
+];
+const KUDOS_SENT = [
+  { id: 'KS-001', to: 'Anesu Moyo',       init: 'AM', when: '3 days ago',  msg: 'Customer at till 3 specifically asked for you by name — you turned their day around. Brilliant.', tags: ['Customer first'] },
+  { id: 'KS-002', to: 'Brighton Mhlanga', init: 'BM', when: '1 week ago',  msg: 'Stock-room is the cleanest it has ever been. Your system is paying off.', tags: ['Reliability'] },
+];
+
+/* ================== Reviews ================== */
+const REVIEW_GOALS = [
+  { nm: 'Cut till discrepancy variance to under $5/day', sb: 'Branch operations · H1 target',           pct: 78 },
+  { nm: 'Onboard two new junior cashiers',               sb: 'Talent · with HR business partner',        pct: 100 },
+  { nm: 'Complete IMM stage 2 retail management',        sb: 'Personal development · funded by company', pct: 45 },
+  { nm: 'Lead a cross-branch process improvement',       sb: 'Stretch goal · regional initiative',       pct: 30 },
+];
+const PEER_FEEDBACK = [
+  { from: 'Faith Moyo',        init: 'FM', when: 'Q1 2026', text: 'Chipo is the calmest person in a busy branch. She listens before deciding.' },
+  { from: 'Brighton Mhlanga',  init: 'BM', when: 'Q1 2026', text: 'Always backs the team. Knows the till and the stock-room equally well.' },
+  { from: 'Anesu Moyo',        init: 'AM', when: 'Q1 2026', text: 'Could push back harder on unrealistic targets from regional — but a great manager day-to-day.' },
+];
+
+/* ================== Expenses ================== */
+const EXPENSE_CATEGORIES = ['Travel — fuel', 'Travel — accommodation', 'Travel — meals', 'Office supplies', 'Client entertainment', 'Training & books', 'Other'];
+
+/* ================== FAQ ================== */
+const FAQ = [
+  { q: 'When are payslips released each month?', a: 'Payslips are issued by 17:00 on the 28th of the month, or the previous working day if the 28th falls on a weekend or public holiday. The May 2026 payslip will be available on Friday 29 May.' },
+  { q: 'How do I update my banking details?', a: 'Open Profile → Banking & payroll → Update banking. Payroll will send a small verification transfer (typically $0.01) before the next full payroll run uses the new account. CBZ, NMB, Stanbic, FBC, ZB and Steward Bank are supported. Mobile-wallet payouts to EcoCash or OneMoney are available for amounts under $500.' },
+  { q: 'What\'s the difference between sick leave and compassionate leave?', a: 'Sick leave (12 days/yr) is for your own illness — a doctor\'s note is required from day 3. Compassionate leave (3 days/yr) is for the death or serious illness of an immediate family member. Both are paid in full and don\'t affect your annual-leave balance.' },
+  { q: 'Why was AIDS levy deducted from my pay?', a: 'The AIDS levy is a 3% surcharge on your PAYE (income tax). It funds the National AIDS Council per the Finance Act. If your PAYE for the month is $352.40, your AIDS levy is $10.57. It is not paid on your gross salary — only on your tax.' },
+  { q: 'My clock-in didn\'t register — what should I do?', a: 'First, check that you\'re inside the branch geo-fence (the time clock screen shows this). If you are inside but the button stays grey, refresh the app. If that still fails, ask your manager to add a manual entry — it will be flagged for audit but won\'t affect your pay.' },
+  { q: 'Can I see the leave balance of someone reporting to me?', a: 'Yes — open their leave request in the manager Inbox. Their remaining balance is shown in the "Their balance" cell of the request detail. You can\'t see other staff balances outside of your direct reports.' },
+  { q: 'How do I claim back the IMM exam fee?', a: 'Submit an expense claim under "Training & books", attach the receipt and the exam confirmation email. HR pre-approves up to $250/year per employee for IMM, ACCA and CIMA fees.' },
+  { q: 'I forgot my password — what do I do?', a: 'Use the "Forgot password" link on the sign-in screen. A reset link will be sent to your registered email. If you no longer have access to that email, contact Ruvimbo Mhlanga in IT support.' },
+];
+
 /* App state */
 const state = {
   route: 'dashboard',
   modal: null,
   fullscreen: false,
+  signedIn: false,
+  signInStep: 'creds', // 'creds' | '2fa'
+  rememberDevice: true,
+  twoFAEnabled: true,
+  passwordVisible: false,
+  signInError: null,
+  loadingRoute: null,
 
   /* Leave */
   leaveRequests: [
@@ -582,9 +870,9 @@ const state = {
   clockInTime: '07:42',
   events: [
     { kind: 'in',  nm: 'Clocked in',  sb: 'Today · Park Centre · on time',          tm: '07:42' },
-    { kind: 'out', nm: 'Clocked out', sb: 'Thu 21 May · 17:08 · 9h 26m total',      tm: '17:08' },
+    { kind: 'out', nm: 'Clocked out', sb: 'Thu 21 May · 17:08 · 9h 26m for the day', tm: '17:08' },
     { kind: 'in',  nm: 'Clocked in',  sb: 'Thu 21 May · 07:42 · Park Centre',       tm: '07:42' },
-    { kind: 'out', nm: 'Clocked out', sb: 'Wed 20 May · 17:14 · 9h 32m total',      tm: '17:14' },
+    { kind: 'out', nm: 'Clocked out', sb: 'Wed 20 May · 17:14 · 9h 32m for the day', tm: '17:14' },
     { kind: 'in',  nm: 'Clocked in',  sb: 'Wed 20 May · 07:42 · Park Centre',       tm: '07:42' },
   ],
 
@@ -600,7 +888,81 @@ const state = {
 
   /* Tasks done state */
   tasksDone: {},
+
+  /* Onboarding */
+  onboarding: ONBOARDING_TASKS.reduce((acc, t) => { acc[t.id] = t.done; return acc; }, {}),
+
+  /* Expenses */
+  expenses: [
+    { id: 'EX-2026-118', date: '2026-05-19', cat: 'Travel — fuel',        amount: 42.50, desc: 'Park Centre → Bulawayo regional meeting · Total Service Station', status: 'approved', receipt: true },
+    { id: 'EX-2026-117', date: '2026-05-12', cat: 'Client entertainment', amount: 28.00, desc: 'Coffee with new supplier · Cafe Nush, Avondale',                 status: 'approved', receipt: true },
+    { id: 'EX-2026-115', date: '2026-05-08', cat: 'Office supplies',       amount: 18.75, desc: 'Till tape & ribbon · TM Hyper Eastlea',                         status: 'pending',  receipt: true },
+    { id: 'EX-2026-112', date: '2026-04-29', cat: 'Training & books',      amount: 145.00, desc: 'IMM textbooks · stage 2 retail management',                   status: 'pending',  receipt: false },
+    { id: 'EX-2026-109', date: '2026-04-22', cat: 'Travel — accommodation', amount: 78.00, desc: 'Overnight Mutare visit · Holiday Inn standard room',          status: 'denied',   receipt: true },
+  ],
+
+  /* Timesheet (weekly hours per category) */
+  timesheet: {
+    weekOf: '2026-05-19',
+    submitted: false,
+    rows: [
+      { id: 'reg',  nm: 'Regular hours',   sb: 'Branch operations',  hrs: [8.5, 9.0, 8.0, 8.5, 9.0, 0, 0] },
+      { id: 'ot',   nm: 'Overtime',        sb: 'Approved by Tendai', hrs: [0.5, 1.0, 0, 0, 0.5, 0, 0] },
+      { id: 'stk',  nm: 'Stock-take',      sb: 'Project · monthly',  hrs: [0, 0, 1.5, 0, 0, 0, 0] },
+      { id: 'tr',   nm: 'Training',        sb: 'IMM study leave',    hrs: [0, 0, 0, 0, 0, 0, 0] },
+    ],
+  },
+  pastTimesheets: [
+    { id: 'TS-2026-W19', week: '12 – 18 May 2026', total: 47.5, status: 'approved' },
+    { id: 'TS-2026-W18', week: '05 – 11 May 2026', total: 45.0, status: 'approved' },
+    { id: 'TS-2026-W17', week: '28 Apr – 04 May 2026', total: 48.0, status: 'approved' },
+    { id: 'TS-2026-W16', week: '21 – 27 Apr 2026', total: 46.5, status: 'approved' },
+  ],
+
+  /* Kudos sent (mutable) */
+  kudosSent: KUDOS_SENT.slice(),
+
+  /* Documents acknowledged */
+  docsAck: { 'D-003': false },
+
+  /* Settings */
+  notifCadence: 'realtime', // realtime | digest-daily | digest-weekly | quiet
 };
+
+/* ================== Persistence ================== */
+const PERSIST_KEY = 'huchu-staff-portal-v1';
+function persist() {
+  try {
+    const blob = {
+      signedIn: state.signedIn,
+      tasksDone: state.tasksDone,
+      onboarding: state.onboarding,
+      notif: state.notif,
+      theme: state.theme,
+      notifCadence: state.notifCadence,
+      twoFAEnabled: state.twoFAEnabled,
+      rememberDevice: state.rememberDevice,
+      docsAck: state.docsAck,
+    };
+    localStorage.setItem(PERSIST_KEY, JSON.stringify(blob));
+  } catch (e) { /* swallow */ }
+}
+function hydrate() {
+  try {
+    const raw = localStorage.getItem(PERSIST_KEY);
+    if (!raw) return;
+    const blob = JSON.parse(raw);
+    if (blob.signedIn) state.signedIn = blob.signedIn;
+    if (blob.tasksDone) state.tasksDone = blob.tasksDone;
+    if (blob.onboarding) state.onboarding = blob.onboarding;
+    if (blob.notif) state.notif = blob.notif;
+    if (blob.theme) state.theme = blob.theme;
+    if (blob.notifCadence) state.notifCadence = blob.notifCadence;
+    if (typeof blob.twoFAEnabled === 'boolean') state.twoFAEnabled = blob.twoFAEnabled;
+    if (typeof blob.rememberDevice === 'boolean') state.rememberDevice = blob.rememberDevice;
+    if (blob.docsAck) state.docsAck = blob.docsAck;
+  } catch (e) { /* swallow */ }
+}
 
 /* ================== Router ================== */
 function go(route, opts = {}) {
@@ -666,14 +1028,30 @@ document.addEventListener('keydown', (e) => {
 function pendingCount() { return state.approvalQueue.length; }
 
 function render() {
+  if (!state.signedIn) {
+    $('#app').innerHTML = renderSignIn();
+    const chrome = $('#chrome-url'); if (chrome) chrome.textContent = 'https://staff.huchu.app / Sign in';
+    if (window.Icons) window.Icons.render($('#app'));
+    wireSignIn();
+    return;
+  }
+
   const url = ({
-    dashboard: 'https://staff.huchu.app / Park Centre / Self-service',
+    dashboard: 'https://staff.huchu.app / Park Centre / Home',
     leave:     'https://staff.huchu.app / Leave',
     payslip:   'https://staff.huchu.app / My pay / ' + PAYSLIPS[state.payslipPeriod].label,
     time:      'https://staff.huchu.app / Time clock',
-    directory: 'https://staff.huchu.app / Directory',
-    inbox:     'https://staff.huchu.app / Approvals · inbox',
-    profile:   'https://staff.huchu.app / Profile',
+    timesheet: 'https://staff.huchu.app / Timesheet',
+    expenses:  'https://staff.huchu.app / Money you spent',
+    reviews:   'https://staff.huchu.app / Performance reviews',
+    directory: 'https://staff.huchu.app / Workmates',
+    kudos:     'https://staff.huchu.app / Kudos',
+    documents: 'https://staff.huchu.app / Documents',
+    inbox:     'https://staff.huchu.app / Waiting for your approval',
+    profile:   'https://staff.huchu.app / Your details',
+    settings:  'https://staff.huchu.app / Settings',
+    help:      'https://staff.huchu.app / Help',
+    onboarding:'https://staff.huchu.app / Getting started',
   })[state.route] || 'https://staff.huchu.app';
   const chrome = $('#chrome-url'); if (chrome) chrome.textContent = url;
 
@@ -692,6 +1070,7 @@ function render() {
   wireTop();
   wireMobileTabs();
   wireRoute();
+  persist();
 }
 
 function renderSide() {
@@ -711,7 +1090,7 @@ function renderSide() {
       <nav>
         <button data-action="request-leave"><span class="ic" data-icon="plus"></span><span>Request leave</span></button>
         <button data-go="payslip"><span class="ic" data-icon="download"></span><span>Latest payslip</span></button>
-        <button data-action="contact-hr"><span class="ic" data-icon="chat"></span><span>Contact HR</span></button>
+        <button data-action="contact-hr"><span class="ic" data-icon="chat"></span><span>Message HR</span></button>
       </nav>
       <div class="foot">
         <span class="av">${ME.initials}</span>
@@ -734,13 +1113,21 @@ function wireSide() {
 
 function renderTop() {
   const titles = {
-    dashboard: { crumbs: 'Staff · Self-service · Home',     h: `Good morning, ${ME.name.split(' ')[0]}` },
-    leave:     { crumbs: 'Staff · Self-service · Leave',    h: 'Leave' },
-    payslip:   { crumbs: 'Staff · My pay · Payslip',        h: `${PAYSLIPS[state.payslipPeriod].label} payslip` },
-    time:      { crumbs: 'Staff · Self-service · Time',     h: 'Time clock' },
-    directory: { crumbs: 'Staff · Directory',               h: 'Directory' },
-    inbox:     { crumbs: 'Staff · Manager · Approvals',     h: 'Approvals · inbox' },
-    profile:   { crumbs: 'Staff · Profile · Account',       h: 'My profile' },
+    dashboard:  { crumbs: 'Staff · Home',                        h: `Good morning, ${ME.name.split(' ')[0]}` },
+    leave:      { crumbs: 'Staff · Leave',                       h: 'Leave' },
+    payslip:    { crumbs: 'Staff · My pay · Payslip',            h: `${PAYSLIPS[state.payslipPeriod].label} payslip` },
+    time:       { crumbs: 'Staff · Time clock',                  h: 'Time clock' },
+    timesheet:  { crumbs: 'Staff · Time · Weekly timesheet',     h: 'My timesheet' },
+    expenses:   { crumbs: 'Staff · Money you spent',             h: 'Money you spent for work' },
+    reviews:    { crumbs: 'Staff · Performance · Reviews',       h: 'My performance' },
+    directory:  { crumbs: 'Staff · Workmates',                   h: 'Workmates' },
+    kudos:      { crumbs: 'Staff · Kudos',                       h: 'Kudos & shout-outs' },
+    documents:  { crumbs: 'Staff · Documents',                   h: 'Documents & policies' },
+    inbox:      { crumbs: 'Staff · Manager · Approvals',         h: 'Waiting for your approval' },
+    profile:    { crumbs: 'Staff · Your details',                h: 'Your details' },
+    settings:   { crumbs: 'Staff · Settings',                    h: 'Settings' },
+    help:       { crumbs: 'Staff · Help',                        h: 'Help & common questions' },
+    onboarding: { crumbs: 'Staff · Getting started',             h: 'Welcome to Mukamba' },
   };
   const t = titles[state.route] || titles.dashboard;
 
@@ -748,7 +1135,7 @@ function renderTop() {
   if (state.route === 'dashboard') {
     extra = `
       <button class="bar-btn" data-action="request-leave"><span data-icon="plus" data-icon-size="13"></span><span class="bar-btn-label">Request leave</span></button>
-      <button class="bar-btn primary" data-go="time"><span data-icon="clock" data-icon-size="13"></span><span class="bar-btn-label">${state.clockedIn ? 'Clocked in · ' + state.clockInTime : 'Clock in'}</span></button>
+      <button class="bar-btn primary" data-go="time"><span data-icon="clock" data-icon-size="13"></span><span class="bar-btn-label">${state.clockedIn ? 'Clocked in at ' + state.clockInTime : 'Clock in'}</span></button>
     `;
   } else if (state.route === 'leave') {
     extra = `
@@ -768,22 +1155,43 @@ function renderTop() {
   } else if (state.route === 'directory') {
     extra = `<span class="pill muted">${PEOPLE.length} people</span>`;
   } else if (state.route === 'inbox') {
-    extra = `<span class="pill brand">${pendingCount()} pending</span>`;
+    extra = `<span class="pill brand">${pendingCount()} waiting</span>`;
   } else if (state.route === 'profile') {
     extra = `<button class="bar-btn primary" data-action="save-profile"><span data-icon="check" data-icon-size="13"></span><span class="bar-btn-label">Save changes</span></button>`;
+  } else if (state.route === 'timesheet') {
+    extra = `
+      <button class="bar-btn" data-action="ts-save"><span data-icon="check" data-icon-size="13"></span><span class="bar-btn-label">Save draft</span></button>
+      <button class="bar-btn primary" data-action="ts-submit"${state.timesheet.submitted?' disabled':''}><span data-icon="upload" data-icon-size="13"></span><span class="bar-btn-label">${state.timesheet.submitted?'Sent':'Send to manager'}</span></button>
+    `;
+  } else if (state.route === 'expenses') {
+    extra = `<button class="bar-btn primary" data-action="exp-new"><span data-icon="plus" data-icon-size="13"></span><span class="bar-btn-label">New claim</span></button>`;
+  } else if (state.route === 'reviews') {
+    extra = `<button class="bar-btn primary" data-action="rv-checkin"><span data-icon="calendar" data-icon-size="13"></span><span class="bar-btn-label">Book a catch-up</span></button>`;
+  } else if (state.route === 'kudos') {
+    extra = `<button class="bar-btn primary" data-action="kudos-new"><span data-icon="heart" data-icon-size="13"></span><span class="bar-btn-label">Send kudos</span></button>`;
+  } else if (state.route === 'documents') {
+    extra = `<span class="pill muted">${DOCUMENTS.length} files</span>`;
+  } else if (state.route === 'settings') {
+    extra = `<button class="bar-btn primary" data-action="save-settings"><span data-icon="check" data-icon-size="13"></span><span class="bar-btn-label">Save settings</span></button>`;
+  } else if (state.route === 'help') {
+    extra = `<button class="bar-btn" data-action="chat-hr"><span data-icon="chat" data-icon-size="13"></span><span class="bar-btn-label">Message HR</span></button>`;
+  } else if (state.route === 'onboarding') {
+    const done = Object.values(state.onboarding).filter(Boolean).length;
+    extra = `<span class="pill brand">${done} / ${ONBOARDING_TASKS.length} done</span>`;
   }
 
   return `
     <header class="st-top">
+      <button class="hamb" id="hamb-toggle" title="Open Huchu navigation"><span data-icon="menu" data-icon-size="20"></span></button>
       <div class="meta">
         <div class="crumbs">${t.crumbs}</div>
         <h1>${escapeHtml(t.h)}</h1>
       </div>
       <div class="actions">
         ${extra}
-        <button class="bar-btn" id="fs-toggle" title="${state.fullscreen ? 'Exit fullscreen' : 'Fullscreen preview'}">
+        <button class="bar-btn" id="fs-toggle" title="${state.fullscreen ? 'Leave full screen' : 'Show full screen'}">
           <span data-icon="${state.fullscreen ? 'x' : 'grid'}" data-icon-size="13"></span>
-          <span class="bar-btn-label">${state.fullscreen ? 'Exit' : 'Fullscreen'}</span>
+          <span class="bar-btn-label">${state.fullscreen ? 'Exit' : 'Full screen'}</span>
         </button>
       </div>
     </header>
@@ -791,59 +1199,239 @@ function renderTop() {
 }
 function wireTop() {
   const fs = $('#fs-toggle'); if (fs) fs.addEventListener('click', toggleFullscreen);
+  const hb = $('#hamb-toggle'); if (hb) hb.addEventListener('click', () => {
+    if (window.HuchuNav && typeof window.HuchuNav.toggle === 'function') window.HuchuNav.toggle();
+    else toast('Huchu nav unavailable in this preview');
+  });
   $$('.st-top [data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
   $$('.st-top [data-action]').forEach(b => b.addEventListener('click', () => {
     const a = b.dataset.action;
     if (a === 'request-leave') { if (state.route !== 'leave') go('leave'); setTimeout(openRequestLeaveModal, 80); }
-    else if (a === 'export-history') toast('Leave history exported as CSV', 'success');
+    else if (a === 'export-history') toast('Leave history saved as CSV file', 'success');
     else if (a === 'print-payslip') toast('Sent to printer', 'success');
     else if (a === 'download-payslip') toast(`${PAYSLIPS[state.payslipPeriod].label} payslip downloaded`, 'success');
-    else if (a === 'time-history') toast('Opening fortnight timesheet…');
-    else if (a === 'save-profile') toast('Profile changes saved', 'success');
+    else if (a === 'time-history') toast('Opening this fortnight\'s timesheet…');
+    else if (a === 'save-profile') toast('Your details saved', 'success');
+    else if (a === 'ts-save') toast('Timesheet saved · saves itself every 30 seconds', 'success');
+    else if (a === 'ts-submit') { state.timesheet.submitted = true; toast('Timesheet sent to Tendai Moyo to approve', 'success'); render(); }
+    else if (a === 'exp-new') openExpenseModal();
+    else if (a === 'rv-checkin') openCheckInModal();
+    else if (a === 'kudos-new') openKudosModal();
+    else if (a === 'save-settings') { persist(); toast('Settings saved', 'success'); }
+    else if (a === 'chat-hr') toast('Opening chat with Rumbidzai Chivasa (HR)…', 'success');
   }));
-  const ps = $('#period-sel'); if (ps) ps.addEventListener('change', (e) => { state.payslipPeriod = e.target.value; render(); toast('Loaded ' + PAYSLIPS[e.target.value].label, 'success'); });
+  const ps = $('#period-sel'); if (ps) ps.addEventListener('change', (e) => { state.payslipPeriod = e.target.value; render(); toast('Showing ' + PAYSLIPS[e.target.value].label, 'success'); });
 }
 
 function renderMobileTabs() {
   return `
-    <nav class="st-tabs">
+    <nav class="b-bottom-tabs" aria-label="Primary">
       ${MOBILE_TABS.map(t => `
-        <button class="${state.route === t.route ? 'active' : ''}" data-go="${t.route}">
-          <span class="ic" data-icon="${t.icon}" data-icon-size="20"></span>
-          <span>${t.label}</span>
-          ${t.route === 'time' && pendingCount() > 0 && state.route !== 'time' ? '' : ''}
+        <button type="button" class="${state.route === t.route ? 'active' : ''}" data-go="${t.route}">
+          <span class="b-bt-ic" data-icon="${t.icon}" data-icon-size="20"></span>
+          ${t.label}
         </button>
       `).join('')}
     </nav>
   `;
 }
 function wireMobileTabs() {
-  $$('.st-tabs [data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+  $$('.b-bottom-tabs [data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
 }
 
 function renderRoute() {
   switch (state.route) {
-    case 'dashboard': return renderDashboard();
-    case 'leave':     return renderLeave();
-    case 'payslip':   return renderPayslip();
-    case 'time':      return renderTime();
-    case 'directory': return renderDirectory();
-    case 'inbox':     return renderInbox();
-    case 'profile':   return renderProfile();
-    default:          return renderDashboard();
+    case 'dashboard':  return renderDashboard();
+    case 'leave':      return renderLeave();
+    case 'payslip':    return renderPayslip();
+    case 'time':       return renderTime();
+    case 'timesheet':  return renderTimesheet();
+    case 'expenses':   return renderExpenses();
+    case 'reviews':    return renderReviews();
+    case 'directory':  return renderDirectory();
+    case 'kudos':      return renderKudos();
+    case 'documents':  return renderDocuments();
+    case 'inbox':      return renderInbox();
+    case 'profile':    return renderProfile();
+    case 'settings':   return renderSettings();
+    case 'help':       return renderHelp();
+    case 'onboarding': return renderOnboarding();
+    default:           return renderDashboard();
   }
 }
 
 function wireRoute() {
   switch (state.route) {
-    case 'dashboard': wireDashboard(); break;
-    case 'leave':     wireLeave();     break;
-    case 'payslip':   wirePayslip();   break;
-    case 'time':      wireTime();      break;
-    case 'directory': wireDirectory(); break;
-    case 'inbox':     wireInbox();     break;
-    case 'profile':   wireProfile();   break;
+    case 'dashboard':  wireDashboard();  break;
+    case 'leave':      wireLeave();      break;
+    case 'payslip':    wirePayslip();    break;
+    case 'time':       wireTime();       break;
+    case 'timesheet':  wireTimesheet();  break;
+    case 'expenses':   wireExpenses();   break;
+    case 'reviews':    wireReviews();    break;
+    case 'directory':  wireDirectory();  break;
+    case 'kudos':      wireKudos();      break;
+    case 'documents':  wireDocuments();  break;
+    case 'inbox':      wireInbox();      break;
+    case 'profile':    wireProfile();    break;
+    case 'settings':   wireSettings();   break;
+    case 'help':       wireHelp();       break;
+    case 'onboarding': wireOnboarding(); break;
   }
+}
+
+/* ============================================================
+   0. Sign-in gate (employee ID + password + 2FA + remember device)
+   ============================================================ */
+function renderSignIn() {
+  if (state.signInStep === '2fa') {
+    return `
+      <div class="signin-gate">
+        <div class="signin-card">
+          <div class="brand-mark"><span class="mk" data-icon="corelith" data-icon-size="18"></span> Huchu Staff</div>
+          <h2>Extra security code</h2>
+          <p class="sub">We sent a 6-digit code to your authenticator app on your phone. Type it in to finish signing in as <b>${escapeHtml(ME.name)}</b>.</p>
+          ${state.signInError ? `<div class="err"><span data-icon="info" data-icon-size="14"></span>${escapeHtml(state.signInError)}</div>` : ''}
+          <div class="otp" id="otp-codes" role="group" aria-label="6-digit verification code">
+            ${[0,1,2,3,4,5].map(i => `<input maxlength="1" data-otp="${i}" inputmode="numeric" autocomplete="one-time-code" aria-label="Digit ${i+1}" />`).join('')}
+          </div>
+          <div class="row-link">
+            <label class="toggle ${state.rememberDevice ? 'on' : ''}" id="otp-remember">
+              <span class="sw"></span>
+              <span class="lb">Remember this computer for 30 days</span>
+            </label>
+          </div>
+          <button class="btn btn-primary" id="otp-verify" style="height: 44px; justify-content: center; font-size: 14px;"><span data-icon="check" data-icon-size="14"></span> Check code &amp; sign in</button>
+          <div class="row-link">
+            <a href="#" id="otp-resend">Send a new code</a>
+            <a href="#" id="otp-back">Sign in as someone else</a>
+          </div>
+          <div class="meta-foot">
+            <span class="ic"><span data-icon="shield" data-icon-size="12"></span></span>
+            Codes change every 30 seconds. Lost your phone or can't open the app? Call Ruvimbo Mhlanga in IT.
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  return `
+    <div class="signin-gate">
+      <div class="signin-card">
+        <div class="brand-mark"><span class="mk" data-icon="corelith" data-icon-size="18"></span> Huchu Staff</div>
+        <h2>Sign in to your account</h2>
+        <p class="sub">Mukamba Group · Park Centre branch · your staff account.</p>
+        ${state.signInError ? `<div class="err"><span data-icon="info" data-icon-size="14"></span>${escapeHtml(state.signInError)}</div>` : ''}
+        <div class="field full"><label>Employee number</label><input id="si-emp" placeholder="EMP-00284" value="EMP-00284" autocomplete="username" /></div>
+        <div class="field full"><label>Password</label>
+          <div style="position: relative;">
+            <input id="si-pw" type="${state.passwordVisible ? 'text' : 'password'}" placeholder="Your password" value="HuchuDemo2026!" autocomplete="current-password" style="padding-right: 36px;" />
+            <button type="button" id="si-pw-toggle" aria-label="${state.passwordVisible ? 'Hide password' : 'Show password'}" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: transparent; border: 0; cursor: pointer; color: var(--text-subtle); padding: 4px;">
+              <span data-icon="${state.passwordVisible ? 'eyeoff' : 'eye'}" data-icon-size="16"></span>
+            </button>
+          </div>
+        </div>
+        <div class="row-link">
+          <label class="toggle ${state.rememberDevice ? 'on' : ''}" id="si-remember">
+            <span class="sw"></span>
+            <span class="lb">Remember this computer</span>
+          </label>
+          <a href="#" id="si-forgot">Forgot password?</a>
+        </div>
+        <button class="btn btn-primary" id="si-go" style="height: 44px; justify-content: center; font-size: 14px;"><span data-icon="lock" data-icon-size="14"></span> Sign in</button>
+        <div class="row-link" style="justify-content: center;">
+          <span style="color: var(--text-muted);">New here? <a href="#" id="si-help">Set up your account</a></span>
+        </div>
+        <div class="meta-foot">
+          <span class="ic"><span data-icon="shield" data-icon-size="12"></span></span>
+          Use your Mukamba sign-in. New computers need the extra security code. By signing in you agree to the <a href="#" style="color: var(--brand-strong);">rules for using this app</a>.
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function wireSignIn() {
+  if (state.signInStep === '2fa') {
+    const inputs = $$('#otp-codes input');
+    inputs.forEach((inp, idx) => {
+      inp.addEventListener('input', (e) => {
+        const v = e.target.value.replace(/[^0-9]/g, '');
+        e.target.value = v;
+        if (v && idx < inputs.length - 1) inputs[idx + 1].focus();
+      });
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !e.target.value && idx > 0) inputs[idx - 1].focus();
+      });
+    });
+    if (inputs[0]) inputs[0].focus();
+    const rem = $('#otp-remember');
+    if (rem) rem.addEventListener('click', () => { state.rememberDevice = !state.rememberDevice; render(); });
+    const verify = $('#otp-verify');
+    if (verify) verify.addEventListener('click', () => {
+      const code = inputs.map(i => i.value).join('');
+      if (code.length < 6) {
+        state.signInError = 'Type all 6 numbers from your authenticator app.';
+        render();
+        return;
+      }
+      // Accept any 6-digit code in the demo, or specifically reject 000000
+      if (code === '000000') {
+        state.signInError = 'That code is wrong or has expired. Try again.';
+        render();
+        return;
+      }
+      state.signInError = null;
+      state.signedIn = true;
+      state.signInStep = 'creds';
+      persist();
+      render();
+      toast('Welcome back, ' + ME.name.split(' ')[0] + ' · signed in at Park Centre', 'success');
+    });
+    const resend = $('#otp-resend');
+    if (resend) resend.addEventListener('click', (e) => { e.preventDefault(); toast('New code sent to your phone'); });
+    const back = $('#otp-back');
+    if (back) back.addEventListener('click', (e) => { e.preventDefault(); state.signInStep = 'creds'; state.signInError = null; render(); });
+    return;
+  }
+  const goBtn = $('#si-go');
+  const empInp = $('#si-emp');
+  const pwInp = $('#si-pw');
+  const submit = () => {
+    const emp = (empInp.value || '').trim();
+    const pw = (pwInp.value || '').trim();
+    if (!emp || !pw) { state.signInError = 'Type your employee number and password to continue.'; render(); return; }
+    if (!/^EMP-\d{3,6}$/i.test(emp)) { state.signInError = 'Your employee number looks like EMP-00284.'; render(); return; }
+    if (pw.length < 4) { state.signInError = 'That password doesn\'t look right. Tap "Forgot password?" for help.'; render(); return; }
+    state.signInError = null;
+    if (state.twoFAEnabled) { state.signInStep = '2fa'; render(); return; }
+    state.signedIn = true;
+    persist();
+    render();
+    toast('Welcome back, ' + ME.name.split(' ')[0], 'success');
+  };
+  if (goBtn) goBtn.addEventListener('click', submit);
+  if (pwInp) pwInp.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+  if (empInp) empInp.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+  const tog = $('#si-pw-toggle'); if (tog) tog.addEventListener('click', () => { state.passwordVisible = !state.passwordVisible; render(); });
+  const rem = $('#si-remember'); if (rem) rem.addEventListener('click', () => { state.rememberDevice = !state.rememberDevice; render(); });
+  const fg = $('#si-forgot'); if (fg) fg.addEventListener('click', (e) => { e.preventDefault(); openForgotPasswordModal(); });
+  const help = $('#si-help'); if (help) help.addEventListener('click', (e) => { e.preventDefault(); toast('Set-up email sent again to chipo.mutasa@mukamba.co.zw'); });
+}
+
+function openForgotPasswordModal() {
+  openModal(`
+    <div class="modal" onclick="event.stopPropagation()">
+      <h3>Reset your password</h3>
+      <p class="sub">We'll email you a link to set a new password. The link works for 60 minutes.</p>
+      <div class="field full"><label>Employee number or work email</label><input value="EMP-00284" /></div>
+      <div class="acts">
+        <button class="btn btn-secondary" data-close>Cancel</button>
+        <button class="btn btn-primary ok" data-ok>Email me the link</button>
+      </div>
+    </div>
+  `);
+  $('.modal [data-close]').addEventListener('click', closeModal);
+  $('.modal [data-ok]').addEventListener('click', () => { closeModal(); toast('Reset link emailed to chipo.mutasa@mukamba.co.zw', 'success'); });
 }
 
 /* ============================================================
@@ -854,24 +1442,24 @@ function renderDashboard() {
     <!-- Stat tiles -->
     <div class="stat-grid">
       <div class="stat brand">
-        <div class="lb"><span data-icon="card" data-icon-size="12"></span> Next payslip</div>
+        <div class="lb"><span data-icon="card" data-icon-size="12"></span> Next pay</div>
         <div class="vl">$ 1,840.00</div>
-        <div class="sb">Pays Friday 29 May · period May 2026</div>
+        <div class="sb">Pays Friday 29 May · for May 2026</div>
       </div>
       <div class="stat">
-        <div class="lb"><span data-icon="calendar" data-icon-size="12"></span> Leave balance</div>
+        <div class="lb"><span data-icon="calendar" data-icon-size="12"></span> Leave days left</div>
         <div class="vl">12 days</div>
         <div class="sb">Annual · 5 sick · 3 compassionate</div>
       </div>
       <div class="stat">
-        <div class="lb"><span data-icon="clock" data-icon-size="12"></span> Hours this period</div>
+        <div class="lb"><span data-icon="clock" data-icon-size="12"></span> Hours worked this pay period</div>
         <div class="vl">86h 40m</div>
-        <div class="sb">Target 96h · 4 days remaining</div>
+        <div class="sb">Aiming for 96h · 4 days to go</div>
       </div>
       <div class="stat">
-        <div class="lb"><span data-icon="star" data-icon-size="12"></span> Anniversary</div>
+        <div class="lb"><span data-icon="star" data-icon-size="12"></span> Years here</div>
         <div class="vl">3 years</div>
-        <div class="sb">Joined 14 August 2023</div>
+        <div class="sb">Started 14 August 2023</div>
       </div>
     </div>
 
@@ -879,7 +1467,7 @@ function renderDashboard() {
     <div class="grid-2">
       <div class="panel">
         <div class="panel-h">
-          <h2>Today's tasks</h2>
+          <h2>Things to do today</h2>
           <div class="sp"></div>
           <span class="pill muted">2 to do</span>
         </div>
@@ -887,8 +1475,8 @@ function renderDashboard() {
           <div class="task-row ${state.tasksDone['t1']?'done':''}" data-task="t1">
             <div class="cb"><span data-icon="check" data-icon-size="12"></span></div>
             <div>
-              <div class="nm">Submit fortnight timesheet</div>
-              <div class="sb">Period ending 24 May · sign off before Tuesday close</div>
+              <div class="nm">Send in your fortnight timesheet</div>
+              <div class="sb">Two weeks ending 24 May · finish before close of business Tuesday</div>
             </div>
             <span class="due late">Due Tue</span>
           </div>
@@ -896,23 +1484,23 @@ function renderDashboard() {
             <div class="cb"><span data-icon="check" data-icon-size="12"></span></div>
             <div>
               <div class="nm">Approve ${pendingCount()} leave requests from your team</div>
-              <div class="sb">Faith, Anesu, Brighton · oldest waiting since 20 May</div>
+              <div class="sb">Faith, Anesu, Brighton · oldest one waiting since 20 May</div>
             </div>
             <span class="due">Today</span>
           </div>
           <div class="task-row ${state.tasksDone['t3']?'done':''}" data-task="t3" data-open="profile">
             <div class="cb"><span data-icon="check" data-icon-size="12"></span></div>
             <div>
-              <div class="nm">Confirm emergency contact details</div>
-              <div class="sb">HR annual check · takes about 1 minute</div>
+              <div class="nm">Check your emergency contact is still right</div>
+              <div class="sb">HR checks once a year · takes about 1 minute</div>
             </div>
             <span class="due">This week</span>
           </div>
           <div class="task-row ${state.tasksDone['t4']?'done':''}" data-task="t4">
             <div class="cb"><span data-icon="check" data-icon-size="12"></span></div>
             <div>
-              <div class="nm">Acknowledge new travel-claim policy</div>
-              <div class="sb">Per-diem rates effective 1 June · 2 min read</div>
+              <div class="nm">Read and tick off the new travel-claim rules</div>
+              <div class="sb">New daily travel rates start 1 June · 2 minute read</div>
             </div>
             <span class="due">By 31 May</span>
           </div>
@@ -921,16 +1509,60 @@ function renderDashboard() {
 
       <div class="panel">
         <div class="panel-h">
-          <h2>Upcoming holidays</h2>
+          <h2>Public holidays coming up</h2>
           <div class="sp"></div>
-          <a href="#">2026 calendar</a>
+          <a href="#">See 2026 calendar</a>
         </div>
         <div class="panel-body">
           <div class="hol-row"><div class="dt"><div class="d">25</div><div class="m">May</div></div><div><div class="nm">Africa Day</div><div class="sb">Public holiday · branches closed</div></div><span class="pill">Mon</span></div>
           <div class="hol-row"><div class="dt"><div class="d">11</div><div class="m">Aug</div></div><div><div class="nm">Heroes' Day</div><div class="sb">Public holiday</div></div><span class="pill">Tue</span></div>
-          <div class="hol-row"><div class="dt"><div class="d">12</div><div class="m">Aug</div></div><div><div class="nm">Defence Forces Day</div><div class="sb">Public holiday · double-time roster</div></div><span class="pill">Wed</span></div>
+          <div class="hol-row"><div class="dt"><div class="d">12</div><div class="m">Aug</div></div><div><div class="nm">Defence Forces Day</div><div class="sb">Public holiday · double pay if you work</div></div><span class="pill">Wed</span></div>
           <div class="hol-row"><div class="dt"><div class="d">22</div><div class="m">Dec</div></div><div><div class="nm">Unity Day</div><div class="sb">Public holiday</div></div><span class="pill">Mon</span></div>
           <div class="hol-row"><div class="dt"><div class="d">25</div><div class="m">Dec</div></div><div><div class="nm">Christmas Day</div><div class="sb">Public holiday · branches closed</div></div><span class="pill">Thu</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Anniversaries & birthdays this week -->
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-h"><h2>Work anniversaries this week</h2><div class="sp"></div><span class="pill brand">3</span></div>
+        <div class="panel-body">
+          <div class="ann-row">
+            <span class="av">FM</span>
+            <div><div class="nm">Faith Moyo · 4 years at Mukamba</div><div class="sb">Senior cashier · Park Centre · started 23 May 2022</div></div>
+            <span class="ic"><span data-icon="star" data-icon-size="16"></span></span>
+          </div>
+          <div class="ann-row">
+            <span class="av">TM</span>
+            <div><div class="nm">Tendai Moyo · 8 years</div><div class="sb">Operations manager · started 26 May 2018</div></div>
+            <span class="ic"><span data-icon="star" data-icon-size="16"></span></span>
+          </div>
+          <div class="ann-row">
+            <span class="av">PD</span>
+            <div><div class="nm">Patience Dube · 2 years</div><div class="sb">Junior accountant · Head office · started 28 May 2024</div></div>
+            <span class="ic"><span data-icon="star" data-icon-size="16"></span></span>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><h2>Birthdays this week</h2><div class="sp"></div><a href="#" data-go-kudos>Send a shout-out</a></div>
+        <div class="panel-body">
+          <div class="ann-row">
+            <span class="av" style="background: var(--tone-warn-bg); color: var(--tone-warn);">AM</span>
+            <div><div class="nm">Anesu Moyo · today</div><div class="sb">Cashier · Park Centre · turning 28</div></div>
+            <button class="btn btn-secondary" data-go-kudos style="padding: 4px 10px;"><span data-icon="heart" data-icon-size="12"></span> Wish</button>
+          </div>
+          <div class="ann-row">
+            <span class="av" style="background: var(--tone-warn-bg); color: var(--tone-warn);">RM</span>
+            <div><div class="nm">Ruvimbo Mhlanga · Friday</div><div class="sb">IT support lead · Head office</div></div>
+            <button class="btn btn-secondary" data-go-kudos style="padding: 4px 10px;"><span data-icon="heart" data-icon-size="12"></span> Wish</button>
+          </div>
+          <div class="ann-row">
+            <span class="av" style="background: var(--tone-warn-bg); color: var(--tone-warn);">SN</span>
+            <div><div class="nm">Simba Ndlovu · Saturday</div><div class="sb">Forklift operator · Bulawayo</div></div>
+            <button class="btn btn-secondary" data-go-kudos style="padding: 4px 10px;"><span data-icon="heart" data-icon-size="12"></span> Wish</button>
+          </div>
         </div>
       </div>
     </div>
@@ -938,24 +1570,24 @@ function renderDashboard() {
     <!-- Recent activity (full width) -->
     <div class="panel">
       <div class="panel-h">
-        <h2>Recent activity</h2>
+        <h2>What's been happening</h2>
         <div class="sp"></div>
-        <a href="#">View all</a>
+        <a href="#">See all</a>
       </div>
       <div class="panel-body">
         <div class="feed-row">
           <span class="ic success"><span data-icon="check" data-icon-size="16"></span></span>
           <div>
-            <div class="nm">Leave approved · 3 days annual</div>
-            <div class="sb">Tendai Moyo (manager) approved 25–27 Jun for Victoria Falls trip</div>
+            <div class="nm">Your leave was approved · 3 days annual</div>
+            <div class="sb">Your manager Tendai Moyo approved 25–27 Jun for your Victoria Falls trip</div>
           </div>
           <span class="tm">2h ago</span>
         </div>
         <div class="feed-row">
           <span class="ic brand"><span data-icon="card" data-icon-size="16"></span></span>
           <div>
-            <div class="nm">Payslip issued · April 2026</div>
-            <div class="sb">$ 1,815.42 paid into CBZ Bank · stub available for download</div>
+            <div class="nm">April 2026 payslip ready</div>
+            <div class="sb">$ 1,815.42 paid into your CBZ Bank account · you can download the payslip</div>
           </div>
           <span class="tm">28 Apr</span>
         </div>
@@ -963,23 +1595,23 @@ function renderDashboard() {
           <span class="ic"><span data-icon="clock" data-icon-size="16"></span></span>
           <div>
             <div class="nm">Clocked in at Park Centre</div>
-            <div class="sb">07:42 · 8 minutes early · within geo-fence</div>
+            <div class="sb">07:42 · 8 minutes early · phone confirms you're at the branch</div>
           </div>
           <span class="tm">Today</span>
         </div>
         <div class="feed-row">
           <span class="ic warn"><span data-icon="info" data-icon-size="16"></span></span>
           <div>
-            <div class="nm">3 leave requests awaiting your approval</div>
-            <div class="sb">Faith Moyo, Anesu Moyo and Brighton Mhlanga · open the manager inbox</div>
+            <div class="nm">3 leave requests waiting for you to approve</div>
+            <div class="sb">Faith Moyo, Anesu Moyo and Brighton Mhlanga · open Approvals to see them</div>
           </div>
           <span class="tm">Today</span>
         </div>
         <div class="feed-row">
           <span class="ic brand"><span data-icon="book" data-icon-size="16"></span></span>
           <div>
-            <div class="nm">Policy update · Travel claims</div>
-            <div class="sb">New per-diem rates for inter-branch travel effective 1 June</div>
+            <div class="nm">New rules · Travel claims</div>
+            <div class="sb">New daily travel rates for trips between branches start 1 June</div>
           </div>
           <span class="tm">21 May</span>
         </div>
@@ -987,7 +1619,7 @@ function renderDashboard() {
           <span class="ic success"><span data-icon="check" data-icon-size="16"></span></span>
           <div>
             <div class="nm">NSSA registration confirmed</div>
-            <div class="sb">HR uploaded updated reference number to your profile</div>
+            <div class="sb">HR added your updated NSSA number to your details</div>
           </div>
           <span class="tm">14 May</span>
         </div>
@@ -1002,8 +1634,9 @@ function wireDashboard() {
     const id = r.dataset.task;
     state.tasksDone[id] = !state.tasksDone[id];
     render();
-    toast(state.tasksDone[id] ? 'Task marked done' : 'Task reopened');
+    toast(state.tasksDone[id] ? 'Marked done' : 'Marked not done');
   }));
+  $$('[data-go-kudos]').forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openKudosModal(); }));
 }
 
 /* ============================================================
@@ -1020,55 +1653,55 @@ function renderLeave() {
         <div class="lb">Annual leave</div>
         <div class="vl">${b.annual} <span>/ ${b.annualTotal} days</span></div>
         <div class="bar"><i style="width: ${Math.round(b.annual/b.annualTotal*100)}%; background: var(--brand);"></i></div>
-        <div class="sb">${b.annualTotal-b.annual} days taken · expires 31 Dec</div>
+        <div class="sb">${b.annualTotal-b.annual} days used · unused days expire 31 Dec</div>
       </div>
       <div class="bal">
         <div class="lb">Sick leave</div>
         <div class="vl">${b.sick} <span>/ ${b.sickTotal} days</span></div>
         <div class="bar"><i style="width: ${Math.round(b.sick/b.sickTotal*100)}%; background: var(--tone-info);"></i></div>
-        <div class="sb">Doctor's note from day 3</div>
+        <div class="sb">Need a doctor's note from day 3</div>
       </div>
       <div class="bal">
         <div class="lb">Compassionate</div>
         <div class="vl">${b.comp} <span>/ ${b.compTotal} days</span></div>
         <div class="bar"><i style="width: 100%; background: var(--tone-warn);"></i></div>
-        <div class="sb">Per Labour Act · immediate family</div>
+        <div class="sb">For close family · per Labour Act</div>
       </div>
       <div class="bal">
         <div class="lb">Study leave</div>
         <div class="vl">${b.study} <span>/ ${b.studyTotal} days</span></div>
         <div class="bar"><i style="width: 100%; background: #A78BFA;"></i></div>
-        <div class="sb">Approved courses · HR pre-approval</div>
+        <div class="sb">For approved courses · ask HR first</div>
       </div>
     </div>
 
     <!-- Recent requests -->
     <div class="panel">
       <div class="panel-h">
-        <h2>Recent requests</h2>
+        <h2>Your recent leave requests</h2>
         <div class="sp"></div>
         <span class="pill muted">Last 12 months</span>
       </div>
-      <table class="tbl">
-        <thead>
-          <tr><th style="width:28%">Type &amp; dates</th><th>Days</th><th>Submitted</th><th>Approver</th><th>Status</th><th></th></tr>
-        </thead>
-        <tbody>
-          ${state.leaveRequests.map(r => `
-            <tr class="clickable" data-leave="${r.id}">
-              <td>
-                <div class="nm">${escapeHtml(r.type)}</div>
-                <div class="sb">${fmtRange(r.from, r.to)}</div>
-              </td>
-              <td class="num">${r.days.toFixed(1)}</td>
-              <td class="num">${escapeHtml(r.submitted)}</td>
-              <td>${escapeHtml(r.approver)}</td>
-              <td><span class="pill ${r.status} dot">${cap(r.status)}</span></td>
-              <td style="text-align:right;"><a href="#" data-leave-view="${r.id}" style="font:500 12px/1 var(--font-sans); color: var(--brand-strong); text-decoration:none;">${r.status === 'pending' ? 'Manage' : 'View'} →</a></td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
+      <div style="padding: 12px 14px;">
+        ${state.leaveRequests.map(r => `
+          <button class="b-row-card" type="button" data-leave="${r.id}" aria-label="${escapeHtml(r.type)} · ${escapeHtml(fmtRange(r.from, r.to))} · ${escapeHtml(statusLabel(r.status))}">
+            <div class="b-rc-top">
+              <div class="b-rc-info">
+                <div class="b-rc-nm">${escapeHtml(r.type)}</div>
+                <div class="b-rc-sb">${fmtRange(r.from, r.to)} · sent ${escapeHtml(r.submitted)}</div>
+              </div>
+              <div style="text-align: right;">
+                <div class="b-rc-val">${r.days.toFixed(1)} <span style="font: 500 12px/1 var(--font-sans); color: var(--text-muted);">days</span></div>
+                <div class="b-rc-delta"><span class="pill ${r.status} dot">${statusLabel(r.status)}</span></div>
+              </div>
+            </div>
+            <div class="b-rc-meta">
+              <div><div class="b-rc-m-l">Goes to</div><div class="b-rc-m-v">${escapeHtml(r.approver)}</div></div>
+              <div><div class="b-rc-m-l">Ref</div><div class="b-rc-m-v">${escapeHtml(r.id)}</div></div>
+            </div>
+          </button>
+        `).join('')}
+      </div>
     </div>
   `;
 }
@@ -1079,6 +1712,10 @@ function fmtRange(from, to) {
   return fmt(from) + ' – ' + fmt(to);
 }
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+function statusLabel(s) {
+  const map = { pending: 'Waiting', approved: 'Approved', denied: 'Turned down', draft: 'Draft' };
+  return map[s] || cap(s);
+}
 
 function workingDays(from, to) {
   const d1 = new Date(from), d2 = new Date(to);
@@ -1089,11 +1726,7 @@ function workingDays(from, to) {
 }
 
 function wireLeave() {
-  $$('[data-leave]').forEach(r => r.addEventListener('click', (e) => {
-    if (e.target.dataset.leaveView !== undefined) { e.preventDefault(); openLeaveDetailModal(r.dataset.leave); return; }
-    openLeaveDetailModal(r.dataset.leave);
-  }));
-  $$('[data-leave-view]').forEach(a => a.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openLeaveDetailModal(a.dataset.leaveView); }));
+  $$('[data-leave]').forEach(r => r.addEventListener('click', () => openLeaveDetailModal(r.dataset.leave)));
 }
 
 function openRequestLeaveModal() {
@@ -1105,38 +1738,43 @@ function openRequestLeaveModal() {
   function paint() {
     const days = workingDays(from, to);
     openModal(`
-      <div class="modal lg" onclick="event.stopPropagation()">
-        <h3>Request leave</h3>
-        <p class="sub">Submit a new leave request. Your manager will be notified and can approve or query.</p>
-        <div class="form-grid">
-          <div class="field half"><label>Type</label>
-            <select id="lr-type">${['Annual','Sick','Compassionate','Study'].map(t => `<option ${t===type?'selected':''}>${t}</option>`).join('')}</select>
+      <div class="x-bottom-sheet" role="dialog" aria-modal="true" aria-labelledby="lr-title" onclick="event.stopPropagation()">
+        <div class="x-bs-grab"></div>
+        <div class="x-bs-head">
+          <h3 id="lr-title">Request leave</h3>
+          <button class="x-bs-close" type="button" aria-label="Close" data-cancel><span data-icon="x" data-icon-size="16"></span></button>
+        </div>
+        <div class="x-bs-body">
+          <p class="sub" style="font: 13px/1.4 var(--font-sans); color: var(--text-muted); margin: 0 0 14px;">Ask for time off. Your manager will see this and can say yes, no, or ask a question.</p>
+          <div class="form-grid">
+            <div class="field half"><label>Type of leave</label>
+              <select id="lr-type">${['Annual','Sick','Compassionate','Study'].map(t => `<option ${t===type?'selected':''}>${t}</option>`).join('')}</select>
+            </div>
+            <div class="field half"><label>Who will approve this</label>
+              <select id="lr-mgr">
+                <option ${manager.startsWith('Tendai')?'selected':''}>Tendai Moyo · Operations</option>
+                <option ${manager.startsWith('Rumbidzai')?'selected':''}>Rumbidzai Chivasa · HR</option>
+                <option ${manager.startsWith('Brighton')?'selected':''}>Brighton Sibanda · Regional</option>
+              </select>
+            </div>
+            <div class="field half"><label>From</label><input type="date" id="lr-from" value="${from}" /></div>
+            <div class="field half"><label>To</label><input type="date" id="lr-to" value="${to}" /></div>
+            <div class="field full"><label>Reason (for your manager)</label>
+              <textarea id="lr-notes" placeholder="A short reason makes it easier for your manager to say yes.">${escapeHtml(notes)}</textarea>
+            </div>
           </div>
-          <div class="field half"><label>Manager (approver)</label>
-            <select id="lr-mgr">
-              <option ${manager.startsWith('Tendai')?'selected':''}>Tendai Moyo · Operations</option>
-              <option ${manager.startsWith('Rumbidzai')?'selected':''}>Rumbidzai Chivasa · HR</option>
-              <option ${manager.startsWith('Brighton')?'selected':''}>Brighton Sibanda · Regional</option>
-            </select>
-          </div>
-          <div class="field half"><label>From</label><input type="date" id="lr-from" value="${from}" /></div>
-          <div class="field half"><label>To</label><input type="date" id="lr-to" value="${to}" /></div>
-          <div class="field full"><label>Notes for approver</label>
-            <textarea id="lr-notes" placeholder="Short reason — helps your manager approve quickly.">${escapeHtml(notes)}</textarea>
+          <div style="margin-top:14px; padding: 10px 14px; background: var(--brand-soft); border-radius: 8px; font: 13px/1.4 var(--font-sans); color: var(--brand-strong);">
+            <span data-icon="info" data-icon-size="13"></span>
+            You're asking for <b>${days} working day${days===1?'':'s'}</b>${days>0 ? ' · you\'ll have ' + Math.max(0, leaveBalance().annual - days) + ' annual days left after this' : ''}
           </div>
         </div>
-        <div style="margin-top:14px; padding: 10px 14px; background: var(--brand-soft); border-radius: 8px; font: 13px/1.4 var(--font-sans); color: var(--brand-strong);">
-          <span data-icon="info" data-icon-size="13"></span>
-          Requesting <b>${days} working day${days===1?'':'s'}</b>${days>0 ? ' · balance after: ' + Math.max(0, leaveBalance().annual - days) + ' days annual' : ''}
-        </div>
-        <div class="acts">
-          <button class="btn btn-secondary" data-cancel>Cancel</button>
-          <button class="btn btn-ghost" data-draft>Save draft</button>
-          <button class="btn btn-primary ok" data-ok ${days>0?'':'disabled'}><span data-icon="check" data-icon-size="13"></span> Submit request</button>
+        <div class="x-bs-foot">
+          <button class="alt" type="button" data-draft>Save for later</button>
+          <button class="primary" type="button" data-ok ${days>0?'':'disabled'}><span data-icon="check" data-icon-size="13"></span> Send request</button>
         </div>
       </div>
     `);
-    const m = $('.modal');
+    const m = $('.x-bottom-sheet');
     const bind = (id, fn) => { const el = $('#'+id, m); el && el.addEventListener('input', fn); el && el.addEventListener('change', fn); };
     bind('lr-type', e => { type = e.target.value; });
     bind('lr-mgr', e => { manager = e.target.value; });
@@ -1144,7 +1782,7 @@ function openRequestLeaveModal() {
     bind('lr-to', e => { to = e.target.value; paint(); });
     bind('lr-notes', e => { notes = e.target.value; });
     m.querySelector('[data-cancel]').addEventListener('click', closeModal);
-    m.querySelector('[data-draft]').addEventListener('click', () => { closeModal(); toast('Draft saved'); });
+    m.querySelector('[data-draft]').addEventListener('click', () => { closeModal(); toast('Saved · finish later'); });
     m.querySelector('[data-ok]').addEventListener('click', () => {
       const id = 'LR-2026-' + String(15 + Math.floor(Math.random()*80)).padStart(3,'0');
       state.leaveRequests.unshift({
@@ -1156,7 +1794,7 @@ function openRequestLeaveModal() {
         notes: notes || '(no notes)',
       });
       closeModal();
-      toast('Leave request submitted · awaiting ' + manager.split(' · ')[0], 'success');
+      toast('Leave request sent · waiting on ' + manager.split(' · ')[0], 'success');
       if (state.route !== 'leave') go('leave'); else render();
     });
   }
@@ -1169,17 +1807,17 @@ function openLeaveDetailModal(id) {
   openModal(`
     <div class="modal" onclick="event.stopPropagation()">
       <h3>${escapeHtml(r.type)} · ${escapeHtml(r.id)}</h3>
-      <p class="sub">Submitted ${escapeHtml(r.submitted)} · ${r.days.toFixed(1)} working days</p>
+      <p class="sub">Sent ${escapeHtml(r.submitted)} · ${r.days.toFixed(1)} working days</p>
       <div class="meta-strip" style="margin-bottom: 14px;">
         <div><span class="lb">Dates</span><span class="vl">${escapeHtml(fmtRange(r.from, r.to))}</span></div>
-        <div><span class="lb">Approver</span><span class="vl">${escapeHtml(r.approver)}</span></div>
-        <div><span class="lb">Status</span><span class="vl"><span class="pill ${r.status} dot">${cap(r.status)}</span></span></div>
+        <div><span class="lb">Goes to</span><span class="vl">${escapeHtml(r.approver)}</span></div>
+        <div><span class="lb">Status</span><span class="vl"><span class="pill ${r.status} dot">${statusLabel(r.status)}</span></span></div>
       </div>
-      <div style="font:500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Notes</div>
+      <div style="font:500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Your reason</div>
       <div style="padding: 10px 12px; background: var(--surface-muted); border-radius: 8px; font: 13px/1.5 var(--font-sans); color: var(--text-body);">${escapeHtml(r.notes)}</div>
       <div class="acts">
         <button class="btn btn-secondary" data-close>Close</button>
-        ${r.status === 'pending' ? `<button class="btn btn-danger danger" data-cancel-req>Cancel request</button>` : ''}
+        ${r.status === 'pending' ? `<button class="btn btn-danger danger" data-cancel-req>Cancel this request</button>` : ''}
       </div>
     </div>
   `);
@@ -1205,21 +1843,21 @@ function renderInbox() {
     <div class="inbox-grid">
       <div class="inbox-list">
         <div class="panel-h" style="border-bottom: 1px solid var(--border-subtle);">
-          <h2>Pending approvals</h2>
+          <h2>Waiting for your decision</h2>
           <div class="sp"></div>
           <span class="pill brand">${state.approvalQueue.length}</span>
         </div>
         ${state.approvalQueue.length === 0 ? `
           <div style="padding: 60px 20px; text-align: center; color: var(--text-muted); font: 13px var(--font-sans);">
             <div style="font-size: 32px; margin-bottom: 10px;"><span data-icon="check" data-icon-size="32"></span></div>
-            Inbox zero — nothing pending.
+            All done — nothing waiting.
           </div>
         ` : state.approvalQueue.map(r => `
           <div class="lr ${inboxState.selectedId === r.id ? 'on' : ''}" data-aq="${r.id}">
             <span class="av">${r.who.init}</span>
             <div>
               <div class="nm">${escapeHtml(r.who.name)} · ${escapeHtml(r.type)}</div>
-              <div class="sb">${escapeHtml(fmtRange(r.from, r.to))} · submitted ${escapeHtml(r.submitted)}</div>
+              <div class="sb">${escapeHtml(fmtRange(r.from, r.to))} · sent ${escapeHtml(r.submitted)}</div>
             </div>
             <span class="days">${r.days.toFixed(1)}d</span>
           </div>
@@ -1227,7 +1865,7 @@ function renderInbox() {
       </div>
 
       <div class="inbox-review">
-        ${sel ? renderInboxDetail(sel) : `<div class="empty">Pick a request to review.</div>`}
+        ${sel ? renderInboxDetail(sel) : `<div class="empty">Tap a request on the left to open it.</div>`}
       </div>
     </div>
   `;
@@ -1239,15 +1877,15 @@ function renderInboxDetail(r) {
       <span class="av">${r.who.init}</span>
       <div style="flex:1;">
         <h3>${escapeHtml(r.who.name)}</h3>
-        <div class="sb">${escapeHtml(r.who.role)} · reports to you · ${escapeHtml(r.who.branch)}</div>
+        <div class="sb">${escapeHtml(r.who.role)} · works under you · ${escapeHtml(r.who.branch)}</div>
       </div>
-      <span class="pill pending dot">Pending ${escapeHtml(r.submitted)}</span>
+      <span class="pill pending dot">Waiting since ${escapeHtml(r.submitted)}</span>
     </div>
 
     <div class="kv">
       <div class="cell"><div class="k">Type</div><div class="v">${escapeHtml(r.type)}</div></div>
       <div class="cell"><div class="k">Working days</div><div class="v">${r.days.toFixed(1)} days</div></div>
-      <div class="cell"><div class="k">Their balance</div><div class="v">${r.balance} days remaining</div></div>
+      <div class="cell"><div class="k">Their leave days left</div><div class="v">${r.balance} days</div></div>
     </div>
 
     <div>
@@ -1260,25 +1898,25 @@ function renderInboxDetail(r) {
     <div class="conflict ${r.conflict ? 'warn' : 'ok'}">
       <span class="ic"><span data-icon="${r.conflict ? 'info' : 'check'}" data-icon-size="14"></span></span>
       <div>
-        <div style="font-weight: 600;">${r.conflict ? 'Team calendar conflict' : 'No team calendar conflicts'}</div>
-        <div style="opacity: 0.85; margin-top: 2px;">${r.conflict ? 'Overlaps with your trip 25–27 Jun and Faith Moyo\'s approved leave. Branch will be short-staffed.' : 'Branch coverage remains within minimum staffing.'}</div>
+        <div style="font-weight: 600;">${r.conflict ? 'Clashes with other staff leave' : 'No clash with other staff'}</div>
+        <div style="opacity: 0.85; margin-top: 2px;">${r.conflict ? 'Same dates as your trip 25–27 Jun and Faith Moyo\'s approved leave. Branch will be short-staffed.' : 'Branch will still have enough people on duty.'}</div>
       </div>
     </div>
 
     <div>
-      <div style="font:500 11px/1 var(--font-sans); letter-spacing:.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Their notes</div>
+      <div style="font:500 11px/1 var(--font-sans); letter-spacing:.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Their reason</div>
       <div style="padding: 10px 12px; background: var(--surface-muted); border-radius: 8px; font: 13px/1.5 var(--font-sans); color: var(--text-body);">${escapeHtml(r.notes)}</div>
     </div>
 
     <div>
-      <div style="font:500 11px/1 var(--font-sans); letter-spacing:.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Comment (optional)</div>
-      <textarea id="iq-comment" placeholder="Optional message back to ${escapeHtml(r.who.name.split(' ')[0])}…" style="width: 100%; min-height: 60px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font: 13px var(--font-sans); color: var(--text-strong); resize: vertical; box-sizing: border-box;"></textarea>
+      <div style="font:500 11px/1 var(--font-sans); letter-spacing:.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Message back (optional)</div>
+      <textarea id="iq-comment" placeholder="A short message to ${escapeHtml(r.who.name.split(' ')[0])}…" style="width: 100%; min-height: 60px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; font: 13px var(--font-sans); color: var(--text-strong); resize: vertical; box-sizing: border-box;"></textarea>
     </div>
 
     <div style="display: flex; gap: 8px; margin-top: 4px;">
-      <button class="btn btn-secondary" data-iq-query>Query</button>
+      <button class="btn btn-secondary" data-iq-query>Ask a question</button>
       <div style="flex:1"></div>
-      <button class="btn btn-danger" data-iq-reject><span data-icon="x" data-icon-size="13"></span> Reject</button>
+      <button class="btn btn-danger" data-iq-reject><span data-icon="x" data-icon-size="13"></span> Turn down</button>
       <button class="btn btn-primary" data-iq-approve><span data-icon="check" data-icon-size="13"></span> Approve leave</button>
     </div>
   `;
@@ -1291,7 +1929,7 @@ function wireInbox() {
     const r = state.approvalQueue.find(x => x.id === inboxState.selectedId); if (!r) return;
     state.approvalQueue = state.approvalQueue.filter(x => x.id !== r.id);
     inboxState.selectedId = state.approvalQueue[0] ? state.approvalQueue[0].id : null;
-    const verb = kind === 'approve' ? 'Approved' : kind === 'reject' ? 'Rejected' : 'Queried';
+    const verb = kind === 'approve' ? 'Approved' : kind === 'reject' ? 'Turned down' : 'Question sent on';
     const tone = kind === 'approve' ? 'success' : kind === 'reject' ? 'danger' : 'warn';
     toast(`${verb} ${r.who.name.split(' ')[0]}'s ${r.type.toLowerCase()} · ${r.days}d`, tone);
     render();
@@ -1333,35 +1971,42 @@ function renderPayslip() {
   return `
     <div class="meta-strip">
       <div><span class="lb">Employee</span><span class="vl">${escapeHtml(ME.name)} · ${escapeHtml(ME.empId)}</span></div>
-      <div><span class="lb">Period</span><span class="vl">${escapeHtml(p.period)}</span></div>
+      <div><span class="lb">For the month of</span><span class="vl">${escapeHtml(p.period)}</span></div>
       <div><span class="lb">Pay date</span><span class="vl">${escapeHtml(p.payDate)}</span></div>
-      <div><span class="lb">Bank</span><span class="vl mono">${escapeHtml(ME.bank)}</span></div>
+      <div><span class="lb">Paid into</span><span class="vl mono">${escapeHtml(ME.bank)}</span></div>
       <div><span class="lb">Tax code</span><span class="vl mono">PAYE-2026</span></div>
       <div style="margin-left: auto;"><span class="lb">Status</span><span class="vl"><span class="pill ${p.status === 'Paid' ? 'success' : 'brand'} dot">${escapeHtml(p.status)}</span></span></div>
     </div>
 
-    <div class="big-grid">
-      <div class="big">
-        <span class="lb">Gross earnings</span>
-        <span class="vl">${money(gross)}</span>
-        <span class="sb">Basic + housing + transport + bonus</span>
+    <div class="b-stat-hero">
+      <div class="b-sh-lead">
+        <div class="b-sh-l">Take-home pay</div>
+        <div class="b-sh-v">${money(net)}</div>
+        <div class="b-sh-d">${p.status === 'Paid' ? 'Paid' : 'Pays'} ${escapeHtml(p.payDate)} into ${escapeHtml(ME.bank.split(' · ')[0])} ${escapeHtml(ME.bank.split(' · ')[1])}</div>
       </div>
-      <div class="big">
-        <span class="lb">Total deductions</span>
-        <span class="vl">${money(totDed)}</span>
-        <span class="sb">PAYE, NSSA, AIDS levy, NEC, pension, PSMAS</span>
-      </div>
-      <div class="big net">
-        <span class="lb">Net pay</span>
-        <span class="vl">${money(net)}</span>
-        <span class="sb">${p.status === 'Paid' ? 'Paid' : 'Pays'} ${escapeHtml(p.payDate)} into ${escapeHtml(ME.bank.split(' · ')[0])} ${escapeHtml(ME.bank.split(' · ')[1])}</span>
+      <div class="b-sh-row">
+        <div class="b-sh-s">
+          <div class="b-sh-l">Before deductions</div>
+          <div class="b-sh-v">${money(gross)}</div>
+          <div class="b-sh-sb">Basic + housing + transport + bonus</div>
+        </div>
+        <div class="b-sh-s">
+          <div class="b-sh-l">Deductions</div>
+          <div class="b-sh-v">${money(totDed)}</div>
+          <div class="b-sh-sb">PAYE, NSSA, AIDS levy, NEC, pension, PSMAS</div>
+        </div>
+        <div class="b-sh-s">
+          <div class="b-sh-l">Pay date</div>
+          <div class="b-sh-v">${escapeHtml(p.payDate.split(' ').slice(0,2).join(' '))}</div>
+          <div class="b-sh-sb">${escapeHtml(p.status)} · ${escapeHtml(p.period)}</div>
+        </div>
       </div>
     </div>
 
     <div class="grid-12">
       <div class="panel">
         <div class="panel-h">
-          <h2>Earnings</h2>
+          <h2>What you earned</h2>
           <div class="sp"></div>
           <span class="tot">${money(gross)}</span>
         </div>
@@ -1376,14 +2021,14 @@ function renderPayslip() {
                 <td class="r num">${r.amount.toFixed(2)}</td>
               </tr>
             `).join('')}
-            <tr class="foot"><td colspan="3">Gross earnings</td><td class="r num">${gross.toFixed(2)}</td></tr>
+            <tr class="foot"><td colspan="3">Total before deductions</td><td class="r num">${gross.toFixed(2)}</td></tr>
           </tbody>
         </table>
       </div>
 
       <div class="panel">
         <div class="panel-h">
-          <h2>Deductions</h2>
+          <h2>What was taken off</h2>
           <div class="sp"></div>
           <span class="tot" style="color: var(--tone-danger);">– ${money(totDed)}</span>
         </div>
@@ -1406,19 +2051,19 @@ function renderPayslip() {
 
     <div class="panel">
       <div class="panel-h">
-        <h2>Year-to-date · January – ${p.label.split(' ')[0]} 2026</h2>
+        <h2>Year so far · January to ${p.label.split(' ')[0]} 2026</h2>
         <div class="sp"></div>
-        <span style="font:500 12px/1 var(--font-sans); color: var(--text-muted);">${periodsToInclude.length + 2} of 12 periods</span>
+        <span style="font:500 12px/1 var(--font-sans); color: var(--text-muted);">${periodsToInclude.length + 2} of 12 months</span>
       </div>
       <div class="ytd-grid">
-        <div class="ytd-cell"><span class="lb">YTD gross</span><span class="vl">${money(ytdGrossDisplay)}</span><span class="sb">Earnings before deductions</span></div>
-        <div class="ytd-cell"><span class="lb">YTD PAYE</span><span class="vl">${money(ytdPAYE + 700)}</span><span class="sb">Remitted to ZIMRA</span></div>
-        <div class="ytd-cell"><span class="lb">YTD NSSA</span><span class="vl">${money(ytdNSSA + 180)}</span><span class="sb">Employee + employer matched</span></div>
-        <div class="ytd-cell"><span class="lb">YTD pension</span><span class="vl">${money(ytdPens + 200)}</span><span class="sb">Old Mutual group scheme</span></div>
-        <div class="ytd-cell"><span class="lb">YTD AIDS levy</span><span class="vl">${money(ytdAIDS + 21)}</span><span class="sb">3% of PAYE</span></div>
-        <div class="ytd-cell"><span class="lb">YTD NEC</span><span class="vl">${money(ytdNEC + 48)}</span><span class="sb">Commercial sector</span></div>
-        <div class="ytd-cell"><span class="lb">YTD medical</span><span class="vl">${money(ytdMed + 5.66)}</span><span class="sb">PSMAS family plan</span></div>
-        <div class="ytd-cell"><span class="lb">YTD net</span><span class="vl" style="color: var(--brand-strong);">${money(ytdNet)}</span><span class="sb">Banked into ${escapeHtml(ME.bank.split(' · ')[1] || ME.bank)}</span></div>
+        <div class="ytd-cell"><span class="lb">Earned this year</span><span class="vl">${money(ytdGrossDisplay)}</span><span class="sb">Before anything was taken off</span></div>
+        <div class="ytd-cell"><span class="lb">PAYE paid</span><span class="vl">${money(ytdPAYE + 700)}</span><span class="sb">Sent to ZIMRA (income tax)</span></div>
+        <div class="ytd-cell"><span class="lb">NSSA paid</span><span class="vl">${money(ytdNSSA + 180)}</span><span class="sb">Your share · company matches it</span></div>
+        <div class="ytd-cell"><span class="lb">Pension paid</span><span class="vl">${money(ytdPens + 200)}</span><span class="sb">Old Mutual group scheme</span></div>
+        <div class="ytd-cell"><span class="lb">AIDS levy paid</span><span class="vl">${money(ytdAIDS + 21)}</span><span class="sb">3% of your PAYE</span></div>
+        <div class="ytd-cell"><span class="lb">NEC paid</span><span class="vl">${money(ytdNEC + 48)}</span><span class="sb">Commercial sector</span></div>
+        <div class="ytd-cell"><span class="lb">Medical aid paid</span><span class="vl">${money(ytdMed + 5.66)}</span><span class="sb">PSMAS family plan</span></div>
+        <div class="ytd-cell"><span class="lb">Take-home this year</span><span class="vl" style="color: var(--brand-strong);">${money(ytdNet)}</span><span class="sb">Paid into ${escapeHtml(ME.bank.split(' · ')[1] || ME.bank)}</span></div>
       </div>
     </div>
   `;
@@ -1444,12 +2089,12 @@ function renderTime() {
             <div class="cell">
               <div class="ck">Today</div>
               <div class="cv">${state.clockedIn ? '1h 19m' : '0h 00m'}</div>
-              <div class="csb">${state.clockedIn ? 'In at ' + state.clockInTime + ' · target 8h' : 'Not yet clocked in'}</div>
+              <div class="csb">${state.clockedIn ? 'In at ' + state.clockInTime + ' · aiming for 8h' : 'Not clocked in yet'}</div>
             </div>
             <div class="cell">
               <div class="ck">This pay period</div>
               <div class="cv">86h 40m</div>
-              <div class="csb">Of 96h · 4 days left</div>
+              <div class="csb">Out of 96h · 4 days left</div>
             </div>
           </div>
           <button class="clock-btn ${state.clockedIn ? 'out' : ''}" id="clock-toggle">
@@ -1459,7 +2104,7 @@ function renderTime() {
         </div>
 
         <div class="panel">
-          <div class="panel-h"><h2>Recent clock events</h2><div class="sp"></div><a href="#">All</a></div>
+          <div class="panel-h"><h2>Recent clock-ins and clock-outs</h2><div class="sp"></div><a href="#">See all</a></div>
           <div class="panel-body" style="padding: 0;">
             ${state.events.map(ev => `
               <div class="feed-row">
@@ -1477,7 +2122,7 @@ function renderTime() {
 
       <div style="display: flex; flex-direction: column; gap: 16px;">
         <div class="panel">
-          <div class="panel-h"><h2>Location · geo-fence</h2><div class="sp"></div><span class="pill success dot">In range</span></div>
+          <div class="panel-h"><h2>Are you at the branch?</h2><div class="sp"></div><span class="pill success dot">Yes, you're here</span></div>
           <div class="geo" style="border: 0; border-radius: 0;">
             <div class="map">
               <div class="road h1"></div>
@@ -1489,8 +2134,8 @@ function renderTime() {
             <div class="bar">
               <span class="ic"><span data-icon="check" data-icon-size="14"></span></span>
               <div style="flex:1;">
-                <div class="nm">Inside Park Centre fence</div>
-                <div class="sb">18m from till counter · accuracy ±8m</div>
+                <div class="nm">You're at Park Centre branch</div>
+                <div class="sb">18m from the till · location accurate to ±8m</div>
               </div>
               <span style="font: 500 11px/1 var(--font-mono); color: var(--text-subtle);">GPS</span>
             </div>
@@ -1501,16 +2146,16 @@ function renderTime() {
           <div class="panel-h"><h2>This pay period</h2><div class="sp"></div></div>
           <div style="padding: 16px 18px; display: flex; flex-direction: column; gap: 10px;">
             <div style="display: flex; justify-content: space-between; font: 13.5px var(--font-sans); color: var(--text-muted);">
-              <span>Worked</span><span style="font: 500 14px/1 var(--font-mono); color: var(--text-strong);">86h 40m</span>
+              <span>Hours worked</span><span style="font: 500 14px/1 var(--font-mono); color: var(--text-strong);">86h 40m</span>
             </div>
             <div style="display: flex; justify-content: space-between; font: 13.5px var(--font-sans); color: var(--text-muted);">
-              <span>Target</span><span style="font: 500 14px/1 var(--font-mono); color: var(--text-strong);">96h 00m</span>
+              <span>Hours expected</span><span style="font: 500 14px/1 var(--font-mono); color: var(--text-strong);">96h 00m</span>
             </div>
             <div style="display: flex; justify-content: space-between; font: 13.5px var(--font-sans); color: var(--text-muted);">
               <span>Overtime</span><span style="font: 500 14px/1 var(--font-mono); color: var(--text-strong);">2h 14m</span>
             </div>
             <div style="height: 8px; border-radius: 9999px; background: var(--surface-muted); overflow: hidden; margin-top: 6px;"><i style="display: block; height: 100%; width: 90%; background: var(--brand);"></i></div>
-            <div style="font: 12px/1.4 var(--font-sans); color: var(--text-muted);">Fortnight ends 24 May. Submit timesheet by Tuesday close.</div>
+            <div style="font: 12px/1.4 var(--font-sans); color: var(--text-muted);">Two-week period ends 24 May. Send in your timesheet by close of business Tuesday.</div>
           </div>
         </div>
       </div>
@@ -1540,8 +2185,8 @@ function wireTime() {
       state.events.unshift({ kind: 'in', nm: 'Clocked in', sb: 'Today · Park Centre · on time', tm: hhmm });
       toast('Clocked in at Park Centre branch', 'success');
     } else {
-      state.events.unshift({ kind: 'out', nm: 'Clocked out', sb: 'Today · ' + hhmm + ' · session complete', tm: hhmm });
-      toast('Clocked out · session saved', 'success');
+      state.events.unshift({ kind: 'out', nm: 'Clocked out', sb: 'Today · ' + hhmm + ' · shift saved', tm: hhmm });
+      toast('Clocked out · shift saved', 'success');
     }
     render();
   });
@@ -1587,18 +2232,18 @@ function renderDirectory() {
     <div class="dir-search">
       <div class="srch">
         <span data-icon="search" data-icon-size="16"></span>
-        <input id="dir-search" placeholder="Search name, role, department or branch…" value="${escapeHtml(state.dirSearch)}" />
+        <input id="dir-search" placeholder="Search by name, job, department or branch…" value="${escapeHtml(state.dirSearch)}" />
       </div>
       <button class="btn btn-secondary" data-action="dir-export"><span data-icon="download" data-icon-size="13"></span> Export</button>
     </div>
 
-    <div class="chip-bar">
-      ${DIR_FILTERS.map(f => `<button class="chipd ${state.dirFilter === f.id ? 'on' : ''}" data-filter="${f.id}">${f.label} <span class="ct">${f.count()}</span></button>`).join('')}
+    <div class="b-filter-chips" role="radiogroup" aria-label="Directory filter" style="padding: 0;">
+      ${DIR_FILTERS.map(f => `<button type="button" class="b-fc ${state.dirFilter === f.id ? 'on' : ''}" data-filter="${f.id}" aria-pressed="${state.dirFilter === f.id ? 'true' : 'false'}">${f.label} <span class="b-fc-ct">${f.count()}</span></button>`).join('')}
     </div>
 
     <div class="dir-deck">
       <div class="dir-grid">
-        ${list.length === 0 ? `<div style="grid-column:1/-1; padding: 40px; text-align: center; color: var(--text-muted); font: 13px var(--font-sans);">No matches.</div>` : list.map(p => `
+        ${list.length === 0 ? `<div style="grid-column:1/-1; padding: 40px; text-align: center; color: var(--text-muted); font: 13px var(--font-sans);">No one matches.</div>` : list.map(p => `
           <div class="dcard ${state.dirSelected === p.id ? 'on' : ''}" data-person="${p.id}">
             <div class="h">
               <span class="av ${p.av}">${p.init}</span>
@@ -1606,7 +2251,7 @@ function renderDirectory() {
                 <div class="nm">${escapeHtml(p.name)}</div>
                 <div class="rl">${escapeHtml(p.role)}</div>
               </div>
-              <span class="stat ${p.status === 'away' ? 'away' : p.status === 'off' ? 'off' : ''}" title="${p.status === 'away' ? 'In a meeting' : p.status === 'off' ? 'Off duty' : 'Online'}"></span>
+              <span class="stat ${p.status === 'away' ? 'away' : p.status === 'off' ? 'off' : ''}" title="${p.status === 'away' ? 'In a meeting' : p.status === 'off' ? 'Off work' : 'At work'}"></span>
             </div>
             <div class="pills">
               <span class="pill"><span data-icon="building" data-icon-size="10"></span> ${escapeHtml(p.dept)}</span>
@@ -1642,18 +2287,18 @@ function renderDirectory() {
           </div>
           ${reports.length ? `
             <div class="sec">
-              <div class="sh">Direct reports · ${reports.length}</div>
+              <div class="sh">People they manage · ${reports.length}</div>
               ${reports.map(r => `<div style="display:flex; align-items:center; gap: 10px; padding: 6px 0;"><span style="width: 26px; height: 26px; border-radius: 50%; background: var(--surface-muted); color: var(--text-strong); display: grid; place-items: center; font: 600 10px/1 var(--font-sans);">${r.init}</span><div style="flex:1;"><div style="font: 500 13px/1.2 var(--font-sans); color: var(--text-strong);">${escapeHtml(r.name)}</div><div style="font: 11px/1.2 var(--font-sans); color: var(--text-muted); margin-top:1px;">${escapeHtml(r.role)}</div></div></div>`).join('')}
             </div>
           ` : ''}
           <div class="sec">
-            <div class="sh">On-call</div>
+            <div class="sh">On call (available outside hours)</div>
             <div class="toggle ${state.onCall ? 'on' : ''}" id="dir-oncall">
               <span class="sw"></span>
-              <span class="lb">${state.onCall ? 'On call now · pager 0782 010 555' : 'Not on call'}</span>
+              <span class="lb">${state.onCall ? 'On call now · phone 0782 010 555' : 'Not on call'}</span>
             </div>
           </div>
-        ` : `<div class="empty">Pick a person from the grid to see their profile.</div>`}
+        ` : `<div class="empty">Tap a workmate on the left to see their details.</div>`}
       </div>
     </div>
   `;
@@ -1668,7 +2313,7 @@ function wireDirectory() {
   $$('[data-person]').forEach(b => b.addEventListener('click', () => { state.dirSelected = b.dataset.person; render(); }));
   const oc = $('#dir-oncall'); if (oc) oc.addEventListener('click', () => {
     state.onCall = !state.onCall;
-    toast(state.onCall ? 'You are now on call' : 'On-call status cleared');
+    toast(state.onCall ? 'You\'re now on call' : 'You\'re no longer on call');
     render();
   });
   $$('[data-action]').forEach(b => {
@@ -1678,11 +2323,11 @@ function wireDirectory() {
         const p = PEOPLE.find(x => x.id === state.dirSelected);
         if (!p) return;
         if (a === 'dir-call') toast('Calling ' + p.name + ' · ' + p.phone);
-        if (a === 'dir-email') toast('New email to ' + p.email, 'success');
+        if (a === 'dir-email') toast('Writing email to ' + p.email, 'success');
         if (a === 'dir-chat') toast('Opening chat with ' + p.name.split(' ')[0], 'success');
       });
     }
-    if (a === 'dir-export') b.addEventListener('click', () => toast('Directory exported as CSV', 'success'));
+    if (a === 'dir-export') b.addEventListener('click', () => toast('Staff list saved as CSV file', 'success'));
   });
 }
 
@@ -1696,7 +2341,7 @@ function renderProfile() {
         <div class="av">${ME.initials}</div>
         <h3>${escapeHtml(ME.name)}</h3>
         <div class="rl">${escapeHtml(ME.role)} · ${escapeHtml(ME.branch)}</div>
-        <div style="font: 11.5px/1.3 var(--font-mono); color: var(--text-subtle); margin-top: 2px;">${escapeHtml(ME.empId)} · joined ${escapeHtml(ME.joined)}</div>
+        <div style="font: 11.5px/1.3 var(--font-mono); color: var(--text-subtle); margin-top: 2px;">${escapeHtml(ME.empId)} · started ${escapeHtml(ME.joined)}</div>
         <div class="stack">
           <button class="btn btn-secondary" data-action="change-avatar"><span data-icon="camera" data-icon-size="13"></span> Change photo</button>
           <button class="btn btn-secondary" data-action="change-pw"><span data-icon="lock" data-icon-size="13"></span> Change password</button>
@@ -1881,6 +2526,858 @@ function openEditBankingModal() {
   `);
   $('.modal [data-close]').addEventListener('click', closeModal);
   $('.modal [data-ok]').addEventListener('click', () => { closeModal(); toast('Banking details updated · payroll will verify', 'success'); });
+}
+
+/* ============================================================
+   8. Timesheet
+   ============================================================ */
+function weekDates(weekOf) {
+  const start = new Date(weekOf);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    return { dow: d.toLocaleDateString('en-GB', { weekday: 'short' }), dom: d.getDate(), m: d.toLocaleDateString('en-GB', { month: 'short' }), isWknd: d.getDay() === 0 || d.getDay() === 6 };
+  });
+}
+function tsTotalsByDay() {
+  return state.timesheet.rows[0].hrs.map((_, idx) => state.timesheet.rows.reduce((s, r) => s + (parseFloat(r.hrs[idx]) || 0), 0));
+}
+function tsTotalsByRow(row) { return row.hrs.reduce((s, v) => s + (parseFloat(v) || 0), 0); }
+function tsGrandTotal() { return state.timesheet.rows.reduce((s, r) => s + tsTotalsByRow(r), 0); }
+
+function renderTimesheet() {
+  const days = weekDates(state.timesheet.weekOf);
+  const totals = tsTotalsByDay();
+  const grand = tsGrandTotal();
+  const status = state.timesheet.submitted ? 'pending' : 'draft';
+  return `
+    <div class="meta-strip">
+      <div><span class="lb">Week</span><span class="vl">19 – 25 May 2026</span></div>
+      <div><span class="lb">Status</span><span class="vl"><span class="pill ${state.timesheet.submitted?'pending':'muted'} dot">${state.timesheet.submitted?'Awaiting approval':'Draft'}</span></span></div>
+      <div><span class="lb">Approver</span><span class="vl">Tendai Moyo</span></div>
+      <div><span class="lb">Cut-off</span><span class="vl">Tue 26 May · 17:00</span></div>
+      <div style="margin-left:auto;"><span class="lb">Total this week</span><span class="vl mono">${grand.toFixed(1)}h</span></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h">
+        <h2>Hours by day &amp; activity</h2>
+        <div class="sp"></div>
+        <span style="font:500 12px/1 var(--font-sans); color: var(--text-muted);">Tap a cell to edit · 0.25h granularity</span>
+      </div>
+      <div style="padding: 14px 18px;">
+        <div class="ts-row" style="border-bottom: 1px solid var(--border-subtle); padding-bottom: 8px;">
+          <div style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle);">Activity</div>
+          <div class="vals" style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-subtle); text-align: center;">
+            ${days.map(d => `<div style="text-align:center;"><div>${escapeHtml(d.dow)}</div><div style="font: 700 13px/1 var(--font-mono); color: var(--text-strong); margin-top: 3px;">${d.dom}</div></div>`).join('')}
+          </div>
+          <div style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); text-align: right; padding-right: 6px;">Row total</div>
+        </div>
+        ${state.timesheet.rows.map((r, ri) => `
+          <div class="ts-row" style="border-bottom: 1px solid var(--border-subtle);">
+            <div class="lbl">${escapeHtml(r.nm)}<div class="sb">${escapeHtml(r.sb)}</div></div>
+            <div class="vals">
+              ${r.hrs.map((h, di) => `<input data-ts-r="${ri}" data-ts-d="${di}" value="${h}" ${state.timesheet.submitted?'disabled':''} ${days[di].isWknd?'style="background:var(--surface-muted);"':''}/>`).join('')}
+            </div>
+            <div class="tot">${tsTotalsByRow(r).toFixed(1)}h</div>
+          </div>
+        `).join('')}
+        <div class="ts-row" style="background: var(--brand-soft); border-radius: 8px; padding: 10px 12px; margin-top: 4px;">
+          <div class="lbl" style="color: var(--brand-strong); font-weight: 700;">Day total</div>
+          <div class="vals">
+            ${totals.map(v => `<div class="tot" style="background: transparent; color: var(--brand-strong); padding: 6px; font-size: 13px;">${v.toFixed(1)}</div>`).join('')}
+          </div>
+          <div class="tot" style="color: var(--brand-strong); font-size: 16px;">${grand.toFixed(1)}h</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h"><h2>Past timesheets</h2><div class="sp"></div><a href="#">All weeks</a></div>
+      <table class="tbl">
+        <thead><tr><th>Ref</th><th>Week</th><th class="r">Total</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          ${state.pastTimesheets.map(t => `
+            <tr class="clickable" data-ts-view="${t.id}">
+              <td><span class="num">${escapeHtml(t.id)}</span></td>
+              <td>${escapeHtml(t.week)}</td>
+              <td class="r num">${t.total.toFixed(1)}h</td>
+              <td><span class="pill ${t.status} dot">${statusLabel(t.status)}</span></td>
+              <td style="text-align:right;"><a href="#" style="font:500 12px/1 var(--font-sans); color: var(--brand-strong); text-decoration:none;">View →</a></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function wireTimesheet() {
+  $$('[data-ts-r]').forEach(inp => inp.addEventListener('change', (e) => {
+    const r = parseInt(e.target.dataset.tsR, 10);
+    const d = parseInt(e.target.dataset.tsD, 10);
+    const v = Math.max(0, Math.min(24, parseFloat(e.target.value) || 0));
+    state.timesheet.rows[r].hrs[d] = v;
+    render();
+  }));
+  $$('[data-ts-view]').forEach(b => b.addEventListener('click', () => toast('Opening ' + b.dataset.tsView + '…')));
+}
+
+/* ============================================================
+   9. Expenses
+   ============================================================ */
+function expTotals() {
+  const ytd = state.expenses.reduce((s, e) => s + (e.status === 'approved' ? e.amount : 0), 0);
+  const pending = state.expenses.filter(e => e.status === 'pending').reduce((s, e) => s + e.amount, 0);
+  const denied = state.expenses.filter(e => e.status === 'denied').reduce((s, e) => s + e.amount, 0);
+  return { ytd, pending, denied };
+}
+function renderExpenses() {
+  const t = expTotals();
+  return `
+    <div class="stat-grid">
+      <div class="stat brand">
+        <div class="lb"><span data-icon="check" data-icon-size="12"></span> Reimbursed YTD</div>
+        <div class="vl">${money(t.ytd)}</div>
+        <div class="sb">Paid into ${escapeHtml(ME.bank.split(' · ')[0])} with payroll</div>
+      </div>
+      <div class="stat">
+        <div class="lb"><span data-icon="clock" data-icon-size="12"></span> Pending review</div>
+        <div class="vl">${money(t.pending)}</div>
+        <div class="sb">${state.expenses.filter(e => e.status === 'pending').length} claim(s) awaiting Tendai Moyo</div>
+      </div>
+      <div class="stat">
+        <div class="lb"><span data-icon="x" data-icon-size="12"></span> Denied YTD</div>
+        <div class="vl">${money(t.denied)}</div>
+        <div class="sb">Outside policy · 1 claim · view notes</div>
+      </div>
+      <div class="stat">
+        <div class="lb"><span data-icon="card" data-icon-size="12"></span> Annual limit</div>
+        <div class="vl">$ 1,200</div>
+        <div class="sb">$ ${(1200 - t.ytd).toFixed(2)} remaining · resets 1 Jan</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h">
+        <h2>My expense claims</h2>
+        <div class="sp"></div>
+        <span class="pill muted">Last 12 months · ${state.expenses.length}</span>
+      </div>
+      ${state.expenses.length === 0 ? `
+        <div class="empty-state">
+          <div class="ic"><span data-icon="receipt" data-icon-size="24"></span></div>
+          <h3>No expenses yet</h3>
+          <p>When you spend on company business, snap the receipt and submit a claim from here.</p>
+          <button class="btn btn-primary" data-action="exp-new"><span data-icon="plus" data-icon-size="13"></span> Submit first expense</button>
+        </div>
+      ` : `
+        <table class="tbl">
+          <thead><tr><th>Ref &amp; date</th><th>Category</th><th>Description</th><th class="r">Amount</th><th>Receipt</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            ${state.expenses.map(e => `
+              <tr class="clickable" data-exp="${e.id}">
+                <td><div class="nm">${escapeHtml(e.id)}</div><div class="sb">${escapeHtml(new Date(e.date).toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'}))}</div></td>
+                <td>${escapeHtml(e.cat)}</td>
+                <td><div style="font: 13px/1.4 var(--font-sans); color: var(--text-body); max-width: 320px;">${escapeHtml(e.desc)}</div></td>
+                <td class="r num">${money(e.amount)}</td>
+                <td>${e.receipt ? '<span class="pill success"><span data-icon="check" data-icon-size="10"></span> Attached</span>' : '<span class="pill muted">Missing</span>'}</td>
+                <td><span class="pill ${e.status} dot">${statusLabel(e.status)}</span></td>
+                <td style="text-align:right;"><a href="#" data-exp-view="${e.id}" style="font:500 12px/1 var(--font-sans); color: var(--brand-strong); text-decoration:none;">View →</a></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `}
+    </div>
+  `;
+}
+function wireExpenses() {
+  $$('[data-exp]').forEach(r => r.addEventListener('click', () => openExpenseDetail(r.dataset.exp)));
+  $$('[data-exp-view]').forEach(a => a.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openExpenseDetail(a.dataset.expView); }));
+  $$('[data-action="exp-new"]').forEach(b => b.addEventListener('click', openExpenseModal));
+}
+function openExpenseModal() {
+  let cat = EXPENSE_CATEGORIES[0];
+  let amount = '';
+  let desc = '';
+  let date = new Date().toISOString().slice(0,10);
+  let hasReceipt = false;
+  function paint() {
+    openModal(`
+      <div class="modal lg" onclick="event.stopPropagation()">
+        <h3>Submit expense claim</h3>
+        <p class="sub">Snap a receipt, pick a category and Tendai Moyo will approve. Reimbursement appears with your next payslip.</p>
+        <div class="form-grid">
+          <div class="field half"><label>Category</label>
+            <select id="ex-cat">${EXPENSE_CATEGORIES.map(c => `<option ${c===cat?'selected':''}>${escapeHtml(c)}</option>`).join('')}</select>
+          </div>
+          <div class="field half"><label>Date incurred</label><input type="date" id="ex-date" value="${date}" /></div>
+          <div class="field half"><label>Amount (USD)</label><input id="ex-amt" inputmode="decimal" placeholder="0.00" value="${escapeHtml(amount)}" /></div>
+          <div class="field half"><label>Merchant / vendor</label><input id="ex-merch" placeholder="Total Service Station, TM Hyper…" /></div>
+          <div class="field full"><label>Description</label>
+            <textarea id="ex-desc" placeholder="Brief reason — helps your manager approve quickly.">${escapeHtml(desc)}</textarea>
+          </div>
+          <div class="field full"><label>Receipt</label>
+            <div class="upload-drop ${hasReceipt?'has-file':''}" id="ex-drop">
+              <div class="ic"><span data-icon="${hasReceipt?'check':'upload'}" data-icon-size="22"></span></div>
+              <div>${hasReceipt ? 'receipt-19-may.jpg · 1.2 MB · ready to upload' : 'Tap to attach receipt photo or PDF'}</div>
+              <div style="font-size: 11.5px; opacity: 0.8; margin-top: 4px;">${hasReceipt ? '' : 'JPG, PNG or PDF · 10 MB max'}</div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:14px; padding: 10px 14px; background: var(--brand-soft); border-radius: 8px; font: 13px/1.4 var(--font-sans); color: var(--brand-strong);">
+          <span data-icon="info" data-icon-size="13"></span>
+          ${cat.startsWith('Training') ? 'Training claims up to $250/yr are pre-approved (IMM, ACCA, CIMA).' : cat.startsWith('Travel') ? 'Travel per-diems are set per the policy effective 1 June. Bring fuel receipts for fuel claims.' : 'Approver: Tendai Moyo · typically reviews within 2 working days.'}
+        </div>
+        <div class="acts">
+          <button class="btn btn-secondary" data-cancel>Cancel</button>
+          <button class="btn btn-primary ok" data-ok>Submit claim</button>
+        </div>
+      </div>
+    `);
+    const m = $('.modal');
+    const drop = $('#ex-drop', m); drop.addEventListener('click', () => { hasReceipt = !hasReceipt; paint(); });
+    $('#ex-cat', m).addEventListener('change', e => { cat = e.target.value; paint(); });
+    $('#ex-amt', m).addEventListener('input', e => { amount = e.target.value; });
+    $('#ex-desc', m).addEventListener('input', e => { desc = e.target.value; });
+    $('#ex-date', m).addEventListener('change', e => { date = e.target.value; });
+    m.querySelector('[data-cancel]').addEventListener('click', closeModal);
+    m.querySelector('[data-ok]').addEventListener('click', () => {
+      const amt = parseFloat(amount) || 0;
+      if (amt <= 0) { toast('Enter an amount greater than zero', 'warn'); return; }
+      if (!desc.trim()) { toast('Add a short description', 'warn'); return; }
+      const id = 'EX-2026-' + String(120 + Math.floor(Math.random()*80)).padStart(3,'0');
+      state.expenses.unshift({ id, date, cat, amount: amt, desc: desc.trim(), status: 'pending', receipt: hasReceipt });
+      closeModal();
+      toast('Expense claim submitted · awaiting Tendai Moyo', 'success');
+      if (state.route !== 'expenses') go('expenses'); else render();
+    });
+  }
+  paint();
+}
+function openExpenseDetail(id) {
+  const e = state.expenses.find(x => x.id === id);
+  if (!e) return;
+  openModal(`
+    <div class="modal lg" onclick="event.stopPropagation()">
+      <h3>${escapeHtml(e.id)}</h3>
+      <p class="sub">Submitted ${escapeHtml(new Date(e.date).toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'}))} · ${escapeHtml(e.cat)}</p>
+      <div class="meta-strip" style="margin-bottom: 14px;">
+        <div><span class="lb">Amount</span><span class="vl mono">${money(e.amount)}</span></div>
+        <div><span class="lb">Category</span><span class="vl">${escapeHtml(e.cat)}</span></div>
+        <div><span class="lb">Status</span><span class="vl"><span class="pill ${e.status} dot">${statusLabel(e.status)}</span></span></div>
+        <div><span class="lb">Receipt</span><span class="vl">${e.receipt ? 'Attached' : 'Missing'}</span></div>
+      </div>
+      <div style="font:500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 6px;">Description</div>
+      <div style="padding: 10px 12px; background: var(--surface-muted); border-radius: 8px; font: 13px/1.5 var(--font-sans); color: var(--text-body);">${escapeHtml(e.desc)}</div>
+      ${e.status === 'denied' ? `<div style="margin-top: 10px; padding: 10px 12px; background: var(--tone-danger-bg); color: var(--tone-danger); border-radius: 8px; font: 13px/1.4 var(--font-sans);"><b>Denied by Tendai Moyo:</b> Mutare overnight not pre-approved · please use day-trip per-diem instead.</div>` : ''}
+      <div class="acts">
+        <button class="btn btn-secondary" data-close>Close</button>
+        ${e.status === 'pending' ? `<button class="btn btn-danger danger" data-cancel-exp>Withdraw claim</button>` : ''}
+      </div>
+    </div>
+  `);
+  $('.modal [data-close]').addEventListener('click', closeModal);
+  const cb = $('.modal [data-cancel-exp]'); if (cb) cb.addEventListener('click', () => {
+    state.expenses = state.expenses.filter(x => x.id !== id); closeModal(); toast('Claim withdrawn', 'success'); render();
+  });
+}
+
+/* ============================================================
+   10. Performance reviews
+   ============================================================ */
+function renderReviews() {
+  const avgGoal = REVIEW_GOALS.reduce((s, g) => s + g.pct, 0) / REVIEW_GOALS.length;
+  return `
+    <div class="stat-grid">
+      <div class="stat brand">
+        <div class="lb"><span data-icon="star" data-icon-size="12"></span> Latest rating</div>
+        <div class="vl">4.4 <span style="font-size:13px; opacity:0.8;">/ 5</span></div>
+        <div class="sb">H1 review · Tendai Moyo · 14 Apr 2026</div>
+      </div>
+      <div class="stat">
+        <div class="lb"><span data-icon="target" data-icon-size="12"></span> Goal progress</div>
+        <div class="vl">${Math.round(avgGoal)}%</div>
+        <div class="sb">Across ${REVIEW_GOALS.length} active goals</div>
+      </div>
+      <div class="stat">
+        <div class="lb"><span data-icon="calendar" data-icon-size="12"></span> Next check-in</div>
+        <div class="vl">Thu 12 Jun</div>
+        <div class="sb">14:00 with Tendai Moyo · 30 min</div>
+      </div>
+      <div class="stat">
+        <div class="lb"><span data-icon="heart" data-icon-size="12"></span> Peer notes</div>
+        <div class="vl">${PEER_FEEDBACK.length}</div>
+        <div class="sb">Anonymised · last submitted 18 Apr</div>
+      </div>
+    </div>
+
+    <div class="rv-deck">
+      <div class="panel">
+        <div class="panel-h"><h2>My H1 2026 goals</h2><div class="sp"></div><a href="#" data-action="add-goal">+ Add goal</a></div>
+        <div style="padding: 6px 18px 14px;">
+          ${REVIEW_GOALS.map(g => `
+            <div class="goal-row">
+              <div>
+                <div class="nm">${escapeHtml(g.nm)}</div>
+                <div class="sb">${escapeHtml(g.sb)}</div>
+                <div class="bar"><i style="width: ${g.pct}%;"></i></div>
+              </div>
+              <div class="pct">${g.pct}%</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h"><h2>Latest review</h2><div class="sp"></div><span class="pill brand">H1 · 2026</span></div>
+        <div style="padding: 16px 18px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 16px/1 var(--font-sans);">TM</div>
+            <div style="flex:1;">
+              <div style="font: 600 14px/1.2 var(--font-sans); color: var(--text-strong);">Tendai Moyo · Operations manager</div>
+              <div style="font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px;">Reviewed 14 Apr 2026 · 1h conversation</div>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div style="padding: 10px 12px; background: var(--surface-muted); border-radius: 8px;">
+              <div style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle);">Overall</div>
+              <div style="font: 700 22px/1 var(--font-sans); color: var(--text-strong); margin: 6px 0;">4.4 <span style="font-size: 12px; color: var(--text-muted);">/ 5</span></div>
+              <div class="star-row">★★★★<span class="sx">★</span></div>
+            </div>
+            <div style="padding: 10px 12px; background: var(--surface-muted); border-radius: 8px;">
+              <div style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle);">Recommendation</div>
+              <div style="font: 600 14px/1.2 var(--font-sans); color: var(--text-strong); margin-top: 8px;">Promote to senior branch supervisor at H2 review</div>
+            </div>
+          </div>
+          <div style="padding: 12px 14px; border-left: 3px solid var(--brand); background: var(--brand-soft); border-radius: 4px; font: 13px/1.55 var(--font-sans); color: var(--text-body);">
+            "Chipo has had a standout half. Park Centre's till discrepancies are at a 2-year low and the team is visibly more confident. Pushing her to take on cross-branch process improvement next."
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-h"><h2>Peer feedback · Q1 2026</h2><div class="sp"></div><span style="font: 500 12px/1 var(--font-sans); color: var(--text-muted);">Anonymised view · names shown to you only</span></div>
+      <div class="panel-body">
+        ${PEER_FEEDBACK.map(f => `
+          <div class="feed-row">
+            <span class="ic brand"><span style="font: 600 11px/1 var(--font-sans);">${f.init}</span></span>
+            <div>
+              <div class="nm">${escapeHtml(f.from)} <span style="font-weight: 400; color: var(--text-muted); font-size: 12px;">· ${escapeHtml(f.when)}</span></div>
+              <div class="sb" style="margin-top: 4px; color: var(--text-body); font-size: 13px;">${escapeHtml(f.text)}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+function wireReviews() {
+  $$('[data-action="add-goal"]').forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); toast('Goal builder coming soon'); }));
+}
+function openCheckInModal() {
+  openModal(`
+    <div class="modal lg" onclick="event.stopPropagation()">
+      <h3>Schedule check-in with Tendai Moyo</h3>
+      <p class="sub">30-minute one-on-one. Tendai's calendar shows free slots this week and next.</p>
+      <div class="form-grid">
+        <div class="field half"><label>Suggested date</label><input type="date" value="2026-06-12" /></div>
+        <div class="field half"><label>Time</label>
+          <select><option>14:00 · Thu 12 Jun</option><option>10:30 · Fri 13 Jun</option><option>15:00 · Mon 16 Jun</option></select>
+        </div>
+        <div class="field full"><label>Topics to cover</label>
+          <textarea placeholder="What would you like to discuss?">H1 goal progress · IMM stage 2 funding · branch coverage for Heroes' Day</textarea>
+        </div>
+      </div>
+      <div class="acts">
+        <button class="btn btn-secondary" data-close>Cancel</button>
+        <button class="btn btn-primary ok" data-ok>Send invite</button>
+      </div>
+    </div>
+  `);
+  $('.modal [data-close]').addEventListener('click', closeModal);
+  $('.modal [data-ok]').addEventListener('click', () => { closeModal(); toast('Check-in scheduled · invite sent to Tendai Moyo', 'success'); });
+}
+
+/* ============================================================
+   11. Kudos & recognition
+   ============================================================ */
+function renderKudos() {
+  return `
+    <div class="stat-grid">
+      <div class="stat brand">
+        <div class="lb"><span data-icon="heart" data-icon-size="12"></span> Kudos received</div>
+        <div class="vl">${KUDOS_RECEIVED.length}</div>
+        <div class="sb">This quarter · ${KUDOS_RECEIVED.length+1} all-time</div>
+      </div>
+      <div class="stat">
+        <div class="lb"><span data-icon="upload" data-icon-size="12"></span> Kudos sent</div>
+        <div class="vl">${state.kudosSent.length}</div>
+        <div class="sb">Keep going — managers see your shout-outs</div>
+      </div>
+      <div class="stat">
+        <div class="lb"><span data-icon="star" data-icon-size="12"></span> Most-tagged value</div>
+        <div class="vl" style="font-size: 16px;">Teamwork</div>
+        <div class="sb">Across your recent kudos</div>
+      </div>
+      <div class="stat">
+        <div class="lb"><span data-icon="building" data-icon-size="12"></span> Branch rank</div>
+        <div class="vl">#2</div>
+        <div class="sb">Park Centre · this quarter · behind Faith Moyo</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-h"><h2>Received</h2><div class="sp"></div><a href="#">All</a></div>
+        <div style="padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;">
+          ${KUDOS_RECEIVED.map(k => `
+            <div class="kudos-card">
+              <div class="hd">
+                <span class="av">${k.init}</span>
+                <div style="flex:1;">
+                  <div class="nm">${escapeHtml(k.from)}</div>
+                  <div class="ds">${escapeHtml(k.when)}</div>
+                </div>
+              </div>
+              <div class="msg">${escapeHtml(k.msg)}</div>
+              <div class="tags">${k.tags.map(t => `<span class="tg">${escapeHtml(t)}</span>`).join('')}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><h2>Sent</h2><div class="sp"></div><button class="lnk" data-action="kudos-new">+ Send new</button></div>
+        ${state.kudosSent.length === 0 ? `
+          <div class="empty-state">
+            <div class="ic"><span data-icon="heart" data-icon-size="24"></span></div>
+            <h3>Send your first kudos</h3>
+            <p>Recognise a colleague who's gone the extra mile. They'll get a notification and it appears on their profile.</p>
+            <button class="btn btn-primary" data-action="kudos-new"><span data-icon="heart" data-icon-size="13"></span> Send kudos</button>
+          </div>
+        ` : `
+        <div style="padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;">
+          ${state.kudosSent.map(k => `
+            <div class="kudos-card">
+              <div class="hd">
+                <span class="av" style="background: var(--surface-muted); color: var(--text-strong);">${k.init}</span>
+                <div style="flex:1;">
+                  <div class="nm">To ${escapeHtml(k.to)}</div>
+                  <div class="ds">${escapeHtml(k.when)}</div>
+                </div>
+              </div>
+              <div class="msg">${escapeHtml(k.msg)}</div>
+              <div class="tags">${k.tags.map(t => `<span class="tg">${escapeHtml(t)}</span>`).join('')}</div>
+            </div>
+          `).join('')}
+        </div>
+        `}
+      </div>
+    </div>
+  `;
+}
+function wireKudos() {
+  $$('[data-action="kudos-new"]').forEach(b => b.addEventListener('click', openKudosModal));
+}
+function openKudosModal() {
+  let to = PEOPLE[3].id;
+  let tags = ['Teamwork'];
+  let msg = '';
+  const allTags = ['Teamwork', 'Reliability', 'Leadership', 'Customer first', 'Communication', 'Going the extra mile'];
+  function paint() {
+    openModal(`
+      <div class="modal lg" onclick="event.stopPropagation()">
+        <h3>Send kudos</h3>
+        <p class="sub">Recognise a colleague. They'll get a notification and it appears on their public profile and team feed.</p>
+        <div class="form-grid">
+          <div class="field full"><label>Recipient</label>
+            <select id="k-to">${PEOPLE.map(p => `<option value="${p.id}" ${p.id===to?'selected':''}>${escapeHtml(p.name)} · ${escapeHtml(p.role)}</option>`).join('')}</select>
+          </div>
+          <div class="field full"><label>What did they do well? (visible to recipient and their manager)</label>
+            <textarea id="k-msg" placeholder="Be specific — what they did, when, and why it mattered.">${escapeHtml(msg)}</textarea>
+          </div>
+          <div class="field full"><label>Values</label>
+            <div class="chip-bar" id="k-tags">
+              ${allTags.map(t => `<button type="button" class="chipd ${tags.includes(t)?'on':''}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</button>`).join('')}
+            </div>
+          </div>
+        </div>
+        <div class="acts">
+          <button class="btn btn-secondary" data-cancel>Cancel</button>
+          <button class="btn btn-primary ok" data-ok>Send kudos</button>
+        </div>
+      </div>
+    `);
+    const m = $('.modal');
+    $('#k-to', m).addEventListener('change', e => { to = e.target.value; });
+    $('#k-msg', m).addEventListener('input', e => { msg = e.target.value; });
+    $$('[data-tag]', m).forEach(b => b.addEventListener('click', () => {
+      const t = b.dataset.tag;
+      if (tags.includes(t)) tags = tags.filter(x => x !== t); else tags.push(t);
+      paint();
+    }));
+    m.querySelector('[data-cancel]').addEventListener('click', closeModal);
+    m.querySelector('[data-ok]').addEventListener('click', () => {
+      if (!msg.trim()) { toast('Add a note — kudos are more meaningful with specifics', 'warn'); return; }
+      const person = PEOPLE.find(p => p.id === to);
+      state.kudosSent.unshift({ id: 'KS-' + Date.now(), to: person.name, init: person.init, when: 'just now', msg: msg.trim(), tags });
+      closeModal();
+      toast('Kudos sent to ' + person.name.split(' ')[0] + ' · they\'ll be notified', 'success');
+      if (state.route !== 'kudos') go('kudos'); else render();
+    });
+  }
+  paint();
+}
+
+/* ============================================================
+   12. Documents
+   ============================================================ */
+function renderDocuments() {
+  const cats = ['Handbook', 'Policy', 'Form'];
+  return `
+    <div class="dir-search">
+      <div class="srch">
+        <span data-icon="search" data-icon-size="16"></span>
+        <input id="doc-search" placeholder="Search policies, handbooks, forms…" />
+      </div>
+    </div>
+
+    ${state.docsAck['D-003'] === false ? `
+      <div class="err-banner" style="background: var(--tone-warn-bg); color: var(--tone-warn);">
+        <span data-icon="info" data-icon-size="16"></span>
+        <div style="flex:1;">
+          <div style="font-weight: 600;">1 policy needs your acknowledgement</div>
+          <div style="font-weight: 400; font-size: 12px; margin-top: 2px;">Travel &amp; per-diem claims (effective 1 June 2026) — takes 2 minutes to read.</div>
+        </div>
+        <button class="btn btn-secondary" data-action="ack-doc" data-id="D-003">Acknowledge</button>
+      </div>
+    ` : ''}
+
+    ${cats.map(c => `
+      <div class="panel">
+        <div class="panel-h"><h2>${escapeHtml(c)}s</h2><div class="sp"></div><span class="pill muted">${DOCUMENTS.filter(d => d.cat === c).length}</span></div>
+        <div style="padding: 14px 18px;">
+          <div class="doc-grid">
+            ${DOCUMENTS.filter(d => d.cat === c).map(d => `
+              <div class="doc-card" data-doc="${d.id}">
+                <div class="ic"><span data-icon="${d.icon}" data-icon-size="18"></span></div>
+                <div class="nm">${escapeHtml(d.nm)}</div>
+                <div class="sb">${escapeHtml(d.sb)}</div>
+                <div class="meta">
+                  <span>${escapeHtml(d.size)}</span>
+                  <span style="color: var(--brand-strong); font-family: var(--font-sans); font-weight: 500;">Open PDF →</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+function wireDocuments() {
+  $$('[data-doc]').forEach(c => c.addEventListener('click', () => {
+    const d = DOCUMENTS.find(x => x.id === c.dataset.doc);
+    toast('Opening ' + d.nm + '…');
+  }));
+  const inp = $('#doc-search'); if (inp) inp.addEventListener('input', () => {/* search demo */});
+  $$('[data-action="ack-doc"]').forEach(b => b.addEventListener('click', () => {
+    state.docsAck[b.dataset.id] = true;
+    toast('Policy acknowledged · noted in your file', 'success');
+    render();
+  }));
+}
+
+/* ============================================================
+   13. Settings (notifications, theme, password, 2FA)
+   ============================================================ */
+function renderSettings() {
+  const cadences = [
+    { id: 'realtime',      lb: 'Real-time',                 sb: 'Notifications fire as events happen' },
+    { id: 'digest-daily',  lb: 'Daily digest',              sb: 'One summary email at 18:00' },
+    { id: 'digest-weekly', lb: 'Weekly digest',             sb: 'Sunday evening summary' },
+    { id: 'quiet',         lb: 'Quiet hours only · 19–07',  sb: 'Critical only outside working hours' },
+  ];
+  return `
+    <div class="prof-card">
+      <h3><span class="ic" data-icon="bell"></span> Notification cadence</h3>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        ${cadences.map(c => `
+          <button class="${state.notifCadence === c.id ? 'btn btn-primary' : 'btn btn-secondary'}" data-cadence="${c.id}" style="text-align: left; justify-content: flex-start; flex-direction: column; align-items: flex-start; padding: 12px 14px; height: auto; gap: 4px;">
+            <span style="font: 600 13.5px/1.2 var(--font-sans);">${escapeHtml(c.lb)}</span>
+            <span style="font: 500 12px/1.4 var(--font-sans); opacity: 0.85;">${escapeHtml(c.sb)}</span>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="prof-card">
+      <h3><span class="ic" data-icon="bell"></span> Channels</h3>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        ${notifRow('email', 'Email', 'chipo.mutasa@mukamba.co.zw')}
+        ${notifRow('sms', 'SMS', '0775 332 891 · critical only')}
+        ${notifRow('push', 'Push (mobile app)', 'Clock reminders, approvals')}
+        ${notifRow('weekly', 'Weekly digest', 'Sunday evening summary')}
+      </div>
+    </div>
+
+    <div class="prof-card">
+      <h3><span class="ic" data-icon="settings"></span> Appearance</h3>
+      <div style="display: flex; gap: 8px;">
+        ${['light','dark','auto'].map(t => `<button class="btn ${state.theme===t?'btn-primary':'btn-secondary'}" data-theme="${t}">${cap(t)}</button>`).join('')}
+      </div>
+      <div style="margin-top: 10px; font: 12.5px/1.4 var(--font-sans); color: var(--text-muted);">Preview-only in this demo · system-wide setting lives in Workspace admin.</div>
+    </div>
+
+    <div class="prof-card">
+      <h3><span class="ic" data-icon="lock"></span> Security</h3>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface-muted); border-radius: 8px;">
+          <span style="width: 36px; height: 36px; border-radius: 8px; background: ${state.twoFAEnabled ? 'var(--tone-success-bg)' : 'var(--tone-warn-bg)'}; color: ${state.twoFAEnabled ? 'var(--tone-success)' : 'var(--tone-warn)'}; display: grid; place-items: center;"><span data-icon="shield" data-icon-size="16"></span></span>
+          <div style="flex:1;">
+            <div style="font: 600 13.5px/1.3 var(--font-sans); color: var(--text-strong);">Two-step verification</div>
+            <div style="font: 11.5px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 2px;">${state.twoFAEnabled ? 'Authenticator app · enrolled 14 Aug 2023' : 'Off — your account is less secure without 2FA'}</div>
+          </div>
+          <button class="btn ${state.twoFAEnabled ? 'btn-secondary' : 'btn-primary'}" data-action="toggle-2fa">${state.twoFAEnabled ? 'Re-enrol' : 'Enable 2FA'}</button>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface-muted); border-radius: 8px;">
+          <span style="width: 36px; height: 36px; border-radius: 8px; background: var(--surface); color: var(--text-strong); display: grid; place-items: center;"><span data-icon="lock" data-icon-size="16"></span></span>
+          <div style="flex:1;">
+            <div style="font: 600 13.5px/1.3 var(--font-sans); color: var(--text-strong);">Password</div>
+            <div style="font: 11.5px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 2px;">Last changed 14 Mar 2026 · strength: strong</div>
+          </div>
+          <button class="btn btn-secondary" data-action="change-pw">Change password</button>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--surface-muted); border-radius: 8px;">
+          <span style="width: 36px; height: 36px; border-radius: 8px; background: var(--surface); color: var(--text-strong); display: grid; place-items: center;"><span data-icon="pc" data-icon-size="16"></span></span>
+          <div style="flex:1;">
+            <div style="font: 600 13.5px/1.3 var(--font-sans); color: var(--text-strong);">Active sessions</div>
+            <div style="font: 11.5px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 2px;">3 devices · Park Centre desk, iPhone, Bulawayo laptop</div>
+          </div>
+          <button class="btn btn-secondary" data-action="sessions">Review</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="prof-card">
+      <h3><span class="ic" data-icon="logout"></span> Account</h3>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn btn-secondary" data-action="export-data"><span data-icon="download" data-icon-size="13"></span> Export my data</button>
+        <button class="btn btn-danger" data-action="signout"><span data-icon="logout" data-icon-size="13"></span> Sign out</button>
+      </div>
+    </div>
+  `;
+}
+function wireSettings() {
+  $$('[data-cadence]').forEach(b => b.addEventListener('click', () => { state.notifCadence = b.dataset.cadence; toast('Cadence set to ' + b.textContent.trim().split('·')[0].trim(), 'success'); render(); }));
+  $$('[data-notif]').forEach(t => t.addEventListener('click', () => {
+    const k = t.dataset.notif; state.notif[k] = !state.notif[k];
+    toast((state.notif[k] ? 'Enabled' : 'Disabled') + ' ' + k + ' notifications'); render();
+  }));
+  $$('[data-theme]').forEach(b => b.addEventListener('click', () => { state.theme = b.dataset.theme; toast('Theme set to ' + state.theme); render(); }));
+  $$('[data-action]').forEach(b => {
+    const a = b.dataset.action;
+    if (a === 'toggle-2fa') b.addEventListener('click', open2FAModal);
+    if (a === 'change-pw') b.addEventListener('click', openChangePasswordModal);
+    if (a === 'signout') b.addEventListener('click', openSignOutModal);
+    if (a === 'sessions') b.addEventListener('click', openSessionsModal);
+    if (a === 'export-data') b.addEventListener('click', () => toast('Data export will be emailed within 24 hours', 'success'));
+  });
+}
+function open2FAModal() {
+  openModal(`
+    <div class="modal lg" onclick="event.stopPropagation()">
+      <h3>${state.twoFAEnabled ? 'Re-enrol' : 'Set up'} two-step verification</h3>
+      <p class="sub">Scan the QR code with Google Authenticator, Microsoft Authenticator, 1Password or any TOTP app, then enter the 6-digit code it generates.</p>
+      <div class="qr-box"><div class="qr-grid"></div></div>
+      <div style="text-align: center; font: 12px/1.4 var(--font-mono); color: var(--text-muted); margin-top: 8px;">Or enter secret manually:<br><b style="color: var(--text-strong); letter-spacing: 0.1em;">MUKA-CHIP-2026-PARK-TOTP</b></div>
+      <div class="field full" style="margin-top: 14px;"><label>Code from your authenticator</label>
+        <div class="otp" id="otp-test" role="group" aria-label="6-digit verification code">
+          ${[0,1,2,3,4,5].map(i => `<input maxlength="1" data-otp-test="${i}" inputmode="numeric" autocomplete="one-time-code" aria-label="Digit ${i+1}" />`).join('')}
+        </div>
+      </div>
+      <div style="margin-top: 10px; padding: 10px 12px; background: var(--brand-soft); color: var(--brand-strong); border-radius: 8px; font: 12.5px/1.4 var(--font-sans);">
+        Recovery codes will be shown after enrolment. Store them in a safe place — they let you sign in if you lose your phone.
+      </div>
+      <div class="acts">
+        <button class="btn btn-secondary" data-close>Cancel</button>
+        <button class="btn btn-primary ok" data-ok><span data-icon="shield" data-icon-size="13"></span> Confirm enrolment</button>
+      </div>
+    </div>
+  `);
+  $('.modal [data-close]').addEventListener('click', closeModal);
+  // wire OTP cell auto-advance
+  const otpCells = $$('.modal [data-otp-test]');
+  otpCells.forEach((inp, i) => {
+    inp.addEventListener('input', () => {
+      inp.value = inp.value.replace(/\D/g, '').slice(0, 1);
+      if (inp.value && i < otpCells.length - 1) otpCells[i+1].focus();
+    });
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !inp.value && i > 0) otpCells[i-1].focus();
+    });
+  });
+  $('.modal [data-ok]').addEventListener('click', () => {
+    const v = otpCells.map(c => c.value).join('').trim();
+    if (v.length !== 6) { toast('Enter the 6-digit code', 'warn'); return; }
+    state.twoFAEnabled = true;
+    closeModal();
+    toast('Two-step verification enrolled · recovery codes emailed', 'success');
+    render();
+  });
+}
+function openSessionsModal() {
+  openModal(`
+    <div class="modal lg" onclick="event.stopPropagation()">
+      <h3>Active sessions</h3>
+      <p class="sub">Devices currently signed in to your account. Sign out anywhere you don't recognise.</p>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        ${[
+          { ic: 'desktop', nm: 'Park Centre · branch desk (Windows)',  sb: 'This device · signed in 07:42 today', current: true },
+          { ic: 'phone',   nm: 'iPhone · staff PWA',                    sb: 'Last seen 30 min ago · Harare', current: false },
+          { ic: 'pc',      nm: 'Bulawayo laptop',                       sb: 'Last seen 14 May · Brighton Sibanda meeting', current: false },
+        ].map(s => `
+          <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface-muted); border-radius: 8px;">
+            <span style="width: 32px; height: 32px; border-radius: 8px; background: var(--surface); display: grid; place-items: center;"><span data-icon="${s.ic}" data-icon-size="16"></span></span>
+            <div style="flex:1;">
+              <div style="font: 600 13.5px/1.3 var(--font-sans); color: var(--text-strong);">${escapeHtml(s.nm)} ${s.current ? '<span class="pill brand" style="margin-left: 6px;">This device</span>' : ''}</div>
+              <div style="font: 11.5px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 2px;">${escapeHtml(s.sb)}</div>
+            </div>
+            ${s.current ? '' : '<button class="btn btn-danger">Sign out</button>'}
+          </div>
+        `).join('')}
+      </div>
+      <div class="acts">
+        <button class="btn btn-secondary" data-close>Close</button>
+        <button class="btn btn-danger danger">Sign out everywhere else</button>
+      </div>
+    </div>
+  `);
+  $('.modal [data-close]').addEventListener('click', closeModal);
+}
+
+/* ============================================================
+   14. Help & FAQ
+   ============================================================ */
+function renderHelp() {
+  return `
+    <div class="grid-2">
+      <div>
+        <div class="panel" style="margin-bottom: 16px;">
+          <div class="panel-h"><h2>Frequently asked questions</h2><div class="sp"></div><span class="pill muted">${FAQ.length}</span></div>
+          <div style="padding: 14px 18px; display: flex; flex-direction: column; gap: 8px;">
+            ${FAQ.map(f => `
+              <details class="faq-item">
+                <summary>${escapeHtml(f.q)}</summary>
+                <div class="ans">${escapeHtml(f.a)}</div>
+              </details>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="prof-card">
+          <h3><span class="ic" data-icon="chat"></span> Get human help</h3>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface-muted); border-radius: 8px;">
+              <span style="width: 36px; height: 36px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 13px/1 var(--font-sans);">RC</span>
+              <div style="flex:1;">
+                <div style="font: 600 13.5px/1.3 var(--font-sans); color: var(--text-strong);">Rumbidzai Chivasa</div>
+                <div style="font: 11.5px/1.4 var(--font-sans); color: var(--text-muted);">HR business partner · usually responds in 1 hour</div>
+              </div>
+              <button class="btn btn-primary" data-action="chat-hr">Chat</button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface-muted); border-radius: 8px;">
+              <span style="width: 36px; height: 36px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 13px/1 var(--font-sans);">RM</span>
+              <div style="flex:1;">
+                <div style="font: 600 13.5px/1.3 var(--font-sans); color: var(--text-strong);">Ruvimbo Mhlanga</div>
+                <div style="font: 11.5px/1.4 var(--font-sans); color: var(--text-muted);">IT support · for sign-in / device issues</div>
+              </div>
+              <button class="btn btn-secondary" data-action="chat-it">Chat</button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface-muted); border-radius: 8px;">
+              <span style="width: 36px; height: 36px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 13px/1 var(--font-sans);">PD</span>
+              <div style="flex:1;">
+                <div style="font: 600 13.5px/1.3 var(--font-sans); color: var(--text-strong);">Patience Dube</div>
+                <div style="font: 11.5px/1.4 var(--font-sans); color: var(--text-muted);">Payroll · pay queries &amp; tax</div>
+              </div>
+              <button class="btn btn-secondary" data-action="chat-payroll">Chat</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="prof-card">
+          <h3><span class="ic" data-icon="phone"></span> Emergency</h3>
+          <div style="font: 13px/1.5 var(--font-sans); color: var(--text-body); margin-bottom: 10px;">For after-hours emergencies, on-call HR can be reached on the pager line.</div>
+          <button class="btn btn-secondary" style="width: 100%;"><span data-icon="phone" data-icon-size="13"></span> Call on-call HR · 0782 010 555</button>
+        </div>
+
+        <div class="prof-card">
+          <h3><span class="ic" data-icon="info"></span> About this portal</h3>
+          <div style="font: 13px/1.5 var(--font-sans); color: var(--text-body);">
+            Huchu Staff portal · v0.5 (beta) · Mukamba Group<br>
+            Built on Corelith design system. <a href="#" style="color: var(--brand-strong);">Release notes →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function wireHelp() {
+  $$('[data-action]').forEach(b => {
+    const a = b.dataset.action;
+    if (a === 'chat-hr') b.addEventListener('click', () => toast('Opening chat with Rumbidzai (HR)…', 'success'));
+    if (a === 'chat-it') b.addEventListener('click', () => toast('Opening chat with Ruvimbo (IT)…', 'success'));
+    if (a === 'chat-payroll') b.addEventListener('click', () => toast('Opening chat with Patience (Payroll)…', 'success'));
+  });
+}
+
+/* ============================================================
+   15. Onboarding
+   ============================================================ */
+function renderOnboarding() {
+  const done = Object.values(state.onboarding).filter(Boolean).length;
+  const pct = Math.round(done / ONBOARDING_TASKS.length * 100);
+  const groups = {};
+  ONBOARDING_TASKS.forEach(t => { (groups[t.day] = groups[t.day] || []).push(t); });
+  return `
+    <div class="ob-progress">
+      <div style="flex:1;">
+        <div style="font: 700 16px/1.2 var(--font-sans); color: var(--brand-strong);">Welcome to Mukamba Group, ${escapeHtml(ME.name.split(' ')[0])}!</div>
+        <div style="font: 12.5px/1.4 var(--font-sans); color: var(--brand-strong); opacity: 0.85; margin-top: 4px;">Your onboarding checklist — complete by end of week 4. Your buddy is Tendai Moyo (Operations).</div>
+        <div class="bar" style="margin-top: 10px;"><i style="width: ${pct}%;"></i></div>
+      </div>
+      <div class="pct">${pct}%</div>
+    </div>
+
+    ${Object.entries(groups).map(([day, tasks]) => `
+      <div class="panel">
+        <div class="panel-h"><h2>${escapeHtml(day)}</h2><div class="sp"></div><span class="pill muted">${tasks.filter(t => state.onboarding[t.id]).length} / ${tasks.length}</span></div>
+        <div class="panel-body">
+          ${tasks.map(t => `
+            <div class="task-row ${state.onboarding[t.id]?'done':''}" data-ob="${t.id}">
+              <div class="cb"><span data-icon="check" data-icon-size="12"></span></div>
+              <div>
+                <div class="nm">${escapeHtml(t.nm)}</div>
+                <div class="sb">${escapeHtml(t.sb)}</div>
+              </div>
+              <span class="due">${state.onboarding[t.id] ? 'Done' : 'Open'}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+function wireOnboarding() {
+  $$('[data-ob]').forEach(r => r.addEventListener('click', () => {
+    const id = r.dataset.ob;
+    state.onboarding[id] = !state.onboarding[id];
+    toast(state.onboarding[id] ? 'Task complete — nice one' : 'Task reopened');
+    render();
+  }));
 }
 
 /* ================== Init ================== */

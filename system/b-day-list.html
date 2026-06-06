@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" /><title>Day list · Huchu DS</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs"><a href="../index.html">Home</a><span class="sep">/</span><a href="blocks.html">Blocks</a><span class="sep">/</span><span>Day list</span></div>
+    <h1>Day list</h1>
+    <p class="lede">A two-column label / value list. The chart fallback for phones — where a real bar chart wouldn't read, the day-list shows the same data as named rows. Owner uses it for weekday revenue, Gold for daily pours, Parent for ladder schedules.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="check" data-icon-size="12"></span>Stable</span>
+      <span class="meta-pill"><span class="t-mono">.b-day-list</span></span>
+      <span class="meta-pill">Chart fallback</span>
+    </div>
+  </header>
+
+  <section id="default">
+    <h2 class="ds-h2">Default</h2>
+    <p class="ds-h2-sub">Label left, mono-numbered value right. Hairline dividers between rows. Wrap in a <a href="b-card.html">card</a>.</p>
+    <div class="ds-specimen"
+         data-code='import { Card, DayList } from &#39;@corelith/design-system&#39;;
+
+export function Example() {
+  return (
+    &lt;Card title=&quot;Revenue by weekday&quot;&gt;
+      &lt;DayList rows={[
+        { label: &#39;Mon&#39;, value: &#39;$ 1,240&#39;, delta: &#39;up&#39; },
+        { label: &#39;Tue&#39;, value: &#39;$ 1,160&#39; },
+        { label: &#39;Wed&#39;, value: &#39;$ 1,420&#39;, delta: &#39;up&#39; },
+        { label: &#39;Thu&#39;, value: &#39;$    980&#39;, delta: &#39;dn&#39; },
+        { label: &#39;Fri&#39;, value: &#39;$ 2,016&#39;, delta: &#39;up&#39; },
+      ]} /&gt;
+    &lt;/Card&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded" style="display: block; max-width: 380px;">
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;">
+          <div style="font: 600 14px/1.3 var(--font-sans); color: var(--text-strong); margin-bottom: 10px;">Revenue by weekday</div>
+          <div class="b-day-list">
+            <div class="b-dl-l">Mon</div><div class="b-dl-v up">$ 1,240</div>
+            <div class="b-dl-l">Tue</div><div class="b-dl-v">$ 1,160</div>
+            <div class="b-dl-l">Wed</div><div class="b-dl-v up">$ 1,420</div>
+            <div class="b-dl-l">Thu</div><div class="b-dl-v dn">$   980</div>
+            <div class="b-dl-l">Fri</div><div class="b-dl-v up">$ 2,016</div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Weekday revenue</span><span class="spacer"></span><span class="t-mono">.b-day-list</span></div>
+    </div>
+  </section>
+
+  <section id="anatomy">
+    <h2 class="ds-h2">Parts</h2>
+    <table class="ds-props"><thead><tr><th>Property</th><th>Value</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>columns</td><td>1fr auto</td><td>Label stretches, value sized to content</td></tr>
+      <tr><td>row padding</td><td>8 px top / bottom</td><td>—</td></tr>
+      <tr><td>divider</td><td>1 px --border-subtle</td><td>Bottom of every row except the last</td></tr>
+      <tr><td>label</td><td>500 13 / 1 sans</td><td>--text-body</td></tr>
+      <tr><td>value</td><td>600 13 / 1 mono, tabular-nums</td><td>Mono so the right column rights-aligns cleanly</td></tr>
+      <tr><td>delta colours</td><td>--tone-success / --tone-danger</td><td>Inherited via .up / .dn modifiers</td></tr>
+    </tbody>
+    </table>
+  </section>
+
+  <section id="rules">
+    <h2 class="ds-h2">Do &amp; don't</h2>
+    <div class="ds-rules">
+      <div class="rule do"><span class="tag">Do</span><p>Use it when a real chart would be illegible at phone width. 7 weekday rows are easy to read; a 7-bar chart at 320 px is not.</p></div>
+      <div class="rule dont"><span class="tag">Don't</span><p>Use it on desktop. Past 720 px viewport, swap in a proper chart with the same data.</p></div>
+      <div class="rule do"><span class="tag">Do</span><p>Right-align mono values. The eye scans the column for the largest / smallest number; that only works if the digits stack.</p></div>
+      <div class="rule dont"><span class="tag">Don't</span><p>Mix value formats. If one row is currency, every row is currency. Use a sub-card for a different unit.</p></div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <ul class="ds-list">
+      <li>If the block reads as data, wrap the rows in <code>&lt;dl&gt;</code>+<code>&lt;dt&gt;</code>/<code>&lt;dd&gt;</code> instead of plain divs. The grid layout still works, and screen readers get a definition list.</li>
+      <li>Delta tone is coded by colour. Pair with an icon or text suffix ("up 12%") so colour-blind operators can still read the trend.</li>
+      <li>Tabular-nums is mandatory — proportional digits make right-aligned columns jitter and break the chart-fallback purpose.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related</h2>
+    <ul class="ds-list">
+      <li><a href="b-stat-card.html">Stat card</a> — when there's only one number to show.</li>
+      <li><a href="b-card.html">Card &amp; panel</a> — the container the list lives inside.</li>
+      <li><a href="guide-mobile-adaptation.html">Mobile adaptation guide</a> — how to choose between a chart and a day-list at small widths.</li>
+    </ul>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="b-stat-hero.html"><div class="pager-label">← Previous</div><div class="pager-title">Stat hero</div></a>
+    <a href="b-callout.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Callout</div></a>
+  </nav>
+</article>
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#default" class="current">Default</a></li>
+    <li><a href="#anatomy">Parts</a></li>
+    <li><a href="#rules">Rules</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body></html>

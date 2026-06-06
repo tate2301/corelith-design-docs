@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Heavy data table · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pull { background: var(--brand-soft); border-left: 3px solid var(--brand); padding: 10px 14px; border-radius: 0 8px 8px 0; font: 500 14px/1.5 var(--font-sans); color: var(--text-strong); margin: 14px 0 0; }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .phone { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+  .ck-screen .brand { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .ph-title { font: 700 13px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .ck-screen .ph-tools { display: flex; gap: 4px; flex-wrap: wrap; padding: 4px 0; }
+  .ck-screen .ph-pill { font: 600 9px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-strong); }
+  .ck-screen .ph-pill.on { background: var(--brand); color: white; }
+  .ck-screen .ph-th { font: 600 9px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding: 4px; border-bottom: 2px solid var(--border); display: grid; grid-template-columns: 16px 1fr 60px 40px; gap: 4px; }
+  .ck-screen .ph-td { display: grid; grid-template-columns: 16px 1fr 60px 40px; gap: 4px; padding: 5px 4px; border-bottom: 1px solid var(--border); font: 500 10px/1.3 var(--font-sans); align-items: center; }
+  .ck-screen .ph-td .num { font: 500 9px/1 var(--font-mono); color: var(--text-strong); text-align: right; }
+  .ck-screen .ph-td input { width: 12px; height: 12px; }
+  .ck-screen .ph-bar { display: flex; justify-content: space-between; align-items: center; padding: 4px 6px; background: var(--brand-soft); border-radius: 4px; font: 600 9px/1 var(--font-mono); color: var(--brand-strong); margin-top: 4px; }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p  { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+  .ck-code-only-note { display: grid; gap: 8px; padding: 22px 26px; background: var(--surface-muted); border: 1px dashed var(--border-strong); border-radius: 12px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-code-only-note .ck-code-only-tag { display: inline-flex; align-items: center; gap: 6px; align-self: start; font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 9px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); border: 1px solid var(--border); }
+  .ck-code-only-note p { margin: 0; color: var(--text-muted); }
+  .ck-code-only-note code { background: var(--surface); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Tables</a><span class="sep">/</span>
+      <span>Heavy with everything</span>
+    </div>
+    <h1>Build the kitchen-sink table — filters, bulk actions, saved views, the lot</h1>
+    <p class="lede">By the end of this recipe you'll have the end-state data table: server-paged, sort + filter, editable cells, bulk actions, column show/hide, saved views, CSV export, sticky first column, frozen header. Most apps don't need this. When they do, here's how it composes.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="table" data-icon-size="12"></span>Tables</span>
+      <span class="meta-pill">6 primitives · 2 blocks · 2 patterns</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~60 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A toolbar of filter chips, a bulk-action bar that appears on row select, a column-visibility drawer, a saved-views menu, paged server data, inline editing on safe cells, and CSV export of the current view. All the layers, sitting on top of each other, in one composition.</p>
+    <p>This recipe is the synthesis of the other table recipes. The trick is that each layer is independent — toolbar doesn't know about inline edit; bulk action doesn't know about sort. Compose them in a fixed order and the result is predictable. Build them as a tangle and the table will become unmaintainable in 6 months.</p>
+    <p class="ck-pull"><b>This is the END state — most tables don't need it.</b> A POS line items table needs editable cells, not column visibility. An audit log needs filters, not bulk actions. Reach for the simpler recipes first. The "everything" table is for when a power user lives inside it 8 hours a day.</p>
+    <p><b>Skip this recipe if</b> you're not sure you need it. Skip if you'd ever describe the user as "casual" — this UI is for the operator who knows what they want and needs the shortest path to it.</p>
+  </section>
+
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Default with toolbar, two rows selected (bulk bar), and saved-views open.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu</span>
+          <p class="ph-title">All transactions</p>
+          <div class="ph-tools"><span class="ph-pill">Q</span><span class="ph-pill">Status</span><span class="ph-pill">Date</span><span class="ph-pill">···</span></div>
+          <div class="ph-th"><input type="checkbox" /><span>Ref</span><span style="text-align: right;">Amt</span><span>St</span></div>
+          <div class="ph-td"><input type="checkbox" /><span>TXN-001</span><span class="num">$12</span><span>P</span></div>
+          <div class="ph-td"><input type="checkbox" /><span>TXN-002</span><span class="num">$45</span><span>O</span></div>
+          <div class="ph-td"><input type="checkbox" /><span>TXN-003</span><span class="num">$220</span><span>P</span></div>
+          <div class="ph-td"><input type="checkbox" /><span>TXN-004</span><span class="num">$85</span><span>V</span></div>
+        </div>
+        <div class="caption"><span class="num">01</span> Default — toolbar with filter chips</div>
+      </div>
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu</span>
+          <p class="ph-title">All transactions</p>
+          <div class="ph-bar"><span>2 selected</span><span>Export · Void · Delete</span></div>
+          <div class="ph-th"><input type="checkbox" checked /><span>Ref</span><span style="text-align: right;">Amt</span><span>St</span></div>
+          <div class="ph-td" style="background: var(--brand-soft);"><input type="checkbox" checked /><span>TXN-001</span><span class="num">$12</span><span>P</span></div>
+          <div class="ph-td"><input type="checkbox" /><span>TXN-002</span><span class="num">$45</span><span>O</span></div>
+          <div class="ph-td" style="background: var(--brand-soft);"><input type="checkbox" checked /><span>TXN-003</span><span class="num">$220</span><span>P</span></div>
+          <div class="ph-td"><input type="checkbox" /><span>TXN-004</span><span class="num">$85</span><span>V</span></div>
+        </div>
+        <div class="caption"><span class="num">02</span> 2 selected — bulk bar replaces toolbar</div>
+      </div>
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu</span>
+          <p class="ph-title">All transactions · Views</p>
+          <div style="background: var(--surface-muted); border-radius: 6px; padding: 6px; display: grid; gap: 4px;">
+            <div style="font: 600 10px/1 var(--font-mono); padding: 4px; background: var(--brand); color: white; border-radius: 4px;">Unpaid this month</div>
+            <div style="font: 500 10px/1 var(--font-mono); padding: 4px;">Voided last 30 days</div>
+            <div style="font: 500 10px/1 var(--font-mono); padding: 4px;">High value (&gt; $1k)</div>
+            <div style="font: 500 10px/1 var(--font-mono); padding: 4px; color: var(--brand-strong);">+ Save current as view</div>
+          </div>
+          <div class="ph-th" style="margin-top: 6px;"><input type="checkbox" /><span>Ref</span><span style="text-align: right;">Amt</span><span>St</span></div>
+          <div class="ph-td"><input type="checkbox" /><span>TXN-006</span><span class="num">$520</span><span>O</span></div>
+        </div>
+        <div class="caption"><span class="num">03</span> Saved views — switch between presets</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Most of the kit, honestly. This is the composition test.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/x-data-table.html"><span class="kind">Pattern</span>Data table</a>
+      <a class="ck-piece" href="../system/x-bulk-edit.html"><span class="kind">Pattern</span>Bulk edit</a>
+      <a class="ck-piece" href="../system/b-data-toolbar.html"><span class="kind">Block</span>DataToolbar</a>
+      <a class="ck-piece" href="../system/b-filter-chips.html"><span class="kind">Block</span>FilterChips</a>
+      <a class="ck-piece" href="../system/p-checkbox.html"><span class="kind">Primitive</span>Checkbox</a>
+      <a class="ck-piece" href="../system/p-dropdown-menu.html"><span class="kind">Primitive</span>Dropdown</a>
+      <a class="ck-piece" href="../system/p-popover.html"><span class="kind">Primitive</span>Popover</a>
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+      <a class="ck-piece" href="../system/p-pagination.html"><span class="kind">Primitive</span>Pagination</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>DataToolbar</code>, <code>FilterChips</code>, <code>Checkbox</code>, <code>DropdownMenu</code>, <code>Popover</code>, <code>Button</code>, <code>Pagination</code>, <code>Drawer</code>, <code>Toast</code>, <code>useUrlState</code>.</p>
+  </section>
+
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <div class="ck-step"><span class="n">01</span><h3>Layered state — selection, filter, view, columns, edit</h3></div>
+    <p>Five independent stores. URL holds filter + sort + page (shareable). LocalStorage holds saved views + column visibility (user preference). Component state holds selection + edit (ephemeral). Don't merge them.</p>
+    <div class="ds-specimen"
+         data-code='// URL  - shareable: ?status=open&amp;sort=amount:desc&amp;page=2
+const [q, setQ] = useTableQuery();
+
+// LocalStorage - per-user: column show/hide + saved views
+const [visibleCols, setVisibleCols] = useLocalStorageList&lt;Col&gt;(
+  &#39;txns:cols&#39;, DEFAULT_COLS,
+);
+const [views, setViews] = useLocalStorageList&lt;SavedView&gt;(&#39;txns:views&#39;, []);
+
+// Component - ephemeral: selection + edit
+const [selection, setSelection] = useState&lt;Set&lt;string&gt;&gt;(new Set());
+const [edit, setEdit] = useState&lt;EditState&gt;({ kind: &#39;idle&#39; });'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>Three storage tiers — URL, LocalStorage, memory — each with a clear "who owns this" rule. The moment you blur them, two-way sync hell is unavoidable.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · State layers</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">02</span><h3>Toolbar swaps with bulk bar — same slot, different content</h3></div>
+    <p>Reserve one horizontal strip above the table. When <code>selection.size === 0</code>, render the filter toolbar. Otherwise render the bulk-action bar. Don't stack them — that's two rows fighting for attention. Same slot, different content, one mental load.</p>
+    <div class="ds-specimen"
+         data-code='function TableToolbar({ selectionSize, …}) {
+  if (selectionSize === 0) {
+    return (
+      &lt;DataToolbar&gt;
+        &lt;FilterChips … /&gt;
+        &lt;ViewMenu … /&gt;
+        &lt;ColumnMenu … /&gt;
+        &lt;Button onClick={exportCsv}&gt;Export CSV&lt;/Button&gt;
+      &lt;/DataToolbar&gt;
+    );
+  }
+  return (
+    &lt;DataToolbar tone=&quot;brand&quot;&gt;
+      &lt;span&gt;{selectionSize} selected&lt;/span&gt;
+      &lt;Button onClick={bulkExport}&gt;Export selected&lt;/Button&gt;
+      &lt;Button onClick={bulkVoid} tone=&quot;warning&quot;&gt;Void&lt;/Button&gt;
+      &lt;Button onClick={bulkDelete} tone=&quot;danger&quot;&gt;Delete&lt;/Button&gt;
+      &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; setSelection(new Set())}&gt;Cancel&lt;/Button&gt;
+    &lt;/DataToolbar&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 14px; max-width: 460px; margin: 0 auto; display: grid; gap: 8px;">
+          <div style="display: flex; gap: 6px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; font: 500 12px/1 var(--font-sans);">
+            <span style="padding: 4px 10px; background: var(--surface-muted); border-radius: 9999px;">Status: Open</span>
+            <span style="padding: 4px 10px; background: var(--surface-muted); border-radius: 9999px;">Date: 30d</span>
+            <span style="margin-left: auto; padding: 4px 10px; background: var(--surface-muted); border-radius: 9999px;">Export</span>
+          </div>
+          <div style="display: flex; gap: 6px; padding: 8px 10px; background: var(--brand-soft); border: 1px solid var(--brand-strong); border-radius: 8px; font: 500 12px/1 var(--font-sans);">
+            <span style="font-weight: 600; color: var(--brand-strong);">3 selected</span>
+            <span style="margin-left: auto;">Export · Void · Delete · Cancel</span>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Toolbar swap</span><span class="spacer"></span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">03</span><h3>Saved views — a serialized TableQuery, named</h3></div>
+    <p>A saved view is just <code>{ name, q: TableQuery }</code>. Store an array of them in localStorage. Switching a view = <code>setQ(view.q)</code>. Saving the current view = <code>{ name: prompt('Name?'), q }</code>. No backend required for v1.</p>
+    <div class="ds-specimen"
+         data-code='type SavedView = { id: string; name: string; q: TableQuery };
+
+function ViewMenu({ views, current, onApply, onSave, onDelete }: {
+  views: SavedView[];
+  current: TableQuery;
+  onApply: (q: TableQuery) =&gt; void;
+  onSave: (name: string) =&gt; void;
+  onDelete: (id: string) =&gt; void;
+}) {
+  return (
+    &lt;DropdownMenu label=&quot;Views&quot;&gt;
+      {views.map(v =&gt; (
+        &lt;DropdownMenu.Item key={v.id}
+          onSelect={() =&gt; onApply(v.q)}
+          active={isSameQuery(v.q, current)}
+        &gt;
+          {v.name}
+          &lt;button onClick={(e) =&gt; { e.stopPropagation(); onDelete(v.id); }}&gt;×&lt;/button&gt;
+        &lt;/DropdownMenu.Item&gt;
+      ))}
+      &lt;DropdownMenu.Separator /&gt;
+      &lt;DropdownMenu.Item onSelect={() =&gt; {
+        const name = prompt(&#39;Name this view:&#39;);
+        if (name) onSave(name);
+      }}&gt;+ Save current as view&lt;/DropdownMenu.Item&gt;
+    &lt;/DropdownMenu&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 14px; max-width: 240px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 4px;">
+          <div style="padding: 8px 10px; font: 500 13px/1 var(--font-sans); background: var(--brand); color: white; border-radius: 4px;">Unpaid this month</div>
+          <div style="padding: 8px 10px; font: 500 13px/1 var(--font-sans);">Voided last 30 days</div>
+          <div style="padding: 8px 10px; font: 500 13px/1 var(--font-sans);">High value (> $1k)</div>
+          <div style="border-top: 1px solid var(--border); margin-top: 4px; padding: 8px 10px; font: 500 13px/1 var(--font-sans); color: var(--brand-strong);">+ Save current as view</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Saved views</span><span class="spacer"></span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">04</span><h3>Column visibility + sticky first column</h3></div>
+    <p>A checkbox list in a Popover toggles a Set of visible columns. The first column is sticky to the left so the row label stays visible while scrolling horizontally. <code>position: sticky; left: 0</code> on the <code>&lt;th&gt;</code> and <code>&lt;td&gt;</code> of column 0.</p>
+    <div class="ds-specimen"
+         data-code='// CSS
+.table-wrap { overflow-x: auto; }
+table.heavy thead th:first-child,
+table.heavy tbody td:first-child {
+  position: sticky;
+  left: 0;
+  background: var(--canvas);
+  z-index: 1;
+}
+table.heavy thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--canvas);
+}
+
+// Column menu
+function ColumnMenu({ all, visible, onChange }: {
+  all: Array&lt;{ key: Col; label: string }&gt;;
+  visible: Set&lt;Col&gt;;
+  onChange: (next: Set&lt;Col&gt;) =&gt; void;
+}) {
+  return (
+    &lt;Popover trigger={&lt;Button&gt;Columns&lt;/Button&gt;}&gt;
+      &lt;Stack gap=&quot;xs&quot;&gt;
+        {all.map(c =&gt; (
+          &lt;Checkbox key={c.key}
+            checked={visible.has(c.key)}
+            label={c.label}
+            onChange={(v) =&gt; {
+              const n = new Set(visible);
+              v ? n.add(c.key) : n.delete(c.key);
+              if (n.size === 0) return;   // keep at least one
+              onChange(n);
+            }}
+          /&gt;
+        ))}
+      &lt;/Stack&gt;
+    &lt;/Popover&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 14px; max-width: 220px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;">
+          <div style="font: 600 11px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding: 6px 10px; border-bottom: 1px solid var(--border);">Columns</div>
+          <div style="display: grid; gap: 8px; padding: 10px;">
+            <div style="display: flex; gap: 6px; align-items: center; font: 500 12px/1 var(--font-sans);"><input type="checkbox" checked />Ref</div>
+            <div style="display: flex; gap: 6px; align-items: center; font: 500 12px/1 var(--font-sans);"><input type="checkbox" checked />Amount</div>
+            <div style="display: flex; gap: 6px; align-items: center; font: 500 12px/1 var(--font-sans);"><input type="checkbox" />Created by</div>
+            <div style="display: flex; gap: 6px; align-items: center; font: 500 12px/1 var(--font-sans);"><input type="checkbox" checked />Status</div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Columns + sticky</span><span class="spacer"></span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">05</span><h3>Bulk actions — confirm destructives, optimistic for safe ones</h3></div>
+    <p>Delete/Void: alert-dialog ("Delete 12 transactions? This cannot be undone."). Export: just do it. Status changes: optimistic + Toast undo. The pattern: irreversible needs confirmation, reversible doesn't.</p>
+    <div class="ds-specimen"
+         data-code='async function bulkDelete(ids: Set&lt;string&gt;) {
+  const ok = await AlertDialog.confirm({
+    title: `Delete ${ids.size} transactions?`,
+    description: &#39;This cannot be undone.&#39;,
+    confirmLabel: &#39;Delete&#39;,
+    tone: &#39;danger&#39;,
+  });
+  if (!ok) return;
+  setRows(rs =&gt; rs.filter(r =&gt; !ids.has(r.id)));
+  setSelection(new Set());
+  try {
+    await api.bulkDelete([...ids]);
+    Toast.show({ message: `Deleted ${ids.size}` });
+  } catch (err) {
+    refetch();
+    Toast.show({ message: `Delete failed: ${err.message}`, tone: &#39;danger&#39; });
+  }
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 14px; max-width: 320px; margin: 0 auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
+          <div style="font: 600 14px/1.2 var(--font-sans); margin-bottom: 6px;">Delete 12 transactions?</div>
+          <div style="font: 500 13px/1.5 var(--font-sans); color: var(--text-muted); margin-bottom: 16px;">This cannot be undone.</div>
+          <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <span style="padding: 6px 14px; background: var(--surface-muted); border-radius: 6px; font: 600 12px/1.4 var(--font-sans);">Cancel</span>
+            <span style="padding: 6px 14px; background: var(--tone-danger); color: white; border-radius: 6px; font: 600 12px/1.4 var(--font-sans);">Delete</span>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 5 · Bulk actions</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">~350 lines once you wire it all. The point is the composition tree — each layer is a small file underneath.</p>
+    <div class="ds-specimen"
+         data-code='import { useState } from &#39;react&#39;;
+import {
+  DataToolbar, FilterChips, Checkbox, DropdownMenu, Popover, Button,
+  Pagination, Toast, AlertDialog,
+} from &#39;@huchu/react&#39;;
+
+export function HeavyTransactionsTable() {
+  // 1. State layers
+  const [q, setQ] = useTableQuery();
+  const [visibleCols, setVisibleCols] = useLocalStorageList&lt;Col&gt;(&#39;txns:cols&#39;, DEFAULT_COLS);
+  const [views, setViews] = useLocalStorageList&lt;SavedView&gt;(&#39;txns:views&#39;, []);
+  const [selection, setSelection] = useState&lt;Set&lt;string&gt;&gt;(new Set());
+  const [edit, setEdit] = useState&lt;EditState&gt;({ kind: &#39;idle&#39; });
+
+  // 2. Fetch
+  const { data, loading, error } = useTxnPage(q);
+  const rows = data?.rows ?? [];
+
+  // 3. Derived
+  const allSelected = rows.length &gt; 0 &amp;&amp; rows.every(r =&gt; selection.has(r.id));
+
+  // 4. Render
+  return (
+    &lt;div className=&quot;heavy-table&quot; aria-busy={loading}&gt;
+      {/* SWAPPABLE TOOLBAR */}
+      {selection.size === 0 ? (
+        &lt;DataToolbar&gt;
+          &lt;FilterChips label=&quot;Status&quot; options={STATUS_OPTS}
+            value={q.statuses}
+            onChange={(v) =&gt; setQ({ statuses: v })} /&gt;
+          &lt;FilterChips label=&quot;Date&quot; options={DATE_OPTS}
+            value={[q.dateRange]} onChange={([v]) =&gt; setQ({ dateRange: v })} /&gt;
+          &lt;DropdownMenu label=&quot;Views&quot;&gt;
+            {views.map(v =&gt; (
+              &lt;DropdownMenu.Item key={v.id} onSelect={() =&gt; setQ(v.q)}&gt;
+                {v.name}
+              &lt;/DropdownMenu.Item&gt;
+            ))}
+            &lt;DropdownMenu.Separator /&gt;
+            &lt;DropdownMenu.Item onSelect={() =&gt; {
+              const name = prompt(&#39;Name this view:&#39;);
+              if (name) setViews([...views, { id: crypto.randomUUID(), name, q }]);
+            }}&gt;+ Save current&lt;/DropdownMenu.Item&gt;
+          &lt;/DropdownMenu&gt;
+          &lt;Popover trigger={&lt;Button&gt;Columns&lt;/Button&gt;}&gt;
+            {ALL_COLS.map(c =&gt; (
+              &lt;Checkbox key={c.key} checked={visibleCols.includes(c.key)} label={c.label}
+                onChange={(v) =&gt; setVisibleCols(
+                  v ? [...visibleCols, c.key] : visibleCols.filter(k =&gt; k !== c.key)
+                )} /&gt;
+            ))}
+          &lt;/Popover&gt;
+          &lt;Button onClick={() =&gt; exportCsv(rows, visibleCols)}&gt;Export CSV&lt;/Button&gt;
+        &lt;/DataToolbar&gt;
+      ) : (
+        &lt;DataToolbar tone=&quot;brand&quot;&gt;
+          &lt;span&gt;{selection.size} selected&lt;/span&gt;
+          &lt;Button onClick={() =&gt; exportCsv(rows.filter(r =&gt; selection.has(r.id)), visibleCols)}&gt;Export&lt;/Button&gt;
+          &lt;Button tone=&quot;warning&quot; onClick={() =&gt; bulkVoid(selection)}&gt;Void&lt;/Button&gt;
+          &lt;Button tone=&quot;danger&quot; onClick={() =&gt; bulkDelete(selection)}&gt;Delete&lt;/Button&gt;
+          &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; setSelection(new Set())}&gt;Cancel&lt;/Button&gt;
+        &lt;/DataToolbar&gt;
+      )}
+
+      {/* THE TABLE */}
+      &lt;div className=&quot;table-wrap&quot;&gt;
+        &lt;table className=&quot;heavy&quot;&gt;
+          &lt;thead&gt;
+            &lt;tr&gt;
+              &lt;th&gt;&lt;Checkbox aria-label=&quot;Select all&quot; checked={allSelected}
+                onChange={(v) =&gt; {
+                  if (v) setSelection(new Set(rows.map(r =&gt; r.id)));
+                  else setSelection(new Set());
+                }} /&gt;&lt;/th&gt;
+              {visibleCols.map(c =&gt; (
+                &lt;th key={c} aria-sort={ariaSort(q.sort, c)}&gt;
+                  &lt;SortButton field={c} q={q} setQ={setQ} /&gt;
+                &lt;/th&gt;
+              ))}
+            &lt;/tr&gt;
+          &lt;/thead&gt;
+          &lt;tbody&gt;
+            {rows.map(row =&gt; (
+              &lt;tr key={row.id} data-selected={selection.has(row.id)}&gt;
+                &lt;td&gt;&lt;Checkbox aria-label={`Select ${row.ref}`}
+                  checked={selection.has(row.id)}
+                  onChange={(v) =&gt; setSelection(s =&gt; {
+                    const n = new Set(s);
+                    v ? n.add(row.id) : n.delete(row.id);
+                    return n;
+                  })} /&gt;&lt;/td&gt;
+                {visibleCols.map(c =&gt; (
+                  &lt;EditableCell key={c}
+                    row={row} col={c}
+                    edit={edit} setEdit={setEdit}
+                  /&gt;
+                ))}
+              &lt;/tr&gt;
+            ))}
+          &lt;/tbody&gt;
+        &lt;/table&gt;
+      &lt;/div&gt;
+
+      {/* PAGER */}
+      &lt;footer className=&quot;heavy-foot&quot;&gt;
+        &lt;Pagination page={q.page} pageCount={pageCount} onChange={(p) =&gt; setQ({ page: p })} /&gt;
+      &lt;/footer&gt;
+    &lt;/div&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 16px; max-width: 460px; margin: 0 auto;">
+          <div style="display: flex; gap: 6px; padding: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; margin-bottom: 8px; font: 500 11px/1 var(--font-sans);">
+            <span style="padding: 4px 8px; background: var(--brand-soft); border-radius: 9999px;">Status: Open</span>
+            <span style="padding: 4px 8px; background: var(--surface-muted); border-radius: 9999px;">Views ▾</span>
+            <span style="padding: 4px 8px; background: var(--surface-muted); border-radius: 9999px;">Columns</span>
+            <span style="margin-left: auto; padding: 4px 8px; background: var(--surface-muted); border-radius: 9999px;">Export</span>
+          </div>
+          <table style="width: 100%; border-collapse: collapse; font: 500 12px/1.4 var(--font-sans);">
+            <thead><tr style="border-bottom: 2px solid var(--border);"><th style="padding: 4px; width: 16px;"><input type="checkbox" /></th><th style="text-align: left; padding: 4px;">Ref</th><th style="text-align: right; padding: 4px;">Amount</th><th style="text-align: left; padding: 4px;">Status</th></tr></thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid var(--border);"><td style="padding: 4px;"><input type="checkbox" /></td><td style="padding: 4px;">TXN-0001</td><td style="padding: 4px; text-align: right; font-family: var(--font-mono);">$12.40</td><td style="padding: 4px;">Open</td></tr>
+              <tr style="border-bottom: 1px solid var(--border);"><td style="padding: 4px;"><input type="checkbox" /></td><td style="padding: 4px;">TXN-0002</td><td style="padding: 4px; text-align: right; font-family: var(--font-mono);">$45.00</td><td style="padding: 4px;">Open</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">HeavyTransactionsTable.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three subtractions — what to remove first when this is overkill.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Drop saved views</h4>
+        <p>If users use 1–2 filter combos, hard-code them as tabs above the table. Saved views are for users with 5+ saved combos who switch hourly.</p>
+<pre>// remove ViewMenu + storage
+&lt;Tabs value={preset}
+  onChange={setPreset}&gt;
+  &lt;Tab value=&quot;all&quot;&gt;All&lt;/Tab&gt;
+  &lt;Tab value=&quot;open&quot;&gt;Open&lt;/Tab&gt;
+&lt;/Tabs&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Drop column visibility</h4>
+        <p>If your row has &lt; 6 columns, every column is essential. Hiding earns nothing. Keep the table fixed-column.</p>
+<pre>// remove ColumnMenu + storage
+// inline ALL_COLS at render:
+{ALL_COLS.map(c =&gt; (
+  &lt;th key={c.key}&gt;{c.label}&lt;/th&gt;
+))}</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Drop inline editing</h4>
+        <p>If edits trigger workflows (PO approval, audit trail), edits belong in a drawer with explicit Save, not inline. See the autosave-drawer recipe.</p>
+<pre>&lt;td onClick={() =&gt;
+  openDrawer(row.id)
+}&gt;
+  {row[c]}
+&lt;/td&gt;
+// no EditableCell at all</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">More layers = more places to fail. These are the load-bearing ones.</p>
+    <ul class="ck-a11y">
+      <li><b>The toolbar swap is announced.</b> Wrap the toolbar slot in <code>role="region" aria-live="polite"</code> so screen readers say "3 selected" when the bulk bar appears.</li>
+      <li><b>Each Checkbox has an <code>aria-label</code>.</b> Per-row: "Select TXN-0001". Header: "Select all on this page". Without labels they're 30 unnamed checkboxes.</li>
+      <li><b>Saved views menu uses <code>role="menu"</code>.</b> The <code>DropdownMenu</code> primitive does this for you — don't roll your own <code>&lt;ul&gt;</code>.</li>
+      <li><b>Sticky first column doesn't change tab order.</b> Visual stickiness via CSS only; Tab still walks the cells in DOM order, left to right.</li>
+      <li><b>Destructive bulk actions go through <code>AlertDialog</code>.</b> The dialog has <code>role="alertdialog"</code>; focus traps inside; Esc cancels; Enter on Confirm proceeds.</li>
+      <li><b>The "current view" badge has aria-current.</b> In the views dropdown, the active item gets <code>aria-current="true"</code> so AT users know which preset is loaded.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <div class="ck-related">
+      <a href="tables-server-paginated.html">Server-paginated table<span class="tag">Recipe</span></a>
+      <a href="tables-editable-cells.html">Editable cells<span class="tag">Recipe</span></a>
+      <a href="tables-responsive-to-cards.html">Responsive to cards<span class="tag">Recipe</span></a>
+      <a href="lists-history-feed.html">History feed<span class="tag">Recipe</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="tables-editable-cells.html"><div class="pager-label">← Previous</div><div class="pager-title">Editable cells</div></a>
+    <a href="tables-responsive-to-cards.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Responsive to cards</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

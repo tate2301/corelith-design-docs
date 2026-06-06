@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Radar · Huchu Charts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../system.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../system-shell.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+  .ck-pull { margin: 14px 0; padding: 14px 18px; background: var(--brand-soft); border-left: 3px solid var(--brand); border-radius: 8px; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-roadmap-note { margin-top: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+  .ck-chart-stage { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; display: grid; place-items: center; }
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../../index.html">Home</a><span class="sep">/</span>
+      <a href="../index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Charts</a><span class="sep">/</span>
+      <span>Radar</span>
+    </div>
+    <h1>Radar / spider chart</h1>
+    <p class="lede">Five-to-seven spokes radiating from a centre, each measuring one axis. The chart that turns a multi-dimensional profile — student, team, vendor — into a single polygon you can compare to a benchmark.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="chart" data-icon-size="12"></span>Charts · 16 of 20</span>
+      <span class="meta-pill">1 primitive · <code>Chart.Radar</code></span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~12 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A polygon plotted on radial axes — each spoke is one normalised metric, each polygon is one entity. The shape itself is the comparison.</p>
+    <p>Radar charts work because the human eye is good at "matches the outline" judgement. Overlay an entity polygon on a benchmark polygon and the dents (under-performing dimensions) jump out instantly. Common uses: student profile across subjects, vendor capability across criteria, team competency across roles. Every spoke must be the same scale (typically 0–100 or 0–5) — mixing units across spokes makes the shape meaningless.</p>
+    <p>Reach for it when you have 5–7 commensurable axes and want shape comparison, not magnitude. Skip it for fewer than 4 axes (a bar chart wins), more than 8 (the polygon gets noisy), or when the axes aren't on the same scale (use small-multiples bars).</p>
+    <div class="ck-pull"><b>The opinion:</b> radars are terrible for two unrelated entities and great for one entity against a known benchmark. Never plot more than three polygons on the same radar — past two, the overlap is visual soup.</div>
+  </section>
+
+  <section id="chart">
+    <h2 class="ds-h2">The chart</h2>
+    <p class="ds-h2-sub">Student profile vs. cohort average. Six axes, two polygons — the student leads in maths and science, lags in writing.</p>
+    <div class="ck-chart-stage">
+      <svg width="380" height="380" viewBox="-200 -200 400 400" role="img" aria-label="Student profile across 6 subjects vs cohort average">
+        <title>Tendai vs. cohort · term grades</title>
+        <desc>Six-axis radar: maths, science, English, history, geography, art. Tendai leads cohort in maths and science, trails in English writing.</desc>
+        <!-- 3 concentric hexagons -->
+        <g fill="none" stroke="var(--border)">
+          <polygon points="0,-150 130,-75 130,75 0,150 -130,75 -130,-75" />
+          <polygon points="0,-100 87,-50 87,50 0,100 -87,50 -87,-50" />
+          <polygon points="0,-50 43,-25 43,25 0,50 -43,25 -43,-25" />
+        </g>
+        <!-- spokes -->
+        <g stroke="var(--border)">
+          <line x1="0" y1="0" x2="0" y2="-150" />
+          <line x1="0" y1="0" x2="130" y2="-75" />
+          <line x1="0" y1="0" x2="130" y2="75" />
+          <line x1="0" y1="0" x2="0" y2="150" />
+          <line x1="0" y1="0" x2="-130" y2="75" />
+          <line x1="0" y1="0" x2="-130" y2="-75" />
+        </g>
+        <!-- cohort polygon (benchmark) -->
+        <polygon points="0,-100 87,-50 87,50 0,100 -87,50 -87,-50" fill="var(--text-subtle)" fill-opacity="0.15" stroke="var(--text-subtle)" stroke-width="1.5" stroke-dasharray="4 3" />
+        <!-- student polygon -->
+        <polygon points="0,-135 117,-65 80,45 0,75 -100,55 -110,-65" fill="var(--brand)" fill-opacity="0.3" stroke="var(--brand-strong)" stroke-width="2" />
+        <!-- vertex dots -->
+        <g fill="var(--brand-strong)">
+          <circle cx="0" cy="-135" r="4" /><circle cx="117" cy="-65" r="4" /><circle cx="80" cy="45" r="4" /><circle cx="0" cy="75" r="4" /><circle cx="-100" cy="55" r="4" /><circle cx="-110" cy="-65" r="4" />
+        </g>
+        <!-- axis labels -->
+        <g font-family="var(--font-sans)" font-size="12" font-weight="600" fill="var(--text-strong)">
+          <text x="0" y="-165" text-anchor="middle">Maths</text>
+          <text x="148" y="-78" text-anchor="start">Science</text>
+          <text x="148" y="82" text-anchor="start">English</text>
+          <text x="0" y="170" text-anchor="middle">History</text>
+          <text x="-148" y="82" text-anchor="end">Geography</text>
+          <text x="-148" y="-78" text-anchor="end">Art</text>
+        </g>
+      </svg>
+      <div style="display: flex; gap: 18px; margin-top: 12px; font: var(--type-body-sm); color: var(--text-muted);">
+        <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 14px; height: 4px; background: var(--brand-strong);"></span>Tendai</span>
+        <span style="display: inline-flex; align-items: center; gap: 6px;"><span style="display: inline-block; width: 14px; height: 4px; background: var(--text-subtle); opacity: 0.6;"></span>Cohort avg.</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart.Radar</a>
+    </div>
+    <div class="ck-roadmap-note"><b>Roadmap:</b> <code>Chart.Radar</code> with auto-normalised axes and built-in comparison ships in v0.2. v0.1-alpha users compose with the inline SVG above; the axis math is the same.</div>
+  </section>
+
+  <section id="snippet">
+    <h2 class="ds-h2">React snippet</h2>
+    <p class="ds-h2-sub">Define <code>axes</code> with names + max values; pass an array of <code>series</code>, each a polygon.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart } from &#39;@huchu/react&#39;;
+
+const axes = [
+  { name: &#39;Maths&#39;,     max: 100 },
+  { name: &#39;Science&#39;,   max: 100 },
+  { name: &#39;English&#39;,   max: 100 },
+  { name: &#39;History&#39;,   max: 100 },
+  { name: &#39;Geography&#39;, max: 100 },
+  { name: &#39;Art&#39;,       max: 100 },
+];
+
+const series = [
+  { name: &#39;Tendai&#39;,      values: [92, 88, 64, 72, 78, 84], tone: &#39;brand&#39; },
+  { name: &#39;Cohort avg.&#39;, values: [70, 68, 74, 72, 70, 72], tone: &#39;subtle&#39;, dashed: true },
+];
+
+export function StudentRadar() {
+  return (
+    &lt;Chart.Radar
+      axes={axes}
+      series={series}
+      size={380}
+      legend
+      aria-label=&quot;Tendai term grades vs cohort, leads in maths/science, trails in English&quot;
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <svg width="260" height="260" viewBox="-130 -130 260 260" role="img">
+          <g fill="none" stroke="var(--border)"><polygon points="0,-100 87,-50 87,50 0,100 -87,50 -87,-50" /><polygon points="0,-66 58,-33 58,33 0,66 -58,33 -58,-33" /></g>
+          <polygon points="0,-66 58,-33 58,33 0,66 -58,33 -58,-33" fill="var(--text-subtle)" fill-opacity="0.15" stroke="var(--text-subtle)" stroke-dasharray="3 2" />
+          <polygon points="0,-90 78,-42 54,30 0,50 -66,38 -74,-44" fill="var(--brand)" fill-opacity="0.3" stroke="var(--brand-strong)" stroke-width="2" />
+        </svg>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Chart.Radar</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="customise">
+    <h2 class="ds-h2">Customising</h2>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Single polygon, no benchmark</h4>
+        <p>For self-assessment displays — "how are we doing across these axes?" — drop the benchmark and just show one shape.</p>
+<pre>&lt;Chart.Radar
+  axes={axes}
+  series={[{ name: &#39;You&#39;,
+    values: [...] }]}
+  showGridLevels
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Filled vs. outline</h4>
+        <p>Use filled polygons for one series, outline-only for two or three to keep them visually distinguishable.</p>
+<pre>&lt;Chart.Radar
+  axes={axes}
+  series={[
+    { name: &#39;A&#39;, fill: true },
+    { name: &#39;B&#39;, fill: false }
+  ]}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Square axis (no axis lines)</h4>
+        <p>Clean variant — just the polygon and axis labels, no gridlines. Reads more like an infographic.</p>
+<pre>&lt;Chart.Radar
+  axes={axes}
+  series={series}
+  grid=&quot;none&quot;
+  axisLines={false}
+/&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="in-context">
+    <h2 class="ds-h2">In context</h2>
+    <p class="ds-h2-sub">A stat hero with a "Student of the term" header, then a row card with the radar and a numeric breakdown side-by-side.</p>
+    <div class="ck-chart-stage" style="padding: 18px;">
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; width: 100%; max-width: 720px;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px;">
+          <div>
+            <div style="font: 500 11px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase;">Term profile · Tendai Moyo</div>
+            <div style="font: 700 24px/1.1 var(--font-sans); color: var(--text-strong); margin-top: 4px;">79.7 <span style="font: 500 13px/1 var(--font-sans); color: var(--tone-success);">+5.2 vs. cohort</span></div>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 200px; gap: 18px; align-items: center;">
+          <svg width="100%" height="220" viewBox="-130 -130 260 260" role="img">
+            <g fill="none" stroke="var(--border)"><polygon points="0,-100 87,-50 87,50 0,100 -87,50 -87,-50" /><polygon points="0,-66 58,-33 58,33 0,66 -58,33 -58,-33" /></g>
+            <polygon points="0,-66 58,-33 58,33 0,66 -58,33 -58,-33" fill="var(--text-subtle)" fill-opacity="0.15" stroke="var(--text-subtle)" stroke-dasharray="3 2" />
+            <polygon points="0,-92 78,-42 54,30 0,50 -66,38 -74,-44" fill="var(--brand)" fill-opacity="0.3" stroke="var(--brand-strong)" stroke-width="2" />
+          </svg>
+          <div style="display: grid; gap: 4px; font: 500 12px/1.4 var(--font-sans);">
+            <div style="display: flex; justify-content: space-between;"><span style="color: var(--text-muted);">Maths</span><b>92</b></div>
+            <div style="display: flex; justify-content: space-between;"><span style="color: var(--text-muted);">Science</span><b>88</b></div>
+            <div style="display: flex; justify-content: space-between;"><span style="color: var(--text-muted);">Art</span><b>84</b></div>
+            <div style="display: flex; justify-content: space-between;"><span style="color: var(--text-muted);">Geography</span><b>78</b></div>
+            <div style="display: flex; justify-content: space-between;"><span style="color: var(--text-muted);">History</span><b>72</b></div>
+            <div style="display: flex; justify-content: space-between;"><span style="color: var(--tone-danger);">English</span><b style="color: var(--tone-danger);">64</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">Radar charts visually invite comparison but spatially scramble it — left-right and up-down don't mean anything. The desc and fallback table do all the work.</p>
+    <ul class="ck-a11y">
+      <li><b>One <code>role="img"</code> per radar.</b> The <code>&lt;title&gt;</code> names what's being profiled; the <code>&lt;desc&gt;</code> lists each axis with its value for every series.</li>
+      <li><b>Aria-label is comparative.</b> "Tendai term grades vs. cohort, leads in maths and science, trails in English" — relationship first, axes second.</li>
+      <li><b>Polygons distinguished by more than colour.</b> Use solid vs. dashed strokes (and stroke widths) so the benchmark and the focus series stay distinct in monochrome.</li>
+      <li><b>Hidden axis × series table.</b> An <code>sr-only</code> <code>&lt;table&gt;</code> with axes as rows, series as columns lets screen readers compare row-by-row.</li>
+      <li><b>Vertex dots are tab targets.</b> Each vertex carries an aria-label like "Maths 92, cohort 70, +22 vs. cohort"; arrow keys cycle around the polygon.</li>
+      <li><b>Legend is text-redundant.</b> Series names appear both as colour swatches and as visible labels next to them; never colour-only.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related charts</h2>
+    <div class="ck-related">
+      <a href="../charts/chart-bar-grouped.html">Grouped bars<span class="tag">Chart</span></a>
+      <a href="bullet.html">Bullet<span class="tag">Chart</span></a>
+      <a href="../charts/chart-pie.html">Pie<span class="tag">Chart</span></a>
+      <a href="scatter.html">Scatter<span class="tag">Chart</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="scatter.html"><div class="pager-label">← Previous</div><div class="pager-title">Scatter</div></a>
+    <a href="treemap.html" class="next"><div class="pager-label">Next chart →</div><div class="pager-title">Treemap</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#chart">The chart</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#snippet">React snippet</a></li>
+    <li><a href="#customise">Customising</a></li>
+    <li><a href="#in-context">In context</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related charts</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

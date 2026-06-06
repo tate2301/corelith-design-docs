@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Inline edit on row · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .phone { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+  .ck-screen .brand { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .ph-title { font: 700 13px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .ck-screen .ph-thead { display: grid; grid-template-columns: 1fr 1fr 0.8fr; gap: 4px; padding: 4px 6px; font: 500 9px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase; background: var(--surface-muted); border-radius: 4px; }
+  .ck-screen .ph-trow { display: grid; grid-template-columns: 1fr 1fr 0.8fr; gap: 4px; padding: 6px 6px; border-bottom: 1px solid var(--border); font: 500 10px/1.2 var(--font-mono); color: var(--text-strong); align-items: center; }
+  .ck-screen .ph-cell { padding: 2px 4px; border-radius: 4px; }
+  .ck-screen .ph-cell.editing { border: 1px solid var(--brand); box-shadow: 0 0 0 2px var(--focus-ring-soft); background: var(--surface); }
+  .ck-screen .ph-cell.saving { background: var(--surface-muted); color: var(--text-subtle); }
+  .ck-screen .ph-cell.error { border: 1px solid var(--tone-danger); color: var(--tone-danger); }
+  .ck-screen .ph-cell.ok { background: var(--tone-success-bg); color: var(--tone-success); }
+  .ck-screen .ph-hint { font: 500 9px/1.2 var(--font-mono); color: var(--text-subtle); margin-top: auto; }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p  { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+
+  /* Honest "code-only" preview marker — used when a step is conceptual code
+     (state machine, hook, reducer) and a visual mockup would be misleading. */
+  .ck-code-only-note {
+    display: grid; gap: 8px;
+    padding: 22px 26px;
+    background: var(--surface-muted);
+    border: 1px dashed var(--border-strong);
+    border-radius: 12px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-code-only-note .ck-code-only-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    align-self: start;
+    font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--surface); color: var(--brand-strong);
+    border: 1px solid var(--border);
+  }
+  .ck-code-only-note p { margin: 0; color: var(--text-muted); }
+  .ck-code-only-note code {
+    background: var(--surface); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+
+  /* Off-system component roadmap pill — for recipes that compose with
+     components not yet in @huchu/react v0.1.0-alpha.0. */
+  .ck-roadmap-note {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--brand);
+    border-radius: 8px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code {
+    background: var(--surface-muted); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Forms</a><span class="sep">/</span>
+      <span>Inline edit on row</span>
+    </div>
+    <h1>Build inline-editable cells that feel like a spreadsheet</h1>
+    <p class="lede">By the end of this recipe you'll have a table where tapping a cell opens it for edit, Enter saves, Esc reverts, Tab moves to the next cell, the row paints in optimistically while the server confirms, and a failed save rolls the row back with the error attached to the specific cell.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="edit" data-icon-size="12"></span>Forms</span>
+      <span class="meta-pill">3 primitives · 1 block · 1 pattern</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~30 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A per-cell state machine — <code>'view' | 'editing' | 'saving' | 'error'</code> — plus optimistic UI so the row updates the instant the user hits Enter, and rolls back if the server says no.</p>
+    <p>The gold-ledger and stock-take tables in operator apps live in this pattern. Someone is counting bags of mealie-meal at a depot and needs to type 14 into a quantity cell, hit Tab, type 6 into the next, and move on. Forcing a modal per row or a "Save all" button at the bottom turns a 20-cell update into a wrist-cramp ritual.</p>
+    <p>The opinionated bits: state is per cell, not per row (two cells in the same row can be in different states); the row paints with the new value <i>before</i> the server confirms; on 4xx the cell gets a red ring and a one-line error, not a banner; on 5xx the row rolls back and a Toast offers a retry.</p>
+    <p><b>Skip this recipe if</b> the table is read-only or the edits trigger heavy downstream effects (price changes that recompute invoices). Use the autosave drawer recipe — the explicit context helps the user understand the blast radius.</p>
+  </section>
+
+  <!-- WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three cell states the user actually sees.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · Gold ledger</span>
+          <p class="ph-title">Stock count · Park Centre</p>
+          <div class="ph-thead"><span>SKU</span><span>Qty</span><span>Loc</span></div>
+          <div class="ph-trow"><span class="ph-cell">MM-25</span><span class="ph-cell editing">14│</span><span class="ph-cell">A-3</span></div>
+          <div class="ph-trow"><span class="ph-cell">SG-10</span><span class="ph-cell">6</span><span class="ph-cell">B-1</span></div>
+          <div class="ph-trow"><span class="ph-cell">OL-2L</span><span class="ph-cell">22</span><span class="ph-cell">A-1</span></div>
+          <p class="ph-hint">Enter saves · Esc reverts · Tab next cell</p>
+        </div>
+        <div class="caption"><span class="num">01</span> Editing — keyboard wins</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · Gold ledger</span>
+          <p class="ph-title">Stock count · Park Centre</p>
+          <div class="ph-thead"><span>SKU</span><span>Qty</span><span>Loc</span></div>
+          <div class="ph-trow"><span class="ph-cell">MM-25</span><span class="ph-cell ok">14</span><span class="ph-cell">A-3</span></div>
+          <div class="ph-trow"><span class="ph-cell">SG-10</span><span class="ph-cell saving">6…</span><span class="ph-cell">B-1</span></div>
+          <div class="ph-trow"><span class="ph-cell">OL-2L</span><span class="ph-cell">22</span><span class="ph-cell">A-1</span></div>
+          <p class="ph-hint">Saving · optimistic paint</p>
+        </div>
+        <div class="caption"><span class="num">02</span> Saving — optimistic, no blur</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · Gold ledger</span>
+          <p class="ph-title">Stock count · Park Centre</p>
+          <div class="ph-thead"><span>SKU</span><span>Qty</span><span>Loc</span></div>
+          <div class="ph-trow"><span class="ph-cell">MM-25</span><span class="ph-cell error">−1</span><span class="ph-cell">A-3</span></div>
+          <div class="ph-trow"><span class="ph-cell">SG-10</span><span class="ph-cell">6</span><span class="ph-cell">B-1</span></div>
+          <div class="ph-trow"><span class="ph-cell">OL-2L</span><span class="ph-cell">22</span><span class="ph-cell">A-1</span></div>
+          <p class="ph-hint">Qty can't be negative · Enter to retry, Esc to revert</p>
+        </div>
+        <div class="caption"><span class="num">03</span> Error — cell-scoped</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIVE IN PORTALS -->
+  <section id="demos">
+    <h2 class="ds-h2">You can see this live in</h2>
+    <p class="ds-h2-sub">Portal demos that wire this inline-edit table in context. Open one and tap a cell.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../portals/gold/demo.html" target="_blank" rel="noopener"><span class="kind">Demo</span><span data-icon="gold" data-icon-size="12"></span>Gold mine clerk — See it in action →</a>
+      <a class="ck-piece" href="../portals/admin/demo.html" target="_blank" rel="noopener"><span class="kind">Demo</span><span data-icon="shield" data-icon-size="12"></span>Admin portal — See it in action →</a>
+      <a class="ck-piece" href="../portals/owner/demo.html" target="_blank" rel="noopener"><span class="kind">Demo</span><span data-icon="dashboard" data-icon-size="12"></span>Owner / Manager — See it in action →</a>
+    </div>
+  </section>
+
+  <!-- REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/x-data-table.html"><span class="kind">Pattern</span>Data table</a>
+      <a class="ck-piece" href="../system/b-row-card.html"><span class="kind">Block</span>Row card</a>
+      <a class="ck-piece" href="../system/p-input.html"><span class="kind">Primitive</span>Input &amp; field</a>
+      <a class="ck-piece" href="../system/p-input-group.html"><span class="kind">Primitive</span>Input group</a>
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+      <a class="ck-piece" href="../system/p-toast.html"><span class="kind">Primitive</span>Toast</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>DataTable</code>, <code>Input</code>, <code>InputGroup</code>, <code>Button</code>, <code>Toast</code>, <code>Stack</code>. We introduce a small <code>useEditableCell</code> hook here; reuse it on every editable table.</p>
+  </section>
+
+  <!-- STEP-BY-STEP -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <!-- Step 1 -->
+    <div class="ck-step"><span class="n">01</span><h3>Per-cell state — keyed by <code>rowId + colKey</code></h3></div>
+    <p>A single <code>editingCell</code> string at the table level means only one cell can be in any non-view state at a time. That's almost always what you want: the user is typing in one place, and a server save for a different cell can race independently. Keep status maps for <code>saving</code> and <code>errors</code> keyed by the same composite key.</p>
+    <div class="ds-specimen"
+         data-code='import { useState } from &#39;@huchu/react&#39;;
+
+type CellKey = `${string}|${string}`;        // `${rowId}|${colKey}`
+const ck = (rowId: string, col: string): CellKey =&gt; `${rowId}|${col}`;
+
+type CellStatus = &#39;view&#39; | &#39;editing&#39; | &#39;saving&#39; | &#39;error&#39;;
+
+export function useTableEdit() {
+  const [editing, setEditing] = useState&lt;CellKey | null&gt;(null);
+  const [saving, setSaving]   = useState&lt;Record&lt;CellKey, boolean&gt;&gt;({});
+  const [errors, setErrors]   = useState&lt;Record&lt;CellKey, string&gt;&gt;({});
+
+  const statusOf = (rowId: string, col: string): CellStatus =&gt; {
+    const k = ck(rowId, col);
+    if (errors[k])    return &#39;error&#39;;
+    if (saving[k])    return &#39;saving&#39;;
+    if (editing === k) return &#39;editing&#39;;
+    return &#39;view&#39;;
+  };
+
+  return {
+    statusOf,
+    startEdit: (rowId: string, col: string) =&gt; setEditing(ck(rowId, col)),
+    cancelEdit: () =&gt; setEditing(null),
+    markSaving: (rowId: string, col: string) =&gt; {
+      const k = ck(rowId, col);
+      setEditing(null);
+      setSaving((s) =&gt; ({ ...s, [k]: true }));
+      setErrors((e) =&gt; { const n = { ...e }; delete n[k]; return n; });
+    },
+    markSaved: (rowId: string, col: string) =&gt;
+      setSaving((s) =&gt; { const n = { ...s }; delete n[ck(rowId, col)]; return n; }),
+    markError: (rowId: string, col: string, msg: string) =&gt; {
+      const k = ck(rowId, col);
+      setSaving((s) =&gt; { const n = { ...s }; delete n[k]; return n; });
+      setErrors((e) =&gt; ({ ...e, [k]: msg }));
+    },
+    errorOf: (rowId: string, col: string) =&gt; errors[ck(rowId, col)] ?? null,
+  };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p><code>saving</code>, <code>errors</code>: maps — multiple cells can be in flight.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Per-cell state</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="ck-step"><span class="n">02</span><h3>Optimistic rows — local edits live alongside server data</h3></div>
+    <p>Hold a <code>localPatch</code> map keyed by row id; the row renders <code>{ ...server, ...localPatch[rowId] }</code>. On save success we clear that key; on error we keep it and let the cell render its error state so the user can fix or revert.</p>
+    <div class="ds-specimen"
+         data-code='import { useState } from &#39;@huchu/react&#39;;
+
+type StockRow = { id: string; sku: string; qty: number; loc: string };
+
+export function useOptimisticRows(server: StockRow[]) {
+  const [patches, setPatches] = useState&lt;Record&lt;string, Partial&lt;StockRow&gt;&gt;&gt;({});
+
+  const merged: StockRow[] = server.map((r) =&gt; ({ ...r, ...patches[r.id] }));
+
+  return {
+    rows: merged,
+    patch: (rowId: string, p: Partial&lt;StockRow&gt;) =&gt;
+      setPatches((all) =&gt; ({ ...all, [rowId]: { ...all[rowId], ...p } })),
+    rollback: (rowId: string) =&gt;
+      setPatches((all) =&gt; { const n = { ...all }; delete n[rowId]; return n; }),
+    clear: (rowId: string) =&gt;
+      setPatches((all) =&gt; { const n = { ...all }; delete n[rowId]; return n; }),
+  };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>Save OK → <code>clear(rowId)</code> (the server now matches).</p>
+          <p>Save 5xx → <code>rollback(rowId)</code> + Toast retry.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Optimistic UI</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="ck-step"><span class="n">03</span><h3>Keyboard contract: Enter saves, Esc reverts, Tab moves to next editable cell</h3></div>
+    <p>Behaviour your users instinctively expect from Excel. Enter blurs and triggers save; Esc blurs without saving; Tab is a save-and-advance. Build the move-to-next as a list of editable column keys per row, so a Tab off the last cell of row N lands on the first editable cell of row N+1.</p>
+    <div class="ds-specimen"
+         data-code='import { useRef, useEffect } from &#39;@huchu/react&#39;;
+
+function EditableCell({
+  rowId, col, value, validate, onCommit, onCancel, onAdvance,
+}: {
+  rowId: string;
+  col: string;
+  value: string;
+  validate?: (v: string) =&gt; string | null;
+  onCommit: (v: string) =&gt; void;
+  onCancel: () =&gt; void;
+  onAdvance: () =&gt; void;
+}) {
+  const ref = useRef&lt;HTMLInputElement&gt;(null);
+  useEffect(() =&gt; { ref.current?.focus(); ref.current?.select(); }, []);
+
+  return (
+    &lt;Input
+      ref={ref}
+      value={value}
+      onChange={(v) =&gt; ref.current!.value = v}     // controlled by ref to avoid re-render storm
+      onKeyDown={(e: React.KeyboardEvent&lt;HTMLInputElement&gt;) =&gt; {
+        if (e.key === &#39;Enter&#39;) {
+          e.preventDefault();
+          const v = ref.current!.value;
+          const err = validate?.(v);
+          if (err) return; // cell shows the error, stay in edit
+          onCommit(v);
+        } else if (e.key === &#39;Escape&#39;) {
+          e.preventDefault(); onCancel();
+        } else if (e.key === &#39;Tab&#39;) {
+          e.preventDefault();
+          const v = ref.current!.value;
+          if (validate?.(v)) { onCancel(); return; }
+          onCommit(v);
+          onAdvance();
+        }
+      }}
+      aria-label={`${col} for row ${rowId}`}
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>Validation runs synchronously on Enter; failing keeps the cell editing so the user can fix the value.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Keyboard</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 3.5 — reusable wrapper -->
+    <div class="ck-step"><span class="n">3.5</span><h3>Reusable inline-edit wrapper — compose with the <code>.p-inline-edit</code> primitive</h3></div>
+    <p>Every editable cell is the same trio: a text input, a save check, a cancel cross. The new <code>.p-inline-edit</code> primitive in <code>components.css</code> ships exactly that shell — focus ring, hover states, padding, and the two icon slots — so your <code>EditableCell</code> stops carrying its own border / focus / icon-button rules. Compose it like this:</p>
+    <div class="ds-specimen"
+         data-code='import { InlineEdit } from &#39;@huchu/react&#39;;
+
+function EditableCellShell({ value, onCommit, onCancel, validate }: {
+  value: string;
+  onCommit: (v: string) =&gt; void;
+  onCancel: () =&gt; void;
+  validate?: (v: string) =&gt; string | null;
+}) {
+  return (
+    &lt;InlineEdit
+      defaultValue={value}
+      validate={validate}
+      onSave={onCommit}
+      onCancel={onCancel}
+    /&gt;
+  );
+}
+
+// Compiles to the tokenised .p-inline-edit shell:
+//   &lt;span class="p-inline-edit"&gt;
+//     &lt;input value="..." /&gt;
+//     &lt;button class="p-inline-edit-save"   aria-label="Save"&gt;✓&lt;/button&gt;
+//     &lt;button class="p-inline-edit-cancel" aria-label="Cancel"&gt;✕&lt;/button&gt;
+//   &lt;/span&gt;'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <span class="p-inline-edit" style="font: 500 13px/1 var(--font-mono);">
+            <input type="text" value="A-3" style="width: 80px;" />
+            <button type="button" class="p-inline-edit-save" aria-label="Save"><span data-icon="check" data-icon-size="12"></span></button>
+            <button type="button" class="p-inline-edit-cancel" aria-label="Cancel"><span data-icon="x" data-icon-size="12"></span></button>
+          </span>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3.5 · .p-inline-edit shell</span><span class="spacer"></span><span class="t-mono">components.css</span></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="ck-step"><span class="n">04</span><h3>Validate per cell, both client- and server-side</h3></div>
+    <p>A client-side validator catches the obvious (negative qty, non-numeric, max length); the server is the final word. Both surface as the same per-cell error: red ring + one-line message under the cell. Don't ever silently coerce — "−1" rounding to 0 will lose you a stocktake somewhere.</p>
+    <div class="ds-specimen"
+         data-code='type Validator = (v: string) =&gt; string | null;
+
+const validators: Record&lt;string, Validator&gt; = {
+  qty: (v) =&gt; {
+    const n = Number(v);
+    if (!Number.isFinite(n))          return &#39;Qty must be a number.&#39;;
+    if (n &lt; 0)                        return &quot;Qty can&#39;t be negative.&quot;;
+    if (!Number.isInteger(n))         return &#39;Qty must be a whole number.&#39;;
+    return null;
+  },
+  loc: (v) =&gt; (/^[A-Z]-\d{1,2}$/.test(v) ? null : &#39;Loc must look like A-3.&#39;),
+  sku: (v) =&gt; (v.trim().length === 0 ? &#39;Required&#39; : null),
+};
+
+async function patchCell(rowId: string, col: string, value: string) {
+  const res = await fetch(`/api/stock/${rowId}`, {
+    method: &#39;PATCH&#39;,
+    body: JSON.stringify({ [col]: col === &#39;qty&#39; ? Number(value) : value }),
+  });
+  if (res.status === 400) {
+    const body = await res.json();
+    throw { kind: &#39;validation&#39; as const, message: body.message as string };
+  }
+  if (!res.ok) throw { kind: &#39;network&#39; as const, message: &#39;Could not reach server&#39; };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>5xx (<code>network</code>) → rollback row, Toast "Retry".</p>
+          <p>4xx (<code>validation</code>) → keep optimistic value, mark cell error.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Validation + API shape</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="ck-step"><span class="n">05</span><h3>Wire it together — one row renderer, three rendering branches per cell</h3></div>
+    <p>The row renderer reads <code>statusOf(rowId, col)</code> for each editable cell and returns one of: read-only value, editing <code>EditableCell</code>, or read-only with error chip below. Saving is just a paint colour — the value already shows the optimistic update.</p>
+    <div class="ds-specimen"
+         data-code='function Cell({ row, col, edit, optimistic }: {
+  row: StockRow; col: keyof StockRow;
+  edit: ReturnType&lt;typeof useTableEdit&gt;;
+  optimistic: ReturnType&lt;typeof useOptimisticRows&gt;;
+}) {
+  const status = edit.statusOf(row.id, col as string);
+  const value = String(row[col]);
+
+  const commit = async (v: string) =&gt; {
+    optimistic.patch(row.id, { [col]: col === &#39;qty&#39; ? Number(v) : v });
+    edit.markSaving(row.id, col as string);
+    try {
+      await patchCell(row.id, col as string, v);
+      optimistic.clear(row.id);
+      edit.markSaved(row.id, col as string);
+    } catch (e: any) {
+      if (e.kind === &#39;validation&#39;) {
+        edit.markError(row.id, col as string, e.message);
+      } else {
+        optimistic.rollback(row.id);
+        edit.markError(row.id, col as string, e.message);
+        Toast.show(&#39;Save failed&#39;, { action: { label: &#39;Retry&#39;, onClick: () =&gt; commit(v) } });
+      }
+    }
+  };
+
+  if (status === &#39;editing&#39;) {
+    return (
+      &lt;EditableCell
+        rowId={row.id}
+        col={col as string}
+        value={value}
+        validate={validators[col as string]}
+        onCommit={commit}
+        onCancel={() =&gt; edit.cancelEdit()}
+        onAdvance={() =&gt; { /* delegated up to table */ }}
+      /&gt;
+    );
+  }
+
+  return (
+    &lt;div
+      role=&quot;button&quot;
+      tabIndex={0}
+      onClick={() =&gt; edit.startEdit(row.id, col as string)}
+      onKeyDown={(e) =&gt; { if (e.key === &#39;Enter&#39;) edit.startEdit(row.id, col as string); }}
+      className={status === &#39;saving&#39; ? &#39;t-subtle&#39; : status === &#39;error&#39; ? &#39;cell-error&#39; : undefined}
+      aria-invalid={status === &#39;error&#39; || undefined}
+    &gt;
+      {value}
+      {status === &#39;error&#39; &amp;&amp; (
+        &lt;div role=&quot;alert&quot; className=&quot;t-mono&quot; style={{ color: &#39;var(--tone-danger)&#39; }}&gt;
+          {edit.errorOf(row.id, col as string)}
+        &lt;/div&gt;
+      )}
+    &lt;/div&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>Saving is a visual tint on the view branch, not its own render path.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 5 · Cell renderer</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- FINAL COMPOSITION -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The <code>StockTable</code>, assembled. Cell state machine, optimistic patches, keyboard contract, error recovery.</p>
+    <div class="ds-specimen"
+         data-code='import { useRef, useEffect, useState } from &#39;@huchu/react&#39;;
+import { Stack, Input, Button, Toast, DataTable } from &#39;@huchu/react&#39;;
+
+type StockRow = { id: string; sku: string; qty: number; loc: string };
+
+// ── Per-cell edit state (see Step 1) ───────────────────────────
+type CellKey = `${string}|${string}`;
+const ck = (r: string, c: string): CellKey =&gt; `${r}|${c}`;
+
+function useTableEdit() {
+  const [editing, setEditing] = useState&lt;CellKey | null&gt;(null);
+  const [saving, setSaving]   = useState&lt;Record&lt;CellKey, boolean&gt;&gt;({});
+  const [errors, setErrors]   = useState&lt;Record&lt;CellKey, string&gt;&gt;({});
+
+  return {
+    isEditing: (r: string, c: string) =&gt; editing === ck(r, c),
+    isSaving:  (r: string, c: string) =&gt; !!saving[ck(r, c)],
+    errorOf:   (r: string, c: string) =&gt; errors[ck(r, c)] ?? null,
+    startEdit: (r: string, c: string) =&gt; setEditing(ck(r, c)),
+    cancelEdit: () =&gt; setEditing(null),
+    markSaving: (r: string, c: string) =&gt; {
+      const k = ck(r, c);
+      setEditing(null);
+      setSaving(s =&gt; ({ ...s, [k]: true }));
+      setErrors(e =&gt; { const n = { ...e }; delete n[k]; return n; });
+    },
+    markSaved: (r: string, c: string) =&gt;
+      setSaving(s =&gt; { const n = { ...s }; delete n[ck(r, c)]; return n; }),
+    markError: (r: string, c: string, msg: string) =&gt; {
+      const k = ck(r, c);
+      setSaving(s =&gt; { const n = { ...s }; delete n[k]; return n; });
+      setErrors(e =&gt; ({ ...e, [k]: msg }));
+    },
+  };
+}
+
+// ── Optimistic rows (see Step 2) ───────────────────────────────
+function useOptimisticRows(server: StockRow[]) {
+  const [patches, setPatches] = useState&lt;Record&lt;string, Partial&lt;StockRow&gt;&gt;&gt;({});
+  return {
+    rows: server.map(r =&gt; ({ ...r, ...patches[r.id] })),
+    patch: (id: string, p: Partial&lt;StockRow&gt;) =&gt;
+      setPatches(all =&gt; ({ ...all, [id]: { ...all[id], ...p } })),
+    rollback: (id: string) =&gt;
+      setPatches(all =&gt; { const n = { ...all }; delete n[id]; return n; }),
+    clear: (id: string) =&gt;
+      setPatches(all =&gt; { const n = { ...all }; delete n[id]; return n; }),
+  };
+}
+
+// ── Validators (see Step 4) ────────────────────────────────────
+const validators: Record&lt;string, (v: string) =&gt; string | null&gt; = {
+  qty: (v) =&gt; {
+    const n = Number(v);
+    if (!Number.isFinite(n))   return &#39;Qty must be a number.&#39;;
+    if (n &lt; 0)                 return &quot;Qty can&#39;t be negative.&quot;;
+    if (!Number.isInteger(n))  return &#39;Qty must be a whole number.&#39;;
+    return null;
+  },
+  loc: (v) =&gt; (/^[A-Z]-\d{1,2}$/.test(v) ? null : &#39;Loc must look like A-3.&#39;),
+  sku: (v) =&gt; (v.trim().length === 0 ? &#39;Required&#39; : null),
+};
+
+async function patchCell(id: string, col: string, value: string) {
+  const res = await fetch(`/api/stock/${id}`, {
+    method: &#39;PATCH&#39;,
+    headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+    body: JSON.stringify({ [col]: col === &#39;qty&#39; ? Number(value) : value }),
+  });
+  if (res.status === 400) {
+    const b = await res.json();
+    throw { kind: &#39;validation&#39; as const, message: b.message as string };
+  }
+  if (!res.ok) throw { kind: &#39;network&#39; as const, message: &#39;Could not reach server&#39; };
+}
+
+// ── Editable cell input (see Step 3) ───────────────────────────
+function CellInput({
+  initial, validate, onCommit, onCancel, onAdvance,
+}: {
+  initial: string;
+  validate?: (v: string) =&gt; string | null;
+  onCommit: (v: string) =&gt; void;
+  onCancel: () =&gt; void;
+  onAdvance: () =&gt; void;
+}) {
+  const ref = useRef&lt;HTMLInputElement&gt;(null);
+  useEffect(() =&gt; { ref.current?.focus(); ref.current?.select(); }, []);
+
+  return (
+    &lt;Input
+      ref={ref}
+      defaultValue={initial}
+      onKeyDown={(e: React.KeyboardEvent&lt;HTMLInputElement&gt;) =&gt; {
+        const v = ref.current!.value;
+        if (e.key === &#39;Enter&#39;) {
+          e.preventDefault();
+          if (validate?.(v)) return;
+          onCommit(v);
+        } else if (e.key === &#39;Escape&#39;) {
+          e.preventDefault(); onCancel();
+        } else if (e.key === &#39;Tab&#39;) {
+          e.preventDefault();
+          if (validate?.(v)) { onCancel(); return; }
+          onCommit(v); onAdvance();
+        }
+      }}
+    /&gt;
+  );
+}
+
+// ── Table ──────────────────────────────────────────────────────
+const EDITABLE_COLS = [&#39;sku&#39;, &#39;qty&#39;, &#39;loc&#39;] as const;
+
+export function StockTable({ initialRows }: { initialRows: StockRow[] }) {
+  const edit = useTableEdit();
+  const optimistic = useOptimisticRows(initialRows);
+
+  const advance = (rowIdx: number, colIdx: number) =&gt; {
+    const nextCol = colIdx + 1;
+    if (nextCol &lt; EDITABLE_COLS.length) {
+      edit.startEdit(optimistic.rows[rowIdx].id, EDITABLE_COLS[nextCol]);
+    } else if (rowIdx + 1 &lt; optimistic.rows.length) {
+      edit.startEdit(optimistic.rows[rowIdx + 1].id, EDITABLE_COLS[0]);
+    } else {
+      edit.cancelEdit();
+    }
+  };
+
+  const commit = async (row: StockRow, col: typeof EDITABLE_COLS[number], v: string) =&gt; {
+    optimistic.patch(row.id, { [col]: col === &#39;qty&#39; ? Number(v) : v } as Partial&lt;StockRow&gt;);
+    edit.markSaving(row.id, col);
+    try {
+      await patchCell(row.id, col, v);
+      optimistic.clear(row.id);
+      edit.markSaved(row.id, col);
+    } catch (e: any) {
+      if (e.kind === &#39;validation&#39;) {
+        edit.markError(row.id, col, e.message);
+      } else {
+        optimistic.rollback(row.id);
+        edit.markError(row.id, col, e.message);
+        Toast.show(&#39;Save failed&#39;, { action: { label: &#39;Retry&#39;, onClick: () =&gt; commit(row, col, v) } });
+      }
+    }
+  };
+
+  return (
+    &lt;DataTable
+      rows={optimistic.rows}
+      columns={[
+        { key: &#39;sku&#39;, label: &#39;SKU&#39;,
+          render: (r, i) =&gt; renderCell(r, &#39;sku&#39;, i) },
+        { key: &#39;qty&#39;, label: &#39;Qty&#39;,
+          render: (r, i) =&gt; renderCell(r, &#39;qty&#39;, i) },
+        { key: &#39;loc&#39;, label: &#39;Loc&#39;,
+          render: (r, i) =&gt; renderCell(r, &#39;loc&#39;, i) },
+      ]}
+    /&gt;
+  );
+
+  function renderCell(row: StockRow, col: typeof EDITABLE_COLS[number], rowIdx: number) {
+    const value = String(row[col]);
+    const colIdx = EDITABLE_COLS.indexOf(col);
+    if (edit.isEditing(row.id, col)) {
+      return (
+        &lt;CellInput
+          initial={value}
+          validate={validators[col]}
+          onCommit={(v) =&gt; commit(row, col, v)}
+          onCancel={() =&gt; edit.cancelEdit()}
+          onAdvance={() =&gt; advance(rowIdx, colIdx)}
+        /&gt;
+      );
+    }
+    const err = edit.errorOf(row.id, col);
+    return (
+      &lt;div
+        role=&quot;button&quot;
+        tabIndex={0}
+        onClick={() =&gt; edit.startEdit(row.id, col)}
+        onKeyDown={(e) =&gt; { if (e.key === &#39;Enter&#39;) edit.startEdit(row.id, col); }}
+        aria-invalid={!!err || undefined}
+        aria-describedby={err ? `${row.id}-${col}-err` : undefined}
+        style={{
+          opacity: edit.isSaving(row.id, col) ? 0.6 : 1,
+          outline: err ? &#39;1px solid var(--tone-danger)&#39; : undefined,
+          padding: &#39;4px 8px&#39;, borderRadius: 6, cursor: &#39;pointer&#39;,
+        }}
+      &gt;
+        {value}
+        {err &amp;&amp; (
+          &lt;div id={`${row.id}-${col}-err`} role=&quot;alert&quot;
+               className=&quot;t-mono&quot; style={{ color: &#39;var(--tone-danger)&#39; }}&gt;
+            {err}
+          &lt;/div&gt;
+        )}
+      &lt;/div&gt;
+    );
+  }
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="width: 480px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px;">
+            <h2 style="font: 700 16px/1.2 var(--font-sans); margin: 0 0 12px;">Stock count · Park Centre</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 8px; background: var(--surface-muted); border-radius: 6px; font: 500 10px/1 var(--font-mono); color: var(--text-subtle); text-transform: uppercase;">
+              <span>SKU</span><span>Qty</span><span>Loc</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 10px 8px; border-bottom: 1px solid var(--border); font: 500 var(--type-body-sm) var(--font-mono); color: var(--text-strong);">
+              <span>MM-25</span>
+              <span style="border: 1px solid var(--brand); box-shadow: 0 0 0 2px var(--focus-ring-soft); border-radius: 4px; padding: 2px 6px; background: var(--surface);">14│</span>
+              <span>A-3</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 10px 8px; border-bottom: 1px solid var(--border); font: 500 var(--type-body-sm) var(--font-mono);">
+              <span style="color: var(--text-strong);">SG-10</span>
+              <span style="background: var(--surface-muted); color: var(--text-subtle); border-radius: 4px; padding: 2px 6px;">6 …</span>
+              <span style="color: var(--text-strong);">B-1</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 10px 8px; border-bottom: 1px solid var(--border); font: 500 var(--type-body-sm) var(--font-mono);">
+              <span style="color: var(--text-strong);">OL-2L</span>
+              <span style="color: var(--tone-danger); border: 1px solid var(--tone-danger); border-radius: 4px; padding: 2px 6px;">−1</span>
+              <span style="color: var(--text-strong);">A-1</span>
+            </div>
+            <p style="font: 500 11px/1.2 var(--font-mono); color: var(--text-subtle); margin: 10px 0 0;">Enter saves · Esc reverts · Tab next cell</p>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">StockTable.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three forks. Each a small diff off the final composition.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Dropdown cell (Select instead of Input)</h4>
+        <p>For status / category cells. Swap <code>CellInput</code> for a <code>CellSelect</code> with the same commit/cancel contract.</p>
+<pre>{edit.isEditing(row.id, col) ? (
+  &lt;Select
+    value={value}
+    autoFocus
+    options={STATUS_OPTIONS}
+    onChange={(v) =&gt; commit(row, col, v)}
+    onBlur={() =&gt; edit.cancelEdit()}
+  /&gt;
+) : (...)}</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Bulk commit (one Save button)</h4>
+        <p>Hold optimistic patches until the user taps "Save all". Drop the per-cell API call; commit becomes a local state set.</p>
+<pre>// commit just stages:
+const commit = (row, col, v) =&gt; {
+  optimistic.patch(row.id, { [col]: v });
+  edit.cancelEdit();
+};
+// new button:
+&lt;Button onClick={async () =&gt; {
+  await saveAll(optimistic.rows);
+}}&gt;Save all&lt;/Button&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Paste a column</h4>
+        <p>Spreadsheet paste of a single column. Intercept paste on the cell input; if the clipboard has newlines, distribute values down the column.</p>
+<pre>onPaste={(e) =&gt; {
+  const lines = e.clipboardData.getData(&#39;text&#39;)
+    .split(/\r?\n/).filter(Boolean);
+  if (lines.length &gt; 1) {
+    e.preventDefault();
+    lines.forEach((v, i) =&gt;
+      commit(rows[rowIdx + i], col, v));
+  }
+}}</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCESSIBILITY -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">What this recipe takes care of for you.</p>
+    <ul class="ck-a11y">
+      <li><b>Read-only cells are buttons.</b> Each closed cell is <code>role="button"</code> + <code>tabIndex={0}</code>. Keyboard users tab into it, Enter opens edit.</li>
+      <li><b>Editing input auto-focuses and selects.</b> Opening a cell focuses the input and selects its contents — typing replaces, no "click then triple-click" ritual.</li>
+      <li><b>Errors are linked, not banner-only.</b> Each cell carries <code>aria-invalid</code> and <code>aria-describedby</code> pointing to its inline error. Screen readers read the column, the value, and the reason it's bad.</li>
+      <li><b>Saving doesn't blur the value.</b> The optimistic value renders at 60% opacity, not as a spinner. The cell never disappears — the user's place is preserved.</li>
+      <li><b>Toast retry is keyboard-reachable.</b> Network failures pop a <code>Toast</code> with a "Retry" button; <code>Toast</code> is rendered inside an <code>aria-live="polite"</code> region and the button is in the natural tab order.</li>
+      <li><b>Tab order matches column order.</b> Tab inside an editing cell commits and advances to the next editable cell — never trapping focus inside one input.</li>
+      <li><b>Esc never destroys explicit input.</b> Esc cancels the in-flight edit but does not roll back already-saved cells. Confirmed work stays confirmed.</li>
+    </ul>
+  </section>
+
+  <!-- RELATED -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">The other Forms &amp; Lists recipes in this batch.</p>
+    <div class="ck-related">
+      <a href="forms-autosave-drawer.html">Forms · Autosave drawer<span class="tag">New</span></a>
+      <a href="forms-multi-step-wizard.html">Forms · Multi-step wizard<span class="tag">New</span></a>
+      <a href="lists-filterable-data-table.html">Lists · Filterable data table<span class="tag">New</span></a>
+      <a href="lists-master-detail.html">Lists · Master–detail page<span class="tag">New</span></a>
+      <a href="auth-signin-2fa.html">Auth · Sign in with 2FA</a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="lists-master-detail.html"><div class="pager-label">← Previous</div><div class="pager-title">Master–detail page</div></a>
+    <a href="index.html" class="next"><div class="pager-label">All recipes →</div><div class="pager-title">Browse the cookbook</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#demos">You can see this live in</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

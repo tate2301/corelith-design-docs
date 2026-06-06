@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Optimistic mutations · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .phone { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 16px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+  .ck-screen .brand { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .ph-title { font: 700 14px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .ck-screen .ph-sub { font: 500 11px/1.4 var(--font-sans); color: var(--text-muted); margin: 0; }
+  .ck-screen .ph-row { display: grid; grid-template-columns: 16px 1fr auto; gap: 6px; padding: 6px 8px; background: var(--surface-muted); border-radius: 6px; font: 500 10px/1.2 var(--font-sans); align-items: center; }
+  .ck-screen .ph-row .chk { width: 12px; height: 12px; border-radius: 3px; border: 1px solid var(--border-strong); background: var(--surface); }
+  .ck-screen .ph-row.done .chk { background: var(--brand); border-color: var(--brand); }
+  .ck-screen .ph-row .nm { color: var(--text-strong); }
+  .ck-screen .ph-row.done .nm { color: var(--text-muted); text-decoration: line-through; }
+  .ck-screen .ph-row .st { font: 500 9px/1 var(--font-mono); color: var(--text-subtle); display: flex; gap: 4px; align-items: center; }
+  .ck-screen .ph-row.saving .st { color: var(--brand-strong); }
+  .ck-screen .ph-row.saving .st::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--brand-strong); animation: pulse 1.4s infinite; }
+  .ck-screen .ph-row.err { background: var(--tone-danger-bg); border: 1px solid var(--tone-danger-bd); }
+  .ck-screen .ph-row.err .st { color: var(--tone-danger); }
+  .ck-screen .ph-row .undo { font: 600 9px/1 var(--font-sans); color: var(--brand-strong); }
+  @keyframes pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+
+  .ck-pull { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; padding: 14px 16px; margin: 14px 0 0; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+
+  .ck-table { width: 100%; border-collapse: collapse; margin-top: 12px; font: var(--type-body-sm); }
+  .ck-table th, .ck-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .ck-table th { font: 600 12px/1 var(--font-sans); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .ck-table .yes { color: var(--tone-success); font-weight: 600; }
+  .ck-table .no  { color: var(--tone-danger); font-weight: 600; }
+
+  /* Honest "code-only" preview marker — used when a step is conceptual code
+     (state machine, hook, reducer) and a visual mockup would be misleading. */
+  .ck-code-only-note {
+    display: grid; gap: 8px;
+    padding: 22px 26px;
+    background: var(--surface-muted);
+    border: 1px dashed var(--border-strong);
+    border-radius: 12px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-code-only-note .ck-code-only-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    align-self: start;
+    font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--surface); color: var(--brand-strong);
+    border: 1px solid var(--border);
+  }
+  .ck-code-only-note p { margin: 0; color: var(--text-muted); }
+  .ck-code-only-note code {
+    background: var(--surface); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+
+  /* Off-system component roadmap pill — for recipes that compose with
+     components not yet in @huchu/react v0.1.0-alpha.0. */
+  .ck-roadmap-note {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--brand);
+    border-radius: 8px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code {
+    background: var(--surface-muted); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">States</a><span class="sep">/</span>
+      <span>Optimistic mutations</span>
+    </div>
+    <h1>Build optimistic mutations with rollback you can trust</h1>
+    <p class="lede">By the end of this recipe you'll have a <code>useOptimistic</code>-powered list where create / update / delete update the UI instantly, show a per-row "saving…" indicator, and roll back cleanly when the server says no — plus a clear rule for which actions should never be optimistic.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="zap" data-icon-size="12"></span>States</span>
+      <span class="meta-pill">2 primitives · 0 blocks · 0 patterns</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~30 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">User clicks. The UI updates immediately with a pending row. The mutation fires in the background. On success: the pending row becomes real. On failure: the row rolls back, the error toasts, and the input that caused it gets focus back.</p>
+    <p>Without optimism, every action feels like submitting a form to a remote office. With optimism, the app feels like a notebook. The trick is doing it without lying to the user — the indicator has to be honest about state, the rollback has to be visible, and you have to know which actions should <em>never</em> be optimistic in the first place.</p>
+    <p class="ck-pull"><b>Optimistic for safe ops. Pessimistic for irreversible ones.</b> Toggle a flag, like a post, mark a task done — optimistic. Send a payment, charge a card, fire a webhook — pessimistic, with a confirm. The decision is "can I un-press this button after the API fails" — if no, don't be optimistic.</p>
+    <p>The mechanism is two state slices: the <em>committed</em> list (the server's view) and the <em>optimistic</em> list (committed + pending intents). The UI always renders the optimistic list. On success, the pending intent merges into committed. On failure, the intent drops and an error toast fires. Concurrent edits are resolved by ordering — last write wins, but the toast tells the user which write was the loser.</p>
+    <p><b>Skip this recipe if</b> your mutation is irreversible (payments, sent emails, deletes that cascade), or if the user can't usefully retry — e.g. an SMS gateway that already charged. Those want a confirm dialog and a real loading state.</p>
+  </section>
+
+  <!-- WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three states: pending, success, rollback.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Tasks</span>
+          <p class="ph-title">Today</p>
+          <p class="ph-sub">3 open · 2 done</p>
+          <div class="ph-row done"><div class="chk"></div><div class="nm">Pay supplier</div><span class="st">done</span></div>
+          <div class="ph-row saving"><div class="chk" style="background: var(--brand); border-color: var(--brand);"></div><div class="nm" style="color: var(--text-muted); text-decoration: line-through;">Reconcile till</div><span class="st">saving</span></div>
+          <div class="ph-row"><div class="chk"></div><div class="nm">Order toner</div><span class="st"></span></div>
+          <div class="ph-row"><div class="chk"></div><div class="nm">Call Tendai</div><span class="st"></span></div>
+        </div>
+        <div class="caption"><span class="num">01</span> Pending — UI ahead of the server</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Tasks</span>
+          <p class="ph-title">Today</p>
+          <p class="ph-sub">2 open · 3 done</p>
+          <div class="ph-row done"><div class="chk"></div><div class="nm">Pay supplier</div><span class="st">done</span></div>
+          <div class="ph-row done"><div class="chk"></div><div class="nm">Reconcile till</div><span class="st">done</span></div>
+          <div class="ph-row"><div class="chk"></div><div class="nm">Order toner</div><span class="st"></span></div>
+          <div class="ph-row"><div class="chk"></div><div class="nm">Call Tendai</div><span class="st"></span></div>
+        </div>
+        <div class="caption"><span class="num">02</span> Committed — server agreed</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Tasks</span>
+          <p class="ph-title">Today</p>
+          <p class="ph-sub">3 open · 2 done</p>
+          <div class="ph-row done"><div class="chk"></div><div class="nm">Pay supplier</div><span class="st">done</span></div>
+          <div class="ph-row err"><div class="chk"></div><div class="nm">Reconcile till</div><span class="undo">Retry</span></div>
+          <div class="ph-row"><div class="chk"></div><div class="nm">Order toner</div><span class="st"></span></div>
+          <div class="ph-row"><div class="chk"></div><div class="nm">Call Tendai</div><span class="st"></span></div>
+        </div>
+        <div class="caption"><span class="num">03</span> Rollback — server said no, Retry offered</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/p-toast.html"><span class="kind">Primitive</span>Toast</a>
+      <a class="ck-piece" href="../system/b-row-card.html"><span class="kind">Block</span>Row card</a>
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>useOptimistic</code>, <code>useToast</code>, <code>Button</code>, <code>RowCard</code>, <code>Stack</code>. The hook is the headline export — everything else is rendering.</p>
+
+    <h3 style="margin-top: 22px; font: 600 16px/1.2 var(--font-sans);">When NOT to be optimistic</h3>
+    <table class="ck-table">
+      <thead><tr><th>Operation</th><th>Optimistic?</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Toggle done / like / mark-read</td><td class="yes">YES</td><td>Idempotent, instantly reversible</td></tr>
+        <tr><td>Rename, edit a field</td><td class="yes">YES</td><td>Reversible — show old value on error</td></tr>
+        <tr><td>Reorder rows / drag-and-drop</td><td class="yes">YES</td><td>Rollback puts them back where they were</td></tr>
+        <tr><td>Create a record (POST)</td><td class="yes">YES*</td><td>*Pending row gets a tempId; replace on success</td></tr>
+        <tr><td>Soft-delete an item</td><td class="yes">YES</td><td>Undo toast for 5s, then commit</td></tr>
+        <tr><td>Hard-delete that cascades</td><td class="no">NO</td><td>Server has to be source of truth — show a spinner</td></tr>
+        <tr><td>Send an email / SMS / push</td><td class="no">NO</td><td>Can't un-send; needs a confirm</td></tr>
+        <tr><td>Charge a card / move money</td><td class="no">NO</td><td>Irreversible side effects</td></tr>
+        <tr><td>Approve a workflow</td><td class="no">NO</td><td>Triggers downstream; needs server ack</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- STEP-BY-STEP -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <!-- Step 1 -->
+    <div class="ck-step"><span class="n">01</span><h3>Model the row with a state tag, not booleans</h3></div>
+    <p>Every row is one of <code>'idle' | 'saving' | 'error'</code>. Don't reach for <code>isSaving</code> + <code>hasError</code> booleans — they let you reach impossible combinations ("saving AND errored"). The tag makes the row a state machine.</p>
+    <div class="ds-specimen"
+         data-code='export type RowState =
+  | { kind: &#39;idle&#39; }
+  | { kind: &#39;saving&#39;; pending: Partial&lt;Task&gt; }
+  | { kind: &#39;error&#39;;  message: string; lastTried: Partial&lt;Task&gt; };
+
+export type Task = {
+  id: string;
+  title: string;
+  done: boolean;
+  state: RowState;
+};
+
+const isPending = (t: Task) =&gt; t.state.kind === &#39;saving&#39;;
+const isErrored = (t: Task) =&gt; t.state.kind === &#39;error&#39;;'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>Impossible states (saving + errored) don't compile.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Row state</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="ck-step"><span class="n">02</span><h3>Wrap the list in <code>useOptimistic</code></h3></div>
+    <p><code>useOptimistic</code> takes a committed list + a reducer for pending intents. The render reads from the optimistic projection; the commit handler is where you make the API call. The hook handles the merge and the rollback — your code is just two functions.</p>
+    <div class="ds-specimen"
+         data-code='import { useOptimistic, useState } from &#39;@huchu/react&#39;;
+
+type Intent =
+  | { type: &#39;toggle&#39;; id: string; done: boolean }
+  | { type: &#39;create&#39;; tempId: string; title: string }
+  | { type: &#39;rename&#39;; id: string; title: string }
+  | { type: &#39;delete&#39;; id: string };
+
+function applyIntent(list: Task[], intent: Intent): Task[] {
+  switch (intent.type) {
+    case &#39;toggle&#39;: return list.map((t) =&gt;
+      t.id === intent.id
+        ? { ...t, done: intent.done, state: { kind: &#39;saving&#39;, pending: { done: intent.done } } }
+        : t);
+    case &#39;create&#39;: return [
+      { id: intent.tempId, title: intent.title, done: false,
+        state: { kind: &#39;saving&#39;, pending: { title: intent.title } } },
+      ...list,
+    ];
+    case &#39;rename&#39;: return list.map((t) =&gt;
+      t.id === intent.id
+        ? { ...t, title: intent.title, state: { kind: &#39;saving&#39;, pending: { title: intent.title } } }
+        : t);
+    case &#39;delete&#39;: return list.filter((t) =&gt; t.id !== intent.id);
+  }
+}
+
+export function useTasks(serverTasks: Task[]) {
+  const [committed, setCommitted] = useState&lt;Task[]&gt;(serverTasks);
+  const [optimistic, addIntent] = useOptimistic(committed, applyIntent);
+  return { committed, setCommitted, optimistic, addIntent };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p><b style="color: var(--brand-strong);">optimistic</b> = committed + pending intents</p>
+          <p>Render reads optimistic. Server response writes committed.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · useOptimistic</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="ck-step"><span class="n">03</span><h3>Wire create / update / delete with rollback</h3></div>
+    <p>For create, the optimistic row uses a temp id (<code>tmp_abc</code>); the server returns a real id we swap in. For update / delete, the rollback is just <em>don't apply</em>: if the API fails, the committed list never changes, so the optimistic projection naturally drops the intent on the next render — and you fire a toast so the user knows.</p>
+    <div class="ds-specimen"
+         data-code='import { useToast } from &#39;@huchu/react&#39;;
+
+const tempId = () =&gt; `tmp_${crypto.randomUUID()}`;
+
+function useTaskMutations() {
+  const { committed, setCommitted, optimistic, addIntent } = useTasks(initialTasks);
+  const toast = useToast();
+
+  const toggleDone = async (id: string, done: boolean) =&gt; {
+    addIntent({ type: &#39;toggle&#39;, id, done });
+    try {
+      const res = await fetch(`/api/tasks/${id}`, {
+        method: &#39;PATCH&#39;,
+        body: JSON.stringify({ done }),
+      });
+      if (!res.ok) throw new Error(&#39;Couldn&#39;t save that toggle&#39;);
+      const updated = await res.json();
+      setCommitted((list) =&gt;
+        list.map((t) =&gt; (t.id === id ? { ...updated, state: { kind: &#39;idle&#39; } } : t)));
+    } catch (e: any) {
+      toast.show({ tone: &#39;danger&#39;, title: e.message, action: {
+        label: &#39;Retry&#39;,
+        onClick: () =&gt; toggleDone(id, done),
+      }});
+    }
+  };
+
+  const create = async (title: string) =&gt; {
+    const tmp = tempId();
+    addIntent({ type: &#39;create&#39;, tempId: tmp, title });
+    try {
+      const res = await fetch(&#39;/api/tasks&#39;, {
+        method: &#39;POST&#39;,
+        body: JSON.stringify({ title }),
+      });
+      if (!res.ok) throw new Error(&#39;Couldn&#39;t create that task&#39;);
+      const real = await res.json();
+      // Replace the tempId row, leave order intact.
+      setCommitted((list) =&gt; [{ ...real, state: { kind: &#39;idle&#39; } }, ...list]);
+    } catch (e: any) {
+      toast.show({ tone: &#39;danger&#39;, title: e.message });
+    }
+  };
+
+  return { tasks: optimistic, toggleDone, create };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 8px; background: var(--tone-danger-bg); border: 1px solid var(--tone-danger-bd);">
+            <span data-icon="alert-circle" data-icon-size="14" style="color: var(--tone-danger);"></span>
+            <div style="font: var(--type-body-sm); color: var(--text-strong);"><b>Couldn't save that toggle</b></div>
+            <div style="padding: 4px 10px; border: 1px solid var(--border-strong); border-radius: 6px; font: 600 12px/1 var(--font-sans);">Retry</div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Commit / rollback</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="ck-step"><span class="n">04</span><h3>Resolve concurrent edits with last-write-wins + a toast</h3></div>
+    <p>Two operators on the same row will happen. The simple rule: server timestamps each commit and only accepts a write whose <code>If-Match</code> matches the row's <code>updatedAt</code>. If yours is stale, the API returns 409 — you reload the row from the server response and toast "your change was overwritten by Tendai".</p>
+    <div class="ds-specimen"
+         data-code='const rename = async (id: string, title: string) =&gt; {
+  const current = committed.find((t) =&gt; t.id === id);
+  if (!current) return;
+  addIntent({ type: &#39;rename&#39;, id, title });
+  try {
+    const res = await fetch(`/api/tasks/${id}`, {
+      method: &#39;PATCH&#39;,
+      headers: { &#39;If-Match&#39;: current.updatedAt },
+      body: JSON.stringify({ title }),
+    });
+    if (res.status === 409) {
+      const fresh = await res.json();          // server returns the winning row
+      setCommitted((list) =&gt; list.map((t) =&gt; t.id === id ? fresh : t));
+      toast.show({
+        tone: &#39;warning&#39;,
+        title: `${fresh.lastEditedBy.name} edited this first`,
+        description: `Their change kept: &quot;${fresh.title}&quot;`,
+      });
+      return;
+    }
+    if (!res.ok) throw new Error(&#39;Couldn&#39;t rename that task&#39;);
+    const updated = await res.json();
+    setCommitted((list) =&gt; list.map((t) =&gt; t.id === id ? updated : t));
+  } catch (e: any) {
+    toast.show({ tone: &#39;danger&#39;, title: e.message });
+  }
+};'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 8px; background: var(--tone-warning-bg); border: 1px solid var(--tone-warning-bd);">
+            <span data-icon="alert-circle" data-icon-size="14" style="color: var(--tone-warning);"></span>
+            <div style="font: var(--type-body-sm); color: var(--text-strong);"><b>Tendai edited this first.</b> Their change kept: "Reconcile till — A".</div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Concurrency</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- FINAL COMPOSITION -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole <code>useOptimisticList</code> hook + a sample <code>TasksList</code> component. Toggle / create / rename / delete, rollback, concurrency, retry toast.</p>
+    <div class="ds-specimen"
+         data-code='import { useOptimistic, useState, useCallback } from &#39;@huchu/react&#39;;
+import { Stack, Button, RowCard, useToast } from &#39;@huchu/react&#39;;
+
+// ── Types ──────────────────────────────────────────────────────
+export type RowState =
+  | { kind: &#39;idle&#39; }
+  | { kind: &#39;saving&#39;; pending: object }
+  | { kind: &#39;error&#39;;  message: string };
+
+export type Task = {
+  id: string; title: string; done: boolean;
+  updatedAt: string;
+  state: RowState;
+};
+
+type Intent =
+  | { type: &#39;toggle&#39;; id: string; done: boolean }
+  | { type: &#39;create&#39;; tempId: string; title: string }
+  | { type: &#39;rename&#39;; id: string; title: string }
+  | { type: &#39;delete&#39;; id: string };
+
+const apply = (list: Task[], i: Intent): Task[] =&gt; {
+  switch (i.type) {
+    case &#39;toggle&#39;: return list.map((t) =&gt;
+      t.id === i.id
+        ? { ...t, done: i.done, state: { kind: &#39;saving&#39;, pending: { done: i.done } } }
+        : t);
+    case &#39;create&#39;: return [
+      { id: i.tempId, title: i.title, done: false, updatedAt: &#39;&#39;,
+        state: { kind: &#39;saving&#39;, pending: { title: i.title } } },
+      ...list,
+    ];
+    case &#39;rename&#39;: return list.map((t) =&gt;
+      t.id === i.id
+        ? { ...t, title: i.title, state: { kind: &#39;saving&#39;, pending: { title: i.title } } }
+        : t);
+    case &#39;delete&#39;: return list.filter((t) =&gt; t.id !== i.id);
+  }
+};
+
+const tempId = () =&gt; `tmp_${crypto.randomUUID()}`;
+
+// ── Hook ───────────────────────────────────────────────────────
+export function useOptimisticTasks(initial: Task[]) {
+  const [committed, setCommitted] = useState&lt;Task[]&gt;(initial);
+  const [optimistic, addIntent] = useOptimistic(committed, apply);
+  const toast = useToast();
+
+  const patch = useCallback(async (id: string, body: object, ifMatch: string) =&gt; {
+    const res = await fetch(`/api/tasks/${id}`, {
+      method: &#39;PATCH&#39;,
+      headers: { &#39;Content-Type&#39;: &#39;application/json&#39;, &#39;If-Match&#39;: ifMatch },
+      body: JSON.stringify(body),
+    });
+    if (res.status === 409) {
+      const fresh = await res.json();
+      setCommitted((list) =&gt; list.map((t) =&gt; t.id === id ? { ...fresh, state: { kind: &#39;idle&#39; } } : t));
+      toast.show({
+        tone: &#39;warning&#39;,
+        title: `${fresh.lastEditedBy.name} edited this first`,
+      });
+      return null;
+    }
+    if (!res.ok) throw new Error(&#39;Couldn&#39;t save&#39;);
+    return res.json();
+  }, [toast]);
+
+  const toggleDone = useCallback(async (id: string, done: boolean) =&gt; {
+    const cur = committed.find((t) =&gt; t.id === id);
+    if (!cur) return;
+    addIntent({ type: &#39;toggle&#39;, id, done });
+    try {
+      const updated = await patch(id, { done }, cur.updatedAt);
+      if (!updated) return;
+      setCommitted((list) =&gt; list.map((t) =&gt; t.id === id ? { ...updated, state: { kind: &#39;idle&#39; } } : t));
+    } catch (e: any) {
+      toast.show({
+        tone: &#39;danger&#39;, title: e.message,
+        action: { label: &#39;Retry&#39;, onClick: () =&gt; toggleDone(id, done) },
+      });
+    }
+  }, [committed, addIntent, patch, toast]);
+
+  const rename = useCallback(async (id: string, title: string) =&gt; {
+    const cur = committed.find((t) =&gt; t.id === id);
+    if (!cur) return;
+    addIntent({ type: &#39;rename&#39;, id, title });
+    try {
+      const updated = await patch(id, { title }, cur.updatedAt);
+      if (!updated) return;
+      setCommitted((list) =&gt; list.map((t) =&gt; t.id === id ? { ...updated, state: { kind: &#39;idle&#39; } } : t));
+    } catch (e: any) {
+      toast.show({ tone: &#39;danger&#39;, title: e.message });
+    }
+  }, [committed, addIntent, patch, toast]);
+
+  const create = useCallback(async (title: string) =&gt; {
+    const tmp = tempId();
+    addIntent({ type: &#39;create&#39;, tempId: tmp, title });
+    try {
+      const res = await fetch(&#39;/api/tasks&#39;, {
+        method: &#39;POST&#39;,
+        headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+        body: JSON.stringify({ title }),
+      });
+      if (!res.ok) throw new Error(&#39;Couldn&#39;t create that task&#39;);
+      const real = await res.json();
+      setCommitted((list) =&gt; [{ ...real, state: { kind: &#39;idle&#39; } }, ...list]);
+    } catch (e: any) {
+      toast.show({
+        tone: &#39;danger&#39;, title: e.message,
+        action: { label: &#39;Retry&#39;, onClick: () =&gt; create(title) },
+      });
+    }
+  }, [addIntent, toast]);
+
+  const remove = useCallback(async (id: string) =&gt; {
+    const cur = committed.find((t) =&gt; t.id === id);
+    if (!cur) return;
+    addIntent({ type: &#39;delete&#39;, id });
+    try {
+      const res = await fetch(`/api/tasks/${id}`, { method: &#39;DELETE&#39; });
+      if (!res.ok) throw new Error(&#39;Couldn&#39;t delete that task&#39;);
+      setCommitted((list) =&gt; list.filter((t) =&gt; t.id !== id));
+    } catch (e: any) {
+      toast.show({
+        tone: &#39;danger&#39;, title: e.message,
+        action: { label: &#39;Retry&#39;, onClick: () =&gt; remove(id) },
+      });
+    }
+  }, [committed, addIntent, toast]);
+
+  return { tasks: optimistic, toggleDone, rename, create, remove };
+}
+
+// ── Component ──────────────────────────────────────────────────
+export function TasksList({ initial }: { initial: Task[] }) {
+  const { tasks, toggleDone, create, remove } = useOptimisticTasks(initial);
+  const [draft, setDraft] = useState(&#39;&#39;);
+
+  return (
+    &lt;Stack gap=&quot;sm&quot;&gt;
+      &lt;form onSubmit={(e) =&gt; { e.preventDefault(); if (draft) { create(draft); setDraft(&#39;&#39;); } }}&gt;
+        &lt;input
+          value={draft}
+          onChange={(e) =&gt; setDraft(e.target.value)}
+          placeholder=&quot;Add a task and press Enter&quot;
+          aria-label=&quot;New task&quot;
+        /&gt;
+      &lt;/form&gt;
+      {tasks.map((t) =&gt; (
+        &lt;RowCard
+          key={t.id}
+          leading={
+            &lt;input
+              type=&quot;checkbox&quot;
+              checked={t.done}
+              onChange={(e) =&gt; toggleDone(t.id, e.target.checked)}
+              aria-label={`Mark ${t.title} ${t.done ? &#39;not done&#39; : &#39;done&#39;}`}
+            /&gt;
+          }
+          title={t.title}
+          trailing={
+            t.state.kind === &#39;saving&#39; ? (
+              &lt;span role=&quot;status&quot; aria-live=&quot;polite&quot;&gt;Saving…&lt;/span&gt;
+            ) : (
+              &lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot; onClick={() =&gt; remove(t.id)}&gt;Delete&lt;/Button&gt;
+            )
+          }
+          aria-busy={t.state.kind === &#39;saving&#39;}
+        /&gt;
+      ))}
+    &lt;/Stack&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="width: 380px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; display: grid; gap: 8px;">
+            <div style="display: grid; grid-template-columns: 20px 1fr auto; gap: 10px; padding: 10px 12px; background: var(--surface-muted); border-radius: 8px; align-items: center;">
+              <input type="checkbox" checked disabled />
+              <span style="font: 500 13px/1.2 var(--font-sans); color: var(--text-muted); text-decoration: line-through;">Pay supplier</span>
+              <span style="font: 500 11px/1 var(--font-mono); color: var(--text-subtle);">done</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 20px 1fr auto; gap: 10px; padding: 10px 12px; background: var(--brand-soft); border-radius: 8px; align-items: center;">
+              <input type="checkbox" checked disabled />
+              <span style="font: 500 13px/1.2 var(--font-sans); color: var(--text-muted); text-decoration: line-through;">Reconcile till</span>
+              <span style="font: 500 11px/1 var(--font-mono); color: var(--brand-strong);">Saving…</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 20px 1fr auto; gap: 10px; padding: 10px 12px; background: var(--surface-muted); border-radius: 8px; align-items: center;">
+              <input type="checkbox" disabled />
+              <span style="font: 500 13px/1.2 var(--font-sans); color: var(--text-strong);">Order toner</span>
+              <span style="font: 500 11px/1 var(--font-sans); color: var(--text-subtle);">Delete</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">TasksList.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three forks.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Optimistic with retry</h4>
+        <p>Auto-retry on network failure with exponential backoff. Stop retrying after 3 attempts and toast the user.</p>
+<pre>const retry = async (fn: () =&gt; Promise&lt;void&gt;, n = 0) =&gt; {
+  try { await fn(); }
+  catch (e) {
+    if (n &gt;= 3) throw e;
+    await new Promise(r =&gt; setTimeout(r, 2 ** n * 500));
+    return retry(fn, n + 1);
+  }
+};</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Optimistic queue (offline)</h4>
+        <p>Hold pending intents in IndexedDB. When the connection comes back, drain the queue in order. Show a "5 pending changes" pill in the shell.</p>
+<pre>const queue = await idb.getAll(&#39;intents&#39;);
+for (const i of queue) {
+  try { await commitIntent(i);
+        await idb.delete(&#39;intents&#39;, i.id); }
+  catch { break; } // stop on first failure
+}</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Soft-delete with Undo (transient toast)</h4>
+        <p>Delete is optimistic + a short Undo. The API call doesn't fire until the toast fades. Use <code>tone: &#39;transient&#39;</code> — it renders the new <code>.toast.tone-transient</code> variant from <code>components.css</code>: white surface, 1.5s fade after a 1.5s read window, action button (Undo) styled as the loudest element. See <a href="../system/p-toast.html">p-toast</a> and <a href="forms-bulk-edit-with-undo.html">Bulk edit with undo</a>.</p>
+<pre>const remove = (id: string) =&gt; {
+  addIntent({ type: &#39;delete&#39;, id });
+  const t = setTimeout(() =&gt; commitDelete(id), 3000);
+  toast.show({
+    tone: &#39;transient&#39;,           // .toast.tone-transient
+    title: &#39;Task removed&#39;,
+    action: { label: &#39;Undo&#39;,
+      onClick: () =&gt; { clearTimeout(t);
+        addIntent({ type: &#39;restore&#39;, id }); }},
+  });
+};</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCESSIBILITY -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">What this recipe takes care of for you.</p>
+    <ul class="ck-a11y">
+      <li><b>Pending rows announce themselves.</b> The "Saving…" indicator is wrapped in <code>role="status"</code> + <code>aria-live="polite"</code>, so a screen-reader user hears the state change without losing focus.</li>
+      <li><b>The row itself flags busy.</b> <code>aria-busy={state.kind === 'saving'}</code> on the row lets assistive tech know not to interrupt with the row's content while it's transient.</li>
+      <li><b>Errors come with a Retry.</b> Every failure toast includes an <code>action</code> button — keyboard users tab to it, screen readers announce it as "Retry, button".</li>
+      <li><b>Disabled while pending.</b> The checkbox is disabled during the saving state — clicking twice on a flaky network doesn't fire two requests, and a screen reader hears "checkbox, busy".</li>
+      <li><b>Tempid rows don't lose focus.</b> When the server returns the real id, the row's DOM node and key swap — but focus stays on whatever the user clicked next.</li>
+      <li><b>Concurrency conflicts toast, don't dialog.</b> A modal in the middle of typing is hostile. The toast tells the user what happened and offers a "Reload" action they can choose to take.</li>
+      <li><b>Optimistic / pessimistic is decided up front.</b> The table in "Required pieces" is part of the API — never lie to the user by being optimistic about a charge.</li>
+    </ul>
+  </section>
+
+  <!-- RELATED -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">More recipes about reversible writes and async state.</p>
+    <div class="ck-related">
+      <a href="lists-activity-log.html">Lists · Activity log<span class="tag">New</span></a>
+      <a href="forms-bulk-edit-with-undo.html">Forms · Bulk edit with undo</a>
+      <a href="states-empty-loading-error.html">States · Empty, loading, error</a>
+      <a href="notifications-toasts.html">States · Toasts + notifications</a>
+      <a href="forms-date-range-picker.html">Forms · Date-range picker<span class="tag">New</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="lists-activity-log.html"><div class="pager-label">← Previous</div><div class="pager-title">Activity log</div></a>
+    <a href="shells-deep-link-restore.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Deep-link restore</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

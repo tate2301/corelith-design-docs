@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Single-series line · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../system.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../system-shell.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  /* Required-pieces badge links. */
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 10px; border-radius: 9999px;
+    background: var(--surface); border: 1px solid var(--border);
+    font: 500 12px/1 var(--font-sans); color: var(--text-strong);
+    text-decoration: none;
+  }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind {
+    font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-subtle);
+    padding-right: 6px; border-right: 1px solid var(--border);
+  }
+
+  /* Pull-quote opinion. */
+  .ck-pull {
+    margin: 16px 0;
+    padding: 14px 18px;
+    border-left: 3px solid var(--brand);
+    background: var(--brand-soft);
+    border-radius: 0 8px 8px 0;
+    font: 500 15px/1.55 var(--font-sans);
+    color: var(--text-strong);
+  }
+  .ck-pull b { color: var(--brand-strong); }
+
+  /* Chart stage — the SVG holder. */
+  .ck-chart-stage {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 24px;
+    margin: 14px 0;
+  }
+  .ck-chart-stage svg { width: 100%; height: auto; display: block; }
+  .ck-chart-stage .legend {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    margin-top: 14px;
+    font: 500 12px/1 var(--font-sans); color: var(--text-muted);
+  }
+  .ck-chart-stage .legend .dot {
+    display: inline-block; width: 10px; height: 10px; border-radius: 2px;
+    vertical-align: middle; margin-right: 6px;
+  }
+
+  /* Step header. */
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n {
+    font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--brand-soft); color: var(--brand-strong);
+  }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  /* Customising callouts. */
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: grid; gap: 10px;
+  }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p  { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre {
+    background: var(--ink); color: var(--canvas);
+    border-radius: 8px; padding: 12px 14px; margin: 0;
+    font: 500 12px/1.55 var(--font-mono); overflow-x: auto;
+    white-space: pre;
+  }
+
+  /* Accessibility checklist. */
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li {
+    display: grid; grid-template-columns: 20px 1fr; gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5;
+  }
+  .ck-a11y li::before {
+    content: ""; display: block; width: 16px; height: 16px;
+    background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd);
+    border-radius: 4px; margin-top: 1px;
+  }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  /* Related charts. */
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    font: 500 13px/1.2 var(--font-sans); color: var(--text-strong);
+    text-decoration: none;
+  }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag {
+    font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 3px 7px; border-radius: 9999px;
+    background: var(--surface-muted); color: var(--text-subtle);
+  }
+
+  /* Roadmap note — chart components not in v0.1-alpha. */
+  .ck-roadmap-note {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--brand);
+    border-radius: 8px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code {
+    background: var(--surface-muted); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+
+  /* Screen-reader-only text version of the chart. */
+  .ck-sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+
+  /* In-context card wrapper (the stat-hero / row card visual). */
+  .ck-context-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin-top: 12px;
+  }
+  .ck-context-card .h {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .ck-context-card .h .t { font: 600 14px/1 var(--font-sans); color: var(--text-strong); }
+  .ck-context-card .h .s { font: 500 11px/1 var(--font-mono); color: var(--text-subtle); letter-spacing: 0.05em; text-transform: uppercase; }
+  .ck-context-card .kpi {
+    display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px;
+  }
+  .ck-context-card .kpi .v { font: 700 28px/1 var(--font-sans); color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-context-card .kpi .d { font: 500 12px/1 var(--font-sans); color: var(--tone-success); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../../index.html">Home</a><span class="sep">/</span>
+      <a href="../index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Charts</a><span class="sep">/</span>
+      <span>Single-series line</span>
+    </div>
+    <h1>Draw a single-series line chart</h1>
+    <p class="lede">By the end of this recipe you'll have a clean line chart showing one metric over time — axes, gridlines, a smooth curve and a hover-friendly data layer — small enough to drop into a stat-hero card or a full-bleed dashboard panel.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="chart" data-icon-size="12"></span>Charts</span>
+      <span class="meta-pill">Intermediate</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~10 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">One metric. One axis of time. One line. The chart you reach for first, and the one you should default to whenever you're unsure.</p>
+    <p>A single-series line is the baseline analytics chart. Use it when the question is <em>"how is this number moving?"</em> — revenue per day, signups per week, cash on hand per month. The eye reads slope without effort, so trends and inflections leap off the page before the reader has parsed a single label.</p>
+    <p><b>Skip a line</b> if your x-axis isn't ordered (categories, products, regions — use bars instead), or if you'd be plotting fewer than four points (a sparkline reads better in tight spaces, a single big number is more honest still).</p>
+    <p class="ck-pull"><b>Default opinion:</b> a single thin line on a quiet grid beats a hero chart every time. Add fill, dots, or a second series only when the question demands it.</p>
+  </section>
+
+  <!-- THE CHART -->
+  <section id="chart">
+    <h2 class="ds-h2">The chart</h2>
+    <p class="ds-h2-sub">Daily revenue across one month. Smooth curve, four y-ticks, a soft area fill that hints at total without overpowering the slope.</p>
+    <div class="ck-chart-stage">
+      <svg viewBox="0 0 640 320" role="img" aria-labelledby="line-title line-desc">
+        <title id="line-title">Daily revenue, last 30 days</title>
+        <desc id="line-desc">A line chart showing daily revenue rising from $1,800 on day 1 to $4,820 on day 30, with a soft dip mid-month.</desc>
+
+        <!-- Grid -->
+        <g stroke="var(--border-subtle)" stroke-width="1">
+          <line x1="56" y1="40"  x2="616" y2="40"  />
+          <line x1="56" y1="100" x2="616" y2="100" />
+          <line x1="56" y1="160" x2="616" y2="160" />
+          <line x1="56" y1="220" x2="616" y2="220" />
+          <line x1="56" y1="280" x2="616" y2="280" />
+        </g>
+
+        <!-- Y-axis ticks -->
+        <g font-family="var(--font-mono)" font-size="11" fill="var(--text-muted)" text-anchor="end">
+          <text x="48" y="44">$5k</text>
+          <text x="48" y="104">$4k</text>
+          <text x="48" y="164">$3k</text>
+          <text x="48" y="224">$2k</text>
+          <text x="48" y="284">$1k</text>
+        </g>
+
+        <!-- X-axis ticks -->
+        <g font-family="var(--font-mono)" font-size="11" fill="var(--text-muted)" text-anchor="middle">
+          <text x="80"  y="304">May 1</text>
+          <text x="192" y="304">May 8</text>
+          <text x="304" y="304">May 15</text>
+          <text x="416" y="304">May 22</text>
+          <text x="568" y="304">May 30</text>
+        </g>
+
+        <!-- Area fill -->
+        <path d="M80,250 C120,238 160,220 200,210 C240,200 280,205 320,180 C360,158 400,165 440,140 C480,118 520,108 560,80 L568,72 L568,280 L80,280 Z"
+              fill="var(--brand)" opacity="0.12" />
+
+        <!-- The line -->
+        <path d="M80,250 C120,238 160,220 200,210 C240,200 280,205 320,180 C360,158 400,165 440,140 C480,118 520,108 560,80 L568,72"
+              fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+
+        <!-- Data dots -->
+        <g fill="var(--brand)">
+          <circle cx="80"  cy="250" r="3" />
+          <circle cx="200" cy="210" r="3" />
+          <circle cx="320" cy="180" r="3" />
+          <circle cx="440" cy="140" r="3" />
+          <circle cx="568" cy="72"  r="3" />
+        </g>
+
+        <!-- Last-point callout -->
+        <g transform="translate(568,72)">
+          <circle r="6" fill="var(--surface)" stroke="var(--brand)" stroke-width="2" />
+          <text x="-10" y="-12" font-family="var(--font-sans)" font-size="12" font-weight="700" fill="var(--text-strong)" text-anchor="end">$4,820</text>
+        </g>
+      </svg>
+      <div class="legend">
+        <span><span class="dot" style="background: var(--brand);"></span>Daily revenue</span>
+      </div>
+    </div>
+    <span class="ck-sr-only">Daily revenue starts at $1,800 on May 1, climbs steadily through the month with a brief plateau around May 15, and reaches $4,820 on May 30 — a 168% rise.</span>
+  </section>
+
+  <!-- REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart</a>
+      <a class="ck-piece" href="../../system/b-stat-hero.html"><span class="kind">Block</span>Stat hero</a>
+      <a class="ck-piece" href="../../system/b-card.html"><span class="kind">Block</span>Card</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended exports used here:</b> <code>Chart.Line</code>, <code>Chart.Axis</code>, <code>Chart.Grid</code>, <code>StatHero</code>, <code>Card</code>.</p>
+    <div class="ck-roadmap-note">
+      <b>Roadmap.</b> <code>Chart.*</code> sub-components are planned for <code>@huchu/react v0.2</code>. The snippets below show the intended API; until ship, render the SVG you see above inline (or use any headless chart library — the recipe's data shape is what we're committing to).
+    </div>
+  </section>
+
+  <!-- REACT SNIPPET -->
+  <section id="snippet">
+    <h2 class="ds-h2">The React snippet</h2>
+    <p class="ds-h2-sub">Minimal opinionated API. <code>data</code> is an array of points, <code>xAccessor</code>/<code>yAccessor</code> are keys, and the chart picks sensible axes for you.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart } from &#39;@huchu/react&#39;;
+
+const data = [
+  { day: &#39;May 1&#39;,  revenue: 1820 },
+  { day: &#39;May 5&#39;,  revenue: 2140 },
+  { day: &#39;May 9&#39;,  revenue: 2380 },
+  { day: &#39;May 13&#39;, revenue: 2510 },
+  { day: &#39;May 17&#39;, revenue: 2890 },
+  { day: &#39;May 21&#39;, revenue: 3320 },
+  { day: &#39;May 25&#39;, revenue: 3870 },
+  { day: &#39;May 30&#39;, revenue: 4820 },
+];
+
+export function RevenueLine() {
+  return (
+    &lt;Chart.Line
+      data={data}
+      xAccessor=&quot;day&quot;
+      yAccessor=&quot;revenue&quot;
+      color=&quot;brand&quot;
+      height={240}
+      curve=&quot;smooth&quot;
+      areaFill
+      yFormat={(v) =&gt; `$${(v / 1000).toFixed(1)}k`}
+      aria-label=&quot;Daily revenue, last 30 days&quot;
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 18px;">
+          <svg viewBox="0 0 640 240" role="img" aria-label="Live preview of the line chart" style="width: 100%; height: auto; display: block;">
+            <g stroke="var(--border-subtle)"><line x1="40" y1="40" x2="620" y2="40"/><line x1="40" y1="100" x2="620" y2="100"/><line x1="40" y1="160" x2="620" y2="160"/></g>
+            <path d="M60,190 C140,180 220,162 300,150 C380,138 460,116 540,80 L580,60" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M60,190 C140,180 220,162 300,150 C380,138 460,116 540,80 L580,60 L580,210 L60,210 Z" fill="var(--brand)" opacity="0.12"/>
+          </svg>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">RevenueLine.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- CUSTOMISING -->
+  <section id="customising">
+    <h2 class="ds-h2">Customising</h2>
+    <p class="ds-h2-sub">Three of the most common forks — colour, axes, animation. Each is a small diff from the snippet above.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Recolour for a tone</h4>
+        <p>Swap the brand stroke for a success or danger tone when the metric itself carries a positive or negative connotation.</p>
+<pre>&lt;Chart.Line
+  data={data}
+  color=&quot;success&quot;     {/* brand | success | danger | info */}
+  areaFill
+  height={240}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Tweak the axes</h4>
+        <p>Hide the y-axis labels for a more "sparkline" feel inside a stat-hero, or pin the y-domain so the line doesn't visually wobble between renders.</p>
+<pre>&lt;Chart.Line
+  data={data}
+  yDomain={[0, 5000]}
+  axes=&quot;x&quot;             {/* &quot;x&quot; | &quot;y&quot; | &quot;both&quot; | &quot;none&quot; */}
+  grid=&quot;horizontal&quot;
+  height={240}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Animate on mount</h4>
+        <p>Draw the line from left-to-right on first paint. Keep it under 600ms — anything longer reads as decoration, not data.</p>
+<pre>&lt;Chart.Line
+  data={data}
+  animate=&quot;draw&quot;       {/* &quot;draw&quot; | &quot;fade&quot; | &quot;none&quot; */}
+  animateMs={420}
+  height={240}
+/&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- IN CONTEXT -->
+  <section id="in-context">
+    <h2 class="ds-h2">In context</h2>
+    <p class="ds-h2-sub">The same chart, dropped inside a stat-hero. The big number reads first; the line gives the trend behind it.</p>
+    <div class="ck-context-card">
+      <div class="h">
+        <div class="t">Revenue · last 30 days</div>
+        <div class="s">May 2025</div>
+      </div>
+      <div class="kpi">
+        <span class="v">$4,820</span>
+        <span class="d">+168% vs. prev. period</span>
+      </div>
+      <svg viewBox="0 0 640 160" role="img" aria-label="Revenue trend inside a stat hero" style="width: 100%; height: auto; display: block; margin-top: 8px;">
+        <g stroke="var(--border-subtle)"><line x1="0" y1="40" x2="640" y2="40"/><line x1="0" y1="80" x2="640" y2="80"/><line x1="0" y1="120" x2="640" y2="120"/></g>
+        <path d="M20,128 C100,118 180,104 260,96 C340,88 420,68 500,46 L620,28" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M20,128 C100,118 180,104 260,96 C340,88 420,68 500,46 L620,28 L620,150 L20,150 Z" fill="var(--brand)" opacity="0.12"/>
+        <circle cx="620" cy="28" r="4" fill="var(--brand)"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ACCESSIBILITY -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">A chart is an image to a screen reader unless you build the bridge.</p>
+    <ul class="ck-a11y">
+      <li><b>Role and label.</b> The root <code>&lt;svg&gt;</code> carries <code>role="img"</code> plus an <code>aria-labelledby</code> that points to inline <code>&lt;title&gt;</code> + <code>&lt;desc&gt;</code> elements — short headline, one sentence of summary.</li>
+      <li><b>Text alternative.</b> A visually-hidden paragraph (<code>.ck-sr-only</code>) restates the chart's takeaway in prose: start value, end value, direction, change. This is what the screen reader user actually wants.</li>
+      <li><b>Keyboard data-point navigation.</b> Each data point is a <code>&lt;g tabindex="0"&gt;</code> with its own <code>aria-label</code> ("May 8 — $2,380"), so Arrow keys walk the series and Tab jumps to the chart as a whole.</li>
+      <li><b>Colour is never the only signal.</b> The line is also tagged with its series name in the legend, and the y-axis labels make the magnitude readable even with the line stripped out.</li>
+      <li><b>Reduced motion.</b> <code>@media (prefers-reduced-motion: reduce)</code> disables the draw animation; the chart appears at its final state with no fade.</li>
+    </ul>
+  </section>
+
+  <!-- RELATED -->
+  <section id="related">
+    <h2 class="ds-h2">Related charts</h2>
+    <p class="ds-h2-sub">Closest neighbours in this batch — reach for these when one line isn't enough.</p>
+    <div class="ck-related">
+      <a href="line-multi.html">Multi-series line<span class="tag">Charts</span></a>
+      <a href="area-stacked.html">Stacked area<span class="tag">Charts</span></a>
+      <a href="bar-vertical.html">Vertical bars<span class="tag">Charts</span></a>
+      <a href="../auth-signin-2fa.html">Sign in with 2FA<span class="tag">Canonical</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="index.html"><div class="pager-label">← Back to</div><div class="pager-title">Charts</div></a>
+    <a href="line-multi.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Multi-series line</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#chart">The chart</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#snippet">The React snippet</a></li>
+    <li><a href="#customising">Customising</a></li>
+    <li><a href="#in-context">In context</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related charts</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

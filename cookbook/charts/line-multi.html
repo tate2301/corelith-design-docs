@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Multi-series line · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../system.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../system-shell.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+  .ck-pull { margin: 16px 0; padding: 14px 18px; border-left: 3px solid var(--brand); background: var(--brand-soft); border-radius: 0 8px 8px 0; font: 500 15px/1.55 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-chart-stage { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 24px; margin: 14px 0; }
+  .ck-chart-stage svg { width: 100%; height: auto; display: block; }
+  .ck-chart-stage .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; font: 500 12px/1 var(--font-sans); color: var(--text-muted); }
+  .ck-chart-stage .legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+  .ck-roadmap-note { margin-top: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+  .ck-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .ck-context-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; margin-top: 12px; }
+  .ck-context-card .h { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+  .ck-context-card .h .t { font: 600 14px/1 var(--font-sans); color: var(--text-strong); }
+  .ck-context-card .h .s { font: 500 11px/1 var(--font-mono); color: var(--text-subtle); letter-spacing: 0.05em; text-transform: uppercase; }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../../index.html">Home</a><span class="sep">/</span>
+      <a href="../index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Charts</a><span class="sep">/</span>
+      <span>Multi-series line</span>
+    </div>
+    <h1>Compare metrics with a multi-series line chart</h1>
+    <p class="lede">By the end of this recipe you'll have two-to-four lines on a shared axis — colour-coded, legend-tagged, and honest about which series you intend the reader to compare against which.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="chart" data-icon-size="12"></span>Charts</span>
+      <span class="meta-pill">Intermediate</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~12 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">Two-to-four ordered series on the same time axis. The reader compares slopes; you pick the colours; the legend names the lines.</p>
+    <p>A multi-series line is for when the story is comparison. Revenue this year vs. last; signups by plan; gold-price vs. scrap-price. The shared axis is what makes the comparison legitimate — if your series don't share the y-unit, you don't have a multi-line, you have two charts pretending to be one.</p>
+    <p><b>Skip multi-line</b> above 5 series — the colours collide and the eye gives up. Switch to small multiples: a 2×2 grid of single lines beats a five-colour spaghetti every time.</p>
+    <p class="ck-pull"><b>Default opinion:</b> two series share one axis; three is the upper bound for a single panel. Beyond that, pick a different chart.</p>
+  </section>
+
+  <section id="chart">
+    <h2 class="ds-h2">The chart</h2>
+    <p class="ds-h2-sub">Revenue, costs and refunds across one month. Solid for healthy series, dashed for the one you'd rather was lower.</p>
+    <div class="ck-chart-stage">
+      <svg viewBox="0 0 640 320" role="img" aria-labelledby="ml-title ml-desc">
+        <title id="ml-title">Revenue, costs and refunds, last 30 days</title>
+        <desc id="ml-desc">Three lines: revenue rising from $1,800 to $4,800; costs flat near $2,000; refunds low and rising slightly.</desc>
+
+        <g stroke="var(--border-subtle)">
+          <line x1="56" y1="40"  x2="616" y2="40"  />
+          <line x1="56" y1="100" x2="616" y2="100" />
+          <line x1="56" y1="160" x2="616" y2="160" />
+          <line x1="56" y1="220" x2="616" y2="220" />
+          <line x1="56" y1="280" x2="616" y2="280" />
+        </g>
+        <g font-family="var(--font-mono)" font-size="11" fill="var(--text-muted)" text-anchor="end">
+          <text x="48" y="44">$5k</text><text x="48" y="104">$4k</text><text x="48" y="164">$3k</text><text x="48" y="224">$2k</text><text x="48" y="284">$1k</text>
+        </g>
+        <g font-family="var(--font-mono)" font-size="11" fill="var(--text-muted)" text-anchor="middle">
+          <text x="80"  y="304">May 1</text><text x="192" y="304">May 8</text><text x="304" y="304">May 15</text><text x="416" y="304">May 22</text><text x="568" y="304">May 30</text>
+        </g>
+
+        <!-- Revenue -->
+        <path d="M80,250 C140,235 200,215 260,200 C320,182 380,165 440,135 C500,108 540,90 568,72"
+              fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" />
+        <!-- Costs (success — lower is OK, but we colour it info-ish via brand-300 for distinction) -->
+        <path d="M80,220 C160,215 240,222 320,218 C400,212 480,225 568,220"
+              fill="none" stroke="var(--tone-success)" stroke-width="2.5" stroke-linecap="round" />
+        <!-- Refunds — dashed, the "bad" series -->
+        <path d="M80,272 C160,270 240,265 320,262 C400,258 480,252 568,248"
+              fill="none" stroke="var(--tone-danger)" stroke-width="2.2" stroke-dasharray="5 4" stroke-linecap="round" />
+
+        <g>
+          <circle cx="568" cy="72"  r="3.5" fill="var(--brand)" />
+          <circle cx="568" cy="220" r="3.5" fill="var(--tone-success)" />
+          <circle cx="568" cy="248" r="3.5" fill="var(--tone-danger)" />
+        </g>
+      </svg>
+      <div class="legend">
+        <span><span class="dot" style="background: var(--brand);"></span>Revenue</span>
+        <span><span class="dot" style="background: var(--tone-success);"></span>Costs</span>
+        <span><span class="dot" style="background: var(--tone-danger);"></span>Refunds (dashed)</span>
+      </div>
+    </div>
+    <span class="ck-sr-only">Revenue climbs from $1,800 to $4,800 over thirty days. Costs hold flat around $2,000. Refunds inch up from $1,000 to $1,200.</span>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart</a>
+      <a class="ck-piece" href="../../system/b-card.html"><span class="kind">Block</span>Card</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended exports used here:</b> <code>Chart.Line</code>, <code>Chart.Legend</code>, <code>Chart.Series</code>.</p>
+    <div class="ck-roadmap-note">
+      <b>Roadmap.</b> <code>Chart.Series</code> ships in <code>@huchu/react v0.2</code>. Until then, render the SVG inline or use a headless lib — the API shape below is what we're committing to.
+    </div>
+  </section>
+
+  <section id="snippet">
+    <h2 class="ds-h2">The React snippet</h2>
+    <p class="ds-h2-sub">Pass an array of series. Each series sets its own colour and an optional dashed style.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart } from &#39;@huchu/react&#39;;
+
+const data = [
+  { day: &#39;May 1&#39;,  revenue: 1820, costs: 2000, refunds: 1000 },
+  { day: &#39;May 8&#39;,  revenue: 2240, costs: 2020, refunds: 1040 },
+  { day: &#39;May 15&#39;, revenue: 2890, costs: 2010, refunds: 1080 },
+  { day: &#39;May 22&#39;, revenue: 3470, costs: 2040, refunds: 1150 },
+  { day: &#39;May 30&#39;, revenue: 4820, costs: 2020, refunds: 1200 },
+];
+
+export function RevenueCompare() {
+  return (
+    &lt;Chart.Line
+      data={data}
+      xAccessor=&quot;day&quot;
+      series={[
+        { key: &#39;revenue&#39;, label: &#39;Revenue&#39;, color: &#39;brand&#39; },
+        { key: &#39;costs&#39;,   label: &#39;Costs&#39;,   color: &#39;success&#39; },
+        { key: &#39;refunds&#39;, label: &#39;Refunds&#39;, color: &#39;danger&#39;, dashed: true },
+      ]}
+      height={280}
+      legend=&quot;top&quot;
+      yFormat={(v) =&gt; `$${(v / 1000).toFixed(1)}k`}
+      aria-label=&quot;Revenue, costs and refunds over the last 30 days&quot;
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="padding: 18px;">
+          <svg viewBox="0 0 640 240" role="img" aria-label="Preview" style="width:100%; height:auto; display:block;">
+            <g stroke="var(--border-subtle)"><line x1="40" y1="40" x2="620" y2="40"/><line x1="40" y1="100" x2="620" y2="100"/><line x1="40" y1="160" x2="620" y2="160"/></g>
+            <path d="M60,180 C160,170 260,140 380,108 C480,82 540,62 600,46" fill="none" stroke="var(--brand)" stroke-width="2.5"/>
+            <path d="M60,150 C160,148 260,152 380,148 C480,146 540,150 600,148" fill="none" stroke="var(--tone-success)" stroke-width="2.5"/>
+            <path d="M60,200 C160,198 260,194 380,192 C480,188 540,184 600,180" fill="none" stroke="var(--tone-danger)" stroke-width="2.2" stroke-dasharray="5 4"/>
+          </svg>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">RevenueCompare.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="customising">
+    <h2 class="ds-h2">Customising</h2>
+    <p class="ds-h2-sub">Three forks — colours, axes, animation.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Pick safer palettes</h4>
+        <p>Above 3 series, switch from semantic tones to a categorical palette so colours don't carry meaning the data doesn't.</p>
+<pre>&lt;Chart.Line
+  data={data}
+  palette=&quot;categorical&quot;  {/* brand-rotated */}
+  series={mySeries}
+  height={280}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Pin and align the axes</h4>
+        <p>If you redraw on filter changes, pin the y-domain so the line doesn't jump around between renders.</p>
+<pre>&lt;Chart.Line
+  data={data}
+  yDomain={[0, 5000]}
+  xTicks={6}
+  legend=&quot;bottom&quot;
+  height={280}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Stagger the draw</h4>
+        <p>Animate each series 80ms after the last so the reader's eye follows them in order — most-important first.</p>
+<pre>&lt;Chart.Line
+  data={data}
+  series={mySeries}
+  animate=&quot;draw&quot;
+  animateStaggerMs={80}
+  height={280}
+/&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="in-context">
+    <h2 class="ds-h2">In context</h2>
+    <p class="ds-h2-sub">Drop into a "compare two periods" report card. The legend doubles as the period picker.</p>
+    <div class="ck-context-card">
+      <div class="h">
+        <div class="t">This month vs. last</div>
+        <div class="s">Revenue · daily</div>
+      </div>
+      <svg viewBox="0 0 640 180" role="img" aria-label="Period comparison" style="width:100%; height:auto; display:block;">
+        <g stroke="var(--border-subtle)"><line x1="0" y1="40" x2="640" y2="40"/><line x1="0" y1="90" x2="640" y2="90"/><line x1="0" y1="140" x2="640" y2="140"/></g>
+        <path d="M20,140 C140,128 260,108 380,90 C480,72 560,52 620,40" fill="none" stroke="var(--brand)" stroke-width="2.5"/>
+        <path d="M20,150 C140,145 260,138 380,132 C480,128 560,118 620,110" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-dasharray="4 3"/>
+      </svg>
+      <div style="margin-top: 10px; display: flex; gap: 16px; font: 500 12px/1 var(--font-sans); color: var(--text-muted);">
+        <span><span style="display:inline-block; width:10px; height:10px; background:var(--brand); border-radius:2px; vertical-align:middle; margin-right:6px;"></span>May</span>
+        <span><span style="display:inline-block; width:10px; height:2px; background:var(--text-muted); vertical-align:middle; margin-right:6px;"></span>April (dashed)</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">Multi-series adds one risk: telling the lines apart without colour.</p>
+    <ul class="ck-a11y">
+      <li><b>Role and label.</b> Root <code>&lt;svg&gt;</code> uses <code>role="img"</code> with an <code>aria-labelledby</code> pointing to inline <code>&lt;title&gt;</code> + <code>&lt;desc&gt;</code> that name every series.</li>
+      <li><b>Pattern, not only colour.</b> Dashed strokes carry a second signal (here, "refunds is the dashed one"). Pair every colour with a legend entry that repeats the line style.</li>
+      <li><b>Screen-reader summary.</b> A visually-hidden paragraph (<code>.ck-sr-only</code>) reads out each series' start, end and direction in one sentence.</li>
+      <li><b>Series-level navigation.</b> Each series is a <code>&lt;g tabindex="0"&gt;</code> with an <code>aria-label</code> like "Revenue: 1,800 to 4,800" — Tab walks between series, Arrow keys walk between points within one.</li>
+      <li><b>Reduced motion.</b> <code>prefers-reduced-motion: reduce</code> disables the stagger; all series render at final state.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related charts</h2>
+    <p class="ds-h2-sub">Closest neighbours.</p>
+    <div class="ck-related">
+      <a href="line-simple.html">Single-series line<span class="tag">Charts</span></a>
+      <a href="area-stacked.html">Stacked area<span class="tag">Charts</span></a>
+      <a href="bar-grouped.html">Grouped bars<span class="tag">Charts</span></a>
+      <a href="../auth-signin-2fa.html">Sign in with 2FA<span class="tag">Canonical</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="line-simple.html"><div class="pager-label">← Previous</div><div class="pager-title">Single-series line</div></a>
+    <a href="area-stacked.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Stacked area</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#chart">The chart</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#snippet">The React snippet</a></li>
+    <li><a href="#customising">Customising</a></li>
+    <li><a href="#in-context">In context</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related charts</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

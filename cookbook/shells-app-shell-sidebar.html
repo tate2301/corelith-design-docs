@@ -1,0 +1,894 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>App shell with sidebar · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  /* Required-pieces badge links. */
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 10px; border-radius: 9999px;
+    background: var(--surface); border: 1px solid var(--border);
+    font: 500 12px/1 var(--font-sans); color: var(--text-strong);
+    text-decoration: none;
+  }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind {
+    font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-subtle);
+    padding-right: 6px; border-right: 1px solid var(--border);
+  }
+
+  /* Three-up phone/desktop previews. */
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen {
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 14px;
+    display: grid; gap: 10px;
+  }
+  .ck-screen .frame {
+    aspect-ratio: 16 / 11;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    display: grid; grid-template-columns: 56px 1fr;
+  }
+  .ck-screen .frame.expanded { grid-template-columns: 120px 1fr; }
+  .ck-screen .frame.mobile   { grid-template-columns: 1fr; grid-template-rows: 22px 1fr; }
+  .ck-screen .frame aside {
+    background: var(--canvas);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 8px 6px;
+  }
+  .ck-screen .frame aside .brand {
+    width: 22px; height: 22px; border-radius: 5px; background: var(--brand);
+    margin: 0 auto 6px;
+  }
+  .ck-screen .frame aside .nav {
+    height: 8px; border-radius: 3px;
+    background: var(--surface-muted);
+    margin: 0 2px;
+  }
+  .ck-screen .frame aside .nav.on { background: var(--brand-soft); }
+  .ck-screen .frame aside .brand-x {
+    height: 22px; border-radius: 5px; background: var(--brand); margin-bottom: 6px;
+    display: flex; align-items: center; padding: 0 6px;
+    font: 600 9px/1 var(--font-sans); color: #fff;
+  }
+  .ck-screen .frame aside .nav-x {
+    height: 14px; border-radius: 4px; background: var(--surface-muted);
+    margin: 0 0 2px;
+  }
+  .ck-screen .frame aside .nav-x.on { background: var(--brand-soft); }
+  .ck-screen .frame main {
+    background: var(--canvas);
+    display: grid; grid-template-rows: 20px 1fr;
+  }
+  .ck-screen .frame main .top {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 6px; gap: 4px;
+  }
+  .ck-screen .frame main .top .dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--border-strong);
+  }
+  .ck-screen .frame main .body {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+    padding: 6px;
+  }
+  .ck-screen .frame main .body .card {
+    background: var(--surface-muted); border-radius: 4px;
+  }
+  .ck-screen .frame.mobile .top {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 6px; gap: 4px;
+  }
+  .ck-screen .frame.mobile .top .ham {
+    width: 10px; height: 8px; background: var(--text-muted); border-radius: 1px;
+  }
+  .ck-screen .frame.mobile main { display: block; padding: 6px; }
+  .ck-screen .caption {
+    font: 500 12px/1.4 var(--font-sans);
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ck-screen .caption .num {
+    font: 600 10px/1 var(--font-mono);
+    padding: 3px 6px; border-radius: 9999px;
+    background: var(--surface); color: var(--brand-strong);
+  }
+
+  /* Step header. */
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n {
+    font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--brand-soft); color: var(--brand-strong);
+  }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  /* Variations. */
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: grid; gap: 10px;
+  }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p  { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre {
+    background: var(--ink); color: var(--canvas);
+    border-radius: 8px; padding: 12px 14px; margin: 0;
+    font: 500 12px/1.55 var(--font-mono); overflow-x: auto;
+    white-space: pre;
+  }
+
+  /* Accessibility checklist. */
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li {
+    display: grid; grid-template-columns: 20px 1fr; gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5;
+  }
+  .ck-a11y li::before {
+    content: ""; display: block; width: 16px; height: 16px;
+    background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd);
+    border-radius: 4px; margin-top: 1px;
+  }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  /* Related recipes. */
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 12px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    font: 500 13px/1.2 var(--font-sans); color: var(--text-strong);
+    text-decoration: none;
+  }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag {
+    font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 3px 7px; border-radius: 9999px;
+    background: var(--surface-muted); color: var(--text-subtle);
+  }
+
+  /* Honest "code-only" preview marker — used when a step is conceptual code
+     (state machine, hook, reducer) and a visual mockup would be misleading. */
+  .ck-code-only-note {
+    display: grid; gap: 8px;
+    padding: 22px 26px;
+    background: var(--surface-muted);
+    border: 1px dashed var(--border-strong);
+    border-radius: 12px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-code-only-note .ck-code-only-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    align-self: start;
+    font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--surface); color: var(--brand-strong);
+    border: 1px solid var(--border);
+  }
+  .ck-code-only-note p { margin: 0; color: var(--text-muted); }
+  .ck-code-only-note code {
+    background: var(--surface); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+
+  /* Off-system component roadmap pill — for recipes that compose with
+     components not yet in @huchu/react v0.1.0-alpha.0. */
+  .ck-roadmap-note {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--brand);
+    border-radius: 8px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code {
+    background: var(--surface-muted); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Shells &amp; nav</a><span class="sep">/</span>
+      <span>App shell with sidebar</span>
+    </div>
+    <h1>Build the operator app shell: sidebar, top bar, content</h1>
+    <p class="lede">By the end of this recipe you'll have the chrome every Huchu operator app lives inside — a 252&nbsp;px sidebar with brand mark, search, primary nav, tenant switcher and sign-out; a top bar with breadcrumbs and a bell; a content area that takes the rest. Plus collapse-to-icon-rail, persisted per user, and a Cmd+K shortcut.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="sidebar" data-icon-size="12"></span>Shells</span>
+      <span class="meta-pill">2 primitives · 0 blocks · 1 pattern</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~30 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- SECTION 2 · OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">One <code>&lt;AppShell&gt;</code> wraps your whole app. Compose with <code>AppShell.Sidebar</code>, <code>AppShell.Topbar</code> and <code>AppShell.Main</code> — the rest is your pages.</p>
+    <p>The sidebar app shell is the chrome a cashier, bursar or plant operator sees every working day. The job of this recipe is to make it boring in the right way — the brand mark, the search, the nav, the active state and the sign-out menu always live exactly where the operator's eye expects them, on every screen, in every app you ship. That sameness is what lets a bursar new to the inventory app find "Receipts" in three seconds.</p>
+    <p>The shell handles three responsibilities: <b>layout</b> (252&nbsp;px sidebar on desktop, icon-rail at narrower widths, off-canvas drawer on mobile); <b>state</b> (collapsed/expanded persisted to <code>localStorage</code>, route-aware active nav, tenant pinned to the topbar); and <b>shortcuts</b> (Cmd+K for the command palette, Cmd+B to toggle the sidebar). Everything else — page content, breadcrumbs, page header — is rendered by whichever route is active.</p>
+    <p><b>Skip this recipe if</b> your app is single-purpose and a one-page UI with a sticky top action bar is enough — adding a sidebar to a single-screen app just adds a column of empty space and a navigation muscle the user will never need.</p>
+  </section>
+
+  <!-- SECTION 3 · WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three breakpoints, one component. The shell adapts; your pages don't move.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="frame expanded">
+          <aside>
+            <div class="brand-x">M</div>
+            <div class="nav-x on"></div>
+            <div class="nav-x"></div>
+            <div class="nav-x"></div>
+            <div class="nav-x"></div>
+            <div style="flex: 1;"></div>
+            <div class="nav-x"></div>
+          </aside>
+          <main>
+            <div class="top"><div class="dot"></div><div class="dot"></div><div style="flex: 1;"></div><div class="dot"></div></div>
+            <div class="body"><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div></div>
+          </main>
+        </div>
+        <div class="caption"><span class="num">01</span> Desktop — sidebar expanded (default)</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="frame">
+          <aside>
+            <div class="brand"></div>
+            <div class="nav on"></div>
+            <div class="nav"></div>
+            <div class="nav"></div>
+            <div class="nav"></div>
+            <div style="flex: 1;"></div>
+            <div class="nav"></div>
+          </aside>
+          <main>
+            <div class="top"><div class="dot"></div><div class="dot"></div><div style="flex: 1;"></div><div class="dot"></div></div>
+            <div class="body"><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div><div class="card"></div></div>
+          </main>
+        </div>
+        <div class="caption"><span class="num">02</span> Compact — sidebar collapsed to icons</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="frame mobile">
+          <div class="top"><div class="ham"></div><div style="flex: 1;"></div><div class="dot"></div></div>
+          <main>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+              <div style="height: 26px; background: var(--surface-muted); border-radius: 4px;"></div>
+              <div style="height: 26px; background: var(--surface-muted); border-radius: 4px;"></div>
+              <div style="height: 26px; background: var(--surface-muted); border-radius: 4px;"></div>
+              <div style="height: 26px; background: var(--surface-muted); border-radius: 4px;"></div>
+            </div>
+          </main>
+        </div>
+        <div class="caption"><span class="num">03</span> Mobile — sidebar off-canvas behind hamburger</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3.5 · LIVE IN PORTALS -->
+  <section id="demos">
+    <h2 class="ds-h2">You can see this live in</h2>
+    <p class="ds-h2-sub">Portal demos that wire this shell in context. Open one to see the sidebar in action on a real workflow.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../portals/admin/demo.html" target="_blank" rel="noopener"><span class="kind">Demo</span><span data-icon="shield" data-icon-size="12"></span>Admin portal — See it in action →</a>
+      <a class="ck-piece" href="../portals/owner/demo.html" target="_blank" rel="noopener"><span class="kind">Demo</span><span data-icon="dashboard" data-icon-size="12"></span>Owner / Manager — See it in action →</a>
+      <a class="ck-piece" href="../portals/staff/demo.html" target="_blank" rel="noopener"><span class="kind">Demo</span><span data-icon="user" data-icon-size="12"></span>Staff portal — See it in action →</a>
+    </div>
+  </section>
+
+  <!-- SECTION 4 · REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>. Click any to see its reference page.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/x-app-shell.html"><span class="kind">Pattern</span>App shell</a>
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+      <a class="ck-piece" href="../system/p-dropdown-menu.html"><span class="kind">Primitive</span>Dropdown menu</a>
+      <a class="ck-piece" href="../system/p-command.html"><span class="kind">Primitive</span>Command palette</a>
+      <a class="ck-piece" href="../system/p-avatar.html"><span class="kind">Primitive</span>Avatar</a>
+      <a class="ck-piece" href="../system/p-input.html"><span class="kind">Primitive</span>Input &amp; field</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>AppShell</code>, <code>AppShell.Sidebar</code>, <code>AppShell.Topbar</code>, <code>AppShell.Main</code>, <code>NavItem</code>, <code>NavGroup</code>, <code>Avatar</code>, <code>DropdownMenu</code>, <code>Input</code>, <code>Kbd</code>, <code>CommandPalette</code>. The <code>AppShell.*</code> dot-namespace is the published-API convention for shells — every shell recipe follows the same shape.</p>
+  </section>
+
+  <!-- SECTION 5 · STEP-BY-STEP -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <!-- Step 1 -->
+    <div class="ck-step"><span class="n">01</span><h3>Lay out the three slots and persist the collapsed state</h3></div>
+    <p>The shell is grid + slot. <code>AppShell</code> takes three children with named slots; it handles the responsive grid so your pages never need to. Persist the <code>collapsed</code> bit to <code>localStorage</code> with a single hook — the operator stays in their preferred config across sessions, which is the single most-requested shell behaviour.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useState } from &#39;@huchu/react&#39;;
+import { AppShell } from &#39;@huchu/react&#39;;
+
+function usePersistedFlag(key: string, initial: boolean) {
+  const [v, setV] = useState&lt;boolean&gt;(() =&gt; {
+    try { return JSON.parse(localStorage.getItem(key) ?? &#39;null&#39;) ?? initial; }
+    catch { return initial; }
+  });
+  useEffect(() =&gt; { localStorage.setItem(key, JSON.stringify(v)); }, [key, v]);
+  return [v, setV] as const;
+}
+
+export function Shell({ children }: { children: React.ReactNode }) {
+  const [collapsed, setCollapsed] = usePersistedFlag(&#39;shell.collapsed&#39;, false);
+
+  return (
+    &lt;AppShell collapsed={collapsed}&gt;
+      &lt;AppShell.Sidebar
+        collapsible
+        onToggle={() =&gt; setCollapsed(!collapsed)}
+      &gt;
+        {/* step 2 — brand, search, nav, tenant, sign-out */}
+      &lt;/AppShell.Sidebar&gt;
+
+      &lt;AppShell.Topbar&gt;
+        {/* step 3 — breadcrumb, bell, command-palette trigger */}
+      &lt;/AppShell.Topbar&gt;
+
+      &lt;AppShell.Main&gt;
+        {children /* your route */}
+      &lt;/AppShell.Main&gt;
+    &lt;/AppShell&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>collapsed → localStorage. Survives sign-out.</p>
+          <p>Mobile shifts the Sidebar into an off-canvas drawer automatically.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Layout + persistence</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="ck-step"><span class="n">02</span><h3>Compose the sidebar: brand, search, nav, tenant switcher, sign-out</h3></div>
+    <p>The sidebar reads top-to-bottom in the same order on every Huchu app: brand → search → primary nav → spacer → tenant + user menu. Use <code>NavItem</code> with the route's <code>match</code> so the active state lights up automatically — no <code>useLocation</code> sprinkled across the tree. The tenant switcher and sign-out live in a single <code>DropdownMenu</code> anchored to the user avatar.</p>
+    <div class="ds-specimen"
+         data-code='import {
+  AppShell, NavItem, NavGroup, Avatar, DropdownMenu,
+  Input, Kbd,
+} from &#39;@huchu/react&#39;;
+
+function Sidebar({
+  user, tenant, tenants, onSwitchTenant, onSignOut, onSearchFocus,
+}: {
+  user: { name: string; email: string; initials: string };
+  tenant: { id: string; name: string };
+  tenants: { id: string; name: string }[];
+  onSwitchTenant: (id: string) =&gt; void;
+  onSignOut: () =&gt; void;
+  onSearchFocus: () =&gt; void;
+}) {
+  return (
+    &lt;&gt;
+      &lt;AppShell.Brand href=&quot;/&quot;&gt;{tenant.name}&lt;/AppShell.Brand&gt;
+
+      &lt;Input
+        placeholder=&quot;Search&quot;
+        onFocus={onSearchFocus}
+        leadingIcon=&quot;search&quot;
+        trailingSlot={&lt;Kbd&gt;⌘ K&lt;/Kbd&gt;}
+      /&gt;
+
+      &lt;NavGroup label=&quot;Workspace&quot;&gt;
+        &lt;NavItem to=&quot;/&quot;          icon=&quot;dashboard&quot;&gt;Overview&lt;/NavItem&gt;
+        &lt;NavItem to=&quot;/receipts&quot;  icon=&quot;receipt&quot;   badge={3}&gt;Receipts&lt;/NavItem&gt;
+        &lt;NavItem to=&quot;/inventory&quot; icon=&quot;bag&quot;&gt;Inventory&lt;/NavItem&gt;
+        &lt;NavItem to=&quot;/staff&quot;     icon=&quot;user&quot;&gt;Staff&lt;/NavItem&gt;
+        &lt;NavItem to=&quot;/reports&quot;   icon=&quot;chart&quot;&gt;Reports&lt;/NavItem&gt;
+      &lt;/NavGroup&gt;
+
+      &lt;NavGroup label=&quot;Admin&quot;&gt;
+        &lt;NavItem to=&quot;/settings&quot;  icon=&quot;settings&quot;&gt;Settings&lt;/NavItem&gt;
+      &lt;/NavGroup&gt;
+
+      &lt;AppShell.Sidebar.Footer&gt;
+        &lt;DropdownMenu
+          trigger={
+            &lt;button className=&quot;tenant-trigger&quot;&gt;
+              &lt;Avatar initials={user.initials} /&gt;
+              &lt;span&gt;{user.name}&lt;/span&gt;
+            &lt;/button&gt;
+          }
+        &gt;
+          &lt;DropdownMenu.Label&gt;Workspaces&lt;/DropdownMenu.Label&gt;
+          {tenants.map(t =&gt; (
+            &lt;DropdownMenu.Item
+              key={t.id}
+              onSelect={() =&gt; onSwitchTenant(t.id)}
+              checked={t.id === tenant.id}
+            &gt;
+              {t.name}
+            &lt;/DropdownMenu.Item&gt;
+          ))}
+          &lt;DropdownMenu.Separator /&gt;
+          &lt;DropdownMenu.Item onSelect={onSignOut} tone=&quot;danger&quot;&gt;
+            Sign out
+          &lt;/DropdownMenu.Item&gt;
+        &lt;/DropdownMenu&gt;
+      &lt;/AppShell.Sidebar.Footer&gt;
+    &lt;/&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="width: 220px; background: var(--canvas); border: 1px solid var(--border); border-radius: 12px; padding: 12px 10px;">
+            <div style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); margin-bottom: 10px;"><span style="width: 22px; height: 22px; background: var(--brand); border-radius: 5px;"></span><span style="font: 600 12px/1 var(--font-sans);">Mukamba</span></div>
+            <div style="height: 28px; border-radius: 6px; border: 1px solid var(--border-strong); padding: 0 8px; display: flex; align-items: center; gap: 6px; margin-bottom: 10px;"><span data-icon="search" data-icon-size="11" style="color: var(--text-muted);"></span><span style="font: var(--type-caption); color: var(--text-muted);">Search</span><span style="margin-left: auto; font: 500 9px/1 var(--font-mono); color: var(--text-subtle); border: 1px solid var(--border); border-radius: 3px; padding: 2px 4px;">⌘ K</span></div>
+            <div style="font: 500 9px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); padding: 4px 8px;">Workspace</div>
+            <div style="display: flex; gap: 8px; padding: 6px 8px; border-radius: 6px; font: 500 12px/1 var(--font-sans); background: var(--brand-soft); color: var(--brand-strong);"><span data-icon="dashboard" data-icon-size="13"></span>Overview</div>
+            <div style="display: flex; gap: 8px; padding: 6px 8px; border-radius: 6px; font: 500 12px/1 var(--font-sans); color: var(--text-body);"><span data-icon="receipt" data-icon-size="13"></span>Receipts<span style="margin-left: auto; font: 500 9px/1 var(--font-mono); background: var(--tone-danger-bg); color: var(--tone-danger); padding: 2px 5px; border-radius: 9999px;">3</span></div>
+            <div style="display: flex; gap: 8px; padding: 6px 8px; border-radius: 6px; font: 500 12px/1 var(--font-sans); color: var(--text-body);"><span data-icon="bag" data-icon-size="13"></span>Inventory</div>
+            <div style="display: flex; gap: 8px; padding: 6px 8px; border-radius: 6px; font: 500 12px/1 var(--font-sans); color: var(--text-body);"><span data-icon="user" data-icon-size="13"></span>Staff</div>
+            <div style="display: flex; gap: 8px; padding: 6px 8px; border-radius: 6px; font: 500 12px/1 var(--font-sans); color: var(--text-body);"><span data-icon="chart" data-icon-size="13"></span>Reports</div>
+            <div style="display: flex; align-items: center; gap: 8px; padding: 8px; margin-top: 10px; border-top: 1px solid var(--border);"><div style="width: 24px; height: 24px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 10px/1 var(--font-sans);">TM</div><div style="font: 500 11px/1 var(--font-sans); color: var(--text-strong);">Tendai</div><span data-icon="chevron" data-icon-size="11" style="color: var(--text-muted); margin-left: auto;"></span></div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Sidebar</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="ck-step"><span class="n">03</span><h3>Compose the topbar: breadcrumb, bell, command palette trigger</h3></div>
+    <p>The topbar is the one piece of chrome that knows what page you're on. Render a breadcrumb on the left (route-driven), a search-button on the right that opens the same command palette as Cmd+K, and a bell that shows unread notifications. Keep it under 56&nbsp;px tall — anything more eats content the operator came here to see.</p>
+    <div class="ds-specimen"
+         data-code='import { AppShell, Button, Badge } from &#39;@huchu/react&#39;;
+
+function Topbar({
+  crumbs,
+  unread,
+  onCommand,
+  onOpenNotifications,
+}: {
+  crumbs: { label: string; href?: string }[];
+  unread: number;
+  onCommand: () =&gt; void;
+  onOpenNotifications: () =&gt; void;
+}) {
+  return (
+    &lt;&gt;
+      &lt;AppShell.Topbar.Breadcrumbs&gt;
+        {crumbs.map((c, i) =&gt; (
+          c.href
+            ? &lt;a key={i} href={c.href}&gt;{c.label}&lt;/a&gt;
+            : &lt;span key={i}&gt;{c.label}&lt;/span&gt;
+        ))}
+      &lt;/AppShell.Topbar.Breadcrumbs&gt;
+
+      &lt;AppShell.Topbar.Actions&gt;
+        &lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot; onClick={onCommand}&gt;
+          Search &amp; jump
+        &lt;/Button&gt;
+        &lt;Button
+          variant=&quot;ghost&quot;
+          size=&quot;sm&quot;
+          icon=&quot;bell&quot;
+          aria-label={`Notifications (${unread} unread)`}
+          onClick={onOpenNotifications}
+        &gt;
+          {unread &gt; 0 &amp;&amp; &lt;Badge tone=&quot;danger&quot;&gt;{unread}&lt;/Badge&gt;}
+        &lt;/Button&gt;
+      &lt;/AppShell.Topbar.Actions&gt;
+    &lt;/&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="width: 100%; max-width: 520px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px 14px; display: flex; align-items: center; gap: 10px;">
+            <div style="font: var(--type-body-sm); color: var(--text-muted);">Park Centre <span style="color: var(--text-subtle);">/</span> <span style="color: var(--text-strong); font-weight: 500;">Receipts</span></div>
+            <span style="flex: 1;"></span>
+            <div style="height: 28px; border-radius: 6px; border: 1px solid var(--border); padding: 0 8px; display: flex; align-items: center; font: 500 12px/1 var(--font-sans); color: var(--text-muted);">Search &amp; jump</div>
+            <div style="position: relative; width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; color: var(--text-muted);"><span data-icon="bell" data-icon-size="14"></span><span style="position: absolute; top: 0; right: 0; min-width: 14px; height: 14px; padding: 0 3px; border-radius: 9999px; background: var(--tone-danger); color: #fff; font: 600 9px/14px var(--font-sans); text-align: center;">3</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Topbar</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="ck-step"><span class="n">04</span><h3>Wire the keyboard shortcuts: Cmd+K, Cmd+B, Esc</h3></div>
+    <p>Three shortcuts cover 95% of operator nav: Cmd+K opens the command palette, Cmd+B toggles the sidebar, Esc closes whichever overlay is open. Bind them at the shell level with one <code>useEffect</code>; never re-bind in pages or you'll get drift the day someone forgets to unmount a listener.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useState } from &#39;@huchu/react&#39;;
+import { CommandPalette } from &#39;@huchu/react&#39;;
+
+function useShortcuts({
+  onTogglePalette,
+  onToggleSidebar,
+  onEscape,
+}: {
+  onTogglePalette: () =&gt; void;
+  onToggleSidebar: () =&gt; void;
+  onEscape: () =&gt; void;
+}) {
+  useEffect(() =&gt; {
+    const onKey = (e: KeyboardEvent) =&gt; {
+      const mod = e.metaKey || e.ctrlKey;
+      if (mod &amp;&amp; e.key.toLowerCase() === &#39;k&#39;) { e.preventDefault(); onTogglePalette(); }
+      else if (mod &amp;&amp; e.key.toLowerCase() === &#39;b&#39;) { e.preventDefault(); onToggleSidebar(); }
+      else if (e.key === &#39;Escape&#39;) onEscape();
+    };
+    window.addEventListener(&#39;keydown&#39;, onKey);
+    return () =&gt; window.removeEventListener(&#39;keydown&#39;, onKey);
+  }, [onTogglePalette, onToggleSidebar, onEscape]);
+}
+
+// usage inside &lt;Shell&gt;
+const [paletteOpen, setPaletteOpen] = useState(false);
+useShortcuts({
+  onTogglePalette: () =&gt; setPaletteOpen(o =&gt; !o),
+  onToggleSidebar: () =&gt; setCollapsed(c =&gt; !c),
+  onEscape:        () =&gt; setPaletteOpen(false),
+});
+
+&lt;CommandPalette
+  open={paletteOpen}
+  onClose={() =&gt; setPaletteOpen(false)}
+  groups={[/* …routes, recent items, actions */]}
+/&gt;'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 12px; padding: 24px; font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); text-align: center;">
+          <div style="display: inline-flex; gap: 6px; justify-content: center; align-items: center; font-family: var(--font-mono);">
+            <span style="border: 1px solid var(--border); padding: 3px 6px; border-radius: 4px; background: var(--surface); color: var(--text-strong);">⌘ K</span> open palette ·
+            <span style="border: 1px solid var(--border); padding: 3px 6px; border-radius: 4px; background: var(--surface); color: var(--text-strong);">⌘ B</span> toggle sidebar ·
+            <span style="border: 1px solid var(--border); padding: 3px 6px; border-radius: 4px; background: var(--surface); color: var(--text-strong);">Esc</span> close
+          </div>
+          <div style="color: var(--text-subtle);">All bindings live in one effect at shell-level. No drift.</div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Shortcuts</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- SECTION 6 · FINAL COMPOSITION -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole <code>Shell</code> component, assembled. Sidebar slots, topbar slots, palette, shortcuts, persistence. Drop your route output into <code>&lt;Shell&gt;</code> and every page inherits the chrome.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useState } from &#39;@huchu/react&#39;;
+import {
+  AppShell, NavItem, NavGroup, Avatar, DropdownMenu,
+  Input, Kbd, Button, Badge, CommandPalette,
+} from &#39;@huchu/react&#39;;
+
+// ── Hooks ──────────────────────────────────────────────────────
+function usePersistedFlag(key: string, initial: boolean) {
+  const [v, setV] = useState&lt;boolean&gt;(() =&gt; {
+    try { return JSON.parse(localStorage.getItem(key) ?? &#39;null&#39;) ?? initial; }
+    catch { return initial; }
+  });
+  useEffect(() =&gt; { localStorage.setItem(key, JSON.stringify(v)); }, [key, v]);
+  return [v, setV] as const;
+}
+
+function useShortcuts(handlers: {
+  togglePalette: () =&gt; void;
+  toggleSidebar: () =&gt; void;
+  escape: () =&gt; void;
+}) {
+  useEffect(() =&gt; {
+    const onKey = (e: KeyboardEvent) =&gt; {
+      const mod = e.metaKey || e.ctrlKey;
+      if (mod &amp;&amp; e.key.toLowerCase() === &#39;k&#39;) { e.preventDefault(); handlers.togglePalette(); }
+      else if (mod &amp;&amp; e.key.toLowerCase() === &#39;b&#39;) { e.preventDefault(); handlers.toggleSidebar(); }
+      else if (e.key === &#39;Escape&#39;) handlers.escape();
+    };
+    window.addEventListener(&#39;keydown&#39;, onKey);
+    return () =&gt; window.removeEventListener(&#39;keydown&#39;, onKey);
+  }, [handlers]);
+}
+
+// ── Types ──────────────────────────────────────────────────────
+type User    = { name: string; email: string; initials: string };
+type Tenant  = { id: string; name: string };
+type Crumb   = { label: string; href?: string };
+
+// ── Component ──────────────────────────────────────────────────
+export function Shell({
+  user, tenant, tenants, crumbs, unread,
+  onSwitchTenant, onSignOut, children,
+}: {
+  user: User;
+  tenant: Tenant;
+  tenants: Tenant[];
+  crumbs: Crumb[];
+  unread: number;
+  onSwitchTenant: (id: string) =&gt; void;
+  onSignOut: () =&gt; void;
+  children: React.ReactNode;
+}) {
+  const [collapsed, setCollapsed] = usePersistedFlag(&#39;shell.collapsed&#39;, false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  useShortcuts({
+    togglePalette: () =&gt; setPaletteOpen(o =&gt; !o),
+    toggleSidebar: () =&gt; setCollapsed(c =&gt; !c),
+    escape:        () =&gt; setPaletteOpen(false),
+  });
+
+  return (
+    &lt;AppShell collapsed={collapsed}&gt;
+      {/* ── Sidebar ────────────────────────────────────── */}
+      &lt;AppShell.Sidebar
+        collapsible
+        onToggle={() =&gt; setCollapsed(!collapsed)}
+        aria-label=&quot;Primary&quot;
+      &gt;
+        &lt;AppShell.Brand href=&quot;/&quot;&gt;{tenant.name}&lt;/AppShell.Brand&gt;
+
+        &lt;Input
+          placeholder=&quot;Search&quot;
+          onFocus={() =&gt; setPaletteOpen(true)}
+          leadingIcon=&quot;search&quot;
+          trailingSlot={&lt;Kbd&gt;⌘ K&lt;/Kbd&gt;}
+        /&gt;
+
+        &lt;NavGroup label=&quot;Workspace&quot;&gt;
+          &lt;NavItem to=&quot;/&quot;          icon=&quot;dashboard&quot;&gt;Overview&lt;/NavItem&gt;
+          &lt;NavItem to=&quot;/receipts&quot;  icon=&quot;receipt&quot;   badge={unread}&gt;Receipts&lt;/NavItem&gt;
+          &lt;NavItem to=&quot;/inventory&quot; icon=&quot;bag&quot;&gt;Inventory&lt;/NavItem&gt;
+          &lt;NavItem to=&quot;/staff&quot;     icon=&quot;user&quot;&gt;Staff&lt;/NavItem&gt;
+          &lt;NavItem to=&quot;/reports&quot;   icon=&quot;chart&quot;&gt;Reports&lt;/NavItem&gt;
+        &lt;/NavGroup&gt;
+
+        &lt;NavGroup label=&quot;Admin&quot;&gt;
+          &lt;NavItem to=&quot;/settings&quot;  icon=&quot;settings&quot;&gt;Settings&lt;/NavItem&gt;
+        &lt;/NavGroup&gt;
+
+        &lt;AppShell.Sidebar.Footer&gt;
+          &lt;DropdownMenu
+            trigger={
+              &lt;button className=&quot;tenant-trigger&quot;&gt;
+                &lt;Avatar initials={user.initials} /&gt;
+                &lt;span&gt;{user.name}&lt;/span&gt;
+              &lt;/button&gt;
+            }
+          &gt;
+            &lt;DropdownMenu.Label&gt;Workspaces&lt;/DropdownMenu.Label&gt;
+            {tenants.map(t =&gt; (
+              &lt;DropdownMenu.Item
+                key={t.id}
+                onSelect={() =&gt; onSwitchTenant(t.id)}
+                checked={t.id === tenant.id}
+              &gt;
+                {t.name}
+              &lt;/DropdownMenu.Item&gt;
+            ))}
+            &lt;DropdownMenu.Separator /&gt;
+            &lt;DropdownMenu.Item onSelect={onSignOut} tone=&quot;danger&quot;&gt;
+              Sign out
+            &lt;/DropdownMenu.Item&gt;
+          &lt;/DropdownMenu&gt;
+        &lt;/AppShell.Sidebar.Footer&gt;
+      &lt;/AppShell.Sidebar&gt;
+
+      {/* ── Topbar ─────────────────────────────────────── */}
+      &lt;AppShell.Topbar&gt;
+        &lt;AppShell.Topbar.Breadcrumbs&gt;
+          {crumbs.map((c, i) =&gt; (
+            c.href
+              ? &lt;a key={i} href={c.href}&gt;{c.label}&lt;/a&gt;
+              : &lt;span key={i}&gt;{c.label}&lt;/span&gt;
+          ))}
+        &lt;/AppShell.Topbar.Breadcrumbs&gt;
+        &lt;AppShell.Topbar.Actions&gt;
+          &lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot; onClick={() =&gt; setPaletteOpen(true)}&gt;
+            Search &amp; jump
+          &lt;/Button&gt;
+          &lt;Button
+            variant=&quot;ghost&quot;
+            size=&quot;sm&quot;
+            icon=&quot;bell&quot;
+            aria-label={`Notifications (${unread} unread)`}
+          &gt;
+            {unread &gt; 0 &amp;&amp; &lt;Badge tone=&quot;danger&quot;&gt;{unread}&lt;/Badge&gt;}
+          &lt;/Button&gt;
+        &lt;/AppShell.Topbar.Actions&gt;
+      &lt;/AppShell.Topbar&gt;
+
+      {/* ── Main ───────────────────────────────────────── */}
+      &lt;AppShell.Main&gt;
+        {children}
+      &lt;/AppShell.Main&gt;
+
+      {/* ── Command palette overlay ────────────────────── */}
+      &lt;CommandPalette
+        open={paletteOpen}
+        onClose={() =&gt; setPaletteOpen(false)}
+        groups={[
+          {
+            label: &#39;Jump to&#39;,
+            items: [
+              { id: &#39;home&#39;,      label: &#39;Overview&#39;,  to: &#39;/&#39;,        icon: &#39;dashboard&#39; },
+              { id: &#39;receipts&#39;,  label: &#39;Receipts&#39;,  to: &#39;/receipts&#39;, icon: &#39;receipt&#39;   },
+              { id: &#39;inventory&#39;, label: &#39;Inventory&#39;, to: &#39;/inventory&#39;,icon: &#39;bag&#39;       },
+              { id: &#39;staff&#39;,     label: &#39;Staff&#39;,     to: &#39;/staff&#39;,    icon: &#39;user&#39;      },
+            ],
+          },
+          {
+            label: &#39;Actions&#39;,
+            items: [
+              { id: &#39;new-sale&#39;,   label: &#39;Start a sale&#39;,    icon: &#39;plus&#39;,  shortcut: &#39;N&#39; },
+              { id: &#39;close-till&#39;, label: &#39;Close till…&#39;,     icon: &#39;check&#39;, shortcut: &#39;X&#39; },
+            ],
+          },
+        ]}
+      /&gt;
+    &lt;/AppShell&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="width: 100%; max-width: 640px; display: grid; grid-template-columns: 200px 1fr; min-height: 280px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: clip;">
+            <aside style="background: var(--canvas); border-right: 1px solid var(--border); padding: 12px 10px;">
+              <div style="display: flex; align-items: center; gap: 8px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); margin-bottom: 10px;"><span style="width: 22px; height: 22px; background: var(--brand); border-radius: 5px;"></span><span style="font: 600 12px/1 var(--font-sans);">Mukamba</span></div>
+              <div style="height: 24px; border-radius: 6px; border: 1px solid var(--border); padding: 0 8px; display: flex; align-items: center; gap: 6px; margin-bottom: 10px;"><span data-icon="search" data-icon-size="10" style="color: var(--text-muted);"></span><span style="font: 500 10px/1 var(--font-sans); color: var(--text-muted);">Search</span><span style="margin-left: auto; font: 500 8px/1 var(--font-mono); color: var(--text-subtle);">⌘K</span></div>
+              <div style="display: flex; gap: 8px; padding: 6px 8px; border-radius: 6px; font: 500 11px/1 var(--font-sans); background: var(--brand-soft); color: var(--brand-strong);"><span data-icon="dashboard" data-icon-size="12"></span>Overview</div>
+              <div style="display: flex; gap: 8px; padding: 6px 8px; border-radius: 6px; font: 500 11px/1 var(--font-sans); color: var(--text-body);"><span data-icon="receipt" data-icon-size="12"></span>Receipts</div>
+              <div style="display: flex; gap: 8px; padding: 6px 8px; border-radius: 6px; font: 500 11px/1 var(--font-sans); color: var(--text-body);"><span data-icon="bag" data-icon-size="12"></span>Inventory</div>
+              <div style="display: flex; gap: 8px; padding: 6px 8px; border-radius: 6px; font: 500 11px/1 var(--font-sans); color: var(--text-body);"><span data-icon="user" data-icon-size="12"></span>Staff</div>
+            </aside>
+            <main>
+              <header style="padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; background: var(--surface);">
+                <div style="font: var(--type-caption); color: var(--text-muted);">Park Centre <span style="color: var(--text-subtle);">/</span> <span style="color: var(--text-strong); font-weight: 500;">Overview</span></div>
+                <span style="flex: 1;"></span>
+                <span style="font: var(--type-caption); color: var(--text-muted);">Search &amp; jump</span>
+                <span data-icon="bell" data-icon-size="13" style="color: var(--text-muted);"></span>
+              </header>
+              <div style="padding: 16px;">
+                <h2 style="font: 700 16px/1.2 var(--font-sans); margin: 0 0 4px;">Park Centre · today</h2>
+                <p style="font: var(--type-caption); color: var(--text-muted); margin: 0 0 12px;">Three tills open, one cashier on lunch.</p>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                  <div style="padding: 10px; background: var(--surface-muted); border-radius: 6px; font: 500 10px/1.4 var(--font-sans); color: var(--text-muted);">Revenue<br><b style="font: 700 14px/1 var(--font-mono); color: var(--text-strong);">$ 2,816</b></div>
+                  <div style="padding: 10px; background: var(--surface-muted); border-radius: 6px; font: 500 10px/1.4 var(--font-sans); color: var(--text-muted);">Sales<br><b style="font: 700 14px/1 var(--font-mono); color: var(--text-strong);">147</b></div>
+                  <div style="padding: 10px; background: var(--surface-muted); border-radius: 6px; font: 500 10px/1.4 var(--font-sans); color: var(--text-muted);">Avg<br><b style="font: 700 14px/1 var(--font-mono); color: var(--text-strong);">$ 19.16</b></div>
+                </div>
+              </div>
+            </main>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Shell.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- SECTION 7 · VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three common forks. Each is a small diff from the final composition — the slots stay the same shape.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Multi-site owner</h4>
+        <p>Owner of three sites. Topbar carries a site picker; sidebar nav groups by site. The site they're focused on is part of the chrome, not a setting.</p>
+<pre>&lt;AppShell.Topbar.Pickers&gt;
+  &lt;SitePicker
+    value={siteId}
+    options={sites}
+    onChange={setSite}
+  /&gt;
+&lt;/AppShell.Topbar.Pickers&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Nested settings shell</h4>
+        <p>Inside Settings, the content column splits into a section rail + content. Reuse <code>AppShell.Main</code> as the host; render a <code>SettingsShell</code> inside.</p>
+<pre>&lt;AppShell.Main&gt;
+  &lt;SettingsShell sections={SETTINGS}&gt;
+    {/* settings page */}
+  &lt;/SettingsShell&gt;
+&lt;/AppShell.Main&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Focus mode</h4>
+        <p>A workflow (close shift, post payroll). Hide the sidebar, swap the topbar for a brand + step header. Same shell, two props.</p>
+<pre>&lt;AppShell mode=&quot;focus&quot;&gt;
+  &lt;AppShell.Topbar.Step
+    title=&quot;Close shift S-2841&quot;
+    current={2} total={4}
+  /&gt;
+  &lt;AppShell.Main&gt;{workflow}&lt;/AppShell.Main&gt;
+&lt;/AppShell&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 8 · ACCESSIBILITY -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">What this recipe takes care of for you. Each item is something a screen-reader or keyboard user will notice.</p>
+    <ul class="ck-a11y">
+      <li><b>Landmarks for free.</b> <code>AppShell.Sidebar</code> renders as <code>&lt;nav aria-label="Primary"&gt;</code>; <code>AppShell.Main</code> as <code>&lt;main&gt;</code>; <code>AppShell.Topbar</code> as <code>&lt;header&gt;</code>. Screen-reader users can jump straight to nav or content with rotor.</li>
+      <li><b>Active route is announced.</b> <code>NavItem</code> renders <code>aria-current="page"</code> on the matching route, so SR users hear "Overview, current page" instead of just "Overview".</li>
+      <li><b>Collapse is keyboard-toggleable.</b> Cmd/Ctrl+B toggles the sidebar; collapse-button has a real <code>aria-pressed</code> + <code>aria-controls</code>.</li>
+      <li><b>Search input has a kbd hint and focuses the palette.</b> Focusing the input opens the same palette as Cmd+K — keyboard-only users don't have to remember the shortcut.</li>
+      <li><b>Tenant menu is a real menu.</b> <code>DropdownMenu</code> uses <code>role="menu"</code>; arrow keys move between items, Enter selects, Esc closes and returns focus to the trigger.</li>
+      <li><b>Bell announces the count.</b> <code>aria-label="Notifications (3 unread)"</code>, not just a bell icon — SR users hear the number.</li>
+      <li><b>Mobile drawer traps focus.</b> When the off-canvas sidebar is open, Tab cycles inside it; Esc closes it and returns focus to the hamburger trigger.</li>
+    </ul>
+  </section>
+
+  <!-- SECTION 9 · RELATED RECIPES -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">Other shells, plus the auth flows the shell lives downstream of.</p>
+    <div class="ck-related">
+      <a href="shells-mobile-bottom-tab.html">Mobile bottom-tab shell<span class="tag">Shells</span></a>
+      <a href="auth-signin-2fa.html">Sign in with 2FA<span class="tag">Auth</span></a>
+      <a href="auth-forgot-password.html">Forgot password<span class="tag">Auth</span></a>
+      <a href="auth-signup-email-verify.html">Sign-up + email verify<span class="tag">Auth</span></a>
+      <span class="soon">Command-palette nav<span class="tag">Soon</span></span>
+      <span class="soon">Settings shell (nested)<span class="tag">Soon</span></span>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="auth-signup-email-verify.html"><div class="pager-label">← Previous</div><div class="pager-title">Sign-up + email verify</div></a>
+    <a href="shells-mobile-bottom-tab.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Mobile bottom-tab shell</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#demos">You can see this live in</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

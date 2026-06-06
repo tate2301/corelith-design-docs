@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Toasts + notifications inbox · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .phone { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 16px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; position: relative; }
+  .ck-screen .brand { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .ph-title { font: 700 14px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .ck-screen .ph-sub { font: 500 11px/1.4 var(--font-sans); color: var(--text-muted); margin: 0; }
+  .ck-screen .ph-toast { position: absolute; right: 10px; bottom: 14px; left: 10px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px 10px; box-shadow: 0 6px 18px rgba(0,0,0,.14); display: flex; gap: 8px; align-items: center; font: 500 10px/1.3 var(--font-sans); }
+  .ck-screen .ph-toast.success { border-left: 3px solid var(--tone-success); }
+  .ck-screen .ph-toast.danger { border-left: 3px solid var(--tone-danger); }
+  .ck-screen .ph-toast .lbl { flex: 1; color: var(--text-strong); }
+  .ck-screen .ph-toast .lbl b { display: block; }
+  .ck-screen .ph-toast .lbl span { color: var(--text-subtle); font: 500 9px/1.2 var(--font-sans); }
+  .ck-screen .ph-toast .act { font: 500 10px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .ph-bell { display: inline-flex; align-items: center; gap: 4px; padding: 4px 6px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); font: 600 9px/1 var(--font-mono); margin-left: auto; }
+  .ck-screen .ph-bell::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--tone-danger); }
+  .ck-screen .ph-inbox { display: grid; gap: 6px; margin-top: 4px; }
+  .ck-screen .ph-inbox .row { display: flex; gap: 6px; padding: 6px 8px; background: var(--surface-muted); border-radius: 6px; font: 500 10px/1.3 var(--font-sans); color: var(--text-strong); }
+  .ck-screen .ph-inbox .row.unread { background: var(--brand-soft); }
+  .ck-screen .ph-inbox .row .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--tone-danger); margin-top: 4px; flex: none; }
+  .ck-screen .ph-inbox .row .ts { font: 500 9px/1 var(--font-mono); color: var(--text-subtle); margin-left: auto; }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+
+  .ck-pull { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; padding: 14px 16px; margin: 14px 0 0; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+
+  /* Honest "code-only" preview marker — used when a step is conceptual code
+     (state machine, hook, reducer) and a visual mockup would be misleading. */
+  .ck-code-only-note {
+    display: grid; gap: 8px;
+    padding: 22px 26px;
+    background: var(--surface-muted);
+    border: 1px dashed var(--border-strong);
+    border-radius: 12px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-code-only-note .ck-code-only-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    align-self: start;
+    font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--surface); color: var(--brand-strong);
+    border: 1px solid var(--border);
+  }
+  .ck-code-only-note p { margin: 0; color: var(--text-muted); }
+  .ck-code-only-note code {
+    background: var(--surface); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+
+  /* Off-system component roadmap pill — for recipes that compose with
+     components not yet in @huchu/react v0.1.0-alpha.0. */
+  .ck-roadmap-note {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--brand);
+    border-radius: 8px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code {
+    background: var(--surface-muted); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">States</a><span class="sep">/</span>
+      <span>Toasts + notifications inbox</span>
+    </div>
+    <h1>Build a toast system and a notifications inbox that share one queue</h1>
+    <p class="lede">By the end of this recipe you'll have a single <code>useToast</code> hook for transient confirmations, a stacking top-right-on-desktop / top-on-mobile region, an action-button slot, and an inbox bell with badge that surfaces every notification worth revisiting later.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="bell" data-icon-size="12"></span>States</span>
+      <span class="meta-pill">3 primitives · 0 blocks · 1 pattern</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~25 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">Two surfaces, one data source. <b>Toasts</b> are transient — they slide in, sit for a few seconds, slide out. The <b>inbox</b> is a persistent timeline of everything the user might want to revisit.</p>
+    <p>Most apps confuse the two: a "Saved!" confirmation gets added to a notifications inbox the user has to clean up, or a failed background job pops a toast that disappears before the user reads it. The split here is hard: toasts are <em>for right now</em>; the inbox is <em>for later</em>. The system decides which channel each event goes to.</p>
+    <p class="ck-pull"><b>Errors get toasts. Successes might not.</b> A successful save the user just triggered doesn't need its own slide-in — the row updated, that's the confirmation. Reserve toasts for things the user couldn't see otherwise: failures, background completions, async results.</p>
+    <p>Toasts use the design-system <code>tone-danger</code> token for failures. Never red — red is a theme decision; <code>tone-danger</code> is a semantic one, and a brand re-skin updates both toasts and inline errors in lockstep.</p>
+    <p><b>Skip this recipe if</b> your app has no async work and no background events. A purely synchronous form doesn't need toasts; the inline error message under each field is enough.</p>
+  </section>
+
+  <!-- WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">A toast on desktop, the same event in the inbox bell, and the mobile-stacked variant.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu<span class="ph-bell">3</span></span>
+          <p class="ph-title">Sales</p>
+          <p class="ph-sub">Today's receipts</p>
+          <div style="height: 30px; background: var(--surface-muted); border-radius: 6px;"></div>
+          <div style="height: 30px; background: var(--surface-muted); border-radius: 6px;"></div>
+          <div style="height: 30px; background: var(--surface-muted); border-radius: 6px;"></div>
+          <div class="ph-toast success">
+            <span data-icon="check" data-icon-size="14"></span>
+            <div class="lbl"><b>Refund processed</b><span>$48.20 → Tendai M.</span></div>
+            <span class="act">Undo</span>
+          </div>
+        </div>
+        <div class="caption"><span class="num">01</span> Toast slides in over content</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu<span class="ph-bell">3</span></span>
+          <p class="ph-title">Notifications</p>
+          <p class="ph-sub">3 unread · 8 total</p>
+          <div class="ph-inbox">
+            <div class="row unread"><span class="dot"></span><div><b>Refund processed</b><br/>$48.20 → Tendai M.</div><span class="ts">just now</span></div>
+            <div class="row unread"><span class="dot"></span><div><b>Bank sync failed</b><br/>FNB · last try 3 min ago</div><span class="ts">5m</span></div>
+            <div class="row unread"><span class="dot"></span><div><b>Payroll run finished</b><br/>14 of 14 paid</div><span class="ts">1h</span></div>
+            <div class="row"><div><b>Inventory imported</b><br/>1,204 items</div><span class="ts">3h</span></div>
+            <div class="row"><div><b>Owner approved leave</b><br/>Anesu S. · 25–27 Jun</div><span class="ts">yest</span></div>
+          </div>
+        </div>
+        <div class="caption"><span class="num">02</span> Inbox bell — timeline you can revisit</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu<span class="ph-bell">3</span></span>
+          <div style="display: grid; gap: 6px; margin-top: 4px;">
+            <div class="ph-toast success" style="position: static;">
+              <span data-icon="check" data-icon-size="14"></span>
+              <div class="lbl"><b>Sale saved</b><span>#2841 · $124.00</span></div>
+            </div>
+            <div class="ph-toast danger" style="position: static;">
+              <span data-icon="alert" data-icon-size="14"></span>
+              <div class="lbl"><b>Couldn't sync</b><span>Tap to retry</span></div>
+              <span class="act">Retry</span>
+            </div>
+          </div>
+          <p class="ph-sub" style="margin-top: auto; text-align: center;">Mobile: stack from top, max 3</p>
+        </div>
+        <div class="caption"><span class="num">03</span> Mobile stack — max 3 visible</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/p-toast.html"><span class="kind">Primitive</span>Toast</a>
+      <a class="ck-piece" href="../system/p-alert.html"><span class="kind">Primitive</span>Alert</a>
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+      <a class="ck-piece" href="../system/x-notifications.html"><span class="kind">Pattern</span>Notifications</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>Toast</code>, <code>ToastProvider</code>, <code>useToast</code>, <code>Stack</code>, <code>Button</code>. The provider owns the queue; <code>useToast</code> dispatches into it.</p>
+  </section>
+
+  <!-- STEP-BY-STEP -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <!-- Step 1 -->
+    <div class="ck-step"><span class="n">01</span><h3>Model a toast as a record with a destiny</h3></div>
+    <p>Every toast has a <code>persistent</code> flag — does this event also belong in the inbox? Successes that are reversible (undo) belong in the inbox; an autosave confirmation doesn't. The provider routes accordingly.</p>
+    <div class="ds-specimen"
+         data-code='export type Tone = &#39;info&#39; | &#39;success&#39; | &#39;danger&#39; | &#39;warning&#39;;
+
+export type ToastRecord = {
+  id: string;
+  tone: Tone;
+  title: string;
+  description?: string;
+  // Optional inline action — &quot;Undo&quot;, &quot;Retry&quot;, &quot;View&quot;.
+  action?: { label: string; run: () =&gt; void };
+  // ms before auto-dismiss. 0 = sticky.
+  duration: number;
+  // If true, also record this in the notification inbox.
+  persistent: boolean;
+  createdAt: number;
+};
+
+export const DEFAULT_DURATIONS: Record&lt;Tone, number&gt; = {
+  info: 4_000,
+  success: 3_000,
+  warning: 6_000,
+  danger: 0,  // Errors stick until dismissed. They matter.
+};'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p><code>persistent: true</code> = also lands in the inbox.</p>
+          <p>Never red — design-system <code>tone-danger</code> token only.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · ToastRecord</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="ck-step"><span class="n">02</span><h3>Build the queue + provider — one source of truth</h3></div>
+    <p>The queue is a single array in a provider context. Components dispatch via <code>useToast</code>; the provider owns dismissal, auto-expiry timers, and writes persistent toasts into the inbox. Two surfaces, one queue.</p>
+    <div class="ds-specimen"
+         data-code='import { createContext, useContext, useReducer, useEffect, useCallback } from &#39;@huchu/react&#39;;
+
+type State = { queue: ToastRecord[]; inbox: ToastRecord[] };
+
+type Action =
+  | { type: &#39;PUSH&#39;; toast: ToastRecord }
+  | { type: &#39;DISMISS&#39;; id: string }
+  | { type: &#39;MARK_READ&#39;; id: string };
+
+function reducer(s: State, a: Action): State {
+  switch (a.type) {
+    case &#39;PUSH&#39;: {
+      const next = { ...s, queue: [...s.queue, a.toast] };
+      if (a.toast.persistent) next.inbox = [a.toast, ...s.inbox].slice(0, 200);
+      return next;
+    }
+    case &#39;DISMISS&#39;:
+      return { ...s, queue: s.queue.filter((t) =&gt; t.id !== a.id) };
+    case &#39;MARK_READ&#39;:
+      return { ...s, inbox: s.inbox.filter((t) =&gt; t.id !== a.id) };
+  }
+}
+
+const Ctx = createContext&lt;{
+  state: State;
+  push: (t: Omit&lt;ToastRecord, &#39;id&#39; | &#39;createdAt&#39;&gt;) =&gt; void;
+  dismiss: (id: string) =&gt; void;
+  markRead: (id: string) =&gt; void;
+} | null&gt;(null);
+
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [state, dispatch] = useReducer(reducer, { queue: [], inbox: [] });
+
+  const push = useCallback&lt;NonNullable&lt;React.ContextType&lt;typeof Ctx&gt;&gt;[&#39;push&#39;]&gt;((t) =&gt; {
+    const toast: ToastRecord = {
+      id: crypto.randomUUID(),
+      createdAt: Date.now(),
+      ...t,
+    };
+    dispatch({ type: &#39;PUSH&#39;, toast });
+  }, []);
+
+  const dismiss = useCallback((id: string) =&gt; dispatch({ type: &#39;DISMISS&#39;, id }), []);
+  const markRead = useCallback((id: string) =&gt; dispatch({ type: &#39;MARK_READ&#39;, id }), []);
+
+  // Auto-dismiss timers, one per non-sticky toast.
+  useEffect(() =&gt; {
+    const timers = state.queue
+      .filter((t) =&gt; t.duration &gt; 0)
+      .map((t) =&gt; setTimeout(() =&gt; dismiss(t.id), t.duration));
+    return () =&gt; timers.forEach(clearTimeout);
+  }, [state.queue, dismiss]);
+
+  return &lt;Ctx.Provider value={{ state, push, dismiss, markRead }}&gt;{children}&lt;/Ctx.Provider&gt;;
+}
+
+export function useToast() {
+  const ctx = useContext(Ctx);
+  if (!ctx) throw new Error(&#39;useToast outside &lt;ToastProvider&gt;&#39;);
+  return ctx;
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>Auto-dismiss timers live in a single <code>useEffect</code>.</p>
+          <p>Inbox is capped at 200 entries; old ones fall off.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Provider</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="ck-step"><span class="n">03</span><h3>Render the toast region — top-right desktop, top mobile</h3></div>
+    <p>The toast region is fixed-position and renders the visible queue. On desktop it lives at top-right; on mobile it slides from the top, centred. Stacking is capped at three visible — older ones queue up behind, not above.</p>
+    <div class="ds-specimen"
+         data-code='import { Toast, Stack, Button } from &#39;@huchu/react&#39;;
+
+const MAX_VISIBLE = 3;
+
+export function ToastRegion() {
+  const { state, dismiss } = useToast();
+  const visible = state.queue.slice(-MAX_VISIBLE);
+
+  return (
+    &lt;div className=&quot;ds-toast-region&quot; role=&quot;region&quot; aria-label=&quot;Notifications&quot;&gt;
+      &lt;Stack gap=&quot;sm&quot;&gt;
+        {visible.map((t) =&gt; (
+          &lt;Toast
+            key={t.id}
+            tone={t.tone}
+            title={t.title}
+            description={t.description}
+            // assertive for danger so screen readers interrupt; polite otherwise.
+            ariaLive={t.tone === &#39;danger&#39; ? &#39;assertive&#39; : &#39;polite&#39;}
+            onDismiss={() =&gt; dismiss(t.id)}
+            action={t.action &amp;&amp;
+              &lt;Button
+                variant=&quot;link&quot;
+                size=&quot;sm&quot;
+                onClick={() =&gt; { t.action!.run(); dismiss(t.id); }}
+              &gt;{t.action.label}&lt;/Button&gt;
+            }
+          /&gt;
+        ))}
+      &lt;/Stack&gt;
+    &lt;/div&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="width: 320px; display: grid; gap: 8px;">
+            <div style="background: var(--surface); border: 1px solid var(--border-strong); border-left: 3px solid var(--tone-success); border-radius: 8px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; box-shadow: 0 6px 18px rgba(0,0,0,.12);">
+              <span data-icon="check" data-icon-size="16" style="color: var(--tone-success);"></span>
+              <div style="flex: 1;"><div style="font: 600 13px/1.2 var(--font-sans); color: var(--text-strong);">Refund processed</div><div style="font: var(--type-caption); color: var(--text-subtle);">$48.20 → Tendai M.</div></div>
+              <div style="font: 600 12px/1 var(--font-sans); color: var(--brand-strong);">Undo</div>
+            </div>
+            <div style="background: var(--surface); border: 1px solid var(--border-strong); border-left: 3px solid var(--tone-danger); border-radius: 8px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; box-shadow: 0 6px 18px rgba(0,0,0,.12);">
+              <span data-icon="alert" data-icon-size="16" style="color: var(--tone-danger);"></span>
+              <div style="flex: 1;"><div style="font: 600 13px/1.2 var(--font-sans); color: var(--text-strong);">Bank sync failed</div><div style="font: var(--type-caption); color: var(--text-subtle);">FNB · we'll retry in 60s</div></div>
+              <div style="font: 600 12px/1 var(--font-sans); color: var(--brand-strong);">Retry now</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · ToastRegion</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="ck-step"><span class="n">04</span><h3>Render the bell + inbox — same data, different surface</h3></div>
+    <p>The bell shows the count of unread inbox items; clicking opens a popover with the full timeline. Clicking an entry marks it read. The inbox is purely visual on the client — no special API; it's just the persistent slice of the queue.</p>
+    <div class="ds-specimen"
+         data-code='import { Stack, Button, Popover } from &#39;@huchu/react&#39;;
+
+export function NotificationsBell() {
+  const { state, markRead } = useToast();
+  const unread = state.inbox.length;
+
+  return (
+    &lt;Popover&gt;
+      &lt;Popover.Trigger asChild&gt;
+        &lt;Button variant=&quot;icon&quot; aria-label={`Notifications, ${unread} unread`}&gt;
+          &lt;span data-icon=&quot;bell&quot; data-icon-size=&quot;18&quot; /&gt;
+          {unread &gt; 0 &amp;&amp; &lt;span className=&quot;ds-badge&quot;&gt;{Math.min(unread, 99)}&lt;/span&gt;}
+        &lt;/Button&gt;
+      &lt;/Popover.Trigger&gt;
+      &lt;Popover.Content align=&quot;end&quot; width={360}&gt;
+        &lt;Stack gap=&quot;sm&quot; padding=&quot;md&quot;&gt;
+          &lt;h3&gt;Notifications&lt;/h3&gt;
+          {state.inbox.length === 0 &amp;&amp; &lt;p&gt;You&#39;re caught up.&lt;/p&gt;}
+          {state.inbox.map((t) =&gt; (
+            &lt;button
+              key={t.id}
+              type=&quot;button&quot;
+              className=&quot;ds-inbox-row&quot;
+              onClick={() =&gt; markRead(t.id)}
+            &gt;
+              &lt;span className={`ds-dot tone-${t.tone}`} /&gt;
+              &lt;div&gt;
+                &lt;div className=&quot;ds-inbox-title&quot;&gt;{t.title}&lt;/div&gt;
+                {t.description &amp;&amp; &lt;div className=&quot;ds-inbox-desc&quot;&gt;{t.description}&lt;/div&gt;}
+              &lt;/div&gt;
+              &lt;time dateTime={new Date(t.createdAt).toISOString()}&gt;
+                {timeAgo(t.createdAt)}
+              &lt;/time&gt;
+            &lt;/button&gt;
+          ))}
+        &lt;/Stack&gt;
+      &lt;/Popover.Content&gt;
+    &lt;/Popover&gt;
+  );
+}
+
+function timeAgo(t: number): string {
+  const s = (Date.now() - t) / 1000;
+  if (s &lt; 60) return &#39;just now&#39;;
+  if (s &lt; 3600) return `${Math.floor(s / 60)}m`;
+  if (s &lt; 86400) return `${Math.floor(s / 3600)}h`;
+  return `${Math.floor(s / 86400)}d`;
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="width: 320px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 12px; padding: 12px; box-shadow: 0 6px 18px rgba(0,0,0,.12);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;"><div style="font: 700 14px/1 var(--font-sans);">Notifications</div><div style="font: var(--type-caption); color: var(--text-subtle);">3 unread</div></div>
+            <div style="display: grid; gap: 4px;">
+              <div style="display: flex; gap: 8px; padding: 8px; border-radius: 6px; background: var(--brand-soft); align-items: flex-start;"><span style="width: 6px; height: 6px; border-radius: 50%; background: var(--tone-success); margin-top: 6px;"></span><div style="flex: 1; font: var(--type-body-sm); color: var(--text-strong);"><div><b>Refund processed</b></div><div style="color: var(--text-subtle);">$48.20 → Tendai M.</div></div><div style="font: var(--type-caption); color: var(--text-subtle);">just now</div></div>
+              <div style="display: flex; gap: 8px; padding: 8px; border-radius: 6px; background: var(--brand-soft); align-items: flex-start;"><span style="width: 6px; height: 6px; border-radius: 50%; background: var(--tone-danger); margin-top: 6px;"></span><div style="flex: 1; font: var(--type-body-sm); color: var(--text-strong);"><div><b>Bank sync failed</b></div><div style="color: var(--text-subtle);">FNB · 3 min ago</div></div><div style="font: var(--type-caption); color: var(--text-subtle);">5m</div></div>
+              <div style="display: flex; gap: 8px; padding: 8px; border-radius: 6px; align-items: flex-start;"><div style="flex: 1; font: var(--type-body-sm); color: var(--text-strong);"><div><b>Payroll run finished</b></div><div style="color: var(--text-subtle);">14 of 14 paid</div></div><div style="font: var(--type-caption); color: var(--text-subtle);">1h</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Inbox bell</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- FINAL COMPOSITION -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole <code>NotificationsCenter</code>, assembled. Provider + region + bell + a sample async handler that uses both surfaces.</p>
+    <div class="ds-specimen"
+         data-code='import {
+  createContext, useCallback, useContext, useEffect, useReducer,
+} from &#39;@huchu/react&#39;;
+import { Toast, Button, Stack, Popover } from &#39;@huchu/react&#39;;
+
+// ── Types (Step 1) ─────────────────────────────────────────────
+export type Tone = &#39;info&#39; | &#39;success&#39; | &#39;danger&#39; | &#39;warning&#39;;
+
+export type ToastRecord = {
+  id: string;
+  tone: Tone;
+  title: string;
+  description?: string;
+  action?: { label: string; run: () =&gt; void };
+  duration: number;
+  persistent: boolean;
+  createdAt: number;
+};
+
+const DEFAULT_DURATIONS: Record&lt;Tone, number&gt; = {
+  info: 4_000, success: 3_000, warning: 6_000, danger: 0,
+};
+
+// ── Provider (Step 2) ──────────────────────────────────────────
+type State = { queue: ToastRecord[]; inbox: ToastRecord[] };
+type Action =
+  | { type: &#39;PUSH&#39;; toast: ToastRecord }
+  | { type: &#39;DISMISS&#39;; id: string }
+  | { type: &#39;MARK_READ&#39;; id: string };
+
+function reducer(s: State, a: Action): State {
+  switch (a.type) {
+    case &#39;PUSH&#39;: {
+      const next = { ...s, queue: [...s.queue, a.toast] };
+      if (a.toast.persistent) next.inbox = [a.toast, ...s.inbox].slice(0, 200);
+      return next;
+    }
+    case &#39;DISMISS&#39;:   return { ...s, queue: s.queue.filter((t) =&gt; t.id !== a.id) };
+    case &#39;MARK_READ&#39;: return { ...s, inbox: s.inbox.filter((t) =&gt; t.id !== a.id) };
+  }
+}
+
+const Ctx = createContext&lt;{
+  state: State;
+  push: (t: Partial&lt;ToastRecord&gt; &amp; { title: string; tone: Tone }) =&gt; void;
+  dismiss: (id: string) =&gt; void;
+  markRead: (id: string) =&gt; void;
+} | null&gt;(null);
+
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [state, dispatch] = useReducer(reducer, { queue: [], inbox: [] });
+
+  const push = useCallback&lt;NonNullable&lt;React.ContextType&lt;typeof Ctx&gt;&gt;[&#39;push&#39;]&gt;((t) =&gt; {
+    dispatch({
+      type: &#39;PUSH&#39;,
+      toast: {
+        id: crypto.randomUUID(),
+        createdAt: Date.now(),
+        duration: t.duration ?? DEFAULT_DURATIONS[t.tone],
+        persistent: t.persistent ?? (t.tone === &#39;danger&#39; || !!t.action),
+        ...t,
+      } as ToastRecord,
+    });
+  }, []);
+
+  const dismiss = useCallback((id: string) =&gt; dispatch({ type: &#39;DISMISS&#39;, id }), []);
+  const markRead = useCallback((id: string) =&gt; dispatch({ type: &#39;MARK_READ&#39;, id }), []);
+
+  useEffect(() =&gt; {
+    const timers = state.queue
+      .filter((t) =&gt; t.duration &gt; 0)
+      .map((t) =&gt; setTimeout(() =&gt; dismiss(t.id), t.duration));
+    return () =&gt; timers.forEach(clearTimeout);
+  }, [state.queue, dismiss]);
+
+  return &lt;Ctx.Provider value={{ state, push, dismiss, markRead }}&gt;{children}&lt;/Ctx.Provider&gt;;
+}
+
+export function useToast() {
+  const ctx = useContext(Ctx);
+  if (!ctx) throw new Error(&#39;useToast outside &lt;ToastProvider&gt;&#39;);
+  return ctx;
+}
+
+// ── Surfaces (Steps 3 + 4) ─────────────────────────────────────
+const MAX_VISIBLE = 3;
+
+export function ToastRegion() {
+  const { state, dismiss } = useToast();
+  const visible = state.queue.slice(-MAX_VISIBLE);
+  return (
+    &lt;div className=&quot;ds-toast-region&quot; role=&quot;region&quot; aria-label=&quot;Notifications&quot;&gt;
+      &lt;Stack gap=&quot;sm&quot;&gt;
+        {visible.map((t) =&gt; (
+          &lt;Toast
+            key={t.id}
+            tone={t.tone}
+            title={t.title}
+            description={t.description}
+            ariaLive={t.tone === &#39;danger&#39; ? &#39;assertive&#39; : &#39;polite&#39;}
+            onDismiss={() =&gt; dismiss(t.id)}
+            action={t.action &amp;&amp;
+              &lt;Button
+                variant=&quot;link&quot; size=&quot;sm&quot;
+                onClick={() =&gt; { t.action!.run(); dismiss(t.id); }}
+              &gt;{t.action.label}&lt;/Button&gt;
+            }
+          /&gt;
+        ))}
+      &lt;/Stack&gt;
+    &lt;/div&gt;
+  );
+}
+
+export function NotificationsBell() {
+  const { state, markRead } = useToast();
+  const unread = state.inbox.length;
+  return (
+    &lt;Popover&gt;
+      &lt;Popover.Trigger asChild&gt;
+        &lt;Button variant=&quot;icon&quot; aria-label={`Notifications, ${unread} unread`}&gt;
+          &lt;span data-icon=&quot;bell&quot; data-icon-size=&quot;18&quot; /&gt;
+          {unread &gt; 0 &amp;&amp; &lt;span className=&quot;ds-badge&quot;&gt;{Math.min(unread, 99)}&lt;/span&gt;}
+        &lt;/Button&gt;
+      &lt;/Popover.Trigger&gt;
+      &lt;Popover.Content align=&quot;end&quot; width={360}&gt;
+        &lt;Stack gap=&quot;sm&quot; padding=&quot;md&quot;&gt;
+          &lt;h3&gt;Notifications&lt;/h3&gt;
+          {state.inbox.length === 0 &amp;&amp; &lt;p&gt;You&#39;re caught up.&lt;/p&gt;}
+          {state.inbox.map((t) =&gt; (
+            &lt;button key={t.id} type=&quot;button&quot; className=&quot;ds-inbox-row&quot;
+                    onClick={() =&gt; markRead(t.id)}&gt;
+              &lt;span className={`ds-dot tone-${t.tone}`} /&gt;
+              &lt;div&gt;
+                &lt;div className=&quot;ds-inbox-title&quot;&gt;{t.title}&lt;/div&gt;
+                {t.description &amp;&amp; &lt;div className=&quot;ds-inbox-desc&quot;&gt;{t.description}&lt;/div&gt;}
+              &lt;/div&gt;
+              &lt;time&gt;{timeAgo(t.createdAt)}&lt;/time&gt;
+            &lt;/button&gt;
+          ))}
+        &lt;/Stack&gt;
+      &lt;/Popover.Content&gt;
+    &lt;/Popover&gt;
+  );
+}
+
+function timeAgo(t: number): string {
+  const s = (Date.now() - t) / 1000;
+  if (s &lt; 60) return &#39;just now&#39;;
+  if (s &lt; 3600) return `${Math.floor(s / 60)}m`;
+  if (s &lt; 86400) return `${Math.floor(s / 3600)}h`;
+  return `${Math.floor(s / 86400)}d`;
+}
+
+// ── Usage example ──────────────────────────────────────────────
+export function useSaveSale() {
+  const { push } = useToast();
+  return async (sale: Sale) =&gt; {
+    try {
+      await api.saveSale(sale);
+      // Success — silent OR a tiny non-persistent toast.
+      // (We don&#39;t store this in the inbox.)
+    } catch (e: any) {
+      push({
+        tone: &#39;danger&#39;,
+        title: &quot;Couldn&#39;t save sale&quot;,
+        description: e.message,
+        action: { label: &#39;Retry&#39;, run: () =&gt; api.saveSale(sale) },
+        persistent: true,
+      });
+    }
+  };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="width: 360px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+              <div style="font: 700 16px/1.2 var(--font-sans);">Mukamba Group</div>
+              <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); font: 600 11px/1 var(--font-mono);"><span data-icon="bell" data-icon-size="12"></span>3</div>
+            </div>
+            <div style="display: grid; gap: 8px;">
+              <div style="background: var(--surface); border: 1px solid var(--border-strong); border-left: 3px solid var(--tone-success); border-radius: 8px; padding: 10px 12px; display: flex; gap: 10px; align-items: center;"><span data-icon="check" data-icon-size="16" style="color: var(--tone-success);"></span><div style="flex: 1;"><div style="font: 600 13px/1.2 var(--font-sans);">Refund processed</div><div style="font: var(--type-caption); color: var(--text-subtle);">$48.20 → Tendai M.</div></div><div style="font: 600 12px/1 var(--font-sans); color: var(--brand-strong);">Undo</div></div>
+              <div style="background: var(--surface); border: 1px solid var(--border-strong); border-left: 3px solid var(--tone-danger); border-radius: 8px; padding: 10px 12px; display: flex; gap: 10px; align-items: center;"><span data-icon="alert" data-icon-size="16" style="color: var(--tone-danger);"></span><div style="flex: 1;"><div style="font: 600 13px/1.2 var(--font-sans);">Bank sync failed</div><div style="font: var(--type-caption); color: var(--text-subtle);">FNB · we'll retry in 60s</div></div><div style="font: 600 12px/1 var(--font-sans); color: var(--brand-strong);">Retry now</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">NotificationsCenter.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three common forks. Each is a small diff from the final composition.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Inbox-only (no toast)</h4>
+        <p>For background events the user wasn't watching for. Push with <code>silent: true</code> — the inbox catches it but no toast pops.</p>
+<pre>// Add a `silent` flag to ToastRecord
+case &#39;PUSH&#39;: {
+  const inbox = a.toast.persistent
+    ? [a.toast, ...s.inbox].slice(0, 200) : s.inbox;
+  const queue = a.toast.silent
+    ? s.queue : [...s.queue, a.toast];
+  return { queue, inbox };
+}</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Server-pushed notifications</h4>
+        <p>WebSocket pushes from the server. Map the incoming message shape into a <code>ToastRecord</code> and call <code>push</code>.</p>
+<pre>useEffect(() =&gt; {
+  const ws = new WebSocket(WS_URL);
+  ws.onmessage = (m) =&gt; {
+    const e = JSON.parse(m.data);
+    push({
+      tone: e.severity, title: e.title,
+      description: e.body, persistent: true,
+    });
+  };
+}, [push]);</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Grouped consecutive toasts</h4>
+        <p>Three "Item saved" toasts within 5 seconds collapse into one "3 items saved". Track group keys.</p>
+<pre>// Each toast can carry a `groupKey`
+const last = s.queue[s.queue.length - 1];
+if (last?.groupKey === a.toast.groupKey) {
+  last.count = (last.count ?? 1) + 1;
+  return { ...s };
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCESSIBILITY -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">What this recipe takes care of for you.</p>
+    <ul class="ck-a11y">
+      <li><b>Toasts announce themselves.</b> Danger toasts use <code>aria-live="assertive"</code> (interrupt), everything else uses <code>polite</code>. Errors should not be missed.</li>
+      <li><b>The region is named.</b> <code>role="region"</code> + <code>aria-label="Notifications"</code> on the toast container so screen-reader users can jump to it via landmark navigation.</li>
+      <li><b>Action buttons are real buttons.</b> "Undo" / "Retry" are <code>&lt;Button&gt;</code> elements inside the toast, not clickable text. Tab from the toast lands on the action.</li>
+      <li><b>Dismiss has a label.</b> The X button on each toast carries <code>aria-label="Dismiss"</code>. Mouse and keyboard users have parity.</li>
+      <li><b>The bell announces unread count.</b> <code>aria-label="Notifications, 3 unread"</code> updates as the inbox changes — screen readers re-announce on focus.</li>
+      <li><b>Auto-dismiss respects motion preferences.</b> Slide animation is replaced with an instant fade when <code>prefers-reduced-motion: reduce</code> is set.</li>
+      <li><b>Touch dismiss works.</b> Swipe-right on mobile dismisses a toast; the same gesture is bound to the <code>Esc</code> key handler so keyboard users get the same outcome.</li>
+    </ul>
+  </section>
+
+  <!-- RELATED -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">Other state-and-feedback recipes.</p>
+    <div class="ck-related">
+      <a href="states-empty-loading-error.html">States · Empty, loading, error<span class="tag">New</span></a>
+      <a href="forms-bulk-edit-with-undo.html">Forms · Bulk edit with undo<span class="tag">New</span></a>
+      <a href="forms-autosave-drawer.html">Forms · Autosave drawer<span class="tag">New</span></a>
+      <a href="onboarding-checklist.html">Onboarding · First-run checklist<span class="tag">New</span></a>
+      <a href="commands-cmd-k.html">Shells · Command palette<span class="tag">New</span></a>
+      <a href="auth-signin-2fa.html">Auth · Sign in with 2FA</a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="commands-cmd-k.html"><div class="pager-label">← Previous</div><div class="pager-title">Command palette (⌘K)</div></a>
+    <a href="auth-permission-gate.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Permission gate</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

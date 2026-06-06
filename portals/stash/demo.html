@@ -1,0 +1,3298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Stash · Save and track your money</title>
+<!-- Stash — mobile-first personal savings + expense tracking. Dark default. Copilot-Money-inspired. -->
+
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  /* ============================================================
+     STASH — Personal savings + expense tracking
+     Mobile-first. Dark default. Quiet surfaces. Big numbers.
+     Inspired by Copilot Money.
+     All component CSS reuses the design-system tokens & blocks;
+     anything bespoke is scoped to body[data-kit-nav="stash"].
+     ============================================================ */
+
+  :root {
+    --st-bg:        #0B0D11;
+    --st-bg-soft:   #11141A;
+    --st-surface:   #15181F;
+    --st-surface-2: #1B1F27;
+    --st-surface-3: #232832;
+    --st-border:    rgba(255,255,255,0.06);
+    --st-border-2:  rgba(255,255,255,0.10);
+    --st-text:      #E5E8EE;
+    --st-text-mute: rgba(229,232,238,0.62);
+    --st-text-sub:  rgba(229,232,238,0.38);
+    --st-brand:     #7CC4A9;       /* mint / Copilot accent */
+    --st-brand-2:   #5BAA8B;
+    --st-brand-soft:rgba(124,196,169,0.16);
+    --st-good:      #5BAA8B;
+    --st-good-soft: rgba(91,170,139,0.14);
+    --st-warn:      #E0B45D;
+    --st-warn-soft: rgba(224,180,93,0.16);
+    --st-bad:       #E07472;
+    --st-bad-soft:  rgba(224,116,114,0.14);
+    --st-info:      #6FB1E0;
+    --st-info-soft: rgba(111,177,224,0.14);
+    --st-purple:    #B49CE8;
+    --st-purple-soft: rgba(180,156,232,0.14);
+    --st-orange:    #E8A56E;
+    --st-orange-soft: rgba(232,165,110,0.14);
+    --st-pink:      #E08CB5;
+    --st-pink-soft: rgba(224,140,181,0.14);
+    --tap: 44px;
+  }
+
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--st-bg);
+    color: var(--st-text);
+    font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+  }
+
+  body.is-fullscreen .pk-nav { display: none !important; }
+  body.is-fullscreen .st-app { height: 100vh; height: 100dvh; }
+
+  /* ===== PHONE LAYOUT ===== */
+  .st-app {
+    display: flex; flex-direction: column;
+    background: var(--st-bg); color: var(--st-text);
+    min-height: calc(100vh - 47px); min-height: calc(100dvh - 47px);
+  }
+  body.is-fullscreen .st-app { min-height: 100vh; min-height: 100dvh; }
+  .st-side { display: none; }
+
+  /* Top bar */
+  .st-bar {
+    position: sticky; top: 0; z-index: 40;
+    background: var(--st-bg-soft);
+    border-bottom: 1px solid var(--st-border);
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px;
+    padding-top: calc(10px + env(safe-area-inset-top, 0px));
+    font: 500 13px/1 var(--font-sans);
+    color: var(--st-text);
+    min-height: 48px;
+  }
+  .st-bar .br { font: 600 14px/1.2 var(--font-sans); color: #fff; display:inline-flex; align-items:center; gap:6px; }
+  .st-bar .br .mk { color: var(--st-brand); }
+  .st-bar .sub { font: 11.5px/1.2 var(--font-sans); color: var(--st-text-mute); margin-top: 2px; }
+  .st-bar .who-w { flex: 1; min-width: 0; }
+  .st-bar .bar-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: var(--tap); min-height: var(--tap);
+    padding: 8px; border-radius: 9px;
+    background: transparent; color: var(--st-text);
+    border: 0; cursor: pointer;
+  }
+  .st-bar .bar-btn:hover { background: rgba(255,255,255,0.06); }
+  .st-bar .bar-btn-label { display: none; }
+
+  /* Main scroll area */
+  .st-main {
+    flex: 1; min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--st-bg);
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+  .st-page { padding: 14px 12px 22px; }
+  .st-page-head { margin-bottom: 14px; }
+  .st-page-head .crumb { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--st-text-sub); }
+  .st-page-head h2 { font: 700 22px/1.15 var(--font-sans); color: #fff; margin: 6px 0 0; letter-spacing: -0.018em; }
+  .st-page-head .sub { font: 13.5px/1.5 var(--font-sans); color: var(--st-text-mute); margin-top: 6px; max-width: 640px; }
+  .st-page-head .head-acts { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
+
+  /* Section title between cards */
+  .st-sect-h {
+    display: flex; align-items: center; gap: 8px;
+    margin: 18px 0 8px;
+    font: 600 13px/1 var(--font-sans); color: #fff;
+  }
+  .st-sect-h .lbl { letter-spacing: 0.02em; }
+  .st-sect-h .sp { flex: 1; }
+  .st-sect-h .lk { font: 500 12px/1 var(--font-sans); color: var(--st-brand); cursor: pointer; background:transparent; border:0; padding:6px 0; }
+
+  /* ===== Bottom tabs — dark-theme overrides for design-system .b-bottom-tabs ===== */
+  .b-bottom-tabs {
+    background: rgba(11,13,17,0.92);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid var(--st-border);
+    z-index: 90;
+  }
+  .b-bottom-tabs button { color: var(--st-text-mute); font-weight: 500; }
+  .b-bottom-tabs button:hover { color: #fff; }
+  .b-bottom-tabs button.active { color: var(--st-brand); }
+  .b-bottom-tabs button.active .b-bt-ic { color: var(--st-brand); }
+  .b-bottom-tabs .b-bt-badge { background: var(--st-bad); }
+  @media (min-width: 901px) and (max-width: 1023.98px) {
+    .b-bottom-tabs { display: flex; }
+  }
+
+  /* ===== Dark-theme overrides for shared DS blocks ===== */
+  .b-row-card {
+    background: var(--st-surface);
+    border-color: var(--st-border);
+    color: var(--st-text);
+    border-radius: 12px;
+  }
+  .b-row-card:hover, .b-row-card:active {
+    background: var(--st-surface-2);
+    border-color: var(--st-border-2);
+  }
+  .b-row-card .b-rc-nm { color: #fff; }
+  .b-row-card .b-rc-sb { color: var(--st-text-mute); }
+  .b-row-card .b-rc-val { color: #fff; }
+  .b-row-card .b-rc-delta { color: var(--st-text-mute); }
+  .b-row-card .b-rc-delta.up { color: var(--st-good); }
+  .b-row-card .b-rc-delta.dn { color: var(--st-bad); }
+  .b-row-card .b-rc-meta .b-rc-m-l { color: var(--st-text-sub); }
+  .b-row-card .b-rc-meta .b-rc-m-v { color: var(--st-text); }
+
+  .b-stat-hero .b-sh-lead {
+    background: linear-gradient(135deg, #1B2A24 0%, #2C4438 100%);
+    border: 1px solid rgba(124,196,169,0.18);
+  }
+  .b-stat-hero .b-sh-lead .b-sh-l { color: rgba(255,255,255,0.62); }
+  .b-stat-hero .b-sh-lead .b-sh-v { color: #fff; }
+  .b-stat-hero .b-sh-lead .b-sh-d { color: rgba(255,255,255,0.7); }
+  .b-stat-hero .b-sh-s {
+    background: var(--st-surface);
+    border-color: var(--st-border);
+  }
+  .b-stat-hero .b-sh-s .b-sh-l { color: var(--st-text-sub); }
+  .b-stat-hero .b-sh-s .b-sh-v { color: #fff; }
+  .b-stat-hero .b-sh-s .b-sh-sb { color: var(--st-text-mute); }
+
+  .b-day-list .b-dl-l { color: var(--st-text); border-bottom-color: var(--st-border); }
+  .b-day-list .b-dl-v { color: #fff; border-bottom-color: var(--st-border); }
+  .b-day-list .b-dl-v.up { color: var(--st-good); }
+  .b-day-list .b-dl-v.dn { color: var(--st-bad); }
+
+  .b-filter-chips { padding: 0; }
+  .b-filter-chips .b-fc {
+    background: rgba(255,255,255,0.04);
+    border-color: var(--st-border);
+    color: var(--st-text);
+    min-height: 34px;
+    border-radius: 9999px;
+  }
+  .b-filter-chips .b-fc:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .b-filter-chips .b-fc .b-fc-ct {
+    background: rgba(255,255,255,0.08); color: var(--st-text-mute);
+  }
+  .b-filter-chips .b-fc.on {
+    background: var(--st-brand); border-color: var(--st-brand); color: #0B0D11;
+  }
+  .b-filter-chips .b-fc.on .b-fc-ct { background: rgba(11,13,17,0.18); color: #0B0D11; }
+
+  /* Bottom sheet */
+  .x-bs-scrim { background: rgba(0,0,0,0.62); z-index: 100; }
+  .x-bottom-sheet {
+    background: var(--st-surface-2);
+    color: var(--st-text);
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+  }
+  .x-bottom-sheet .x-bs-grab { background: var(--st-border-2); }
+  .x-bottom-sheet .x-bs-head { border-bottom-color: var(--st-border); padding: 14px 18px 12px; }
+  .x-bottom-sheet .x-bs-head h3 { color: #fff; font: 600 17px/1.2 var(--font-sans); margin:0; }
+  .x-bottom-sheet .x-bs-head .x-bs-close {
+    background: rgba(255,255,255,0.06); color: var(--st-text);
+    width: 32px; height: 32px; border-radius: 8px; border:0; cursor:pointer;
+    display:grid; place-items:center;
+  }
+  .x-bottom-sheet .x-bs-head .x-bs-close:hover { background: rgba(255,255,255,0.12); color: #fff; }
+  .x-bottom-sheet .x-bs-body { padding: 14px 18px; }
+  .x-bottom-sheet .x-bs-foot {
+    background: var(--st-surface-2);
+    border-top-color: var(--st-border);
+    padding: 12px 18px calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+  .x-bottom-sheet .x-bs-foot button.alt {
+    background: rgba(255,255,255,0.05);
+    color: var(--st-text);
+    border: 1px solid var(--st-border);
+  }
+  .x-bottom-sheet .x-bs-foot button.alt:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .x-bottom-sheet .x-bs-foot button.primary { background: var(--st-brand); color: #0B0D11; border:0; }
+  .x-bottom-sheet .x-bs-foot button.primary:hover { background: var(--st-brand-2); }
+  .x-bottom-sheet .x-bs-foot button.danger { background: var(--st-bad-soft); color: var(--st-bad); border:1px solid rgba(224,116,114,0.3); }
+
+  /* Buttons */
+  .btn {
+    min-height: var(--tap);
+    padding: 10px 14px; border-radius: 10px;
+    background: rgba(255,255,255,0.05); color: var(--st-text);
+    font: 500 13.5px/1 var(--font-sans);
+    border: 1px solid var(--st-border);
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    transition: background 200ms ease, color 200ms ease, border-color 200ms ease;
+  }
+  .btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .btn.primary { background: var(--st-brand); color: #0B0D11; border-color: var(--st-brand); font-weight:600; }
+  .btn.primary:hover { background: var(--st-brand-2); }
+  .btn.ghost { background: transparent; border-color: transparent; }
+  .btn.danger { background: var(--st-bad-soft); color: var(--st-bad); border-color: rgba(224,116,114,0.3); }
+  .btn.sm { min-height: 36px; padding: 6px 10px; font-size: 12px; }
+  .btn.block { width: 100%; }
+
+  /* Input + field */
+  .input, input[type="text"].input, input[type="email"].input, input[type="password"].input {
+    width: 100%; min-height: var(--tap); padding: 0 12px;
+    background: var(--st-surface); color: #fff;
+    border: 1px solid var(--st-border-2); border-radius: 10px;
+    font: 500 15px/1 var(--font-sans); box-sizing: border-box;
+  }
+  .input:focus { outline: 0; border-color: var(--st-brand); box-shadow: 0 0 0 3px var(--st-brand-soft); }
+  .field { display: grid; gap: 6px; margin-bottom: 12px; }
+  .field label, .field .lb { font: 500 12px/1 var(--font-sans); color: var(--st-text-mute); }
+  .field .help { font: 11.5px/1.4 var(--font-sans); color: var(--st-text-sub); }
+
+  /* Card */
+  .st-card {
+    background: var(--st-surface);
+    border: 1px solid var(--st-border);
+    border-radius: 14px; padding: 14px 16px;
+    margin-bottom: 12px;
+  }
+  .st-card .ttl { font: 600 14px/1.2 var(--font-sans); color: #fff; }
+  .st-card .sub { font: 12.5px/1.45 var(--font-sans); color: var(--st-text-mute); margin-top: 4px; }
+  .st-card .hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .st-card .hdr .spacer { flex: 1; }
+
+  /* ===== Transaction row (custom layout, uses .b-row-card surface) ===== */
+  .st-tx-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px;
+    background: var(--st-surface);
+    border: 1px solid var(--st-border);
+    border-radius: 12px;
+    margin-bottom: 6px;
+    cursor: pointer; min-height: var(--tap);
+    transition: background 180ms ease;
+  }
+  .st-tx-row:hover { background: var(--st-surface-2); }
+  .st-tx-row .badge-ic {
+    width: 38px; height: 38px; border-radius: 11px;
+    display: grid; place-items: center; flex: none;
+    font: 600 14px/1 var(--font-sans); color: #fff;
+    letter-spacing: 0;
+  }
+  .st-tx-row .info { flex: 1; min-width: 0; }
+  .st-tx-row .info .nm { font: 600 14.5px/1.2 var(--font-sans); color: #fff; text-overflow: ellipsis; overflow:hidden; white-space:nowrap; }
+  .st-tx-row .info .sb { font: 12px/1.3 var(--font-sans); color: var(--st-text-mute); margin-top: 3px; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .st-tx-row .amt { font: 600 14.5px/1 var(--font-sans); color: #fff; flex: none; text-align: right; font-variant-numeric: tabular-nums; white-space:nowrap; }
+  .st-tx-row .amt.dn { color: var(--st-bad); }
+  .st-tx-row .amt.up { color: var(--st-good); }
+  .st-tx-row .amt.transfer { color: var(--st-text-mute); }
+  .st-tx-row.unread { border-color: rgba(124,196,169,0.25); }
+  .st-tx-row .smart-hint { font: 11px/1.3 var(--font-sans); color: var(--st-text-mute); margin-top: 6px; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+  .st-tx-row .smart-hint .chip { padding: 3px 8px; border-radius: 9999px; background: rgba(255,255,255,0.06); color: var(--st-text); cursor: pointer; font-size:11px; }
+  .st-tx-row .smart-hint .chip:hover { background: rgba(124,196,169,0.18); color: var(--st-brand); }
+
+  /* Day group header */
+  .st-tx-day {
+    position: sticky; top: 0; z-index: 5;
+    display: flex; align-items: baseline; gap: 8px;
+    padding: 14px 4px 8px;
+    background: var(--st-bg);
+    font: 600 12px/1 var(--font-sans);
+    color: var(--st-text-sub);
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .st-tx-day .total { margin-left: auto; font: 500 12px var(--font-mono); color: var(--st-text-mute); font-variant-numeric: tabular-nums; }
+
+  /* Category pill */
+  .cat-pill {
+    padding: 2px 8px; border-radius: 9999px;
+    font: 500 11px/1.4 var(--font-sans);
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(255,255,255,0.05); color: var(--st-text-mute);
+  }
+  .cat-pill .dt { width: 7px; height: 7px; border-radius: 50%; flex:none; background: currentColor; }
+
+  /* Pill */
+  .pill {
+    padding: 3px 9px; border-radius: 9999px;
+    font: 500 11px/1.4 var(--font-sans);
+    display: inline-block;
+    background: rgba(255,255,255,0.07); color: var(--st-text-mute);
+  }
+  .pill.ok { background: var(--st-good-soft); color: var(--st-good); }
+  .pill.warn { background: var(--st-warn-soft); color: var(--st-warn); }
+  .pill.bad { background: var(--st-bad-soft); color: var(--st-bad); }
+  .pill.info { background: var(--st-info-soft); color: var(--st-info); }
+
+  /* Search bar */
+  .st-search {
+    position: relative; margin: 4px 0 12px;
+  }
+  .st-search input {
+    width: 100%; min-height: var(--tap); padding: 0 14px 0 38px;
+    background: var(--st-surface); color: #fff; border: 1px solid var(--st-border);
+    border-radius: 12px; font: 500 14px/1 var(--font-sans); box-sizing: border-box;
+  }
+  .st-search input:focus { outline:0; border-color: var(--st-brand); box-shadow: 0 0 0 3px var(--st-brand-soft); }
+  .st-search .ic { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--st-text-sub); pointer-events:none; }
+
+  /* Progress bar */
+  .st-progress {
+    height: 6px; background: rgba(255,255,255,0.06);
+    border-radius: 9999px; overflow: hidden;
+  }
+  .st-progress .fl { height: 100%; background: var(--st-brand); border-radius: 9999px; transition: width 240ms ease; }
+  .st-progress.warn .fl { background: var(--st-warn); }
+  .st-progress.bad .fl { background: var(--st-bad); }
+  .st-progress.good .fl { background: var(--st-good); }
+
+  /* Chart wrap */
+  .chart-wrap { position: relative; overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -2px; }
+  .chart-wrap svg { display: block; min-width: 280px; }
+  .chart-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+  .chart-legend .lg { font: 12px/1 var(--font-sans); color: var(--st-text-mute); display: inline-flex; align-items: center; gap: 6px; }
+  .chart-legend .lg .sw { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* Sign-in screen */
+  .st-login {
+    position: fixed; inset: 0; z-index: 50;
+    background: radial-gradient(ellipse at top, #16241F 0%, #0B0D11 60%);
+    display: grid; place-items: center;
+    padding: 20px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  }
+  body:not(.is-fullscreen) .st-login { top: 47px; }
+  .st-login .brand {
+    text-align: center; margin-bottom: 22px;
+    color: #fff; font: 700 22px/1 var(--font-sans);
+    display: inline-flex; align-items: center; gap: 10px; justify-content: center;
+    width: 100%; letter-spacing: -0.02em;
+  }
+  .st-login .brand .mark {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--st-brand), var(--st-brand-2));
+    color: #0B0D11; display: grid; place-items: center;
+  }
+  .st-login .brand .name { font-size: 24px; }
+  .st-login .card {
+    width: 100%; max-width: 380px;
+    background: var(--st-surface-2);
+    border: 1px solid var(--st-border);
+    border-radius: 16px;
+    padding: 24px;
+    color: var(--st-text);
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.55);
+  }
+  .st-login h1 { font: 700 22px/1.15 var(--font-sans); color: #fff; margin: 0; letter-spacing: -0.015em; }
+  .st-login .lead { font: 13.5px/1.5 var(--font-sans); color: var(--st-text-mute); margin-top: 6px; }
+  .st-login .field { display: block; margin-top: 14px; }
+  .st-login .otp { display: flex; gap: 6px; justify-content: space-between; margin-top:6px; }
+  .st-login .otp input {
+    flex: 1; padding: 0; box-sizing: border-box; text-align: center;
+    min-height: var(--tap); background: var(--st-surface); color: #fff;
+    border: 1px solid var(--st-border-2); border-radius: 9px;
+    font-size: 20px; font-weight: 600;
+  }
+  .st-login .otp input:focus { outline: 0; border-color: var(--st-brand); box-shadow: 0 0 0 3px var(--st-brand-soft); }
+  .st-login .full {
+    width: 100%; margin-top: 16px; min-height: var(--tap);
+    background: var(--st-brand); color: #0B0D11;
+    border: 0; border-radius: 10px; cursor: pointer;
+    font: 600 14px/1 var(--font-sans);
+  }
+  .st-login .full:hover { background: var(--st-brand-2); }
+  .st-login .meta { font: 12px/1.5 var(--font-sans); color: var(--st-text-sub); margin-top: 12px; text-align: center; }
+  .st-login .meta a { color: var(--st-brand); text-decoration: none; }
+  .st-login .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 9999px;
+    background: var(--st-brand-soft); color: var(--st-brand);
+    font: 500 11px var(--font-sans); margin-bottom: 12px;
+  }
+
+  /* Modal scrim — bottom sheet on phone */
+  .modal-scrim {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.6);
+    display: flex; justify-content: center; align-items: flex-end;
+    animation: scrimIn 180ms ease;
+  }
+  @keyframes scrimIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    width: 100%;
+    background: var(--st-surface-2);
+    color: var(--st-text);
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    padding: 6px 0 calc(16px + env(safe-area-inset-bottom, 0px));
+    max-height: 95vh;
+    display: flex; flex-direction: column;
+    box-shadow: 0 -16px 40px -10px rgba(0,0,0,0.55);
+    animation: sheetIn 240ms cubic-bezier(0.2, 0, 0.1, 1);
+  }
+  @keyframes sheetIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal .handle { width: 36px; height: 4px; margin: 6px auto 10px; background: var(--st-border-2); border-radius: 9999px; flex: none; }
+  .modal .sheet-hd { padding: 4px 18px 14px; border-bottom: 1px solid var(--st-border); flex: none; position: sticky; top: 0; background: var(--st-surface-2); z-index: 2; }
+  .modal .sheet-bd { padding: 16px 18px; overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1; min-height: 0; }
+  .modal h3 { font: 600 17px/1.2 var(--font-sans); color: #fff; margin: 0 0 4px; }
+  .modal .sub { font: 13px/1.4 var(--font-sans); color: var(--st-text-mute); margin: 0; }
+  .modal .row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .modal .row input, .modal .row select, .modal .row textarea {
+    flex: 1; min-width: 0; min-height: var(--tap); padding: 0 12px;
+    background: var(--st-surface); color: #fff;
+    border: 1px solid var(--st-border-2); border-radius: 10px;
+    font: 500 14px/1 var(--font-sans);
+  }
+  .modal .row textarea { min-height: 100px; padding: 10px 12px; resize: vertical; }
+  .modal .acts { display: flex; gap: 8px; padding: 12px 18px 0; border-top: 1px solid var(--st-border); flex: none; }
+  .modal .acts .btn { flex: 1; }
+
+  /* Stat rows in sheets */
+  .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .stat-row .s { padding: 10px 12px; background: var(--st-surface); border-radius: 10px; }
+  .stat-row .s .l { font: 11px/1 var(--font-sans); color: var(--st-text-sub); text-transform: uppercase; letter-spacing: 0.07em; }
+  .stat-row .s .v { font: 700 18px/1 var(--font-sans); color: #fff; margin-top: 6px; font-variant-numeric: tabular-nums; }
+
+  /* Toast */
+  .toast-host {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    top: calc(60px + env(safe-area-inset-top, 0px));
+    z-index: 200; display: flex; flex-direction: column; gap: 8px;
+    pointer-events: none; width: calc(100% - 32px); max-width: 360px;
+    align-items: center;
+  }
+  body.is-fullscreen .toast-host { top: 22px; }
+  .toast {
+    background: var(--st-surface-3); color: #fff;
+    border: 1px solid var(--st-border-2);
+    padding: 11px 14px; border-radius: 10px;
+    font: 500 13px/1.3 var(--font-sans);
+    display: inline-flex; align-items: center; gap: 8px;
+    box-shadow: 0 12px 24px -6px rgba(0,0,0,0.5);
+    animation: toastIn 160ms ease; pointer-events: auto;
+    max-width: 360px;
+  }
+  .toast.success { background: var(--st-good); color:#0B0D11; border-color: var(--st-good); }
+  .toast.danger { background: var(--st-bad); border-color: var(--st-bad); }
+  .toast.warn { background: var(--st-warn); color:#1A1308; border-color: var(--st-warn); }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+  .toast.out { animation: toastOut 160ms ease forwards; }
+  @keyframes toastOut { to { opacity: 0; transform: translateY(-8px); } }
+
+  /* Empty state */
+  .empty-st {
+    text-align: center; padding: 32px 18px; color: var(--st-text-mute);
+    background: var(--st-surface); border: 1px dashed var(--st-border); border-radius: 14px;
+  }
+  .empty-st .ic-bg {
+    width: 52px; height: 52px; border-radius: 14px;
+    margin: 0 auto 12px; display: grid; place-items: center;
+    background: var(--st-brand-soft); color: var(--st-brand);
+  }
+  .empty-st .ttl { font: 600 15px/1.3 var(--font-sans); color: #fff; }
+  .empty-st .ds { font: 13px/1.4 var(--font-sans); color: var(--st-text-mute); margin-top: 6px; }
+  .empty-st .ct { margin-top: 14px; }
+
+  /* Toggle */
+  .toggle { width: 44px; height: 26px; border-radius: 9999px; background: rgba(255,255,255,0.1); position: relative; cursor: pointer; transition: background 200ms; flex: none; display: inline-block; border:0; }
+  .toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform 200ms; }
+  .toggle.on { background: var(--st-brand); }
+  .toggle.on::after { transform: translateX(18px); }
+
+  /* Account / institution badge */
+  .inst-badge {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: grid; place-items: center; flex: none;
+    font: 700 13px/1 var(--font-sans); color: #fff;
+    background: linear-gradient(135deg, #243038, #18222A);
+    letter-spacing: -0.01em;
+  }
+
+  /* Pull-to-refresh */
+  .ptr {
+    text-align: center; padding: 14px 0;
+    font: 500 12px/1 var(--font-sans); color: var(--st-text-mute);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .ptr .sp {
+    width: 16px; height: 16px;
+    border: 2px solid var(--st-border-2);
+    border-top-color: var(--st-brand);
+    border-radius: 50%;
+    animation: ptr-spin 800ms linear infinite;
+  }
+  @keyframes ptr-spin { to { transform: rotate(360deg); } }
+
+  /* Welcome banner */
+  .st-hello {
+    margin-bottom: 14px;
+  }
+  .st-hello .h1 { font: 700 24px/1.15 var(--font-sans); color: #fff; letter-spacing: -0.018em; }
+  .st-hello .sb { font: 13.5px/1.5 var(--font-sans); color: var(--st-text-mute); margin-top: 4px; }
+
+  /* Sub-tab nav (sub-sections in settings, billing etc.) */
+  .st-subnav {
+    display: flex; gap: 6px;
+    padding: 4px; overflow-x: auto;
+    background: var(--st-surface);
+    border: 1px solid var(--st-border);
+    border-radius: 12px;
+    margin-bottom: 14px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .st-subnav button {
+    min-height: 38px;
+    padding: 0 14px; border-radius: 8px;
+    background: transparent; color: var(--st-text-mute); cursor: pointer; border: 0;
+    font: 500 13px var(--font-sans); display: inline-flex; align-items: center; gap: 7px;
+    white-space: nowrap; flex: none;
+  }
+  .st-subnav button.on { background: var(--st-surface-2); color: #fff; }
+  .st-subnav button:hover:not(.on) { color: #fff; }
+
+  /* Stepper */
+  .p-stepper {
+    display: inline-flex; gap: 6px; padding: 0;
+    align-items: center; justify-content: center;
+    margin-bottom: 18px;
+  }
+  .p-stepper .p-step {
+    width: 24px; height: 5px; border-radius: 9999px;
+    background: rgba(255,255,255,0.1);
+    transition: background 240ms;
+  }
+  .p-stepper .p-step.done, .p-stepper .p-step.current { background: var(--st-brand); }
+
+  /* Save bar */
+  .p-save-bar {
+    position: fixed; left: 0; right: 0;
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    z-index: 80;
+    background: var(--st-surface-2);
+    border-top: 1px solid var(--st-border-2);
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+    display: flex; gap: 12px; align-items: center;
+    transform: translateY(120%); transition: transform 240ms cubic-bezier(0.2,0,0.1,1);
+  }
+  .p-save-bar.dirty { transform: translateY(0); }
+  .p-save-bar .label { flex: 1; }
+  .p-save-bar .label .title { font: 500 13px/1.3 var(--font-sans); color: #fff; }
+  .p-save-bar .label .summary { font: 12px var(--font-sans); color: var(--st-text-mute); margin-top: 2px; }
+  .p-save-bar .actions { display: flex; gap: 8px; flex: none; }
+
+  /* Alert */
+  .alert {
+    padding: 12px 14px; border-radius: 12px;
+    display: flex; gap: 10px; align-items: flex-start;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--st-border);
+    margin-bottom: 12px;
+  }
+  .alert .ic { flex: none; width: 22px; height: 22px; display: grid; place-items: center; color: var(--st-text-mute); }
+  .alert .bd { flex: 1; min-width: 0; }
+  .alert .bd .ttl { font: 600 13.5px/1.3 var(--font-sans); color: #fff; }
+  .alert .bd .tx { font: 12.5px/1.45 var(--font-sans); color: var(--st-text-mute); margin-top: 3px; }
+  .alert.tone-success { background: var(--st-good-soft); border-color: rgba(91,170,139,0.25); }
+  .alert.tone-success .ic { color: var(--st-good); }
+  .alert.tone-warn { background: var(--st-warn-soft); border-color: rgba(224,180,93,0.25); }
+  .alert.tone-warn .ic { color: var(--st-warn); }
+  .alert.tone-danger { background: var(--st-bad-soft); border-color: rgba(224,116,114,0.25); }
+  .alert.tone-danger .ic { color: var(--st-bad); }
+
+  /* Calendar grid for cashflow */
+  .cf-cal {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+    background: var(--st-surface);
+    padding: 10px; border: 1px solid var(--st-border); border-radius: 14px;
+  }
+  .cf-cal .dow {
+    font: 600 10px/1 var(--font-sans); color: var(--st-text-sub);
+    text-align: center; padding: 6px 0;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .cf-cal .day {
+    aspect-ratio: 1;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    padding: 4px; display: flex; flex-direction: column; align-items: stretch;
+    cursor: pointer; min-width:0;
+    transition: background 200ms;
+  }
+  .cf-cal .day:hover { background: rgba(255,255,255,0.08); }
+  .cf-cal .day.empty { background: transparent; cursor: default; pointer-events: none; }
+  .cf-cal .day .n { font: 500 11px/1 var(--font-sans); color: var(--st-text-mute); text-align: right; }
+  .cf-cal .day.today .n { color: var(--st-brand); font-weight: 600; }
+  .cf-cal .day .dots { margin-top: auto; display: flex; gap: 2px; justify-content: center; align-items: center; }
+  .cf-cal .day .dot { width: 5px; height: 5px; border-radius: 50%; }
+  .cf-cal .day .dot.in { background: var(--st-good); }
+  .cf-cal .day .dot.out { background: var(--st-bad); }
+
+  /* Plan cards */
+  .plan-card {
+    background: var(--st-surface); border: 1px solid var(--st-border);
+    border-radius: 14px; padding: 16px;
+    margin-bottom: 10px; cursor: pointer;
+    display: flex; gap: 12px; align-items: flex-start;
+    transition: border-color 200ms;
+  }
+  .plan-card:hover { border-color: var(--st-border-2); }
+  .plan-card.active { border-color: var(--st-brand); background: var(--st-brand-soft); }
+  .plan-card .info { flex: 1; }
+  .plan-card .info .nm { font: 700 16px var(--font-sans); color: #fff; }
+  .plan-card .info .sb { font: 12.5px/1.4 var(--font-sans); color: var(--st-text-mute); margin-top: 4px; }
+  .plan-card .info ul { margin: 8px 0 0; padding: 0; list-style: none; }
+  .plan-card .info li { font: 12.5px/1.5 var(--font-sans); color: var(--st-text); padding: 3px 0 3px 18px; position: relative; }
+  .plan-card .info li::before { content: '✓'; color: var(--st-brand); position: absolute; left: 0; font-weight: 700; }
+  .plan-card .price { text-align: right; font: 700 18px var(--font-sans); color: #fff; flex: none; }
+  .plan-card .price small { font: 500 11px var(--font-sans); color: var(--st-text-mute); display: block; }
+
+  /* Inline KPI chips on insights */
+  .kpi-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    margin-bottom: 12px;
+  }
+  .kpi-card {
+    background: var(--st-surface); border: 1px solid var(--st-border);
+    border-radius: 12px; padding: 12px 14px;
+  }
+  .kpi-card .lbl { font: 500 11px/1 var(--font-sans); color: var(--st-text-sub); text-transform: uppercase; letter-spacing: 0.06em; }
+  .kpi-card .v { font: 700 20px/1.1 var(--font-sans); color: #fff; margin-top: 8px; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .kpi-card .d { font: 12px/1 var(--font-sans); color: var(--st-text-mute); margin-top: 6px; }
+  .kpi-card .d.up { color: var(--st-good); }
+  .kpi-card .d.dn { color: var(--st-bad); }
+
+  /* Goal donut visualization */
+  .goal-ring { width: 64px; height: 64px; flex: none; position: relative; }
+  .goal-ring svg { transform: rotate(-90deg); }
+  .goal-ring .pct {
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    font: 700 13px var(--font-sans); color: #fff;
+  }
+
+  /* Bank list (add-account) */
+  .bank-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; background: var(--st-surface);
+    border: 1px solid var(--st-border); border-radius: 12px;
+    margin-bottom: 6px; cursor: pointer; min-height: var(--tap);
+    transition: background 200ms;
+  }
+  .bank-row:hover { background: var(--st-surface-2); }
+  .bank-row .lg {
+    width: 36px; height: 36px; border-radius: 9px;
+    display: grid; place-items: center; flex: none;
+    background: linear-gradient(135deg, #2A3540, #1A222C);
+    color: #fff; font: 700 12px/1 var(--font-sans);
+  }
+  .bank-row .nm { flex: 1; font: 600 14px var(--font-sans); color: #fff; }
+  .bank-row .ar { color: var(--st-text-sub); }
+
+  /* OAuth fake screen */
+  .oauth-card {
+    background: var(--st-surface);
+    border: 1px solid var(--st-border);
+    border-radius: 16px; padding: 22px;
+    max-width: 360px; margin: 24px auto;
+  }
+  .oauth-card .lg {
+    width: 56px; height: 56px; border-radius: 14px;
+    display: grid; place-items: center; margin: 0 auto 12px;
+    background: linear-gradient(135deg, #2A3540, #1A222C);
+    color: #fff; font: 700 18px var(--font-sans);
+  }
+  .oauth-card h3 { font: 700 18px var(--font-sans); color: #fff; margin: 0; text-align: center; }
+  .oauth-card .sub { font: 13px/1.5 var(--font-sans); color: var(--st-text-mute); margin: 6px 0 16px; text-align: center; }
+  .oauth-card ul { margin: 8px 0; padding: 0 0 0 18px; }
+  .oauth-card li { font: 12.5px/1.6 var(--font-sans); color: var(--st-text); }
+
+  /* notifications list */
+  .notif-row {
+    display: flex; gap: 12px; padding: 12px 14px;
+    background: var(--st-surface); border: 1px solid var(--st-border);
+    border-radius: 12px; margin-bottom: 6px; align-items: flex-start;
+  }
+  .notif-row.unread { border-color: rgba(124,196,169,0.3); background: rgba(124,196,169,0.04); }
+  .notif-row .ic { width: 36px; height: 36px; border-radius: 10px; background: var(--st-surface-2); display: grid; place-items: center; color: var(--st-brand); flex:none; }
+  .notif-row .bd { flex: 1; min-width: 0; }
+  .notif-row .ttl { font: 600 13.5px/1.3 var(--font-sans); color: #fff; }
+  .notif-row .tx { font: 12.5px/1.4 var(--font-sans); color: var(--st-text-mute); margin-top: 3px; }
+  .notif-row .ts { font: 11px var(--font-mono); color: var(--st-text-sub); }
+
+  /* desktop-only / phone-only utility */
+  .desktop-only { display: none; }
+  .phone-only { display: block; }
+
+  /* ============================================================
+     TABLET / DESKTOP
+     ============================================================ */
+  @media (min-width: 720px) {
+    .st-bar { padding: 12px 16px; }
+    .st-bar .bar-btn-label { display: inline; font: 500 12px var(--font-sans); }
+    .st-page { padding: 22px 22px 32px; }
+    .st-page-head h2 { font-size: 26px; }
+    .desktop-only { display: block; }
+    .modal-scrim { align-items: center; padding: 24px; }
+    .modal {
+      max-width: 520px;
+      border: 1px solid var(--st-border-2);
+      border-radius: 16px;
+      padding: 6px 0 18px;
+      max-height: 88vh;
+      animation: modalIn 240ms cubic-bezier(0.2, 0.8, 0.3, 1);
+    }
+    .modal .handle { display: none; }
+    .modal .sheet-hd { padding: 18px 22px 14px; position: static; }
+    .modal .sheet-bd { padding: 18px 22px; }
+    .modal .acts { padding: 14px 22px 0; }
+    @keyframes modalIn { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+    .b-stat-hero .b-sh-lead .b-sh-v { font-size: 32px !important; }
+  }
+
+  @media (min-width: 1024px) {
+    .st-app {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      grid-template-rows: auto 1fr;
+      grid-template-areas: "side bar" "side main";
+      height: calc(100vh - 47px);
+      height: calc(100dvh - 47px);
+      min-height: 640px;
+    }
+    body.is-fullscreen .st-app { height: 100vh; height: 100dvh; }
+    .st-bar { grid-area: bar; position: static; }
+    .st-main { grid-area: main; padding-bottom: 32px; }
+    .b-bottom-tabs { display: none; }
+    .st-side {
+      grid-area: side;
+      display: flex; flex-direction: column; gap: 2px;
+      background: #07090C;
+      border-right: 1px solid var(--st-border);
+      padding: 14px 10px;
+      min-width: 0; overflow-y: auto;
+    }
+    .st-side .brand {
+      display: inline-flex; align-items: center; gap: 9px;
+      padding: 4px 8px 14px; color: #fff;
+      font: 700 15px/1 var(--font-sans);
+      text-decoration: none; letter-spacing: -0.01em;
+    }
+    .st-side .brand .mk { color: var(--st-brand); width:24px; height:24px; border-radius:8px; background: var(--st-brand-soft); display:grid; place-items:center; }
+    .st-side .h {
+      font: 600 10px/1 var(--font-sans);
+      letter-spacing: 0.13em; text-transform: uppercase;
+      color: var(--st-text-sub);
+      padding: 14px 10px 6px;
+    }
+    .st-side .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 10px; border-radius: 7px;
+      color: var(--st-text-mute); text-decoration: none;
+      font: 500 13px/1 var(--font-sans);
+      border: 0; background: transparent; cursor: pointer;
+      width: 100%; text-align: left; min-height: 36px;
+    }
+    .st-side .nav-item:hover { background: rgba(255,255,255,0.04); color: #fff; }
+    .st-side .nav-item.active { background: var(--st-brand-soft); color: var(--st-brand); }
+    .st-side .nav-item .ic { width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; flex: none; color: var(--st-text-sub); }
+    .st-side .nav-item.active .ic { color: var(--st-brand); }
+    .st-side .foot {
+      margin-top: auto;
+      padding: 12px 10px 4px;
+      border-top: 1px solid var(--st-border);
+      font: 11.5px/1.4 var(--font-sans);
+      color: var(--st-text-sub);
+    }
+    .st-side .foot strong { color: var(--st-text-mute); font-weight: 600; display: block; }
+    .st-side .foot a { color: var(--st-brand); text-decoration: none; }
+    .phone-only { display: none; }
+  }
+
+  /* PHONE TIGHTENING */
+  @media (max-width: 720px) {
+    body[data-kit-nav="stash"] .desktop-only { display: none !important; }
+    body[data-kit-nav="stash"] .st-page-head h2 { font-size: 22px; line-height: 1.18; }
+    body[data-kit-nav="stash"] .st-page-head .sub { font-size: 12.5px; }
+    body[data-kit-nav="stash"] .b-stat-hero .b-sh-lead .b-sh-v { font-size: 22px; }
+    body[data-kit-nav="stash"] .b-stat-hero .b-sh-s .b-sh-v { font-size: 16px; }
+    body[data-kit-nav="stash"] .st-hello .h1 { font-size: 22px; }
+  }
+</style>
+</head>
+<body class="hx-no-kit-nav is-dark" data-kit-nav="stash">
+
+<div id="app"></div>
+<div id="modal-host"></div>
+<div class="toast-host" id="toast-host"></div>
+
+<script>
+/* ============================================================
+   STASH — Personal savings + expense tracking
+   Mobile-first. Dark only. Inspired by Copilot Money.
+   ============================================================ */
+
+const $ = (s, p = document) => p.querySelector(s);
+const $$ = (s, p = document) => Array.from(p.querySelectorAll(s));
+const fmt = (n, d = 0) => {
+  if (n === null || n === undefined) return '—';
+  const v = Math.abs(n);
+  const sign = n < 0 ? '-' : '';
+  const s = v.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+  return sign + s;
+};
+const usd = (n, d = 0) => '$' + fmt(n, d);
+const escapeHtml = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ============================================================
+   SEEDS
+   ============================================================ */
+
+const CATEGORIES = [
+  { id: 'food',          name: 'Food',          color: '#E8A56E', icon: 'shop'     },
+  { id: 'transport',     name: 'Transport',     color: '#6FB1E0', icon: 'truck'    },
+  { id: 'bills',         name: 'Bills',         color: '#E0B45D', icon: 'receipt'  },
+  { id: 'entertainment', name: 'Entertainment', color: '#B49CE8', icon: 'sparkles' },
+  { id: 'shopping',      name: 'Shopping',      color: '#E08CB5', icon: 'tag'      },
+  { id: 'gym',           name: 'Gym',           color: '#5BAA8B', icon: 'activity' },
+  { id: 'subs',          name: 'Subscriptions', color: '#7CC4A9', icon: 'refresh'  },
+  { id: 'income',        name: 'Income',        color: '#5BAA8B', icon: 'arrow'    },
+  { id: 'transfer',      name: 'Transfer',      color: '#9CA3AF', icon: 'forward'  },
+  { id: 'other',         name: 'Other',         color: '#9CA3AF', icon: 'grid'     },
+];
+const catById = id => CATEGORIES.find(c => c.id === id) || CATEGORIES[CATEGORIES.length-1];
+
+/* 50+ ZW/SA banks for add-account search */
+const INSTITUTIONS = [
+  { id: 'cbz',   name: 'CBZ Bank',          mono: 'CB', country: 'ZW' },
+  { id: 'stnb',  name: 'Stanbic Bank',      mono: 'SB', country: 'ZW' },
+  { id: 'nedb',  name: 'Nedbank',           mono: 'ND', country: 'ZW' },
+  { id: 'fnb',   name: 'FNB',               mono: 'FN', country: 'ZA' },
+  { id: 'nmb',   name: 'NMB Bank',          mono: 'NM', country: 'ZW' },
+  { id: 'zbb',   name: 'ZB Bank',           mono: 'ZB', country: 'ZW' },
+  { id: 'banc',  name: 'BancABC',           mono: 'BA', country: 'ZW' },
+  { id: 'cabs',  name: 'CABS',              mono: 'CA', country: 'ZW' },
+  { id: 'fbcb',  name: 'FBC Bank',          mono: 'FB', country: 'ZW' },
+  { id: 'aric',  name: 'Agribank',          mono: 'AG', country: 'ZW' },
+  { id: 'ecob',  name: 'Ecobank',           mono: 'EC', country: 'ZW' },
+  { id: 'std',   name: 'Standard Chartered',mono: 'SC', country: 'ZW' },
+  { id: 'pos',   name: 'POSB',              mono: 'PS', country: 'ZW' },
+  { id: 'ste',   name: 'Steward Bank',      mono: 'ST', country: 'ZW' },
+  { id: 'meta',  name: 'MetBank',           mono: 'MB', country: 'ZW' },
+  { id: 'cbz2',  name: 'CBZ Touch',         mono: 'CT', country: 'ZW' },
+  { id: 'eco',   name: 'EcoCash',           mono: 'EM', country: 'ZW' },
+  { id: 'one',   name: 'OneMoney',          mono: 'OM', country: 'ZW' },
+  { id: 'inn',   name: 'InnBucks',          mono: 'IN', country: 'ZW' },
+  { id: 'eqty',  name: 'Easy Equities',     mono: 'EE', country: 'ZA' },
+  { id: 'absa',  name: 'Absa',              mono: 'AB', country: 'ZA' },
+  { id: 'cap',   name: 'Capitec',           mono: 'CP', country: 'ZA' },
+  { id: 'inv',   name: 'Investec',          mono: 'IV', country: 'ZA' },
+  { id: 'dbk',   name: 'Discovery Bank',    mono: 'DB', country: 'ZA' },
+  { id: 'tym',   name: 'TymeBank',          mono: 'TY', country: 'ZA' },
+  { id: 'bnk',   name: 'Bank Zero',         mono: 'BZ', country: 'ZA' },
+  { id: 'afr',   name: 'African Bank',      mono: 'AF', country: 'ZA' },
+  { id: 'gro',   name: 'GroBank',           mono: 'GR', country: 'ZA' },
+  { id: 'meri',  name: 'Mercantile',        mono: 'MC', country: 'ZA' },
+  { id: 'eaaa',  name: 'AAA Investments',   mono: 'AA', country: 'ZW' },
+  { id: 'old',   name: 'Old Mutual',        mono: 'OM', country: 'ZW' },
+  { id: 'liberty', name: 'Liberty',         mono: 'LB', country: 'ZW' },
+  { id: 'first',name: 'First Capital Bank', mono: 'FC', country: 'ZW' },
+  { id: 'imara',name: 'Imara Asset Mgmt',   mono: 'IA', country: 'ZW' },
+  { id: 'platn',name: 'Platinum Wealth',    mono: 'PW', country: 'ZA' },
+  { id: 'sasf', name: 'SASFIN',             mono: 'SF', country: 'ZA' },
+  { id: 'rmb',  name: 'RMB Private Bank',   mono: 'RM', country: 'ZA' },
+  { id: 'ubuntu', name: 'Ubuntu Wealth',    mono: 'UB', country: 'ZA' },
+  { id: 'sanlam',name: 'Sanlam Bank',       mono: 'SL', country: 'ZA' },
+  { id: 'pep',  name: 'PEP Money',          mono: 'PP', country: 'ZA' },
+  { id: 'shopr', name: 'Shoprite Money',    mono: 'SM', country: 'ZA' },
+  { id: 'pcap', name: 'Pickn Pay Savings',  mono: 'PP', country: 'ZA' },
+  { id: 'allan',name: 'Allan Gray',         mono: 'AG', country: 'ZA' },
+  { id: 'cor',  name: 'Coronation',         mono: 'CO', country: 'ZA' },
+  { id: 'momt', name: 'Momentum',           mono: 'MT', country: 'ZA' },
+  { id: 'psgmt',name: 'PSG Wealth',         mono: 'PS', country: 'ZA' },
+  { id: 'mauf', name: 'Mauritius Commercial', mono: 'MC', country: 'MU' },
+  { id: 'tnm',  name: 'Telecom Money',      mono: 'TM', country: 'ZW' },
+  { id: 'zswn', name: 'ZW Stock Wealth',    mono: 'ZS', country: 'ZW' },
+  { id: 'inter',name: 'Interfin',           mono: 'IF', country: 'ZW' },
+  { id: 'untvr',name: 'Univera Banking',    mono: 'UN', country: 'ZW' },
+  { id: 'btcb', name: 'Bitcoin Wallet',     mono: 'BT', country: '—'  },
+];
+
+/* Seed accounts */
+const SEED_ACCOUNTS = [
+  { id: 'a1', inst: 'cbz',  kind: 'bank',  type: 'Banks',      nick: 'CBZ Savings',       last4: '4821', bal: 4820.40, status: 'ok',   spark: [4400,4480,4520,4600,4640,4720,4820] },
+  { id: 'a2', inst: 'stnb', kind: 'bank',  type: 'Banks',      nick: 'Stanbic Cheque',    last4: '0512', bal: 1284.00, status: 'ok',   spark: [1640,1580,1500,1420,1380,1320,1284] },
+  { id: 'a3', inst: 'nedb', kind: 'card',  type: 'Cards',      nick: 'Nedbank Credit',    last4: '7702', bal: -842.50, status: 'ok',   spark: [-540,-620,-680,-720,-780,-820,-842] },
+  { id: 'a4', inst: 'fnb',  kind: 'bank',  type: 'Banks',      nick: 'FNB EasyAccount',   last4: '1144', bal: 320.10,  status: 'sync', spark: [580,540,460,420,380,340,320] },
+  { id: 'a5', inst: 'eqty', kind: 'inv',   type: 'Investments',nick: 'Easy Equities ZA',  last4: '9981', bal: 12420.00,status: 'ok',   spark: [11200,11400,11620,11800,12000,12240,12420] },
+  { id: 'a6', inst: 'eco',  kind: 'cash',  type: 'Cash',       nick: 'EcoCash float',     last4: '4821', bal: 42.80,   status: 'ok',   spark: [62,58,55,48,46,44,42] },
+];
+
+/* Seed transactions — generated from a template */
+const TODAY = new Date(2026, 5, 5); // Jun 5 2026
+function daysAgo(n) { const d = new Date(TODAY); d.setDate(d.getDate() - n); return d; }
+const SEED_TX = [
+  { d: 0, m: 'Pick n Pay',     a: -28.40, c: 'food',          acct: 'a4', note: '', loc: 'Borrowdale Village', smart: false },
+  { d: 0, m: 'Steers Borrowdale', a: -12.00, c: 'food',       acct: 'a2', note: '', loc: 'Sam Levy Village', smart: true, suggestions:['food','entertainment','other'] },
+  { d: 0, m: 'Uber',           a: -8.50, c: 'transport',     acct: 'a3', note: 'To Avondale', loc: 'Harare', smart: false },
+  { d: 0, m: 'Mukamba Fuel',   a: -42.00, c: 'transport',    acct: 'a4', note: '', loc: 'Eastlea', smart: false },
+  { d: 1, m: 'Salary · Mukamba Group', a: 1840.50, c: 'income', acct: 'a1', note: 'Net pay May', loc: 'Direct deposit', smart: false },
+  { d: 1, m: 'Chicken Inn',    a: -7.20, c: 'food',          acct: 'a2', note: '', loc: 'Westgate', smart: false },
+  { d: 1, m: 'Netflix',        a: -9.99, c: 'subs',          acct: 'a3', note: 'Premium', loc: 'Card on file', smart: false },
+  { d: 2, m: 'OK Mart',        a: -54.80, c: 'food',         acct: 'a4', note: 'Weekly groceries', loc: 'Borrowdale Village', smart: false },
+  { d: 2, m: 'Spotify',        a: -4.99, c: 'subs',          acct: 'a3', note: '', loc: 'Card on file', smart: false },
+  { d: 2, m: 'DStv',           a: -45.00, c: 'bills',        acct: 'a1', note: 'Premium package', loc: 'Auto debit', smart: false },
+  { d: 3, m: 'Transfer to Stash', a: -200.00, c: 'transfer', acct: 'a1', note: 'Emergency fund', loc: 'Internal', smart: false },
+  { d: 3, m: 'CABS Mortgage',  a: -320.00, c: 'bills',       acct: 'a1', note: 'June payment', loc: 'Auto debit', smart: false },
+  { d: 3, m: 'Steers',         a: -14.50, c: 'food',         acct: 'a2', note: '', loc: 'Avondale', smart: false },
+  { d: 4, m: 'Pick n Pay',     a: -36.20, c: 'food',         acct: 'a4', note: '', loc: 'Borrowdale', smart: false },
+  { d: 4, m: 'MetroPeech',     a: -22.80, c: 'shopping',     acct: 'a2', note: 'Cleaning supplies', loc: 'Sam Levy', smart: false },
+  { d: 5, m: 'Uber Eats',      a: -18.20, c: 'food',         acct: 'a3', note: 'Chinese', loc: 'Avondale', smart: false },
+  { d: 5, m: 'Power Sales',    a: -12.40, c: 'transport',    acct: 'a4', note: 'Diesel can refill', loc: 'Eastlea', smart: false },
+  { d: 6, m: 'Spar',           a: -41.20, c: 'food',         acct: 'a2', note: '', loc: 'Strathaven', smart: false },
+  { d: 6, m: 'Gym membership · Curves', a: -25.00, c: 'gym', acct: 'a1', note: '', loc: 'Auto debit', smart: false },
+  { d: 7, m: 'Sam Levy Cinema',a: -16.00, c: 'entertainment',acct: 'a3', note: 'Movie · Inside Out 3', loc: 'Borrowdale', smart: true, suggestions:['entertainment','other','food'] },
+  { d: 7, m: 'Refund · Pick n Pay', a: 8.40, c: 'income',    acct: 'a4', note: 'Damaged item', loc: 'Borrowdale', smart: false },
+  { d: 8, m: 'Mukamba Fuel',   a: -50.00, c: 'transport',    acct: 'a4', note: '', loc: 'Eastlea', smart: false },
+  { d: 8, m: 'Chicken Inn',    a: -9.00, c: 'food',          acct: 'a2', note: '', loc: 'Avondale', smart: false },
+  { d: 9, m: 'TelOne',         a: -34.00, c: 'bills',        acct: 'a1', note: 'Internet', loc: 'Auto debit', smart: false },
+  { d: 9, m: 'OK Mart',        a: -64.20, c: 'food',         acct: 'a4', note: 'Weekly', loc: 'Borrowdale', smart: false },
+  { d: 10, m: 'Apple Music',   a: -3.99, c: 'subs',          acct: 'a3', note: '', loc: 'Card on file', smart: false },
+  { d: 10, m: 'Uber',          a: -6.80, c: 'transport',     acct: 'a3', note: '', loc: 'Harare', smart: false },
+  { d: 11, m: 'Pick n Pay',    a: -22.40, c: 'food',         acct: 'a4', note: '', loc: 'Borrowdale', smart: false },
+  { d: 12, m: 'ZESA prepaid',  a: -28.00, c: 'bills',        acct: 'a1', note: 'Electricity tokens', loc: 'Online', smart: false },
+  { d: 12, m: 'Steers',        a: -11.00, c: 'food',         acct: 'a2', note: '', loc: 'Borrowdale', smart: false },
+  { d: 13, m: 'Side gig · web design', a: 240.00, c: 'income', acct: 'a1', note: 'Pamberi Stationers', loc: 'Bank transfer', smart: false },
+];
+
+/* Seed budgets */
+const SEED_BUDGETS = [
+  { id: 'b-food',  name: 'Food',          cat: 'food',          limit: 320, spent: 245.10, cad: 'monthly', daysLeft: 25, projOver: false },
+  { id: 'b-trans', name: 'Transport',     cat: 'transport',     limit: 200, spent: 116.30, cad: 'monthly', daysLeft: 25, projOver: false },
+  { id: 'b-bills', name: 'Bills',         cat: 'bills',         limit: 480, spent: 427.00, cad: 'monthly', daysLeft: 25, projOver: true  },
+  { id: 'b-ent',   name: 'Entertainment', cat: 'entertainment', limit: 80,  spent: 16.00,  cad: 'monthly', daysLeft: 25, projOver: false },
+  { id: 'b-shop',  name: 'Shopping',      cat: 'shopping',      limit: 120, spent: 22.80,  cad: 'monthly', daysLeft: 25, projOver: false },
+  { id: 'b-gym',   name: 'Gym',           cat: 'gym',           limit: 25,  spent: 25.00,  cad: 'monthly', daysLeft: 25, projOver: false },
+  { id: 'b-subs',  name: 'Subscriptions', cat: 'subs',          limit: 70,  spent: 63.97,  cad: 'monthly', daysLeft: 25, projOver: false },
+];
+
+/* Seed subscriptions */
+const SEED_SUBS = [
+  { id: 's1', name: 'Netflix',         cad: 'monthly', price: 9.99,  next: 'in 7 days',  acct: 'a3', logo: 'N', color: '#E07472' },
+  { id: 's2', name: 'Spotify',         cad: 'monthly', price: 4.99,  next: 'in 11 days', acct: 'a3', logo: 'S', color: '#5BAA8B' },
+  { id: 's3', name: 'Apple Music',     cad: 'monthly', price: 3.99,  next: 'in 18 days', acct: 'a3', logo: 'A', color: '#9CA3AF' },
+  { id: 's4', name: 'DStv Premium',    cad: 'monthly', price: 45.00, next: 'in 22 days', acct: 'a1', logo: 'D', color: '#6FB1E0' },
+  { id: 's5', name: 'Adobe Photoshop', cad: 'monthly', price: 9.99,  next: 'in 12 days', acct: 'a3', logo: 'A', color: '#B49CE8' },
+  { id: 's6', name: 'iCloud 200GB',    cad: 'monthly', price: 2.99,  next: 'in 24 days', acct: 'a3', logo: 'C', color: '#7CC4A9' },
+  { id: 's7', name: 'Gym · Curves',    cad: 'monthly', price: 25.00, next: 'in 14 days', acct: 'a1', logo: 'G', color: '#E0B45D' },
+  { id: 's8', name: 'NY Times',        cad: 'yearly',  price: 75.00, next: 'in 92 days', acct: 'a3', logo: 'N', color: '#E08CB5' },
+];
+
+/* Seed goals */
+const SEED_GOALS = [
+  { id: 'g1', name: 'Emergency fund',  target: 3000, saved: 1840,  weekly: 60, ic: 'shield',   color: '#5BAA8B', eta: 'about 5 months' },
+  { id: 'g2', name: 'Holiday · Cape Town', target: 1200, saved: 480, weekly: 30, ic: 'sun',   color: '#E0B45D', eta: 'about 6 months' },
+  { id: 'g3', name: 'New laptop',      target: 1800, saved: 720,   weekly: 40, ic: 'desktop',  color: '#6FB1E0', eta: 'about 7 months' },
+  { id: 'g4', name: 'House deposit',   target: 25000, saved: 3200, weekly: 120, ic: 'home',    color: '#B49CE8', eta: 'about 4 years' },
+];
+
+/* Seed notifications */
+const SEED_NOTIFS = [
+  { d: 0, ic: 'bell',    ttl: 'New transaction', tx: 'Steers $12.00 — looks like Food', ts: '14m', unread: true  },
+  { d: 0, ic: 'check',   ttl: 'Budget healthy',  tx: 'Food budget is on track for the month', ts: '2h', unread: true },
+  { d: 1, ic: 'warn',    ttl: 'Bills budget at 89%', tx: 'You may go over in 4 days', ts: '1d', unread: false },
+  { d: 1, ic: 'refresh', ttl: 'Subscription renewed', tx: 'Netflix charged $9.99', ts: '1d', unread: false },
+  { d: 2, ic: 'target',  ttl: 'Goal milestone', tx: 'Emergency fund passed 60%', ts: '2d', unread: false },
+  { d: 3, ic: 'arrow',   ttl: 'Salary deposit', tx: 'Mukamba Group sent $1,840.50', ts: '3d', unread: false },
+];
+
+/* Seed billing invoices */
+const SEED_INVOICES = [
+  { id: 'INV-2026-06', period: 'Jun 2026', amt: 8.00, status: 'Paid', when: '01 Jun' },
+  { id: 'INV-2026-05', period: 'May 2026', amt: 8.00, status: 'Paid', when: '01 May' },
+  { id: 'INV-2026-04', period: 'Apr 2026', amt: 8.00, status: 'Paid', when: '01 Apr' },
+  { id: 'INV-2026-03', period: 'Mar 2026', amt: 8.00, status: 'Paid', when: '01 Mar' },
+];
+
+/* ===== Defaults & state ===== */
+const DEFAULT_SETTINGS = {
+  theme: 'dark',
+  plan: 'pro',
+  notifChannels: { newTx: ['push'], budget: ['push','email'], goal: ['push'], subRenew: ['email'], lowBalance: ['push','email'] },
+  biometric: true,
+  twoFa: true,
+};
+
+const state = {
+  route: 'home',
+  signedIn: false,
+  step: 'creds',
+  tab: 'home',
+  moreSheetOpen: false,
+  modal: null,
+  txFilter: 'all',
+  txSearch: '',
+  refreshing: false,
+  insightsRange: '30d',
+  selectedTx: null,
+  selectedAccount: null,
+  selectedBudget: null,
+  selectedGoal: null,
+  selectedDay: null,
+  addAccountStep: 'search',
+  addAccountInst: null,
+  addAccountSearch: '',
+  onboardStep: 0,
+  settingsTab: 'security',
+  billingTab: 'plan',
+  saveBarDirty: false,
+  accounts: null,
+  transactions: null,
+  budgets: null,
+  subs: null,
+  goals: null,
+  notifs: null,
+  settings: { ...DEFAULT_SETTINGS },
+};
+
+const ROUTES = ['sign-in','home','transactions','accounts','account-detail','add-account','budgets','budget-detail','subscriptions','goals','goal-detail','insights','cashflow','categories','profile','settings','billing','onboarding','notifications','transaction-detail'];
+
+/* ===== Persistence ===== */
+const LS = 'huchu-stash-demo:v1';
+const PERSIST = ['signedIn','accounts','transactions','budgets','subs','goals','notifs','settings'];
+function saveState() {
+  try {
+    const o = {}; PERSIST.forEach(k => o[k] = state[k]);
+    localStorage.setItem(LS, JSON.stringify(o));
+  } catch(e){}
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS); if (!raw) return;
+    const o = JSON.parse(raw);
+    PERSIST.forEach(k => { if (o[k] !== undefined) state[k] = o[k]; });
+    state.settings = { ...DEFAULT_SETTINGS, ...(state.settings || {}) };
+  } catch(e){}
+}
+function hydrateSeeds() {
+  if (!state.accounts) state.accounts = SEED_ACCOUNTS.map(x => ({ ...x }));
+  if (!state.transactions) {
+    state.transactions = SEED_TX.map((t, i) => ({
+      id: 't'+i,
+      date: daysAgo(t.d).toISOString(),
+      merchant: t.m,
+      amt: t.a,
+      cat: t.c,
+      acctId: t.acct,
+      note: t.note || '',
+      loc: t.loc || '',
+      hidden: false,
+      smart: !!t.smart,
+      suggestions: t.suggestions || [],
+      seen: !t.smart,
+    }));
+  }
+  if (!state.budgets) state.budgets = SEED_BUDGETS.map(b => ({ ...b }));
+  if (!state.subs) state.subs = SEED_SUBS.map(s => ({ ...s }));
+  if (!state.goals) state.goals = SEED_GOALS.map(g => ({ ...g }));
+  if (!state.notifs) state.notifs = SEED_NOTIFS.map((n, i) => ({ id: 'n'+i, ...n, date: daysAgo(n.d).toISOString() }));
+}
+function resetDemo() {
+  try { localStorage.removeItem(LS); } catch(e){}
+  location.reload();
+}
+
+/* ===== Toast / modal ===== */
+function toast(msg, kind='default') {
+  const host = $('#toast-host');
+  if (!host) return;
+  const el = document.createElement('div');
+  el.className = 'toast' + (kind!=='default' ? ' '+kind : '');
+  const icon = kind==='success' ? 'check' : kind==='danger' ? 'x' : kind==='warn' ? 'info' : 'check';
+  el.innerHTML = `<span data-icon="${icon}" data-icon-size="14"></span>${escapeHtml(msg)}`;
+  host.appendChild(el);
+  if (window.Icons) window.Icons.render(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 200); }, 2400);
+}
+function openModal(html) { state.modal = html; renderModal(); }
+function closeModal() { state.modal = null; renderModal(); }
+function renderModal() {
+  const h = $('#modal-host');
+  if (!state.modal) { h.innerHTML = ''; return; }
+  if (state.modal === '__bs__') return; // bottom sheet manages its own host
+  h.innerHTML = `<div class="modal-scrim" data-scrim>${state.modal}</div>`;
+  if (window.Icons) window.Icons.render(h);
+  h.querySelector('[data-scrim]').addEventListener('click', (e) => {
+    if (e.target.dataset.scrim !== undefined) closeModal();
+  });
+  const cl = h.querySelector('[data-sheet-close]');
+  if (cl) cl.addEventListener('click', closeModal);
+}
+function openConfirm({title, sub, okLabel='Confirm', danger=false, onOk}) {
+  openModal(`
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="handle"></div>
+      <div class="sheet-hd"><h3>${escapeHtml(title)}</h3><p class="sub">${escapeHtml(sub||'')}</p></div>
+      <div class="sheet-bd"></div>
+      <div class="acts">
+        <button class="btn" data-cancel>Cancel</button>
+        <button class="btn ${danger?'danger':'primary'}" data-ok>${escapeHtml(okLabel)}</button>
+      </div>
+    </div>`);
+  $('.modal [data-cancel]').addEventListener('click', closeModal);
+  $('.modal [data-ok]').addEventListener('click', () => { closeModal(); onOk && onOk(); });
+}
+
+/* ===== Bottom sheet (DS .x-bottom-sheet) ===== */
+function openSheet(opts) {
+  /* opts: { crumb, title, body, primaryLabel, onPrimary, secondaryLabel, onSecondary, dangerLabel, onDanger } */
+  state.modal = '__bs__';
+  const h = $('#modal-host');
+  h.innerHTML = `
+    <div class="x-bs-scrim open" data-bs-scrim>
+      <div class="x-bottom-sheet" role="dialog" aria-modal="true" aria-labelledby="bs-title">
+        <div class="x-bs-grab"></div>
+        <div class="x-bs-head">
+          <div style="flex:1;min-width:0;">
+            ${opts.crumb ? `<div style="font:500 11px/1 var(--font-sans);letter-spacing:0.09em;text-transform:uppercase;color:var(--st-text-sub);margin-bottom:5px;">${escapeHtml(opts.crumb)}</div>` : ''}
+            <h3 id="bs-title">${escapeHtml(opts.title || '')}</h3>
+          </div>
+          <button class="x-bs-close" type="button" data-sheet-close aria-label="Close"><span data-icon="x" data-icon-size="16"></span></button>
+        </div>
+        <div class="x-bs-body" style="max-height:65vh;overflow-y:auto;">
+          ${opts.body || ''}
+        </div>
+        <div class="x-bs-foot" style="display:flex; gap:8px;">
+          ${opts.dangerLabel ? `<button class="danger" type="button" id="sheet-danger">${escapeHtml(opts.dangerLabel)}</button>` : ''}
+          <button class="alt" type="button" data-sheet-close>${escapeHtml(opts.secondaryLabel || 'Close')}</button>
+          ${opts.primaryLabel ? `<button class="primary" type="button" id="sheet-primary">${escapeHtml(opts.primaryLabel)}</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+  if (window.Icons) window.Icons.render(h);
+  const scrim = h.querySelector('[data-bs-scrim]');
+  scrim.addEventListener('click', (e) => { if (e.target === scrim) closeModal(); });
+  h.querySelectorAll('[data-sheet-close]').forEach(b => b.addEventListener('click', () => { closeModal(); if (opts.onSecondary) opts.onSecondary(); }));
+  if (opts.onPrimary) {
+    const p = $('#sheet-primary');
+    if (p) p.addEventListener('click', () => { closeModal(); opts.onPrimary(); });
+  }
+  if (opts.onDanger) {
+    const d = $('#sheet-danger');
+    if (d) d.addEventListener('click', () => { closeModal(); opts.onDanger(); });
+  }
+}
+
+/* ===== Router ===== */
+function go(route, extra) {
+  state.route = route;
+  state.moreSheetOpen = false;
+  if (extra) Object.assign(state, extra);
+  history.replaceState(null, '', '#/' + route);
+  render();
+  const m = $('.st-main'); if (m) m.scrollTo(0,0);
+}
+window.addEventListener('hashchange', () => {
+  let r = (location.hash.replace(/^#\/?/, '') || 'home');
+  if (state.route !== r) { state.route = r; render(); }
+});
+
+/* ===== Fullscreen ===== */
+function toggleFullscreen() {
+  const isFs = !!document.fullscreenElement || document.body.classList.contains('is-fullscreen');
+  if (isFs) {
+    document.exitFullscreen && document.exitFullscreen().catch(()=>{});
+    document.body.classList.remove('is-fullscreen');
+  } else {
+    document.body.classList.add('is-fullscreen');
+    document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(()=>{});
+  }
+  render();
+}
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) document.body.classList.remove('is-fullscreen');
+  render();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (state.moreSheetOpen) { state.moreSheetOpen = false; render(); return; }
+    if (state.modal) { closeModal(); return; }
+    if (document.body.classList.contains('is-fullscreen') && !document.fullscreenElement) {
+      document.body.classList.remove('is-fullscreen'); render();
+    }
+  }
+});
+
+/* ===== SVG charts ===== */
+function svgSparkline(values, opts={}) {
+  const w = opts.w || 80, h = opts.h || 22;
+  const c = opts.color || '#7CC4A9';
+  const min = Math.min(...values), max = Math.max(...values);
+  const rng = max - min || 1;
+  const sx = w / (values.length - 1);
+  const pts = values.map((v,i) => `${(i*sx).toFixed(1)},${(h - ((v - min)/rng)*(h-3) - 1.5).toFixed(1)}`).join(' ');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg"><polyline points="${pts}" fill="none" stroke="${c}" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+}
+function svgArea(values, opts={}) {
+  const w = opts.w || 320, h = opts.h || 90;
+  const c = opts.color || '#7CC4A9';
+  const min = Math.min(0, ...values), max = Math.max(...values);
+  const rng = max - min || 1;
+  const sx = w / (values.length - 1);
+  const pts = values.map((v,i) => `${(i*sx).toFixed(1)},${(h - ((v - min)/rng)*(h-8) - 4).toFixed(1)}`);
+  const line = pts.join(' ');
+  const fill = `0,${h} ` + pts.join(' ') + ` ${w},${h}`;
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="width:100%;">
+    <polygon points="${fill}" fill="${c}" opacity="0.16"/>
+    <polyline points="${line}" fill="none" stroke="${c}" stroke-width="1.8" stroke-linejoin="round"/>
+  </svg>`;
+}
+function svgBars(values, labels, opts={}) {
+  const w = opts.w || 320, h = opts.h || 130;
+  const c = opts.color || '#7CC4A9';
+  const max = Math.max(...values) || 1;
+  const bw = w / values.length * 0.6;
+  const gap = w / values.length * 0.4;
+  let out = `<svg width="${w}" height="${h+20}" viewBox="0 0 ${w} ${h+20}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">`;
+  values.forEach((v,i)=>{
+    const bh = (v / max) * (h - 8);
+    const x = i*(bw+gap) + gap/2;
+    const y = h - bh;
+    out += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" fill="${c}" rx="3"/>`;
+    if (labels && labels[i]) out += `<text x="${(x+bw/2).toFixed(1)}" y="${h+14}" text-anchor="middle" font-size="10" fill="rgba(229,232,238,0.42)" font-family="ui-sans-serif,system-ui">${escapeHtml(labels[i])}</text>`;
+  });
+  out += '</svg>';
+  return out;
+}
+function svgLine(values, opts={}) {
+  const w = opts.w || 320, h = opts.h || 120;
+  const c = opts.color || '#7CC4A9';
+  const min = Math.min(...values), max = Math.max(...values);
+  const rng = max - min || 1;
+  const sx = w / (values.length - 1);
+  const pts = values.map((v,i) => `${(i*sx).toFixed(1)},${(h - ((v - min)/rng)*(h-12) - 6).toFixed(1)}`).join(' ');
+  let out = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="width:100%;">`;
+  for (let i=0;i<4;i++) {
+    const y = (h-20) * (i/3) + 10;
+    out += `<line x1="0" y1="${y}" x2="${w}" y2="${y}" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>`;
+  }
+  out += `<polyline points="${pts}" fill="none" stroke="${c}" stroke-width="1.8" stroke-linejoin="round"/></svg>`;
+  return out;
+}
+function svgDonut(segments, opts={}) {
+  /* segments: [{value, color, label}] */
+  const w = opts.w || 180, h = opts.h || 180;
+  const cx = w/2, cy = h/2;
+  const r = opts.r || 70, thickness = opts.thickness || 22;
+  const total = segments.reduce((s, x) => s + x.value, 0) || 1;
+  let start = -Math.PI / 2;
+  let out = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto;">`;
+  segments.forEach(seg => {
+    const frac = seg.value / total;
+    const end = start + frac * Math.PI * 2;
+    const x1 = cx + r * Math.cos(start), y1 = cy + r * Math.sin(start);
+    const x2 = cx + r * Math.cos(end),   y2 = cy + r * Math.sin(end);
+    const large = end - start > Math.PI ? 1 : 0;
+    const rin = r - thickness;
+    const x3 = cx + rin * Math.cos(end), y3 = cy + rin * Math.sin(end);
+    const x4 = cx + rin * Math.cos(start), y4 = cy + rin * Math.sin(start);
+    out += `<path d="M${x1} ${y1} A${r} ${r} 0 ${large} 1 ${x2} ${y2} L${x3} ${y3} A${rin} ${rin} 0 ${large} 0 ${x4} ${y4} Z" fill="${seg.color}"/>`;
+    start = end;
+  });
+  if (opts.center) {
+    out += `<text x="${cx}" y="${cy-4}" text-anchor="middle" font-size="13" fill="rgba(229,232,238,0.62)" font-family="ui-sans-serif,system-ui">${escapeHtml(opts.centerLabel||'')}</text>`;
+    out += `<text x="${cx}" y="${cy+18}" text-anchor="middle" font-size="22" font-weight="700" fill="#fff" font-family="ui-sans-serif,system-ui">${escapeHtml(opts.center)}</text>`;
+  }
+  out += '</svg>';
+  return out;
+}
+function svgRing(pct, opts={}) {
+  const w = opts.w || 64, h = opts.h || 64;
+  const cx = w/2, cy = h/2, r = (w/2) - 4;
+  const color = opts.color || '#7CC4A9';
+  const bg = 'rgba(255,255,255,0.08)';
+  const c = 2 * Math.PI * r;
+  const off = c * (1 - Math.max(0, Math.min(1, pct)));
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${bg}" stroke-width="6"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"/>
+  </svg>`;
+}
+
+/* ===== Side nav (desktop) ===== */
+const NAV = [
+  { h: 'Home' },
+  { route: 'home',          label: 'Home',          icon: 'dashboard' },
+  { route: 'transactions',  label: 'Transactions',  icon: 'receipt' },
+  { route: 'cashflow',      label: 'Cashflow',      icon: 'calendar' },
+  { h: 'Money' },
+  { route: 'accounts',      label: 'Accounts',      icon: 'wallet' },
+  { route: 'budgets',       label: 'Budgets',       icon: 'pie' },
+  { route: 'subscriptions', label: 'Subscriptions', icon: 'refresh' },
+  { route: 'goals',         label: 'Goals',         icon: 'target' },
+  { h: 'Insights' },
+  { route: 'insights',      label: 'Insights',      icon: 'chart' },
+  { route: 'categories',    label: 'Categories',    icon: 'tag' },
+  { h: 'You' },
+  { route: 'profile',       label: 'Profile',       icon: 'user' },
+  { route: 'notifications', label: 'Notifications', icon: 'bell' },
+  { route: 'settings',      label: 'Settings',      icon: 'settings' },
+  { route: 'billing',       label: 'Plan & billing',icon: 'coin' },
+];
+
+function renderSide() {
+  return `
+    <aside class="st-side">
+      <a class="brand" href="index.html"><span class="mk" data-icon="coins" data-icon-size="14"></span> Stash</a>
+      ${NAV.map(n => n.h
+        ? `<div class="h">${n.h}</div>`
+        : `<button class="nav-item ${state.route===n.route?'active':''}" data-go="${n.route}">
+             <span class="ic" data-icon="${n.icon}" data-icon-size="16"></span>
+             <span>${escapeHtml(n.label)}</span>
+           </button>`
+      ).join('')}
+      <div class="foot">
+        <strong>Demo only — no real money</strong>
+        Your changes save in this browser.
+        <a href="#" id="reset-demo" style="text-decoration: underline;">Reset demo</a>
+      </div>
+    </aside>
+  `;
+}
+
+function renderBar() {
+  const isFs = !!document.fullscreenElement || document.body.classList.contains('is-fullscreen');
+  const titles = {
+    'home': 'Home', 'transactions': 'Transactions', 'accounts': 'Accounts',
+    'account-detail': 'Account', 'add-account': 'Add account',
+    'budgets': 'Budgets', 'budget-detail': 'Budget',
+    'subscriptions': 'Subscriptions', 'goals': 'Goals', 'goal-detail': 'Goal',
+    'insights': 'Insights', 'cashflow': 'Cashflow', 'categories': 'Categories',
+    'profile': 'Profile', 'settings': 'Settings', 'billing': 'Plan & billing',
+    'notifications': 'Notifications', 'onboarding': 'Welcome',
+  };
+  const t = titles[state.route] || 'Stash';
+  return `
+    <header class="st-bar">
+      <button class="bar-btn" data-hx-nav-trigger title="Site menu" aria-label="Open site navigation">
+        <span data-icon="menu" data-icon-size="16"></span>
+      </button>
+      <div class="who-w">
+        <div class="br"><span class="mk" data-icon="coins" data-icon-size="14"></span> Stash</div>
+        <div class="sub">${escapeHtml(t)} · Pro plan</div>
+      </div>
+      <button class="bar-btn" id="notif-btn" title="Notifications">
+        <span data-icon="bell" data-icon-size="16"></span>
+      </button>
+      <button class="bar-btn" id="fs-toggle" title="${isFs?'Exit full screen':'Full screen'}">
+        <span data-icon="${isFs?'x':'grid'}" data-icon-size="16"></span>
+        <span class="bar-btn-label">${isFs?'Exit':'Full'}</span>
+      </button>
+    </header>
+  `;
+}
+
+/* ===== Bottom tabs ===== */
+const TABS = [
+  { id: 'home',     route: 'home',         label: 'Home',     icon: 'dashboard' },
+  { id: 'money',    route: 'accounts',     label: 'Money',    icon: 'wallet' },
+  { id: 'insights', route: 'insights',     label: 'Insights', icon: 'chart' },
+  { id: 'more',     route: '__more',       label: 'More',     icon: 'menu' },
+];
+function isMoneyRoute(r) { return ['accounts','account-detail','add-account','budgets','budget-detail','subscriptions','goals','goal-detail','transactions'].includes(r); }
+function isInsightsRoute(r) { return ['insights','cashflow','categories'].includes(r); }
+function activeTabId() {
+  if (state.route === 'home') return 'home';
+  if (isInsightsRoute(state.route)) return 'insights';
+  if (isMoneyRoute(state.route)) return 'money';
+  return 'more';
+}
+function renderTabs() {
+  const active = activeTabId();
+  const unreadCount = (state.notifs||[]).filter(n => n.unread).length;
+  return `
+    <nav class="b-bottom-tabs" aria-label="Primary">
+      ${TABS.map(t => {
+        const b = (t.id === 'more' && unreadCount) ? unreadCount : 0;
+        return `<button type="button" class="${active===t.id?'active':''}" data-tab="${t.id}" aria-label="${escapeHtml(t.label)}"${active===t.id?' aria-current="page"':''}>
+          <span class="b-bt-ic" data-icon="${t.icon}" data-icon-size="20"></span>
+          <span>${escapeHtml(t.label)}</span>
+          ${b ? `<span class="b-bt-badge">${b}</span>` : ''}
+        </button>`;
+      }).join('')}
+    </nav>
+  `;
+}
+
+function renderMoreSheet() {
+  if (!state.moreSheetOpen) return '';
+  const items = [
+    { route: 'transactions',  label: 'Transactions',   icon: 'receipt' },
+    { route: 'budgets',       label: 'Budgets',        icon: 'pie' },
+    { route: 'subscriptions', label: 'Subscriptions',  icon: 'refresh' },
+    { route: 'goals',         label: 'Goals',          icon: 'target' },
+    { route: 'cashflow',      label: 'Cashflow',       icon: 'calendar' },
+    { route: 'categories',    label: 'Categories',     icon: 'tag' },
+    { route: 'notifications', label: 'Notifications',  icon: 'bell' },
+    { route: 'profile',       label: 'Profile',        icon: 'user' },
+    { route: 'settings',      label: 'Settings',       icon: 'settings' },
+    { route: 'billing',       label: 'Plan & billing', icon: 'coin' },
+    { route: 'onboarding',    label: 'Replay onboarding', icon: 'play' },
+  ];
+  return `
+    <div class="modal-scrim" data-more-scrim>
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="handle"></div>
+        <div class="sheet-hd">
+          <h3>More</h3>
+          <p class="sub">Everything else in Stash.</p>
+        </div>
+        <div class="sheet-bd">
+          ${items.map(it => `
+            <button class="b-row-card" type="button" data-more-go="${it.route}" style="margin-bottom:6px;">
+              <div class="b-rc-top" style="align-items:center;">
+                <span data-icon="${it.icon}" data-icon-size="18" style="color:var(--st-text-mute);"></span>
+                <div class="b-rc-info"><div class="b-rc-nm">${escapeHtml(it.label)}</div></div>
+                <span data-icon="chright" data-icon-size="14" style="color:var(--st-text-sub);"></span>
+              </div>
+            </button>
+          `).join('')}
+          <div style="margin-top:14px;">
+            <button class="btn block" id="more-signout"><span data-icon="x" data-icon-size="13"></span> Sign out</button>
+          </div>
+          <div style="margin-top:10px;text-align:center;font:11.5px/1.4 var(--font-sans);color:var(--st-text-sub);">
+            Demo only — your changes save in this browser. <a href="#" id="more-reset" style="color:var(--st-brand);">Reset demo</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ===== Render shell ===== */
+function render() {
+  saveState();
+  if (!state.signedIn) {
+    $('#app').innerHTML = renderSignIn();
+    if (window.Icons) window.Icons.render($('#app'));
+    wireSignIn();
+    return;
+  }
+  hydrateSeeds();
+  $('#app').innerHTML = `
+    <div class="st-app">
+      ${renderSide()}
+      ${renderBar()}
+      <div class="st-main">
+        ${renderRoute()}
+      </div>
+      ${renderTabs()}
+      ${renderMoreSheet()}
+    </div>
+  `;
+  if (window.Icons) window.Icons.render($('#app'));
+  wireShell();
+  wireRoute();
+}
+
+function wireShell() {
+  $$('.st-side [data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+  const rd = $('#reset-demo'); if (rd) rd.addEventListener('click', (e) => { e.preventDefault(); openConfirm({title:'Reset demo?', sub:'Wipes saved transactions, budgets and goals.', okLabel:'Reset', danger:true, onOk: resetDemo}); });
+  const fs = $('#fs-toggle'); if (fs) fs.addEventListener('click', toggleFullscreen);
+  const nb = $('#notif-btn'); if (nb) nb.addEventListener('click', () => go('notifications'));
+  $$('.b-bottom-tabs [data-tab]').forEach(b => b.addEventListener('click', () => {
+    const id = b.dataset.tab;
+    if (id === 'more') { state.moreSheetOpen = true; render(); return; }
+    const t = TABS.find(x=>x.id===id); if (t) go(t.route);
+  }));
+  const ms = $('[data-more-scrim]'); if (ms) ms.addEventListener('click', (e) => {
+    if (e.target.dataset.moreScrim !== undefined) { state.moreSheetOpen = false; render(); }
+  });
+  $$('[data-more-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.moreGo)));
+  const so = $('#more-signout'); if (so) so.addEventListener('click', () => { state.moreSheetOpen = false; openSignOutModal(); });
+  const mr = $('#more-reset'); if (mr) mr.addEventListener('click', (e) => { e.preventDefault(); state.moreSheetOpen = false; openConfirm({title:'Reset demo?', sub:'Wipes saved transactions, budgets and goals.', okLabel:'Reset', danger:true, onOk: resetDemo}); });
+}
+
+function openSignOutModal() {
+  openModal(`
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="handle"></div>
+      <div class="sheet-hd"><h3>Sign out?</h3><p class="sub">You'll be sent back to the Stash sign-in screen. Your saved data stays on this device.</p></div>
+      <div class="sheet-bd"></div>
+      <div class="acts">
+        <button class="btn" data-cancel>Cancel</button>
+        <button class="btn primary" data-ok>Sign out</button>
+      </div>
+    </div>`);
+  $('.modal [data-cancel]').addEventListener('click', closeModal);
+  $('.modal [data-ok]').addEventListener('click', () => {
+    closeModal(); state.signedIn = false; state.step = 'creds'; render();
+  });
+}
+
+function renderRoute() {
+  switch (state.route) {
+    case 'home':              return renderHome();
+    case 'transactions':      return renderTransactions();
+    case 'accounts':          return renderAccounts();
+    case 'account-detail':    return renderAccountDetail();
+    case 'add-account':       return renderAddAccount();
+    case 'budgets':           return renderBudgets();
+    case 'budget-detail':     return renderBudgetDetail();
+    case 'subscriptions':     return renderSubscriptions();
+    case 'goals':             return renderGoals();
+    case 'goal-detail':       return renderGoalDetail();
+    case 'insights':          return renderInsights();
+    case 'cashflow':          return renderCashflow();
+    case 'categories':        return renderCategories();
+    case 'profile':           return renderProfile();
+    case 'settings':          return renderSettings();
+    case 'billing':           return renderBilling();
+    case 'onboarding':        return renderOnboarding();
+    case 'notifications':     return renderNotifications();
+    case 'sign-in':           state.signedIn = false; render(); return '';
+    default:                  return renderHome();
+  }
+}
+function wireRoute() {
+  switch (state.route) {
+    case 'home':              wireHome(); break;
+    case 'transactions':      wireTransactions(); break;
+    case 'accounts':          wireAccounts(); break;
+    case 'account-detail':    wireAccountDetail(); break;
+    case 'add-account':       wireAddAccount(); break;
+    case 'budgets':           wireBudgets(); break;
+    case 'budget-detail':     wireBudgetDetail(); break;
+    case 'subscriptions':     wireSubscriptions(); break;
+    case 'goals':             wireGoals(); break;
+    case 'goal-detail':       wireGoalDetail(); break;
+    case 'insights':          wireInsights(); break;
+    case 'cashflow':          wireCashflow(); break;
+    case 'categories':        wireCategories(); break;
+    case 'profile':           wireProfile(); break;
+    case 'settings':          wireSettings(); break;
+    case 'billing':           wireBilling(); break;
+    case 'onboarding':        wireOnboarding(); break;
+    case 'notifications':     wireNotifications(); break;
+  }
+}
+
+/* ============================================================
+   SIGN IN  (AuthShell.Brand + AuthShell.Card + InputOtp)
+   ============================================================ */
+function renderSignIn() {
+  if (state.step === 'otp') {
+    return `
+      <div class="st-login">
+        <div style="width:100%;max-width:380px;">
+          <div class="brand"><span class="mark" data-icon="coins" data-icon-size="22"></span> <span class="name">Stash</span></div>
+          <div class="card">
+            <div class="badge"><span data-icon="check" data-icon-size="11"></span> Extra security code</div>
+            <h1>Enter the 6-digit code</h1>
+            <div class="lead">We sent a code to <strong>+263 77 ••• 4821</strong>. It expires in 60 seconds.</div>
+            <div class="field"><label>Code from your phone</label>
+              <div class="otp" id="otp-row" role="group" aria-label="6-digit security code">
+                ${[0,1,2,3,4,5].map(i => `<input maxlength="1" data-otp="${i}" inputmode="numeric" autocomplete="one-time-code" autofocus="${i===0?'true':'false'}" aria-label="Digit ${i+1}" />`).join('')}
+              </div>
+            </div>
+            <button class="full" id="otp-go">Check code &amp; sign in</button>
+            <div class="meta">Demo · any 6 digits work · <a href="#" id="otp-back">Use a different account</a></div>
+          </div>
+        </div>
+      </div>`;
+  }
+  return `
+    <div class="st-login">
+      <div style="width:100%;max-width:380px;">
+        <div class="brand"><span class="mark" data-icon="coins" data-icon-size="22"></span> <span class="name">Stash</span></div>
+        <div class="card">
+          <div class="badge"><span data-icon="sparkles" data-icon-size="11"></span> Save more · spend better</div>
+          <h1>Sign in to Stash</h1>
+          <div class="lead">Welcome back. We'll send a code to your phone next.</div>
+          <div class="field"><label>Email</label>
+            <input class="input" type="text" id="si-email" value="chipo@stash.app" autocomplete="username" />
+          </div>
+          <div class="field"><label>Password</label>
+            <input class="input" type="password" id="si-pass" value="••••••••••" autocomplete="current-password" />
+          </div>
+          <button class="full" id="si-go">Next · send code</button>
+          <div class="meta">Demo · tap Next · any code works · <a href="#" id="si-onb">Create account</a></div>
+        </div>
+      </div>
+    </div>`;
+}
+function wireSignIn() {
+  if (state.step === 'otp') {
+    $$('[data-otp]').forEach((inp,i,arr) => {
+      inp.addEventListener('input', () => {
+        inp.value = inp.value.replace(/\D/g, '').slice(0, 1);
+        if (inp.value && i < arr.length - 1) arr[i+1].focus();
+      });
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !inp.value && i > 0) arr[i-1].focus();
+        if (e.key === 'ArrowLeft' && i > 0) arr[i-1].focus();
+        if (e.key === 'ArrowRight' && i < arr.length - 1) arr[i+1].focus();
+      });
+    });
+    $('#otp-go').addEventListener('click', () => {
+      state.signedIn = true; state.step = 'creds'; toast('Signed in · welcome back, Chipo', 'success'); render();
+    });
+    $('#otp-back').addEventListener('click', (e) => { e.preventDefault(); state.step='creds'; render(); });
+    return;
+  }
+  $('#si-go').addEventListener('click', () => { state.step = 'otp'; render(); });
+  const ob = $('#si-onb'); if (ob) ob.addEventListener('click', (e) => { e.preventDefault(); state.signedIn = true; state.route = 'onboarding'; state.onboardStep = 0; render(); });
+}
+
+/* ============================================================
+   Helpers
+   ============================================================ */
+function fmtDay(iso) {
+  const d = new Date(iso);
+  const today = new Date(TODAY);
+  const same = (a, b) => a.toDateString() === b.toDateString();
+  if (same(d, today)) return 'Today';
+  const yest = new Date(today); yest.setDate(today.getDate() - 1);
+  if (same(d, yest)) return 'Yesterday';
+  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+}
+function fmtShortDate(iso) {
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+function groupTxByDay(list) {
+  const groups = {};
+  list.forEach(t => {
+    const key = new Date(t.date).toDateString();
+    (groups[key] = groups[key] || { label: fmtDay(t.date), items: [], total: 0, date: t.date });
+    groups[key].items.push(t);
+    if (t.cat !== 'transfer') groups[key].total += t.amt;
+  });
+  return Object.values(groups).sort((a,b) => new Date(b.date) - new Date(a.date));
+}
+function txInitial(name) {
+  const parts = name.replace(/[^A-Za-z0-9 ]/g, '').split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
+function renderTxRow(t, opts={}) {
+  const cat = catById(t.cat);
+  const acct = (state.accounts||[]).find(a => a.id === t.acctId);
+  const isIn = t.amt > 0 && t.cat === 'income';
+  const isTrans = t.cat === 'transfer';
+  const amtCls = isIn ? 'up' : (isTrans ? 'transfer' : 'dn');
+  const amtTxt = (t.amt < 0 ? '−' : (isIn ? '+' : '')) + '$' + fmt(Math.abs(t.amt), 2);
+  const smartChips = t.smart && !t.seen ? `
+    <div class="smart-hint">
+      <span style="color:var(--st-text-sub);">This looks like</span>
+      ${(t.suggestions||[]).map(s => `<button type="button" class="chip" data-smart="${t.id}|${s}">${escapeHtml(catById(s).name)}</button>`).join('')}
+    </div>` : '';
+  return `
+    <button class="st-tx-row ${t.smart && !t.seen ? 'unread' : ''}" type="button" data-tx="${t.id}">
+      <div class="badge-ic" style="background:${cat.color}22;color:${cat.color};">${escapeHtml(txInitial(t.merchant))}</div>
+      <div class="info">
+        <div class="nm">${escapeHtml(t.merchant)}</div>
+        <div class="sb">
+          <span class="cat-pill" style="color:${cat.color};">
+            <span class="dt"></span>${escapeHtml(cat.name)}
+          </span>
+          ${acct ? `<span style="color:var(--st-text-sub);">· ${escapeHtml(acct.nick)}</span>` : ''}
+        </div>
+        ${smartChips}
+      </div>
+      <div class="amt ${amtCls}">${amtTxt}</div>
+    </button>`;
+}
+
+function netWorth() {
+  return (state.accounts || []).reduce((s, a) => s + a.bal, 0);
+}
+function cashOnHand() {
+  return (state.accounts || []).filter(a => a.kind !== 'card' && a.kind !== 'inv').reduce((s, a) => s + a.bal, 0);
+}
+function spendingThisMonth() {
+  const start = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
+  return (state.transactions || []).filter(t => new Date(t.date) >= start && t.amt < 0 && t.cat !== 'transfer').reduce((s, t) => s + Math.abs(t.amt), 0);
+}
+function incomeThisMonth() {
+  const start = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
+  return (state.transactions || []).filter(t => new Date(t.date) >= start && t.amt > 0 && t.cat === 'income').reduce((s, t) => s + t.amt, 0);
+}
+
+/* ============================================================
+   HOME
+   ============================================================ */
+function renderHome() {
+  const nw = netWorth(), sp = spendingThisMonth(), cash = cashOnHand();
+  const recent = (state.transactions||[]).slice(0, 4);
+  const primaryGoal = (state.goals||[])[0];
+  const pgPct = primaryGoal ? Math.min(1, primaryGoal.saved / primaryGoal.target) : 0;
+  const yestSpend = (state.transactions||[]).filter(t => {
+    const d = new Date(t.date);
+    const yest = new Date(TODAY); yest.setDate(yest.getDate()-1);
+    return d.toDateString() === yest.toDateString() && t.amt < 0 && t.cat !== 'transfer';
+  }).reduce((s, t) => s + Math.abs(t.amt), 0);
+  const todaySpend = (state.transactions||[]).filter(t => {
+    return new Date(t.date).toDateString() === TODAY.toDateString() && t.amt < 0 && t.cat !== 'transfer';
+  }).reduce((s, t) => s + Math.abs(t.amt), 0);
+  return `
+    <div class="st-page">
+      <div class="st-hello">
+        <div class="h1">Hi Chipo 👋</div>
+        <div class="sb">You saved <strong style="color:var(--st-good);">$324 this week</strong>. Nice work — keep it going.</div>
+      </div>
+
+      <div class="b-stat-hero">
+        <button class="b-sh-lead" type="button" data-go="accounts" style="border:0; text-align:left; cursor:pointer; color:#fff; padding:18px 20px; border-radius:14px; display:block; width:100%;">
+          <div class="b-sh-l">Net worth</div>
+          <div class="b-sh-v">${usd(nw, 2)}</div>
+          <div class="b-sh-d"><span data-icon="arrow" data-icon-size="11"></span> +$642 this month</div>
+        </button>
+        <div class="b-sh-row">
+          <button class="b-sh-s" type="button" data-go="insights" style="border:1px solid var(--st-border); background:var(--st-surface); border-radius:12px; padding:12px 14px; text-align:left; cursor:pointer; color:var(--st-text); flex:1;">
+            <div class="b-sh-l" style="font:500 11px/1 var(--font-sans);color:var(--st-text-sub);letter-spacing:0.06em;text-transform:uppercase;">Spending this month</div>
+            <div class="b-sh-v" style="font:700 22px/1.1 var(--font-sans);color:#fff;margin-top:8px;">${usd(sp, 2)}</div>
+            <div class="b-sh-sb" style="font:12px var(--font-sans);color:var(--st-text-mute);margin-top:4px;">$1,084 left in budget</div>
+          </button>
+          <button class="b-sh-s" type="button" data-go="accounts" style="border:1px solid var(--st-border); background:var(--st-surface); border-radius:12px; padding:12px 14px; text-align:left; cursor:pointer; color:var(--st-text); flex:1;">
+            <div class="b-sh-l" style="font:500 11px/1 var(--font-sans);color:var(--st-text-sub);letter-spacing:0.06em;text-transform:uppercase;">Cash on hand</div>
+            <div class="b-sh-v" style="font:700 22px/1.1 var(--font-sans);color:#fff;margin-top:8px;">${usd(cash, 2)}</div>
+            <div class="b-sh-sb" style="font:12px var(--font-sans);color:var(--st-text-mute);margin-top:4px;">Across 4 accounts</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="alert tone-success">
+        <span class="ic" data-icon="sparkles" data-icon-size="16"></span>
+        <div class="bd">
+          <div class="ttl">What changed since yesterday</div>
+          <div class="tx">You spent <strong>${usd(todaySpend,2)}</strong> today vs <strong>${usd(yestSpend,2)}</strong> yesterday. Net worth ticked up by $42.</div>
+        </div>
+      </div>
+
+      <div class="st-sect-h">
+        <span class="lbl">Recent transactions</span>
+        <div class="sp"></div>
+        <button class="lk" data-go="transactions">See all →</button>
+      </div>
+      ${recent.map(t => renderTxRow(t)).join('')}
+
+      ${primaryGoal ? `
+        <div class="st-sect-h">
+          <span class="lbl">Goal in focus</span>
+          <div class="sp"></div>
+          <button class="lk" data-go="goals">All goals →</button>
+        </div>
+        <button class="b-row-card" type="button" data-goal="${primaryGoal.id}" style="margin-bottom:6px; padding:14px 16px;">
+          <div class="b-rc-top" style="align-items:center; gap:14px;">
+            <div class="goal-ring">
+              ${svgRing(pgPct, { color: primaryGoal.color })}
+              <div class="pct">${Math.round(pgPct*100)}%</div>
+            </div>
+            <div class="b-rc-info">
+              <div class="b-rc-nm">${escapeHtml(primaryGoal.name)}</div>
+              <div class="b-rc-sb">${usd(primaryGoal.saved,0)} of ${usd(primaryGoal.target,0)} · ${escapeHtml(primaryGoal.eta)} to go</div>
+            </div>
+            <span data-icon="chright" data-icon-size="14" style="color:var(--st-text-sub);"></span>
+          </div>
+        </button>
+      ` : ''}
+
+      <div class="st-sect-h">
+        <span class="lbl">Budgets snapshot</span>
+        <div class="sp"></div>
+        <button class="lk" data-go="budgets">All →</button>
+      </div>
+      ${(state.budgets||[]).slice(0,3).map(b => {
+        const pct = Math.min(100, Math.round(b.spent / b.limit * 100));
+        const cat = catById(b.cat);
+        const cls = pct >= 90 ? 'bad' : pct >= 75 ? 'warn' : 'good';
+        return `
+        <button class="b-row-card" type="button" data-budget="${b.id}" style="margin-bottom:6px; padding:14px 16px;">
+          <div class="b-rc-top" style="margin-bottom:10px;">
+            <div class="b-rc-info">
+              <div class="b-rc-nm">${escapeHtml(b.name)}</div>
+              <div class="b-rc-sb">${usd(b.spent,2)} of ${usd(b.limit,0)} · ${b.daysLeft} days left</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="b-rc-val">${pct}%</div>
+            </div>
+          </div>
+          <div class="st-progress ${cls}"><div class="fl" style="width:${pct}%;background:${cat.color};"></div></div>
+        </button>`;
+      }).join('')}
+    </div>
+  `;
+}
+function wireHome() {
+  $$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+  $$('[data-tx]').forEach(b => b.addEventListener('click', () => openTxDetail(b.dataset.tx)));
+  $$('[data-budget]').forEach(b => b.addEventListener('click', () => go('budget-detail', { selectedBudget: b.dataset.budget })));
+  $$('[data-goal]').forEach(b => b.addEventListener('click', () => go('goal-detail', { selectedGoal: b.dataset.goal })));
+  $$('[data-smart]').forEach(b => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const [id, cat] = b.dataset.smart.split('|');
+    const t = state.transactions.find(x => x.id === id);
+    if (t) { t.cat = cat; t.seen = true; t.smart = false; toast('Categorised as ' + catById(cat).name, 'success'); render(); }
+  }));
+}
+
+/* ============================================================
+   TRANSACTIONS
+   ============================================================ */
+function renderTransactions() {
+  const filter = state.txFilter;
+  let list = (state.transactions || []);
+  if (filter === 'income') list = list.filter(t => t.amt > 0 && t.cat === 'income');
+  else if (filter === 'spending') list = list.filter(t => t.amt < 0 && t.cat !== 'transfer' && t.cat !== 'bills');
+  else if (filter === 'bills') list = list.filter(t => t.cat === 'bills');
+  else if (filter === 'hidden') list = list.filter(t => t.hidden);
+  else if (filter === 'uncat') list = list.filter(t => t.cat === 'other' || t.smart);
+  if (filter !== 'hidden') list = list.filter(t => !t.hidden);
+  if (state.txSearch) {
+    const q = state.txSearch.toLowerCase();
+    list = list.filter(t => t.merchant.toLowerCase().includes(q));
+  }
+  const groups = groupTxByDay(list);
+  const filters = [
+    { id: 'all', label: 'All' },
+    { id: 'income', label: 'Income' },
+    { id: 'spending', label: 'Spending' },
+    { id: 'bills', label: 'Bills' },
+    { id: 'hidden', label: 'Hidden' },
+    { id: 'uncat', label: 'Uncategorised' },
+  ];
+  return `
+    <div class="st-page">
+      <div class="st-page-head">
+        <div class="crumb">Money</div>
+        <h2>Transactions</h2>
+      </div>
+      ${state.refreshing ? `<div class="ptr"><span class="sp"></span> Refreshing…</div>` : ''}
+      <div class="st-search">
+        <span class="ic" data-icon="search" data-icon-size="16"></span>
+        <input type="search" id="tx-search" placeholder="Search merchant" value="${escapeHtml(state.txSearch)}" />
+      </div>
+      <div class="b-filter-chips" style="margin-bottom:12px;">
+        ${filters.map(f => `<button class="b-fc ${state.txFilter===f.id?'on':''}" type="button" data-filter="${f.id}">${escapeHtml(f.label)}</button>`).join('')}
+      </div>
+      ${groups.length === 0 ? `
+        <div class="empty-st">
+          <div class="ic-bg" data-icon="receipt" data-icon-size="22"></div>
+          <div class="ttl">No transactions match</div>
+          <div class="ds">Try a different filter or pull to refresh.</div>
+          <div class="ct"><button class="btn" id="tx-clear">Clear filters</button></div>
+        </div>
+      ` : groups.map(g => `
+        <div class="st-tx-day">
+          <span>${escapeHtml(g.label)}</span>
+          <span class="total">${g.total >= 0 ? '+' : '−'}$${fmt(Math.abs(g.total),2)}</span>
+        </div>
+        ${g.items.map(t => renderTxRow(t)).join('')}
+      `).join('')}
+    </div>
+  `;
+}
+function wireTransactions() {
+  $$('[data-filter]').forEach(b => b.addEventListener('click', () => { state.txFilter = b.dataset.filter; render(); }));
+  $$('[data-tx]').forEach(b => b.addEventListener('click', () => openTxDetail(b.dataset.tx)));
+  $$('[data-smart]').forEach(b => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const [id, cat] = b.dataset.smart.split('|');
+    const t = state.transactions.find(x => x.id === id);
+    if (t) { t.cat = cat; t.seen = true; t.smart = false; toast('Categorised as ' + catById(cat).name, 'success'); render(); }
+  }));
+  const s = $('#tx-search');
+  if (s) s.addEventListener('input', (e) => { state.txSearch = e.target.value; render(); });
+  const cl = $('#tx-clear'); if (cl) cl.addEventListener('click', () => { state.txFilter = 'all'; state.txSearch = ''; render(); });
+  /* Pull-to-refresh stub */
+  const main = $('.st-main');
+  if (main && !state._ptrBound) {
+    state._ptrBound = true;
+    let start = 0;
+    main.addEventListener('touchstart', (e) => { if (main.scrollTop === 0) start = e.touches[0].clientY; });
+    main.addEventListener('touchmove', (e) => {
+      if (main.scrollTop === 0 && e.touches[0].clientY - start > 64 && !state.refreshing) {
+        state.refreshing = true; render();
+        setTimeout(() => { state.refreshing = false; render(); toast('Up to date', 'success'); }, 600);
+      }
+    });
+  }
+}
+
+/* ============================================================
+   TRANSACTION DETAIL — opens as bottom sheet
+   ============================================================ */
+function openTxDetail(id) {
+  const t = (state.transactions || []).find(x => x.id === id);
+  if (!t) return;
+  state.selectedTx = id;
+  const cat = catById(t.cat);
+  const acct = (state.accounts||[]).find(a => a.id === t.acctId);
+  const body = `
+    <div style="text-align:center; padding:14px 0 8px;">
+      <div class="badge-ic" style="width:56px;height:56px;border-radius:14px;background:${cat.color}22;color:${cat.color};font:700 18px/1 var(--font-sans);display:grid;place-items:center;margin:0 auto 12px;">${escapeHtml(txInitial(t.merchant))}</div>
+      <div style="font:700 26px/1 var(--font-sans);color:#fff;letter-spacing:-0.02em;">${t.amt < 0 ? '−' : '+'}$${fmt(Math.abs(t.amt),2)}</div>
+      <div style="font:13px/1.4 var(--font-sans);color:var(--st-text-mute);margin-top:6px;">${escapeHtml(t.merchant)}</div>
+      <div style="margin-top:10px;">
+        <span class="cat-pill" style="color:${cat.color};background:${cat.color}1A;">
+          <span class="dt"></span>${escapeHtml(cat.name)}
+        </span>
+      </div>
+    </div>
+
+    <div class="stat-row" style="margin-top:14px;">
+      <div class="s"><div class="l">Account</div><div class="v" style="font-size:14px;">${escapeHtml(acct ? acct.nick : '—')}</div></div>
+      <div class="s"><div class="l">Date</div><div class="v" style="font-size:14px;">${fmtDay(t.date)}</div></div>
+    </div>
+
+    <div class="field"><label>Note</label>
+      <input class="input" type="text" id="tx-note" value="${escapeHtml(t.note||'')}" placeholder="Add a note" />
+    </div>
+
+    <div class="st-card" style="margin-top:14px;">
+      <div class="hdr"><span class="ttl">Merchant info</span></div>
+      <div style="display:grid;gap:6px;font:13px/1.5 var(--font-sans);color:var(--st-text-mute);">
+        <div><strong style="color:var(--st-text);">Location</strong> · ${escapeHtml(t.loc || 'Unknown')}</div>
+        <div><strong style="color:var(--st-text);">Receipt</strong> · ${t.receipt ? 'Attached' : 'No photo yet'}</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn sm" id="tx-split"><span data-icon="grid" data-icon-size="13"></span> Split</button>
+        <button class="btn sm" id="tx-recat"><span data-icon="tag" data-icon-size="13"></span> Recategorize</button>
+        <button class="btn sm" id="tx-photo"><span data-icon="camera" data-icon-size="13"></span> Photo</button>
+      </div>
+    </div>
+
+    <div class="st-card">
+      <div class="hdr"><span class="ttl">Actions</span></div>
+      <div style="display:grid;gap:8px;">
+        <button class="btn block" id="tx-toggle-seen"><span data-icon="${t.seen?'eyeoff':'check'}" data-icon-size="13"></span> ${t.seen ? 'Mark unseen' : 'Mark seen'}</button>
+        <button class="btn block" id="tx-toggle-hide"><span data-icon="eyeoff" data-icon-size="13"></span> ${t.hidden ? 'Unhide' : 'Hide from totals'}</button>
+      </div>
+    </div>
+  `;
+  openSheet({
+    crumb: 'Transaction', title: t.merchant,
+    body,
+    primaryLabel: 'Save changes',
+    onPrimary: () => {
+      const n = ($('#tx-note')||{}).value;
+      if (n !== undefined) t.note = n;
+      toast('Saved', 'success'); render();
+    },
+  });
+  setTimeout(() => {
+    const tsh = $('#tx-toggle-hide'); if (tsh) tsh.addEventListener('click', () => { t.hidden = !t.hidden; toast(t.hidden ? 'Hidden from totals' : 'Visible again', 'success'); closeModal(); render(); });
+    const tss = $('#tx-toggle-seen'); if (tss) tss.addEventListener('click', () => { t.seen = !t.seen; toast(t.seen ? 'Marked seen' : 'Marked unseen', 'success'); closeModal(); render(); });
+    const r = $('#tx-recat'); if (r) r.addEventListener('click', () => openRecategorize(t.id));
+    const sp = $('#tx-split'); if (sp) sp.addEventListener('click', () => openSplit(t.id));
+    const p = $('#tx-photo'); if (p) p.addEventListener('click', () => { t.receipt = true; toast('Receipt attached (demo)', 'success'); closeModal(); render(); });
+  }, 30);
+}
+function openRecategorize(id) {
+  const t = state.transactions.find(x => x.id === id); if (!t) return;
+  const body = `
+    <div style="display:grid;gap:6px;">
+      ${CATEGORIES.filter(c => c.id !== 'income' && c.id !== 'transfer').map(c => `
+        <button class="b-row-card" type="button" data-pick="${c.id}" style="padding:12px 14px;">
+          <div class="b-rc-top" style="align-items:center;">
+            <span style="width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:${c.color}22;color:${c.color};" data-icon="${c.icon}" data-icon-size="14"></span>
+            <div class="b-rc-info"><div class="b-rc-nm">${escapeHtml(c.name)}</div></div>
+            ${t.cat === c.id ? '<span style="color:var(--st-brand);" data-icon="check" data-icon-size="16"></span>' : ''}
+          </div>
+        </button>`).join('')}
+    </div>`;
+  openSheet({ crumb: 'Recategorize', title: t.merchant, body, secondaryLabel: 'Close' });
+  setTimeout(() => {
+    $$('[data-pick]').forEach(b => b.addEventListener('click', () => {
+      t.cat = b.dataset.pick; t.smart = false; t.seen = true;
+      toast('Moved to ' + catById(t.cat).name, 'success'); closeModal(); render();
+    }));
+  }, 30);
+}
+function openSplit(id) {
+  const t = state.transactions.find(x => x.id === id); if (!t) return;
+  openSheet({
+    crumb: 'Split transaction', title: t.merchant,
+    body: `
+      <p style="font:13px/1.5 var(--font-sans);color:var(--st-text-mute);">Split <strong>${'$'+fmt(Math.abs(t.amt),2)}</strong> across two categories. Useful for combined receipts (e.g. groceries + alcohol).</p>
+      <div class="field"><label>Part 1 amount</label><input class="input" type="number" id="sp-1" value="${(Math.abs(t.amt)/2).toFixed(2)}" /></div>
+      <div class="field"><label>Part 2 amount</label><input class="input" type="number" id="sp-2" value="${(Math.abs(t.amt)/2).toFixed(2)}" /></div>
+    `,
+    primaryLabel: 'Save split',
+    onPrimary: () => toast('Split saved (demo)', 'success'),
+  });
+}
+
+/* ============================================================
+   ACCOUNTS
+   ============================================================ */
+function renderAccounts() {
+  const groups = ['Banks','Cards','Investments','Cash'];
+  return `
+    <div class="st-page">
+      <div class="st-page-head">
+        <div class="crumb">Money</div>
+        <h2>Accounts</h2>
+        <p class="sub">All your money in one view. Tap any account to see history.</p>
+        <div class="head-acts">
+          <button class="btn primary" data-go="add-account"><span data-icon="plus" data-icon-size="13"></span> Add account</button>
+        </div>
+      </div>
+
+      ${groups.map(g => {
+        const list = (state.accounts||[]).filter(a => a.type === g);
+        if (list.length === 0) return '';
+        const total = list.reduce((s,a) => s + a.bal, 0);
+        return `
+          <div class="st-sect-h">
+            <span class="lbl">${escapeHtml(g)}</span>
+            <div class="sp"></div>
+            <span style="font:500 12px var(--font-mono);color:var(--st-text-mute);">${total < 0 ? '−' : ''}$${fmt(Math.abs(total),2)}</span>
+          </div>
+          ${list.map(a => {
+            const inst = INSTITUTIONS.find(x => x.id === a.inst);
+            return `
+            <button class="b-row-card" type="button" data-acct="${a.id}" style="margin-bottom:6px;padding:14px 16px;">
+              <div class="b-rc-top" style="align-items:center;gap:12px;">
+                <div class="inst-badge">${escapeHtml(inst ? inst.mono : 'AC')}</div>
+                <div class="b-rc-info">
+                  <div class="b-rc-nm">${escapeHtml(a.nick)}</div>
+                  <div class="b-rc-sb">${escapeHtml(inst ? inst.name : '')} · ••${escapeHtml(a.last4)} ${a.status==='sync' ? '· <span style="color:var(--st-warn);">syncing…</span>' : ''}</div>
+                </div>
+                <div style="text-align:right;">
+                  <div class="b-rc-val">${a.bal < 0 ? '−' : ''}$${fmt(Math.abs(a.bal),2)}</div>
+                  <div style="margin-top:4px;">${svgSparkline(a.spark, { color: a.bal >= 0 ? '#5BAA8B' : '#E07472' })}</div>
+                </div>
+              </div>
+            </button>`;
+          }).join('')}
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+function wireAccounts() {
+  $$('[data-acct]').forEach(b => b.addEventListener('click', () => go('account-detail', { selectedAccount: b.dataset.acct })));
+  $$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+}
+
+/* ============================================================
+   ACCOUNT DETAIL
+   ============================================================ */
+function renderAccountDetail() {
+  const a = (state.accounts||[]).find(x => x.id === state.selectedAccount) || (state.accounts||[])[0];
+  if (!a) return `<div class="st-page"><div class="empty-st"><div class="ttl">Account not found</div></div></div>`;
+  const inst = INSTITUTIONS.find(x => x.id === a.inst);
+  /* 90-day trend — fabricate from sparkline */
+  const trend = [];
+  const base = a.spark[0];
+  for (let i = 0; i < 90; i++) {
+    const t = i / 89;
+    const noise = Math.sin(i*0.3) * (Math.abs(a.bal) * 0.04) + (Math.random()-0.5) * (Math.abs(a.bal) * 0.02);
+    trend.push(base + (a.bal - base) * t + noise);
+  }
+  const recent = (state.transactions||[]).filter(t => t.acctId === a.id).slice(0, 8);
+  return `
+    <div class="st-page">
+      <div class="st-page-head">
+        <div class="crumb"><button class="btn ghost sm" data-go="accounts" style="padding:4px 8px;color:var(--st-text-mute);"><span data-icon="chleft" data-icon-size="12"></span> Accounts</button></div>
+        <h2>${escapeHtml(a.nick)}</h2>
+        <p class="sub">${escapeHtml(inst ? inst.name : '')} · ••${escapeHtml(a.last4)}</p>
+      </div>
+
+      <div class="b-stat-hero">
+        <div class="b-sh-lead" style="padding:20px;border-radius:14px;color:#fff;">
+          <div class="b-sh-l" style="font:500 11px/1 var(--font-sans);letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.62);">Current balance</div>
+          <div class="b-sh-v" style="font:700 32px/1 var(--font-sans);margin-top:10px;letter-spacing:-0.02em;">${a.bal < 0 ? '−' : ''}$${fmt(Math.abs(a.bal),2)}</div>
+          <div class="b-sh-d" style="font:13px/1.4 var(--font-sans);color:rgba(255,255,255,0.7);margin-top:8px;">${a.status === 'sync' ? 'Syncing…' : 'Updated just now'}</div>
+        </div>
+      </div>
+
+      <div class="st-card">
+        <div class="hdr"><span class="ttl">90-day balance trend</span></div>
+        <div class="chart-wrap">${svgArea(trend, { color: a.bal >= 0 ? '#7CC4A9' : '#E07472', w: 320, h: 110 })}</div>
+      </div>
+
+      <div class="st-sect-h">
+        <span class="lbl">Recent transactions</span>
+        <div class="sp"></div>
+        <button class="lk" data-go="transactions">All →</button>
+      </div>
+      ${recent.length === 0 ? `<div class="empty-st"><div class="ttl">No transactions yet</div><div class="ds">New activity will appear here.</div></div>` : recent.map(t => renderTxRow(t)).join('')}
+
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="btn block" id="acct-reconnect"><span data-icon="refresh" data-icon-size="13"></span> Reconnect</button>
+        <button class="btn block danger" id="acct-disconnect"><span data-icon="x" data-icon-size="13"></span> Disconnect</button>
+      </div>
+    </div>
+  `;
+}
+function wireAccountDetail() {
+  $$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+  $$('[data-tx]').forEach(b => b.addEventListener('click', () => openTxDetail(b.dataset.tx)));
+  $$('[data-smart]').forEach(b => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const [id, cat] = b.dataset.smart.split('|');
+    const t = state.transactions.find(x => x.id === id);
+    if (t) { t.cat = cat; t.seen = true; t.smart = false; render(); }
+  }));
+  const r = $('#acct-reconnect'); if (r) r.addEventListener('click', () => { toast('Reconnected', 'success'); });
+  const d = $('#acct-disconnect'); if (d) d.addEventListener('click', () => openConfirm({ title: 'Disconnect account?', sub: 'Your historical transactions stay. New activity will stop syncing.', okLabel: 'Disconnect', danger: true, onOk: () => { toast('Disconnected (demo)', 'warn'); go('accounts'); } }));
+}
+
+/* ============================================================
+   ADD ACCOUNT
+   ============================================================ */
+function renderAddAccount() {
+  if (state.addAccountStep === 'oauth') return renderAddAccountOauth();
+  if (state.addAccountStep === 'success') return renderAddAccountSuccess();
+  const q = (state.addAccountSearch || '').toLowerCase();
+  const list = INSTITUTIONS.filter(i => !q || i.name.toLowerCase().includes(q));
+  return `
+    <div class="st-page">
+      <div class="st-page-head">
+        <div class="crumb"><button class="btn ghost sm" data-go="accounts" style="padding:4px 8px;color:var(--st-text-mute);"><span data-icon="chleft" data-icon-size="12"></span> Accounts</button></div>
+        <h2>Add an account</h2>
+        <p class="sub">Connect a bank, credit card or mobile-money wallet.</p>
+      </div>
+      <div class="st-search">
+        <span class="ic" data-icon="search" data-icon-size="16"></span>
+        <input type="search" id="inst-search" placeholder="Search 50+ banks" value="${escapeHtml(state.addAccountSearch)}" autofocus />
+      </div>
+      <div class="b-filter-chips" style="margin-bottom:10px;">
+        <button class="b-fc on">All</button>
+        <button class="b-fc">Zimbabwe</button>
+        <button class="b-fc">South Africa</button>
+        <button class="b-fc">Mobile money</button>
+        <button class="b-fc">Investing</button>
+      </div>
+      ${list.length === 0 ? `
+        <div class="empty-st">
+          <div class="ic-bg" data-icon="search" data-icon-size="22"></div>
+          <div class="ttl">No banks match</div>
+          <div class="ds">Try a different name or contact support to request a new connection.</div>
+        </div>
+      ` : list.map(i => `
+        <button class="bank-row" type="button" data-inst="${i.id}">
+          <div class="lg">${escapeHtml(i.mono)}</div>
+          <div class="nm">${escapeHtml(i.name)}</div>
+          <span class="ar" data-icon="chright" data-icon-size="14"></span>
+        </button>
+      `).join('')}
+    </div>
+  `;
+}
+function renderAddAccountOauth() {
+  const i = INSTITUTIONS.find(x => x.id === state.addAccountInst);
+  if (!i) { state.addAccountStep = 'search'; return renderAddAccount(); }
+  return `
+    <div class="st-page">
+      <div class="st-page-head"><div class="crumb"><button class="btn ghost sm" id="oauth-back" style="padding:4px 8px;color:var(--st-text-mute);"><span data-icon="chleft" data-icon-size="12"></span> Back</button></div></div>
+      <div class="oauth-card">
+        <div class="lg">${escapeHtml(i.mono)}</div>
+        <h3>Sign in to ${escapeHtml(i.name)}</h3>
+        <div class="sub">We connect your account so Stash can read transactions and balances. We never store your password.</div>
+        <div class="field"><label>Customer number</label><input class="input" value="83291884" /></div>
+        <div class="field"><label>Password</label><input class="input" type="password" value="••••••••" /></div>
+        <button class="btn primary block" id="oauth-go">Sign in &amp; share read-only access</button>
+        <div style="margin-top:14px;border-top:1px solid var(--st-border);padding-top:14px;">
+          <div style="font:600 12.5px var(--font-sans);color:var(--st-text);margin-bottom:6px;">Stash will be able to:</div>
+          <ul>
+            <li>See your transactions</li>
+            <li>See your balances</li>
+            <li>See your account names</li>
+          </ul>
+          <div style="font:600 12.5px var(--font-sans);color:var(--st-text);margin:10px 0 6px;">Stash will not be able to:</div>
+          <ul style="opacity:0.8;">
+            <li>Move money</li>
+            <li>Change account settings</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function renderAddAccountSuccess() {
+  const i = INSTITUTIONS.find(x => x.id === state.addAccountInst);
+  return `
+    <div class="st-page">
+      <div class="oauth-card">
+        <div class="lg" style="background:var(--st-brand-soft);color:var(--st-brand);"><span data-icon="check" data-icon-size="22"></span></div>
+        <h3>Connected!</h3>
+        <div class="sub">${escapeHtml(i ? i.name : 'Your account')} is now syncing. The first batch of transactions will land in about a minute.</div>
+        <button class="btn primary block" id="success-go">Done</button>
+      </div>
+    </div>
+  `;
+}
+function wireAddAccount() {
+  $$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+  const s = $('#inst-search'); if (s) s.addEventListener('input', (e) => { state.addAccountSearch = e.target.value; render(); });
+  $$('[data-inst]').forEach(b => b.addEventListener('click', () => { state.addAccountInst = b.dataset.inst; state.addAccountStep = 'oauth'; render(); }));
+  const ob = $('#oauth-back'); if (ob) ob.addEventListener('click', () => { state.addAccountStep = 'search'; render(); });
+  const og = $('#oauth-go'); if (og) og.addEventListener('click', () => { state.addAccountStep = 'success'; render(); toast('Account linked', 'success'); });
+  const sg = $('#success-go'); if (sg) sg.addEventListener('click', () => { state.addAccountStep = 'search'; state.addAccountInst = null; state.addAccountSearch = ''; go('accounts'); });
+}
+
+/* ============================================================
+   BUDGETS
+   ============================================================ */
+function renderBudgets() {
+  const list = (state.budgets || []);
+  const total = list.reduce((s, b) => s + b.limit, 0);
+  const spent = list.reduce((s, b) => s + b.spent, 0);
+  return `
+    <div class="st-page">
+      <div class="st-page-head">
+        <div class="crumb">Money</div>
+        <h2>Budgets</h2>
+        <p class="sub">${list.length} budgets · ${usd(spent,0)} of ${usd(total,0)} spent this month</p>
+        <div class="head-acts">
+          <button class="btn primary" id="add-budget"><span data-icon="plus" data-icon-size="13"></span> New budget</button>
+        </div>
+      </div>
+      ${list.length === 0 ? `
+        <div class="empty-st">
+          <div class="ic-bg" data-icon="pie" data-icon-size="22"></div>
+          <div class="ttl">No budgets yet</div>
+          <div class="ds">Set a monthly cap for a category to keep yourself honest.</div>
+          <div class="ct"><button class="btn primary" id="first-budget">Add your first budget</button></div>
+        </div>
+      ` : list.map(b => {
+        const pct = Math.min(100, Math.round(b.spent / b.limit * 100));
+        const cat = catById(b.cat);
+        const cls = pct >= 90 ? 'bad' : pct >= 75 ? 'warn' : 'good';
+        return `
+          <button class="b-row-card" type="button" data-budget="${b.id}" style="margin-bottom:6px; padding:14px 16px;">
+            <div class="b-rc-top" style="margin-bottom:10px; align-items:flex-start;">
+              <span style="width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:${cat.color}22;color:${cat.color};flex:none;" data-icon="${cat.icon}" data-icon-size="16"></span>
+              <div class="b-rc-info">
+                <div class="b-rc-nm">${escapeHtml(b.name)}</div>
+                <div class="b-rc-sb">${usd(b.spent,2)} of ${usd(b.limit,0)} · ${b.daysLeft} days left ${b.projOver ? '<span class="pill bad" style="margin-left:6px;">on track to go over</span>' : ''}</div>
+              </div>
+              <div style="text-align:right;">
+                <div class="b-rc-val">${pct}%</div>
+              </div>
+            </div>
+            <div class="st-progress ${cls}"><div class="fl" style="width:${pct}%;background:${cat.color};"></div></div>
+          </button>`;
+      }).join('')}
+    </div>
+  `;
+}
+function wireBudgets() {
+  $$('[data-budget]').forEach(b => b.addEventListener('click', () => go('budget-detail', { selectedBudget: b.dataset.budget })));
+  const ab = $('#add-budget'); if (ab) ab.addEventListener('click', () => openAddBudget());
+  const fb = $('#first-budget'); if (fb) fb.addEventListener('click', () => openAddBudget());
+}
+function openAddBudget() {
+  openSheet({
+    crumb: 'New budget', title: 'Set a monthly cap',
+    body: `
+      <div class="field"><label>Category</label>
+        <select class="input" id="bd-cat">${CATEGORIES.filter(c=>c.id!=='income'&&c.id!=='transfer').map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>Monthly limit (USD)</label>
+        <input class="input" type="number" id="bd-limit" placeholder="100" />
+      </div>
+    `,
+    primaryLabel: 'Save',
+    onPrimary: () => {
+      const c = $('#bd-cat').value;
+      const lim = +(($('#bd-limit')||{}).value || 100);
+      state.budgets.push({ id: 'b-' + Date.now(), name: catById(c).name, cat: c, limit: lim, spent: 0, cad: 'monthly', daysLeft: 25, projOver: false });
+      toast('Budget added', 'success'); render();
+    }
+  });
+}
+
+/* ============================================================
+   BUDGET DETAIL
+   ============================================================ */
+function renderBudgetDetail() {
+  const b = (state.budgets||[]).find(x => x.id === state.selectedBudget) || (state.budgets||[])[0];
+  if (!b) return `<div class="st-page"><div class="empty-st"><div class="ttl">Budget not found</div></div></div>`;
+  const cat = catById(b.cat);
+  const txs = (state.transactions||[]).filter(t => t.cat === b.cat && t.amt < 0);
+  const pct = Math.min(100, Math.round(b.spent / b.limit * 100));
+  /* Donut breakdown — by merchant */
+  const byMerch = {};
+  txs.forEach(t => { byMerch[t.merchant] = (byMerch[t.merchant] || 0) + Math.abs(t.amt); });
+  const merchEntries = Object.entries(byMerch).sort((a,b)=>b[1]-a[1]).slice(0, 5);
+  const palette = ['#7CC4A9','#6FB1E0','#E0B45D','#B49CE8','#E08CB5'];
+  const segs = merchEntries.map(([n, v], i) => ({ value: v, color: palette[i % palette.length], label: n }));
+  return `
+    <div class="st-page">
+      <div class="st-page-head">
+        <div class="crumb"><button class="btn ghost sm" data-go="budgets" style="padding:4px 8px;color:var(--st-text-mute);"><span data-icon="chleft" data-icon-size="12"></span> Budgets</button></div>
+        <h2>${escapeHtml(b.name)}</h2>
+        <p class="sub">${b.daysLeft} days left this month · ${b.projOver ? 'on track to go over' : 'within budget'}</p>
+      </div>
+
+      <div class="b-stat-hero">
+        <div class="b-sh-lead" style="padding:20px;border-radius:14px;color:#fff;background:linear-gradient(135deg, ${cat.color}40, ${cat.color}80);">
+          <div class="b-sh-l" style="font:500 11px/1 var(--font-sans);letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.7);">Spent so far</div>
+          <div class="b-sh-v" style="font:700 28px/1 var(--font-sans);margin-top:10px;letter-spacing:-0.02em;">${usd(b.spent,2)}</div>
+          <div class="b-sh-d" style="font:13px/1.4 var(--font-sans);color:rgba(255,255,255,0.85);margin-top:8px;">${pct}% of ${usd(b.limit,0)}</div>
+          <div class="st-progress" style="margin-top:14px;background:rgba(255,255,255,0.18);"><div class="fl" style="width:${pct}%;background:#fff;"></div></div>
+        </div>
+      </div>
+
+      <div class="st-card">
+        <div class="hdr"><span class="ttl">Where it went</span></div>
+        ${segs.length > 0 ? `
+          ${svgDonut(segs, { center: '$'+fmt(b.spent,0), centerLabel: 'spent', r: 60, thickness: 18, w: 160, h: 160 })}
+          <div class="chart-legend">
+            ${segs.map(s => `<div class="lg"><span class="sw" style="background:${s.color};"></span>${escapeHtml(s.label)} · ${usd(s.value,2)}</div>`).join('')}
+          </div>
+        ` : `<div class="empty-st"><div class="ttl">No spending yet</div><div class="ds">Transactions in this category will show here.</div></div>`}
+      </div>
+
+      <div class="st-sect-h">
+        <span class="lbl">Transactions in this budget</span>
+      </div>
+      ${txs.length === 0 ? `<div class="empty-st"><div class="ttl">Nothing yet</div></div>` : txs.map(t => renderTxRow(t)).join('')}
+    </div>
+  `;
+}
+function wireBudgetDetail() {
+  $$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+  $$('[data-tx]').forEach(b => b.addEventListener('click', () => openTxDetail(b.dataset.tx)));
+}
+
+/* ============================================================
+   SUBSCRIPTIONS
+   ============================================================ */
+function renderSubscriptions() {
+  const list = (state.subs || []);
+  const monthly = list.filter(s => s.cad === 'monthly').reduce((s,x) => s + x.price, 0);
+  const yearly = monthly * 12 + list.filter(s => s.cad === 'yearly').reduce((s,x) => s + x.price, 0);
+  return `
+    <div class="st-page">
+      <div class="st-page-head">
+        <div class="crumb">Money</div>
+        <h2>Subscriptions</h2>
+        <p class="sub">${list.length} active · ${usd(monthly,2)}/mo · ${usd(yearly,0)} per year</p>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="lbl">Monthly</div>
+          <div class="v">${usd(monthly,2)}</div>
+          <div class="d">Across ${list.filter(s=>s.cad==='monthly').length} subscriptions</div>
+        </div>
+        <div class="kpi-card">
+          <div class="lbl">Yearly</div>
+          <div class="v">${usd(yearly,0)}</div>
+          <div class="d">Total annual cost</div>
+        </div>
+      </div>
+
+      ${list.length === 0 ? `
+        <div class="empty-st">
+          <div class="ic-bg" data-icon="refresh" data-icon-size="22"></div>
+          <div class="ttl">No subscriptions detected</div>
+          <div class="ds">We'll auto-detect recurring charges as new transactions arrive.</div>
+        </div>
+      ` : list.map(s => `
+        <button class="b-row-card" type="button" data-sub="${s.id}" style="margin-bottom:6px; padding:14px 16px;">
+          <div class="b-rc-top" style="align-items:center; gap:12px;">
+            <div class="badge-ic" style="background:${s.color}22; color:${s.color}; width:38px; height:38px;">${escapeHtml(s.logo)}</div>
+            <div class="b-rc-info">
+              <div class="b-rc-nm">${escapeHtml(s.name)}</div>
+              <div class="b-rc-sb">${escapeHtml(s.cad)} · next charge ${escapeHtml(s.next)}</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="b-rc-val">${usd(s.price,2)}</div>
+              <div class="b-rc-delta" style="font:11px/1 var(--font-sans);color:var(--st-text-mute);">${s.cad==='yearly'?'per year':'per month'}</div>
+            </div>
+          </div>
+        </button>
+      `).join('')}
+    </div>
+  `;
+}
+function wireSubscriptions() {
+  $$('[data-sub]').forEach(b => b.addEventListener('click', () => openSubDetail(b.dataset.sub)));
+}
+function openSubDetail(id) {
+  const s = state.subs.find(x => x.id === id); if (!s) return;
+  openSheet({
+    crumb: 'Subscription', title: s.name,
+    body: `
+      <div style="text-align:center;padding:14px 0;">
+        <div class="badge-ic" style="width:56px;height:56px;border-radius:14px;background:${s.color}22;color:${s.color};font:700 22px/1 var(--font-sans);display:grid;place-items:center;margin:0 auto 12px;">${escapeHtml(s.logo)}</div>
+        <div style="font:700 26px/1 var(--font-sans);color:#fff;">${usd(s.price,2)}</div>
+        <div style="font:13px/1.4 var(--font-sans);color:var(--st-text-mute);margin-top:6px;">${escapeHtml(s.cad)} · next charge ${escapeHtml(s.next)}</div>
+      </div>
+      <div class="alert tone-warn" style="margin-top:14px;">
+        <span class="ic" data-icon="info" data-icon-size="16"></span>
+        <div class="bd">
+          <div class="ttl">Cancel this subscription?</div>
+          <div class="tx">We'll set a reminder 2 days before the next charge — that gives you time to actually cancel with the provider.</div>
+        </div>
+      </div>
+    `,
+    secondaryLabel: 'Close',
+    dangerLabel: 'Set reminder to cancel',
+    onDanger: () => toast('Reminder set 2 days before charge', 'success'),
+    primaryLabel: 'Mark paused',
+    onPrimary: () => toast('Marked as paused', 'success'),
+  });
+}
+
+/* ============================================================
+   GOALS
+   ============================================================ */
+function renderGoals() {
+  const list = (state.goals || []);
+  return `
+    <div class="st-page">
+      <div class="st-page-head">
+        <div class="crumb">Money</div>
+        <h2>Savings goals</h2>
+        <p class="sub">What you're working toward.</p>
+        <div class="head-acts">
+          <button class="btn primary" id="add-goal"><span data-icon="plus" data-icon-size="13"></span> New goal</button>
+        </div>
+      </div>
+      ${list.length === 0 ? `
+        <div class="empty-st">
+          <div class="ic-bg" data-icon="target" data-icon-size="22"></div>
+          <div class="ttl">No goals yet</div>
+          <div class="ds">Pick something you're saving for — a holiday, an emergency fund, a deposit.</div>
+          <div class="ct"><button class="btn primary" id="first-goal">Start a goal</button></div>
+        </div>
+      ` : list.map(g => {
+        const pct = Math.min(1, g.saved / g.target);
+        return `
+          <button class="b-row-card" type="button" data-goal="${g.id}" style="margin-bottom:6px; padding:16px;">
+            <div class="b-rc-top" style="align-items:center; gap:14px;">
+              <div class="goal-ring">
+                ${svgRing(pct, { color: g.color })}
+                <div class="pct">${Math.round(pct*100)}%</div>
+              </div>
+              <div class="b-rc-info">
+                <div class="b-rc-nm">${escapeHtml(g.name)}</div>
+                <div class="b-rc-sb">${usd(g.saved,0)} of ${usd(g.target,0)} · ${escapeHtml(g.eta)} at ${usd(g.weekly,0)}/wk</div>
+              </div>
+              <span data-icon="chright" data-icon-size="14" style="color:var(--st-text-sub);"></span>
+            </div>
+          </button>`;
+      }).join('')}
+    </div>
+  `;
+}
+function wireGoals() {
+  $$('[data-goal]').forEach(b => b.addEventListener('click', () => go('goal-detail', { selectedGoal: b.dataset.goal })));
+  const ag = $('#add-goal'); if (ag) ag.addEventListener('click', () => openAddGoal());
+  const fg = $('#first-goal'); if (fg) fg.addEventListener('click', () => openAddGoal());
+}
+function openAddGoal() {
+  openSheet({
+    crumb: 'New goal', title: 'What are you saving for?',
+    body: `
+      <div class="field"><label>Goal name</label><input class="input" id="g-name" placeholder="e.g. Holiday in Vic Falls" /></div>
+      <div class="field"><label>Target amount</label><input class="input" type="number" id="g-target" placeholder="1000" /></div>
+      <div class="field"><label>Weekly contribution</label><input class="input" type="number" id="g-weekly" placeholder="30" /></div>
+    `,
+    primaryLabel: 'Create goal',
+    onPrimary: () => {
+      const name = ($('#g-name')||{}).value || 'New goal';
+      const tgt = +(($('#g-target')||{}).value || 1000);
+      const wk = +(($('#g-weekly')||{}).value || 30);
+      state.goals.push({ id: 'g-'+Date.now(), name, target: tgt, saved: 0, weekly: wk, ic: 'target', color: '#7CC4A9', eta: 'about ' + Math.ceil(tgt/wk/4) + ' months' });
+      toast('Goal created · keep going', 'success'); render();
+    }
+  });
+}
+
+/* ============================================================
+   GOAL DETAIL
+   ============================================================ */
+function renderGoalDetail() {
+  const g = (state.goals || []).find(x => x.id === state.selectedGoal) || (state.goals || [])[0];
+  if (!g) return `<div class="st-page"><div class="empty-st"><div class="ttl">Goal not found</div></div></div>`;
+  const pct = Math.min(1, g.saved / g.target);
+  /* Contribution timeline */
+  const weeks = 14;
+  const data = [];
+  let running = 0;
+  for (let i = 0; i < weeks; i++) {
+    running += g.weekly * (0.8 + Math.random() * 0.6);
+    data.push(Math.min(g.saved, running));
+  }
+  return `
+    <div class="st-page">
+      <div class="st-page-head">
+        <div class="crumb"><button class="btn ghost sm" data-go="goals" style="padding:4px 8px;color:var(--st-text-mute);"><span data-icon="chleft" data-icon-size="12"></span> Goals</button></div>
+        <h2>${escapeHtml(g.name)}</h2>
+        <p class="sub">${escapeHtml(g.eta)} to go at ${usd(g.weekly,0)}/wk</p>
+      </div>
+
+      <div class="b-stat-hero">
+        <div class="b-sh-lead" style="padding:20px;border-radius:14px;color:#fff;background:linear-gradient(135deg, ${g.color}40, ${g.color}90);">
+          <div class="b-sh-l" style="font:500 11px/1 var(--font-sans);letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.7);">Saved so far</div>
+          <div class="b-sh-v" style="font:700 30px/1 var(--font-sans);margin-top:10px;letter-spacing:-0.02em;">${usd(g.saved,2)}</div>
+          <div class="b-sh-d" style="font:13px/1.4 var(--font-sans);color:rgba(255,255,255,0.85);margin-top:8px;">${Math.round(pct*100)}% of ${usd(g.target,0)}</div>
+          <div class="st-progress" style="margin-top:14px;background:rgba(255,255,255,0.22);"><div class="fl" style="width:${pct*100}%;background:#fff;"></div></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin:6px 0 14px;">
+        <button class="btn primary block" id="goal-add"><span data-icon="plus" data-icon-size="13"></span> Contribute now</button>
+        <button class="btn block" id="goal-boost"><span data-icon="sparkles" data-icon-size="13"></span> Boost</button>
+      </div>
+
+      <div class="st-card">
+        <div class="hdr"><span class="ttl">Contribution timeline</span></div>
+        <div class="chart-wrap">${svgArea(data, { color: g.color, w: 320, h: 120 })}</div>
+        <div class="chart-legend"><div class="lg"><span class="sw" style="background:${g.color};"></span>Weekly cumulative</div></div>
+      </div>
+
+      <div class="st-card">
+        <div class="hdr"><span class="ttl">Recent contributions</span></div>
+        <div class="b-day-list">
+          <div class="b-dl-l">3 Jun · Auto contribution</div><div class="b-dl-v up">+${usd(g.weekly,2)}</div>
+          <div class="b-dl-l">27 May · Auto contribution</div><div class="b-dl-v up">+${usd(g.weekly,2)}</div>
+          <div class="b-dl-l">20 May · Round-up boost</div><div class="b-dl-v up">+$12.30</div>
+          <div class="b-dl-l">13 May · Auto contribution</div><div class="b-dl-v up">+${usd(g.weekly,2)}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function wireGoalDetail() {
+  $$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+  const a = $('#goal-add'); if (a) a.addEventListener('click', () => openContribute(state.selectedGoal));
+  const b = $('#goal-boost'); if (b) b.addEventListener('click', () => openBoost(state.selectedGoal));
+}
+function openContribute(id) {
+  const g = state.goals.find(x => x.id === id); if (!g) return;
+  openSheet({
+    crumb: 'Contribute', title: 'Add to ' + g.name,
+    body: `
+      <div class="field"><label>Amount (USD)</label><input class="input" type="number" id="c-amt" value="50" /></div>
+      <div class="field"><label>From</label>
+        <select class="input" id="c-from">${state.accounts.map(a => `<option value="${a.id}">${escapeHtml(a.nick)} · $${fmt(a.bal,2)}</option>`).join('')}</select>
+      </div>
+    `,
+    primaryLabel: 'Contribute',
+    onPrimary: () => {
+      const amt = +($('#c-amt')||{}).value || 0;
+      g.saved = Math.min(g.target, g.saved + amt);
+      toast('Added ' + usd(amt,2) + ' to ' + g.name, 'success'); render();
+    }
+  });
+}
+function openBoost(id) {
+  const g = state.goals.find(x => x.id === id); if (!g) return;
+  openSheet({
+    crumb: 'Boost this goal', title: 'Save faster',
+    body: `
+      <div class="st-card" style="margin-bottom:10px;"><div class="hdr"><span class="ttl">Auto contribute</span></div><div class="sub">Move ${usd(g.weekly,0)} every Friday automatically.</div><div style="margin-top:8px;"><button class="toggle on" id="bs-auto"></button></div></div>
+      <div class="st-card" style="margin-bottom:10px;"><div class="hdr"><span class="ttl">Round-ups</span></div><div class="sub">Round every spend up to the nearest dollar and save the change.</div><div style="margin-top:8px;"><button class="toggle" id="bs-ru"></button></div></div>
+      <div class="field"><label>Boost weekly amount to</label><input class="input" type="number" id="bs-amt" value="${g.weekly + 20}" /></div>
+    `,
+    primaryLabel: 'Apply',
+    onPrimary: () => {
+      const v = +($('#bs-amt')||{}).value;
+      if (v > 0) g.weekly = v;
+      toast('Boost applied · saving ' + usd(g.weekly,0) + '/wk', 'success'); render();
+    }
+  });
+  setTimeout(() => {
+    $$('.x-bottom-sheet .toggle').forEach(t => t.addEventListener('click', () => t.classList.toggle('on')));
+  }, 30);
+}
+
+/* ============================================================
+   INSIGHTS
+   ============================================================ */
+function renderInsights() {
+  const tx = state.transactions || [];
+  const range = state.insightsRange;
+  let cutoff;
+  if (range === '7d') { cutoff = new Date(TODAY); cutoff.setDate(cutoff.getDate() - 7); }
+  else if (range === '30d') { cutoff = new Date(TODAY); cutoff.setDate(cutoff.getDate() - 30); }
+  else if (range === '90d') { cutoff = new Date(TODAY); cutoff.setDate(cutoff.getDate() - 90); }
+  else cutoff = new Date(TODAY.getFullYear(), 0, 1);
+  const filtered = tx.filter(t => new Date(t.date) >= cutoff && t.amt < 0 && t.cat !== 'transfer');
+  const totalSpent = filtered.reduce((s,t) => s + Math.abs(t.amt), 0);
+
+  /* By category for donut */
+  const byCat = {};
+  filtered.forEach(t => byCat[t.cat] = (byCat[t.cat] || 0) + Math.abs(t.amt));
+  const segs = Object.entries(byCat).map(([c, v]) => ({ value: v, color: catById(c).color, label: catById(c).name })).sort((a,b)=>b.value-a.value);
+
+  /* Spending by day-of-week */
+  const dow = [0,0,0,0,0,0,0];
+  filtered.forEach(t => { dow[new Date(t.date).getDay()] += Math.abs(t.amt); });
+  const dowLabels = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  /* Largest expenses */
+  const largest = [...filtered].sort((a,b)=>Math.abs(b.amt)-Math.abs(a.amt)).slice(0,5);
+
+  /* Spending velocity — cumulative over last 30 days */
+  const days = 30;
+  const cum = [];
+  let run = 0;
+  for (let i = days - 1; i >= 0; i--) {
+    const day = new Date(TODAY); day.setDate(day.getDate() - i);
+    const sd = tx.filter(t => new Date(t.date).toDateString() === day.toDateString() && t.amt < 0 && t.cat !== 'transfer').reduce((s,t)=>s+Math.abs(t.amt),0);
+    run += sd;
+    cum.push(run);
+  }
+
+  return `
+    <div class="st-page">
+      <div class="st-page-head">
+        <div class="crumb">Insights</div>
+        <h2>Where it goes</h2>
+        <p class="sub">Understand your spending patterns.</p>
+      </div>
+      <div class="b-filter-chips" style="margin-bottom:12px;">
+        ${['7d','30d','90d','ytd'].map(r => `<button class="b-fc ${state.insightsRange===r?'on':''}" type="button" data-range="${r}">${r==='ytd'?'YTD':r}</button>`).join('')}
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="lbl">Total spent</div>
+          <div class="v">${usd(totalSpent,0)}</div>
+          <div class="d dn">+12% vs prev period</div>
+        </div>
+        <div class="kpi-card">
+          <div class="lbl">Avg per day</div>
+          <div class="v">${usd(totalSpent/(range==='7d'?7:range==='30d'?30:90),0)}</div>
+          <div class="d">across ${filtered.length} transactions</div>
+        </div>
+      </div>
+
+      <div class="st-card">
+        <div class="hdr"><span class="ttl">Top categories</span></div>
+        ${segs.length === 0 ? `<div class="empty-st"><div class="ttl">No spending yet</div></div>` : `
+          ${svgDonut(segs, { center: '$'+fmt(totalSpent,0), centerLabel: 'total', r: 64, thickness: 20, w: 170, h: 170 })}
+          <div class="chart-legend">${segs.slice(0,6).map(s => `<div class="lg"><span class="sw" style="background:${s.color};"></span>${escapeHtml(s.label)} · ${usd(s.value,0)}</div>`).join('')}</div>
+        `}
+      </div>
+
+      <div class="st-card">
+        <div class="hdr"><span class="ttl">Spending by day of week</span></div>
+        <div class="chart-wrap">${svgBars(dow, dowLabels, { color: '#7CC4A9', w: 320, h: 140 })}</div>
+      </div>
+
+      <div class="st-card">
+        <div class="hdr"><span class="ttl">Spending velocity</span></div>
+        <div class="chart-wrap">${svgLine(cum, { color: '#6FB1E0', w: 320, h: 120 })}</div>
+        <div class="chart-legend"><div class="lg"><span class="sw" style="background:#6FB1E0;"></span>Cumulative spending · 30 days</div></div>
+      </div>
+
+      <div class="st-sect-h"><span class="lbl">Largest expenses</span></div>
+      ${largest.length === 0 ? `<div class="empty-st"><div class="ttl">No expenses</div></div>` : largest.map(t => renderTxRow(t)).join('')}
+    </div>
+  `;
+}
+function wireInsights() {
+  $$('[data-range]').forEach(b => b.addEventListener('click', () => { state.insightsRange = b.dataset.range; render(); }));
+  $$('[data-tx]').forEach(b => b.addEventListener('click', () => openTxDetail(b.dataset.tx)));
+}
+
+/* ============================================================
+   CASHFLOW (calendar)
+   ============================================================ */
+function renderCashflow() {
+  const month = TODAY.getMonth();
+  const year = TODAY.getFullYear();
+  const first = new Date(year, month, 1);
+  const last = new Date(year, month + 1, 0);
+  const firstDay = first.getDay();
+  const daysInMonth = last.getDate();
+  const tx = state.transactions || [];
+  const dayMap = {};
+  tx.forEach(t => {
+    const d = new Date(t.date);
+    if (d.getFullYear() === year && d.getMonth() === month) {
+      const k = d.getDate();
+      (dayMap[k] = dayMap[k] || { in: 0, out: 0 });
+      if (t.amt > 0 && t.cat === 'income') dayMap[k].in += t.amt;
+      else if (t.amt < 0 && t.cat !== 'transfer') dayMap[k].out += Math.abs(t.amt);
+    }
+  });
+  const cells = [];
+  for (let i = 0; i < firstDay; i++) cells.push({ empty: true });
+  for (let d = 1; d <= daysInMonth; d++) cells.push({ n: d, m: dayMap[d] || { in: 0, out: 0 }, today: d === TODAY.getDate() });
+  const totalIn = Object.values(dayMap).reduce((s, x) => s + x.in, 0);
+  const totalOut = Object.values(dayMap).reduce((s, x) => s + x.out, 0);
+  return `
+    <div class="st-page">
+      <div class="st-page-head">
+        <div class="crumb">Insights</div>
+        <h2>Cashflow · ${first.toLocaleDateString('en-US',{month:'long',year:'numeric'})}</h2>
+        <p class="sub">Each day shows income (green) and spending (red).</p>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="lbl">In</div><div class="v" style="color:var(--st-good);">+${usd(totalIn,0)}</div></div>
+        <div class="kpi-card"><div class="lbl">Out</div><div class="v" style="color:var(--st-bad);">−${usd(totalOut,0)}</div></div>
+      </div>
+
+      <div class="cf-cal">
+        ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => `<div class="dow">${d}</div>`).join('')}
+        ${cells.map(c => c.empty ? '<div class="day empty"></div>' : `
+          <div class="day ${c.today ? 'today' : ''}" data-day="${c.n}">
+            <div class="n">${c.n}</div>
+            <div class="dots">
+              ${c.m.in > 0 ? '<span class="dot in"></span>' : ''}
+              ${c.m.out > 0 ? '<span class="dot out"></span>' : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div style="margin-top:14px;display:flex;gap:14px;font:12px var(--font-sans);color:var(--st-text-mute);">
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--st-good);margin-right:5px;"></span>Income</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--st-bad);margin-right:5px;"></span>Spending</span>
+      </div>
+    </div>
+  `;
+}
+function wireCashflow() {
+  $$('[data-day]').forEach(b => b.addEventListener('click', () => openDaySheet(+b.dataset.day)));
+}
+function openDaySheet(dayNum) {
+  const tx = (state.transactions||[]).filter(t => {
+    const d = new Date(t.date);
+    return d.getFullYear() === TODAY.getFullYear() && d.getMonth() === TODAY.getMonth() && d.getDate() === dayNum;
+  });
+  const inT = tx.filter(t => t.amt > 0).reduce((s,t)=>s+t.amt, 0);
+  const outT = tx.filter(t => t.amt < 0 && t.cat !== 'transfer').reduce((s,t)=>s+Math.abs(t.amt), 0);
+  const dt = new Date(TODAY.getFullYear(), TODAY.getMonth(), dayNum);
+  openSheet({
+    crumb: dt.toLocaleDateString('en-US',{weekday:'long'}),
+    title: dt.toLocaleDateString('en-US',{month:'long',day:'numeric'}),
+    body: `
+      <div class="stat-row">
+        <div class="s"><div class="l">In</div><div class="v" style="color:var(--st-good);">+${usd(inT,2)}</div></div>
+        <div class="s"><div class="l">Out</div><div class="v" style="color:var(--st-bad);">−${usd(outT,2)}</div></div>
+      </div>
+      ${tx.length === 0 ? `<div class="empty-st"><div class="ttl">Nothing on this day</div></div>` : tx.map(t => renderTxRow(t)).join('')}
+    `,
+    secondaryLabel: 'Close',
+  });
+}
+
+/* ============================================================
+   CATEGORIES
+   ============================================================ */
+function renderCategories() {
+  return `
+    <div class="st-page">
+      <div class="st-page-head">
+        <div class="crumb">Insights</div>
+        <h2>Categories</h2>
+        <p class="sub">Customize how Stash groups your spending.</p>
+        <div class="head-acts">
+          <button class="btn primary" id="add-cat"><span data-icon="plus" data-icon-size="13"></span> New category</button>
+        </div>
+      </div>
+      <div class="st-card">
+        <div class="hdr"><span class="ttl">Your categories</span></div>
+        ${CATEGORIES.filter(c => c.id !== 'income' && c.id !== 'transfer').map(c => `
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--st-border);">
+            <span style="width:36px;height:36px;border-radius:10px;background:${c.color}22;color:${c.color};display:grid;place-items:center;" data-icon="${c.icon}" data-icon-size="14"></span>
+            <div style="flex:1;">
+              <div style="font:600 14px var(--font-sans);color:#fff;">${escapeHtml(c.name)}</div>
+              <div style="font:12px var(--font-sans);color:var(--st-text-mute);">${c.color}</div>
+            </div>
+            <button class="btn sm" data-edit-cat="${c.id}">Edit</button>
+          </div>
+        `).join('')}
+      </div>
+      <div class="st-card">
+        <div class="hdr"><span class="ttl">Suggestions</span></div>
+        <div class="sub" style="margin-bottom:10px;">Merge similar categories to keep your view clean.</div>
+        <button class="btn block">Merge "Other" into a category</button>
+      </div>
+    </div>
+    <div class="p-save-bar ${state.saveBarDirty ? 'dirty' : ''}" id="save-bar">
+      <div class="label">
+        <div class="title">Unsaved changes</div>
+        <div class="summary">You renamed 1 category</div>
+      </div>
+      <div class="actions">
+        <button class="btn sm" id="sb-discard">Discard</button>
+        <button class="btn sm primary" id="sb-save">Save</button>
+      </div>
+    </div>
+  `;
+}
+function wireCategories() {
+  $$('[data-edit-cat]').forEach(b => b.addEventListener('click', () => {
+    state.saveBarDirty = true;
+    const sb = $('#save-bar'); if (sb) sb.classList.add('dirty');
+    toast('Editing — save when ready', 'warn');
+  }));
+  const ac = $('#add-cat'); if (ac) ac.addEventListener('click', () => openSheet({
+    crumb: 'Custom category', title: 'New category',
+    body: `<div class="field"><label>Name</label><input class="input" id="nc-name" placeholder="Coffee" /></div><div class="field"><label>Color</label><input class="input" type="color" id="nc-color" value="#7CC4A9" /></div>`,
+    primaryLabel: 'Create',
+    onPrimary: () => toast('Category created (demo)', 'success'),
+  }));
+  const dis = $('#sb-discard'); if (dis) dis.addEventListener('click', () => { state.saveBarDirty = false; render(); });
+  const sv = $('#sb-save'); if (sv) sv.addEventListener('click', () => { state.saveBarDirty = false; toast('Saved', 'success'); render(); });
+}
+
+/* ============================================================
+   PROFILE
+   ============================================================ */
+function renderProfile() {
+  return `
+    <div class="st-page">
+      <div class="st-page-head">
+        <div class="crumb">You</div>
+        <h2>Profile</h2>
+      </div>
+
+      <div class="st-card" style="text-align:center;padding:22px;">
+        <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--st-brand),var(--st-purple));color:#0B0D11;font:700 24px var(--font-sans);display:grid;place-items:center;margin:0 auto 12px;">CM</div>
+        <div style="font:700 18px var(--font-sans);color:#fff;">Chipo Mutasa</div>
+        <div style="font:13px var(--font-sans);color:var(--st-text-mute);margin-top:3px;">chipo@stash.app</div>
+        <button class="btn sm" style="margin-top:12px;" id="prof-photo">Change photo</button>
+      </div>
+
+      <div class="st-card">
+        <div class="hdr"><span class="ttl">Account info</span></div>
+        <div class="field"><label>Full name</label><input class="input" value="Chipo Mutasa" /></div>
+        <div class="field"><label>Email</label><input class="input" value="chipo@stash.app" /></div>
+        <div class="field"><label>Phone</label><input class="input" value="+263 77 412 4821" /></div>
+      </div>
+
+      <div class="st-card">
+        <div class="hdr"><span class="ttl">Linked devices</span></div>
+        <div style="display:grid;gap:8px;">
+          <div style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--st-border);">
+            <span data-icon="phone" data-icon-size="16" style="color:var(--st-text-mute);"></span>
+            <div style="flex:1;"><div style="font:600 13px var(--font-sans);color:#fff;">iPhone 14 · Chipo's phone</div><div style="font:11.5px var(--font-mono);color:var(--st-text-mute);">Last seen · Today 14:22</div></div>
+            <span class="pill ok">Active</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;padding:10px 0;">
+            <span data-icon="desktop" data-icon-size="16" style="color:var(--st-text-mute);"></span>
+            <div style="flex:1;"><div style="font:600 13px var(--font-sans);color:#fff;">MacBook Air · Office</div><div style="font:11.5px var(--font-mono);color:var(--st-text-mute);">Last seen · Yesterday 18:12</div></div>
+            <button class="btn sm danger">Revoke</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="st-card">
+        <div class="hdr"><span class="ttl">Recent activity</span></div>
+        <div class="b-day-list">
+          <div class="b-dl-l">Today 14:22 · Signed in · iPhone</div><div class="b-dl-v">Harare</div>
+          <div class="b-dl-l">Yesterday 09:14 · Password changed</div><div class="b-dl-v">Harare</div>
+          <div class="b-dl-l">29 May · Added account · FNB</div><div class="b-dl-v">Harare</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function wireProfile() {
+  const p = $('#prof-photo'); if (p) p.addEventListener('click', () => toast('Photo uploaded (demo)', 'success'));
+}
+
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+function renderSettings() {
+  const tabs = [
+    { id: 'security', label: 'Security' },
+    { id: 'notif',    label: 'Notifications' },
+    { id: 'linked',   label: 'Linked accounts' },
+    { id: 'privacy',  label: 'Privacy' },
+    { id: 'help',     label: 'Help & FAQ' },
+    { id: 'about',    label: 'About' },
+  ];
+  return `
+    <div class="st-page">
+      <div class="st-page-head">
+        <div class="crumb">You</div>
+        <h2>Settings</h2>
+      </div>
+      <div class="st-subnav">
+        ${tabs.map(t => `<button class="${state.settingsTab===t.id?'on':''}" data-stab="${t.id}">${escapeHtml(t.label)}</button>`).join('')}
+      </div>
+      ${renderSettingsTab()}
+    </div>
+  `;
+}
+function renderSettingsTab() {
+  const t = state.settingsTab;
+  if (t === 'security') return `
+    <div class="st-card">
+      <div class="hdr"><span class="ttl">Sign in & security</span></div>
+      <div style="display:grid;gap:14px;">
+        <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--st-border);"><div style="flex:1;"><div style="font:600 14px var(--font-sans);color:#fff;">Two-factor auth</div><div style="font:12px var(--font-sans);color:var(--st-text-mute);">Get a 6-digit code on your phone every sign-in.</div></div><button class="toggle ${state.settings.twoFa?'on':''}" data-tg="twoFa"></button></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--st-border);"><div style="flex:1;"><div style="font:600 14px var(--font-sans);color:#fff;">Face ID / Touch ID</div><div style="font:12px var(--font-sans);color:var(--st-text-mute);">Unlock with biometrics on this device.</div></div><button class="toggle ${state.settings.biometric?'on':''}" data-tg="biometric"></button></div>
+        <button class="btn block">Change password</button>
+        <button class="btn block danger" id="set-signout-all">Sign out all devices</button>
+      </div>
+    </div>
+  `;
+  if (t === 'notif') return `
+    <div class="st-card">
+      <div class="hdr"><span class="ttl">Notification preferences</span></div>
+      <div class="sub" style="margin-bottom:12px;">Pick how Stash reaches you for each event type.</div>
+      ${[
+        ['newTx', 'New transaction'],
+        ['budget', 'Budget alerts'],
+        ['goal', 'Goal milestones'],
+        ['subRenew', 'Subscription renewal'],
+        ['lowBalance', 'Low balance warning'],
+      ].map(([k, label]) => `
+        <div style="padding:10px 0;border-bottom:1px solid var(--st-border);">
+          <div style="font:600 13.5px var(--font-sans);color:#fff;margin-bottom:8px;">${escapeHtml(label)}</div>
+          <div class="b-filter-chips">
+            ${['push','email','sms'].map(ch => {
+              const on = (state.settings.notifChannels[k] || []).includes(ch);
+              return `<button class="b-fc ${on?'on':''}" type="button" data-nch="${k}|${ch}">${ch}</button>`;
+            }).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  if (t === 'linked') return `
+    <div class="st-card">
+      <div class="hdr"><span class="ttl">Linked accounts</span></div>
+      ${(state.accounts||[]).map(a => {
+        const inst = INSTITUTIONS.find(i => i.id === a.inst);
+        return `
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--st-border);">
+          <div class="inst-badge" style="width:32px;height:32px;font-size:11px;">${escapeHtml(inst?inst.mono:'AC')}</div>
+          <div style="flex:1;">
+            <div style="font:600 13px var(--font-sans);color:#fff;">${escapeHtml(a.nick)}</div>
+            <div style="font:12px var(--font-sans);color:var(--st-text-mute);">${escapeHtml(inst?inst.name:'')} · ••${escapeHtml(a.last4)}</div>
+          </div>
+          <button class="btn sm">Manage</button>
+        </div>`;
+      }).join('')}
+      <div style="margin-top:14px;"><button class="btn primary block" data-go="add-account">Add another account</button></div>
+    </div>
+  `;
+  if (t === 'privacy') return `
+    <div class="st-card">
+      <div class="hdr"><span class="ttl">Privacy</span></div>
+      <p class="sub">Your data stays yours. Stash uses read-only connections and never sells your activity.</p>
+      <div style="display:grid;gap:10px;margin-top:8px;">
+        <button class="btn block">Download my data</button>
+        <button class="btn block">Privacy policy</button>
+        <button class="btn block danger">Delete my account</button>
+      </div>
+    </div>
+  `;
+  if (t === 'help') return `
+    <div class="st-card">
+      <div class="hdr"><span class="ttl">Help & FAQ</span></div>
+      <div style="display:grid;gap:14px;">
+        ${[
+          ['How does Stash connect to my bank?', 'Through read-only OAuth — we never get your password.'],
+          ['Can I use Stash if I bank with a small institution?', 'We support 50+ Zimbabwe and South Africa banks plus EcoCash, OneMoney and major investment platforms.'],
+          ['How much does Pro cost?', '$8 / month. Cancel any time.'],
+          ['Can I share with my partner?', 'Yes — upgrade to Family.'],
+        ].map(([q, a]) => `<div style="padding-bottom:12px;border-bottom:1px solid var(--st-border);"><div style="font:600 13.5px var(--font-sans);color:#fff;">${escapeHtml(q)}</div><div style="font:12.5px/1.55 var(--font-sans);color:var(--st-text-mute);margin-top:4px;">${escapeHtml(a)}</div></div>`).join('')}
+      </div>
+      <div style="margin-top:14px;"><button class="btn block primary">Contact support</button></div>
+    </div>
+  `;
+  return `
+    <div class="st-card">
+      <div class="hdr"><span class="ttl">About Stash</span></div>
+      <p class="sub">Stash · v0.5 (demo)<br>Built for personal use. Your data stays on this device in this demo.</p>
+      <div style="display:grid;gap:8px;margin-top:10px;">
+        <button class="btn block">Terms of service</button>
+        <button class="btn block">Acknowledgements</button>
+      </div>
+    </div>
+  `;
+}
+function wireSettings() {
+  $$('[data-stab]').forEach(b => b.addEventListener('click', () => { state.settingsTab = b.dataset.stab; render(); }));
+  $$('[data-tg]').forEach(b => b.addEventListener('click', () => {
+    const k = b.dataset.tg;
+    state.settings[k] = !state.settings[k];
+    toast(state.settings[k] ? 'Turned on' : 'Turned off', 'success');
+    render();
+  }));
+  $$('[data-nch]').forEach(b => b.addEventListener('click', () => {
+    const [k, ch] = b.dataset.nch.split('|');
+    const arr = state.settings.notifChannels[k] || [];
+    const i = arr.indexOf(ch);
+    if (i >= 0) arr.splice(i, 1); else arr.push(ch);
+    state.settings.notifChannels[k] = arr; render();
+  }));
+  const sa = $('#set-signout-all'); if (sa) sa.addEventListener('click', () => openConfirm({ title: 'Sign out everywhere?', sub: 'You\'ll need to sign back in on each device.', okLabel: 'Sign out all', danger: true, onOk: () => { toast('Signed out all devices', 'success'); } }));
+  $$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+}
+
+/* ============================================================
+   BILLING
+   ============================================================ */
+function renderBilling() {
+  const tabs = [
+    { id: 'plan', label: 'Plan & usage' },
+    { id: 'invoices', label: 'Invoices' },
+    { id: 'payment', label: 'Payment method' },
+  ];
+  return `
+    <div class="st-page">
+      <div class="st-page-head">
+        <div class="crumb">You</div>
+        <h2>Plan & billing</h2>
+      </div>
+      <div class="st-subnav">
+        ${tabs.map(t => `<button class="${state.billingTab===t.id?'on':''}" data-btab="${t.id}">${escapeHtml(t.label)}</button>`).join('')}
+      </div>
+      ${renderBillingTab()}
+    </div>
+  `;
+}
+function renderBillingTab() {
+  if (state.billingTab === 'invoices') return `
+    <div class="st-card">
+      <div class="hdr"><span class="ttl">Invoices</span></div>
+      ${SEED_INVOICES.map(i => `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--st-border);">
+          <div style="flex:1;"><div style="font:600 13.5px var(--font-sans);color:#fff;">${escapeHtml(i.period)}</div><div style="font:11.5px var(--font-mono);color:var(--st-text-mute);">${escapeHtml(i.id)}</div></div>
+          <div style="text-align:right;"><div style="font:600 14px var(--font-mono);color:#fff;">${usd(i.amt,2)}</div><span class="pill ok">${escapeHtml(i.status)}</span></div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  if (state.billingTab === 'payment') return `
+    <div class="st-card">
+      <div class="hdr"><span class="ttl">Payment method</span></div>
+      <div class="b-row-card" style="padding:14px;">
+        <div class="b-rc-top" style="align-items:center;gap:12px;">
+          <div class="inst-badge" style="background:linear-gradient(135deg,#1B2A24,#2C4438);">VS</div>
+          <div class="b-rc-info"><div class="b-rc-nm">Visa ending 4821</div><div class="b-rc-sb">Expires 11/27</div></div>
+          <span class="pill ok">Default</span>
+        </div>
+      </div>
+      <div style="margin-top:14px;"><button class="btn block primary">Update card</button></div>
+    </div>
+  `;
+  /* Plan tab */
+  const cur = state.settings.plan;
+  const usage = (state.accounts||[]).length;
+  return `
+    <div class="st-card">
+      <div class="hdr"><span class="ttl">Current plan</span></div>
+      <div style="font:700 26px var(--font-sans);color:var(--st-brand);letter-spacing:-0.02em;">${cur === 'free' ? 'Free' : cur === 'pro' ? 'Pro' : 'Family'}</div>
+      <div class="sub">${usage} accounts linked · ${(state.budgets||[]).length} budgets · ${(state.goals||[]).length} goals</div>
+    </div>
+    <div class="st-sect-h"><span class="lbl">Choose a plan</span></div>
+    <button class="plan-card ${cur==='free'?'active':''}" data-plan="free">
+      <div class="info">
+        <div class="nm">Free</div>
+        <div class="sb">Get started — basics covered.</div>
+        <ul>
+          <li>1 linked account</li>
+          <li>Up to 3 budgets</li>
+          <li>Manual goals</li>
+        </ul>
+      </div>
+      <div class="price">$0<small>forever</small></div>
+    </button>
+    <button class="plan-card ${cur==='pro'?'active':''}" data-plan="pro">
+      <div class="info">
+        <div class="nm">Pro <span class="pill ok" style="margin-left:6px;">Recommended</span></div>
+        <div class="sb">Everything to take control.</div>
+        <ul>
+          <li>Unlimited accounts</li>
+          <li>Investments tracking</li>
+          <li>Subscriptions tracker</li>
+          <li>Smart categorization</li>
+        </ul>
+      </div>
+      <div class="price">$8<small>per month</small></div>
+    </button>
+    <button class="plan-card ${cur==='family'?'active':''}" data-plan="family">
+      <div class="info">
+        <div class="nm">Family</div>
+        <div class="sb">Plan together.</div>
+        <ul>
+          <li>Everything in Pro</li>
+          <li>Up to 5 members</li>
+          <li>Shared budgets & goals</li>
+        </ul>
+      </div>
+      <div class="price">$14<small>per month</small></div>
+    </button>
+  `;
+}
+function wireBilling() {
+  $$('[data-btab]').forEach(b => b.addEventListener('click', () => { state.billingTab = b.dataset.btab; render(); }));
+  $$('[data-plan]').forEach(b => b.addEventListener('click', () => {
+    const p = b.dataset.plan;
+    if (p === state.settings.plan) return;
+    openConfirm({ title: 'Switch to ' + p + '?', sub: p === 'free' ? 'You\'ll lose access to Pro features at next billing date.' : 'You\'ll be charged today and pro-rated.', okLabel: 'Switch plan', onOk: () => { state.settings.plan = p; toast('Plan updated to ' + p, 'success'); render(); } });
+  }));
+}
+
+/* ============================================================
+   ONBOARDING
+   ============================================================ */
+function renderOnboarding() {
+  const steps = ['Welcome', 'Link an account', 'Set a budget', 'Pick a goal'];
+  const i = state.onboardStep || 0;
+  return `
+    <div class="st-page" style="padding-top:24px;">
+      <div class="p-stepper" style="display:flex;justify-content:center;">
+        ${steps.map((s, idx) => `<div class="p-step ${idx <= i ? (idx === i ? 'current' : 'done') : ''}"></div>`).join('')}
+      </div>
+      ${renderOnboardStep(i)}
+    </div>
+  `;
+}
+function renderOnboardStep(i) {
+  if (i === 0) return `
+    <div style="text-align:center;padding:24px 16px;">
+      <div style="width:80px;height:80px;border-radius:22px;background:var(--st-brand-soft);color:var(--st-brand);display:grid;place-items:center;margin:0 auto 18px;" data-icon="coins" data-icon-size="32"></div>
+      <h2 style="font:700 26px var(--font-sans);color:#fff;margin:0;letter-spacing:-0.02em;">Welcome to Stash</h2>
+      <p style="font:14px/1.55 var(--font-sans);color:var(--st-text-mute);margin:10px auto 0;max-width:340px;">In 90 seconds we'll connect your first account, set a budget you can actually live with, and start a savings goal.</p>
+      <div style="margin-top:24px;display:grid;gap:8px;max-width:280px;margin-left:auto;margin-right:auto;">
+        <button class="btn primary block" id="ob-next">Let's go</button>
+        <button class="btn ghost block" data-go="home">Skip for now</button>
+      </div>
+    </div>
+  `;
+  if (i === 1) return `
+    <div style="padding:18px 4px;">
+      <h2 style="font:700 22px var(--font-sans);color:#fff;margin:0;">Link your first account</h2>
+      <p class="sub" style="margin:6px 0 16px;color:var(--st-text-mute);font:13.5px/1.5 var(--font-sans);">Pick a bank — we'll redirect you to a fake sign-in (this is a demo).</p>
+      ${INSTITUTIONS.slice(0,5).map(inst => `
+        <button class="bank-row" type="button" data-ob-inst="${inst.id}">
+          <div class="lg">${escapeHtml(inst.mono)}</div>
+          <div class="nm">${escapeHtml(inst.name)}</div>
+          <span class="ar" data-icon="chright" data-icon-size="14"></span>
+        </button>
+      `).join('')}
+      <button class="btn block" style="margin-top:12px;" id="ob-skip-1">Skip — I'll do this later</button>
+    </div>
+  `;
+  if (i === 2) return `
+    <div style="padding:18px 4px;">
+      <h2 style="font:700 22px var(--font-sans);color:#fff;margin:0;">Set your first budget</h2>
+      <p class="sub" style="margin:6px 0 16px;color:var(--st-text-mute);font:13.5px/1.5 var(--font-sans);">Most people start with Food — pick a number you can keep.</p>
+      <div class="field"><label>Category</label>
+        <select class="input" id="ob-cat">${CATEGORIES.filter(c=>c.id!=='income'&&c.id!=='transfer').map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>Monthly limit</label><input class="input" type="number" id="ob-lim" value="320" /></div>
+      <div style="display:grid;gap:8px;margin-top:14px;">
+        <button class="btn primary block" id="ob-next">Continue</button>
+        <button class="btn ghost block" id="ob-skip-2">Skip</button>
+      </div>
+    </div>
+  `;
+  return `
+    <div style="padding:18px 4px;">
+      <h2 style="font:700 22px var(--font-sans);color:#fff;margin:0;">Start a savings goal</h2>
+      <p class="sub" style="margin:6px 0 16px;color:var(--st-text-mute);font:13.5px/1.5 var(--font-sans);">What's something you'd love to save for?</p>
+      <div class="field"><label>Goal</label><input class="input" id="ob-gname" value="Emergency fund" /></div>
+      <div class="field"><label>Target amount</label><input class="input" type="number" id="ob-gtgt" value="3000" /></div>
+      <div class="field"><label>Weekly contribution</label><input class="input" type="number" id="ob-gwk" value="60" /></div>
+      <div style="display:grid;gap:8px;margin-top:14px;">
+        <button class="btn primary block" id="ob-finish">Finish setup</button>
+        <button class="btn ghost block" id="ob-skip-3">Skip</button>
+      </div>
+    </div>
+  `;
+}
+function wireOnboarding() {
+  const n = $('#ob-next'); if (n) n.addEventListener('click', () => { state.onboardStep = Math.min(3, (state.onboardStep||0)+1); render(); });
+  $$('[data-ob-inst]').forEach(b => b.addEventListener('click', () => { state.onboardStep = 2; toast('Account linked', 'success'); render(); }));
+  const s1 = $('#ob-skip-1'); if (s1) s1.addEventListener('click', () => { state.onboardStep = 2; render(); });
+  const s2 = $('#ob-skip-2'); if (s2) s2.addEventListener('click', () => { state.onboardStep = 3; render(); });
+  const s3 = $('#ob-skip-3'); if (s3) s3.addEventListener('click', () => { go('home'); });
+  const f = $('#ob-finish'); if (f) f.addEventListener('click', () => { toast('You\'re all set 🎉', 'success'); go('home'); });
+  $$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+}
+
+/* ============================================================
+   NOTIFICATIONS
+   ============================================================ */
+function renderNotifications() {
+  const groups = {};
+  (state.notifs||[]).forEach(n => {
+    const key = fmtDay(n.date);
+    (groups[key] = groups[key] || []).push(n);
+  });
+  return `
+    <div class="st-page">
+      <div class="st-page-head">
+        <div class="crumb">You</div>
+        <h2>Notifications</h2>
+        <p class="sub">${(state.notifs||[]).filter(n=>n.unread).length} unread</p>
+        <div class="head-acts">
+          <button class="btn sm" id="mark-read">Mark all as read</button>
+        </div>
+      </div>
+      ${Object.keys(groups).length === 0 ? `
+        <div class="empty-st">
+          <div class="ic-bg" data-icon="bell" data-icon-size="22"></div>
+          <div class="ttl">All caught up</div>
+          <div class="ds">New activity will show up here.</div>
+        </div>
+      ` : Object.entries(groups).map(([day, items]) => `
+        <div class="st-sect-h"><span class="lbl">${escapeHtml(day)}</span></div>
+        ${items.map(n => `
+          <div class="notif-row ${n.unread?'unread':''}">
+            <div class="ic"><span data-icon="${n.ic}" data-icon-size="14"></span></div>
+            <div class="bd">
+              <div class="ttl">${escapeHtml(n.ttl)}</div>
+              <div class="tx">${escapeHtml(n.tx)}</div>
+            </div>
+            <div class="ts">${escapeHtml(n.ts)}</div>
+          </div>
+        `).join('')}
+      `).join('')}
+    </div>
+  `;
+}
+function wireNotifications() {
+  const mr = $('#mark-read'); if (mr) mr.addEventListener('click', () => {
+    (state.notifs||[]).forEach(n => n.unread = false);
+    toast('All notifications marked read', 'success'); render();
+  });
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+function init() {
+  loadState();
+  hydrateSeeds();
+  if (/[?&]fullscreen=1/.test(location.search)) {
+    document.body.classList.add('is-fullscreen');
+  }
+  let r = (location.hash.replace(/^#\/?/, '') || 'home');
+  if (r === 'sign-in' || r === 'signin') { state.signedIn = false; state.step = 'creds'; }
+  else if (ROUTES.includes(r)) state.route = r;
+  render();
+}
+if (document.readyState !== 'loading') init();
+else document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

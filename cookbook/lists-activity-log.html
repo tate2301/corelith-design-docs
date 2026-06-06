@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Activity log · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .phone { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 16px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+  .ck-screen .brand { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .ph-title { font: 700 14px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .ck-screen .ph-sub { font: 500 11px/1.4 var(--font-sans); color: var(--text-muted); margin: 0; }
+  .ck-screen .ph-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+  .ck-screen .ph-chips span { font: 500 10px/1 var(--font-sans); padding: 4px 7px; border: 1px solid var(--border); border-radius: 9999px; color: var(--text-muted); }
+  .ck-screen .ph-chips span.on { background: var(--ink); color: var(--canvas); border-color: var(--ink); }
+  .ck-screen .ph-event { display: grid; grid-template-columns: 22px 1fr auto; gap: 6px; padding: 6px 4px; align-items: start; border-bottom: 1px dashed var(--border); }
+  .ck-screen .ph-event .av { width: 18px; height: 18px; border-radius: 50%; background: var(--brand); color: var(--canvas); display: grid; place-items: center; font: 700 9px/1 var(--font-sans); margin-top: 2px; }
+  .ck-screen .ph-event .bd { font: 500 10px/1.3 var(--font-sans); color: var(--text-strong); }
+  .ck-screen .ph-event .bd b { color: var(--brand-strong); }
+  .ck-screen .ph-event .ts { font: 500 9px/1 var(--font-mono); color: var(--text-subtle); }
+  .ck-screen .ph-drawer { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px 10px; display: grid; gap: 4px; margin-top: 4px; }
+  .ck-screen .ph-drawer h5 { font: 600 10px/1 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-screen .ph-drawer .diff { display: grid; grid-template-columns: auto 1fr; gap: 4px 8px; font: 500 9px/1.3 var(--font-mono); }
+  .ck-screen .ph-drawer .diff .k { color: var(--text-subtle); }
+  .ck-screen .ph-drawer .diff .old { color: var(--tone-danger); text-decoration: line-through; }
+  .ck-screen .ph-drawer .diff .new { color: var(--tone-success); }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+
+  .ck-pull { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; padding: 14px 16px; margin: 14px 0 0; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+
+  /* Honest "code-only" preview marker — used when a step is conceptual code
+     (state machine, hook, reducer) and a visual mockup would be misleading. */
+  .ck-code-only-note {
+    display: grid; gap: 8px;
+    padding: 22px 26px;
+    background: var(--surface-muted);
+    border: 1px dashed var(--border-strong);
+    border-radius: 12px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-code-only-note .ck-code-only-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    align-self: start;
+    font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--surface); color: var(--brand-strong);
+    border: 1px solid var(--border);
+  }
+  .ck-code-only-note p { margin: 0; color: var(--text-muted); }
+  .ck-code-only-note code {
+    background: var(--surface); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+
+  /* Off-system component roadmap pill — for recipes that compose with
+     components not yet in @huchu/react v0.1.0-alpha.0. */
+  .ck-roadmap-note {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--brand);
+    border-radius: 8px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code {
+    background: var(--surface-muted); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Lists</a><span class="sep">/</span>
+      <span>Activity log</span>
+    </div>
+    <h1>Build an activity log operators actually trust</h1>
+    <p class="lede">By the end of this recipe you'll have a paginated, polling timeline of every mutation in the tenant — actor + verb + target + relative time + a diff drawer — with filters for actor / event type / date, live updates, and CSV export.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>Lists</span>
+      <span class="meta-pill">4 primitives · 1 block · 1 pattern</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~35 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A reverse-chronological list of events. Each row is one mutation: who, what, where, when. Click → a drawer slides in with the before/after diff. Polls every 15 seconds; new events fade in at the top.</p>
+    <p>SMBs run on trust, and trust runs on receipts. When the till is short ZWL 4,000, the operator wants to see <em>who closed it, when, and what they marked it as</em> — not "ask the manager". The activity log is the receipt. It's how you settle the question without a phone call, and it's why your power users put up with you charging them more than a spreadsheet.</p>
+    <p class="ck-pull"><b>Every action that mutates data MUST log to this trail.</b> The trail is the receipt — never quiet a write. If you skip the log on "small" mutations, you've quietly told the operator their book is unreliable. There are no small mutations.</p>
+    <p>The data model is one row per event: <code>{id, actorId, verb, targetType, targetId, targetLabel, at, diff?}</code>. The verb is a string slug ("created", "updated", "deleted", "approved") so it sorts and filters cleanly. The diff is optional — only updates have one — and lives in a separate field so a 200-row list doesn't ship 200 JSON blobs over the wire.</p>
+    <p><b>Skip this recipe if</b> your app is read-only, or if you're shipping a one-user tool that doesn't need post-hoc accountability. Activity logs are for shared data — solo tools don't need them.</p>
+  </section>
+
+  <!-- WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three states: the timeline, filters open, and a diff drawer.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Activity</span>
+          <p class="ph-title">All activity</p>
+          <p class="ph-sub">Updated 3s ago</p>
+          <div class="ph-event"><div class="av">T</div><div class="bd"><b>Tendai</b> updated price on <b>Acme Wrench</b></div><div class="ts">2m</div></div>
+          <div class="ph-event"><div class="av" style="background: var(--tone-success);">R</div><div class="bd"><b>Rumbi</b> approved <b>PO #1284</b></div><div class="ts">8m</div></div>
+          <div class="ph-event"><div class="av" style="background: var(--tone-warning);">F</div><div class="bd"><b>Farai</b> created supplier <b>Sibanda Co.</b></div><div class="ts">14m</div></div>
+          <div class="ph-event"><div class="av">T</div><div class="bd"><b>Tendai</b> deleted line item on <b>Invoice #91</b></div><div class="ts">1h</div></div>
+          <div class="ph-event"><div class="av" style="background: var(--tone-success);">R</div><div class="bd"><b>Rumbi</b> closed shift <b>Till 2</b></div><div class="ts">3h</div></div>
+        </div>
+        <div class="caption"><span class="num">01</span> Timeline — actor + verb + target + when</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Filters</span>
+          <p class="ph-title">Filter activity</p>
+          <p class="ph-sub">Actor</p>
+          <div class="ph-chips"><span class="on">Tendai</span><span>Rumbi</span><span>Farai</span></div>
+          <p class="ph-sub" style="margin-top: 4px;">Event type</p>
+          <div class="ph-chips"><span>created</span><span class="on">updated</span><span>deleted</span><span>approved</span></div>
+          <p class="ph-sub" style="margin-top: 4px;">Date</p>
+          <div class="ph-chips"><span>Today</span><span class="on">This week</span><span>This month</span></div>
+          <div style="background: var(--ink); color: var(--canvas); height: 28px; border-radius: 6px; display: grid; place-items: center; font: 600 11px/1 var(--font-sans); margin-top: auto;">Export CSV</div>
+        </div>
+        <div class="caption"><span class="num">02</span> Filters — actor, type, date, export</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Event</span>
+          <p class="ph-title">Tendai updated Acme Wrench</p>
+          <p class="ph-sub">2m ago · price changed</p>
+          <div class="ph-drawer">
+            <h5>Diff</h5>
+            <div class="diff">
+              <span class="k">price</span><div><span class="old">$12.50</span> → <span class="new">$13.00</span></div>
+              <span class="k">tax_code</span><div><span class="old">VAT-15</span> → <span class="new">VAT-14.5</span></div>
+              <span class="k">reason</span><div><span class="new">supplier rate change</span></div>
+            </div>
+          </div>
+          <p class="ph-sub" style="margin-top: auto;">Tap any field to open the record</p>
+        </div>
+        <div class="caption"><span class="num">03</span> Drawer — before/after diff</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/x-audit-view.html"><span class="kind">Pattern</span>Audit view</a>
+      <a class="ck-piece" href="../system/p-avatar.html"><span class="kind">Primitive</span>Avatar</a>
+      <a class="ck-piece" href="../system/b-filter-chips.html"><span class="kind">Block</span>Filter chips</a>
+      <a class="ck-piece" href="../system/p-skeleton.html"><span class="kind">Primitive</span>Skeleton</a>
+      <a class="ck-piece" href="../system/p-pagination.html"><span class="kind">Primitive</span>Pagination</a>
+      <a class="ck-piece" href="../system/x-empty-state.html"><span class="kind">Pattern</span>Empty state</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>Stack</code>, <code>Avatar</code>, <code>FilterChips</code>, <code>Drawer</code>, <code>Button</code>, <code>Skeleton</code>, <code>EmptyState</code>, <code>useUrlState</code>. A tiny <code>relativeTime</code> helper ships with the recipe.</p>
+  </section>
+
+  <!-- STEP-BY-STEP -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <!-- Step 1 -->
+    <div class="ck-step"><span class="n">01</span><h3>Model the event as one flat row, diff as a side-channel</h3></div>
+    <p>An event is a tuple, not a tree: <code>{actor, verb, target, at}</code> are everything the timeline needs to render. The diff is an optional field — only updates have one — and it loads lazily when the drawer opens. That keeps the timeline payload small even if the diff is a 4KB JSON blob.</p>
+    <div class="ds-specimen"
+         data-code='export type Verb = &#39;created&#39; | &#39;updated&#39; | &#39;deleted&#39; | &#39;approved&#39; | &#39;rejected&#39;;
+
+export type ActivityEvent = {
+  id: string;
+  actor: { id: string; name: string; initial: string; tone: string };
+  verb: Verb;
+  target: { type: string; id: string; label: string; href?: string };
+  at: string;            // ISO timestamp
+  hasDiff: boolean;      // true if there&#39;s a /events/:id/diff payload
+};
+
+export type DiffEntry = {
+  field: string;
+  old?: unknown;
+  new?: unknown;
+};'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p><b style="color: var(--brand-strong);">DiffEntry[]</b> = drawer-only payload (lazy fetch)</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Model</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="ck-step"><span class="n">02</span><h3>Filters live in the URL, not local state</h3></div>
+    <p><code>useUrlState</code> serialises the filter set into query params (<code>?actor=tendai&amp;verb=updated&amp;from=...&amp;to=...</code>). That makes filters share-safe — a manager can paste "show me Tendai's edits this week" into Slack — and survives reloads. No "I had filters set and they vanished" bug reports.</p>
+    <div class="ds-specimen"
+         data-code='import { useUrlState } from &#39;@huchu/react&#39;;
+
+export type Filters = {
+  actor?: string;
+  verb?: Verb;
+  from?: string;
+  to?: string;
+};
+
+export function useActivityFilters() {
+  return useUrlState&lt;Filters&gt;({
+    actor: { type: &#39;string&#39; },
+    verb:  { type: &#39;string&#39; },
+    from:  { type: &#39;string&#39; },
+    to:    { type: &#39;string&#39; },
+  });
+}
+
+// In the component:
+const [filters, setFilters] = useActivityFilters();
+
+// Setting one filter:
+setFilters({ ...filters, verb: &#39;updated&#39; });'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>Paste the URL → same view, same filters.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · URL state</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="ck-step"><span class="n">03</span><h3>Poll for new events; fade them in at the top</h3></div>
+    <p>Polling every 15 seconds with an <code>If-Modified-Since</code> header is good enough for an audit trail — operators don't need millisecond freshness, and pushing WebSockets through African mobile networks is a tax. New events get an animation class for the first 2 seconds so the user sees what changed.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useRef, useState } from &#39;@huchu/react&#39;;
+
+const POLL_MS = 15000;
+
+export function useActivityPoll(filters: Filters) {
+  const [events, setEvents] = useState&lt;ActivityEvent[]&gt;([]);
+  const [newIds, setNewIds] = useState&lt;Set&lt;string&gt;&gt;(new Set());
+  const lastAt = useRef&lt;string | null&gt;(null);
+
+  useEffect(() =&gt; {
+    let cancelled = false;
+    const fetchPage = async () =&gt; {
+      const qs = new URLSearchParams({ ...filters, since: lastAt.current ?? &#39;&#39; });
+      const res = await fetch(`/api/activity?${qs}`);
+      if (!res.ok || cancelled) return;
+      const { items } = await res.json();
+      if (!items.length) return;
+      lastAt.current = items[0].at;
+      setEvents((prev) =&gt; {
+        const seen = new Set(prev.map((e) =&gt; e.id));
+        const fresh = items.filter((e: ActivityEvent) =&gt; !seen.has(e.id));
+        setNewIds(new Set(fresh.map((e: ActivityEvent) =&gt; e.id)));
+        return [...fresh, ...prev];
+      });
+    };
+
+    fetchPage();
+    const id = setInterval(fetchPage, POLL_MS);
+    return () =&gt; { cancelled = true; clearInterval(id); };
+  }, [filters]);
+
+  // Clear &quot;new&quot; flag after 2s so animations don&#39;t replay on re-render.
+  useEffect(() =&gt; {
+    if (!newIds.size) return;
+    const id = setTimeout(() =&gt; setNewIds(new Set()), 2000);
+    return () =&gt; clearTimeout(id);
+  }, [newIds]);
+
+  return { events, newIds };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p><b style="color: var(--brand-strong);">Diff</b> new items → prepend → 2s highlight</p>
+          <p>15s cadence. No socket, no auth juggling.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Polling</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="ck-step"><span class="n">04</span><h3>Diff drawer fetches on open; verb-tone the avatar</h3></div>
+    <p>The drawer only opens on demand, so the diff fetch is fine. Colour-tone the actor's avatar by verb so the eye can scan a 200-row page — green for approved, amber for updated, red for deleted. The verb stays the source of truth; the colour is a visual shortcut.</p>
+    <div class="ds-specimen"
+         data-code='import { Drawer, Stack, Avatar, Button } from &#39;@huchu/react&#39;;
+
+const VERB_TONE: Record&lt;Verb, &#39;success&#39; | &#39;warning&#39; | &#39;danger&#39; | &#39;info&#39;&gt; = {
+  created:  &#39;success&#39;,
+  updated:  &#39;warning&#39;,
+  deleted:  &#39;danger&#39;,
+  approved: &#39;success&#39;,
+  rejected: &#39;danger&#39;,
+};
+
+function DiffDrawer({ event, onClose }: {
+  event: ActivityEvent | null;
+  onClose: () =&gt; void;
+}) {
+  const [diff, setDiff] = useState&lt;DiffEntry[] | null&gt;(null);
+
+  useEffect(() =&gt; {
+    if (!event?.hasDiff) { setDiff(null); return; }
+    let cancelled = false;
+    fetch(`/api/activity/${event.id}/diff`)
+      .then((r) =&gt; r.json())
+      .then((d) =&gt; !cancelled &amp;&amp; setDiff(d.entries));
+    return () =&gt; { cancelled = true; };
+  }, [event?.id]);
+
+  return (
+    &lt;Drawer open={!!event} onOpenChange={(v) =&gt; !v &amp;&amp; onClose()}&gt;
+      {event &amp;&amp; (
+        &lt;Stack gap=&quot;md&quot;&gt;
+          &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot; align=&quot;center&quot;&gt;
+            &lt;Avatar initial={event.actor.initial} tone={VERB_TONE[event.verb]} /&gt;
+            &lt;span&gt;&lt;b&gt;{event.actor.name}&lt;/b&gt; {event.verb} {event.target.label}&lt;/span&gt;
+          &lt;/Stack&gt;
+          {!event.hasDiff &amp;&amp; &lt;p&gt;No field-level diff for this event.&lt;/p&gt;}
+          {event.hasDiff &amp;&amp; !diff &amp;&amp; &lt;Skeleton rows={3} /&gt;}
+          {diff &amp;&amp; (
+            &lt;dl&gt;
+              {diff.map((d) =&gt; (
+                &lt;div key={d.field}&gt;
+                  &lt;dt&gt;{d.field}&lt;/dt&gt;
+                  &lt;dd&gt;
+                    {d.old !== undefined &amp;&amp; &lt;del&gt;{String(d.old)}&lt;/del&gt;} →{&#39; &#39;}
+                    &lt;ins&gt;{String(d.new)}&lt;/ins&gt;
+                  &lt;/dd&gt;
+                &lt;/div&gt;
+              ))}
+            &lt;/dl&gt;
+          )}
+          {event.target.href &amp;&amp; (
+            &lt;Button as=&quot;a&quot; href={event.target.href}&gt;Open record →&lt;/Button&gt;
+          )}
+        &lt;/Stack&gt;
+      )}
+    &lt;/Drawer&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="width: 280px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 10px; padding: 12px;">
+            <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 10px;">
+              <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--tone-warning); color: var(--canvas); display: grid; place-items: center; font: 700 11px/1 var(--font-sans);">T</div>
+              <span style="font: 600 12px/1.3 var(--font-sans);"><b>Tendai</b> updated Acme Wrench</span>
+            </div>
+            <div style="display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font: 500 11px/1.3 var(--font-mono);">
+              <span style="color: var(--text-subtle);">price</span><div><del style="color: var(--tone-danger);">$12.50</del> → <ins style="color: var(--tone-success); text-decoration: none;">$13.00</ins></div>
+              <span style="color: var(--text-subtle);">tax</span><div><del style="color: var(--tone-danger);">VAT-15</del> → <ins style="color: var(--tone-success); text-decoration: none;">VAT-14.5</ins></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Diff drawer</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- FINAL COMPOSITION -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole <code>ActivityLog</code>: filters in URL, polling, diff drawer, CSV export, empty/loading states.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useRef, useState } from &#39;@huchu/react&#39;;
+import {
+  Stack, Avatar, FilterChips, Drawer, Button, Skeleton, EmptyState,
+  useUrlState,
+} from &#39;@huchu/react&#39;;
+
+// ── Types ──────────────────────────────────────────────────────
+export type Verb = &#39;created&#39; | &#39;updated&#39; | &#39;deleted&#39; | &#39;approved&#39; | &#39;rejected&#39;;
+export type ActivityEvent = {
+  id: string;
+  actor: { id: string; name: string; initial: string; tone: string };
+  verb: Verb;
+  target: { type: string; id: string; label: string; href?: string };
+  at: string;
+  hasDiff: boolean;
+};
+export type DiffEntry = { field: string; old?: unknown; new?: unknown };
+export type Filters = { actor?: string; verb?: Verb; from?: string; to?: string };
+
+const VERB_TONE: Record&lt;Verb, &#39;success&#39; | &#39;warning&#39; | &#39;danger&#39; | &#39;info&#39;&gt; = {
+  created: &#39;success&#39;, updated: &#39;warning&#39;, deleted: &#39;danger&#39;,
+  approved: &#39;success&#39;, rejected: &#39;danger&#39;,
+};
+
+const relativeTime = (iso: string) =&gt; {
+  const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (s &lt; 60) return `${s}s`;
+  if (s &lt; 3600) return `${Math.floor(s / 60)}m`;
+  if (s &lt; 86400) return `${Math.floor(s / 3600)}h`;
+  return `${Math.floor(s / 86400)}d`;
+};
+
+// ── Polling hook ───────────────────────────────────────────────
+const POLL_MS = 15000;
+
+function useActivityPoll(filters: Filters) {
+  const [events, setEvents] = useState&lt;ActivityEvent[] | null&gt;(null);
+  const [newIds, setNewIds] = useState&lt;Set&lt;string&gt;&gt;(new Set());
+  const lastAt = useRef&lt;string | null&gt;(null);
+
+  useEffect(() =&gt; {
+    let cancelled = false;
+    lastAt.current = null;
+    setEvents(null);
+
+    const tick = async () =&gt; {
+      const qs = new URLSearchParams();
+      Object.entries(filters).forEach(([k, v]) =&gt; v &amp;&amp; qs.set(k, v));
+      if (lastAt.current) qs.set(&#39;since&#39;, lastAt.current);
+      const res = await fetch(`/api/activity?${qs}`);
+      if (!res.ok || cancelled) return;
+      const { items } = await res.json();
+      if (!items.length) {
+        if (lastAt.current === null) setEvents([]);
+        return;
+      }
+      lastAt.current = items[0].at;
+      setEvents((prev) =&gt; {
+        const base = prev ?? [];
+        const seen = new Set(base.map((e) =&gt; e.id));
+        const fresh = items.filter((e: ActivityEvent) =&gt; !seen.has(e.id));
+        if (prev !== null) setNewIds(new Set(fresh.map((e: ActivityEvent) =&gt; e.id)));
+        return [...fresh, ...base];
+      });
+    };
+
+    tick();
+    const id = setInterval(tick, POLL_MS);
+    return () =&gt; { cancelled = true; clearInterval(id); };
+  }, [JSON.stringify(filters)]);
+
+  useEffect(() =&gt; {
+    if (!newIds.size) return;
+    const id = setTimeout(() =&gt; setNewIds(new Set()), 2000);
+    return () =&gt; clearTimeout(id);
+  }, [newIds]);
+
+  return { events, newIds };
+}
+
+// ── CSV export ─────────────────────────────────────────────────
+function exportCsv(events: ActivityEvent[]) {
+  const head = &#39;at,actor,verb,target_type,target_label\n&#39;;
+  const rows = events.map((e) =&gt;
+    [e.at, e.actor.name, e.verb, e.target.type, e.target.label]
+      .map((v) =&gt; `&quot;${String(v).replace(/&quot;/g, &#39;&quot;&quot;&#39;)}&quot;`).join(&#39;,&#39;)
+  ).join(&#39;\n&#39;);
+  const blob = new Blob([head + rows], { type: &#39;text/csv&#39; });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement(&#39;a&#39;);
+  a.href = url; a.download = `activity-${Date.now()}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+// ── Component ──────────────────────────────────────────────────
+export function ActivityLog({ actors }: { actors: ActivityEvent[&#39;actor&#39;][] }) {
+  const [filters, setFilters] = useUrlState&lt;Filters&gt;({
+    actor: { type: &#39;string&#39; },
+    verb:  { type: &#39;string&#39; },
+    from:  { type: &#39;string&#39; },
+    to:    { type: &#39;string&#39; },
+  });
+
+  const { events, newIds } = useActivityPoll(filters);
+  const [open, setOpen] = useState&lt;ActivityEvent | null&gt;(null);
+
+  return (
+    &lt;Stack gap=&quot;md&quot;&gt;
+      &lt;Stack direction=&quot;row&quot; justify=&quot;between&quot; align=&quot;center&quot;&gt;
+        &lt;h1&gt;Activity&lt;/h1&gt;
+        &lt;Button
+          variant=&quot;ghost&quot;
+          onClick={() =&gt; events &amp;&amp; exportCsv(events)}
+          disabled={!events?.length}
+          leadingIcon=&quot;download&quot;
+        &gt;
+          Export CSV
+        &lt;/Button&gt;
+      &lt;/Stack&gt;
+
+      &lt;FilterChips
+        groups={[
+          { name: &#39;actor&#39;, label: &#39;Actor&#39;,
+            options: actors.map((a) =&gt; ({ value: a.id, label: a.name })) },
+          { name: &#39;verb&#39;,  label: &#39;Event&#39;,
+            options: (Object.keys(VERB_TONE) as Verb[]).map((v) =&gt; ({ value: v, label: v })) },
+        ]}
+        value={filters}
+        onChange={setFilters}
+      /&gt;
+
+      {events === null &amp;&amp; &lt;Skeleton rows={6} /&gt;}
+      {events !== null &amp;&amp; events.length === 0 &amp;&amp; (
+        &lt;EmptyState
+          icon=&quot;clock&quot;
+          title=&quot;No activity in this view&quot;
+          description=&quot;Try clearing a filter or expanding the date range.&quot;
+        /&gt;
+      )}
+
+      {events &amp;&amp; events.length &gt; 0 &amp;&amp; (
+        &lt;ol role=&quot;feed&quot; aria-busy={false} aria-label=&quot;Activity timeline&quot;&gt;
+          {events.map((e) =&gt; (
+            &lt;li
+              key={e.id}
+              role=&quot;article&quot;
+              tabIndex={0}
+              onClick={() =&gt; setOpen(e)}
+              onKeyDown={(k) =&gt; k.key === &#39;Enter&#39; &amp;&amp; setOpen(e)}
+              className={newIds.has(e.id) ? &#39;is-new&#39; : undefined}
+            &gt;
+              &lt;Avatar initial={e.actor.initial} tone={VERB_TONE[e.verb]} size=&quot;sm&quot; /&gt;
+              &lt;p&gt;
+                &lt;b&gt;{e.actor.name}&lt;/b&gt; {e.verb} {e.target.label}
+              &lt;/p&gt;
+              &lt;time dateTime={e.at} title={e.at}&gt;{relativeTime(e.at)}&lt;/time&gt;
+            &lt;/li&gt;
+          ))}
+        &lt;/ol&gt;
+      )}
+
+      &lt;Drawer open={!!open} onOpenChange={(v) =&gt; !v &amp;&amp; setOpen(null)}&gt;
+        {open &amp;&amp; &lt;EventDiff event={open} /&gt;}
+      &lt;/Drawer&gt;
+    &lt;/Stack&gt;
+  );
+}
+
+function EventDiff({ event }: { event: ActivityEvent }) {
+  const [diff, setDiff] = useState&lt;DiffEntry[] | null&gt;(null);
+  useEffect(() =&gt; {
+    if (!event.hasDiff) return;
+    fetch(`/api/activity/${event.id}/diff`)
+      .then((r) =&gt; r.json())
+      .then((d) =&gt; setDiff(d.entries));
+  }, [event.id]);
+
+  return (
+    &lt;Stack gap=&quot;md&quot;&gt;
+      &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot; align=&quot;center&quot;&gt;
+        &lt;Avatar initial={event.actor.initial} tone={VERB_TONE[event.verb]} /&gt;
+        &lt;span&gt;&lt;b&gt;{event.actor.name}&lt;/b&gt; {event.verb} {event.target.label}&lt;/span&gt;
+      &lt;/Stack&gt;
+      {!event.hasDiff &amp;&amp; &lt;p&gt;No field-level diff for this event.&lt;/p&gt;}
+      {event.hasDiff &amp;&amp; !diff &amp;&amp; &lt;Skeleton rows={3} /&gt;}
+      {diff &amp;&amp; (
+        &lt;dl&gt;
+          {diff.map((d) =&gt; (
+            &lt;div key={d.field}&gt;
+              &lt;dt&gt;{d.field}&lt;/dt&gt;
+              &lt;dd&gt;
+                {d.old !== undefined &amp;&amp; &lt;del&gt;{String(d.old)}&lt;/del&gt;} →{&#39; &#39;}
+                &lt;ins&gt;{String(d.new)}&lt;/ins&gt;
+              &lt;/dd&gt;
+            &lt;/div&gt;
+          ))}
+        &lt;/dl&gt;
+      )}
+      {event.target.href &amp;&amp; (
+        &lt;Button as=&quot;a&quot; href={event.target.href}&gt;Open record →&lt;/Button&gt;
+      )}
+    &lt;/Stack&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="width: 420px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px;">
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;">
+              <span style="font: 500 11px/1 var(--font-sans); padding: 4px 8px; border: 1px solid var(--border); border-radius: 9999px; color: var(--text-muted);">Actor: Tendai</span>
+              <span style="font: 500 11px/1 var(--font-sans); padding: 4px 8px; background: var(--ink); color: var(--canvas); border-radius: 9999px;">updated</span>
+              <span style="font: 500 11px/1 var(--font-sans); padding: 4px 8px; border: 1px solid var(--border); border-radius: 9999px; color: var(--text-muted);">This week</span>
+            </div>
+            <div style="display: grid; gap: 10px;">
+              <div style="display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: center; padding: 8px; border-bottom: 1px dashed var(--border);">
+                <div style="width: 26px; height: 26px; border-radius: 50%; background: var(--tone-warning); color: var(--canvas); display: grid; place-items: center; font: 700 12px/1 var(--font-sans);">T</div>
+                <div style="font: 500 13px/1.3 var(--font-sans);"><b>Tendai</b> updated <b>Acme Wrench</b></div>
+                <time style="font: 500 11px/1 var(--font-mono); color: var(--text-subtle);">2m</time>
+              </div>
+              <div style="display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: center; padding: 8px; border-bottom: 1px dashed var(--border);">
+                <div style="width: 26px; height: 26px; border-radius: 50%; background: var(--tone-success); color: var(--canvas); display: grid; place-items: center; font: 700 12px/1 var(--font-sans);">R</div>
+                <div style="font: 500 13px/1.3 var(--font-sans);"><b>Rumbi</b> approved <b>PO #1284</b></div>
+                <time style="font: 500 11px/1 var(--font-mono); color: var(--text-subtle);">8m</time>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">ActivityLog.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three forks.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Record-scoped log</h4>
+        <p>Embed the same component inside a record detail page, scoped to one target. Fewer filters, no actor chip — the actor matters less when you're already on the record.</p>
+<pre>&lt;ActivityLog
+  scope={{
+    targetType: &#39;invoice&#39;,
+    targetId: invoice.id,
+  }}
+  hideActorFilter
+/&gt;
+// Backend filters by target_id.</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Expand-all diffs inline</h4>
+        <p>For compliance reviews, render diffs inline under each row with a single "Expand all" toggle. Heavy on payload — only enable for short ranges.</p>
+<pre>const [expandAll, setExpandAll] = useState(false);
+
+{events.map((e) =&gt; (
+  &lt;li&gt;
+    {/* …row… */}
+    {expandAll &amp;&amp; e.hasDiff &amp;&amp;
+      &lt;InlineDiff eventId={e.id} /&gt;}
+  &lt;/li&gt;
+))}</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Server-sent events</h4>
+        <p>If you already run SSE for notifications, swap the poll for an event stream — instant updates with less mobile data than a 15s poll.</p>
+<pre>useEffect(() =&gt; {
+  const s = new EventSource(&#39;/api/activity/stream&#39;);
+  s.onmessage = (m) =&gt;
+    setEvents((p) =&gt; [JSON.parse(m.data), ...p]);
+  return () =&gt; s.close();
+}, []);</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCESSIBILITY -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">What this recipe takes care of for you.</p>
+    <ul class="ck-a11y">
+      <li><b>Feed semantics, not list semantics.</b> The timeline uses <code>role="feed"</code> with <code>role="article"</code> children — screen readers announce position ("article 3 of 200") rather than the meaningless "list item 3 of 200".</li>
+      <li><b>Times are machine-readable.</b> Every row uses <code>&lt;time dateTime={iso}&gt;{relative}&lt;/time&gt;</code>, so screen readers can read the absolute time on demand and AT can re-render the relative.</li>
+      <li><b>Verbs are real words, not icons.</b> The colour-toned avatar is a shortcut; the verb is the source of truth — a screen reader hears "Tendai updated Acme Wrench", not "Tendai pencil Acme Wrench".</li>
+      <li><b>Keyboard opens the drawer.</b> Each row is <code>tabIndex={0}</code> with an Enter handler; <code>Drawer</code> traps focus on open and returns it to the row on close.</li>
+      <li><b>Live updates are polite, not assertive.</b> The new-row animation is visual only — <code>aria-live</code> is <em>not</em> set on the feed because announcing every new event would be unbearable.</li>
+      <li><b>Empty state is informative.</b> <code>EmptyState</code> tells the user <em>what to do</em> ("clear a filter") rather than "no results".</li>
+      <li><b>CSV export is keyboard-only safe.</b> Triggered by a real <code>Button</code>; no drag-to-export, no right-click menu.</li>
+    </ul>
+  </section>
+
+  <!-- RELATED -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">More recipes that share data plumbing.</p>
+    <div class="ck-related">
+      <a href="states-optimistic-mutations.html">States · Optimistic mutations<span class="tag">New</span></a>
+      <a href="shells-deep-link-restore.html">Shells · Deep-link restore<span class="tag">New</span></a>
+      <a href="forms-bulk-edit-with-undo.html">Forms · Bulk edit with undo</a>
+      <a href="lists-filterable-data-table.html">Lists · Filterable data table</a>
+      <a href="approvals-leave-request.html">Approvals · Leave request</a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="shells-multi-tenant-switcher.html"><div class="pager-label">← Previous</div><div class="pager-title">Multi-tenant switcher</div></a>
+    <a href="states-optimistic-mutations.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Optimistic mutations</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

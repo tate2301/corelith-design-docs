@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Date-range picker · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .phone { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 16px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+  .ck-screen .brand { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .ph-title { font: 700 14px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .ck-screen .ph-sub { font: 500 11px/1.4 var(--font-sans); color: var(--text-muted); margin: 0; }
+  .ck-screen .ph-input { height: 30px; border-radius: 6px; border: 1px solid var(--border-strong); background: var(--surface); display: flex; align-items: center; padding: 0 10px; font: 500 11px/1 var(--font-mono); color: var(--text-strong); gap: 8px; }
+  .ck-screen .ph-input .cal { color: var(--text-subtle); }
+  .ck-screen .ph-preset { display: flex; gap: 4px; padding: 4px; background: var(--surface-muted); border-radius: 6px; flex-wrap: wrap; }
+  .ck-screen .ph-preset span { padding: 4px 7px; border-radius: 4px; font: 500 10px/1 var(--font-sans); color: var(--text-muted); }
+  .ck-screen .ph-preset span.on { background: var(--ink); color: var(--canvas); }
+  .ck-screen .ph-cal { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 6px; padding: 6px; display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .ck-screen .ph-cal span { font: 500 9px/1 var(--font-mono); color: var(--text-muted); display: grid; place-items: center; height: 16px; border-radius: 3px; }
+  .ck-screen .ph-cal span.h { color: var(--text-subtle); font-size: 8px; }
+  .ck-screen .ph-cal span.in { background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-screen .ph-cal span.end { background: var(--brand); color: var(--canvas); }
+  .ck-screen .ph-btn { margin-top: auto; height: 30px; border-radius: 6px; background: var(--ink); color: var(--canvas); display: grid; place-items: center; font: 600 11px/1 var(--font-sans); }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+
+  .ck-pull { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; padding: 14px 16px; margin: 14px 0 0; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+
+  /* Honest "code-only" preview marker — used when a step is conceptual code
+     (state machine, hook, reducer) and a visual mockup would be misleading. */
+  .ck-code-only-note {
+    display: grid; gap: 8px;
+    padding: 22px 26px;
+    background: var(--surface-muted);
+    border: 1px dashed var(--border-strong);
+    border-radius: 12px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-code-only-note .ck-code-only-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    align-self: start;
+    font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--surface); color: var(--brand-strong);
+    border: 1px solid var(--border);
+  }
+  .ck-code-only-note p { margin: 0; color: var(--text-muted); }
+  .ck-code-only-note code {
+    background: var(--surface); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+
+  /* Off-system component roadmap pill — for recipes that compose with
+     components not yet in @huchu/react v0.1.0-alpha.0. */
+  .ck-roadmap-note {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--brand);
+    border-radius: 8px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code {
+    background: var(--surface-muted); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Forms</a><span class="sep">/</span>
+      <span>Date-range picker</span>
+    </div>
+    <h1>Build a date-range picker that leads with presets</h1>
+    <p class="lede">By the end of this recipe you'll have a date-range field that opens as a popover on desktop and a bottom sheet on mobile, with five presets up top, a two-month calendar below, validation that pins start ≤ end, and a clean <code>{from, to}</code> ISO output.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="calendar" data-icon-size="12"></span>Forms</span>
+      <span class="meta-pill">4 primitives · 0 blocks · 1 pattern</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~25 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A trigger button shows the current range. Tap → presets (<b>Today</b>, <b>Yesterday</b>, <b>This week</b>, <b>This month</b>, <b>Custom</b>). Pick a preset and you're done; pick Custom and a two-month calendar slides into view.</p>
+    <p>Date ranges are how operators ask their data questions. "Show me sales this month." "Refunds last week." "All shifts between 1 May and 14 May." Most of those questions hit one of five answers, and the rest hit a 14-day span ending today. A picker that buries those behind two clicks on a calendar is hostile design.</p>
+    <p class="ck-pull"><b>Presets first, calendar second.</b> Most operators pick "This month", not 1 May → 14 May. Show the answer they want before the tool that builds it. The calendar is a fallback, not the entry point.</p>
+    <p>Output is always <code>{from, to}</code> as ISO date strings, never <code>Date</code> objects — they serialise cleanly into URL params and persist across reloads. The calendar is opinionated: Monday-first weeks, the second month is always <code>from</code>'s month + 1, validation pins <code>from ≤ to</code> by swapping if the user clicks them in the wrong order.</p>
+    <p><b>Skip this recipe if</b> you only need a single date (use <code>&lt;Calendar mode="single"/&gt;</code> from the same primitive) or if your data is always "last 30 days" and the operator has no business changing it — then a label, not a picker, is the right control.</p>
+  </section>
+
+  <!-- WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three states: trigger, presets-with-Custom-open, calendar-with-range-being-selected.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · Reports</span>
+          <p class="ph-title">Sales report</p>
+          <p class="ph-sub">Filter by date</p>
+          <div class="ph-input"><span class="cal" data-icon="calendar" data-icon-size="12"></span><span>1 May — 31 May</span></div>
+          <div style="height: 24px; background: var(--surface-muted); border-radius: 4px;"></div>
+          <div style="height: 24px; background: var(--surface-muted); border-radius: 4px;"></div>
+          <div style="height: 24px; background: var(--surface-muted); border-radius: 4px;"></div>
+        </div>
+        <div class="caption"><span class="num">01</span> Trigger — current range as label</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Pick range</span>
+          <p class="ph-sub">Presets</p>
+          <div class="ph-preset"><span>Today</span><span>Yesterday</span><span>Week</span><span class="on">Month</span><span>Custom</span></div>
+          <p class="ph-sub" style="margin-top: 6px;">Custom</p>
+          <div class="ph-input"><span>From: 1 May 2026</span></div>
+          <div class="ph-input"><span>To: 31 May 2026</span></div>
+          <div class="ph-btn">Apply</div>
+        </div>
+        <div class="caption"><span class="num">02</span> Presets — Custom expands the calendar</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>May 2026</span>
+          <div class="ph-cal">
+            <span class="h">M</span><span class="h">T</span><span class="h">W</span><span class="h">T</span><span class="h">F</span><span class="h">S</span><span class="h">S</span>
+            <span></span><span></span><span></span><span></span><span class="in">1</span><span class="in">2</span><span class="in">3</span>
+            <span class="in">4</span><span class="in">5</span><span class="in">6</span><span class="in">7</span><span class="in">8</span><span class="in">9</span><span class="in">10</span>
+            <span class="in">11</span><span class="in">12</span><span class="in">13</span><span class="in">14</span><span class="end">15</span><span></span><span></span>
+          </div>
+          <p class="ph-sub" style="margin-top: 6px;">1 May — 15 May (14 days)</p>
+          <div class="ph-btn">Apply</div>
+        </div>
+        <div class="caption"><span class="num">03</span> Calendar — range highlight, hover-to-preview</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/p-popover.html"><span class="kind">Primitive</span>Popover</a>
+      <a class="ck-piece" href="../system/p-calendar.html"><span class="kind">Primitive</span>Calendar</a>
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+      <a class="ck-piece" href="../system/p-input.html"><span class="kind">Primitive</span>Input</a>
+      <a class="ck-piece" href="../system/x-bottom-sheet.html"><span class="kind">Pattern</span>Bottom sheet</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>Button</code>, <code>Popover</code>, <code>BottomSheet</code>, <code>Calendar</code>, <code>Stack</code>, <code>Field</code>, <code>Input</code>, <code>useDateRange</code>. The presets list is just data — no new export needed.</p>
+  </section>
+
+  <!-- STEP-BY-STEP -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <!-- Step 1 -->
+    <div class="ck-step"><span class="n">01</span><h3>Model the range as <code>{from, to}</code> ISO strings, not Date objects</h3></div>
+    <p>Date objects don't serialise into URL params and don't compare with <code>===</code>. ISO date strings (<code>'2026-05-01'</code>) sort lexicographically the same as chronologically, JSON-clone cleanly, and round-trip through the query string. The picker is the only place that ever sees a real <code>Date</code> — and only for rendering the calendar.</p>
+    <div class="ds-specimen"
+         data-code='import { useState, useMemo } from &#39;@huchu/react&#39;;
+
+export type DateRange = { from: string; to: string }; // ISO YYYY-MM-DD
+
+const today = () =&gt; new Date().toISOString().slice(0, 10);
+const addDays = (iso: string, n: number) =&gt; {
+  const d = new Date(iso);
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+};
+
+export function useDateRange(initial: DateRange) {
+  const [range, setRange] = useState&lt;DateRange&gt;(initial);
+
+  // Always pin from ≤ to. Swap silently if the user clicks them out of order.
+  const set = (from: string, to: string) =&gt;
+    setRange(from &lt;= to ? { from, to } : { from: to, to: from });
+
+  const isValid = useMemo(() =&gt; range.from &lt;= range.to, [range]);
+
+  return { range, set, isValid };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>ISO strings sort the same as chronologically.</p>
+          <p>Swap on the way in — UI never has to handle "invalid".</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Range model</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="ck-step"><span class="n">02</span><h3>Build the preset list as plain data, not buttons</h3></div>
+    <p>Presets are a static list of <code>{label, range}</code> pairs. Render them with a single <code>map</code>; the active state is whatever preset matches the current range, or <code>'custom'</code> if none do. This means adding "Last 7 days" is a one-line change.</p>
+    <div class="ds-specimen"
+         data-code='type Preset = { id: string; label: string; range: (now: string) =&gt; DateRange };
+
+const startOfWeek = (iso: string) =&gt; {
+  const d = new Date(iso);
+  const day = (d.getDay() + 6) % 7; // Monday = 0
+  d.setDate(d.getDate() - day);
+  return d.toISOString().slice(0, 10);
+};
+const startOfMonth = (iso: string) =&gt;
+  iso.slice(0, 8) + &#39;01&#39;;
+
+export const PRESETS: Preset[] = [
+  { id: &#39;today&#39;,     label: &#39;Today&#39;,      range: (n) =&gt; ({ from: n, to: n }) },
+  { id: &#39;yesterday&#39;, label: &#39;Yesterday&#39;,  range: (n) =&gt; { const y = addDays(n, -1); return { from: y, to: y }; } },
+  { id: &#39;week&#39;,      label: &#39;This week&#39;,  range: (n) =&gt; ({ from: startOfWeek(n), to: n }) },
+  { id: &#39;month&#39;,     label: &#39;This month&#39;, range: (n) =&gt; ({ from: startOfMonth(n), to: n }) },
+];
+
+export function matchPreset(r: DateRange, now: string): string {
+  for (const p of PRESETS) {
+    const pr = p.range(now);
+    if (pr.from === r.from &amp;&amp; pr.to === r.to) return p.id;
+  }
+  return &#39;custom&#39;;
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="display: flex; gap: 6px; padding: 6px; background: var(--surface-muted); border-radius: 8px;">
+            <span style="padding: 6px 10px; border-radius: 6px; font: 500 12px/1 var(--font-sans); color: var(--text-muted);">Today</span>
+            <span style="padding: 6px 10px; border-radius: 6px; font: 500 12px/1 var(--font-sans); color: var(--text-muted);">Yesterday</span>
+            <span style="padding: 6px 10px; border-radius: 6px; font: 500 12px/1 var(--font-sans); color: var(--text-muted);">This week</span>
+            <span style="padding: 6px 10px; border-radius: 6px; background: var(--ink); color: var(--canvas); font: 600 12px/1 var(--font-sans);">This month</span>
+            <span style="padding: 6px 10px; border-radius: 6px; font: 500 12px/1 var(--font-sans); color: var(--text-muted);">Custom</span>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Presets</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="ck-step"><span class="n">03</span><h3>Pick the surface — Popover on desktop, BottomSheet on mobile</h3></div>
+    <p>A two-month calendar floating off a 200px input on a phone is unusable. Switch the wrapper by viewport: <code>Popover</code> above ~720px, <code>BottomSheet</code> below. Both expose the same <code>open</code> / <code>onOpenChange</code> API so the trigger button doesn't care which one's mounted.</p>
+    <div class="ds-specimen"
+         data-code='import { Popover, BottomSheet, Button } from &#39;@huchu/react&#39;;
+import { useMediaQuery } from &#39;@huchu/react&#39;;
+
+function RangeSurface({
+  open, onOpenChange, trigger, children,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) =&gt; void;
+  trigger: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  const isMobile = useMediaQuery(&#39;(max-width: 720px)&#39;);
+
+  if (isMobile) {
+    return (
+      &lt;&gt;
+        {trigger}
+        &lt;BottomSheet open={open} onOpenChange={onOpenChange} title=&quot;Pick a date range&quot;&gt;
+          {children}
+        &lt;/BottomSheet&gt;
+      &lt;/&gt;
+    );
+  }
+  return (
+    &lt;Popover open={open} onOpenChange={onOpenChange} align=&quot;start&quot; trigger={trigger}&gt;
+      {children}
+    &lt;/Popover&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p><b style="color: var(--brand-strong);">&lt; 720px →</b> BottomSheet (full-width, drag-to-dismiss)</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Responsive surface</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="ck-step"><span class="n">04</span><h3>Wire the two-month calendar with hover preview</h3></div>
+    <p><code>Calendar</code> in <code>mode="range"</code> handles the first-click / second-click state internally; you give it <code>numberOfMonths={2}</code> and it lays out the second month to the right. The hover-preview range (between first click and second) is a visual concern only — don't write it back to <code>useDateRange</code> until the user commits.</p>
+    <div class="ds-specimen"
+         data-code='import { Calendar, Stack, Button } from &#39;@huchu/react&#39;;
+
+function CustomCalendar({
+  range, onCommit, onCancel,
+}: {
+  range: DateRange;
+  onCommit: (r: DateRange) =&gt; void;
+  onCancel: () =&gt; void;
+}) {
+  const [draft, setDraft] = useState&lt;DateRange&gt;(range);
+
+  return (
+    &lt;Stack gap=&quot;md&quot;&gt;
+      &lt;Calendar
+        mode=&quot;range&quot;
+        numberOfMonths={2}
+        weekStartsOn={1}                   // Monday
+        value={draft}
+        onChange={setDraft}
+      /&gt;
+      &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot; justify=&quot;end&quot;&gt;
+        &lt;Button variant=&quot;ghost&quot; onClick={onCancel}&gt;Cancel&lt;/Button&gt;
+        &lt;Button
+          variant=&quot;primary&quot;
+          onClick={() =&gt; onCommit(draft)}
+          disabled={draft.from &gt; draft.to}
+        &gt;
+          Apply
+        &lt;/Button&gt;
+      &lt;/Stack&gt;
+    &lt;/Stack&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="display: grid; grid-template-columns: repeat(7, 18px); gap: 2px; padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;">
+            <span style="font: 500 9px/1 var(--font-mono); color: var(--text-subtle); display: grid; place-items: center;">M</span>
+            <span style="font: 500 9px/1 var(--font-mono); color: var(--text-subtle); display: grid; place-items: center;">T</span>
+            <span style="font: 500 9px/1 var(--font-mono); color: var(--text-subtle); display: grid; place-items: center;">W</span>
+            <span style="font: 500 9px/1 var(--font-mono); color: var(--text-subtle); display: grid; place-items: center;">T</span>
+            <span style="font: 500 9px/1 var(--font-mono); color: var(--text-subtle); display: grid; place-items: center;">F</span>
+            <span style="font: 500 9px/1 var(--font-mono); color: var(--text-subtle); display: grid; place-items: center;">S</span>
+            <span style="font: 500 9px/1 var(--font-mono); color: var(--text-subtle); display: grid; place-items: center;">S</span>
+            <span></span><span></span><span></span><span></span>
+            <span style="background: var(--brand); color: var(--canvas); border-radius: 3px; padding: 2px; font: 600 9px/1 var(--font-mono); display: grid; place-items: center;">1</span>
+            <span style="background: var(--brand-soft); color: var(--brand-strong); border-radius: 3px; padding: 2px; font: 600 9px/1 var(--font-mono); display: grid; place-items: center;">2</span>
+            <span style="background: var(--brand-soft); color: var(--brand-strong); border-radius: 3px; padding: 2px; font: 600 9px/1 var(--font-mono); display: grid; place-items: center;">3</span>
+            <span style="background: var(--brand-soft); color: var(--brand-strong); border-radius: 3px; padding: 2px; font: 600 9px/1 var(--font-mono); display: grid; place-items: center;">4</span>
+            <span style="background: var(--brand-soft); color: var(--brand-strong); border-radius: 3px; padding: 2px; font: 600 9px/1 var(--font-mono); display: grid; place-items: center;">5</span>
+            <span style="background: var(--brand-soft); color: var(--brand-strong); border-radius: 3px; padding: 2px; font: 600 9px/1 var(--font-mono); display: grid; place-items: center;">6</span>
+            <span style="background: var(--brand); color: var(--canvas); border-radius: 3px; padding: 2px; font: 600 9px/1 var(--font-mono); display: grid; place-items: center;">7</span>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Calendar</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- FINAL COMPOSITION -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole <code>DateRangePicker</code> component, assembled. Presets, calendar, responsive surface, validation, ISO output — drop it in.</p>
+    <div class="ds-specimen"
+         data-code='import { useState, useMemo } from &#39;@huchu/react&#39;;
+import {
+  Button, Popover, BottomSheet, Calendar, Stack, Field, Input,
+  useMediaQuery, useDateRange,
+} from &#39;@huchu/react&#39;;
+
+export type DateRange = { from: string; to: string };
+
+// ── Helpers ────────────────────────────────────────────────────
+const today = () =&gt; new Date().toISOString().slice(0, 10);
+const addDays = (iso: string, n: number) =&gt; {
+  const d = new Date(iso); d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+};
+const startOfWeek = (iso: string) =&gt; {
+  const d = new Date(iso);
+  const day = (d.getDay() + 6) % 7;
+  d.setDate(d.getDate() - day);
+  return d.toISOString().slice(0, 10);
+};
+const startOfMonth = (iso: string) =&gt; iso.slice(0, 8) + &#39;01&#39;;
+const fmt = (iso: string) =&gt;
+  new Date(iso).toLocaleDateString(undefined, { day: &#39;numeric&#39;, month: &#39;short&#39;, year: &#39;numeric&#39; });
+
+// ── Presets ────────────────────────────────────────────────────
+type Preset = { id: string; label: string; range: (now: string) =&gt; DateRange };
+const PRESETS: Preset[] = [
+  { id: &#39;today&#39;,     label: &#39;Today&#39;,      range: (n) =&gt; ({ from: n, to: n }) },
+  { id: &#39;yesterday&#39;, label: &#39;Yesterday&#39;,  range: (n) =&gt; { const y = addDays(n, -1); return { from: y, to: y }; } },
+  { id: &#39;week&#39;,      label: &#39;This week&#39;,  range: (n) =&gt; ({ from: startOfWeek(n), to: n }) },
+  { id: &#39;month&#39;,     label: &#39;This month&#39;, range: (n) =&gt; ({ from: startOfMonth(n), to: n }) },
+];
+const matchPreset = (r: DateRange, now: string) =&gt; {
+  for (const p of PRESETS) {
+    const pr = p.range(now);
+    if (pr.from === r.from &amp;&amp; pr.to === r.to) return p.id;
+  }
+  return &#39;custom&#39;;
+};
+
+// ── Component ──────────────────────────────────────────────────
+export function DateRangePicker({
+  value, onChange,
+}: {
+  value: DateRange;
+  onChange: (r: DateRange) =&gt; void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(
+    matchPreset(value, today()) === &#39;custom&#39;,
+  );
+  const [draft, setDraft] = useState&lt;DateRange&gt;(value);
+  const isMobile = useMediaQuery(&#39;(max-width: 720px)&#39;);
+  const active = matchPreset(draft, today());
+
+  const commit = (r: DateRange) =&gt; {
+    onChange(r.from &lt;= r.to ? r : { from: r.to, to: r.from });
+    setOpen(false);
+  };
+
+  const body = (
+    &lt;Stack gap=&quot;md&quot; padding=&quot;md&quot;&gt;
+      &lt;div role=&quot;group&quot; aria-label=&quot;Date range presets&quot; style={{ display: &#39;flex&#39;, gap: 4, flexWrap: &#39;wrap&#39; }}&gt;
+        {PRESETS.map((p) =&gt; (
+          &lt;Button
+            key={p.id}
+            size=&quot;sm&quot;
+            variant={active === p.id ? &#39;primary&#39; : &#39;ghost&#39;}
+            onClick={() =&gt; { const r = p.range(today()); setDraft(r); setShowCalendar(false); commit(r); }}
+          &gt;
+            {p.label}
+          &lt;/Button&gt;
+        ))}
+        &lt;Button
+          size=&quot;sm&quot;
+          variant={showCalendar ? &#39;primary&#39; : &#39;ghost&#39;}
+          aria-expanded={showCalendar}
+          onClick={() =&gt; setShowCalendar((v) =&gt; !v)}
+        &gt;
+          Custom
+        &lt;/Button&gt;
+      &lt;/div&gt;
+
+      {showCalendar &amp;&amp; (
+        &lt;&gt;
+          &lt;Calendar
+            mode=&quot;range&quot;
+            numberOfMonths={isMobile ? 1 : 2}
+            weekStartsOn={1}
+            value={draft}
+            onChange={setDraft}
+          /&gt;
+          &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot;&gt;
+            &lt;Field label=&quot;From&quot;&gt;
+              &lt;Input
+                type=&quot;date&quot;
+                value={draft.from}
+                onChange={(e) =&gt; setDraft({ ...draft, from: e.target.value })}
+              /&gt;
+            &lt;/Field&gt;
+            &lt;Field label=&quot;To&quot;&gt;
+              &lt;Input
+                type=&quot;date&quot;
+                value={draft.to}
+                onChange={(e) =&gt; setDraft({ ...draft, to: e.target.value })}
+              /&gt;
+            &lt;/Field&gt;
+          &lt;/Stack&gt;
+          &lt;Stack direction=&quot;row&quot; justify=&quot;end&quot; gap=&quot;sm&quot;&gt;
+            &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; setOpen(false)}&gt;Cancel&lt;/Button&gt;
+            &lt;Button
+              variant=&quot;primary&quot;
+              onClick={() =&gt; commit(draft)}
+              disabled={draft.from &gt; draft.to}
+            &gt;
+              Apply
+            &lt;/Button&gt;
+          &lt;/Stack&gt;
+        &lt;/&gt;
+      )}
+    &lt;/Stack&gt;
+  );
+
+  const trigger = (
+    &lt;Button
+      variant=&quot;outline&quot;
+      onClick={() =&gt; setOpen(true)}
+      leadingIcon=&quot;calendar&quot;
+      aria-haspopup=&quot;dialog&quot;
+    &gt;
+      {fmt(value.from)} — {fmt(value.to)}
+    &lt;/Button&gt;
+  );
+
+  if (isMobile) {
+    return (
+      &lt;&gt;
+        {trigger}
+        &lt;BottomSheet open={open} onOpenChange={setOpen} title=&quot;Pick a date range&quot;&gt;
+          {body}
+        &lt;/BottomSheet&gt;
+      &lt;/&gt;
+    );
+  }
+  return (
+    &lt;Popover open={open} onOpenChange={setOpen} align=&quot;start&quot; trigger={trigger}&gt;
+      {body}
+    &lt;/Popover&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 28px;">
+          <div style="width: 380px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px;">
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;">
+              <span style="padding: 6px 10px; border-radius: 6px; background: var(--surface-muted); color: var(--text-muted); font: 500 12px/1 var(--font-sans);">Today</span>
+              <span style="padding: 6px 10px; border-radius: 6px; background: var(--surface-muted); color: var(--text-muted); font: 500 12px/1 var(--font-sans);">Yesterday</span>
+              <span style="padding: 6px 10px; border-radius: 6px; background: var(--surface-muted); color: var(--text-muted); font: 500 12px/1 var(--font-sans);">This week</span>
+              <span style="padding: 6px 10px; border-radius: 6px; background: var(--ink); color: var(--canvas); font: 600 12px/1 var(--font-sans);">This month</span>
+              <span style="padding: 6px 10px; border-radius: 6px; background: var(--surface-muted); color: var(--text-muted); font: 500 12px/1 var(--font-sans);">Custom</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <div><div style="font: 500 11px/1 var(--font-sans); color: var(--text-muted); margin-bottom: 4px;">From</div><div style="height: 32px; border-radius: 6px; border: 1px solid var(--border-strong); padding: 0 10px; display: flex; align-items: center; font: 500 12px/1 var(--font-mono);">2026-05-01</div></div>
+              <div><div style="font: 500 11px/1 var(--font-sans); color: var(--text-muted); margin-bottom: 4px;">To</div><div style="height: 32px; border-radius: 6px; border: 1px solid var(--border-strong); padding: 0 10px; display: flex; align-items: center; font: 500 12px/1 var(--font-mono);">2026-05-31</div></div>
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px;">
+              <div style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); font: 600 12px/1 var(--font-sans); color: var(--text-strong);">Cancel</div>
+              <div style="padding: 6px 12px; border-radius: 6px; background: var(--ink); color: var(--canvas); font: 600 12px/1 var(--font-sans);">Apply</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">DateRangePicker.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three forks of this recipe. Each is a small diff from the final composition.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Single date</h4>
+        <p>Drop the range entirely. The output becomes one ISO string, and presets shrink to "Today / Yesterday / Pick a date".</p>
+<pre>// Switch the calendar mode
+&lt;Calendar mode=&quot;single&quot;
+  value={value} onChange={onChange} /&gt;
+
+// Output type
+export type SingleDate = string;
+// Drop the from/to Field pair</pre>
+      </div>
+      <div class="ck-var">
+        <h4>With time-of-day</h4>
+        <p>For shift exports and timesheets — pair each date with an HH:mm input. Output becomes ISO datetime strings.</p>
+<pre>// Extend the range
+type DateRange = {
+  from: string; fromTime: string; // 09:00
+  to: string;   toTime: string;   // 17:00
+};
+// Add &lt;Input type=&quot;time&quot;/&gt; next to each
+// date Field. Default 00:00 / 23:59.</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Fiscal calendar</h4>
+        <p>Add "This quarter" / "Last quarter" / "Year-to-date" presets that respect a fiscal-year offset (e.g. April start).</p>
+<pre>// Add to PRESETS
+{ id: &#39;qtd&#39;, label: &#39;Quarter to date&#39;,
+  range: (n) =&gt; ({
+    from: fiscalQtrStart(n, /*startMonth*/ 4),
+    to: n,
+  })
+},
+// Move fiscal config to a Provider.</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCESSIBILITY -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">What this recipe takes care of for you. Every item below is something a screen-reader or keyboard-only user will notice if you skip it.</p>
+    <ul class="ck-a11y">
+      <li><b>Trigger announces what it controls.</b> <code>aria-haspopup="dialog"</code> on the trigger button tells screen readers that activating it opens a dialog, not a menu.</li>
+      <li><b>Presets are a group.</b> The preset row carries <code>role="group"</code> + <code>aria-label="Date range presets"</code> so screen readers announce them as a related set, not five orphan buttons.</li>
+      <li><b>Custom is an expandable disclosure.</b> The Custom button carries <code>aria-expanded={showCalendar}</code> so users know whether the calendar is open without seeing it.</li>
+      <li><b>Calendar exposes the range.</b> <code>Calendar</code> sets <code>aria-label</code> on each day cell ("Friday 1 May 2026, start of selected range"), so range selection is audible.</li>
+      <li><b>Keyboard navigates the calendar.</b> Arrow keys move day-by-day, Home/End jump to week start/end, PgUp/PgDn change months. Enter commits, Esc cancels.</li>
+      <li><b>From ≤ To is enforced silently.</b> If the user types <code>From: 31 May, To: 1 May</code>, the picker swaps on submit — it doesn't show an error.</li>
+      <li><b>The bottom sheet on mobile is a real dialog.</b> Focus traps inside it, Esc closes it, the trigger gets focus back on close.</li>
+    </ul>
+  </section>
+
+  <!-- RELATED -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">More recipes that share the popover / bottom-sheet / URL-state surface area.</p>
+    <div class="ck-related">
+      <a href="lists-activity-log.html">Lists · Activity log<span class="tag">New</span></a>
+      <a href="shells-deep-link-restore.html">Shells · Deep-link restore<span class="tag">New</span></a>
+      <a href="shells-multi-tenant-switcher.html">Shells · Multi-tenant switcher<span class="tag">New</span></a>
+      <a href="states-optimistic-mutations.html">States · Optimistic mutations<span class="tag">New</span></a>
+      <a href="auth-signin-2fa.html">Auth · Sign in with 2FA</a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="index.html"><div class="pager-label">← Back to</div><div class="pager-title">Cookbook</div></a>
+    <a href="shells-multi-tenant-switcher.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Multi-tenant switcher</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

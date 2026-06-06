@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" /><title>Filter chips · Huchu DS</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs"><a href="../index.html">Home</a><span class="sep">/</span><a href="blocks.html">Blocks</a><span class="sep">/</span><span>Filter chips</span></div>
+    <h1>Filter chips</h1>
+    <p class="lede">A horizontally-scrolling chip row that filters the list below — assignments by status, receipts by date, payments by method. The phone-first counterpart to the desktop <a href="b-data-toolbar.html">data toolbar</a>.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="check" data-icon-size="12"></span>Stable</span>
+      <span class="meta-pill"><span class="t-mono">.b-filter-chips</span></span>
+      <span class="meta-pill">Canonical</span>
+      <span class="meta-pill">Horizontal scroll</span>
+    </div>
+  </header>
+  <div class="ds-callout" style="margin-top: 24px;">
+    <span class="ic" data-icon="info" data-icon-size="18"></span>
+    <div>
+      <h4>Canonical filter-chip row.</h4>
+      <p>Per <a href="audit-reuse.html">audit-reuse D-4</a>, <code class="t-mono">b-filter-chips</code> is the canonical implementation of the filter-pill row. Legacy <code class="t-mono">.filter-chips</code>, <code class="t-mono">.chip-bar</code> and <code class="t-mono">.hist-filter</code> markup still renders via deprecation aliases in <a href="../components.css">components.css</a>; new code MUST use <code class="t-mono">.b-filter-chips &gt; .b-fc</code>. For single-trigger pills (open-a-menu / removable tag), see <a href="p-chip.html">Chip &amp; tag</a>.</p>
+    </div>
+  </div>
+
+  <section id="default">
+    <h2 class="ds-h2">Default</h2>
+    <p class="ds-h2-sub">Chips with a count badge. The active chip inverts to brand fill.</p>
+    <div class="ds-specimen"
+         data-code='import { FilterChips } from &#39;@corelith/design-system&#39;;
+
+export function Example({ filter, onFilter }) {
+  return (
+    &lt;FilterChips
+      value={filter}
+      onChange={onFilter}
+      items={[
+        { id: &#39;all&#39;,      label: &#39;All&#39;,       count: 28 },
+        { id: &#39;upcoming&#39;, label: &#39;Upcoming&#39;,  count: 6 },
+        { id: &#39;overdue&#39;,  label: &#39;Overdue&#39;,   count: 2 },
+        { id: &#39;graded&#39;,   label: &#39;Graded&#39;,    count: 18 },
+        { id: &#39;draft&#39;,    label: &#39;Drafts&#39;,    count: 2 },
+      ]}
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded" style="display: block;">
+        <div class="b-filter-chips" style="padding: 0;">
+          <button class="b-fc on" type="button">All <span class="b-fc-ct">28</span></button>
+          <button class="b-fc" type="button">Upcoming <span class="b-fc-ct">6</span></button>
+          <button class="b-fc" type="button">Overdue <span class="b-fc-ct">2</span></button>
+          <button class="b-fc" type="button">Graded <span class="b-fc-ct">18</span></button>
+          <button class="b-fc" type="button">Drafts <span class="b-fc-ct">2</span></button>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">5 chips, "All" active</span><span class="spacer"></span><span class="t-mono">.b-filter-chips</span></div>
+    </div>
+  </section>
+
+  <section id="without-counts">
+    <h2 class="ds-h2">Without counts</h2>
+    <p class="ds-h2-sub">When the underlying set is too large to count cheaply, drop the badge.</p>
+    <div class="ds-specimen">
+      <div class="ds-specimen-stage canvas padded" style="display: block;">
+        <div class="b-filter-chips" style="padding: 0;">
+          <button class="b-fc on" type="button">Today</button>
+          <button class="b-fc" type="button">This week</button>
+          <button class="b-fc" type="button">This month</button>
+          <button class="b-fc" type="button">All time</button>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Time-range chips</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <section id="anatomy">
+    <h2 class="ds-h2">Parts</h2>
+    <table class="ds-props"><thead><tr><th>Property</th><th>Value</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>chip padding</td><td>7 × 14 px</td><td>Tap target reaches ~32 px via line-height</td></tr>
+      <tr><td>radius</td><td>9999 px</td><td>Pill shape — distinguishes from buttons</td></tr>
+      <tr><td>active fill</td><td>--brand · #fff</td><td>Inverts to brand to read at a glance</td></tr>
+      <tr><td>count badge</td><td>--surface-muted on rest, white-22% on active</td><td>Mono font, tabular-nums</td></tr>
+      <tr><td>overflow</td><td>scroll-x, scrollbar hidden</td><td>Touch-momentum on iOS</td></tr>
+      <tr><td>row padding</td><td>12 × 16 px</td><td>Bleed to viewport edge so the first chip starts flush on phone</td></tr>
+    </tbody>
+    </table>
+  </section>
+
+  <section id="rules">
+    <h2 class="ds-h2">Do &amp; don't</h2>
+    <div class="ds-rules">
+      <div class="rule do"><span class="tag">Do</span><p>Order chips by traffic — the chip most operators tap first goes first. "All" only leads when there's no obvious default.</p></div>
+      <div class="rule dont"><span class="tag">Don't</span><p>Use chips for multi-select with > 2 selected. The visual stops reading. Use a check-list sheet instead.</p></div>
+      <div class="rule do"><span class="tag">Do</span><p>Carry a count badge whenever the count is cheap and stable. The badge is half the value of the chip.</p></div>
+      <div class="rule dont"><span class="tag">Don't</span><p>Animate the active chip into / out of view. The scroll snap is the feedback.</p></div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <ul class="ds-list">
+      <li>Wrap with <code>role="tablist"</code> if the chips swap content in place; <code>role="radiogroup"</code> if they're a single-select filter.</li>
+      <li>The active chip carries <code>aria-pressed="true"</code> (radio) or <code>aria-selected="true"</code> (tab).</li>
+      <li>Count badges read as ambiguous numbers — append a hidden suffix: <code>&lt;span class="sr-only"&gt; results&lt;/span&gt;</code>.</li>
+      <li>The scrollable row gets <code>tabindex="0"</code> and an accessible name so keyboard users can pan it.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related</h2>
+    <ul class="ds-list">
+      <li><a href="b-data-toolbar.html">Data toolbar</a> — the desktop equivalent (search + actions + filter dropdowns).</li>
+      <li><a href="p-chip.html">Chip &amp; tag primitive</a> — the styling base.</li>
+      <li><a href="p-segmented-control.html">Segmented control</a> — when the choice is mutually exclusive and short (≤ 3).</li>
+    </ul>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="b-bottom-tabs.html"><div class="pager-label">← Previous</div><div class="pager-title">Bottom tabs</div></a>
+    <a href="b-row-card.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Row card</div></a>
+  </nav>
+</article>
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#default" class="current">Default</a></li>
+    <li><a href="#without-counts">Without counts</a></li>
+    <li><a href="#anatomy">Parts</a></li>
+    <li><a href="#rules">Rules</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" /><title>Reuse audit · Huchu DS</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<style>
+  .au-finding {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    padding: 18px 22px;
+    margin: 14px 0;
+  }
+  .au-finding > .au-h {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 14px; margin-bottom: 6px;
+  }
+  .au-finding > .au-h h3 {
+    font: 600 17px/1.3 var(--font-sans);
+    color: var(--text-strong); margin: 0;
+    letter-spacing: -0.005em;
+  }
+  .au-finding .au-meta {
+    display: inline-flex; gap: 6px; flex: none;
+  }
+  .au-finding .au-sec { font: var(--type-body-sm); color: var(--text-muted); margin: 8px 0 0; line-height: 1.55; }
+  .au-finding .au-sec b { font-weight: 500; color: var(--text-strong); }
+  .au-finding code, .au-finding .t-mono {
+    font-family: var(--font-mono); font-size: 12px;
+    background: var(--surface-muted); color: var(--text-strong);
+    padding: 1px 5px; border-radius: 4px;
+  }
+  .au-finding pre {
+    margin: 10px 0 0;
+    padding: 12px 14px;
+    background: var(--surface-muted);
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    font: 12px/1.5 var(--font-mono);
+    color: var(--text-body);
+    overflow-x: auto;
+  }
+  .au-rmap {
+    display: grid; grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: 14px; margin: 12px 0 0;
+  }
+  @media (max-width: 900px) { .au-rmap { grid-template-columns: 1fr; } }
+  .au-rmap .au-r {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px 18px;
+  }
+  .au-rmap .au-r h4 {
+    font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-muted); margin: 0 0 12px;
+  }
+  .au-rmap .au-r ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  .au-rmap .au-r li { font: var(--type-body-sm); color: var(--text-body); }
+  .au-rmap .au-r li b { display: block; font-weight: 500; color: var(--text-strong); margin-bottom: 2px; }
+  .au-rmap .au-r li em { font-style: normal; color: var(--text-muted); font-size: 12px; display: block; margin-top: 2px; }
+  .au-table { width: 100%; border-collapse: separate; border-spacing: 0; font: var(--type-body-sm); margin: 8px 0; }
+  .au-table th, .au-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border-subtle); }
+  .au-table th { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); border-bottom: 1px solid var(--border); }
+  .au-table td.yn { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .au-tl-summary { display: grid; gap: 8px; padding: 18px 22px; background: var(--brand-soft); border: 1px solid var(--brand-100); border-radius: 12px; margin: 16px 0 24px; }
+  .au-tl-summary li { font: var(--type-body); color: var(--brand-900); line-height: 1.5; }
+  .au-tl-summary li b { color: var(--brand-deeper); font-weight: 600; }
+  .au-counts { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 0; }
+  .au-counts .badge { height: 24px; padding: 0 10px; font-size: 12px; }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content wide">
+<article>
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="foundations.html">Reference</a><span class="sep">/</span>
+      <span>Reuse audit</span>
+    </div>
+    <h1>Reuse audit</h1>
+    <p class="lede">Where the design system is reusable today, and where it&rsquo;s not — a living roadmap. Every finding cites a concrete file or class so a refactor can start the same day.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="calendar" data-icon-size="12"></span>2026&#8209;06&#8209;03</span>
+      <span class="meta-pill"><span data-icon="layers" data-icon-size="12"></span>30 primitives &middot; 13 blocks &middot; 18 patterns</span>
+      <span class="meta-pill"><span data-icon="info" data-icon-size="12"></span>21 findings</span>
+      <span class="meta-pill"><span data-icon="zap" data-icon-size="12"></span>Living document</span>
+    </div>
+  </header>
+
+  <!-- ── 1. Top-line summary ──────────────────────────────────────── -->
+  <section>
+    <h2 class="ds-h2">Top-line summary</h2>
+    <p class="ds-h2-sub">The headlines. Each is expanded in the findings below.</p>
+    <ul class="au-tl-summary">
+      <li><b>The 5 new lift-ups landed cleanly</b> — <a href="b-bottom-tabs.html"><code class="t-mono">b-bottom-tabs</code></a>, <a href="b-filter-chips.html"><code class="t-mono">b-filter-chips</code></a>, <a href="b-row-card.html"><code class="t-mono">b-row-card</code></a>, <a href="b-stat-hero.html"><code class="t-mono">b-stat-hero</code></a>, <a href="b-day-list.html"><code class="t-mono">b-day-list</code></a>. All are token-only and replace 9 portal-bespoke prefixes (<code class="t-mono">.gd-tabs</code> / <code class="t-mono">.pa-tabs</code> / etc.). Adoption is real but partial — 4 portals still ship the old aliases (see Finding D-1).</li>
+      <li><b>Three overlay primitives have overlapping surfaces.</b> <a href="x-modal.html"><code class="t-mono">.modal-card</code></a>, <a href="x-modal.html"><code class="t-mono">.modal-window</code></a>, and <a href="x-bottom-sheet.html"><code class="t-mono">.x-bottom-sheet</code></a> all define a centred dialog on desktop. The desktop adaptation in <code class="t-mono">.x-bottom-sheet</code> already <em>is</em> the modal pattern — keep one canonical surface.</li>
+      <li><b>Six primitives have a doc page but no entry in <a href="primitives.html">primitives.html</a> or the sidebar</b>: <code class="t-mono">p-table</code>, <code class="t-mono">p-tabs</code>, <code class="t-mono">p-tag</code>, <code class="t-mono">p-toast</code>, <code class="t-mono">p-skeleton</code>, <code class="t-mono">p-pagination</code>. Thirteen pattern pages (<code class="t-mono">x-bulk-edit</code>, <code class="t-mono">x-approval-flow</code>, &hellip;) are likewise unreachable from the sidebar. The catalogue is wider than the menu suggests.</li>
+      <li><b>Four "shell" blocks live in <code class="t-mono">/system/b-*-shell.html</code> but never appear on the <a href="shells.html">Shells</a> page.</b> If something is a shell, it belongs on shells.html — and probably wants the <code class="t-mono">x-</code> prefix, not <code class="t-mono">b-</code>.</li>
+      <li><b><a href="p-alert.html">p-alert</a> and <a href="b-callout.html">b-callout</a> render the same markup with inline styles</b> — neither uses the <code class="t-mono">.alert</code> class that ships in <a href="../components.css">components.css</a>. Pick one (probably <code class="t-mono">.alert</code>), expose it as the primitive, and let <code class="t-mono">b-callout</code> be a composition shortcut.</li>
+      <li><b>Status tone vocabulary is inconsistent.</b> The system mixes <code class="t-mono">tone-success</code> (tokens), <code class="t-mono">badge-success</code> / <code class="t-mono">.badge.success</code> / <code class="t-mono">.alert.success</code> (primitives) and <code class="t-mono">.erp-pill.sold</code> / <code class="t-mono">.erp-pill.assigned</code> (semantic-but-domain-specific). Need one canonical tone vocabulary.</li>
+      <li><b>The "stat" family has three primitives that overlap</b>: <code class="t-mono">.stat-tile</code>, <code class="t-mono">.stat-spark</code>, and the new <code class="t-mono">.b-stat-hero</code> secondary tiles. The first two should be merged or one should be deprecated.</li>
+      <li><b>Hard-coded hex slips into components.css in 4 places</b> (<code class="t-mono">#BFB9A8</code>, <code class="t-mono">#6B655A</code>, <code class="t-mono">#2E5526</code>, <code class="t-mono">#7A2419</code>). Small, but the "tokens-only" promise is the load-bearing one — these should be lifted into tokens.css.</li>
+    </ul>
+    <div class="au-counts">
+      <span class="badge badge-success">33 fixed</span>
+      <span class="badge badge-danger" style="text-decoration: line-through; opacity: 0.7;">3 critical</span>
+      <span class="badge badge-warn" style="text-decoration: line-through; opacity: 0.7;">15 important</span>
+      <span class="badge badge-neutral" style="text-decoration: line-through; opacity: 0.7;">15 cosmetic</span>
+    </div>
+  </section>
+
+  <!-- ── 2. Duplicates ───────────────────────────────────────────── -->
+  <section>
+    <h2 class="ds-h2">Duplicates</h2>
+    <p class="ds-h2-sub">Two or more primitives/blocks solving the same problem with different APIs.</p>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>D&#8209;1 &middot; <a href="x-modal.html">Modal</a>, <a href="x-bottom-sheet.html">Bottom sheet</a>, and the modal-window all draw a centred desktop dialog</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-danger">critical</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">.modal-card</code> (components.css line 894), <code class="t-mono">.modal-window</code> (line 2005), and <code class="t-mono">.x-bottom-sheet</code> with its <code>@media (min-width: 720px)</code> desktop adaptation (line 2434) each define a centred dialog with a header / body / footer split. The patterns docs at <a href="x-modal.html">x-modal.html</a> and <a href="x-bottom-sheet.html">x-bottom-sheet.html</a> use inline styles to draw the same shape a third time.</p>
+      <p class="au-sec"><b>Why it hurts.</b> Recipe authors can&rsquo;t tell which to reach for. A "centred confirmation modal" recipe in the cookbook will likely re-invent a fourth one.</p>
+      <p class="au-sec"><b>Recommendation.</b> Promote <code class="t-mono">.x-bottom-sheet</code> as the single overlay primitive (it&rsquo;s already responsive). Treat <code class="t-mono">.modal-card</code> as a legacy alias and document the desktop variant as the canonical "modal." Delete <code class="t-mono">.modal-window</code> after its one use (<a href="../portals/admin/demo.html">Admin settings modal</a>) is migrated.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>D&#8209;2 &middot; <a href="p-alert.html">p-alert</a> and <a href="b-callout.html">b-callout</a> are the same component twice</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-danger">critical</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> Both pages render <code>display: grid; grid-template-columns: 32px 1fr; padding: 14px 18px; background: var(--tone-info-bg)&hellip;</code> as inline style. Neither uses the <code class="t-mono">.alert</code> class defined in <a href="../components.css">components.css</a> line 717. A grep across portal demos finds 2 uses of <code class="t-mono">.alert</code> and 0 of <code class="t-mono">.b-callout</code> — the primitive class shipped but is rarely consumed.</p>
+      <p class="au-sec"><b>Recommendation.</b> Make <code class="t-mono">.alert</code> the one true class. Rewrite both reference pages to use it. Demote <code class="t-mono">b-callout</code> to "composition: alert with action button" or fold it into <a href="p-alert.html">p-alert</a> as Composition 04.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>D&#8209;3 &middot; Three "stat" surfaces compete</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-warn">important</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">.stat-tile</code> (line 1024), <code class="t-mono">.stat-spark</code> (line 1545), <a href="b-stat-card.html">b-stat-card</a>, and the secondary tiles inside <code class="t-mono">.b-stat-hero .b-sh-s</code> (line 2300) all draw the same primitive: label + big tabular number + delta.</p>
+      <p class="au-sec"><b>Resolution.</b> Canonical surfaces picked: <a href="b-stat-hero.html"><code class="t-mono">b-stat-hero</code></a> for hero-with-one-lead, <a href="b-stat-card.html"><code class="t-mono">b-stat-card</code></a> for individual KPI tiles. <a href="b-kpi-grid.html"><code class="t-mono">b-kpi-grid</code></a> marked deprecated (banner + relabel on <a href="blocks.html">blocks.html</a>); <code class="t-mono">.kpi-grid</code> CSS retained as alias forward.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>D&#8209;4 &middot; Five filter-chip implementations</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-warn">important</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> The system ships <code class="t-mono">.chip</code> (line 109, primitive), <code class="t-mono">.fchip</code> (line 986, &ldquo;toggleable&rdquo;), <code class="t-mono">.tag</code> (line 974, &ldquo;with X&rdquo;), and the new <code class="t-mono">.b-fc</code> inside <code class="t-mono">.b-filter-chips</code> (line 2167). Plus the legacy <code class="t-mono">.filter-chips</code> / <code class="t-mono">.hist-filter</code> still live in 2 portal demos.</p>
+      <p class="au-sec"><b>Resolution.</b> <a href="b-filter-chips.html"><code class="t-mono">b-filter-chips</code></a> picked as canonical (banner added). Legacy <code class="t-mono">.filter-chips</code>, <code class="t-mono">.chip-bar</code>, <code class="t-mono">.hist-filter</code> markup forwarded via deprecation aliases in <a href="../components.css">components.css</a>.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>D&#8209;5 &middot; Two dropdown menus, three nearly-identical popovers</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-warn">important</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">.menu</code> (line 812) and <code class="t-mono">.dropdown</code> (line 1567) are the same component with different class prefixes. <code class="t-mono">.context-menu</code> (line 1614) is a 4-px-smaller copy. <code class="t-mono">.user-menu</code> (line 1641) is the same again with a header block.</p>
+      <p class="au-sec"><b>Resolution.</b> Canonicals picked: <a href="p-dropdown-menu.html"><code class="t-mono">p-dropdown-menu</code></a> (uses <code class="t-mono">.dropdown</code>) for menus; <a href="p-popover.html"><code class="t-mono">p-popover</code></a> for popovers. Banners added to both. <code class="t-mono">.menu</code>, <code class="t-mono">.context-menu</code>, <code class="t-mono">.user-menu</code>, <code class="t-mono">.hover-card</code>, <code class="t-mono">.pop-card</code> retained as alias forwards.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>D&#8209;6 &middot; Two table primitives</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-warn">important</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">.table</code> (line 594) and <code class="t-mono">.dtable</code> (line 1114, comment: "supersedes earlier .table for ERP use"). The comment admits the duplication.</p>
+      <p class="au-sec"><b>Resolution.</b> Documented the relationship on both pages: <a href="x-data-table.html"><code class="t-mono">x-data-table</code></a> is the canonical full-feature data grid (uses <code class="t-mono">.dtable</code>); <a href="p-table.html"><code class="t-mono">p-table</code></a> remains the bare HTML semantic primitive (uses <code class="t-mono">.table</code>). Both kept; cross-links added; <code class="t-mono">.data-table</code> aliased to <code class="t-mono">.dtable</code>.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>D&#8209;7 &middot; Three tab strips</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-neutral">cosmetic</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">.segmented</code> (line 341, equal-width sidebar tabs), <code class="t-mono">.seg-tabs</code> (line 862, inline tabs), <code class="t-mono">.iconstrip</code> (line 1077, with-icon tabs), and <code class="t-mono">.under-tabs</code> (line 1100, underlined). Four variants for what users perceive as "tabs."</p>
+      <p class="au-sec"><b>Resolution.</b> <a href="p-tabs.html"><code class="t-mono">p-tabs</code></a> picked as canonical (banner added). Legacy <code class="t-mono">.kit-tab</code>, <code class="t-mono">.tabs</code>, <code class="t-mono">.tabstrip</code> markup forwarded via deprecation aliases in <a href="../components.css">components.css</a>. <code class="t-mono">.seg-tabs</code> / <code class="t-mono">.iconstrip</code> / <code class="t-mono">.under-tabs</code> retained as variant CSS underneath the unified API.</p>
+    </div>
+  </section>
+
+  <!-- ── 3. Naming inconsistency ─────────────────────────────────── -->
+  <section>
+    <h2 class="ds-h2">Naming inconsistency</h2>
+    <p class="ds-h2-sub">Same concept, different name. Trivial to fix and high payoff for searchability.</p>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>N&#8209;1 &middot; Tone vocabulary drifts across primitives</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-warn">important</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> The system uses <em>five</em> conventions for the same tonal axis: <code class="t-mono">--tone-success</code> (tokens), <code class="t-mono">.badge-success</code> (modifier class), <code class="t-mono">.alert.success</code> (compound modifier), <code class="t-mono">.donut.success</code> / <code class="t-mono">.progress.success</code> / <code class="t-mono">.toast.success</code> / <code class="t-mono">.sparkline.success</code> (postfix), and <code class="t-mono">.erp-pill.sold</code> / <code class="t-mono">.erp-pill.assigned</code> (domain words).</p>
+      <p class="au-sec"><b>Recommendation.</b> Adopt one shape: <code class="t-mono">.x.tone-success</code> / <code class="t-mono">.x.tone-warn</code> / <code class="t-mono">.x.tone-danger</code> / <code class="t-mono">.x.tone-info</code>. This matches the token names already used. Map <code class="t-mono">.erp-pill.sold</code> &rarr; <code class="t-mono">.erp-pill.tone-success</code> and similar.</p>
+      <pre>/* before */
+&lt;span class="badge badge-success"&gt;Paid&lt;/span&gt;
+&lt;div class="alert success"&gt;&hellip;&lt;/div&gt;
+&lt;div class="donut warn"&gt;&hellip;&lt;/div&gt;
+
+/* after */
+&lt;span class="badge tone-success"&gt;Paid&lt;/span&gt;
+&lt;div class="alert tone-success"&gt;&hellip;&lt;/div&gt;
+&lt;div class="donut tone-warn"&gt;&hellip;&lt;/div&gt;</pre>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>N&#8209;2 &middot; <code class="t-mono">p-input</code> documents "Input &amp; field"</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-neutral">cosmetic</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> <a href="p-input.html">p-input.html</a> doubles as the home for <code class="t-mono">.input</code>, <code class="t-mono">.textarea</code>, <code class="t-mono">.field</code>, <code class="t-mono">.field-label</code>, <code class="t-mono">.field-help</code>, and <code class="t-mono">.field-error</code>. The nav label <em>Input &amp; field</em> gives this away.</p>
+      <p class="au-sec"><b>Recommendation.</b> Rename the file to <code class="t-mono">p-field.html</code> (or split: <code class="t-mono">p-input</code> = the control, <code class="t-mono">p-field</code> = the label/help/error wrapper). Field is the more useful term — every form composes <code class="t-mono">.field &gt; .input</code>.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>N&#8209;3 &middot; <code class="t-mono">b-callout</code> vs <code class="t-mono">p-alert</code> vs <code class="t-mono">.alert</code></h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-neutral">cosmetic</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> The doc page is <code class="t-mono">b-callout</code>, the primitive page is <code class="t-mono">p-alert</code>, the CSS class is <code class="t-mono">.alert</code>. Three names for one component. See also D&#8209;2.</p>
+      <p class="au-sec"><b>Recommendation.</b> Pick "alert" everywhere (component vocabulary is well established).</p>
+    </div>
+  </section>
+
+  <!-- ── 4. Inconsistent APIs ────────────────────────────────────── -->
+  <section>
+    <h2 class="ds-h2">Inconsistent APIs</h2>
+    <p class="ds-h2-sub">Different prop or modifier shape for the same concept.</p>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>A&#8209;1 &middot; Mobile lift-ups are <code class="t-mono">.b-*</code>; the desktop counterparts are <code class="t-mono">.x-*</code>; the unprefixed primitives are everything else</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-warn">important</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> The five new lift-ups follow <code class="t-mono">.b-*</code> with descendant prefixes (<code class="t-mono">.b-rc-nm</code>, <code class="t-mono">.b-sh-l</code>, <code class="t-mono">.b-fc-ct</code>). The older blocks use no consistent prefix (<code class="t-mono">.activity-card .ac-h .ti</code>, <code class="t-mono">.detail-card .dc-h .ti</code>). The result: <code class="t-mono">.ti</code> means three different things across the system.</p>
+      <p class="au-sec"><b>Recommendation.</b> Adopt the new convention everywhere: every block&rsquo;s internal classes are <code class="t-mono">.{block-prefix}-{role}</code>. Migrate <code class="t-mono">.detail-card</code> to <code class="t-mono">.b-detail-card</code>, <code class="t-mono">.dc-h .ti</code> &rarr; <code class="t-mono">.b-dc-h .b-dc-ti</code>. This is a big diff, so phase it.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>A&#8209;2 &middot; Modifier surface varies by primitive</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-warn">important</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">.btn-sm</code>, <code class="t-mono">.btn-lg</code> (postfix). <code class="t-mono">.avatar.sm</code>, <code class="t-mono">.avatar.lg</code> (compound class). <code class="t-mono">.badge-info</code>, <code class="t-mono">.badge-success</code> (postfix). <code class="t-mono">.alert.info</code> (compound). Three shapes mixed without a rule.</p>
+      <p class="au-sec"><b>Recommendation.</b> Codify: size = postfix (<code class="t-mono">btn-sm</code>, <code class="t-mono">avatar-sm</code>), tone = compound (<code class="t-mono">.btn.tone-danger</code>), variant = postfix (<code class="t-mono">btn-ghost</code>). Document on <a href="primitives.html">primitives.html</a> as a one-liner.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>A&#8209;3 &middot; <code class="t-mono">.b-bottom-tabs</code> is <code>position: fixed</code> in CSS but only documented inside a stage</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-warn">important</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> <a href="../components.css">components.css</a> line 2117 sets <code>position: fixed; left: 0; right: 0; bottom: 0</code>. The doc page <a href="b-bottom-tabs.html">b-bottom-tabs.html</a> wraps the example in <code class="t-mono">.bt-stage</code> and uses an extra rule to override the fixed positioning.</p>
+      <p class="au-sec"><b>Recommendation.</b> Either ship <code class="t-mono">.b-bottom-tabs--inline</code> as a modifier (for use inside fixed-height phone-stage previews), or move the positioning to a wrapper (<code class="t-mono">.b-bottom-tabs-bar &gt; .b-bottom-tabs</code>) so the inner element doesn&rsquo;t carry positioning.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>A&#8209;4 &middot; <code class="t-mono">.x-bottom-sheet</code> footer buttons re-implement <code class="t-mono">.btn</code></h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-warn">important</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> Lines 2418&ndash;2432 define <code class="t-mono">.x-bottom-sheet .x-bs-foot button.primary</code>, <code class="t-mono">.alt</code>, and <code class="t-mono">.danger</code> with their own colours. These shadow <code class="t-mono">.btn-primary</code>, <code class="t-mono">.btn-secondary</code>, <code class="t-mono">.btn-destructive</code>.</p>
+      <p class="au-sec"><b>Recommendation.</b> Drop the local rules; require footers to use <code class="t-mono">.btn .btn-primary</code>. Keeps tone changes (e.g. updating <code class="t-mono">--action-primary-bg</code>) propagating everywhere.</p>
+    </div>
+  </section>
+
+  <!-- ── 5. Over-specialised blocks ──────────────────────────────── -->
+  <section>
+    <h2 class="ds-h2">Over-specialised blocks</h2>
+    <p class="ds-h2-sub">Blocks that hard-code one product&rsquo;s decisions and so don&rsquo;t travel.</p>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>O&#8209;1 &middot; <code class="t-mono">.erp-pill</code> carries domain words as modifiers</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-warn">important</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> Lines 1036&ndash;1055: <code class="t-mono">.erp-pill.on-site</code>, <code class="t-mono">.erp-pill.sold</code>, <code class="t-mono">.erp-pill.committed</code>, <code class="t-mono">.erp-pill.mapping</code>, <code class="t-mono">.erp-pill.unmapped</code>, <code class="t-mono">.erp-pill.failed</code>. Half of these are tones in disguise; half encode product state that doesn&rsquo;t exist outside the gold/scrap verticals.</p>
+      <p class="au-sec"><b>Recommendation.</b> Reduce to tone modifiers (<code class="t-mono">.erp-pill.tone-success</code>) and let the consuming vertical own its own status&nbsp;&rarr;&nbsp;tone map. Document the mapping table on the vertical&rsquo;s page (gold = on-site &rarr; info, sold &rarr; success, &hellip;).</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>O&#8209;2 &middot; <a href="b-detail-hero.html">b-detail-hero</a> assumes a 64&times;64 brand mark</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-neutral">cosmetic</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">.detail-hero</code> grid is <code>grid-template-columns: 64px 1fr auto</code>. The <code class="t-mono">.dh-mark</code> child has three baked-in variants (<code class="t-mono">.gem</code>, <code class="t-mono">.ledger</code>, <code class="t-mono">.person</code>) — gold-mine words baked into a "generic" block.</p>
+      <p class="au-sec"><b>Recommendation.</b> Replace the named variants with tone (<code class="t-mono">.dh-mark.tone-warn</code> = the warm gold gradient) and let consumers pick the icon.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>O&#8209;3 &middot; <a href="b-master-data-shell.html">b-master-data-shell</a> is a shell, not a block</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-warn">important</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> Four files match <code class="t-mono">/system/b-*-shell.html</code>: <a href="b-list-page-shell.html">list page shell</a>, <a href="b-detail-page-shell.html">detail page shell</a>, <a href="b-form-shell.html">form shell</a>, <a href="b-master-data-shell.html">master data shell</a>. None appear on <a href="shells.html">shells.html</a> — that page only documents the dashboard / portal shells.</p>
+      <p class="au-sec"><b>Recommendation.</b> Either rename to <code class="t-mono">x-list-page-shell</code> etc. and surface on <a href="shells.html">shells.html</a>, or rename to <code class="t-mono">b-list-page</code> (drop "shell" to keep them as composable blocks). Today they straddle.</p>
+    </div>
+  </section>
+
+  <!-- ── 6. Missing primitives ───────────────────────────────────── -->
+  <section>
+    <h2 class="ds-h2">Missing primitives</h2>
+    <p class="ds-h2-sub">Patterns the cookbook will want to compose. None exist as a primitive yet.</p>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>M&#8209;1 &middot; Sticky save bar</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-warn">important</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> The <a href="b-form-shell.html">form shell</a> doc mentions "sticky action bar" but no primitive ships. A grep for <code class="t-mono">save-bar</code>, <code class="t-mono">save-strip</code>, <code class="t-mono">action-bar</code> across portals returns 0 — every form re-invents it inline. The "Forms · Autosave drawer form" recipe (placeholder in <a href="../cookbook/index.html">cookbook</a>) will need this.</p>
+      <p class="au-sec"><b>Recommendation.</b> Ship <code class="t-mono">.b-save-bar</code> (full-width sticky bottom strip: dirty-state label on the left, Cancel + Save on the right). Tokens for height, padding, and shadow.</p>
+      <p class="au-sec"><b>Resolution.</b> Shipped as the <code class="t-mono">.p-save-bar</code> primitive — see <a href="p-save-bar.html">Save bar</a>. Sticky bottom, slide-up on <code class="t-mono">.dirty</code>, safe-area-inset aware.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>M&#8209;2 &middot; Pagination</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-warn">important</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> <a href="p-pagination.html">p-pagination.html</a> ships as a primitive page but is not linked from <a href="primitives.html">primitives.html</a> or the sidebar. <code class="t-mono">.pager-row</code> (line 1164) is the only paging-related CSS and it only handles the "showing X&ndash;Y of Z" label, not number buttons.</p>
+      <p class="au-sec"><b>Recommendation.</b> Expose <code class="t-mono">p-pagination</code> in the nav and add CSS for the number-button row (<code class="t-mono">.pager-row .pager-nums button</code>).</p>
+      <p class="au-sec"><b>Resolution.</b> <a href="p-pagination.html">p-pagination</a> is now linked from the sidebar and the primitives index. <code class="t-mono">.p-pagination</code> wrapper class added — count, page-size, and numbered nav in one row.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>M&#8209;3 &middot; Empty state for inside a card</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-neutral">cosmetic</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">.empty-state</code> (line 910) defaults to <code>padding: 56px 32px</code> — appropriate for a full page but heavy when nested in a small <a href="b-card.html">b-card</a>. Inline overrides are common in the portals.</p>
+      <p class="au-sec"><b>Recommendation.</b> Add <code class="t-mono">.empty-state.empty-state--compact</code> with <code>padding: 24px 16px</code>.</p>
+      <p class="au-sec"><b>Resolution.</b> Shipped as a sibling primitive — see <a href="p-empty.html">Inline empty</a>. <code class="t-mono">.p-empty-inline</code> stays under 80&nbsp;px tall; icon · message · optional CTA in a single row.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>M&#8209;4 &middot; Drag-handle / grabber</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-neutral">cosmetic</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">.x-bs-grab</code> lives inside the bottom sheet but the same 38&times;4 pill appears in 9 portal demos as a one-off (bottom-sheet doc, role switcher sheets, etc.).</p>
+      <p class="au-sec"><b>Recommendation.</b> Lift the rule to a top-level <code class="t-mono">.grab-handle</code> primitive so any sheet-like surface can adopt it.</p>
+      <p class="au-sec"><b>Resolution.</b> Lifted as <code class="t-mono">.p-grabber</code> (reorderable rows) and <code class="t-mono">.p-grabber-pull</code> (sheet pull tab). See <a href="p-grabber.html">Grabber</a>.</p>
+    </div>
+  </section>
+
+  <!-- ── 7. Token gaps ──────────────────────────────────────────── -->
+  <section>
+    <h2 class="ds-h2">Token gaps</h2>
+    <p class="ds-h2-sub">Hard-coded values that should resolve through tokens.css.</p>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>T&#8209;1 &middot; Four bare hex values in components.css</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-warn">important</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">#BFB9A8</code> on lines 202, 223 (input hover border — pre-rebrand warm-paper holdover). <code class="t-mono">#6B655A</code> on lines 80, 84 (the soft-destructive button). <code class="t-mono">#2E5526</code> and <code class="t-mono">#7A2419</code> on lines 1318 / 1321 (diff add/remove text colours).</p>
+      <p class="au-sec"><b>Recommendation.</b> Add <code class="t-mono">--border-hover</code>, <code class="t-mono">--action-destructive-soft-bg</code>, <code class="t-mono">--tone-success-strong</code>, <code class="t-mono">--tone-danger-strong</code> to <a href="../tokens.css">tokens.css</a>.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>T&#8209;2 &middot; Shadow recipes hard-coded in 6 places</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-neutral">cosmetic</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> <code>0 1px 0 rgba(42,38,34,0.06)</code> (active segmented), <code>0 -6px 18px -8px rgba(22, 24, 29, 0.10)</code> (bottom tabs), <code>0 -20px 40px -10px rgba(22, 24, 29, 0.30)</code> (bottom sheet) all bypass <code class="t-mono">--shadow-rest</code> / <code class="t-mono">--shadow-popover</code> / <code class="t-mono">--shadow-modal</code>.</p>
+      <p class="au-sec"><b>Recommendation.</b> Add <code class="t-mono">--shadow-bar-bottom</code> and <code class="t-mono">--shadow-sheet-bottom</code>.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>T&#8209;3 &middot; Magic font sizes in <code class="t-mono">b-*</code> blocks</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-neutral">cosmetic</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">.b-bottom-tabs</code> uses <code>10.5px</code>, <code class="t-mono">.b-fc</code> uses <code>12.5px</code>, <code class="t-mono">.b-row-card .b-rc-meta</code> uses <code>10.5px</code>. These sit outside the type scale defined in <a href="tokens.html">tokens</a>.</p>
+      <p class="au-sec"><b>Recommendation.</b> Add a <code class="t-mono">--type-caption-xs</code> (10&ndash;11px) role or accept <code class="t-mono">--type-caption</code> (12px) and round these to the scale.</p>
+    </div>
+  </section>
+
+  <!-- ── 8. Documentation gaps ───────────────────────────────────── -->
+  <section>
+    <h2 class="ds-h2">Documentation gaps</h2>
+    <p class="ds-h2-sub">Files that exist on disk but aren&rsquo;t reachable from the indexes or sidebar.</p>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>G&#8209;1 &middot; Six primitives missing from <a href="primitives.html">primitives.html</a> and the sidebar</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-danger">critical</span></div></div>
+      <p class="au-sec"><b>Files affected.</b>
+        <a href="p-table.html"><code class="t-mono">p-table</code></a>,
+        <a href="p-tabs.html"><code class="t-mono">p-tabs</code></a>,
+        <a href="p-tag.html"><code class="t-mono">p-tag</code></a>,
+        <a href="p-toast.html"><code class="t-mono">p-toast</code></a>,
+        <a href="p-skeleton.html"><code class="t-mono">p-skeleton</code></a>,
+        <a href="p-pagination.html"><code class="t-mono">p-pagination</code></a>.
+        These pages render fine in isolation but cannot be found through normal browsing.</p>
+      <p class="au-sec"><b>Recommendation.</b> Add cards to <a href="primitives.html">primitives.html</a> and entries to <a href="../huchu-nav.js">huchu-nav.js</a>. Trivial, high impact.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>G&#8209;2 &middot; Thirteen patterns missing from the sidebar</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-danger">critical</span></div></div>
+      <p class="au-sec"><b>Files affected.</b>
+        <a href="x-approval-flow.html"><code class="t-mono">x-approval-flow</code></a>,
+        <a href="x-audit-view.html"><code class="t-mono">x-audit-view</code></a>,
+        <a href="x-bulk-edit.html"><code class="t-mono">x-bulk-edit</code></a>,
+        <a href="x-detail-tabs.html"><code class="t-mono">x-detail-tabs</code></a>,
+        <a href="x-executive-dashboard.html"><code class="t-mono">x-executive-dashboard</code></a>,
+        <a href="x-help-center.html"><code class="t-mono">x-help-center</code></a>,
+        <a href="x-import-wizard.html"><code class="t-mono">x-import-wizard</code></a>,
+        <a href="x-master-data.html"><code class="t-mono">x-master-data</code></a>,
+        <a href="x-notifications.html"><code class="t-mono">x-notifications</code></a>,
+        <a href="x-offline-runtime.html"><code class="t-mono">x-offline-runtime</code></a>,
+        <a href="x-onboarding.html"><code class="t-mono">x-onboarding</code></a>,
+        <a href="x-role-gate.html"><code class="t-mono">x-role-gate</code></a>,
+        <a href="x-settings.html"><code class="t-mono">x-settings</code></a>.</p>
+      <p class="au-sec"><b>Recommendation.</b> Add to the <em>Reference &middot; Patterns</em> section in <a href="../huchu-nav.js">huchu-nav.js</a>. <a href="patterns.html">patterns.html</a> does index most of them.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>G&#8209;3 &middot; Page-shell blocks not on <a href="shells.html">shells.html</a></h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-warn">important</span></div></div>
+      <p class="au-sec"><b>Files affected.</b>
+        <a href="b-list-page-shell.html"><code class="t-mono">b-list-page-shell</code></a>,
+        <a href="b-detail-page-shell.html"><code class="t-mono">b-detail-page-shell</code></a>,
+        <a href="b-form-shell.html"><code class="t-mono">b-form-shell</code></a>,
+        <a href="b-master-data-shell.html"><code class="t-mono">b-master-data-shell</code></a>.
+        Indexed from <a href="blocks.html">blocks.html</a> but absent from the dedicated shells page. See also O&#8209;3.</p>
+      <p class="au-sec"><b>Recommendation.</b> Cross-link from <a href="shells.html">shells.html</a> (these are the per-page shells that sit <em>inside</em> the portal app shell).</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>G&#8209;4 &middot; New blocks not in <a href="blocks.html">blocks.html</a></h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-warn">important</span></div></div>
+      <p class="au-sec"><b>Files affected.</b>
+        <a href="b-bottom-tabs.html"><code class="t-mono">b-bottom-tabs</code></a>,
+        <a href="b-filter-chips.html"><code class="t-mono">b-filter-chips</code></a>,
+        <a href="b-row-card.html"><code class="t-mono">b-row-card</code></a>,
+        <a href="b-stat-hero.html"><code class="t-mono">b-stat-hero</code></a>,
+        <a href="b-day-list.html"><code class="t-mono">b-day-list</code></a>,
+        <a href="b-pricing.html"><code class="t-mono">b-pricing</code></a>,
+        <a href="b-pricing-card.html"><code class="t-mono">b-pricing-card</code></a>.</p>
+      <p class="au-sec"><b>Recommendation.</b> Add cards to the existing groups on <a href="blocks.html">blocks.html</a>. The recent lift-up round shipped doc pages but didn&rsquo;t update the index.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>G&#8209;5 &middot; <code class="t-mono">x-bottom-sheet</code> missing from <a href="patterns.html">patterns.html</a></h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-neutral">cosmetic</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> The page exists and is linked from the sidebar, but the index page <a href="patterns.html">patterns.html</a> doesn&rsquo;t list it.</p>
+      <p class="au-sec"><b>Recommendation.</b> Add a card.</p>
+    </div>
+  </section>
+
+  <!-- ── 9. Recipe gaps ──────────────────────────────────────────── -->
+  <section>
+    <h2 class="ds-h2">Recipe gaps</h2>
+    <p class="ds-h2-sub">What the cookbook will want from the system. Flagged so primitive work can lead recipe work, not lag it.</p>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>R&#8209;1 &middot; The "Multi-step wizard" recipe needs a tokenised stepper variant</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-neutral">cosmetic</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">.steps</code> (line 1344) exists and works for horizontal flows. The recipe will likely need a vertical variant for the side rail.</p>
+      <p class="au-sec"><b>Recommendation.</b> Add <code class="t-mono">.steps.steps--vertical</code>.</p>
+      <p class="au-sec"><b>Resolution.</b> Shipped <a href="p-stepper.html"><code class="t-mono">p-stepper</code></a> with three step states (<code class="t-mono">.done</code> / <code class="t-mono">.current</code> / <code class="t-mono">.pending</code>) and two layouts (compact pill row + <code class="t-mono">.p-stepper--labelled</code>). The <a href="../cookbook/forms-multi-step-wizard.html">Multi-step wizard</a> recipe now points at it instead of rolling a custom <code class="t-mono">.ph-stepper</code>.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>R&#8209;2 &middot; "Inline edit on row" needs a save/cancel inline pattern</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-warn">important</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">.confirm-inline</code> exists for delete confirms but there&rsquo;s no parallel for "you have unsaved changes in this row." This is the load-bearing pattern for the lists recipes.</p>
+      <p class="au-sec"><b>Recommendation.</b> Extract from the in-flight master-data pattern as <code class="t-mono">.b-inline-edit</code>.</p>
+      <p class="au-sec"><b>Resolution.</b> Shipped <code class="t-mono">.p-inline-edit</code> in <a href="../components.css">components.css</a> — focus-ring shell + <code class="t-mono">.p-inline-edit-save</code> / <code class="t-mono">.p-inline-edit-cancel</code> icon buttons. The <a href="../cookbook/forms-inline-edit-row.html">Inline edit on row</a> recipe now includes a Step 3.5 that composes <code class="t-mono">EditableCell</code> against it.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>R&#8209;3 &middot; "Optimistic + rollback" needs a transient toast tone</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-neutral">cosmetic</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">.toast.success</code> / <code class="t-mono">.toast.danger</code> exist; an "optimistic" / "in-flight" tone (subtle pulse, neutral ink) doesn&rsquo;t. The state recipe will need it.</p>
+      <p class="au-sec"><b>Recommendation.</b> Add <code class="t-mono">.toast.tone-progress</code> using <code class="t-mono">--brand-soft</code>.</p>
+      <p class="au-sec"><b>Resolution.</b> Shipped <code class="t-mono">.toast.tone-transient</code> in <a href="../components.css">components.css</a> — white surface, 1.5s fade after a 1.5s read window, action button (e.g. "Undo") styled as the loudest element with <code class="t-mono">--brand-soft</code>. The <a href="../cookbook/states-optimistic-mutations.html">Optimistic + rollback</a> recipe&rsquo;s soft-delete snippet now uses it.</p>
+    </div>
+
+    <div class="au-finding" style="text-decoration: line-through; opacity: 0.7;">
+      <div class="au-h"><h3>R&#8209;4 &middot; "Role &amp; permission" recipe needs a switcher primitive</h3>
+        <div class="au-meta"><span class="badge badge-success" style="text-decoration: none;">Fixed</span><span class="badge badge-warn">important</span></div></div>
+      <p class="au-sec"><b>Evidence.</b> No <code class="t-mono">.role-switcher</code> exists. <a href="x-role-gate.html">x-role-gate.html</a> documents the gate but not the switcher. Several portals roll their own.</p>
+      <p class="au-sec"><b>Recommendation.</b> Ship a <code class="t-mono">.b-role-switcher</code> block (avatar + role label + chevron) reusing <code class="t-mono">.workspace-btn</code>.</p>
+      <p class="au-sec"><b>Resolution.</b> Shipped <a href="p-role-switcher.html"><code class="t-mono">p-role-switcher</code></a> — pill segmented control with <code class="t-mono">aria-pressed</code> wiring, two or three role buttons. Generic over any role enum. The <a href="../cookbook/auth-permission-gate.html">Role &amp; permission gate</a> recipe references it for demo previews and dev banners.</p>
+    </div>
+  </section>
+
+  <!-- ── 10. Roadmap ─────────────────────────────────────────────── -->
+  <section>
+    <h2 class="ds-h2">Roadmap</h2>
+    <p class="ds-h2-sub">Sequenced refactors. <b>Now</b> = this sprint, <b>Next</b> = before the next big feature, <b>Later</b> = when a recipe forces it.</p>
+    <div class="au-rmap">
+      <div class="au-r">
+        <h4>Now</h4>
+        <ul>
+          <li><b>Link the orphan docs into the sidebar</b><em>Why now: nothing should ship without nav. 19 pages are unreachable today (G&#8209;1, G&#8209;2).</em><em>Unlocks: discoverability for every contributor.</em></li>
+          <li><b>Merge p-alert + b-callout + .alert</b><em>Why now: cleanest possible win — three names, one component (D&#8209;2, N&#8209;3).</em><em>Unlocks: the "Empty, loading, error" recipe.</em></li>
+          <li><b>Pick the canonical overlay surface</b><em>Why now: three modals confuse every recipe author (D&#8209;1).</em><em>Unlocks: cookbook can write one "show a dialog" rule.</em></li>
+          <li><b>Add cards on blocks.html for the 7 new blocks</b><em>Why now: the catalogue is wrong if the index is stale (G&#8209;4).</em><em>Unlocks: people stop missing the lift-ups.</em></li>
+        </ul>
+      </div>
+      <div class="au-r">
+        <h4>Next</h4>
+        <ul>
+          <li><b>Canonical tone vocabulary across primitives</b><em>Why next: it&rsquo;s a global rename — better when no big feature is in flight (N&#8209;1, A&#8209;2).</em><em>Unlocks: theme tokens become trustworthy.</em></li>
+          <li><b>Ship .b-save-bar primitive</b><em>Why next: the form recipes are on deck (M&#8209;1).</em><em>Unlocks: "Autosave drawer form", "Multi-step wizard" recipes.</em></li>
+          <li><b>Promote page-shell blocks to shells</b><em>Why next: clarifies the b/x/s contract before the cookbook hard-codes today&rsquo;s naming (O&#8209;3, G&#8209;3).</em><em>Unlocks: shells.html as the single shell index.</em></li>
+          <li><b>Merge .menu and .dropdown</b><em>Why next: one of them is dead weight (D&#8209;5).</em><em>Unlocks: smaller catalogue, easier onboarding.</em></li>
+        </ul>
+      </div>
+      <div class="au-r">
+        <h4>Later</h4>
+        <ul>
+          <li><b>Block-prefix migration for old blocks</b><em>Why later: big diff with no behaviour change — wait until a token sweep (A&#8209;1).</em><em>Unlocks: .ti / .h / .body unambiguous.</em></li>
+          <li><b>Lift bare hex into tokens</b><em>Why later: invisible to consumers; bundle with the next token-pass (T&#8209;1, T&#8209;2).</em><em>Unlocks: theming &amp; dark mode tractable.</em></li>
+          <li><b>Reduce .erp-pill to tones</b><em>Why later: needs coordination with verticals (O&#8209;1).</em><em>Unlocks: verticals own their status&nbsp;&rarr;&nbsp;tone map.</em></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 11. Versatility scorecard ───────────────────────────────── -->
+  <section>
+    <h2 class="ds-h2">Versatility scorecard</h2>
+    <p class="ds-h2-sub">The eight most-reusable patterns and how they&rsquo;re holding up. <em>Portals</em> = portal demos that actually consume the class.</p>
+    <table class="au-table">
+      <thead>
+        <tr><th>Pattern</th><th>Portals</th><th>API stable</th><th>Token-only</th><th>Documented</th><th>Recommendation</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="b-bottom-tabs.html"><code class="t-mono">b-bottom-tabs</code></a></td>
+          <td class="yn">9</td>
+          <td class="yn">Y</td>
+          <td class="yn">Y</td>
+          <td class="yn">Y</td>
+          <td>Add an <code class="t-mono">--inline</code> variant for previews (A&#8209;3); remove the 4 legacy aliases from portals (D&#8209;1).</td>
+        </tr>
+        <tr>
+          <td><a href="b-filter-chips.html"><code class="t-mono">b-filter-chips</code></a></td>
+          <td class="yn">10</td>
+          <td class="yn">Y</td>
+          <td class="yn">Y</td>
+          <td class="yn">Y</td>
+          <td>Pick this as canonical (D&#8209;4); deprecate <code class="t-mono">.fchip</code>.</td>
+        </tr>
+        <tr>
+          <td><a href="b-row-card.html"><code class="t-mono">b-row-card</code></a></td>
+          <td class="yn">11</td>
+          <td class="yn">Y</td>
+          <td class="yn">Y</td>
+          <td class="yn">Y</td>
+          <td>Strongest of the new lift-ups. Migrate the 9 remaining <code class="t-mono">.row-card</code> sites.</td>
+        </tr>
+        <tr>
+          <td><a href="b-stat-hero.html"><code class="t-mono">b-stat-hero</code></a></td>
+          <td class="yn">9</td>
+          <td class="yn">Y</td>
+          <td class="yn">Y</td>
+          <td class="yn">Y</td>
+          <td>Replace secondary tiles with a shared <code class="t-mono">.stat</code> primitive (D&#8209;3).</td>
+        </tr>
+        <tr>
+          <td><a href="b-day-list.html"><code class="t-mono">b-day-list</code></a></td>
+          <td class="yn">5</td>
+          <td class="yn">Y</td>
+          <td class="yn">Y</td>
+          <td class="yn">Y</td>
+          <td>Healthy. Watch for divergence in the 5 ad-hoc <code class="t-mono">dt</code>/<code class="t-mono">dd</code> sites still on old markup.</td>
+        </tr>
+        <tr>
+          <td><a href="x-bottom-sheet.html"><code class="t-mono">x-bottom-sheet</code></a></td>
+          <td class="yn">15</td>
+          <td class="yn">Y</td>
+          <td class="yn">N</td>
+          <td class="yn">Y</td>
+          <td>Drop the local footer-button rules (A&#8209;4); promote desktop variant as canonical modal (D&#8209;1).</td>
+        </tr>
+        <tr>
+          <td><a href="b-page-header.html"><code class="t-mono">b-page-header</code></a></td>
+          <td class="yn">10</td>
+          <td class="yn">Y</td>
+          <td class="yn">Y</td>
+          <td class="yn">Y</td>
+          <td>Solid. Used everywhere; document the "no actions" minimal variant.</td>
+        </tr>
+        <tr>
+          <td><a href="b-data-toolbar.html"><code class="t-mono">b-data-toolbar</code></a></td>
+          <td class="yn">6</td>
+          <td class="yn">Y</td>
+          <td class="yn">Y</td>
+          <td class="yn">Y</td>
+          <td>Good. Couple it with <code class="t-mono">.dtable</code> on a single <a href="x-data-table.html">x-data-table</a> recipe.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="ds-callout" style="margin-top: 56px;">
+    <span class="ic" data-icon="info" data-icon-size="18"></span>
+    <div>
+      <h4>This page is living.</h4>
+      <p>Update findings as they&rsquo;re closed; add new ones as the system grows. The audit is only useful if it stays current — flag each finding as <span class="t-mono">resolved</span> in place rather than removing it, so the history of what was duct-tape stays visible.</p>
+    </div>
+  </div>
+</article>
+</main>
+</body></html>

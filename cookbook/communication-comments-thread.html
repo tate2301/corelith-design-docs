@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Comments thread · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .panel { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 12px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+  .ck-screen .comment { display: grid; grid-template-columns: 18px 1fr; gap: 6px; font: 500 9px/1.35 var(--font-sans); }
+  .ck-screen .avatar { width: 18px; height: 18px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 700 9px/1 var(--font-sans); }
+  .ck-screen .comment.r { padding-left: 22px; }
+  .ck-screen .meta { color: var(--text-muted); font: 500 8px/1 var(--font-sans); }
+  .ck-screen .body { color: var(--text-strong); }
+  .ck-screen .resolved { opacity: 0.5; text-decoration: line-through; }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p  { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+
+  .ck-pull { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; padding: 14px 16px; margin: 14px 0 0; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+
+  /* Honest "code-only" preview marker — used when a step is conceptual code
+     (state machine, hook, reducer) and a visual mockup would be misleading. */
+  .ck-code-only-note {
+    display: grid; gap: 8px;
+    padding: 22px 26px;
+    background: var(--surface-muted);
+    border: 1px dashed var(--border-strong);
+    border-radius: 12px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-code-only-note .ck-code-only-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    align-self: start;
+    font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--surface); color: var(--brand-strong);
+    border: 1px solid var(--border);
+  }
+  .ck-code-only-note p { margin: 0; color: var(--text-muted); }
+  .ck-code-only-note code {
+    background: var(--surface); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+
+  /* Off-system component roadmap pill — for recipes that compose with
+     components not yet in @huchu/react v0.1.0-alpha.0. */
+  .ck-roadmap-note {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--brand);
+    border-radius: 8px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code {
+    background: var(--surface-muted); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Communication</a><span class="sep">/</span>
+      <span>Comments thread</span>
+    </div>
+    <h1>Build a threaded comments panel</h1>
+    <p class="lede">By the end of this recipe you'll have a comments panel attached to a record: top-level posts with one level of nested replies, @mention autocomplete, edit-in-place with an "edited" indicator, 👍 reactions, and a resolved-state that hides comments but never deletes them.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="message" data-icon-size="12"></span>Communication</span>
+      <span class="meta-pill">3 primitives · 2 blocks · 1 pattern</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~40 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">Comments attach to a record. Each one is a tiny document with its own state — author, body, reactions, edit history, resolved flag.</p>
+    <p>Comments turn a record into a conversation. For an SMB workflow — a leave request, a sales lead, a stock-count discrepancy — the thread is where the actual decision-making happens, separate from the audit log. This recipe keeps the data model flat (one comment per row, <code>parentId</code> for replies) and the rendering shallow (one level of nesting only). Two levels in, threading becomes unreadable; flat-but-tagged is what real teams use.</p>
+    <p class="ck-pull"><b>Never lose a comment.</b> Edit history is preserved (small "edited" indicator). Resolving doesn't delete — it hides until "Show resolved" is toggled. Comments are evidence; treat them like it.</p>
+    <p><b>Skip this recipe if</b> your workflow doesn't have decisions to make. A read-only audit log or an activity feed is a different pattern — quieter, append-only, no replies.</p>
+  </section>
+
+  <!-- WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three states of the thread: idle, composing with an @mention, and a resolved one tucked away.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="panel">
+          <div class="comment"><div class="avatar">T</div><div><div class="meta">Tendai · 2h</div><div class="body">Do we have a date for the Bulawayo audit?</div></div></div>
+          <div class="comment r"><div class="avatar">A</div><div><div class="meta">Anesu · 1h</div><div class="body">Friday 14:00 works. Will bring float sheets.</div></div></div>
+          <div class="comment"><div class="avatar">J</div><div><div class="meta">Jabu · 30m</div><div class="body">Approved. Cc'ing Mai Mukamba.</div></div></div>
+        </div>
+        <div class="caption"><span class="num">01</span> Idle — top-level + one reply</div>
+      </div>
+      <div class="ck-screen">
+        <div class="panel">
+          <div class="comment"><div class="avatar">T</div><div><div class="meta">Tendai · 2h</div><div class="body">Do we have a date for the audit?</div></div></div>
+          <div style="border: 1px solid var(--border-strong); border-radius: 6px; padding: 6px; background: var(--surface); margin-top: 6px;">
+            <div style="font: 500 9px/1.3 var(--font-mono); color: var(--text-strong);">@an<span style="background: var(--brand-soft); color: var(--brand-strong);">esu</span></div>
+            <div style="background: var(--surface-muted); border: 1px solid var(--border); border-radius: 4px; margin-top: 4px; padding: 4px;">
+              <div style="font: 600 9px/1 var(--font-sans); color: var(--brand-strong);">Anesu Moyo</div>
+              <div style="font: 500 8px/1 var(--font-sans); color: var(--text-muted);">Operations</div>
+            </div>
+          </div>
+        </div>
+        <div class="caption"><span class="num">02</span> Compose — @mention autocomplete</div>
+      </div>
+      <div class="ck-screen">
+        <div class="panel">
+          <div style="font: 500 9px/1 var(--font-sans); color: var(--text-muted); display: flex; justify-content: space-between;"><span>3 unresolved</span><span style="color: var(--brand-strong);">Show resolved (4)</span></div>
+          <div class="comment resolved"><div class="avatar">T</div><div><div class="meta">Tendai · 2h · resolved</div><div class="body">Old discussion thread</div></div></div>
+          <div class="comment"><div class="avatar">J</div><div><div class="meta">Jabu · 5m</div><div class="body">New question — open</div></div></div>
+        </div>
+        <div class="caption"><span class="num">03</span> Resolved — hidden, not gone</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Most pieces are blocks — the conversation pattern is small enough that one component holds the whole thread.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/p-textarea.html"><span class="kind">Primitive</span>TextArea</a>
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+      <a class="ck-piece" href="../system/p-combobox.html"><span class="kind">Primitive</span>Combobox</a>
+      <a class="ck-piece" href="../system/b-avatar.html"><span class="kind">Block</span>Avatar</a>
+      <a class="ck-piece" href="../system/b-row-card.html"><span class="kind">Block</span>RowCard</a>
+      <a class="ck-piece" href="../system/x-comments.html"><span class="kind">Pattern</span>Comments thread</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>CommentsThread</code>, <code>useComments</code>, <code>TextArea</code>, <code>Combobox</code>, <code>Avatar</code>, <code>Button</code>, <code>Stack</code>, <code>Toast</code>, <code>useToast</code>.</p>
+  </section>
+
+  <!-- STEPS -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <div class="ck-step"><span class="n">01</span><h3>Model the comment as a flat row with a parent pointer</h3></div>
+    <p>One table, not a tree. Each comment carries <code>id</code>, optional <code>parentId</code>, and an <code>edits</code> array. Two-level rendering means anything with a non-null <code>parentId</code> attaches to its parent; deeper nesting is flattened to the same level so threads don't shrink off the right edge.</p>
+    <div class="ds-specimen"
+         data-code='type CommentId = string;
+
+type Edit = { at: string; body: string };
+
+type Comment = {
+  id: CommentId;
+  parentId: CommentId | null;
+  author: { id: string; name: string; avatar?: string };
+  body: string;
+  createdAt: string;
+  edits: Edit[];        // empty unless the comment was edited
+  resolved: boolean;
+  reactions: Record&lt;string, string[]&gt;; // emoji → userIds
+};
+
+type State = {
+  comments: Comment[];
+  showResolved: boolean;
+};
+
+type Action =
+  | { type: &#39;ADD&#39;;     comment: Comment }
+  | { type: &#39;EDIT&#39;;    id: CommentId; body: string; at: string }
+  | { type: &#39;RESOLVE&#39;; id: CommentId; resolved: boolean }
+  | { type: &#39;REACT&#39;;   id: CommentId; emoji: string; userId: string }
+  | { type: &#39;TOGGLE_RESOLVED_VIEW&#39; };
+
+function reducer(s: State, a: Action): State {
+  switch (a.type) {
+    case &#39;ADD&#39;: return { ...s, comments: [...s.comments, a.comment] };
+    case &#39;EDIT&#39;: return {
+      ...s,
+      comments: s.comments.map((c) =&gt; c.id === a.id ? {
+        ...c,
+        edits: [...c.edits, { at: a.at, body: c.body }],
+        body: a.body,
+      } : c),
+    };
+    case &#39;RESOLVE&#39;: return {
+      ...s,
+      comments: s.comments.map((c) =&gt; c.id === a.id ? { ...c, resolved: a.resolved } : c),
+    };
+    case &#39;REACT&#39;: return {
+      ...s,
+      comments: s.comments.map((c) =&gt; {
+        if (c.id !== a.id) return c;
+        const have = c.reactions[a.emoji] ?? [];
+        const next = have.includes(a.userId)
+          ? have.filter((u) =&gt; u !== a.userId)
+          : [...have, a.userId];
+        return { ...c, reactions: { ...c.reactions, [a.emoji]: next } };
+      }),
+    };
+    case &#39;TOGGLE_RESOLVED_VIEW&#39;:
+      return { ...s, showResolved: !s.showResolved };
+  }
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>EDIT pushes the old body onto edits[], replaces body</p>
+          <p>No DELETE action. Resolved hides; nothing is destroyed.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Model</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">02</span><h3>Render the thread with one level of nesting</h3></div>
+    <p>Group comments by parentless then attach replies. Each comment is its own component with author, body, time, reactions and a row of actions. Replies indent by a single step; deeper nesting flattens to the same indent so the thread never disappears off the right.</p>
+    <div class="ds-specimen"
+         data-code='import { Avatar, Stack, Button } from &#39;@huchu/react&#39;;
+
+function Thread({ comments, currentUserId, dispatch }: {
+  comments: Comment[];
+  currentUserId: string;
+  dispatch: React.Dispatch&lt;Action&gt;;
+}) {
+  const tops = comments.filter((c) =&gt; c.parentId === null);
+  const replies = (id: CommentId) =&gt; comments.filter((c) =&gt; c.parentId === id);
+
+  return (
+    &lt;Stack gap=&quot;md&quot; role=&quot;feed&quot; aria-label=&quot;Comments&quot;&gt;
+      {tops.map((c) =&gt; (
+        &lt;CommentRow key={c.id} c={c} currentUserId={currentUserId} dispatch={dispatch}&gt;
+          {replies(c.id).map((r) =&gt; (
+            &lt;CommentRow
+              key={r.id}
+              c={r}
+              currentUserId={currentUserId}
+              dispatch={dispatch}
+              indent
+            /&gt;
+          ))}
+        &lt;/CommentRow&gt;
+      ))}
+    &lt;/Stack&gt;
+  );
+}
+
+function CommentRow({ c, currentUserId, dispatch, indent, children }: {
+  c: Comment;
+  currentUserId: string;
+  dispatch: React.Dispatch&lt;Action&gt;;
+  indent?: boolean;
+  children?: React.ReactNode;
+}) {
+  const edited = c.edits.length &gt; 0;
+  return (
+    &lt;article
+      className={`comment ${indent ? &#39;is-reply&#39; : &#39;&#39;} ${c.resolved ? &#39;is-resolved&#39; : &#39;&#39;}`}
+      aria-label={`${c.author.name}, ${c.createdAt}`}
+    &gt;
+      &lt;Avatar name={c.author.name} size=&quot;sm&quot; /&gt;
+      &lt;div&gt;
+        &lt;header&gt;
+          &lt;b&gt;{c.author.name}&lt;/b&gt;
+          &lt;time dateTime={c.createdAt}&gt;{relative(c.createdAt)}&lt;/time&gt;
+          {edited &amp;&amp; &lt;span className=&quot;edited&quot; title={`Edited ${c.edits.length}×`}&gt;edited&lt;/span&gt;}
+          {c.resolved &amp;&amp; &lt;span className=&quot;resolved-tag&quot;&gt;resolved&lt;/span&gt;}
+        &lt;/header&gt;
+        &lt;Body body={c.body} /&gt;
+        &lt;CommentActions c={c} currentUserId={currentUserId} dispatch={dispatch} /&gt;
+        {children}
+      &lt;/div&gt;
+    &lt;/article&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="width: 420px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px;">
+            <div style="display: grid; grid-template-columns: 28px 1fr; gap: 10px;">
+              <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 700 11px/1 var(--font-sans);">T</div>
+              <div>
+                <div style="display: flex; gap: 8px; align-items: baseline;"><b style="font: 600 13px/1 var(--font-sans);">Tendai</b><span style="font: 500 11px/1 var(--font-sans); color: var(--text-subtle);">2h</span></div>
+                <p style="font: 500 13px/1.5 var(--font-sans); color: var(--text-strong); margin: 4px 0 0;">Do we have a date for the Bulawayo audit?</p>
+                <div style="display: flex; gap: 12px; margin-top: 6px; font: 500 11px/1 var(--font-sans); color: var(--text-muted);"><span>Reply</span><span>👍 2</span><span>Resolve</span></div>
+                <div style="display: grid; grid-template-columns: 24px 1fr; gap: 8px; margin-top: 12px; padding-left: 8px; border-left: 2px solid var(--border);">
+                  <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 700 10px/1 var(--font-sans);">A</div>
+                  <div>
+                    <div style="display: flex; gap: 8px; align-items: baseline;"><b style="font: 600 12px/1 var(--font-sans);">Anesu</b><span style="font: 500 10px/1 var(--font-sans); color: var(--text-subtle);">1h</span></div>
+                    <p style="font: 500 12px/1.5 var(--font-sans); color: var(--text-strong); margin: 4px 0 0;">Friday 14:00 works. Will bring float sheets.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Thread render</span><span class="spacer"></span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">03</span><h3>Compose with @mention autocomplete</h3></div>
+    <p>Watch the textarea for an <code>@</code> followed by characters. Open a small <code>Combobox</code> anchored under the caret with matching workspace members. Selecting injects the rendered mention and closes the popover. Don't try to make the cursor "stick inside" the mention — let it be a normal text token that you serialise on submit.</p>
+    <div class="ds-specimen"
+         data-code='import { useRef, useState } from &#39;@huchu/react&#39;;
+import { TextArea, Combobox, Button } from &#39;@huchu/react&#39;;
+
+function Composer({
+  members, currentUserId, onSubmit,
+}: {
+  members: { id: string; name: string }[];
+  currentUserId: string;
+  onSubmit: (body: string) =&gt; void;
+}) {
+  const taRef = useRef&lt;HTMLTextAreaElement&gt;(null);
+  const [draft, setDraft] = useState(&#39;&#39;);
+  const [query, setQuery] = useState&lt;string | null&gt;(null);
+
+  const onChange = (v: string) =&gt; {
+    setDraft(v);
+    // Detect @… at the cursor.
+    const cursor = taRef.current?.selectionStart ?? v.length;
+    const upToCursor = v.slice(0, cursor);
+    const m = /@(\\w*)$/.exec(upToCursor);
+    setQuery(m ? m[1] : null);
+  };
+
+  const insertMention = (memberId: string, name: string) =&gt; {
+    if (!taRef.current) return;
+    const cursor = taRef.current.selectionStart;
+    const before = draft.slice(0, cursor).replace(/@\\w*$/, `@[${name}](${memberId}) `);
+    const after  = draft.slice(cursor);
+    setDraft(before + after);
+    setQuery(null);
+    taRef.current.focus();
+  };
+
+  const candidates = query === null
+    ? []
+    : members.filter((m) =&gt; m.name.toLowerCase().includes(query.toLowerCase()));
+
+  return (
+    &lt;div className=&quot;composer&quot;&gt;
+      &lt;TextArea
+        ref={taRef}
+        value={draft}
+        onChange={onChange}
+        placeholder=&quot;Comment, or @mention someone…&quot;
+        rows={3}
+      /&gt;
+      {query !== null &amp;&amp; candidates.length &gt; 0 &amp;&amp; (
+        &lt;Combobox.Popover&gt;
+          {candidates.map((m) =&gt; (
+            &lt;Combobox.Item key={m.id} onSelect={() =&gt; insertMention(m.id, m.name)}&gt;
+              {m.name}
+            &lt;/Combobox.Item&gt;
+          ))}
+        &lt;/Combobox.Popover&gt;
+      )}
+      &lt;Button
+        variant=&quot;primary&quot;
+        disabled={!draft.trim()}
+        onClick={() =&gt; { onSubmit(draft.trim()); setDraft(&#39;&#39;); }}
+      &gt;
+        Post
+      &lt;/Button&gt;
+    &lt;/div&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="width: 360px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px;">
+            <div style="border: 1px solid var(--border-strong); border-radius: 8px; padding: 10px; font: 500 13px/1.4 var(--font-sans); color: var(--text-strong); min-height: 56px;">Cc'ing @<span style="background: var(--brand-soft); color: var(--brand-strong); padding: 1px 4px; border-radius: 4px;">an</span></div>
+            <div style="margin-top: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--elev-2); overflow: hidden;">
+              <div style="padding: 8px 10px; background: var(--surface-muted); display: flex; gap: 8px; align-items: center;"><div style="width: 22px; height: 22px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 700 10px/1 var(--font-sans);">A</div><div><div style="font: 600 12px/1 var(--font-sans);">Anesu Moyo</div><div style="font: 500 10px/1 var(--font-sans); color: var(--text-muted);">Operations</div></div></div>
+              <div style="padding: 8px 10px; display: flex; gap: 8px; align-items: center;"><div style="width: 22px; height: 22px; border-radius: 50%; background: var(--surface-muted); color: var(--text-muted); display: grid; place-items: center; font: 700 10px/1 var(--font-sans);">A</div><div><div style="font: 600 12px/1 var(--font-sans);">Anna Chigumira</div><div style="font: 500 10px/1 var(--font-sans); color: var(--text-muted);">Accounts</div></div></div>
+            </div>
+            <div style="margin-top: 10px; text-align: right;"><div style="display: inline-block; background: var(--ink); color: var(--canvas); padding: 6px 14px; border-radius: 8px; font: 600 12px/1 var(--font-sans);">Post</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · @mention</span><span class="spacer"></span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">04</span><h3>Edit in place — and keep the history</h3></div>
+    <p>Clicking "Edit" replaces the body with a small textarea pre-filled with the current body. Submitting dispatches EDIT, which pushes the old body onto <code>edits[]</code>. The small "edited" indicator hovers a tooltip with the edit count; the change is visible but quiet.</p>
+    <div class="ds-specimen"
+         data-code='function EditableBody({
+  c, onSave,
+}: {
+  c: Comment;
+  onSave: (body: string) =&gt; void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(c.body);
+
+  if (!editing) {
+    return (
+      &lt;&gt;
+        &lt;p&gt;{renderMentions(c.body)}&lt;/p&gt;
+        &lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot; onClick={() =&gt; setEditing(true)}&gt;
+          Edit
+        &lt;/Button&gt;
+      &lt;/&gt;
+    );
+  }
+
+  return (
+    &lt;div className=&quot;editor&quot;&gt;
+      &lt;TextArea value={draft} onChange={setDraft} autoFocus rows={3} /&gt;
+      &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot;&gt;
+        &lt;Button variant=&quot;primary&quot; onClick={() =&gt; {
+          onSave(draft.trim());
+          setEditing(false);
+        }}&gt;Save&lt;/Button&gt;
+        &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; {
+          setDraft(c.body);
+          setEditing(false);
+        }}&gt;Cancel&lt;/Button&gt;
+      &lt;/Stack&gt;
+    &lt;/div&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="width: 360px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;">
+            <div style="display: flex; gap: 8px; align-items: baseline;"><b style="font: 600 13px/1 var(--font-sans);">Tendai</b><span style="font: 500 11px/1 var(--font-sans); color: var(--text-subtle);">2h</span><span style="font: 500 10px/1 var(--font-sans); color: var(--text-subtle); border-bottom: 1px dashed var(--text-subtle);">edited</span></div>
+            <div style="border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px; font: 500 13px/1.4 var(--font-sans); color: var(--text-strong); margin-top: 6px;">Do we have a date for the Bulawayo audit?</div>
+            <div style="display: flex; gap: 8px; margin-top: 8px;"><div style="background: var(--ink); color: var(--canvas); padding: 5px 12px; border-radius: 6px; font: 600 11px/1 var(--font-sans);">Save</div><div style="color: var(--text-muted); padding: 5px 12px; font: 600 11px/1 var(--font-sans);">Cancel</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Edit + history</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- FINAL -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole <code>CommentsPanel</code> — reducer, thread, composer, edit, resolve toggle.</p>
+    <div class="ds-specimen"
+         data-code='import { useReducer, useRef, useState } from &#39;@huchu/react&#39;;
+import {
+  CommentsThread, useComments,
+  Avatar, Stack, Button, TextArea, Combobox, Toast, useToast,
+} from &#39;@huchu/react&#39;;
+
+type CommentId = string;
+type Edit = { at: string; body: string };
+
+type Comment = {
+  id: CommentId;
+  parentId: CommentId | null;
+  author: { id: string; name: string };
+  body: string;
+  createdAt: string;
+  edits: Edit[];
+  resolved: boolean;
+  reactions: Record&lt;string, string[]&gt;;
+};
+
+type State = { comments: Comment[]; showResolved: boolean };
+
+type Action =
+  | { type: &#39;ADD&#39;;     comment: Comment }
+  | { type: &#39;EDIT&#39;;    id: CommentId; body: string; at: string }
+  | { type: &#39;RESOLVE&#39;; id: CommentId; resolved: boolean }
+  | { type: &#39;REACT&#39;;   id: CommentId; emoji: string; userId: string }
+  | { type: &#39;TOGGLE_RESOLVED_VIEW&#39; };
+
+function reducer(s: State, a: Action): State {
+  switch (a.type) {
+    case &#39;ADD&#39;: return { ...s, comments: [...s.comments, a.comment] };
+    case &#39;EDIT&#39;: return {
+      ...s,
+      comments: s.comments.map((c) =&gt; c.id === a.id ? {
+        ...c,
+        edits: [...c.edits, { at: a.at, body: c.body }],
+        body: a.body,
+      } : c),
+    };
+    case &#39;RESOLVE&#39;: return {
+      ...s,
+      comments: s.comments.map((c) =&gt; c.id === a.id ? { ...c, resolved: a.resolved } : c),
+    };
+    case &#39;REACT&#39;: return {
+      ...s,
+      comments: s.comments.map((c) =&gt; {
+        if (c.id !== a.id) return c;
+        const have = c.reactions[a.emoji] ?? [];
+        const next = have.includes(a.userId)
+          ? have.filter((u) =&gt; u !== a.userId)
+          : [...have, a.userId];
+        return { ...c, reactions: { ...c.reactions, [a.emoji]: next } };
+      }),
+    };
+    case &#39;TOGGLE_RESOLVED_VIEW&#39;:
+      return { ...s, showResolved: !s.showResolved };
+  }
+}
+
+export function CommentsPanel({
+  initial, members, currentUserId,
+}: {
+  initial: Comment[];
+  members: { id: string; name: string }[];
+  currentUserId: string;
+}) {
+  const [s, dispatch] = useReducer(reducer, {
+    comments: initial,
+    showResolved: false,
+  });
+  const toast = useToast();
+
+  const unresolved = s.comments.filter((c) =&gt; !c.resolved);
+  const resolved   = s.comments.filter((c) =&gt; c.resolved);
+  const view = s.showResolved ? s.comments : unresolved;
+
+  const tops    = view.filter((c) =&gt; c.parentId === null);
+  const replies = (id: CommentId) =&gt; view.filter((c) =&gt; c.parentId === id);
+
+  const add = (parentId: CommentId | null, body: string) =&gt; {
+    const author = members.find((m) =&gt; m.id === currentUserId)!;
+    dispatch({
+      type: &#39;ADD&#39;,
+      comment: {
+        id: crypto.randomUUID(),
+        parentId,
+        author,
+        body,
+        createdAt: new Date().toISOString(),
+        edits: [],
+        resolved: false,
+        reactions: {},
+      },
+    });
+  };
+
+  return (
+    &lt;section aria-label=&quot;Comments&quot;&gt;
+      &lt;header className=&quot;thread-head&quot;&gt;
+        &lt;h2&gt;{unresolved.length} unresolved&lt;/h2&gt;
+        {resolved.length &gt; 0 &amp;&amp; (
+          &lt;Button
+            variant=&quot;ghost&quot;
+            onClick={() =&gt; dispatch({ type: &#39;TOGGLE_RESOLVED_VIEW&#39; })}
+          &gt;
+            {s.showResolved ? &#39;Hide resolved&#39; : `Show resolved (${resolved.length})`}
+          &lt;/Button&gt;
+        )}
+      &lt;/header&gt;
+
+      &lt;Stack gap=&quot;md&quot; role=&quot;feed&quot;&gt;
+        {tops.map((c) =&gt; (
+          &lt;CommentRow
+            key={c.id}
+            c={c}
+            members={members}
+            currentUserId={currentUserId}
+            dispatch={dispatch}
+            onReply={(body) =&gt; add(c.id, body)}
+            replies={replies(c.id)}
+          /&gt;
+        ))}
+      &lt;/Stack&gt;
+
+      &lt;Composer
+        members={members}
+        currentUserId={currentUserId}
+        onSubmit={(body) =&gt; {
+          add(null, body);
+          toast.show({ tone: &#39;success&#39;, title: &#39;Comment posted&#39; });
+        }}
+      /&gt;
+    &lt;/section&gt;
+  );
+}
+
+function CommentRow({
+  c, members, currentUserId, dispatch, onReply, replies,
+}: {
+  c: Comment;
+  members: { id: string; name: string }[];
+  currentUserId: string;
+  dispatch: React.Dispatch&lt;Action&gt;;
+  onReply: (body: string) =&gt; void;
+  replies: Comment[];
+}) {
+  const [editing, setEditing] = useState(false);
+  const [replying, setReplying] = useState(false);
+  const [draft, setDraft] = useState(c.body);
+
+  const edited = c.edits.length &gt; 0;
+
+  return (
+    &lt;article
+      className={`comment ${c.resolved ? &#39;is-resolved&#39; : &#39;&#39;}`}
+      aria-label={`${c.author.name}, ${c.createdAt}`}
+    &gt;
+      &lt;Avatar name={c.author.name} size=&quot;sm&quot; /&gt;
+      &lt;div&gt;
+        &lt;header&gt;
+          &lt;b&gt;{c.author.name}&lt;/b&gt;
+          &lt;time dateTime={c.createdAt}&gt;{relative(c.createdAt)}&lt;/time&gt;
+          {edited &amp;&amp; (
+            &lt;span className=&quot;edited&quot; title={`Edited ${c.edits.length}×`}&gt;edited&lt;/span&gt;
+          )}
+          {c.resolved &amp;&amp; &lt;span className=&quot;resolved-tag&quot;&gt;resolved&lt;/span&gt;}
+        &lt;/header&gt;
+
+        {editing ? (
+          &lt;Stack gap=&quot;sm&quot;&gt;
+            &lt;TextArea value={draft} onChange={setDraft} autoFocus rows={3} /&gt;
+            &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot;&gt;
+              &lt;Button variant=&quot;primary&quot; onClick={() =&gt; {
+                dispatch({ type: &#39;EDIT&#39;, id: c.id, body: draft.trim(), at: new Date().toISOString() });
+                setEditing(false);
+              }}&gt;Save&lt;/Button&gt;
+              &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; {
+                setDraft(c.body); setEditing(false);
+              }}&gt;Cancel&lt;/Button&gt;
+            &lt;/Stack&gt;
+          &lt;/Stack&gt;
+        ) : (
+          &lt;p&gt;{renderMentions(c.body)}&lt;/p&gt;
+        )}
+
+        &lt;footer className=&quot;actions&quot;&gt;
+          &lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot; onClick={() =&gt; setReplying((v) =&gt; !v)}&gt;
+            Reply
+          &lt;/Button&gt;
+          &lt;ReactionButton
+            comment={c}
+            currentUserId={currentUserId}
+            onToggle={(emoji) =&gt; dispatch({ type: &#39;REACT&#39;, id: c.id, emoji, userId: currentUserId })}
+          /&gt;
+          {c.author.id === currentUserId &amp;&amp; !c.resolved &amp;&amp; (
+            &lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot; onClick={() =&gt; setEditing(true)}&gt;Edit&lt;/Button&gt;
+          )}
+          &lt;Button
+            variant=&quot;ghost&quot;
+            size=&quot;sm&quot;
+            onClick={() =&gt; dispatch({ type: &#39;RESOLVE&#39;, id: c.id, resolved: !c.resolved })}
+          &gt;
+            {c.resolved ? &#39;Reopen&#39; : &#39;Resolve&#39;}
+          &lt;/Button&gt;
+        &lt;/footer&gt;
+
+        {replies.length &gt; 0 &amp;&amp; (
+          &lt;div className=&quot;replies&quot;&gt;
+            {replies.map((r) =&gt; (
+              &lt;CommentRow
+                key={r.id}
+                c={r}
+                members={members}
+                currentUserId={currentUserId}
+                dispatch={dispatch}
+                onReply={onReply}
+                replies={[]}
+              /&gt;
+            ))}
+          &lt;/div&gt;
+        )}
+
+        {replying &amp;&amp; (
+          &lt;Composer
+            members={members}
+            currentUserId={currentUserId}
+            onSubmit={(body) =&gt; { onReply(body); setReplying(false); }}
+          /&gt;
+        )}
+      &lt;/div&gt;
+    &lt;/article&gt;
+  );
+}
+
+function ReactionButton({ comment, currentUserId, onToggle }: {
+  comment: Comment;
+  currentUserId: string;
+  onToggle: (emoji: string) =&gt; void;
+}) {
+  const count = comment.reactions[&#39;👍&#39;]?.length ?? 0;
+  const mine  = comment.reactions[&#39;👍&#39;]?.includes(currentUserId);
+  return (
+    &lt;Button
+      variant={mine ? &#39;primary&#39; : &#39;ghost&#39;}
+      size=&quot;sm&quot;
+      onClick={() =&gt; onToggle(&#39;👍&#39;)}
+      aria-pressed={mine}
+    &gt;
+      👍 {count || &#39;&#39;}
+    &lt;/Button&gt;
+  );
+}
+
+// renderMentions / relative / Composer omitted for brevity — see step 3.'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="width: 460px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;"><h2 style="font: 700 16px/1.2 var(--font-sans); margin: 0;">3 unresolved</h2><span style="font: 500 12px/1 var(--font-sans); color: var(--brand-strong);">Show resolved (4)</span></div>
+            <div style="display: grid; grid-template-columns: 28px 1fr; gap: 10px; margin-bottom: 16px;">
+              <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 700 11px/1 var(--font-sans);">T</div>
+              <div><div style="display: flex; gap: 8px; align-items: baseline;"><b>Tendai</b><span style="font: 500 11px/1 var(--font-sans); color: var(--text-subtle);">2h</span></div><p style="margin: 4px 0 0; font: 500 13px/1.5 var(--font-sans);">Do we have a date for the Bulawayo audit?</p><div style="display: flex; gap: 14px; margin-top: 6px; font: 500 11px/1 var(--font-sans); color: var(--text-muted);"><span>Reply</span><span style="color: var(--brand-strong);">👍 2</span><span>Resolve</span></div></div>
+            </div>
+            <div style="border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px 10px; font: 500 13px/1.4 var(--font-sans); color: var(--text-subtle);">Comment, or @mention someone…</div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">CommentsPanel.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three forks. Each is a small diff from the final composition.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Read-only mode</h4>
+        <p>Past records that can be read but not posted to. Hide the composer, drop the action buttons.</p>
+<pre>&lt;CommentsPanel readOnly /&gt;
+// inside CommentRow
+{!readOnly &amp;&amp; (
+  &lt;footer className=&quot;actions&quot;&gt;…&lt;/footer&gt;
+)}
+// CommentsPanel skips &lt;Composer/&gt;
+{!readOnly &amp;&amp; &lt;Composer /&gt;}</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Inline field annotations</h4>
+        <p>Comments anchored to a specific field, not the record. Add <code>anchor: { field, value }</code>; render a margin pin next to that field.</p>
+<pre>type Comment = { /* … */
+  anchor?: { field: string };
+};
+// Render a pin on the field
+&lt;Field anchor={
+  comments.filter(c =&gt; c.anchor?.field === &#39;name&#39;)
+} /&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Summary view ("3 unresolved")</h4>
+        <p>For a list of records, show only the unresolved count + last author. The whole thread expands on click.</p>
+<pre>const counts = comments
+  .filter(c =&gt; !c.resolved).length;
+return (
+  &lt;Button variant=&quot;ghost&quot;
+    onClick={openThread}&gt;
+    💬 {counts} unresolved
+  &lt;/Button&gt;
+);</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- A11Y -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">A comments thread is a live region wrapped around a list of articles. Get the semantics right and screen readers do the work.</p>
+    <ul class="ck-a11y">
+      <li><b>The thread is a <code>role="feed"</code>.</b> Each comment is an <code>&lt;article&gt;</code> with an <code>aria-label</code> that names the author and time. Screen readers can step "next article".</li>
+      <li><b>Times are real <code>&lt;time&gt;</code> elements.</b> <code>dateTime="…ISO…"</code> exposes the machine-readable timestamp; the visible label is a relative ("2h ago").</li>
+      <li><b>The "edited" indicator carries a tooltip.</b> <code>title</code> reads "Edited 2×" so the count is available without a click.</li>
+      <li><b>Reactions are <code>aria-pressed</code> toggles.</b> A reaction button reads "Thumbs up, pressed, 2 reactions" — both state and count in one breath.</li>
+      <li><b>The composer textarea is labelled.</b> Placeholder isn't a label; an associated <code>aria-label</code> says "New comment".</li>
+      <li><b>"Show resolved" is announced.</b> The toggle is a real button with <code>aria-expanded</code>; flipping it doesn't move focus, but the new comments are inside the same feed region so SR users hear "feed updated".</li>
+      <li><b>@mention popover is a <code>Combobox</code>.</b> Arrow keys navigate candidates, Enter selects, Esc closes — the textarea stays in focus throughout.</li>
+    </ul>
+  </section>
+
+  <!-- RELATED -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">Other communication patterns, plus the canonical state-machine recipe.</p>
+    <div class="ck-related">
+      <a href="views-print-friendly.html">Views ·  Print-friendly views<span class="tag">New</span></a>
+      <a href="views-image-gallery.html">Views ·  Image gallery + lightbox<span class="tag">New</span></a>
+      <a href="lists-kanban-board.html">Lists ·  Kanban board<span class="tag">New</span></a>
+      <a href="settings-notification-preferences.html">Settings ·  Notification preferences<span class="tag">New</span></a>
+      <a href="auth-signin-2fa.html">Auth ·  Sign in with 2FA<span class="tag">Canonical</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="index.html"><div class="pager-label">← Back to</div><div class="pager-title">Cookbook</div></a>
+    <a href="settings-notification-preferences.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Notification preferences</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

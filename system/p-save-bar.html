@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Save bar · Huchu DS</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<style>
+  /* Local override: in the doc stage we want the bar to render flush
+     to the stage rather than the viewport so the example reads cleanly. */
+  .sb-stage {
+    position: relative;
+    background: var(--canvas);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    min-height: 220px;
+    padding: 16px;
+    overflow: clip;
+  }
+  .sb-stage .p-save-bar { position: absolute; left: 0; right: 0; bottom: 0; transform: translateY(0); }
+  .sb-stage .form-stub { display: grid; gap: 10px; padding-bottom: 80px; }
+  .sb-stage .form-stub .row { height: 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
+  .sb-stage .form-stub .row.wide { width: 100%; }
+  .sb-stage .form-stub .row.half { width: 60%; }
+</style>
+</head>
+<body class="ds-doc" data-page="p-save-bar">
+  <main class="ds-content">
+    <div class="ds-doc-layout">
+
+      <article>
+        <header class="ds-page-head anim-fade-up">
+          <div class="crumbs">
+            <a href="../index.html">Home</a>
+            <span class="sep">/</span>
+            <a href="primitives.html">Primitives</a>
+            <span class="sep">/</span>
+            <span>Save bar</span>
+          </div>
+          <h1>Save bar</h1>
+          <p class="lede">A sticky bottom strip that slides up the moment a form has unsaved changes. Carries a dirty-state label on the left and Discard + Save on the right.</p>
+          <div class="meta">
+            <span class="meta-pill"><span data-icon="check" data-icon-size="12"></span>Stable</span>
+            <span class="meta-pill"><span class="t-mono">.p-save-bar</span></span>
+            <span class="meta-pill">Sticky · safe-area aware</span>
+          </div>
+        </header>
+
+        <!-- DEFAULT -->
+        <section id="default">
+          <h2 class="ds-h2">Default</h2>
+          <p class="ds-h2-sub">Add <code class="t-mono">.dirty</code> when the form has unsaved changes; remove it on save / discard.</p>
+
+          <div class="ds-specimen"
+               data-code='&lt;form&gt;
+  &lt;!-- form fields --&gt;
+
+  &lt;div class=&quot;p-save-bar dirty&quot;&gt;
+    &lt;div class=&quot;label&quot;&gt;
+      &lt;div class=&quot;title&quot;&gt;Unsaved changes&lt;/div&gt;
+      &lt;div class=&quot;summary&quot;&gt;3 fields edited&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;actions&quot;&gt;
+      &lt;button class=&quot;btn btn-ghost&quot; type=&quot;button&quot;&gt;Discard&lt;/button&gt;
+      &lt;button class=&quot;btn btn-primary&quot; type=&quot;submit&quot;&gt;Save changes&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/form&gt;'>
+            <div class="ds-specimen-stage plain" style="display: block;">
+              <div class="sb-stage">
+                <div class="form-stub">
+                  <div class="row wide"></div>
+                  <div class="row wide"></div>
+                  <div class="row half"></div>
+                </div>
+                <div class="p-save-bar dirty">
+                  <div class="label">
+                    <div class="title">Unsaved changes</div>
+                    <div class="summary">3 fields edited</div>
+                  </div>
+                  <div class="actions">
+                    <button class="btn btn-ghost" type="button">Discard</button>
+                    <button class="btn btn-primary" type="button">Save changes</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="ds-specimen-bar">
+              <span class="label">Dirty form · save bar slides up</span>
+              <span class="spacer"></span>
+              <span class="t-mono">.p-save-bar.dirty</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- WITH STATUS -->
+        <section id="status">
+          <h2 class="ds-h2">With save status</h2>
+          <p class="ds-h2-sub">Use the summary slot for autosave timestamps or validation hints.</p>
+
+          <div class="ds-specimen">
+            <div class="ds-specimen-stage plain" style="display: block;">
+              <div class="sb-stage">
+                <div class="form-stub">
+                  <div class="row wide"></div>
+                  <div class="row half"></div>
+                </div>
+                <div class="p-save-bar dirty">
+                  <div class="label">
+                    <div class="title"><span data-icon="info" data-icon-size="14"></span> Saving as draft…</div>
+                    <div class="summary">Last autosaved 12 seconds ago</div>
+                  </div>
+                  <div class="actions">
+                    <button class="btn btn-secondary" type="button">Preview</button>
+                    <button class="btn btn-primary" type="button">Publish</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="ds-specimen-bar">
+              <span class="label">Autosave + publish</span>
+              <span class="spacer"></span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ANATOMY -->
+        <section id="anatomy">
+          <h2 class="ds-h2">Parts</h2>
+          <table class="ds-props">
+            <thead><tr><th>Property</th><th>Value</th><th>Notes</th></tr></thead>
+            <tbody>
+              <tr><td>position</td><td><code class="t-mono">sticky; bottom: 0</code></td><td>Lives inside the form / panel that scrolls.</td></tr>
+              <tr><td>padding</td><td>12 16 (+ safe-area)</td><td>Adds <code class="t-mono">env(safe-area-inset-bottom)</code> on iOS.</td></tr>
+              <tr><td>border-top</td><td>1 px <code class="t-mono">--border-strong</code></td><td>Reads as a divider, not a card.</td></tr>
+              <tr><td>shadow</td><td>0 -6 16 -8</td><td>Soft lift to suggest "above the content."</td></tr>
+              <tr><td>transform</td><td>translateY(110%) → 0</td><td>Slide-up on <code class="t-mono">.dirty</code>; 240 ms ease-out.</td></tr>
+              <tr><td>label</td><td>flex 1</td><td>Title + optional summary line.</td></tr>
+              <tr><td>actions</td><td>flex none</td><td>Discard (ghost) + Save (primary). Save sits right.</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- DO / DON'T -->
+        <section id="rules">
+          <h2 class="ds-h2">Do &amp; don't</h2>
+          <div class="ds-rules">
+            <div class="rule do"><span class="tag">Do</span><p>Show the bar the instant the form goes dirty. The operator should never wonder whether their edits are tracked.</p></div>
+            <div class="rule dont"><span class="tag">Don't</span><p>Hide the bar behind a fixed footer or bottom nav. It needs to sit above the page chrome.</p></div>
+            <div class="rule do"><span class="tag">Do</span><p>Summarise what changed in the summary slot — "3 fields edited", "Quantity adjusted". Operators trust what they can see.</p></div>
+            <div class="rule dont"><span class="tag">Don't</span><p>Use destructive styling for Discard. It's a soft action that loses unsaved work, not a delete.</p></div>
+            <div class="rule do"><span class="tag">Do</span><p>Disable Save while validation is failing — but keep the bar visible so the operator knows changes are pending.</p></div>
+            <div class="rule dont"><span class="tag">Don't</span><p>Auto-save and show the bar at the same time. Pick one mental model per surface.</p></div>
+          </div>
+        </section>
+
+        <!-- A11Y -->
+        <section id="a11y">
+          <h2 class="ds-h2">Accessibility</h2>
+          <p class="ds-h2-sub">The bar appears and disappears — screen readers need to know.</p>
+          <ul style="font: var(--type-body); color: var(--text-body); line-height: 1.7;">
+            <li>Wrap the bar in <code class="t-mono">role="region" aria-label="Unsaved changes"</code> so it lands in landmark navigation.</li>
+            <li>Move keyboard focus to the bar (or its primary button) when the form first goes dirty, only if the operator triggered the dirty state via the keyboard.</li>
+            <li>Discard should require a confirm step on irreversible edits (use <a href="p-alert-dialog.html">alert dialog</a>).</li>
+            <li>Respect <code class="t-mono">prefers-reduced-motion</code>: the slide-up reduces to a fade in the global motion rule.</li>
+          </ul>
+        </section>
+
+        <!-- CODE -->
+        <section id="code">
+          <h2 class="ds-h2">Code</h2>
+          <pre class="ds-code"><span class="c">&lt;!-- Sticky save bar — toggle .dirty when the form has unsaved changes --&gt;</span>
+&lt;<span class="k">div</span> <span class="v">class</span>=<span class="s">"p-save-bar dirty"</span> <span class="v">role</span>=<span class="s">"region"</span> <span class="v">aria-label</span>=<span class="s">"Unsaved changes"</span>&gt;
+  &lt;<span class="k">div</span> <span class="v">class</span>=<span class="s">"label"</span>&gt;
+    &lt;<span class="k">div</span> <span class="v">class</span>=<span class="s">"title"</span>&gt;Unsaved changes&lt;/<span class="k">div</span>&gt;
+    &lt;<span class="k">div</span> <span class="v">class</span>=<span class="s">"summary"</span>&gt;3 fields edited&lt;/<span class="k">div</span>&gt;
+  &lt;/<span class="k">div</span>&gt;
+  &lt;<span class="k">div</span> <span class="v">class</span>=<span class="s">"actions"</span>&gt;
+    &lt;<span class="k">button</span> <span class="v">class</span>=<span class="s">"btn btn-ghost"</span> <span class="v">type</span>=<span class="s">"button"</span>&gt;Discard&lt;/<span class="k">button</span>&gt;
+    &lt;<span class="k">button</span> <span class="v">class</span>=<span class="s">"btn btn-primary"</span> <span class="v">type</span>=<span class="s">"submit"</span>&gt;Save changes&lt;/<span class="k">button</span>&gt;
+  &lt;/<span class="k">div</span>&gt;
+&lt;/<span class="k">div</span>&gt;</pre>
+        </section>
+
+        <div class="ds-callout">
+          <span class="ic" data-icon="info" data-icon-size="18"></span>
+          <div>
+            <h4>Related</h4>
+            <p>For a soft confirmation that a save just happened, see <a href="b-record-saved-banner.html">Record saved banner</a>. For the whole-form chrome, see <a href="b-form-shell.html">Form shell</a>.</p>
+          </div>
+        </div>
+
+        <nav class="ds-pager">
+          <a href="p-mobile-action-bar.html"><div class="pager-label">← Previous</div><div class="pager-title">Mobile action bar</div></a>
+          <a href="p-pagination.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Pagination</div></a>
+        </nav>
+      </article>
+
+      <aside class="ds-toc">
+        <div class="toc-label">On this page</div>
+        <ul>
+          <li><a href="#default" class="current">Default</a></li>
+          <li><a href="#status">With save status</a></li>
+          <li><a href="#anatomy">Parts</a></li>
+          <li><a href="#rules">Do &amp; don't</a></li>
+          <li><a href="#a11y">Accessibility</a></li>
+          <li><a href="#code">Code</a></li>
+        </ul>
+      </aside>
+
+    </div>
+  </main>
+</body>
+</html>

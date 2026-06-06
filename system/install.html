@@ -15,48 +15,93 @@
   <header class="ds-page-head anim-fade-up">
     <div class="crumbs"><a href="../index.html">Home</a><span class="sep">/</span><span>Install</span></div>
     <h1>Install</h1>
-    <p class="lede">Two ways to use the Huchu design system: pull the static stylesheet into any HTML page, or install the source modules into a Next.js app.</p>
+    <p class="lede">Two on-ramps. The CSS path works today in any project. The React path is pre-alpha and lives as source in the monorepo until <code class="inline">@huchu/react@0.1.0-alpha.0</code> hits npm.</p>
     <div class="meta">
-      <span class="meta-pill">CSS + JSON tokens</span>
-      <span class="meta-pill">React + Tailwind 4</span>
+      <span class="meta-pill">CSS today</span>
+      <span class="meta-pill">React pre-alpha</span>
       <span class="meta-pill">No build step required</span>
     </div>
   </header>
 
-  <section id="static">
-    <h2 class="ds-h2">Static HTML</h2>
-    <p class="ds-h2-sub">The fastest path. Link three files and you have the entire visual system.</p>
+  <section id="today">
+    <h2 class="ds-h2">What you can install today</h2>
+    <p class="ds-h2-sub">We don't ship a published npm package yet. Be honest with yourself about which path you're on before you pick.</p>
+    <table class="ds-props">
+      <thead><tr><th>Path</th><th>Status</th><th>What you ship</th></tr></thead>
+      <tbody>
+        <tr><td>CSS-only (Static HTML or any framework)</td><td><span class="badge">Stable</span></td><td>Two stylesheets and an icon helper. Documented classes. Works everywhere.</td></tr>
+        <tr><td><code class="inline">@huchu/react</code> as a workspace</td><td><span class="badge">Pre-alpha</span></td><td>Source-link the package from this monorepo. Same DOM as the CSS path, JSX wrapper.</td></tr>
+        <tr><td><code class="inline">npm i @huchu/react</code></td><td><span class="badge">Coming soon</span></td><td>Published package. Target: <code class="inline">0.1.0-alpha.0</code>. See the <a href="../packages/react/CHANGELOG.md">package changelog</a>.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="static" style="margin-top: 48px;">
+    <h2 class="ds-h2">(a) CSS only &mdash; the fast path</h2>
+    <p class="ds-h2-sub">Copy three files out of this repo, link them in your head, write the documented classes. No build step. No JavaScript required to render.</p>
+    <ol>
+      <li>Copy <code class="inline">tokens.css</code>, <code class="inline">components.css</code>, and <code class="inline">icons.js</code> into your project (we put them under <code class="inline">/public/huchu/</code> in most apps).</li>
+      <li>Link them in <code class="inline">&lt;head&gt;</code>.</li>
+      <li>Write the documented class names &mdash; <code class="inline">.btn-primary</code>, <code class="inline">.card</code>, <code class="inline">.dt-toolbar</code>. Add <code class="inline">data-icon="…"</code> wherever you want an inline SVG.</li>
+    </ol>
     <pre class="ds-code"><span class="c">&lt;!-- Tokens (color, type, spacing, motion) --&gt;</span>
 &lt;<span class="k">link</span> <span class="v">rel</span>=<span class="s">"stylesheet"</span> <span class="v">href</span>=<span class="s">"/huchu/tokens.css"</span>&gt;
 
 <span class="c">&lt;!-- Components (buttons, cards, tables, inputs) --&gt;</span>
 &lt;<span class="k">link</span> <span class="v">rel</span>=<span class="s">"stylesheet"</span> <span class="v">href</span>=<span class="s">"/huchu/components.css"</span>&gt;
 
-<span class="c">&lt;!-- Inline-SVG icons --&gt;</span>
+<span class="c">&lt;!-- Inline-SVG icons (auto-renders &lt;span data-icon&gt;) --&gt;</span>
 &lt;<span class="k">script</span> <span class="v">src</span>=<span class="s">"/huchu/icons.js"</span> <span class="v">defer</span>&gt;&lt;/<span class="k">script</span>&gt;</pre>
-    <p>Then write markup using the documented classes — <code class="inline">.btn-primary</code>, <code class="inline">.card</code>, <code class="inline">.dt-toolbar</code>. No build step. No JavaScript required to render.</p>
+    <p>That's the entire install. Every recipe in the <a href="../cookbook/index.html">cookbook</a> renders against exactly this CSS &mdash; the React snippets you see are JSX wrappers over the same DOM.</p>
   </section>
 
-  <section id="nextjs">
-    <h2 class="ds-h2">Next.js (tate2301/huchu)</h2>
-    <p class="ds-h2-sub">If you're working in the live ERP repo, the tokens already ship as CSS variables in <code class="inline">app/globals.css</code> and the components are Tailwind-derived shadcn primitives.</p>
+  <section id="react" style="margin-top: 48px;">
+    <h2 class="ds-h2">(b) React components &mdash; pre-alpha, monorepo only</h2>
+    <p class="ds-h2-sub">If you're tracking where the system is headed, clone the monorepo and use <code class="inline">@huchu/react</code> as a workspace dependency. There is no npm publish to install against yet.</p>
+    <pre class="ds-code"><span class="c"># 1. clone the monorepo</span>
+git clone https://github.com/tate2301/huchu
+cd huchu
+pnpm install
+
+<span class="c"># 2. wire your app to the workspace package</span>
+<span class="c"># in your-app/package.json:</span>
+<span class="s">"dependencies"</span>: {
+  <span class="s">"@huchu/react"</span>: <span class="s">"workspace:*"</span>
+}
+
+<span class="c"># 3. import the styles + use the components</span>
+<span class="c"># app entry:</span>
+import <span class="s">'@huchu/react/styles.css'</span>;
+import { Button, Card } from <span class="s">'@huchu/react'</span>;</pre>
+    <div class="ds-callout">
+      <span class="ic" data-icon="info" data-icon-size="18"></span>
+      <div>
+        <h4>Why not on npm yet?</h4>
+        <p>The 0.1.0-alpha.0 cut is gated on every <code class="inline">data-code</code> snippet in the <a href="../cookbook/index.html">cookbook</a> compiling against the package. Two thirds of recipes are there; the rest are the ship blocker. Subscribe to the <a href="../packages/react/CHANGELOG.md">changelog</a> for the publish notice.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="nextjs" style="margin-top: 48px;">
+    <h2 class="ds-h2">In the live ERP repo</h2>
+    <p class="ds-h2-sub">If you're already working in <a href="https://github.com/tate2301/huchu" target="_blank">tate2301/huchu</a>, the tokens ship as CSS variables in <code class="inline">app/globals.css</code> and the components are Tailwind-derived shadcn primitives.</p>
     <pre class="ds-code"><span class="c"># From the repo root</span>
 pnpm install
 pnpm dev
 
 <span class="c"># Add a new component by extending the existing primitives</span>
 <span class="c"># Read components/ui/ for the source — it mirrors this docs site 1:1</span></pre>
-    <p>The <a href="https://github.com/tate2301/huchu" target="_blank">tate2301/huchu</a> repo is the canonical source. This design system documents the contract — what tokens exist, which variants are blessed, how they’re used together.</p>
+    <p>This docs site documents the contract &mdash; what tokens exist, which variants are blessed, how they're used together. The ERP repo is the live implementation.</p>
   </section>
 
-  <section id="tokens">
+  <section id="tokens" style="margin-top: 48px;">
     <h2 class="ds-h2">Token files</h2>
-    <p class="ds-h2-sub">Tokens come in two shapes — CSS variables and a JSON manifest for design tools.</p>
+    <p class="ds-h2-sub">Tokens come in two shapes &mdash; CSS variables and a JSON manifest for design tools.</p>
     <table class="ds-props">
       <thead><tr><th>File</th><th>Purpose</th><th>Used by</th></tr></thead>
       <tbody>
         <tr><td>tokens.css</td><td>CSS variables for color, type, motion, layout</td><td>Every HTML doc + every Tailwind theme</td></tr>
-        <tr><td>components.css</td><td>The component layer — .btn, .card, .input, .table</td><td>Static prototypes and the docs site</td></tr>
+        <tr><td>components.css</td><td>The component layer &mdash; .btn, .card, .input, .table</td><td>Static prototypes and the docs site</td></tr>
         <tr><td>icons.js</td><td>Inline-SVG helper for &lt;span data-icon&gt;</td><td>Every page</td></tr>
         <tr><td>system.css</td><td>Docs-site chrome (sidebar, TOC, specimen)</td><td>This site only</td></tr>
         <tr><td>shared.css</td><td>Hub / marketing chrome</td><td>Kits, portals, verticals</td></tr>
@@ -66,21 +111,23 @@ pnpm dev
     </table>
   </section>
 
-  <section id="updates">
+  <section id="updates" style="margin-top: 48px;">
     <h2 class="ds-h2">Updates</h2>
     <p class="ds-h2-sub">Versioned via the <a href="changelog.html">changelog</a>. New components ship behind a "Beta" pill until they've appeared in two live kits.</p>
   </section>
 
   <nav class="ds-pager">
-    <a href="../index.html"><div class="pager-label">← Back to</div><div class="pager-title">Overview</div></a>
-    <a href="changelog.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Changelog</div></a>
+    <a href="../index.html"><div class="pager-label">&larr; Back to</div><div class="pager-title">Overview</div></a>
+    <a href="changelog.html" class="next"><div class="pager-label">Next &rarr;</div><div class="pager-title">Changelog</div></a>
   </nav>
 </article>
 <aside class="ds-toc">
   <div class="toc-label">On this page</div>
   <ul>
-    <li><a href="#static" class="current">Static HTML</a></li>
-    <li><a href="#nextjs">Next.js</a></li>
+    <li><a href="#today" class="current">What ships today</a></li>
+    <li><a href="#static">CSS only</a></li>
+    <li><a href="#react">React (pre-alpha)</a></li>
+    <li><a href="#nextjs">In the ERP repo</a></li>
     <li><a href="#tokens">Token files</a></li>
     <li><a href="#updates">Updates</a></li>
   </ul>

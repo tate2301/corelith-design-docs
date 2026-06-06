@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Permission gate · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .phone { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 16px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+  .ck-screen .brand { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .ph-title { font: 700 14px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .ck-screen .ph-sub { font: 500 11px/1.4 var(--font-sans); color: var(--text-muted); margin: 0; }
+  .ck-screen .ph-row { display: flex; gap: 6px; align-items: center; padding: 6px 8px; background: var(--surface-muted); border-radius: 6px; font: 500 10px/1.2 var(--font-sans); }
+  .ck-screen .ph-row .lab { color: var(--text-strong); flex: 1; }
+  .ck-screen .ph-row .v { color: var(--text-muted); font: 500 9px/1 var(--font-mono); }
+  .ck-screen .ph-btn { background: var(--ink); color: var(--canvas); padding: 4px 8px; border-radius: 4px; font: 600 9px/1 var(--font-sans); }
+  .ck-screen .ph-btn.ghost { background: transparent; color: var(--text-strong); border: 1px solid var(--border-strong); }
+  .ck-screen .ph-btn.dis { opacity: 0.4; }
+  .ck-screen .ph-empty { text-align: center; padding: 14px 8px; flex: 1; display: grid; place-items: center; gap: 6px; }
+  .ck-screen .ph-empty .lock { width: 28px; height: 28px; border-radius: 50%; background: var(--surface-muted); border: 1px solid var(--border); color: var(--text-muted); display: grid; place-items: center; margin: 0 auto; }
+  .ck-screen .ph-empty .title { font: 700 13px/1.2 var(--font-sans); color: var(--text-strong); }
+  .ck-screen .ph-empty .ask { background: var(--brand-soft); color: var(--brand-strong); border-radius: 6px; padding: 6px 10px; font: 500 10px/1.3 var(--font-sans); }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+
+  .ck-pull { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; padding: 14px 16px; margin: 14px 0 0; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+
+  /* Honest "code-only" preview marker — used when a step is conceptual code
+     (state machine, hook, reducer) and a visual mockup would be misleading. */
+  .ck-code-only-note {
+    display: grid; gap: 8px;
+    padding: 22px 26px;
+    background: var(--surface-muted);
+    border: 1px dashed var(--border-strong);
+    border-radius: 12px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-code-only-note .ck-code-only-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    align-self: start;
+    font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--surface); color: var(--brand-strong);
+    border: 1px solid var(--border);
+  }
+  .ck-code-only-note p { margin: 0; color: var(--text-muted); }
+  .ck-code-only-note code {
+    background: var(--surface); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+
+  /* Off-system component roadmap pill — for recipes that compose with
+     components not yet in @huchu/react v0.1.0-alpha.0. */
+  .ck-roadmap-note {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--brand);
+    border-radius: 8px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code {
+    background: var(--surface-muted); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Auth</a><span class="sep">/</span>
+      <span>Permission gate</span>
+    </div>
+    <h1>Build route- and component-level permission gates that fail gracefully</h1>
+    <p class="lede">By the end of this recipe you'll have a <code>RequireRole</code> wrapper for whole pages, a <code>useRole</code> hook for in-component checks (manager sees "Override", clerk doesn't), and a graceful "Manager only — ask Tendai" fallback page that beats a 404 every time.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="lock" data-icon-size="12"></span>Auth</span>
+      <span class="meta-pill">2 primitives · 1 block · 1 pattern</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~25 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">Two gates at two levels. <b>Route gates</b> wrap whole pages and show a friendly "ask your manager" panel when the role doesn't match. <b>Component gates</b> hide or disable individual controls inline.</p>
+    <p>The biggest mistake new teams make is treating the JSX gate as a security boundary. It isn't — anyone with the bundle can flip a boolean. The gate is a UX nicety: it stops a clerk from clicking "Override price" and getting a confusing 403 from the server. The server still has to reject the request; the gate is what prevents the user ever sending it.</p>
+    <p class="ck-pull"><b>Gate server-side, not JSX-side.</b> The JSX gate is a UX nicety — never a security boundary. Hiding a button isn't security; rejecting the request is. Both belong in the codebase; only the second one is allowed to be the only one.</p>
+    <p>When a permission check fails on a whole page, show the user something useful. A blank screen, a 404, or worse — a half-rendered page — all teach the user that the app is broken. The "Manager only" fallback names the role required <em>and</em> the manager on shift, so the user knows who to ask.</p>
+    <p><b>Skip this recipe if</b> every user in the app has the same role. Permission gates exist to support role-based features; in a single-role product they're dead code.</p>
+  </section>
+
+  <!-- WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">A page seen by a manager, the same page denied to a clerk, and the row-level gate for a button.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · POS</span>
+          <p class="ph-title">Sale #2841</p>
+          <p class="ph-sub">Manager · Tendai M.</p>
+          <div class="ph-row"><span class="lab">Subtotal</span><span class="v">$124.00</span></div>
+          <div class="ph-row"><span class="lab">Discount</span><span class="v">−$0.00</span><span class="ph-btn ghost">Edit</span></div>
+          <div class="ph-row"><span class="lab">Total</span><span class="v">$124.00</span><span class="ph-btn">Override price</span></div>
+          <div class="ph-row"><span class="lab">Tender</span><span class="v">Cash</span><span class="ph-btn">Refund</span></div>
+        </div>
+        <div class="caption"><span class="num">01</span> Manager — Override + Refund show</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · POS</span>
+          <p class="ph-title">Sale #2841</p>
+          <p class="ph-sub">Clerk · Anesu S.</p>
+          <div class="ph-row"><span class="lab">Subtotal</span><span class="v">$124.00</span></div>
+          <div class="ph-row"><span class="lab">Discount</span><span class="v">−$0.00</span><span class="ph-btn ghost dis">Edit</span></div>
+          <div class="ph-row"><span class="lab">Total</span><span class="v">$124.00</span></div>
+          <div class="ph-row"><span class="lab">Tender</span><span class="v">Cash</span></div>
+          <p class="ph-sub" style="margin-top: auto;">Manager features are hidden — not just disabled.</p>
+        </div>
+        <div class="caption"><span class="num">02</span> Clerk — same page, fewer actions</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu · Payroll</span>
+          <div class="ph-empty">
+            <div class="lock"><span data-icon="lock" data-icon-size="14"></span></div>
+            <div class="title">Manager only</div>
+            <p class="ph-sub">Payroll is locked to managers and owners. Tendai M. is on shift.</p>
+            <div class="ask">Ask Tendai to open this →</div>
+          </div>
+        </div>
+        <div class="caption"><span class="num">03</span> Route gate — "ask Tendai" not 404</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/x-role-gate.html"><span class="kind">Pattern</span>Role gate</a>
+      <a class="ck-piece" href="../system/b-empty-state.html"><span class="kind">Block</span>Empty state</a>
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+      <a class="ck-piece" href="../system/p-alert.html"><span class="kind">Primitive</span>Alert</a>
+      <a class="ck-piece" href="../system/p-role-switcher.html"><span class="kind">Primitive</span>Role switcher</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>RequireRole</code>, <code>useRole</code>, <code>EmptyState</code>, <code>Button</code>, <code>Stack</code>, <code>RoleSwitcher</code>. The hook and the wrapper share one identity context — they never disagree.</p>
+    <div class="ck-roadmap-note">
+      <b>Use the RoleSwitcher primitive.</b> Earlier walk-throughs of this recipe inlined the "Clerk | Manager" toggle as bespoke JSX. The new <a href="../system/p-role-switcher.html"><code>p-role-switcher</code></a> primitive ships the pill segmented control with <code>aria-pressed</code> wiring — use it in demo previews and dev banners to flip <code>identity.roleId</code> without rewriting the toggle. Never ship it in production UI where the role is set by the back end.
+    </div>
+  </section>
+
+  <!-- STEP-BY-STEP -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <!-- Step 1 -->
+    <div class="ck-step"><span class="n">01</span><h3>Define the role model — roles are sets of permissions, not a string</h3></div>
+    <p>Treat a role as a bag of <code>Permission</code> strings, not a single role name. That way the same gate works whether you grow from three roles to eight, and you can grant a clerk a single elevated permission without inventing "clerk-plus".</p>
+    <div class="ds-specimen"
+         data-code='export type Permission =
+  | &#39;sale.create&#39; | &#39;sale.refund&#39; | &#39;sale.override_price&#39;
+  | &#39;payroll.view&#39; | &#39;payroll.run&#39;
+  | &#39;settings.team&#39;;
+
+export type Role = {
+  id: string;             // &#39;manager&#39; | &#39;clerk&#39; | &#39;owner&#39;
+  label: string;          // &#39;Manager&#39;
+  permissions: Permission[];
+};
+
+export const ROLES: Record&lt;string, Role&gt; = {
+  owner: {
+    id: &#39;owner&#39;, label: &#39;Owner&#39;,
+    permissions: [&#39;sale.create&#39;,&#39;sale.refund&#39;,&#39;sale.override_price&#39;,&#39;payroll.view&#39;,&#39;payroll.run&#39;,&#39;settings.team&#39;],
+  },
+  manager: {
+    id: &#39;manager&#39;, label: &#39;Manager&#39;,
+    permissions: [&#39;sale.create&#39;,&#39;sale.refund&#39;,&#39;sale.override_price&#39;,&#39;payroll.view&#39;],
+  },
+  clerk: {
+    id: &#39;clerk&#39;, label: &#39;Clerk&#39;,
+    permissions: [&#39;sale.create&#39;],
+  },
+};
+
+export type Identity = {
+  userId: string;
+  name: string;
+  roleId: keyof typeof ROLES;
+  extraPermissions?: Permission[];  // one-offs without inventing a new role
+};'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p><code>extraPermissions</code> lets you grant a clerk "refund" without renaming them.</p>
+          <p>The server enforces the same map. JSX gates only mirror.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Role model</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="ck-step"><span class="n">02</span><h3>Build the <code>useRole</code> hook — the single source of truth</h3></div>
+    <p>The hook reads the current identity from context, then exposes <code>can(p)</code> and a literal role for label purposes. Components use <code>can</code>; the gate wrapper uses the same primitive so they can't disagree.</p>
+    <div class="ds-specimen"
+         data-code='import { createContext, useContext } from &#39;@huchu/react&#39;;
+
+const IdentityCtx = createContext&lt;Identity | null&gt;(null);
+
+export function IdentityProvider({ identity, children }: {
+  identity: Identity | null;
+  children: React.ReactNode;
+}) {
+  return &lt;IdentityCtx.Provider value={identity}&gt;{children}&lt;/IdentityCtx.Provider&gt;;
+}
+
+export function useRole() {
+  const id = useContext(IdentityCtx);
+  if (!id) {
+    return {
+      identity: null,
+      role: null,
+      can: (_: Permission) =&gt; false,
+    };
+  }
+  const role = ROLES[id.roleId];
+  const grants = new Set&lt;Permission&gt;([
+    ...role.permissions,
+    ...(id.extraPermissions ?? []),
+  ]);
+  return {
+    identity: id,
+    role,
+    can: (p: Permission) =&gt; grants.has(p),
+  };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>When identity is null, every <code>can()</code> returns false.</p>
+          <p><code>extraPermissions</code> are merged at read time — no role mutation.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · useRole</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="ck-step"><span class="n">03</span><h3>Build the in-component gate — hide, don't disable</h3></div>
+    <p>If the user can't do something, the button isn't there. A disabled button is a tease — it advertises a feature the user can never use, and forces them to inspect it to find out why. The exception is when the user could realistically be promoted — then disable + tooltip.</p>
+    <div class="ds-specimen"
+         data-code='function PriceOverrideButton({ saleId }: { saleId: string }) {
+  const { can } = useRole();
+  // Manager+ feature. Clerks never see the button.
+  if (!can(&#39;sale.override_price&#39;)) return null;
+
+  return (
+    &lt;Button onClick={() =&gt; openOverride(saleId)} variant=&quot;ghost&quot;&gt;
+      Override price
+    &lt;/Button&gt;
+  );
+}
+
+// Use this variant only when the user *should* know the feature exists.
+function RefundButton({ saleId }: { saleId: string }) {
+  const { can, identity } = useRole();
+  const allowed = can(&#39;sale.refund&#39;);
+  return (
+    &lt;Button
+      onClick={() =&gt; openRefund(saleId)}
+      disabled={!allowed}
+      title={allowed ? &#39;Refund this sale&#39; : `Refunds need manager — ${identity?.name} can do this`}
+      variant=&quot;ghost&quot;
+    &gt;
+      Refund
+    &lt;/Button&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>"Override price" is hidden from clerks — secret, not teased.</p>
+          <p>"Refund" is disabled with a tooltip — clerks know it exists.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · In-component gate</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="ck-step"><span class="n">04</span><h3>Build the route-level gate — fall back to "ask Tendai"</h3></div>
+    <p>Wrap the page in <code>RequireRole</code>. When the check fails, render a friendly empty state that names the role required and the on-shift manager. Never a 404; never a blank screen; never the same page with everything disabled.</p>
+    <div class="ds-specimen"
+         data-code='import { EmptyState, Stack, Button } from &#39;@huchu/react&#39;;
+
+export function RequireRole({
+  permission,
+  managerOnShift,
+  children,
+}: {
+  permission: Permission;
+  managerOnShift?: { name: string; userId: string };
+  children: React.ReactNode;
+}) {
+  const { can, identity } = useRole();
+  if (can(permission)) return &lt;&gt;{children}&lt;/&gt;;
+
+  return (
+    &lt;EmptyState
+      icon=&quot;lock&quot;
+      title=&quot;Manager only&quot;
+      description={
+        managerOnShift
+          ? `${managerOnShift.name} is on shift and can open this for you.`
+          : `Ask a manager to open this for you.`
+      }
+      cta={managerOnShift &amp;&amp; (
+        &lt;Button
+          variant=&quot;primary&quot;
+          onClick={() =&gt; openHandoffRequest(managerOnShift.userId)}
+        &gt;
+          Ask {managerOnShift.name.split(&#39; &#39;)[0]} to open this
+        &lt;/Button&gt;
+      )}
+      meta={identity &amp;&amp; `Signed in as ${identity.name}`}
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="width: 340px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; text-align: center;">
+            <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--surface-muted); color: var(--text-muted); display: grid; place-items: center; margin: 0 auto 12px;"><span data-icon="lock" data-icon-size="16"></span></div>
+            <h3 style="font: 700 17px/1.2 var(--font-sans); margin: 0 0 6px;">Manager only</h3>
+            <p style="font: var(--type-body-sm); color: var(--text-muted); margin: 0 0 18px;">Tendai M. is on shift and can open this for you.</p>
+            <div style="background: var(--ink); color: var(--canvas); height: 36px; border-radius: 8px; display: grid; place-items: center; font: 600 13px/1 var(--font-sans);">Ask Tendai to open this</div>
+            <p style="font: var(--type-caption); color: var(--text-subtle); margin: 12px 0 0;">Signed in as Anesu S.</p>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Route gate</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- FINAL COMPOSITION -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole identity layer, assembled. Provider + hook + route gate + in-component gates + a sample router setup.</p>
+    <div class="ds-specimen"
+         data-code='import { createContext, useContext } from &#39;@huchu/react&#39;;
+import { EmptyState, Stack, Button } from &#39;@huchu/react&#39;;
+
+// ── Types &amp; data (Step 1) ──────────────────────────────────────
+export type Permission =
+  | &#39;sale.create&#39; | &#39;sale.refund&#39; | &#39;sale.override_price&#39;
+  | &#39;payroll.view&#39; | &#39;payroll.run&#39; | &#39;settings.team&#39;;
+
+export type Role = {
+  id: string; label: string; permissions: Permission[];
+};
+
+export const ROLES: Record&lt;string, Role&gt; = {
+  owner:   { id: &#39;owner&#39;,   label: &#39;Owner&#39;,   permissions: [&#39;sale.create&#39;,&#39;sale.refund&#39;,&#39;sale.override_price&#39;,&#39;payroll.view&#39;,&#39;payroll.run&#39;,&#39;settings.team&#39;] },
+  manager: { id: &#39;manager&#39;, label: &#39;Manager&#39;, permissions: [&#39;sale.create&#39;,&#39;sale.refund&#39;,&#39;sale.override_price&#39;,&#39;payroll.view&#39;] },
+  clerk:   { id: &#39;clerk&#39;,   label: &#39;Clerk&#39;,   permissions: [&#39;sale.create&#39;] },
+};
+
+export type Identity = {
+  userId: string; name: string;
+  roleId: keyof typeof ROLES;
+  extraPermissions?: Permission[];
+};
+
+// ── Provider + hook (Step 2) ───────────────────────────────────
+const IdentityCtx = createContext&lt;Identity | null&gt;(null);
+
+export function IdentityProvider({ identity, children }: {
+  identity: Identity | null; children: React.ReactNode;
+}) {
+  return &lt;IdentityCtx.Provider value={identity}&gt;{children}&lt;/IdentityCtx.Provider&gt;;
+}
+
+export function useRole() {
+  const id = useContext(IdentityCtx);
+  if (!id) return { identity: null, role: null, can: (_: Permission) =&gt; false };
+  const role = ROLES[id.roleId];
+  const grants = new Set&lt;Permission&gt;([...role.permissions, ...(id.extraPermissions ?? [])]);
+  return { identity: id, role, can: (p: Permission) =&gt; grants.has(p) };
+}
+
+// ── Route gate (Step 4) ────────────────────────────────────────
+export function RequireRole({
+  permission, managerOnShift, children,
+}: {
+  permission: Permission;
+  managerOnShift?: { name: string; userId: string };
+  children: React.ReactNode;
+}) {
+  const { can, identity } = useRole();
+  if (can(permission)) return &lt;&gt;{children}&lt;/&gt;;
+
+  return (
+    &lt;EmptyState
+      icon=&quot;lock&quot;
+      title=&quot;Manager only&quot;
+      description={
+        managerOnShift
+          ? `${managerOnShift.name} is on shift and can open this for you.`
+          : &#39;Ask a manager to open this for you.&#39;
+      }
+      cta={managerOnShift &amp;&amp; (
+        &lt;Button variant=&quot;primary&quot; onClick={() =&gt; askManager(managerOnShift.userId)}&gt;
+          Ask {managerOnShift.name.split(&#39; &#39;)[0]} to open this
+        &lt;/Button&gt;
+      )}
+      meta={identity &amp;&amp; `Signed in as ${identity.name}`}
+    /&gt;
+  );
+}
+
+// ── In-component gates (Step 3) ────────────────────────────────
+export function PriceOverrideButton({ saleId }: { saleId: string }) {
+  const { can } = useRole();
+  if (!can(&#39;sale.override_price&#39;)) return null;  // hide outright
+  return (
+    &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; openOverride(saleId)}&gt;
+      Override price
+    &lt;/Button&gt;
+  );
+}
+
+export function RefundButton({ saleId, managerOnShift }: {
+  saleId: string;
+  managerOnShift?: { name: string };
+}) {
+  const { can } = useRole();
+  const allowed = can(&#39;sale.refund&#39;);
+  return (
+    &lt;Button
+      variant=&quot;ghost&quot;
+      onClick={() =&gt; openRefund(saleId)}
+      disabled={!allowed}
+      title={allowed
+        ? &#39;Refund this sale&#39;
+        : `Refunds need a manager${managerOnShift ? ` — ${managerOnShift.name} can do this` : &#39;&#39;}`}
+    &gt;
+      Refund
+    &lt;/Button&gt;
+  );
+}
+
+// ── Sample router wiring ───────────────────────────────────────
+export function AppRoutes() {
+  return (
+    &lt;Routes&gt;
+      &lt;Route path=&quot;/sale&quot;     element={&lt;SalePage /&gt;} /&gt;
+      &lt;Route path=&quot;/payroll&quot; element={
+        &lt;RequireRole permission=&quot;payroll.view&quot; managerOnShift={getOnShiftManager()}&gt;
+          &lt;PayrollPage /&gt;
+        &lt;/RequireRole&gt;
+      } /&gt;
+      &lt;Route path=&quot;/settings/team&quot; element={
+        &lt;RequireRole permission=&quot;settings.team&quot;&gt;
+          &lt;TeamSettingsPage /&gt;
+        &lt;/RequireRole&gt;
+      } /&gt;
+    &lt;/Routes&gt;
+  );
+}
+
+// IMPORTANT: every action above must also be enforced server-side.
+// The JSX gate is a UX nicety. The API rejection is the security.'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="width: 360px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;"><h3 style="font: 700 16px/1.2 var(--font-sans); margin: 0;">Sale #2841</h3><span style="font: 500 11px/1 var(--font-mono); color: var(--text-subtle);">Manager · Tendai M.</span></div>
+            <div style="display: grid; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; padding: 8px 10px; background: var(--surface-muted); border-radius: 6px; font: var(--type-body-sm);"><span style="color: var(--text-strong);">Subtotal</span><span style="color: var(--text-muted); font: 500 12px/1 var(--font-mono);">$124.00</span></div>
+              <div style="display: flex; justify-content: space-between; padding: 8px 10px; background: var(--surface-muted); border-radius: 6px; font: var(--type-body-sm); align-items: center;"><span style="color: var(--text-strong); flex: 1;">Total</span><span style="color: var(--text-muted); font: 500 12px/1 var(--font-mono); margin-right: 8px;">$124.00</span><span style="background: var(--ink); color: var(--canvas); padding: 4px 10px; border-radius: 6px; font: 600 11px/1 var(--font-sans);">Override price</span></div>
+              <div style="display: flex; justify-content: space-between; padding: 8px 10px; background: var(--surface-muted); border-radius: 6px; font: var(--type-body-sm); align-items: center;"><span style="color: var(--text-strong); flex: 1;">Tender</span><span style="color: var(--text-muted); font: 500 12px/1 var(--font-mono); margin-right: 8px;">Cash</span><span style="background: var(--surface); border: 1px solid var(--border-strong); color: var(--text-strong); padding: 4px 10px; border-radius: 6px; font: 600 11px/1 var(--font-sans);">Refund</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">PermissionGate.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three common forks. Each is a small diff from the final composition.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Time-of-day gate</h4>
+        <p>Refunds disallowed after 6pm without an owner sign-off. Add a temporal predicate to the permission check.</p>
+<pre>const allowed = can(&#39;sale.refund&#39;) &amp;&amp; (
+  new Date().getHours() &lt; 18
+  || can(&#39;sale.refund.afterhours&#39;)
+);
+// rest of the gate is identical</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Owner sign-off prompt</h4>
+        <p>Instead of "ask the manager", let the clerk request the action — owner gets a push, approves, the action runs.</p>
+<pre>// Replace EmptyState with a request form
+&lt;ApprovalRequest
+  permission={permission}
+  managerOnShift={managerOnShift}
+  onSubmit={(reason) =&gt;
+    api.requestOverride(reason)}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Multi-permission gate</h4>
+        <p>Some pages need any-of permissions (manager OR finance). Accept an array and treat as union.</p>
+<pre>function RequireAny({ permissions, ... }) {
+  const { can } = useRole();
+  if (permissions.some(can)) {
+    return &lt;&gt;{children}&lt;/&gt;;
+  }
+  return &lt;EmptyState ... /&gt;;
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCESSIBILITY -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">What this recipe takes care of for you.</p>
+    <ul class="ck-a11y">
+      <li><b>The deny screen is announced.</b> <code>EmptyState</code> renders <code>role="region"</code> + <code>aria-labelledby</code> on its heading, so screen readers announce "Manager only" when the gate triggers.</li>
+      <li><b>Disabled buttons read their reason.</b> A disabled "Refund" carries <code>aria-describedby</code> pointing at a hidden span — screen readers say "Refund, dimmed, refunds need a manager".</li>
+      <li><b>The "ask Tendai" CTA is a real button.</b> Not a link styled like a button. <code>Enter</code> fires the handoff request; focus stays predictable.</li>
+      <li><b>Hidden buttons stay hidden.</b> A button hidden via <code>return null</code> is removed from the DOM entirely, so it can't be reached by Tab or read by a screen reader. Don't <code>visibility: hidden</code> a permission-gated control.</li>
+      <li><b>The manager's name is visible, not just spoken.</b> Sighted users see who to ask without focusing the CTA. Screen-reader users hear the same name through the description.</li>
+      <li><b>The server is the truth.</b> A failed server response renders the same <code>EmptyState</code> via the global error boundary, so a stale client never traps a user on a broken page.</li>
+    </ul>
+  </section>
+
+  <!-- RELATED -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">Other auth + role recipes.</p>
+    <div class="ck-related">
+      <a href="auth-signin-2fa.html">Auth · Sign in with 2FA<span class="tag">New</span></a>
+      <a href="auth-signup-email-verify.html">Auth · Sign up + email verify<span class="tag">New</span></a>
+      <a href="auth-forgot-password.html">Auth · Forgot password<span class="tag">New</span></a>
+      <a href="forms-bulk-edit-with-undo.html">Forms · Bulk edit with undo<span class="tag">New</span></a>
+      <a href="approvals-leave-request.html">Approvals · Leave request<span class="tag">New</span></a>
+      <a href="notifications-toasts.html">States · Toasts + inbox<span class="tag">New</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="notifications-toasts.html"><div class="pager-label">← Previous</div><div class="pager-title">Toasts + inbox</div></a>
+    <a href="forms-bulk-edit-with-undo.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Bulk edit with undo</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

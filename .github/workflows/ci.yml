@@ -1,0 +1,68 @@
+# =====================================================================
+#  Corelith / Huchu docs — CI
+# =====================================================================
+#  Runs on every pull request. We deliberately keep this minimal: the
+#  site is static HTML/CSS/JS today (no build, no bundler, no install
+#  step beyond Node itself). Every check is also runnable locally from
+#  the repo root, so contributors can reproduce CI failures without
+#  cloning into Actions.
+#
+#      bash scripts/check-js-parse.sh
+#      bash scripts/check-html.sh
+#      bash scripts/check-links.sh
+#
+#  Hard failures (CI red):
+#    - check-js-parse.sh : every inline <script> in a portal demo or a
+#      cookbook recipe must parse as valid JS.
+#
+#  Soft failures (CI warn-only — print a notice, exit 0):
+#    - check-html.sh   : requires `html-validate` or `tidy`. Skipped on
+#      a runner that doesn't have either tool installed.
+#    - check-links.sh  : requires `lychee`. Skipped otherwise. Link rot
+#      is annoying but not a release blocker, so we report and move on.
+#
+#  Deployment lives elsewhere (see .github/workflows/deploy.yml). Vercel
+#  handles the actual push-to-prod; this workflow is purely gatekeeping.
+# =====================================================================
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  checks:
+    name: static checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # No npm install: package.json carries only Playwright for local
+      # verification scripts that don't run in CI. If a future check
+      # needs a real dep, add `npm ci` here.
+
+      - name: JS parse check (hard)
+        run: bash scripts/check-js-parse.sh
+
+      - name: HTML structure check (soft)
+        run: |
+          if command -v html-validate >/dev/null 2>&1 || command -v tidy >/dev/null 2>&1; then
+            bash scripts/check-html.sh
+          else
+            echo "::notice::Neither html-validate nor tidy installed on runner — skipping HTML check"
+          fi
+
+      - name: Broken-link check (soft)
+        run: |
+          if command -v lychee >/dev/null 2>&1; then
+            bash scripts/check-links.sh
+          else
+            echo "::notice::lychee not installed on runner — skipping link check"
+          fi

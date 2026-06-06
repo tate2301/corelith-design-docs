@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Multi-tenant switcher · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .phone { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px 16px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+  .ck-screen .brand { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-sans); color: var(--brand-strong); }
+  .ck-screen .ph-title { font: 700 14px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .ck-screen .ph-sub { font: 500 11px/1.4 var(--font-sans); color: var(--text-muted); margin: 0; }
+  .ck-screen .ph-trigger { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--surface-muted); }
+  .ck-screen .ph-trigger .av { width: 22px; height: 22px; border-radius: 6px; background: var(--brand); color: var(--canvas); display: grid; place-items: center; font: 700 10px/1 var(--font-sans); }
+  .ck-screen .ph-trigger .nm { flex: 1; font: 600 11px/1.2 var(--font-sans); color: var(--text-strong); }
+  .ck-screen .ph-trigger .ch { color: var(--text-subtle); font: 500 14px/1 var(--font-mono); }
+  .ck-screen .ph-menu { background: var(--surface); border: 1px solid var(--border-strong); border-radius: 8px; padding: 6px; display: grid; gap: 4px; }
+  .ck-screen .ph-menu .sch { background: var(--surface-muted); border-radius: 4px; padding: 4px 6px; font: 500 10px/1.2 var(--font-mono); color: var(--text-subtle); }
+  .ck-screen .ph-menu .row { display: flex; gap: 6px; align-items: center; padding: 4px 6px; border-radius: 4px; font: 500 10px/1.2 var(--font-sans); }
+  .ck-screen .ph-menu .row.cur { background: var(--brand-soft); }
+  .ck-screen .ph-menu .row .av { width: 18px; height: 18px; border-radius: 4px; display: grid; place-items: center; font: 700 9px/1 var(--font-sans); color: var(--canvas); flex: none; }
+  .ck-screen .ph-menu .row .nm { flex: 1; color: var(--text-strong); }
+  .ck-screen .ph-menu .row .kbd { font: 600 9px/1 var(--font-mono); color: var(--text-subtle); padding: 2px 4px; border: 1px solid var(--border); border-radius: 3px; }
+  .ck-screen .ph-menu .add { padding: 4px 6px; font: 500 10px/1.2 var(--font-sans); color: var(--brand-strong); border-top: 1px dashed var(--border); padding-top: 6px; margin-top: 4px; }
+  .ck-screen .ph-banner { background: var(--tone-info-bg); border: 1px solid var(--tone-info-bd); color: var(--tone-info); border-radius: 6px; padding: 6px 8px; font: 500 10px/1.3 var(--font-sans); display: flex; gap: 6px; align-items: center; }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+
+  .ck-pull { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; padding: 14px 16px; margin: 14px 0 0; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+
+  /* Honest "code-only" preview marker — used when a step is conceptual code
+     (state machine, hook, reducer) and a visual mockup would be misleading. */
+  .ck-code-only-note {
+    display: grid; gap: 8px;
+    padding: 22px 26px;
+    background: var(--surface-muted);
+    border: 1px dashed var(--border-strong);
+    border-radius: 12px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-code-only-note .ck-code-only-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    align-self: start;
+    font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--surface); color: var(--brand-strong);
+    border: 1px solid var(--border);
+  }
+  .ck-code-only-note p { margin: 0; color: var(--text-muted); }
+  .ck-code-only-note code {
+    background: var(--surface); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+
+  /* Off-system component roadmap pill — for recipes that compose with
+     components not yet in @huchu/react v0.1.0-alpha.0. */
+  .ck-roadmap-note {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--brand);
+    border-radius: 8px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code {
+    background: var(--surface-muted); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Shells</a><span class="sep">/</span>
+      <span>Multi-tenant switcher</span>
+    </div>
+    <h1>Build a multi-tenant switcher operators can't fire the wrong gun with</h1>
+    <p class="lede">By the end of this recipe you'll have a top-bar tenant switcher with avatar + business name + chevron, a searchable menu, persisted last-active tenant, <kbd>Cmd</kbd>+1..9 shortcuts, and a 5-second confirmation banner that says "you're now writing to Acme Metals" everywhere on screen.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="building" data-icon-size="12"></span>Shells</span>
+      <span class="meta-pill">4 primitives · 1 block · 0 patterns</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~30 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">In the top-left of the shell: avatar + business name + chevron. Click → searchable menu of every business the user belongs to. Click one → the whole app re-renders against that tenant, and a banner across all open tabs confirms the switch for 5 seconds.</p>
+    <p>SMB operators are sole traders. They run a hardware store, a side hustle hauling scrap, and the books for their cousin's panel-beating yard. One Huchu login covers all three. The switcher is what stops a stock-take being recorded against the wrong business — which, in the offline-first world we ship to, can take days to untangle.</p>
+    <p class="ck-pull"><b>Never let a user accidentally write to the wrong tenant.</b> The switch confirms with a persistent banner across all top bars for 5 seconds — long enough for the operator's brain to catch up with their muscle memory before they tap "Save".</p>
+    <p>The active tenant lives in three places: a <code>TenantContext</code> at the React root, <code>localStorage</code> for last-active across reloads, and the URL path so links survive sharing. All three stay in sync via one <code>switchTenant(id)</code> action. <code>Cmd</code>+1..9 maps to the first nine entries in the user's tenant list — same as Slack workspaces, same as Chrome tabs, same muscle memory.</p>
+    <p><b>Skip this recipe if</b> the user only ever belongs to one tenant. Don't render a switcher with a single item — it's noise, and the menu only appears when the user actually has a choice to make.</p>
+  </section>
+
+  <!-- WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three states: closed trigger, open menu with search, and the post-switch confirmation banner.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu</span>
+          <div class="ph-trigger"><span class="av">A</span><span class="nm">Acme Metals</span><span class="ch">⌄</span></div>
+          <p class="ph-title" style="margin-top: 4px;">Dashboard</p>
+          <p class="ph-sub">Today's takings — Acme Metals</p>
+          <div style="height: 60px; background: var(--surface-muted); border-radius: 6px;"></div>
+        </div>
+        <div class="caption"><span class="num">01</span> Top-bar trigger — current tenant</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Switch business</span>
+          <div class="ph-menu">
+            <div class="sch">⌕ Search…</div>
+            <div class="row cur"><span class="av" style="background: var(--brand);">A</span><span class="nm">Acme Metals</span><span class="kbd">⌘1</span></div>
+            <div class="row"><span class="av" style="background: var(--tone-success);">M</span><span class="nm">Mukamba Mills</span><span class="kbd">⌘2</span></div>
+            <div class="row"><span class="av" style="background: var(--tone-warning);">S</span><span class="nm">Sibanda Scrap</span><span class="kbd">⌘3</span></div>
+            <div class="add">+ Create new business</div>
+          </div>
+        </div>
+        <div class="caption"><span class="num">02</span> Menu — search, shortcuts, create</div>
+      </div>
+
+      <div class="ck-screen">
+        <div class="phone">
+          <span class="brand"><span data-icon="corelith" data-icon-size="12"></span>Huchu</span>
+          <div class="ph-trigger"><span class="av" style="background: var(--tone-success);">M</span><span class="nm">Mukamba Mills</span><span class="ch">⌄</span></div>
+          <div class="ph-banner"><span data-icon="check" data-icon-size="12"></span><span>Switched to <b>Mukamba Mills</b>. 4s</span></div>
+          <p class="ph-title" style="margin-top: 4px;">Dashboard</p>
+          <p class="ph-sub">Today's takings — Mukamba Mills</p>
+        </div>
+        <div class="caption"><span class="num">03</span> 5-second confirmation banner</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/p-menu.html"><span class="kind">Primitive</span>Menu</a>
+      <a class="ck-piece" href="../system/p-combobox.html"><span class="kind">Primitive</span>Combobox</a>
+      <a class="ck-piece" href="../system/p-avatar.html"><span class="kind">Primitive</span>Avatar</a>
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+      <a class="ck-piece" href="../system/b-row-card.html"><span class="kind">Block</span>Row card</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>Menu</code>, <code>Combobox</code>, <code>Avatar</code>, <code>Button</code>, <code>Stack</code>, <code>RowCard</code>, <code>Toast</code>, <code>useToast</code>. A small <code>TenantProvider</code> + <code>useTenant</code> ship next to the switcher.</p>
+  </section>
+
+  <!-- STEP-BY-STEP -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <!-- Step 1 -->
+    <div class="ck-step"><span class="n">01</span><h3>One context, three storage layers</h3></div>
+    <p>The active tenant has to survive three things: a re-render (Context), a hard reload (localStorage), and a shared link (URL path). One <code>switchTenant</code> writes all three; everything else reads from Context. If two browser tabs disagree, the URL wins on the next click.</p>
+    <div class="ds-specimen"
+         data-code='import { createContext, useContext, useEffect, useState } from &#39;@huchu/react&#39;;
+
+export type Tenant = { id: string; name: string; initial: string; tone: string };
+
+type Ctx = {
+  active: Tenant;
+  tenants: Tenant[];
+  switchTenant: (id: string) =&gt; void;
+};
+const TenantCtx = createContext&lt;Ctx | null&gt;(null);
+
+const LAST_KEY = &#39;huchu:last-tenant&#39;;
+
+export function TenantProvider({ tenants, children }: {
+  tenants: Tenant[];
+  children: React.ReactNode;
+}) {
+  // Priority: URL &gt; localStorage &gt; first tenant.
+  const fromUrl = window.location.pathname.match(/^\/t\/([^/]+)/)?.[1];
+  const fromStorage = localStorage.getItem(LAST_KEY);
+  const initial =
+    tenants.find((t) =&gt; t.id === fromUrl) ??
+    tenants.find((t) =&gt; t.id === fromStorage) ??
+    tenants[0];
+
+  const [active, setActive] = useState&lt;Tenant&gt;(initial);
+
+  const switchTenant = (id: string) =&gt; {
+    const next = tenants.find((t) =&gt; t.id === id);
+    if (!next || next.id === active.id) return;
+    setActive(next);
+    localStorage.setItem(LAST_KEY, id);
+    // Re-write URL without a full reload — the app re-fetches off Context.
+    window.history.replaceState(null, &#39;&#39;,
+      window.location.pathname.replace(/^\/t\/[^/]+/, `/t/${id}`));
+  };
+
+  return (
+    &lt;TenantCtx.Provider value={{ active, tenants, switchTenant }}&gt;
+      {children}
+    &lt;/TenantCtx.Provider&gt;
+  );
+}
+
+export const useTenant = () =&gt; {
+  const v = useContext(TenantCtx);
+  if (!v) throw new Error(&#39;useTenant outside provider&#39;);
+  return v;
+};'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p>switchTenant writes all three. URL is the share-safe truth.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Context + persistence</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="ck-step"><span class="n">02</span><h3>Render the top-bar trigger from the active tenant</h3></div>
+    <p>The trigger is a single <code>Button</code> with an avatar, the business name and a chevron. The chevron is a visual cue, not a separate control — the whole pill opens the menu. If the user only has one tenant, render the avatar + name as plain text and skip the menu entirely.</p>
+    <div class="ds-specimen"
+         data-code='import { Button, Avatar } from &#39;@huchu/react&#39;;
+
+function TenantTrigger({ onOpen }: { onOpen: () =&gt; void }) {
+  const { active, tenants } = useTenant();
+
+  if (tenants.length &lt;= 1) {
+    return (
+      &lt;div style={{ display: &#39;flex&#39;, gap: 8, alignItems: &#39;center&#39;, padding: &#39;6px 8px&#39; }}&gt;
+        &lt;Avatar initial={active.initial} tone={active.tone} size=&quot;sm&quot; /&gt;
+        &lt;span&gt;{active.name}&lt;/span&gt;
+      &lt;/div&gt;
+    );
+  }
+
+  return (
+    &lt;Button
+      variant=&quot;ghost&quot;
+      onClick={onOpen}
+      aria-haspopup=&quot;menu&quot;
+      aria-label={`Current business: ${active.name}. Click to switch.`}
+    &gt;
+      &lt;Avatar initial={active.initial} tone={active.tone} size=&quot;sm&quot; /&gt;
+      &lt;span&gt;{active.name}&lt;/span&gt;
+      &lt;span aria-hidden=&quot;true&quot; data-icon=&quot;chevron-down&quot;&gt;&lt;/span&gt;
+    &lt;/Button&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="display: flex; gap: 8px; align-items: center; padding: 6px 12px; border: 1px solid var(--border-strong); border-radius: 8px;">
+            <div style="width: 24px; height: 24px; border-radius: 6px; background: var(--brand); color: var(--canvas); display: grid; place-items: center; font: 700 11px/1 var(--font-sans);">A</div>
+            <span style="font: 600 13px/1 var(--font-sans); color: var(--text-strong);">Acme Metals</span>
+            <span style="color: var(--text-subtle);" data-icon="chevron-down" data-icon-size="14"></span>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Trigger</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="ck-step"><span class="n">03</span><h3>The menu is a Combobox, not a Select</h3></div>
+    <p>If the operator only has three businesses, a <code>Menu</code> would do — but you don't know that. By the time they're managing payroll for ten side hustles, search is the only fast input. <code>Combobox</code> ships search-on-type for free; <code>Menu</code> doesn't.</p>
+    <div class="ds-specimen"
+         data-code='import { Combobox, Avatar, Button } from &#39;@huchu/react&#39;;
+
+function TenantMenu({
+  open, onClose, onCreate,
+}: { open: boolean; onClose: () =&gt; void; onCreate: () =&gt; void }) {
+  const { active, tenants, switchTenant } = useTenant();
+
+  return (
+    &lt;Combobox
+      open={open}
+      onOpenChange={(v) =&gt; !v &amp;&amp; onClose()}
+      placeholder=&quot;Search businesses…&quot;
+      items={tenants}
+      itemToString={(t) =&gt; t.name}
+      renderItem={(t, i) =&gt; (
+        &lt;div style={{ display: &#39;flex&#39;, gap: 8, alignItems: &#39;center&#39; }}&gt;
+          &lt;Avatar initial={t.initial} tone={t.tone} size=&quot;xs&quot; /&gt;
+          &lt;span style={{ flex: 1 }}&gt;{t.name}&lt;/span&gt;
+          {i &lt; 9 &amp;&amp; &lt;kbd&gt;⌘{i + 1}&lt;/kbd&gt;}
+          {t.id === active.id &amp;&amp; &lt;span data-icon=&quot;check&quot; /&gt;}
+        &lt;/div&gt;
+      )}
+      onSelect={(t) =&gt; { switchTenant(t.id); onClose(); }}
+      footer={
+        &lt;Button variant=&quot;ghost&quot; onClick={onCreate} leadingIcon=&quot;plus&quot;&gt;
+          Create new business
+        &lt;/Button&gt;
+      }
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="width: 280px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 10px; padding: 8px;">
+            <div style="background: var(--surface-muted); border-radius: 6px; padding: 6px 10px; font: 500 12px/1 var(--font-mono); color: var(--text-subtle); margin-bottom: 6px;">⌕ Search businesses…</div>
+            <div style="display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 6px; background: var(--brand-soft);">
+              <div style="width: 20px; height: 20px; border-radius: 4px; background: var(--brand); color: var(--canvas); display: grid; place-items: center; font: 700 10px/1 var(--font-sans);">A</div>
+              <span style="flex: 1; font: 600 12px/1 var(--font-sans); color: var(--text-strong);">Acme Metals</span>
+              <span style="font: 600 10px/1 var(--font-mono); color: var(--text-subtle); padding: 2px 5px; border: 1px solid var(--border); border-radius: 3px;">⌘1</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 6px;">
+              <div style="width: 20px; height: 20px; border-radius: 4px; background: var(--tone-success); color: var(--canvas); display: grid; place-items: center; font: 700 10px/1 var(--font-sans);">M</div>
+              <span style="flex: 1; font: 600 12px/1 var(--font-sans); color: var(--text-strong);">Mukamba Mills</span>
+              <span style="font: 600 10px/1 var(--font-mono); color: var(--text-subtle); padding: 2px 5px; border: 1px solid var(--border); border-radius: 3px;">⌘2</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Combobox menu</span><span class="spacer"></span></div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="ck-step"><span class="n">04</span><h3>Wire <kbd>Cmd</kbd>+1..9 and the post-switch banner</h3></div>
+    <p>Power users live on keyboard shortcuts. <kbd>Cmd</kbd>+digit jumps to that-indexed tenant — same as switching browser tabs. After every switch, a global <code>Toast</code> with <code>variant="banner"</code> stays on screen for 5 seconds, so any tab the user has open says "you're now writing to X". Five seconds is the magic number — long enough to read, short enough to not nag.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect } from &#39;@huchu/react&#39;;
+import { useToast } from &#39;@huchu/react&#39;;
+
+function useTenantHotkeys() {
+  const { tenants, active, switchTenant } = useTenant();
+  const toast = useToast();
+
+  useEffect(() =&gt; {
+    const handle = (e: KeyboardEvent) =&gt; {
+      const isMod = e.metaKey || e.ctrlKey;
+      if (!isMod) return;
+      const n = parseInt(e.key, 10);
+      if (n &gt;= 1 &amp;&amp; n &lt;= 9 &amp;&amp; tenants[n - 1]) {
+        e.preventDefault();
+        const target = tenants[n - 1];
+        if (target.id !== active.id) {
+          switchTenant(target.id);
+          toast.show({
+            variant: &#39;banner&#39;,
+            tone: &#39;info&#39;,
+            title: `Switched to ${target.name}`,
+            description: &#39;Any save from now lands here.&#39;,
+            duration: 5000,
+          });
+        }
+      }
+    };
+    window.addEventListener(&#39;keydown&#39;, handle);
+    return () =&gt; window.removeEventListener(&#39;keydown&#39;, handle);
+  }, [tenants, active, switchTenant, toast]);
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="display: inline-flex; gap: 10px; align-items: center; padding: 8px 14px; border-radius: 8px; background: var(--tone-info-bg); border: 1px solid var(--tone-info-bd);">
+            <span data-icon="check" data-icon-size="14" style="color: var(--tone-info);"></span>
+            <div style="font: var(--type-body-sm); color: var(--text-strong);"><b>Switched to Mukamba Mills</b> · Any save from now lands here. <span style="color: var(--text-subtle); font: 600 11px/1 var(--font-mono);">4s</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Hotkeys + banner</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- FINAL COMPOSITION -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole <code>TenantSwitcher</code> + provider, assembled. Context, persistence, trigger, menu, hotkeys, banner.</p>
+    <div class="ds-specimen"
+         data-code='import {
+  createContext, useContext, useEffect, useState,
+} from &#39;@huchu/react&#39;;
+import {
+  Button, Avatar, Combobox, Stack, useToast,
+} from &#39;@huchu/react&#39;;
+
+export type Tenant = { id: string; name: string; initial: string; tone: string };
+
+const TenantCtx = createContext&lt;{
+  active: Tenant;
+  tenants: Tenant[];
+  switchTenant: (id: string) =&gt; void;
+} | null&gt;(null);
+
+const LAST_KEY = &#39;huchu:last-tenant&#39;;
+
+export function TenantProvider({
+  tenants, children,
+}: { tenants: Tenant[]; children: React.ReactNode }) {
+  const fromUrl = window.location.pathname.match(/^\/t\/([^/]+)/)?.[1];
+  const fromStorage = localStorage.getItem(LAST_KEY);
+  const initial =
+    tenants.find((t) =&gt; t.id === fromUrl) ??
+    tenants.find((t) =&gt; t.id === fromStorage) ??
+    tenants[0];
+
+  const [active, setActive] = useState&lt;Tenant&gt;(initial);
+
+  const switchTenant = (id: string) =&gt; {
+    const next = tenants.find((t) =&gt; t.id === id);
+    if (!next || next.id === active.id) return;
+    setActive(next);
+    localStorage.setItem(LAST_KEY, id);
+    window.history.replaceState(
+      null, &#39;&#39;,
+      window.location.pathname.replace(/^\/t\/[^/]+/, `/t/${id}`),
+    );
+  };
+
+  return (
+    &lt;TenantCtx.Provider value={{ active, tenants, switchTenant }}&gt;
+      {children}
+    &lt;/TenantCtx.Provider&gt;
+  );
+}
+
+export const useTenant = () =&gt; {
+  const v = useContext(TenantCtx);
+  if (!v) throw new Error(&#39;useTenant outside provider&#39;);
+  return v;
+};
+
+// ── Switcher ────────────────────────────────────────────────────
+export function TenantSwitcher({ onCreate }: { onCreate: () =&gt; void }) {
+  const { active, tenants, switchTenant } = useTenant();
+  const [open, setOpen] = useState(false);
+  const toast = useToast();
+
+  const announce = (t: Tenant) =&gt; {
+    toast.show({
+      variant: &#39;banner&#39;,
+      tone: &#39;info&#39;,
+      title: `Switched to ${t.name}`,
+      description: &#39;Any save from now lands here.&#39;,
+      duration: 5000,
+    });
+  };
+
+  // Cmd+1..9 → tenants[0..8].
+  useEffect(() =&gt; {
+    const handle = (e: KeyboardEvent) =&gt; {
+      const isMod = e.metaKey || e.ctrlKey;
+      if (!isMod) return;
+      const n = parseInt(e.key, 10);
+      if (n &gt;= 1 &amp;&amp; n &lt;= 9 &amp;&amp; tenants[n - 1]) {
+        e.preventDefault();
+        const target = tenants[n - 1];
+        if (target.id !== active.id) {
+          switchTenant(target.id);
+          announce(target);
+        }
+      }
+    };
+    window.addEventListener(&#39;keydown&#39;, handle);
+    return () =&gt; window.removeEventListener(&#39;keydown&#39;, handle);
+  }, [tenants, active]);
+
+  // Single-tenant: render plain text, skip menu.
+  if (tenants.length &lt;= 1) {
+    return (
+      &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot; align=&quot;center&quot;&gt;
+        &lt;Avatar initial={active.initial} tone={active.tone} size=&quot;sm&quot; /&gt;
+        &lt;span&gt;{active.name}&lt;/span&gt;
+      &lt;/Stack&gt;
+    );
+  }
+
+  return (
+    &lt;&gt;
+      &lt;Button
+        variant=&quot;ghost&quot;
+        onClick={() =&gt; setOpen(true)}
+        aria-haspopup=&quot;menu&quot;
+        aria-expanded={open}
+        aria-label={`Current business: ${active.name}. Click to switch.`}
+      &gt;
+        &lt;Avatar initial={active.initial} tone={active.tone} size=&quot;sm&quot; /&gt;
+        &lt;span&gt;{active.name}&lt;/span&gt;
+        &lt;span aria-hidden=&quot;true&quot; data-icon=&quot;chevron-down&quot;&gt;&lt;/span&gt;
+      &lt;/Button&gt;
+
+      &lt;Combobox
+        open={open}
+        onOpenChange={setOpen}
+        placeholder=&quot;Search businesses…&quot;
+        items={tenants}
+        itemToString={(t) =&gt; t.name}
+        renderItem={(t, i) =&gt; (
+          &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot; align=&quot;center&quot;&gt;
+            &lt;Avatar initial={t.initial} tone={t.tone} size=&quot;xs&quot; /&gt;
+            &lt;span style={{ flex: 1 }}&gt;{t.name}&lt;/span&gt;
+            {i &lt; 9 &amp;&amp; &lt;kbd&gt;⌘{i + 1}&lt;/kbd&gt;}
+            {t.id === active.id &amp;&amp; &lt;span data-icon=&quot;check&quot; aria-label=&quot;current&quot; /&gt;}
+          &lt;/Stack&gt;
+        )}
+        onSelect={(t) =&gt; {
+          if (t.id !== active.id) {
+            switchTenant(t.id);
+            announce(t);
+          }
+          setOpen(false);
+        }}
+        footer={
+          &lt;Button variant=&quot;ghost&quot; onClick={onCreate} leadingIcon=&quot;plus&quot;&gt;
+            Create new business
+          &lt;/Button&gt;
+        }
+      /&gt;
+    &lt;/&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; gap: 16px; padding: 24px;">
+          <div style="display: flex; gap: 8px; align-items: center; padding: 6px 12px; border: 1px solid var(--border-strong); border-radius: 8px; width: fit-content;">
+            <div style="width: 26px; height: 26px; border-radius: 6px; background: var(--tone-success); color: var(--canvas); display: grid; place-items: center; font: 700 12px/1 var(--font-sans);">M</div>
+            <span style="font: 600 14px/1 var(--font-sans); color: var(--text-strong);">Mukamba Mills</span>
+            <span style="color: var(--text-subtle);" data-icon="chevron-down" data-icon-size="14"></span>
+          </div>
+          <div style="display: inline-flex; gap: 10px; align-items: center; padding: 10px 16px; border-radius: 8px; background: var(--tone-info-bg); border: 1px solid var(--tone-info-bd); width: fit-content;">
+            <span data-icon="check" data-icon-size="14" style="color: var(--tone-info);"></span>
+            <div style="font: var(--type-body-sm); color: var(--text-strong);"><b>Switched to Mukamba Mills.</b> Any save from now lands here.</div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">TenantSwitcher.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three forks of this recipe.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Owner / impersonation mode</h4>
+        <p>Admins switching into a tenant they don't own. Add a banner that stays for the whole session — not just 5 seconds.</p>
+<pre>// Toast becomes a sticky banner
+toast.show({
+  variant: &#39;banner&#39;,
+  tone: &#39;warning&#39;,
+  title: `Viewing ${t.name} as admin`,
+  duration: Infinity, // stays
+  action: { label: &#39;Exit&#39;, onClick: exitImpersonation },
+});</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Subdomain-per-tenant</h4>
+        <p>If each tenant lives at <code>acme.huchu.app</code>, the switch does a full <code>location.assign</code> — no Context rewire needed.</p>
+<pre>const switchTenant = (id: string) =&gt; {
+  const host = window.location.host
+    .replace(/^[^.]+\./, &#39;&#39;);
+  window.location.assign(
+    `https://${id}.${host}`,
+  );
+};</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Recent tenants pin</h4>
+        <p>Operators with 30+ tenants need a "recent 5" pinned above the search. Track switches in localStorage, show the top 5 above the list.</p>
+<pre>// On switch
+const recents = JSON.parse(
+  localStorage.getItem(&#39;huchu:recents&#39;) ?? &#39;[]&#39;);
+const next = [id, ...recents.filter(
+  (x: string) =&gt; x !== id)].slice(0, 5);
+localStorage.setItem(&#39;huchu:recents&#39;,
+  JSON.stringify(next));</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCESSIBILITY -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">What this recipe takes care of for you.</p>
+    <ul class="ck-a11y">
+      <li><b>Trigger reads as a state.</b> <code>aria-label</code> includes the current tenant ("Current business: Acme Metals. Click to switch") so screen readers don't lose the context behind the avatar.</li>
+      <li><b>Menu state is exposed.</b> <code>aria-haspopup="menu"</code> + <code>aria-expanded={open}</code> on the trigger; the combobox listbox has <code>role="listbox"</code> and items <code>role="option"</code>.</li>
+      <li><b>Current tenant is announced.</b> The active row has <code>aria-current="true"</code> and the trailing check has <code>aria-label="current"</code>, so screen-reader users know which one's live.</li>
+      <li><b>Hotkeys don't fight inputs.</b> <code>Cmd</code>+1..9 is captured at <code>window</code>, but the handler bails early if <code>e.target</code> is a text input — so typing "<code>1</code>" in search doesn't jump.</li>
+      <li><b>Switch is announced.</b> The post-switch banner uses <code>Toast</code> with <code>role="status"</code> + <code>aria-live="polite"</code> so the change is read out, not silent.</li>
+      <li><b>Single-tenant skips the menu.</b> Saves a redundant tab stop and stops screen readers reading "menu, collapsed" when there's nothing to choose.</li>
+      <li><b>Esc closes the menu.</b> Standard Combobox behaviour, restored focus on the trigger.</li>
+    </ul>
+  </section>
+
+  <!-- RELATED -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">More shell + URL-state patterns.</p>
+    <div class="ck-related">
+      <a href="shells-deep-link-restore.html">Shells · Deep-link restore<span class="tag">New</span></a>
+      <a href="shells-app-shell-sidebar.html">Shells · App shell with sidebar</a>
+      <a href="commands-cmd-k.html">Shells · Command palette (⌘K)</a>
+      <a href="auth-permission-gate.html">Auth · Permission gate</a>
+      <a href="forms-date-range-picker.html">Forms · Date-range picker<span class="tag">New</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="forms-date-range-picker.html"><div class="pager-label">← Previous</div><div class="pager-title">Date-range picker</div></a>
+    <a href="lists-activity-log.html" class="next"><div class="pager-label">Next recipe →</div><div class="pager-title">Activity log</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

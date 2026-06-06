@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Image gallery + lightbox · Huchu Cookbook</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+
+  .ck-screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin: 8px 0 20px; }
+  @media (max-width: 800px) { .ck-screens { grid-template-columns: 1fr; } }
+  .ck-screen { background: var(--surface-muted); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: grid; gap: 10px; }
+  .ck-screen .panel { aspect-ratio: 9 / 16; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+  .ck-screen .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; flex: 1; }
+  .ck-screen .tile { aspect-ratio: 1; border-radius: 4px; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted)); border: 1px solid var(--border); }
+  .ck-screen .tile.alt { background: linear-gradient(135deg, var(--surface-muted), var(--ink)); }
+  .ck-screen .lb { flex: 1; background: var(--ink); border-radius: 6px; position: relative; display: flex; align-items: center; justify-content: center; }
+  .ck-screen .lb .main { width: 70%; aspect-ratio: 4/3; background: linear-gradient(135deg, var(--brand), var(--brand-strong)); border-radius: 4px; }
+  .ck-screen .lb .nav { position: absolute; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,0.2); color: #fff; display: grid; place-items: center; font: 700 10px/1 var(--font-sans); }
+  .ck-screen .lb .nav.l { left: 6px; }
+  .ck-screen .lb .nav.r { right: 6px; }
+  .ck-screen .strip { display: flex; gap: 2px; height: 16px; }
+  .ck-screen .strip .t { flex: 1; background: var(--surface-muted); border-radius: 2px; }
+  .ck-screen .strip .t.cur { background: var(--brand); }
+  .ck-screen .caption { font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+  .ck-screen .caption .num { font: 600 10px/1 var(--font-mono); padding: 3px 6px; border-radius: 9999px; background: var(--surface); color: var(--brand-strong); }
+
+  .ck-step { display: flex; align-items: baseline; gap: 12px; margin-top: 36px; }
+  .ck-step .n { font: 600 12px/1 var(--font-mono); letter-spacing: 0.06em; padding: 5px 9px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); }
+  .ck-step h3 { font: 600 22px/1.25 var(--font-sans); margin: 0; color: var(--text-strong); letter-spacing: -0.01em; }
+  .ck-step + p { margin-top: 10px; }
+
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p  { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a, .ck-related span.soon { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related span.soon { color: var(--text-subtle); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+
+  .ck-pull { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; padding: 14px 16px; margin: 14px 0 0; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+
+  /* Honest "code-only" preview marker — used when a step is conceptual code
+     (state machine, hook, reducer) and a visual mockup would be misleading. */
+  .ck-code-only-note {
+    display: grid; gap: 8px;
+    padding: 22px 26px;
+    background: var(--surface-muted);
+    border: 1px dashed var(--border-strong);
+    border-radius: 12px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-code-only-note .ck-code-only-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    align-self: start;
+    font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 5px 9px; border-radius: 9999px;
+    background: var(--surface); color: var(--brand-strong);
+    border: 1px solid var(--border);
+  }
+  .ck-code-only-note p { margin: 0; color: var(--text-muted); }
+  .ck-code-only-note code {
+    background: var(--surface); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+
+  /* Off-system component roadmap pill — for recipes that compose with
+     components not yet in @huchu/react v0.1.0-alpha.0. */
+  .ck-roadmap-note {
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--brand);
+    border-radius: 8px;
+    font: var(--type-body-sm); color: var(--text-muted);
+    line-height: 1.55;
+  }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code {
+    background: var(--surface-muted); padding: 1px 5px; border-radius: 4px;
+    font: 500 12px/1 var(--font-mono); color: var(--text-strong);
+  }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <!-- HEADER -->
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../index.html">Home</a><span class="sep">/</span>
+      <a href="index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Views</a><span class="sep">/</span>
+      <span>Image gallery + lightbox</span>
+    </div>
+    <h1>Build an image gallery with lightbox</h1>
+    <p class="lede">By the end of this recipe you'll have a thumbnail grid that opens into a full-screen lightbox with keyboard arrows, swipe on touch, pinch zoom, a thumbnail strip at the bottom, and — critically — the page's scroll position restored exactly when the lightbox closes.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="image" data-icon-size="12"></span>Views</span>
+      <span class="meta-pill">2 primitives · 1 block · 1 pattern</span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~40 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <!-- OVERVIEW -->
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A grid that opens into a focus-trapped full-screen view. Arrow keys, swipe, and pinch — same component, three input modes.</p>
+    <p>Image galleries are easy to get 80% right and infuriating to get the last 20% wrong. The recipe gives you the last 20%: focus restored to the thumbnail that opened the lightbox, scroll position restored on the underlying page, keyboard arrows for left/right, Esc to close, swipe and pinch on touch, and a thumbnail strip so the user always knows where they are in the sequence. The lightbox is a focus-trapped <code>&lt;dialog&gt;</code> — modal semantics, no body-scroll-lock hack required.</p>
+    <p class="ck-pull"><b>Lightboxes should NEVER block scroll on the original page after close.</b> Properly restore scroll position. Keyboard nav is non-negotiable. If your gallery isn't usable with arrows + Esc, it isn't shipped.</p>
+    <p><b>Skip this recipe if</b> your images are documents, not photos. Document viewers want page-numbered navigation, find-in-text and a download button — different problem.</p>
+  </section>
+
+  <!-- WHAT YOU'LL BUILD -->
+  <section id="screens">
+    <h2 class="ds-h2">What you'll build</h2>
+    <p class="ds-h2-sub">Three states: grid, lightbox with thumbnail strip, and a pinch-zoomed close-up.</p>
+    <div class="ck-screens">
+      <div class="ck-screen">
+        <div class="panel">
+          <div style="font: 600 10px/1 var(--font-sans); color: var(--text-strong);">Shop fit-out · 12 photos</div>
+          <div class="grid">
+            <div class="tile"></div><div class="tile alt"></div><div class="tile"></div>
+            <div class="tile alt"></div><div class="tile"></div><div class="tile alt"></div>
+            <div class="tile"></div><div class="tile alt"></div><div class="tile"></div>
+          </div>
+        </div>
+        <div class="caption"><span class="num">01</span> Grid — square thumbnails</div>
+      </div>
+      <div class="ck-screen">
+        <div class="panel">
+          <div class="lb">
+            <span class="nav l">‹</span>
+            <div class="main"></div>
+            <span class="nav r">›</span>
+          </div>
+          <div class="strip"><span class="t"></span><span class="t cur"></span><span class="t"></span><span class="t"></span><span class="t"></span></div>
+        </div>
+        <div class="caption"><span class="num">02</span> Lightbox — arrows + strip</div>
+      </div>
+      <div class="ck-screen">
+        <div class="panel">
+          <div class="lb">
+            <div style="width: 100%; height: 100%; background: linear-gradient(135deg, var(--brand), var(--brand-strong)); border-radius: 6px; transform: scale(1.6); transform-origin: center;"></div>
+          </div>
+          <div style="font: 500 9px/1.4 var(--font-sans); color: var(--text-muted); text-align: center;">2.0× · pinch to zoom</div>
+        </div>
+        <div class="caption"><span class="num">03</span> Zoom — pinch on touch</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUIRED PIECES -->
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <p class="ds-h2-sub">A small surface — the heavy lifting is the focus + scroll restoration logic.</p>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
+      <a class="ck-piece" href="../system/p-dialog.html"><span class="kind">Primitive</span>Dialog</a>
+      <a class="ck-piece" href="../system/b-avatar.html"><span class="kind">Block</span>Avatar</a>
+      <a class="ck-piece" href="../system/x-lightbox.html"><span class="kind">Pattern</span>Lightbox</a>
+    </div>
+    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>Lightbox</code>, <code>useGallery</code>, <code>Button</code>, <code>Stack</code>.</p>
+  </section>
+
+  <!-- STEPS -->
+  <section id="build">
+    <h2 class="ds-h2">Step-by-step build</h2>
+
+    <div class="ck-step"><span class="n">01</span><h3>Render the grid as real <code>&lt;button&gt;</code>s, not divs</h3></div>
+    <p>Each thumbnail is a button — it activates on Enter, Tab-stops correctly, and a screen reader announces it. Capturing the activating element here is what lets you return focus when the lightbox closes; refs would also work but the activeElement at close-time is simpler.</p>
+    <div class="ds-specimen"
+         data-code='import { useState } from &#39;@huchu/react&#39;;
+
+type Photo = { id: string; src: string; alt: string; width: number; height: number };
+
+export function Gallery({ photos }: { photos: Photo[] }) {
+  const [open, setOpen] = useState&lt;number | null&gt;(null);
+
+  return (
+    &lt;&gt;
+      &lt;ul className=&quot;gallery-grid&quot;&gt;
+        {photos.map((p, i) =&gt; (
+          &lt;li key={p.id}&gt;
+            &lt;button
+              type=&quot;button&quot;
+              className=&quot;thumb&quot;
+              aria-label={`Open ${p.alt}, ${i + 1} of ${photos.length}`}
+              onClick={() =&gt; setOpen(i)}
+            &gt;
+              &lt;img src={p.src} alt={p.alt} loading=&quot;lazy&quot; /&gt;
+            &lt;/button&gt;
+          &lt;/li&gt;
+        ))}
+      &lt;/ul&gt;
+
+      {open !== null &amp;&amp; (
+        &lt;Lightbox
+          photos={photos}
+          startIndex={open}
+          onClose={() =&gt; setOpen(null)}
+        /&gt;
+      )}
+    &lt;/&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; width: 320px;">
+            <div style="aspect-ratio: 1; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted)); border-radius: 6px; border: 1px solid var(--border);"></div>
+            <div style="aspect-ratio: 1; background: linear-gradient(135deg, var(--surface-muted), var(--ink)); border-radius: 6px; border: 1px solid var(--border);"></div>
+            <div style="aspect-ratio: 1; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted)); border-radius: 6px; border: 1px solid var(--border);"></div>
+            <div style="aspect-ratio: 1; background: linear-gradient(135deg, var(--surface-muted), var(--ink)); border-radius: 6px; border: 1px solid var(--border);"></div>
+            <div style="aspect-ratio: 1; background: linear-gradient(135deg, var(--surface-muted), var(--ink)); border-radius: 6px; border: 1px solid var(--border);"></div>
+            <div style="aspect-ratio: 1; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted)); border-radius: 6px; border: 1px solid var(--border);"></div>
+            <div style="aspect-ratio: 1; background: linear-gradient(135deg, var(--surface-muted), var(--ink)); border-radius: 6px; border: 1px solid var(--border);"></div>
+            <div style="aspect-ratio: 1; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted)); border-radius: 6px; border: 1px solid var(--border);"></div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Grid</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">02</span><h3>Open the lightbox as a real <code>&lt;dialog&gt;</code></h3></div>
+    <p>The native <code>&lt;dialog&gt;</code> element gives you focus trap and inert-the-rest-of-the-page for free when you call <code>showModal()</code>. Capture <code>document.activeElement</code> before opening; restore focus to it after closing. Scroll position is preserved automatically because the rest of the page is inert, not unmounted.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useRef, useState } from &#39;@huchu/react&#39;;
+
+function Lightbox({ photos, startIndex, onClose }: {
+  photos: Photo[];
+  startIndex: number;
+  onClose: () =&gt; void;
+}) {
+  const dialogRef = useRef&lt;HTMLDialogElement&gt;(null);
+  const openerRef = useRef&lt;HTMLElement | null&gt;(null);
+  const [index, setIndex] = useState(startIndex);
+
+  useEffect(() =&gt; {
+    // Remember who opened us so we can restore focus on close.
+    openerRef.current = document.activeElement as HTMLElement;
+    dialogRef.current?.showModal();
+
+    return () =&gt; {
+      dialogRef.current?.close();
+      // Restore focus to the thumbnail. Scroll position is automatic
+      // because the underlying page was never scroll-locked.
+      openerRef.current?.focus();
+    };
+  }, []);
+
+  return (
+    &lt;dialog
+      ref={dialogRef}
+      className=&quot;lightbox&quot;
+      aria-label={`Image ${index + 1} of ${photos.length}`}
+      onClose={onClose}
+      onCancel={(e) =&gt; { e.preventDefault(); onClose(); }}
+    &gt;
+      &lt;img src={photos[index].src} alt={photos[index].alt} /&gt;
+    &lt;/dialog&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="width: 100%; max-width: 460px; aspect-ratio: 16/10; background: #0a0a0a; border-radius: 10px; display: grid; place-items: center; position: relative;">
+            <div style="width: 60%; aspect-ratio: 4/3; background: linear-gradient(135deg, var(--brand), var(--brand-strong)); border-radius: 6px;"></div>
+            <div style="position: absolute; top: 12px; right: 12px; color: rgba(255,255,255,0.7); font: 500 11px/1 var(--font-mono);">2 / 8</div>
+            <div style="position: absolute; bottom: 12px; left: 12px; color: rgba(255,255,255,0.7); font: 500 11px/1 var(--font-sans);">Esc to close</div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 2 · Dialog open</span><span class="spacer"></span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">03</span><h3>Wire keyboard, swipe, and pinch — three handlers, one index</h3></div>
+    <p>Keyboard arrows are the canonical desktop nav. Touch swipe is the canonical mobile nav. Pinch is a transform on the current image, independent of navigation. All three end up calling <code>setIndex</code> or <code>setZoom</code>; the rest is local state.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useState } from &#39;@huchu/react&#39;;
+
+function useLightboxNav(count: number, initial: number, onClose: () =&gt; void) {
+  const [index, setIndex] = useState(initial);
+  const [zoom, setZoom]   = useState(1);
+
+  const prev = () =&gt; setIndex((i) =&gt; Math.max(0, i - 1));
+  const next = () =&gt; setIndex((i) =&gt; Math.min(count - 1, i + 1));
+
+  // Keyboard
+  useEffect(() =&gt; {
+    const onKey = (e: KeyboardEvent) =&gt; {
+      if (e.key === &#39;ArrowLeft&#39;)  prev();
+      if (e.key === &#39;ArrowRight&#39;) next();
+      if (e.key === &#39;Escape&#39;)     onClose();
+      // Zoom shortcuts: + - 0
+      if (e.key === &#39;+&#39;)  setZoom((z) =&gt; Math.min(4, z * 1.25));
+      if (e.key === &#39;-&#39;)  setZoom((z) =&gt; Math.max(1, z / 1.25));
+      if (e.key === &#39;0&#39;)  setZoom(1);
+    };
+    window.addEventListener(&#39;keydown&#39;, onKey);
+    return () =&gt; window.removeEventListener(&#39;keydown&#39;, onKey);
+  }, [count]);
+
+  // Reset zoom when the image changes.
+  useEffect(() =&gt; { setZoom(1); }, [index]);
+
+  // Touch — swipe + pinch.
+  const touch = useTouchGestures({
+    onSwipeLeft:  next,
+    onSwipeRight: prev,
+    onPinch:      (scale) =&gt; setZoom((z) =&gt; Math.min(4, Math.max(1, z * scale))),
+  });
+
+  return { index, zoom, prev, next, touch };
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="ck-code-only-note">
+          <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
+          <p><b style="color: var(--brand-strong);">Esc</b> · close</p>
+          <p><b style="color: var(--brand-strong);">+ / - / 0</b> · zoom keyboard</p>
+          <p><b style="color: var(--brand-strong);">swipe / pinch</b> · touch</p>
+          <p>Index is one source of truth — every input writes to it.</p>
+          <p><b>Switch to the Code tab</b> to see the snippet.</p>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 3 · Navigation</span><span class="spacer"></span></div>
+    </div>
+
+    <div class="ck-step"><span class="n">04</span><h3>Add the thumbnail strip — it doubles as the index marker</h3></div>
+    <p>A horizontal strip of small thumbs anchored to the bottom: each is a real button, the current one has <code>aria-current="true"</code>, and scrolling the strip keeps the current thumb visible with <code>scrollIntoView({ inline: 'center' })</code>. The user always knows where they are without doing maths.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useRef } from &#39;@huchu/react&#39;;
+
+function ThumbStrip({ photos, index, onPick }: {
+  photos: Photo[];
+  index: number;
+  onPick: (i: number) =&gt; void;
+}) {
+  const stripRef = useRef&lt;HTMLDivElement&gt;(null);
+
+  // Keep the current thumb scrolled into view as you arrow through.
+  useEffect(() =&gt; {
+    const el = stripRef.current?.querySelector&lt;HTMLButtonElement&gt;(`[data-i=&quot;${index}&quot;]`);
+    el?.scrollIntoView({ behavior: &#39;smooth&#39;, inline: &#39;center&#39;, block: &#39;nearest&#39; });
+  }, [index]);
+
+  return (
+    &lt;div className=&quot;thumb-strip&quot; ref={stripRef} role=&quot;listbox&quot; aria-label=&quot;Image picker&quot;&gt;
+      {photos.map((p, i) =&gt; (
+        &lt;button
+          key={p.id}
+          type=&quot;button&quot;
+          data-i={i}
+          role=&quot;option&quot;
+          aria-current={i === index}
+          aria-selected={i === index}
+          onClick={() =&gt; onPick(i)}
+        &gt;
+          &lt;img src={p.src} alt=&quot;&quot; loading=&quot;lazy&quot; /&gt;
+        &lt;/button&gt;
+      ))}
+    &lt;/div&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 18px;">
+          <div style="display: flex; gap: 4px; padding: 8px; background: #0a0a0a; border-radius: 8px; width: 380px;">
+            <div style="width: 36px; aspect-ratio: 1; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted)); border-radius: 4px; opacity: 0.6;"></div>
+            <div style="width: 36px; aspect-ratio: 1; background: linear-gradient(135deg, var(--surface-muted), var(--ink)); border-radius: 4px; opacity: 0.6;"></div>
+            <div style="width: 36px; aspect-ratio: 1; background: linear-gradient(135deg, var(--brand), var(--brand-strong)); border-radius: 4px; box-shadow: 0 0 0 2px #fff;"></div>
+            <div style="width: 36px; aspect-ratio: 1; background: linear-gradient(135deg, var(--surface-muted), var(--ink)); border-radius: 4px; opacity: 0.6;"></div>
+            <div style="width: 36px; aspect-ratio: 1; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted)); border-radius: 4px; opacity: 0.6;"></div>
+            <div style="width: 36px; aspect-ratio: 1; background: linear-gradient(135deg, var(--surface-muted), var(--ink)); border-radius: 4px; opacity: 0.6;"></div>
+            <div style="width: 36px; aspect-ratio: 1; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted)); border-radius: 4px; opacity: 0.6;"></div>
+            <div style="width: 36px; aspect-ratio: 1; background: linear-gradient(135deg, var(--surface-muted), var(--ink)); border-radius: 4px; opacity: 0.6;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Step 4 · Thumb strip</span><span class="spacer"></span></div>
+    </div>
+  </section>
+
+  <!-- FINAL -->
+  <section id="final">
+    <h2 class="ds-h2">Final composition</h2>
+    <p class="ds-h2-sub">The whole gallery — grid, lightbox, keyboard / touch nav, thumbnail strip, and focus restoration.</p>
+    <div class="ds-specimen"
+         data-code='import { useEffect, useRef, useState } from &#39;@huchu/react&#39;;
+import { Lightbox, useGallery, Button, Stack } from &#39;@huchu/react&#39;;
+
+type Photo = { id: string; src: string; alt: string; width: number; height: number };
+
+export function Gallery({ photos, title }: { photos: Photo[]; title: string }) {
+  const [openIndex, setOpenIndex] = useState&lt;number | null&gt;(null);
+
+  return (
+    &lt;section aria-label={title}&gt;
+      &lt;h1&gt;{title}&lt;/h1&gt;
+      &lt;p&gt;{photos.length} photos&lt;/p&gt;
+
+      &lt;ul className=&quot;gallery-grid&quot;&gt;
+        {photos.map((p, i) =&gt; (
+          &lt;li key={p.id}&gt;
+            &lt;button
+              type=&quot;button&quot;
+              className=&quot;thumb&quot;
+              aria-label={`Open ${p.alt}, ${i + 1} of ${photos.length}`}
+              onClick={() =&gt; setOpenIndex(i)}
+            &gt;
+              &lt;img src={p.src} alt={p.alt} loading=&quot;lazy&quot; /&gt;
+            &lt;/button&gt;
+          &lt;/li&gt;
+        ))}
+      &lt;/ul&gt;
+
+      {openIndex !== null &amp;&amp; (
+        &lt;LightboxView
+          photos={photos}
+          startIndex={openIndex}
+          onClose={() =&gt; setOpenIndex(null)}
+        /&gt;
+      )}
+    &lt;/section&gt;
+  );
+}
+
+function LightboxView({ photos, startIndex, onClose }: {
+  photos: Photo[];
+  startIndex: number;
+  onClose: () =&gt; void;
+}) {
+  const dialogRef = useRef&lt;HTMLDialogElement&gt;(null);
+  const openerRef = useRef&lt;HTMLElement | null&gt;(null);
+  const stripRef  = useRef&lt;HTMLDivElement&gt;(null);
+
+  const [index, setIndex] = useState(startIndex);
+  const [zoom, setZoom]   = useState(1);
+
+  // Mount: capture opener, show modal.
+  useEffect(() =&gt; {
+    openerRef.current = document.activeElement as HTMLElement;
+    dialogRef.current?.showModal();
+    return () =&gt; {
+      dialogRef.current?.close();
+      // Restore focus — the opener is the thumbnail button.
+      // Scroll position is preserved because the page was inerted,
+      // not scroll-locked.
+      openerRef.current?.focus();
+    };
+  }, []);
+
+  // Reset zoom on every image change.
+  useEffect(() =&gt; { setZoom(1); }, [index]);
+
+  // Keep the current thumb centred in the strip.
+  useEffect(() =&gt; {
+    const el = stripRef.current?.querySelector&lt;HTMLButtonElement&gt;(`[data-i=&quot;${index}&quot;]`);
+    el?.scrollIntoView({ behavior: &#39;smooth&#39;, inline: &#39;center&#39;, block: &#39;nearest&#39; });
+  }, [index]);
+
+  // Keyboard nav.
+  useEffect(() =&gt; {
+    const onKey = (e: KeyboardEvent) =&gt; {
+      if (e.key === &#39;ArrowLeft&#39;)  prev();
+      if (e.key === &#39;ArrowRight&#39;) next();
+      if (e.key === &#39;Escape&#39;)     onClose();
+      if (e.key === &#39;+&#39;)          setZoom((z) =&gt; Math.min(4, z * 1.25));
+      if (e.key === &#39;-&#39;)          setZoom((z) =&gt; Math.max(1, z / 1.25));
+      if (e.key === &#39;0&#39;)          setZoom(1);
+    };
+    window.addEventListener(&#39;keydown&#39;, onKey);
+    return () =&gt; window.removeEventListener(&#39;keydown&#39;, onKey);
+  }, []);
+
+  const prev = () =&gt; setIndex((i) =&gt; (i &gt; 0 ? i - 1 : i));
+  const next = () =&gt; setIndex((i) =&gt; (i &lt; photos.length - 1 ? i + 1 : i));
+
+  // Touch — swipe and pinch.
+  const touchStartX = useRef&lt;number | null&gt;(null);
+  const pinchStart  = useRef&lt;number | null&gt;(null);
+  const baseZoom    = useRef(1);
+
+  const onTouchStart = (e: React.TouchEvent) =&gt; {
+    if (e.touches.length === 1) {
+      touchStartX.current = e.touches[0].clientX;
+    } else if (e.touches.length === 2) {
+      pinchStart.current = distance(e.touches[0], e.touches[1]);
+      baseZoom.current   = zoom;
+    }
+  };
+
+  const onTouchMove = (e: React.TouchEvent) =&gt; {
+    if (e.touches.length === 2 &amp;&amp; pinchStart.current !== null) {
+      const d = distance(e.touches[0], e.touches[1]);
+      const scale = d / pinchStart.current;
+      setZoom(Math.max(1, Math.min(4, baseZoom.current * scale)));
+    }
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) =&gt; {
+    if (touchStartX.current !== null &amp;&amp; e.changedTouches.length === 1 &amp;&amp; zoom === 1) {
+      const dx = e.changedTouches[0].clientX - touchStartX.current;
+      if (dx &lt; -40) next();
+      if (dx &gt;  40) prev();
+    }
+    touchStartX.current = null;
+    pinchStart.current  = null;
+  };
+
+  const p = photos[index];
+
+  return (
+    &lt;dialog
+      ref={dialogRef}
+      className=&quot;lightbox&quot;
+      aria-label={`Image ${index + 1} of ${photos.length}: ${p.alt}`}
+      onClose={onClose}
+      onCancel={(e) =&gt; { e.preventDefault(); onClose(); }}
+    &gt;
+      &lt;header className=&quot;lb-toolbar&quot;&gt;
+        &lt;span&gt;{index + 1} / {photos.length}&lt;/span&gt;
+        &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot;&gt;
+          &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; setZoom((z) =&gt; Math.max(1, z / 1.25))}&gt;−&lt;/Button&gt;
+          &lt;span aria-live=&quot;polite&quot;&gt;{Math.round(zoom * 100)}%&lt;/span&gt;
+          &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; setZoom((z) =&gt; Math.min(4, z * 1.25))}&gt;＋&lt;/Button&gt;
+          &lt;Button onClick={onClose}&gt;Close&lt;/Button&gt;
+        &lt;/Stack&gt;
+      &lt;/header&gt;
+
+      &lt;div
+        className=&quot;lb-stage&quot;
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      &gt;
+        &lt;button
+          type=&quot;button&quot;
+          className=&quot;lb-nav prev&quot;
+          aria-label=&quot;Previous image&quot;
+          disabled={index === 0}
+          onClick={prev}
+        &gt;‹&lt;/button&gt;
+
+        &lt;img
+          src={p.src}
+          alt={p.alt}
+          style={{ transform: `scale(${zoom})` }}
+        /&gt;
+
+        &lt;button
+          type=&quot;button&quot;
+          className=&quot;lb-nav next&quot;
+          aria-label=&quot;Next image&quot;
+          disabled={index === photos.length - 1}
+          onClick={next}
+        &gt;›&lt;/button&gt;
+      &lt;/div&gt;
+
+      &lt;div className=&quot;thumb-strip&quot; ref={stripRef} role=&quot;listbox&quot; aria-label=&quot;Image picker&quot;&gt;
+        {photos.map((thumb, i) =&gt; (
+          &lt;button
+            key={thumb.id}
+            type=&quot;button&quot;
+            data-i={i}
+            role=&quot;option&quot;
+            aria-selected={i === index}
+            aria-current={i === index ? &#39;true&#39; : undefined}
+            onClick={() =&gt; setIndex(i)}
+          &gt;
+            &lt;img src={thumb.src} alt=&quot;&quot; loading=&quot;lazy&quot; /&gt;
+          &lt;/button&gt;
+        ))}
+      &lt;/div&gt;
+    &lt;/dialog&gt;
+  );
+}
+
+function distance(a: { clientX: number; clientY: number }, b: { clientX: number; clientY: number }) {
+  return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div style="display: grid; place-items: center; padding: 24px;">
+          <div style="width: 100%; max-width: 560px; background: #0a0a0a; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; justify-content: space-between; color: rgba(255,255,255,0.8); font: 500 12px/1 var(--font-sans);"><span style="font-family: var(--font-mono);">2 / 8</span><span>100% · Close</span></div>
+            <div style="aspect-ratio: 16/10; background: linear-gradient(135deg, var(--brand), var(--brand-strong)); border-radius: 6px; position: relative; display: grid; place-items: center;">
+              <div style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.2); color: #fff; display: grid; place-items: center; font: 600 14px/1 var(--font-sans);">‹</div>
+              <div style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.2); color: #fff; display: grid; place-items: center; font: 600 14px/1 var(--font-sans);">›</div>
+            </div>
+            <div style="display: flex; gap: 4px;">
+              <div style="flex: 1; aspect-ratio: 1; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted)); border-radius: 4px; opacity: 0.5;"></div>
+              <div style="flex: 1; aspect-ratio: 1; background: linear-gradient(135deg, var(--brand), var(--brand-strong)); border-radius: 4px; box-shadow: 0 0 0 2px #fff;"></div>
+              <div style="flex: 1; aspect-ratio: 1; background: linear-gradient(135deg, var(--surface-muted), var(--ink)); border-radius: 4px; opacity: 0.5;"></div>
+              <div style="flex: 1; aspect-ratio: 1; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted)); border-radius: 4px; opacity: 0.5;"></div>
+              <div style="flex: 1; aspect-ratio: 1; background: linear-gradient(135deg, var(--surface-muted), var(--ink)); border-radius: 4px; opacity: 0.5;"></div>
+              <div style="flex: 1; aspect-ratio: 1; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted)); border-radius: 4px; opacity: 0.5;"></div>
+              <div style="flex: 1; aspect-ratio: 1; background: linear-gradient(135deg, var(--surface-muted), var(--ink)); border-radius: 4px; opacity: 0.5;"></div>
+              <div style="flex: 1; aspect-ratio: 1; background: linear-gradient(135deg, var(--brand-soft), var(--surface-muted)); border-radius: 4px; opacity: 0.5;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Gallery.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <!-- VARIATIONS -->
+  <section id="variations">
+    <h2 class="ds-h2">Variations</h2>
+    <p class="ds-h2-sub">Three forks. Each is a small diff from the final composition.</p>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Download button</h4>
+        <p>Add an explicit download per image. Don't auto-trigger; let the user pick.</p>
+<pre>&lt;a
+  href={p.src}
+  download={p.alt + &#39;.jpg&#39;}
+  className=&quot;lb-download&quot;
+  aria-label=&quot;Download image&quot;
+&gt;
+  Download
+&lt;/a&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Slideshow</h4>
+        <p>Auto-advance every N seconds. Pause on hover and on focus, so keyboard users aren't fighting the timer.</p>
+<pre>useEffect(() =&gt; {
+  if (paused) return;
+  const id = setInterval(next, 4000);
+  return () =&gt; clearInterval(id);
+}, [paused, index]);
+&lt;Button onClick={() =&gt; setPaused(p =&gt; !p)}&gt;
+  {paused ? &#39;Play&#39; : &#39;Pause&#39;}
+&lt;/Button&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Single-image expandable hero</h4>
+        <p>One image on the page, click expands into the lightbox. Same component, photos length is one — strip and arrows hide themselves.</p>
+<pre>&lt;Gallery photos={[hero]} title=&quot;Hero&quot; /&gt;
+// In LightboxView, skip the strip
+// and arrows when photos.length === 1:
+{photos.length &gt; 1 &amp;&amp; &lt;ThumbStrip /&gt;}
+{photos.length &gt; 1 &amp;&amp; &lt;NavArrows /&gt;}</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- A11Y -->
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">A lightbox is a modal dialog with custom navigation. Native <code>&lt;dialog&gt;</code> + careful focus management gets you most of the way.</p>
+    <ul class="ck-a11y">
+      <li><b>Thumbnails are real <code>&lt;button&gt;</code>s.</b> Each carries an <code>aria-label</code> like "Open Shopfront 1, 1 of 8". Tab order through the grid is natural.</li>
+      <li><b>Focus is restored to the opener.</b> The lightbox captures <code>document.activeElement</code> on mount and re-focuses it on close — the keyboard user lands back exactly where they were.</li>
+      <li><b>Scroll position is preserved.</b> The native <code>&lt;dialog&gt;</code> + <code>showModal()</code> inerts the rest of the page without scroll-locking. No body-scroll-restore hack, no jump-to-top on close.</li>
+      <li><b>Keyboard navigation is non-negotiable.</b> Left/right arrows move, Esc closes, +/-/0 control zoom. Every action has a keyboard path.</li>
+      <li><b>The dialog announces what it is.</b> <code>aria-label="Image 2 of 8: Shopfront detail"</code> tells the SR user position and content on open.</li>
+      <li><b>Zoom level is announced.</b> The "100%" indicator is a polite live region — pinch-zoom users hear "150%" as they pinch.</li>
+      <li><b>Disabled arrows are real disabled buttons.</b> At the first or last image, prev/next take <code>disabled</code> — keyboard skips them, SR reads "previous, dimmed".</li>
+      <li><b>Thumb strip is a <code>role="listbox"</code>.</b> Each thumb is <code>role="option"</code> with <code>aria-selected</code>. SR users navigate it like a select.</li>
+    </ul>
+  </section>
+
+  <!-- RELATED -->
+  <section id="related">
+    <h2 class="ds-h2">Related recipes</h2>
+    <p class="ds-h2-sub">Other view recipes, plus the canonical state machine.</p>
+    <div class="ck-related">
+      <a href="views-print-friendly.html">Views ·  Print-friendly views<span class="tag">New</span></a>
+      <a href="lists-kanban-board.html">Lists ·  Kanban board<span class="tag">New</span></a>
+      <a href="communication-comments-thread.html">Communication ·  Comments thread<span class="tag">New</span></a>
+      <a href="settings-notification-preferences.html">Settings ·  Notification preferences<span class="tag">New</span></a>
+      <a href="auth-signin-2fa.html">Auth ·  Sign in with 2FA<span class="tag">Canonical</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="index.html"><div class="pager-label">← Back to</div><div class="pager-title">Cookbook</div></a>
+    <a href="index.html" class="next"><div class="pager-label">All recipes →</div><div class="pager-title">Browse by theme</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#screens">What you'll build</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#build">Step-by-step build</a></li>
+    <li><a href="#final">Final composition</a></li>
+    <li><a href="#variations">Variations</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related recipes</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

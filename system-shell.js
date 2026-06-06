@@ -80,38 +80,118 @@
     return lines.map((l) => l.slice(minIndent)).join('\n');
   }
 
-  // Light HTML/JSX/Vue highlighter. We process raw (unescaped) source so the
-  // tag-vs-text regions are unambiguous, escape inside each region, then emit
-  // syntax spans. This avoids the chicken-and-egg of re-matching our own
-  // injected spans.
-  function highlight(code, framework) {
-    if (!(framework === 'html' || framework === 'vue' || framework === 'react')) {
-      return escHtml(code);
+  // Derive a `.tsx` filename for the code header from a TSX source string.
+  // Prefers the first named import from @corelith/design-system; otherwise
+  // falls back to a generic Example.tsx.
+  function deriveFileName(src) {
+    const m = src.match(/import\s*\{\s*([A-Za-z0-9_]+)/);
+    if (m && m[1]) return m[1] + '.tsx';
+    return 'Example.tsx';
+  }
+
+  // TSX highlighter. We process raw (unescaped) source so tag-vs-text regions
+  // are unambiguous, escape inside each region, then emit syntax spans. This
+  // avoids the chicken-and-egg of re-matching our own injected spans.
+  //
+  // Highlights: line + block comments, strings (', ", `), JSX tags
+  // (component PascalCase vs lowercase intrinsic), JSX attribute names, and a
+  // set of TSX keywords in the non-tag (expression) regions.
+  const TSX_KEYWORDS = new Set([
+    'import', 'from', 'export', 'default', 'function', 'return', 'const', 'let',
+    'var', 'if', 'else', 'for', 'while', 'switch', 'case', 'break', 'continue',
+    'new', 'class', 'extends', 'interface', 'type', 'as', 'async', 'await',
+    'typeof', 'instanceof', 'in', 'of', 'void', 'null', 'undefined', 'true',
+    'false', 'this', 'super', 'yield',
+  ]);
+
+  // Highlight a region of TSX that is NOT inside a tag (imports, JS expressions,
+  // text between tags). Keywords, strings and comments are coloured; the rest is
+  // escaped verbatim.
+  function highlightExpr(src) {
+    let out = '';
+    let i = 0;
+    const N = src.length;
+    while (i < N) {
+      const ch = src[i];
+      // Line comment
+      if (ch === '/' && src[i + 1] === '/') {
+        let j = i + 2;
+        while (j < N && src[j] !== '\n') j++;
+        out += `<span class="c">${escHtml(src.slice(i, j))}</span>`;
+        i = j;
+        continue;
+      }
+      // Block comment
+      if (ch === '/' && src[i + 1] === '*') {
+        const end = src.indexOf('*/', i + 2);
+        const stop = end === -1 ? N : end + 2;
+        out += `<span class="c">${escHtml(src.slice(i, stop))}</span>`;
+        i = stop;
+        continue;
+      }
+      // String (single, double, template)
+      if (ch === '"' || ch === "'" || ch === '`') {
+        let j = i + 1;
+        while (j < N) {
+          if (src[j] === '\\') { j += 2; continue; }
+          if (src[j] === ch) { j++; break; }
+          j++;
+        }
+        out += `<span class="s">${escHtml(src.slice(i, j))}</span>`;
+        i = j;
+        continue;
+      }
+      // Identifier / keyword
+      if (/[A-Za-z_$]/.test(ch)) {
+        let j = i + 1;
+        while (j < N && /[\w$]/.test(src[j])) j++;
+        const word = src.slice(i, j);
+        if (TSX_KEYWORDS.has(word)) out += `<span class="k">${word}</span>`;
+        else if (/^[A-Z]/.test(word)) out += `<span class="t">${word}</span>`;
+        else out += escHtml(word);
+        i = j;
+        continue;
+      }
+      out += escHtml(ch);
+      i++;
     }
+    return out;
+  }
+
+  function highlight(code, framework) {
+    if (framework !== 'tsx') return escHtml(code);
     let out = '';
     let i = 0;
     const N = code.length;
     while (i < N) {
-      // Comment block
-      if (code.startsWith('<!--', i)) {
-        const end = code.indexOf('-->', i + 4);
+      // JSX comment {/* … */}
+      if (code.startsWith('{/*', i)) {
+        const end = code.indexOf('*/}', i + 3);
         const stop = end === -1 ? N : end + 3;
         out += `<span class="c">${escHtml(code.slice(i, stop))}</span>`;
         i = stop;
         continue;
       }
-      // Tag region
-      if (code[i] === '<' && /[a-zA-Z\/]/.test(code[i + 1] || '')) {
-        // Find matching '>' (ignoring those inside quoted attribute values)
+      // JSX tag region
+      if (code[i] === '<' && /[a-zA-Z\/>]/.test(code[i + 1] || '')) {
+        // Find matching '>'. Must ignore '>' inside quoted attribute values,
+        // and inside `{...}` JSX-prop expressions (e.g. onClick={() => x}),
+        // so the `>` of an arrow `=>` doesn't close the tag prematurely.
         let j = i + 1;
         let inQ = null;
+        let braceDepth = 0;
         while (j < N) {
           const ch = code[j];
           if (inQ) {
+            if (ch === '\\') { j += 2; continue; }
             if (ch === inQ) inQ = null;
           } else if (ch === '"' || ch === "'") {
             inQ = ch;
-          } else if (ch === '>') {
+          } else if (ch === '{') {
+            braceDepth++;
+          } else if (ch === '}') {
+            if (braceDepth > 0) braceDepth--;
+          } else if (ch === '>' && braceDepth === 0) {
             break;
           }
           j++;
@@ -121,29 +201,31 @@
         i = j + 1;
         continue;
       }
-      // Plain text — just escape
-      // Find next interesting char
+      // Expression / text region — up to the next tag or JSX comment.
       let j = i;
-      while (j < N && code[j] !== '<') j++;
-      out += escHtml(code.slice(i, j));
+      while (j < N) {
+        if (code[j] === '<' && /[a-zA-Z\/>]/.test(code[j + 1] || '')) break;
+        if (code.startsWith('{/*', j)) break;
+        j++;
+      }
+      out += highlightExpr(code.slice(i, j));
       i = j;
     }
     return out;
   }
 
-  // Highlight one tag, e.g. `<button class="btn">` or `</button>`.
+  // Highlight one JSX tag, e.g. `<Button variant="primary">` or `</Button>`.
+  // Component names (PascalCase) get the `.t` class; intrinsic tags get `.k`.
   function highlightTag(tag) {
-    // tag begins with < and ends with >
     const lead = tag.startsWith('</') ? '&lt;/' : '&lt;';
     let rest = tag.slice(lead === '&lt;/' ? 2 : 1, -1); // strip < / and >
-    // Pull out tag name
-    const nameMatch = rest.match(/^([a-zA-Z][\w-]*)/);
+    const nameMatch = rest.match(/^([A-Za-z][\w.\-]*)/);
     if (!nameMatch) return escHtml(tag);
     const tagName = nameMatch[1];
     rest = rest.slice(tagName.length);
+    const nameCls = /^[A-Z]/.test(tagName) ? 't' : 'k';
 
-    // Inside the attribute area: highlight name="value" pairs and bare attrs.
-    // We scan character by character.
+    // Attribute area: highlight name={…}/name="value" pairs and bare attrs.
     let attrs = '';
     let k = 0;
     while (k < rest.length) {
@@ -161,14 +243,24 @@
         k++;
         const q = rest[k];
         if (q === '"' || q === "'") {
-          // Find closing quote
           let end = rest.indexOf(q, k + 1);
           if (end === -1) end = rest.length;
           const valWithQuotes = rest.slice(k, end + 1);
           attrs += `<span class="s">${escHtml(valWithQuotes)}</span>`;
           k = end + 1;
+        } else if (q === '{') {
+          // Expression value — find matching brace, highlight inside.
+          let depth = 0;
+          let end = k;
+          while (end < rest.length) {
+            if (rest[end] === '{') depth++;
+            else if (rest[end] === '}') { depth--; if (depth === 0) { end++; break; } }
+            end++;
+          }
+          const expr = rest.slice(k + 1, end - 1);
+          attrs += `{${highlightExpr(expr)}}`;
+          k = end;
         } else {
-          // Unquoted value
           const um = rest.slice(k).match(/^[^\s>]+/);
           if (um) {
             attrs += `<span class="s">${escHtml(um[0])}</span>`;
@@ -177,7 +269,7 @@
         }
       }
     }
-    return `${lead}<span class="k">${escHtml(tagName)}</span>${attrs}&gt;`;
+    return `${lead}<span class="${nameCls}">${escHtml(tagName)}</span>${attrs}&gt;`;
   }
 
   function renderCodeBlock(codeRaw, framework) {
@@ -234,6 +326,15 @@
       if (el.closest('.ds-variant-grid')) return;
       targets.push({ el, kind: 'specimen' });
     });
+    // Pattern pages use `.comp-box` for compositions. Treat any .comp-box that
+    // carries a `data-code` attribute as a specimen so it gets the Preview/Code
+    // tab. (.comp-box without `data-code` is left alone — those pages may have
+    // many compositions and only the first/representative one needs a snippet.)
+    scope.querySelectorAll('.comp-box[data-code], .dt-cell[data-code]').forEach((el) => {
+      if (el.closest('.ds-preview')) return;
+      if (el.closest('.ds-specimen')) return;
+      targets.push({ el, kind: 'specimen' });
+    });
     scope.querySelectorAll('.ds-variant-grid').forEach((el) => {
       if (el.closest('.ds-preview')) return;
       if (el.closest('.ds-specimen')) return;
@@ -255,16 +356,14 @@
       if (bar) titleText = bar.textContent.trim();
       if (!titleText) titleText = kind === 'grid' ? 'Variants' : 'Preview';
 
-      // Collect code samples from data-code-* attributes on the specimen.
-      // The browser decodes HTML entities for attribute values automatically,
-      // so dataset.codeHtml / codeReact / codeVue returns the raw string.
-      const codeSources = [];
-      if (kind === 'specimen') {
-        if (el.dataset.codeHtml)  codeSources.push({ id: 'html',  label: 'HTML',  raw: el.dataset.codeHtml });
-        if (el.dataset.codeReact) codeSources.push({ id: 'react', label: 'React', raw: el.dataset.codeReact });
-        if (el.dataset.codeVue)   codeSources.push({ id: 'vue',   label: 'Vue',   raw: el.dataset.codeVue });
-      }
-      const hasCode = codeSources.length > 0;
+      // The Code tab shows REACT/TSX only, sourced from the design-system
+      // package. A specimen declares its example via `data-code` (preferred)
+      // or the legacy `data-code-react` attribute — both hold HTML-entity-
+      // escaped TSX, which the browser decodes for us in dataset.* access.
+      // Legacy `data-code-html` / `data-code-vue` are intentionally ignored:
+      // if a specimen has no React snippet, the Code tab is not rendered.
+      const reactRaw = el.dataset.code || el.dataset.codeReact || '';
+      const hasCode = kind === 'specimen' && !!reactRaw.trim();
       if (hasCode) wrap.classList.add('has-code');
 
       const toolbar = document.createElement('div');
@@ -313,50 +412,26 @@
       wrap.appendChild(toolbar);
       wrap.appendChild(frame);
 
-      // ---- Code panel ----
+      // ---- Code panel (React/TSX only) ----
       let codePanel = null;
-      let activeFw = codeSources[0]?.id || null;
       if (hasCode) {
+        // Derive a component filename from the first import or the page slug,
+        // e.g. `import { Button }` → Button.tsx; `p-page-header` → PageHeader.tsx.
+        const fileName = deriveFileName(dedent(reactRaw));
+
         codePanel = document.createElement('div');
         codePanel.className = 'ds-code-panel';
         codePanel.hidden = true;
-
-        const fwTabs = codeSources.length > 1
-          ? `<div class="ds-code-fw" role="tablist" aria-label="Framework">
-              ${codeSources.map((c) => `
-                <button type="button" class="ds-code-fw-btn" data-fw="${c.id}" aria-pressed="${c.id === activeFw ? 'true' : 'false'}">${c.label}</button>
-              `).join('')}
-            </div>`
-          : `<div class="ds-code-fw single"><span class="ds-code-fw-btn" aria-pressed="true">${codeSources[0].label}</span></div>`;
-
         codePanel.innerHTML = `
           <div class="ds-code-header">
-            ${fwTabs}
+            <div class="ds-code-fw single"><span class="ds-code-fw-btn" aria-pressed="true">React</span></div>
             <span class="spacer"></span>
-            <span class="ds-code-filename"></span>
+            <span class="ds-code-filename">${escHtml(fileName)}</span>
           </div>
           <div class="ds-code-body-wrap" data-fw-render></div>
         `;
         wrap.appendChild(codePanel);
-
-        const filenameFor = (id) => id === 'react' ? 'Example.jsx' : id === 'vue' ? 'Example.vue' : 'index.html';
-        const renderActive = () => {
-          const src = codeSources.find((c) => c.id === activeFw) || codeSources[0];
-          codePanel.querySelector('[data-fw-render]').innerHTML = renderCodeBlock(src.raw, src.id);
-          const fnEl = codePanel.querySelector('.ds-code-filename');
-          if (fnEl) fnEl.textContent = filenameFor(src.id);
-        };
-        renderActive();
-
-        codePanel.querySelectorAll('.ds-code-fw-btn[data-fw]').forEach((btn) => {
-          btn.addEventListener('click', () => {
-            activeFw = btn.dataset.fw;
-            codePanel.querySelectorAll('.ds-code-fw-btn').forEach((b) => {
-              b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
-            });
-            renderActive();
-          });
-        });
+        codePanel.querySelector('[data-fw-render]').innerHTML = renderCodeBlock(reactRaw, 'tsx');
       }
 
       const centerScroll = () => {
@@ -404,8 +479,7 @@
         const copyBtn = toolbar.querySelector('.ds-copy-btn');
         if (copyBtn) {
           copyBtn.addEventListener('click', async () => {
-            const src = codeSources.find((c) => c.id === activeFw) || codeSources[0];
-            const ok = await copyText(dedent(src.raw));
+            const ok = await copyText(dedent(reactRaw));
             showToast(ok ? 'Copied!' : 'Copy failed');
           });
         }

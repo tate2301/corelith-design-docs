@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" /><title>Bottom sheet · Huchu DS</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+<style>
+  .comp-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin: 56px 0 14px; }
+  .comp-h .num { font: 500 11px/1 var(--font-mono); letter-spacing: 0.1em; color: var(--brand-strong); margin-bottom: 8px; }
+  .comp-h h3 { font: 600 22px/1.2 var(--font-sans); color: var(--text-strong); letter-spacing: -0.015em; margin: 0 0 6px; }
+  .comp-h p { font: 400 14.5px/1.55 var(--font-sans); color: var(--text-muted); margin: 0; max-width: 60ch; }
+  .comp-h .when { display: inline-flex; flex-direction: column; gap: 6px; font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); padding: 10px 12px; background: var(--surface-muted); border-radius: 8px; min-width: 220px; max-width: 280px; }
+  .comp-h .when b { color: var(--text-strong); font-weight: 500; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .comp-box { background: var(--canvas); border: 1px solid var(--border); border-radius: 14px; padding: 28px; overflow: hidden; }
+
+  /* Local stage that pretends to be a phone viewport for the previews. */
+  .phone-stage {
+    position: relative; width: 320px; height: 540px;
+    margin: 0 auto;
+    background: var(--canvas);
+    border: 1px solid var(--border); border-radius: 28px;
+    overflow: hidden;
+  }
+  .phone-stage .x-bs-scrim,
+  .phone-stage .x-bottom-sheet {
+    position: absolute;
+  }
+  .phone-stage .x-bs-scrim { inset: 0; opacity: 1; pointer-events: auto; }
+  .phone-stage .x-bottom-sheet { transform: none; }
+
+  /* ── Wireframe primitives ────────── */
+  .wf-frame { border: 1px dashed var(--border-strong); border-radius: 12px; padding: 12px; background: var(--canvas); position: relative; overflow: hidden; }
+  .wf-frame .wf-cap { position: absolute; top: 8px; right: 10px; font: 500 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); }
+  .wf-page { position: relative; background: var(--surface-muted); border-radius: 8px; height: 240px; opacity: 0.5; padding: 10px; display: grid; gap: 6px; }
+  .wf-line { height: 6px; background: var(--canvas); border-radius: 3px; }
+  .wf-sheet {
+    position: absolute; background: var(--canvas);
+    border: 1px dashed var(--border-strong);
+    padding: 10px; display: grid; gap: 6px;
+  }
+  .wf-sheet .handle { width: 30px; height: 4px; background: var(--border); border-radius: 2px; justify-self: center; }
+  .wf-sheet .wf-line { background: var(--surface-muted); }
+  .wf-sheet-bottom { bottom: 0; left: 0; right: 0; border-radius: 14px 14px 0 0; height: 60%; }
+  .wf-sheet-center { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 75%; border-radius: 10px; }
+  .wf-block { height: 24px; background: var(--surface-muted); border-radius: 4px; }
+  .wf-btns { display: flex; gap: 6px; margin-top: 4px; }
+  .wf-btn { flex: 1; height: 18px; background: var(--surface-muted); border-radius: 4px; }
+  .wf-btn.primary { background: var(--border); }
+  .wf-mobile { width: 160px; margin: 0 auto; }
+  .wf-mobile .wf-page { height: 280px; }
+  .wf-tablet { max-width: 280px; margin: 0 auto; }
+  .wf-trio { display: grid; grid-template-columns: 1fr 1.2fr 1.6fr; gap: 14px; align-items: stretch; }
+  @media (max-width: 800px) { .wf-trio { grid-template-columns: 1fr; } }
+  .wf-trio-col { display: grid; gap: 8px; }
+  .wf-trio-col .label { font: 500 10px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); }
+
+  /* Greyscale skeleton lines for use inside the live x-bs-body */
+  .sk-line { height: 8px; background: var(--surface-muted); border-radius: 3px; }
+  .sk-line.title { width: 50%; height: 12px; background: var(--border); }
+  .sk-line.sub { width: 70%; }
+  .sk-input { height: 32px; background: var(--surface-muted); border: 1px dashed var(--border); border-radius: 6px; }
+  .sk-tile-row { display: flex; gap: 10px; align-items: center; padding: 8px 4px; border-bottom: 1px solid var(--border-subtle); }
+  .sk-tile { width: 36px; height: 36px; background: var(--surface-muted); border-radius: 8px; border: 1px dashed var(--border); flex-shrink: 0; }
+  .sk-tile-text { flex: 1; display: grid; gap: 5px; }
+
+  .live-examples { margin: 56px 0 8px; }
+  .live-examples h2 { font: 600 18px/1.2 var(--font-sans); color: var(--text-strong); margin: 0 0 6px; }
+  .live-examples p { font: 14px/1.5 var(--font-sans); color: var(--text-muted); margin: 0 0 14px; }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content wide">
+<article>
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs"><a href="../index.html">Home</a><span class="sep">/</span><a href="patterns.html">Patterns</a><span class="sep">/</span><span>Bottom sheet</span></div>
+    <h1>Bottom sheet</h1>
+    <p class="lede">The mobile-first dialog: anchored to the bottom of the viewport on phone, centred as a modal on desktop. Header, scrollable body, sticky footer. Replaces the bespoke <code class="t-mono">.sheet</code> / <code class="t-mono">.more-sheet</code> / <code class="t-mono">.modal</code> mobile variants shipped by Admin, Parent, Student, Gold, and Owner.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="check" data-icon-size="12"></span>Stable</span>
+      <span class="meta-pill"><span class="t-mono">.x-bottom-sheet</span></span>
+      <span class="meta-pill">3 compositions</span>
+    </div>
+  </header>
+
+  <section style="margin-top: 16px;">
+    <h2 class="ds-h2">Shell at every breakpoint</h2>
+    <p class="ds-h2-sub">Bottom-anchored on phone, centred on desktop. Greyscale wireframes — structure only.</p>
+    <div class="wf-trio">
+      <div class="wf-trio-col">
+        <div class="label">Mobile</div>
+        <div class="wf-frame wf-mobile"><span class="wf-cap">SM</span>
+          <div class="wf-page">
+            <div class="wf-line" style="width: 80%;"></div>
+            <div class="wf-line" style="width: 60%;"></div>
+            <div class="wf-line" style="width: 75%;"></div>
+            <div class="wf-sheet wf-sheet-bottom">
+              <div class="handle"></div>
+              <div class="wf-line" style="width: 50%; height: 8px; background: var(--border);"></div>
+              <div class="wf-block"></div>
+              <div class="wf-block"></div>
+              <div class="wf-btns"><div class="wf-btn"></div><div class="wf-btn primary"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="wf-trio-col">
+        <div class="label">Tablet</div>
+        <div class="wf-frame wf-tablet"><span class="wf-cap">MD</span>
+          <div class="wf-page">
+            <div class="wf-line" style="width: 80%;"></div>
+            <div class="wf-line" style="width: 60%;"></div>
+            <div class="wf-line" style="width: 75%;"></div>
+            <div class="wf-line" style="width: 70%;"></div>
+            <div class="wf-sheet wf-sheet-center">
+              <div class="wf-line" style="width: 60%; height: 8px; background: var(--border);"></div>
+              <div class="wf-block"></div>
+              <div class="wf-block"></div>
+              <div class="wf-btns"><div class="wf-btn"></div><div class="wf-btn primary"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="wf-trio-col">
+        <div class="label">Desktop</div>
+        <div class="wf-frame"><span class="wf-cap">LG</span>
+          <div class="wf-page">
+            <div class="wf-line" style="width: 80%;"></div>
+            <div class="wf-line" style="width: 60%;"></div>
+            <div class="wf-line" style="width: 75%;"></div>
+            <div class="wf-line" style="width: 70%;"></div>
+            <div class="wf-line" style="width: 50%;"></div>
+            <div class="wf-sheet wf-sheet-center" style="width: 50%;">
+              <div class="wf-line" style="width: 50%; height: 8px; background: var(--border);"></div>
+              <div class="wf-block"></div>
+              <div class="wf-block"></div>
+              <div class="wf-btns"><div class="wf-btn"></div><div class="wf-btn primary"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="live-examples">
+    <h2>Live examples</h2>
+    <p>Where to see this shell in action — reference docs, cookbook recipes, and live demos.</p>
+    <div class="surface-grid">
+      <a class="surface-card" href="x-modal.html">
+        <span class="num">REFERENCE</span>
+        <span class="nm">Modal &amp; sheet (legacy)</span>
+        <span class="ds">The deprecated overlay family this primitive replaces.</span>
+        <span class="arrow">Open reference →</span>
+      </a>
+      <a class="surface-card" href="../cookbook/forms-autosave-drawer.html">
+        <span class="num">COOKBOOK</span>
+        <span class="nm">Autosave drawer</span>
+        <span class="ds">Bottom-sheet recipe wired up for autosave on phone &amp; desktop.</span>
+        <span class="arrow">Open recipe →</span>
+      </a>
+      <a class="surface-card" href="../portals/parent/demo.html">
+        <span class="num">PORTAL · LIVE</span>
+        <span class="nm">Parent portal demo</span>
+        <span class="ds">Mobile-first portal that ships the bottom sheet end-to-end.</span>
+        <span class="arrow">Open live →</span>
+      </a>
+    </div>
+  </section>
+
+  <div class="comp-h">
+    <div>
+      <div class="num">COMPOSITION 01</div>
+      <h3>Detail sheet</h3>
+      <p>The default: tap a <a href="b-row-card.html">row card</a> and it opens. Headline, body content, and a sticky footer with the primary action. Header carries a close button and a drag handle for vertical-swipe dismiss.</p>
+    </div>
+    <div class="comp-h .when"><div class="when"><b>Use when</b>The operator drilled into a single record and you need to show the full detail without leaving the list. The sheet keeps context — closing returns to the scroll position.</div></div>
+  </div>
+  <div class="comp-box"
+       data-code='import { BottomSheet, Button } from &#39;@corelith/design-system&#39;;
+
+export function Example({ open, onClose }) {
+  return (
+    &lt;BottomSheet open={open} onClose={onClose} title=&quot;Record title&quot;&gt;
+      &lt;BottomSheet.Body&gt;
+        {/* content */}
+      &lt;/BottomSheet.Body&gt;
+      &lt;BottomSheet.Footer&gt;
+        &lt;Button variant=&quot;alt&quot;&gt;Secondary&lt;/Button&gt;
+        &lt;Button variant=&quot;primary&quot;&gt;Primary&lt;/Button&gt;
+      &lt;/BottomSheet.Footer&gt;
+    &lt;/BottomSheet&gt;
+  );
+}'>
+    <div class="phone-stage">
+      <div class="x-bs-scrim open">
+        <div class="x-bottom-sheet">
+          <div class="x-bs-grab"></div>
+          <div class="x-bs-head">
+            <h3><span class="sk-line title" style="display: inline-block; min-width: 110px;"></span></h3>
+            <button class="x-bs-close" aria-label="Close"><span data-icon="x" data-icon-size="16"></span></button>
+          </div>
+          <div class="x-bs-body">
+            <div style="display: grid; gap: 10px;">
+              <div class="sk-line sub"></div>
+              <div class="sk-line"></div>
+              <div class="sk-line sub"></div>
+              <div class="sk-line"></div>
+              <div class="sk-line sub"></div>
+              <div class="sk-line"></div>
+              <div class="sk-line sub"></div>
+              <div class="sk-line"></div>
+            </div>
+          </div>
+          <div class="x-bs-foot">
+            <button class="btn btn-secondary" type="button" aria-label="Secondary">Cancel</button>
+            <button class="btn btn-primary" type="button" aria-label="Primary">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="comp-h">
+    <div>
+      <div class="num">COMPOSITION 02</div>
+      <h3>Action sheet</h3>
+      <p>A list of destructive / lateral actions surfaced from a "…" button. Each row is a tap target with an icon tile on the left.</p>
+    </div>
+    <div class="when"><b>Use when</b>The operator triggered a per-row menu (the kebab) and you need to offer 2–8 actions. Past 8, use a dedicated screen.</div>
+  </div>
+  <div class="comp-box">
+    <div class="phone-stage">
+      <div class="x-bs-scrim open">
+        <div class="x-bottom-sheet">
+          <div class="x-bs-grab"></div>
+          <div class="x-bs-head">
+            <h3><span class="sk-line title" style="display: inline-block; min-width: 110px;"></span></h3>
+            <button class="x-bs-close" aria-label="Close"><span data-icon="x" data-icon-size="16"></span></button>
+          </div>
+          <div class="x-bs-body" style="padding: 8px 10px;">
+            <div class="sk-tile-row">
+              <div class="sk-tile"></div>
+              <div class="sk-tile-text"><div class="sk-line title" style="width: 40%;"></div><div class="sk-line sub"></div></div>
+            </div>
+            <div class="sk-tile-row">
+              <div class="sk-tile"></div>
+              <div class="sk-tile-text"><div class="sk-line title" style="width: 50%;"></div><div class="sk-line sub"></div></div>
+            </div>
+            <div class="sk-tile-row">
+              <div class="sk-tile"></div>
+              <div class="sk-tile-text"><div class="sk-line title" style="width: 35%;"></div><div class="sk-line sub"></div></div>
+            </div>
+            <div class="sk-tile-row" style="border-bottom: 0;">
+              <div class="sk-tile"></div>
+              <div class="sk-tile-text"><div class="sk-line title" style="width: 45%;"></div><div class="sk-line sub"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="comp-h">
+    <div>
+      <div class="num">COMPOSITION 03</div>
+      <h3>Desktop dialog</h3>
+      <p>≥ 720 px viewport, the sheet centres as a 520 px-wide dialog with rounded top &amp; bottom corners. Same parts — only the entrance is different (fade + lift, not slide-up).</p>
+    </div>
+    <div class="when"><b>Use when</b>The same React component renders this automatically. Components don't fork by viewport; one source of truth, two layouts.</div>
+  </div>
+  <div class="comp-box">
+    <div style="background: rgba(22,24,29,0.55); padding: 32px; border-radius: 10px;">
+      <div class="x-bottom-sheet" style="position: static; transform: none; margin: 0 auto; border-radius: 14px; max-width: 520px; max-height: none;">
+        <div class="x-bs-head">
+          <h3><span class="sk-line title" style="display: inline-block; min-width: 150px;"></span></h3>
+          <button class="x-bs-close" aria-label="Close"><span data-icon="x" data-icon-size="16"></span></button>
+        </div>
+        <div class="x-bs-body">
+          <div style="display: grid; gap: 14px;">
+            <div>
+              <div class="sk-line sub" style="width: 25%; margin-bottom: 6px;"></div>
+              <div class="sk-input"></div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div>
+                <div class="sk-line sub" style="width: 35%; margin-bottom: 6px;"></div>
+                <div class="sk-input"></div>
+              </div>
+              <div>
+                <div class="sk-line sub" style="width: 35%; margin-bottom: 6px;"></div>
+                <div class="sk-input"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="x-bs-foot">
+          <button class="btn btn-secondary" type="button" aria-label="Cancel">Cancel</button>
+          <button class="btn btn-primary" type="button" aria-label="Confirm">Confirm</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section style="margin-top: 56px;">
+    <h2 class="ds-h2">Parts</h2>
+    <table class="ds-props"><thead><tr><th>Property</th><th>Value</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>scrim</td><td>ink @ 55% opacity</td><td>200 ms fade in / out</td></tr>
+      <tr><td>radius (phone)</td><td>18 px top, 0 bottom</td><td>Anchored to viewport edge</td></tr>
+      <tr><td>radius (desktop)</td><td>14 px all corners</td><td>Free-floating dialog ≥ 720 px</td></tr>
+      <tr><td>max height</td><td>90 vh phone, 80 vh desktop</td><td>Body scrolls when over</td></tr>
+      <tr><td>grab handle</td><td>38 × 4 px, --border-strong</td><td>Phone only; hidden on desktop</td></tr>
+      <tr><td>header</td><td>flex, padding 10–18, border-bottom subtle</td><td>Sticky — header stays visible while body scrolls</td></tr>
+      <tr><td>footer</td><td>safe-area padding, border-top subtle</td><td>Buttons stretch to fill; primary on the right</td></tr>
+      <tr><td>entrance (phone)</td><td>translateY 100% → 0</td><td>260 ms cubic-bezier(0.2,0,0.1,1)</td></tr>
+      <tr><td>entrance (desktop)</td><td>translateY 20 → 0, opacity 0 → 1</td><td>200 ms ease-out</td></tr>
+    </tbody>
+    </table>
+  </section>
+
+  <section style="margin-top: 56px;">
+    <h2 class="ds-h2">Shared rules</h2>
+    <div class="ds-rules">
+      <div class="rule do"><span class="tag">Do</span><p>Close on scrim tap, Escape key, drag-down past a threshold, and explicit close button. Each is the only one some users know.</p></div>
+      <div class="rule dont"><span class="tag">Don't</span><p>Stack sheets. If a sheet opens another, you've designed a wizard — use a stepper instead.</p></div>
+      <div class="rule do"><span class="tag">Do</span><p>Use a sheet for any modal that's > 1 viewport tall on phone. The internal scroll inside the sheet is gentler than full-page scroll under chrome.</p></div>
+      <div class="rule dont"><span class="tag">Don't</span><p>Put navigation links in a sheet. Sheets are for the current record / current action — not a substitute for the sidebar.</p></div>
+      <div class="rule do"><span class="tag">Do</span><p>Trap focus inside the sheet when open. Tab cycles through interactive children only; Shift+Tab from the first wraps to the last.</p></div>
+      <div class="rule dont"><span class="tag">Don't</span><p>Animate close as a slow slide. 200 ms or less — operators want the canvas back fast.</p></div>
+    </div>
+  </section>
+
+  <section style="margin-top: 56px;">
+    <h2 class="ds-h2">Accessibility</h2>
+    <ul class="ds-list">
+      <li>The sheet is a <code>&lt;div role="dialog" aria-modal="true" aria-labelledby="bs-title"&gt;</code>. The header H3 carries that ID.</li>
+      <li>Open: move focus to the close button (or the first interactive child). Close: restore focus to the element that opened the sheet.</li>
+      <li>Inert the rest of the page (<code>inert</code> attribute on the app container) so AT can't reach the background.</li>
+      <li>Drag handle is a visual cue, not interactive — keyboard users use Escape or the close button.</li>
+    </ul>
+  </section>
+
+  <section style="margin-top: 56px;">
+    <h2 class="ds-h2">Related</h2>
+    <ul class="ds-list">
+      <li><a href="x-modal.html">Modal &amp; sheet</a> — the broader modal family (alert dialog, confirm, etc.).</li>
+      <li><a href="b-row-card.html">Row card</a> — the primary opener for detail sheets.</li>
+      <li><a href="b-bottom-tabs.html">Bottom tabs</a> — the "More" tab opens a sheet of overflow destinations.</li>
+      <li><a href="x-detail-view.html">Detail view</a> — when the detail is too big for a sheet, use a full screen.</li>
+    </ul>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="x-modal.html"><div class="pager-label">← Previous</div><div class="pager-title">Modal &amp; sheet</div></a>
+    <a href="x-detail-view.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Detail view</div></a>
+  </nav>
+</article>
+</main>
+</body></html>

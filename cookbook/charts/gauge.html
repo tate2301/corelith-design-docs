@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Gauge · Huchu Charts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../system.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../system-shell.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+  .ck-pull { margin: 14px 0; padding: 14px 18px; background: var(--brand-soft); border-left: 3px solid var(--brand); border-radius: 8px; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-roadmap-note { margin-top: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+  .ck-chart-stage { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; display: grid; place-items: center; }
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../../index.html">Home</a><span class="sep">/</span>
+      <a href="../index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Charts</a><span class="sep">/</span>
+      <span>Gauge</span>
+    </div>
+    <h1>Semicircle gauge</h1>
+    <p class="lede">A half-donut arc encoding one bounded score (0–100). Beloved by execs, divisive among designers — and unavoidable when leadership says "give me a dial".</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="chart" data-icon-size="12"></span>Charts · 18 of 20</span>
+      <span class="meta-pill">1 primitive · <code>Chart.Gauge</code></span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~10 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A 180° arc with a coloured fill from one end and a big centred number. The visual metaphor everyone already knows.</p>
+    <p>Gauges trade information density for emotional clarity. They take more pixels than a bullet or a progress ring to convey the same fact, but they read as "dashboard" the moment they land on screen — that aesthetic is sometimes the whole point. Use them on landing screens, exec dashboards, and customer-facing reports where a familiar shape outweighs a more efficient one.</p>
+    <p>Reach for it when the metric is bounded 0–100 (score, percentage, NPS), and the chart will be looked at by people who don't read charts every day. Skip it for analytical screens — a bullet chart shows the same data plus targets and bands in less space. Never stack ten gauges in a row; if you would, switch to bullets.</p>
+    <div class="ck-pull"><b>The opinion:</b> a gauge needs the number printed in the middle. If the user has to read the arc to know the value, the chart failed. The arc colours the verdict; the number carries the precision.</div>
+  </section>
+
+  <section id="chart">
+    <h2 class="ds-h2">The chart</h2>
+    <p class="ds-h2-sub">Customer satisfaction score at 82 of 100 — sits in the "good" band, marked by colour and label.</p>
+    <div class="ck-chart-stage">
+      <svg width="320" height="200" viewBox="0 0 320 200" role="img" aria-label="Customer satisfaction 82 of 100, in good band">
+        <title>CSAT score</title>
+        <desc>Semi-circle gauge showing 82 of 100. Bands: 0-50 poor, 50-80 average, 80-100 good. Score sits in the good band.</desc>
+        <g transform="translate(160,160)">
+          <!-- Track -->
+          <path d="M-120,0 A120,120 0 0,1 120,0" fill="none" stroke="var(--surface-sunken)" stroke-width="22" />
+          <!-- Bands behind: poor (red), average (grey), good (green) -->
+          <path d="M-120,0 A120,120 0 0,1 -37,-114" fill="none" stroke="var(--tone-danger-bg)" stroke-width="22" />
+          <path d="M-37,-114 A120,120 0 0,1 71,-97" fill="none" stroke="var(--surface-sunken)" stroke-width="22" />
+          <path d="M71,-97 A120,120 0 0,1 120,0" fill="none" stroke="var(--brand-100)" stroke-width="22" />
+          <!-- Filled arc — value 82 -->
+          <path d="M-120,0 A120,120 0 0,1 100,-66" fill="none" stroke="var(--brand)" stroke-width="22" stroke-linecap="round" />
+          <!-- Tick at target (80) -->
+          <line x1="71" y1="-97" x2="83" y2="-114" stroke="var(--ink)" stroke-width="2" />
+          <!-- Value -->
+          <text text-anchor="middle" y="-16" font-family="var(--font-sans)" font-size="40" font-weight="700" fill="var(--text-strong)">82</text>
+          <text text-anchor="middle" y="6" font-family="var(--font-sans)" font-size="12" fill="var(--text-muted)">of 100 · CSAT</text>
+          <!-- Band label -->
+          <g transform="translate(0,24)">
+            <rect x="-26" y="-12" width="52" height="20" rx="10" fill="var(--brand-soft)" />
+            <text text-anchor="middle" y="2" font-family="var(--font-sans)" font-size="11" font-weight="600" fill="var(--brand-strong)">good</text>
+          </g>
+          <!-- Min / max labels -->
+          <text x="-120" y="20" font-family="var(--font-sans)" font-size="10" fill="var(--text-muted)" text-anchor="middle">0</text>
+          <text x="120" y="20" font-family="var(--font-sans)" font-size="10" fill="var(--text-muted)" text-anchor="middle">100</text>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart.Gauge</a>
+      <a class="ck-piece" href="../../system/b-stat-hero.html"><span class="kind">Block</span>Stat hero</a>
+    </div>
+    <div class="ck-roadmap-note"><b>Roadmap:</b> <code>Chart.Gauge</code> in v0.2 supports bands, target ticks, and animated reveal. For v0.1-alpha, the inline SVG above is the entire footprint.</div>
+  </section>
+
+  <section id="snippet">
+    <h2 class="ds-h2">React snippet</h2>
+    <p class="ds-h2-sub">Pass <code>value</code>, <code>max</code>, and optional <code>bands</code>; the band the value falls in becomes the auto-label.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart } from &#39;@huchu/react&#39;;
+
+export function CsatGauge() {
+  return (
+    &lt;Chart.Gauge
+      label=&quot;CSAT&quot;
+      value={82}
+      max={100}
+      target={80}
+      bands={[
+        { to: 50,  tone: &#39;danger&#39;,  label: &#39;poor&#39; },
+        { to: 80,  tone: &#39;neutral&#39;, label: &#39;average&#39; },
+        { to: 100, tone: &#39;brand&#39;,   label: &#39;good&#39; },
+      ]}
+      width={320}
+      height={200}
+      aria-label=&quot;Customer satisfaction 82 of 100, in good band&quot;
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <svg width="100%" height="180" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid meet" role="img">
+          <g transform="translate(160,140)">
+            <path d="M-120,0 A120,120 0 0,1 120,0" fill="none" stroke="var(--surface-sunken)" stroke-width="22" />
+            <path d="M-120,0 A120,120 0 0,1 100,-66" fill="none" stroke="var(--brand)" stroke-width="22" stroke-linecap="round" />
+            <text text-anchor="middle" y="-16" font-family="var(--font-sans)" font-size="40" font-weight="700" fill="var(--text-strong)">82</text>
+            <text text-anchor="middle" y="6" font-family="var(--font-sans)" font-size="11" fill="var(--text-muted)">of 100 · CSAT</text>
+          </g>
+        </svg>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Chart.Gauge</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="customise">
+    <h2 class="ds-h2">Customising</h2>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Full-circle gauge</h4>
+        <p>Replace the semicircle with a 270° arc when the dashboard tile is square; the bigger arc reads as "more bandwidth used".</p>
+<pre>&lt;Chart.Gauge
+  value={82}
+  max={100}
+  arc=&quot;three-quarter&quot;
+  startAngle={-225}
+  endAngle={45}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Multi-gauge in a card</h4>
+        <p>Three small gauges in a row for tri-metric dashboards. Drop the band labels — read each as a tile, not a feature.</p>
+<pre>{metrics.map(m =&gt; (
+  &lt;Chart.Gauge
+    key={m.id}
+    value={m.value}
+    max={m.max}
+    width={140}
+  /&gt;
+))}</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Gauge with delta</h4>
+        <p>Add a "+5 vs. last month" subtitle so the gauge stops looking like a static dial.</p>
+<pre>&lt;Chart.Gauge
+  value={82}
+  max={100}
+  sublabel=&quot;+5 vs. last month&quot;
+  sublabelTone=&quot;success&quot;
+/&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="in-context">
+    <h2 class="ds-h2">In context</h2>
+    <p class="ds-h2-sub">Inside a stat hero card on the exec dashboard. The gauge sits next to a short copy explanation and a comparison bullet of last quarter.</p>
+    <div class="ck-chart-stage" style="padding: 18px;">
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; width: 100%; max-width: 560px;">
+        <div style="display: grid; grid-template-columns: 220px 1fr; gap: 18px; align-items: center;">
+          <svg width="100%" height="160" viewBox="0 0 220 160" preserveAspectRatio="xMidYMid meet" role="img">
+            <g transform="translate(110,128)">
+              <path d="M-90,0 A90,90 0 0,1 90,0" fill="none" stroke="var(--surface-sunken)" stroke-width="16" />
+              <path d="M-90,0 A90,90 0 0,1 75,-50" fill="none" stroke="var(--brand)" stroke-width="16" stroke-linecap="round" />
+              <text text-anchor="middle" y="-12" font-family="var(--font-sans)" font-size="30" font-weight="700" fill="var(--text-strong)">82</text>
+              <text text-anchor="middle" y="6" font-family="var(--font-sans)" font-size="10" fill="var(--text-muted)">of 100</text>
+            </g>
+          </svg>
+          <div>
+            <div style="font: 500 11px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase;">Customer satisfaction</div>
+            <div style="font: 700 22px/1.1 var(--font-sans); color: var(--text-strong); margin: 4px 0 6px;">Good · 82</div>
+            <div style="font: var(--type-body-sm); color: var(--text-muted); line-height: 1.5;">Up 5 points since June. Target for the year is 85 — on track if November holds.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">Gauges look approachable but pack a lot of meaning into an arc. Lead with the number and the band, both as text.</p>
+    <ul class="ck-a11y">
+      <li><b>One <code>role="img"</code> per gauge.</b> Inside, <code>&lt;title&gt;</code> names the metric; <code>&lt;desc&gt;</code> spells out the value, scale, and band.</li>
+      <li><b>The number is real text.</b> Centred <code>&lt;text&gt;</code> elements, not images — screen readers can read "82" without needing an aria-label.</li>
+      <li><b>Band name is text-redundant.</b> "Good" appears both as a coloured pill and as the band label in the aria-label.</li>
+      <li><b>Min/max labels visible.</b> "0" and "100" at the arc's endpoints save users from inferring the scale.</li>
+      <li><b>Target tick has a non-colour cue.</b> The target is a thicker ink-coloured tick plus an aria-label "target 80" inside the desc.</li>
+      <li><b>No motion in reduced motion.</b> The arc draw-in honours <code>prefers-reduced-motion: reduce</code> and shows the final state immediately.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related charts</h2>
+    <div class="ck-related">
+      <a href="bullet.html">Bullet<span class="tag">Chart</span></a>
+      <a href="../charts/chart-progress-ring.html">Progress ring<span class="tag">Chart</span></a>
+      <a href="../charts/chart-donut.html">Donut<span class="tag">Chart</span></a>
+      <a href="sparkline.html">Sparkline<span class="tag">Chart</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="treemap.html"><div class="pager-label">← Previous</div><div class="pager-title">Treemap</div></a>
+    <a href="waterfall.html" class="next"><div class="pager-label">Next chart →</div><div class="pager-title">Waterfall</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#chart">The chart</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#snippet">React snippet</a></li>
+    <li><a href="#customise">Customising</a></li>
+    <li><a href="#in-context">In context</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related charts</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

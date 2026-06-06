@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Funnel · Huchu Charts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../system.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../system-shell.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+  .ck-pull { margin: 14px 0; padding: 14px 18px; background: var(--brand-soft); border-left: 3px solid var(--brand); border-radius: 8px; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-roadmap-note { margin-top: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+  .ck-chart-stage { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; display: grid; place-items: center; }
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../../index.html">Home</a><span class="sep">/</span>
+      <a href="../index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Charts</a><span class="sep">/</span>
+      <span>Funnel</span>
+    </div>
+    <h1>Conversion funnel</h1>
+    <p class="lede">Four or five steps narrowing into one — visits to carts to checkouts to buys. The chart that turns "we have a leak" into "we have a leak at step 3".</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="chart" data-icon-size="12"></span>Charts · 14 of 20</span>
+      <span class="meta-pill">1 primitive · <code>Chart.Funnel</code></span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~12 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">A vertical stack of trapezoids, each narrower than the last, with the conversion rate between every pair printed alongside.</p>
+    <p>Every business has a funnel. For e-commerce: visits → product views → carts → checkouts → orders. For onboarding: signed up → invited team → connected data → first action. The funnel chart's job is to make the worst step impossible to miss — the drop from the widest slab to the next-widest is where attention goes first. Pair every slab with the absolute count <em>and</em> the step-to-step conversion rate; people read both.</p>
+    <p>Reach for it for any sequential, irreversible flow with 3–6 stages. Skip it if the stages aren't strictly ordered (use a stacked bar) or if dropoff is &lt; 10% across the board (the funnel looks like a column and the user wonders why you bothered).</p>
+    <div class="ck-pull"><b>The opinion:</b> annotate step-to-step rates, not just totals. "62% conversion to step 3" is the actionable number; the slab width alone tells you how much, not how leaky.</div>
+  </section>
+
+  <section id="chart">
+    <h2 class="ds-h2">The chart</h2>
+    <p class="ds-h2-sub">Five-step e-commerce funnel for the month. Visitors lose the most ground between "viewed product" and "added to cart".</p>
+    <div class="ck-chart-stage">
+      <svg width="520" height="280" viewBox="0 0 520 280" role="img" aria-label="Conversion funnel: 12,400 visits to 248 orders, 2% overall conversion">
+        <title>October funnel</title>
+        <desc>Five-step funnel: 12,400 visits, 8,200 product views, 2,100 carts, 720 checkouts, 248 orders. Largest drop from product views to carts at 26%.</desc>
+        <!-- 5 stacked trapezoids -->
+        <polygon points="20,20 500,20 470,60 50,60" fill="var(--brand)" />
+        <text x="260" y="44" text-anchor="middle" font-family="var(--font-sans)" font-size="13" font-weight="600" fill="var(--text-inverse)">12,400 visits</text>
+        <text x="510" y="44" font-family="var(--font-sans)" font-size="11" fill="var(--text-muted)">—</text>
+
+        <polygon points="50,72 470,72 440,112 80,112" fill="var(--brand)" opacity="0.85" />
+        <text x="260" y="96" text-anchor="middle" font-family="var(--font-sans)" font-size="13" font-weight="600" fill="var(--text-inverse)">8,200 product views</text>
+        <text x="510" y="96" font-family="var(--font-sans)" font-size="11" fill="var(--text-muted)" text-anchor="end">66%</text>
+
+        <polygon points="80,124 440,124 410,164 110,164" fill="var(--brand)" opacity="0.65" />
+        <text x="260" y="148" text-anchor="middle" font-family="var(--font-sans)" font-size="13" font-weight="600" fill="var(--text-inverse)">2,100 carts</text>
+        <text x="510" y="148" font-family="var(--font-sans)" font-size="11" fill="var(--tone-danger)" text-anchor="end">26%</text>
+
+        <polygon points="110,176 410,176 380,216 140,216" fill="var(--brand)" opacity="0.45" />
+        <text x="260" y="200" text-anchor="middle" font-family="var(--font-sans)" font-size="13" font-weight="600" fill="var(--text-strong)">720 checkouts</text>
+        <text x="510" y="200" font-family="var(--font-sans)" font-size="11" fill="var(--text-muted)" text-anchor="end">34%</text>
+
+        <polygon points="140,228 380,228 350,268 170,268" fill="var(--brand)" opacity="0.25" />
+        <text x="260" y="252" text-anchor="middle" font-family="var(--font-sans)" font-size="13" font-weight="600" fill="var(--text-strong)">248 orders</text>
+        <text x="510" y="252" font-family="var(--font-sans)" font-size="11" fill="var(--text-muted)" text-anchor="end">34%</text>
+      </svg>
+    </div>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart.Funnel</a>
+      <a class="ck-piece" href="../../system/b-stat-card.html"><span class="kind">Block</span>Stat card</a>
+    </div>
+    <div class="ck-roadmap-note"><b>Roadmap:</b> <code>Chart.Funnel</code> ships in v0.2 with auto step-conversion calculation and worst-step highlighting. v0.1-alpha users can compose with inline SVG and the math below.</div>
+  </section>
+
+  <section id="snippet">
+    <h2 class="ds-h2">React snippet</h2>
+    <p class="ds-h2-sub">Pass <code>steps</code> with <code>label</code> and <code>value</code>. Step-to-step rates are computed for you.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart } from &#39;@huchu/react&#39;;
+
+const oct = [
+  { label: &#39;Visits&#39;,         value: 12400 },
+  { label: &#39;Product views&#39;,  value:  8200 },
+  { label: &#39;Carts&#39;,          value:  2100 },
+  { label: &#39;Checkouts&#39;,      value:   720 },
+  { label: &#39;Orders&#39;,         value:   248 },
+];
+
+export function OctoberFunnel() {
+  return (
+    &lt;Chart.Funnel
+      steps={oct}
+      showRates
+      highlightWorstStep
+      width={520}
+      height={280}
+      aria-label=&quot;October conversion funnel, 2% overall&quot;
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <svg width="100%" height="220" viewBox="0 0 520 220" role="img" preserveAspectRatio="xMidYMid meet">
+          <polygon points="20,10 500,10 480,42 40,42" fill="var(--brand)" /><text x="260" y="32" text-anchor="middle" font: 600 12px/1 var(--font-sans); fill="var(--text-inverse)" font-size="12">12,400</text>
+          <polygon points="40,52 480,52 460,84 60,84" fill="var(--brand)" opacity="0.8" /><text x="260" y="74" text-anchor="middle" font-size="12" fill="var(--text-inverse)">8,200</text>
+          <polygon points="60,94 460,94 430,126 90,126" fill="var(--brand)" opacity="0.6" /><text x="260" y="116" text-anchor="middle" font-size="12" fill="var(--text-inverse)">2,100</text>
+          <polygon points="90,136 430,136 400,168 120,168" fill="var(--brand)" opacity="0.4" /><text x="260" y="158" text-anchor="middle" font-size="12" fill="var(--text-strong)">720</text>
+          <polygon points="120,178 400,178 370,210 150,210" fill="var(--brand)" opacity="0.25" /><text x="260" y="200" text-anchor="middle" font-size="12" fill="var(--text-strong)">248</text>
+        </svg>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Chart.Funnel</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="customise">
+    <h2 class="ds-h2">Customising</h2>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>Horizontal funnel</h4>
+        <p>Lay the funnel left-to-right in a wide card. Same data, different orientation; works inside a header strip.</p>
+<pre>&lt;Chart.Funnel
+  steps={oct}
+  orientation=&quot;horizontal&quot;
+  height={120}
+  width={720}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Compared funnels</h4>
+        <p>Two side-by-side funnels — this month vs. last. Same scale, easy to see if a step got worse.</p>
+<pre>&lt;Chart.Funnel.Compare
+  current={oct}
+  previous={sep}
+  showDelta
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Segmented by source</h4>
+        <p>Stack each step by traffic source (organic, paid, direct) to see which source leaks where.</p>
+<pre>&lt;Chart.Funnel
+  steps={oct}
+  segmentBy=&quot;source&quot;
+  segments={[&#39;organic&#39;,&#39;paid&#39;,&#39;direct&#39;]}
+/&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="in-context">
+    <h2 class="ds-h2">In context</h2>
+    <p class="ds-h2-sub">Embedded in a "Funnel health" stat hero. The hero leads with overall conversion; the funnel chart sits underneath, dimmed slightly, so the eye reads the number first.</p>
+    <div class="ck-chart-stage" style="padding: 18px;">
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; width: 100%; max-width: 560px;">
+        <div style="font: 500 11px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase;">Funnel health · October</div>
+        <div style="font: 700 30px/1.1 var(--text-strong); margin: 6px 0 2px; color: var(--text-strong);">2.0% <span style="font: 500 13px/1 var(--font-sans); color: var(--tone-danger);">−0.6 pp</span></div>
+        <div style="font: var(--type-body-sm); color: var(--text-muted); margin-bottom: 14px;">Worst step: <b>views → carts</b> at 26% (target 35%)</div>
+        <svg width="100%" height="180" viewBox="0 0 520 180" role="img" preserveAspectRatio="xMidYMid meet">
+          <polygon points="10,8 510,8 490,36 30,36" fill="var(--brand)" /><text x="260" y="27" text-anchor="middle" font-size="11" fill="var(--text-inverse)" font-family="var(--font-sans)" font-weight="600">12.4k visits</text>
+          <polygon points="30,44 490,44 470,72 50,72" fill="var(--brand)" opacity="0.8" /><text x="260" y="63" text-anchor="middle" font-size="11" fill="var(--text-inverse)" font-family="var(--font-sans)" font-weight="600">8.2k views · 66%</text>
+          <polygon points="50,80 470,80 440,108 80,108" fill="var(--brand)" opacity="0.55" stroke="var(--tone-danger)" stroke-width="2" /><text x="260" y="99" text-anchor="middle" font-size="11" fill="var(--text-inverse)" font-family="var(--font-sans)" font-weight="600">2.1k carts · 26%</text>
+          <polygon points="80,116 440,116 410,144 110,144" fill="var(--brand)" opacity="0.35" /><text x="260" y="135" text-anchor="middle" font-size="11" fill="var(--text-strong)" font-family="var(--font-sans)" font-weight="600">720 checkouts · 34%</text>
+          <polygon points="110,152 410,152 380,180 140,180" fill="var(--brand)" opacity="0.2" /><text x="260" y="172" text-anchor="middle" font-size="11" fill="var(--text-strong)" font-family="var(--font-sans)" font-weight="600">248 orders · 34%</text>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">A funnel's whole point is the comparison between steps. Make sure every step's value, label, and step-conversion are reachable without sight.</p>
+    <ul class="ck-a11y">
+      <li><b>One <code>role="img"</code> for the whole funnel.</b> Inside, <code>&lt;title&gt;</code> names it and <code>&lt;desc&gt;</code> lists every step in order with absolute and percentage values.</li>
+      <li><b>The <code>aria-label</code> states the overall conversion.</b> "October conversion funnel, 2% overall, worst step views to carts" — verdict first, detail in the desc.</li>
+      <li><b>Worst-step highlight is not colour-only.</b> The red border on the leaky slab is duplicated by a "worst step" label and the desc says so.</li>
+      <li><b>Counts are inside the slabs.</b> Don't rely on tooltips — touch users and keyboard users can't hover.</li>
+      <li><b>Numeric fallback table.</b> A visually hidden <code>&lt;table&gt;</code> lists step / count / step-conversion / cumulative-conversion in reading order.</li>
+      <li><b>Slabs are tab-targets.</b> Each step is a focusable region; arrow keys move up and down the funnel.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related charts</h2>
+    <div class="ck-related">
+      <a href="../charts/chart-bar-stacked.html">Stacked bars<span class="tag">Chart</span></a>
+      <a href="../charts/chart-bar-horizontal.html">Horizontal bars<span class="tag">Chart</span></a>
+      <a href="bullet.html">Bullet<span class="tag">Chart</span></a>
+      <a href="waterfall.html">Waterfall<span class="tag">Chart</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="heatmap.html"><div class="pager-label">← Previous</div><div class="pager-title">Heatmap</div></a>
+    <a href="scatter.html" class="next"><div class="pager-label">Next chart →</div><div class="pager-title">Scatter plot</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#chart">The chart</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#snippet">React snippet</a></li>
+    <li><a href="#customise">Customising</a></li>
+    <li><a href="#in-context">In context</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related charts</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>

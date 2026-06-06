@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Playground · Huchu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../shared.css" />
+<link rel="stylesheet" href="../huchu-nav.css" />
+<script src="../icons.js" defer></script>
+<script src="../huchu-nav.js" defer></script>
+<style>
+  body { margin: 0; background: var(--canvas); }
+  .pg-shell {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    min-height: 100vh;
+  }
+  .pg-header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .pg-brand {
+    display: inline-flex; align-items: center; gap: 8px;
+    font: 600 15px/1 var(--font-sans);
+    color: var(--text-strong);
+    text-decoration: none;
+  }
+  .pg-brand .tag {
+    font: 500 10px/1 var(--font-mono); letter-spacing: 0.08em;
+    padding: 3px 7px; border-radius: 9999px;
+    background: var(--brand-soft); color: var(--brand-strong);
+    text-transform: uppercase;
+  }
+  .pg-actions { display: flex; gap: 8px; margin-left: auto; }
+  .pg-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 32px; padding: 0 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font: 500 13px/1 var(--font-sans);
+    color: var(--text-strong);
+    cursor: pointer; text-decoration: none;
+  }
+  .pg-btn:hover { border-color: var(--border-strong); }
+  .pg-btn.primary {
+    background: var(--ink); color: var(--canvas);
+    border-color: var(--ink);
+  }
+  .pg-main { padding: 18px 24px; }
+  .pg-sandbox {
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    height: calc(100vh - 160px);
+    min-height: 500px;
+  }
+  .pg-sandbox > iframe {
+    border: 0 !important;
+    border-radius: 12px !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .pg-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    font: 500 12px/1 var(--font-sans); color: var(--text-muted);
+  }
+  .pg-footer a { color: var(--brand-strong); text-decoration: none; }
+  .pg-footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="pg-shell">
+
+  <header class="pg-header">
+    <a class="pg-brand" href="../index.html">
+      <span data-icon="corelith" data-icon-size="20"></span>
+      Huchu
+      <span class="tag">Playground</span>
+    </a>
+    <div class="pg-actions">
+      <button type="button" class="pg-btn" id="pg-reset" title="Reset to the starter snippet">
+        <span data-icon="refresh" data-icon-size="13"></span>Reset
+      </button>
+      <button type="button" class="pg-btn" id="pg-share" title="Copy a shareable URL of the current snippet">
+        <span data-icon="copy" data-icon-size="13"></span>Share
+      </button>
+      <a class="pg-btn primary" id="pg-export" href="https://codesandbox.io/s/new" target="_blank" rel="noopener">
+        <span data-icon="external" data-icon-size="13"></span>Open in CodeSandbox
+      </a>
+    </div>
+  </header>
+
+  <main class="pg-main">
+    <!-- The bridge mounts a SandpackClient iframe into this div on load.
+         data-sandpack-files is base64-encoded JSON of {path: code}. -->
+    <div
+      id="pg-sandbox"
+      class="pg-sandbox"
+      data-sandpack
+      data-sandpack-height="100%"
+    ></div>
+  </main>
+
+  <footer class="pg-footer">
+    <span>Powered by Sandpack — sandbox runs in your browser.</span>
+    <a href="../cookbook/index.html">← Back to Cookbook</a>
+  </footer>
+
+</div>
+
+<script type="module">
+  // Default starter — a tiny SignIn-ish component pulling from the
+  // @huchu/react shim that the bridge ships. Readers can edit and
+  // see the result in the right pane immediately.
+  const STARTER = `import { Stack, Form, Field, Input, Button, AuthShell, useState } from '@huchu/react';
+
+export default function App() {
+  const [email, setEmail] = useState('');
+  const [done, setDone] = useState(false);
+
+  return (
+    <AuthShell brand="Huchu" workspace="Mukamba Group">
+      {done ? (
+        <Stack gap="md" align="center">
+          <h1>Welcome, {email}</h1>
+          <p>You signed in from the playground.</p>
+          <Button variant="primary" size="lg" onClick={() => setDone(false)}>
+            Reset
+          </Button>
+        </Stack>
+      ) : (
+        <Form onSubmit={(v) => { setEmail(v.email); setDone(true); }}>
+          <Stack gap="md">
+            <h1>Sign in</h1>
+            <p>Edit me — the preview updates as you type.</p>
+            <Field label="Email" name="email">
+              <Input type="email" required />
+            </Field>
+            <Field label="Password" name="password">
+              <Input type="password" required />
+            </Field>
+            <Button type="submit" variant="primary" size="lg">
+              Continue
+            </Button>
+          </Stack>
+        </Form>
+      )}
+    </AuthShell>
+  );
+}
+`;
+
+  // Encode the starter (and any ?code= override) into the sandbox host
+  // before sandpack-bridge.js boots.
+  function b64(s) { return btoa(unescape(encodeURIComponent(s))); }
+  function unb64(s) { return decodeURIComponent(escape(atob(s))); }
+
+  const url = new URL(location.href);
+  const shared = url.searchParams.get('code');
+  const code = shared ? unb64(shared) : STARTER;
+
+  const files = { '/App.tsx': code };
+  document.getElementById('pg-sandbox').setAttribute('data-sandpack-files', b64(JSON.stringify(files)));
+
+  // Now load the bridge — it'll find the div and mount.
+  await import('../assets/sandpack-bridge.js');
+
+  // Reset wipes any ?code= override and reloads.
+  document.getElementById('pg-reset').addEventListener('click', () => {
+    const u = new URL(location.href);
+    u.searchParams.delete('code');
+    location.href = u.toString();
+  });
+
+  // Share copies a URL with the current starter (v1: no live editor sync —
+  // future work can wire client.listen() to capture user edits and update
+  // this URL on the fly).
+  document.getElementById('pg-share').addEventListener('click', async () => {
+    const u = new URL(location.href);
+    u.searchParams.set('code', b64(code));
+    try {
+      await navigator.clipboard.writeText(u.toString());
+      const btn = document.getElementById('pg-share');
+      const prev = btn.innerHTML;
+      btn.innerHTML = '<span data-icon="check" data-icon-size="13"></span>Copied!';
+      setTimeout(() => { btn.innerHTML = prev; if (window.Icons) window.Icons.render(btn); }, 1400);
+    } catch (e) {
+      alert('Share link:\n' + u.toString());
+    }
+  });
+</script>
+</body>
+</html>

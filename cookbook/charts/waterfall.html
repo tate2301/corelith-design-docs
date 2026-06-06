@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Waterfall · Huchu Charts</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../tokens.css" />
+<link rel="stylesheet" href="../../components.css" />
+<link rel="stylesheet" href="../../system.css" />
+<link rel="stylesheet" href="../../shared.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../system-shell.js" defer></script>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
+<style>
+  .ck-pieces { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 6px; }
+  .ck-piece { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 12px/1 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-piece:hover { border-color: var(--border-strong); }
+  .ck-piece .kind { font: 500 10px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-right: 6px; border-right: 1px solid var(--border); }
+  .ck-pull { margin: 14px 0; padding: 14px 18px; background: var(--brand-soft); border-left: 3px solid var(--brand); border-radius: 8px; font: 500 15px/1.5 var(--font-sans); color: var(--text-strong); }
+  .ck-pull b { color: var(--brand-strong); }
+  .ck-roadmap-note { margin-top: 12px; padding: 12px 14px; background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--brand); border-radius: 8px; font: var(--type-body-sm); color: var(--text-muted); line-height: 1.55; }
+  .ck-roadmap-note b { color: var(--text-strong); }
+  .ck-roadmap-note code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); color: var(--text-strong); }
+  .ck-chart-stage { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; display: grid; place-items: center; }
+  .ck-vars { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin-top: 12px; }
+  @media (max-width: 1000px) { .ck-vars { grid-template-columns: 1fr; } }
+  .ck-var { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; display: grid; gap: 10px; }
+  .ck-var h4 { font: 600 15px/1.2 var(--font-sans); margin: 0; color: var(--text-strong); }
+  .ck-var p { font: var(--type-body-sm); color: var(--text-muted); margin: 0; line-height: 1.55; }
+  .ck-var pre { background: var(--ink); color: var(--canvas); border-radius: 8px; padding: 12px 14px; margin: 0; font: 500 12px/1.55 var(--font-mono); overflow-x: auto; white-space: pre; }
+  .ck-a11y { display: grid; gap: 8px; padding: 0; margin: 12px 0 0; list-style: none; }
+  .ck-a11y li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; font: var(--type-body-sm); color: var(--text-strong); line-height: 1.5; }
+  .ck-a11y li::before { content: ""; display: block; width: 16px; height: 16px; background: var(--tone-success-bg); border: 1px solid var(--tone-success-bd); border-radius: 4px; margin-top: 1px; }
+  .ck-a11y code { background: var(--surface-muted); padding: 1px 5px; border-radius: 4px; font: 500 12px/1 var(--font-mono); }
+  .ck-related { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ck-related a { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1.2 var(--font-sans); color: var(--text-strong); text-decoration: none; }
+  .ck-related a:hover { border-color: var(--border-strong); }
+  .ck-related .tag { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 7px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-subtle); }
+</style>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up">
+    <div class="crumbs">
+      <a href="../../index.html">Home</a><span class="sep">/</span>
+      <a href="../index.html">Cookbook</a><span class="sep">/</span>
+      <a href="index.html">Charts</a><span class="sep">/</span>
+      <span>Waterfall</span>
+    </div>
+    <h1>Waterfall (cash flow)</h1>
+    <p class="lede">A start bar, a sequence of green and red change bars, an end bar. The chart accountants reach for first because it answers "how did we get from there to here?" in a single picture.</p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="chart" data-icon-size="12"></span>Charts · 19 of 20</span>
+      <span class="meta-pill">1 primitive · <code>Chart.Waterfall</code></span>
+      <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~12 min</span>
+      <span class="meta-pill">React · <code>@huchu/react</code></span>
+    </div>
+  </header>
+
+  <section id="overview">
+    <h2 class="ds-h2">Overview</h2>
+    <p class="ds-h2-sub">Anchor bars at the start and end; floating change bars in between, each starting where the previous left off. Positive deltas are green, negative are red.</p>
+    <p>Waterfalls explain a delta. "We started the quarter at $120k cash, ended at $95k — here's where the $25k went." Each intermediate bar floats above the x-axis at the running total, so the staircase visualises the running balance. They're indispensable for finance pages (P&amp;L bridge, cash flow), and useful anywhere you need to decompose a change — onboarding funnel offsets, headcount churn, energy consumption decomposition.</p>
+    <p>Reach for it when the data is a sequence of additive contributions to a total. Skip it if the contributions aren't additive (use a stacked bar) or if the start and end are the only numbers that matter (use a delta + two anchors).</p>
+    <div class="ck-pull"><b>The opinion:</b> always show the start and end values as full bars, anchored at zero. Floating-only waterfalls hide the magnitude and trick the eye into reading deltas as absolutes.</div>
+  </section>
+
+  <section id="chart">
+    <h2 class="ds-h2">The chart</h2>
+    <p class="ds-h2-sub">Q3 cash bridge: opening balance, plus revenue and tax refund, minus payroll, rent, supplies, closing balance.</p>
+    <div class="ck-chart-stage">
+      <svg width="640" height="320" viewBox="0 0 640 320" role="img" aria-label="Cash flow waterfall, opening 120k to closing 95k, payroll the largest negative">
+        <title>Q3 cash bridge</title>
+        <desc>Opening cash 120k. Revenue +80k, tax refund +10k, payroll -60k, rent -28k, supplies -27k, closing cash 95k.</desc>
+        <!-- y axis -->
+        <line x1="60" y1="20" x2="60" y2="280" stroke="var(--border)" />
+        <line x1="60" y1="280" x2="620" y2="280" stroke="var(--border)" />
+        <!-- y labels -->
+        <g font-family="var(--font-sans)" font-size="10" fill="var(--text-muted)">
+          <text x="54" y="284" text-anchor="end">0</text>
+          <text x="54" y="220" text-anchor="end">50</text>
+          <text x="54" y="156" text-anchor="end">100</text>
+          <text x="54" y="92" text-anchor="end">150</text>
+          <text x="54" y="28" text-anchor="end">200</text>
+        </g>
+        <!-- bars: each width 56, gap 12 -->
+        <!-- Opening 120 -> bar 0..120; y from 280 - 120*1.28 = 280-154=126 -->
+        <g>
+          <rect x="78" y="126" width="56" height="154" fill="var(--ink)" />
+          <text x="106" y="118" text-anchor="middle" font-family="var(--font-sans)" font-size="12" font-weight="600" fill="var(--text-strong)">$120k</text>
+          <text x="106" y="298" text-anchor="middle" font-family="var(--font-sans)" font-size="11" fill="var(--text-muted)">Opening</text>
+        </g>
+        <!-- Connector -->
+        <line x1="134" y1="126" x2="146" y2="126" stroke="var(--border-strong)" stroke-dasharray="3 2" />
+        <!-- Revenue +80 -> 120 to 200; y from 280-200*1.28=24 to 126 -->
+        <g>
+          <rect x="146" y="24" width="56" height="102" fill="var(--tone-success)" />
+          <text x="174" y="16" text-anchor="middle" font-family="var(--font-sans)" font-size="12" font-weight="600" fill="var(--tone-success)">+$80k</text>
+          <text x="174" y="298" text-anchor="middle" font-family="var(--font-sans)" font-size="11" fill="var(--text-muted)">Revenue</text>
+        </g>
+        <line x1="202" y1="24" x2="214" y2="24" stroke="var(--border-strong)" stroke-dasharray="3 2" />
+        <!-- Tax refund +10 -> 200 to 210; y 24 to 280-210*1.28=11; height=13 -->
+        <g>
+          <rect x="214" y="11" width="56" height="13" fill="var(--tone-success)" />
+          <text x="242" y="6" text-anchor="middle" font-family="var(--font-sans)" font-size="11" font-weight="600" fill="var(--tone-success)">+$10k</text>
+          <text x="242" y="298" text-anchor="middle" font-family="var(--font-sans)" font-size="11" fill="var(--text-muted)">Tax refund</text>
+        </g>
+        <line x1="270" y1="11" x2="282" y2="11" stroke="var(--border-strong)" stroke-dasharray="3 2" />
+        <!-- Payroll -60 -> 210 to 150; y 11 to 280-150*1.28=88; height=77 -->
+        <g>
+          <rect x="282" y="11" width="56" height="77" fill="var(--tone-danger)" />
+          <text x="310" y="6" text-anchor="middle" font-family="var(--font-sans)" font-size="12" font-weight="600" fill="var(--tone-danger)">−$60k</text>
+          <text x="310" y="298" text-anchor="middle" font-family="var(--font-sans)" font-size="11" fill="var(--text-muted)">Payroll</text>
+        </g>
+        <line x1="338" y1="88" x2="350" y2="88" stroke="var(--border-strong)" stroke-dasharray="3 2" />
+        <!-- Rent -28 -> 150 to 122; y 88 to 280-122*1.28=124; height=36 -->
+        <g>
+          <rect x="350" y="88" width="56" height="36" fill="var(--tone-danger)" />
+          <text x="378" y="82" text-anchor="middle" font-family="var(--font-sans)" font-size="11" font-weight="600" fill="var(--tone-danger)">−$28k</text>
+          <text x="378" y="298" text-anchor="middle" font-family="var(--font-sans)" font-size="11" fill="var(--text-muted)">Rent</text>
+        </g>
+        <line x1="406" y1="124" x2="418" y2="124" stroke="var(--border-strong)" stroke-dasharray="3 2" />
+        <!-- Supplies -27 -> 122 to 95; y 124 to 280-95*1.28=158; height=34 -->
+        <g>
+          <rect x="418" y="124" width="56" height="34" fill="var(--tone-danger)" />
+          <text x="446" y="118" text-anchor="middle" font-family="var(--font-sans)" font-size="11" font-weight="600" fill="var(--tone-danger)">−$27k</text>
+          <text x="446" y="298" text-anchor="middle" font-family="var(--font-sans)" font-size="11" fill="var(--text-muted)">Supplies</text>
+        </g>
+        <line x1="474" y1="158" x2="486" y2="158" stroke="var(--border-strong)" stroke-dasharray="3 2" />
+        <!-- Closing 95 — anchored to zero -->
+        <g>
+          <rect x="486" y="158" width="56" height="122" fill="var(--ink)" />
+          <text x="514" y="152" text-anchor="middle" font-family="var(--font-sans)" font-size="12" font-weight="600" fill="var(--text-strong)">$95k</text>
+          <text x="514" y="298" text-anchor="middle" font-family="var(--font-sans)" font-size="11" fill="var(--text-muted)">Closing</text>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <section id="pieces">
+    <h2 class="ds-h2">Required pieces</h2>
+    <div class="ck-pieces">
+      <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart.Waterfall</a>
+    </div>
+    <div class="ck-roadmap-note"><b>Roadmap:</b> <code>Chart.Waterfall</code> with auto running-total layout, totals at start/end and connectors ships in v0.2. v0.1-alpha users compute the y-offsets and emit rects.</div>
+  </section>
+
+  <section id="snippet">
+    <h2 class="ds-h2">React snippet</h2>
+    <p class="ds-h2-sub">Steps as objects with a <code>type</code> (<code>'start' | 'change' | 'total'</code>) and a <code>value</code>.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart } from &#39;@huchu/react&#39;;
+
+const cashBridge = [
+  { type: &#39;start&#39;,  label: &#39;Opening&#39;,    value:  120000 },
+  { type: &#39;change&#39;, label: &#39;Revenue&#39;,    value:   80000 },
+  { type: &#39;change&#39;, label: &#39;Tax refund&#39;, value:   10000 },
+  { type: &#39;change&#39;, label: &#39;Payroll&#39;,    value:  -60000 },
+  { type: &#39;change&#39;, label: &#39;Rent&#39;,       value:  -28000 },
+  { type: &#39;change&#39;, label: &#39;Supplies&#39;,   value:  -27000 },
+  { type: &#39;total&#39;,  label: &#39;Closing&#39;,    value:   95000 },
+];
+
+export function CashWaterfall() {
+  return (
+    &lt;Chart.Waterfall
+      steps={cashBridge}
+      width={640}
+      height={320}
+      format={(v) =&gt; `$${(v/1000).toFixed(0)}k`}
+      connectors
+      aria-label=&quot;Q3 cash bridge from $120k to $95k&quot;
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <svg width="100%" height="220" viewBox="0 0 640 220" preserveAspectRatio="xMidYMid meet" role="img">
+          <line x1="60" y1="200" x2="620" y2="200" stroke="var(--border)" />
+          <rect x="78" y="80" width="56" height="120" fill="var(--ink)" />
+          <rect x="146" y="20" width="56" height="60" fill="var(--tone-success)" />
+          <rect x="214" y="12" width="56" height="8" fill="var(--tone-success)" />
+          <rect x="282" y="12" width="56" height="46" fill="var(--tone-danger)" />
+          <rect x="350" y="58" width="56" height="22" fill="var(--tone-danger)" />
+          <rect x="418" y="80" width="56" height="20" fill="var(--tone-danger)" />
+          <rect x="486" y="100" width="56" height="100" fill="var(--ink)" />
+        </svg>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Chart.Waterfall</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+    </div>
+  </section>
+
+  <section id="customise">
+    <h2 class="ds-h2">Customising</h2>
+    <div class="ck-vars">
+      <div class="ck-var">
+        <h4>With sub-totals</h4>
+        <p>Insert <code>type: 'subtotal'</code> at boundary points — after revenue, after costs — so the bridge tells a P&amp;L story.</p>
+<pre>{ type: &#39;subtotal&#39;,
+  label: &#39;Gross&#39;,
+  value: 210000 },
+{ type: &#39;change&#39;,
+  label: &#39;Opex&#39;,
+  value: -115000 },</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Horizontal orientation</h4>
+        <p>Lay the waterfall left-to-right for landing screens — bigger numbers, easier to read on phones.</p>
+<pre>&lt;Chart.Waterfall
+  orientation=&quot;horizontal&quot;
+  steps={cashBridge}
+  width={640}
+  height={240}
+/&gt;</pre>
+      </div>
+      <div class="ck-var">
+        <h4>Percent-of-start scale</h4>
+        <p>Normalise everything to opening — useful when comparing two periods on the same axis.</p>
+<pre>&lt;Chart.Waterfall
+  steps={cashBridge}
+  scale=&quot;pct-of-start&quot;
+  format={(v) =&gt; `${v.toFixed(1)}%`}
+/&gt;</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="in-context">
+    <h2 class="ds-h2">In context</h2>
+    <p class="ds-h2-sub">A finance dashboard hero — title, the two anchor numbers as stat hero, the waterfall under them so the bridge fills the rest of the card.</p>
+    <div class="ck-chart-stage" style="padding: 18px;">
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; width: 100%; max-width: 720px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 14px;">
+          <div>
+            <div style="font: 500 11px/1 var(--font-sans); color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase;">Q3 cash bridge</div>
+            <div style="font: 700 24px/1.1 var(--font-sans); color: var(--text-strong); margin-top: 4px;">$120k → $95k</div>
+            <div style="font: 500 12px/1 var(--font-sans); color: var(--tone-danger); margin-top: 4px;">−$25k · payroll the biggest line</div>
+          </div>
+        </div>
+        <svg width="100%" height="240" viewBox="0 0 640 240" preserveAspectRatio="xMidYMid meet" role="img">
+          <line x1="40" y1="220" x2="620" y2="220" stroke="var(--border)" />
+          <rect x="60" y="100" width="56" height="120" fill="var(--ink)" /><text x="88" y="92" text-anchor="middle" font-family="var(--font-sans)" font-size="11" font-weight="600" fill="var(--text-strong)">120</text>
+          <rect x="128" y="40" width="56" height="60" fill="var(--tone-success)" /><text x="156" y="32" text-anchor="middle" font-family="var(--font-sans)" font-size="11" font-weight="600" fill="var(--tone-success)">+80</text>
+          <rect x="196" y="32" width="56" height="8" fill="var(--tone-success)" /><text x="224" y="26" text-anchor="middle" font-family="var(--font-sans)" font-size="11" font-weight="600" fill="var(--tone-success)">+10</text>
+          <rect x="264" y="32" width="56" height="46" fill="var(--tone-danger)" /><text x="292" y="26" text-anchor="middle" font-family="var(--font-sans)" font-size="11" font-weight="600" fill="var(--tone-danger)">−60</text>
+          <rect x="332" y="78" width="56" height="22" fill="var(--tone-danger)" /><text x="360" y="72" text-anchor="middle" font-family="var(--font-sans)" font-size="11" font-weight="600" fill="var(--tone-danger)">−28</text>
+          <rect x="400" y="100" width="56" height="22" fill="var(--tone-danger)" /><text x="428" y="94" text-anchor="middle" font-family="var(--font-sans)" font-size="11" font-weight="600" fill="var(--tone-danger)">−27</text>
+          <rect x="468" y="122" width="56" height="98" fill="var(--ink)" /><text x="496" y="116" text-anchor="middle" font-family="var(--font-sans)" font-size="11" font-weight="600" fill="var(--text-strong)">95</text>
+          <g font-family="var(--font-sans)" font-size="10" fill="var(--text-muted)" text-anchor="middle">
+            <text x="88" y="234">Open</text><text x="156" y="234">Rev.</text><text x="224" y="234">Tax</text><text x="292" y="234">Pay</text><text x="360" y="234">Rent</text><text x="428" y="234">Supp.</text><text x="496" y="234">Close</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Accessibility</h2>
+    <p class="ds-h2-sub">The whole point of a waterfall is the sequence. Make sure the order, signs, and running total are all reachable as text.</p>
+    <ul class="ck-a11y">
+      <li><b>One <code>role="img"</code> per chart.</b> <code>&lt;title&gt;</code> names it, <code>&lt;desc&gt;</code> lists every step with sign and value in order.</li>
+      <li><b>Aria-label states the bridge.</b> "Q3 cash bridge from $120k to $95k, payroll the largest line at minus $60k" — start, end, headline driver.</li>
+      <li><b>Signs are not colour-only.</b> Values are labelled with "+" and "−" prefixes; the fallback table has a "sign" column.</li>
+      <li><b>Each bar is a tab target.</b> Aria-label: "Payroll, minus $60k, running total $150k". Arrow keys move through the sequence.</li>
+      <li><b>Connectors are decorative.</b> The dashed running-total lines have <code>aria-hidden="true"</code> — they convey nothing extra over the bars.</li>
+      <li><b>Numeric fallback table.</b> Hidden <code>&lt;table&gt;</code> with step / type / value / running-total columns.</li>
+    </ul>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related charts</h2>
+    <div class="ck-related">
+      <a href="../charts/chart-bar-vertical.html">Vertical bars<span class="tag">Chart</span></a>
+      <a href="../charts/chart-bar-stacked.html">Stacked bars<span class="tag">Chart</span></a>
+      <a href="funnel.html">Funnel<span class="tag">Chart</span></a>
+      <a href="bullet.html">Bullet<span class="tag">Chart</span></a>
+    </div>
+  </section>
+
+  <nav class="ds-pager">
+    <a href="gauge.html"><div class="pager-label">← Previous</div><div class="pager-title">Gauge</div></a>
+    <a href="candlestick.html" class="next"><div class="pager-label">Next chart →</div><div class="pager-title">Candlestick</div></a>
+  </nav>
+</article>
+
+<aside class="ds-toc">
+  <div class="toc-label">On this page</div>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#chart">The chart</a></li>
+    <li><a href="#pieces">Required pieces</a></li>
+    <li><a href="#snippet">React snippet</a></li>
+    <li><a href="#customise">Customising</a></li>
+    <li><a href="#in-context">In context</a></li>
+    <li><a href="#a11y">Accessibility</a></li>
+    <li><a href="#related">Related charts</a></li>
+  </ul>
+</aside>
+</div>
+</main>
+</body>
+</html>
