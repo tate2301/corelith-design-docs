@@ -372,10 +372,10 @@
         <span class="label">${titleText}</span>
         ${hasCode ? `
           <div class="ds-tab-group" role="tablist" aria-label="Preview or code">
-            <button type="button" class="ds-tab-btn" data-tab="preview" aria-pressed="true">
+            <button type="button" class="ds-tab-btn" data-tab="preview" role="tab" aria-selected="true" tabindex="0">
               <span data-icon="grid" data-icon-size="13"></span><span class="lbl">Preview</span>
             </button>
-            <button type="button" class="ds-tab-btn" data-tab="code" aria-pressed="false">
+            <button type="button" class="ds-tab-btn" data-tab="code" role="tab" aria-selected="false" tabindex="-1">
               <span data-icon="code" data-icon-size="13"></span><span class="lbl">Code</span>
             </button>
           </div>
@@ -462,12 +462,17 @@
       });
 
       if (hasCode) {
+        // Tabs use ARIA tab/tabpanel pattern with roving tabindex.
+        frame.setAttribute('role', 'tabpanel');
+        if (codePanel) codePanel.setAttribute('role', 'tabpanel');
         toolbar.querySelectorAll('.ds-tab-btn').forEach((btn) => {
           btn.addEventListener('click', () => {
             const tab = btn.dataset.tab;
             wrap.dataset.tab = tab;
             toolbar.querySelectorAll('.ds-tab-btn').forEach((b) => {
-              b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
+              const sel = b === btn;
+              b.setAttribute('aria-selected', sel ? 'true' : 'false');
+              b.setAttribute('tabindex', sel ? '0' : '-1');
             });
             const showCode = tab === 'code';
             frame.hidden = showCode;

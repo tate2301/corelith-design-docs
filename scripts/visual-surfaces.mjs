@@ -33,21 +33,22 @@ export const VIEWPORTS = [
 ];
 
 export const SURFACES = [
-  // Cookbook hub + five recipes that exercise the recipe shell.
+  // Cookbook hub + key recipes that exercise the recipe shell + charts.
   { key: 'cookbook-index',                path: '/cookbook/index.html' },
   { key: 'cookbook-auth-signin-2fa',      path: '/cookbook/auth-signin-2fa.html' },
-  { key: 'cookbook-onboarding-checklist', path: '/cookbook/onboarding-checklist.html' },
-  { key: 'cookbook-forms-multi-step',     path: '/cookbook/forms-multi-step-wizard.html' },
   { key: 'cookbook-lists-master-detail',  path: '/cookbook/lists-master-detail.html' },
-  { key: 'cookbook-dashboards-operator',  path: '/cookbook/dashboards-operator-overview.html' },
+  { key: 'cookbook-charts-donut',         path: '/cookbook/charts/donut.html' },
 
-  // Portal demos — three different shells (POS, parent, owner).
-  { key: 'portal-pos-demo',    path: '/portals/pos/demo.html' },
-  { key: 'portal-parent-demo', path: '/portals/parent/demo.html' },
-  { key: 'portal-owner-demo',  path: '/portals/owner/demo.html' },
+  // Portal hub + two signed-in demos exercising bespoke portal chrome.
+  { key: 'portals-index',      path: '/portals/index.html' },
+  { key: 'portal-owner-demo',  path: '/portals/owner/demo.html', signIn: 'siGoOtpGo' },
+  { key: 'portal-stash-demo',  path: '/portals/stash/demo.html', signIn: 'siGoOtpGo' },
 
   // System reference — exercises system.css + shared.css together.
-  { key: 'system-shells', path: '/system/shells.html' },
+  { key: 'system-shells',  path: '/system/shells.html' },
+
+  // Playground — the all-component sandbox.
+  { key: 'playground',     path: '/playground/index.html' },
 ];
 
 export function baselinePath(surface, viewport) {
@@ -71,6 +72,29 @@ export async function capture(page, url, surface) {
   // Icons.js renders <span data-icon="…"> asynchronously after
   // domcontentloaded — give it a beat.
   await page.waitForTimeout(400);
+
+  // Per-surface sign-in flows. Both owner + stash demos boot to a
+  // sign-in screen, then a 6-digit OTP. We click through both with
+  // the demo's own buttons so the screenshot shows signed-in state.
+  if (surface.signIn === 'siGoOtpGo') {
+    try {
+      await page.click('#si-go', { timeout: 4000 });
+      await page.waitForTimeout(250);
+      // Demo accepts any 6 digits — fill them so #otp-go enables in
+      // case the demo gates submission on input.
+      const otpInputs = await page.$$('[data-otp]');
+      for (let i = 0; i < otpInputs.length; i++) {
+        await otpInputs[i].fill(String(i % 10));
+      }
+      await page.click('#otp-go', { timeout: 4000 });
+      await page.waitForTimeout(500);
+    } catch (err) {
+      // Some demos may already be signed in or use a different control
+      // — fail soft so the screenshot still captures whatever state.
+      console.warn(`  [capture] sign-in step skipped for ${surface.key}: ${err.message}`);
+    }
+  }
+
   // Block any CSS animation from poisoning the screenshot by injecting
   // a freeze rule. This is removed when the context closes.
   await page.addStyleTag({

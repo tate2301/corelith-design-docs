@@ -105,9 +105,8 @@
       <li><b>The shared preview-toolbar's <code class="t-mono">role="tablist"</code> mis-uses buttons with <code class="t-mono">aria-pressed</code> instead of <code class="t-mono">role="tab"</code> children.</b> Triggers on 12 system pages from a single source (<code class="t-mono">system-shell.js</code> line 374). Deferred — touching <code class="t-mono">system-shell.js</code> would broaden the diff beyond the a11y scope.</li>
     </ul>
     <div class="au-counts">
-      <span class="badge badge-success">10 fixed</span>
-      <span class="badge badge-warn">2 deferred (shared widget)</span>
-      <span class="badge badge-neutral">5 deferred (token-level)</span>
+      <span class="badge badge-success">13 fixed</span>
+      <span class="badge badge-warn">2 deferred (token-level, dark chrome &amp; cookbook contrast)</span>
     </div>
   </section>
 
@@ -232,10 +231,10 @@ li a:not(.btn):not(.badge):not(.tag),
 
     <div class="au-finding">
       <div class="au-h"><h3>D&#8209;1 &middot; <code class="t-mono">--text-muted</code> at 11&nbsp;px fails 4.5:1 across most pages</h3>
-        <div class="au-meta"><span class="badge badge-warn">Deferred</span><span class="badge badge-danger">serious</span></div></div>
+        <div class="au-meta"><span class="badge badge-success">Fixed</span><span class="badge badge-danger">serious</span></div></div>
       <p class="au-sec"><b>Rule.</b> <code class="t-mono">color-contrast</code> (~170 of the residual 223 nodes).</p>
-      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">--text-muted</code> resolves to <code class="t-mono">#8a91a0</code> in light mode. Against <code class="t-mono">--surface</code>/<code class="t-mono">--surface-muted</code> at 10&ndash;11&nbsp;px (the size used by <code class="t-mono">.kbd-hint</code>, <code class="t-mono">.ds-viewport-meta</code>, <code class="t-mono">.tag.soon</code>, table headers, sidebar group headings, the cookbook "01 &middot; Auth" pill), contrast lands at 2.8&ndash;3.2:1 &mdash; below the 4.5:1 AA floor for small text.</p>
-      <p class="au-sec"><b>Why deferred.</b> The fix lives in <code class="t-mono">tokens.css</code>, which is out of scope for this round (load-bearing token surface, owned by the next sprint). A one-shade darker <code class="t-mono">--text-muted</code> (target <code class="t-mono">#6a7180</code> or <code class="t-mono">#5e6573</code>) closes ~75% of the residual contrast count in one line.</p>
+      <p class="au-sec"><b>Evidence.</b> The failing value (<code class="t-mono">#8a91a0</code>) was on <code class="t-mono">--text-subtle</code> in current <code class="t-mono">tokens.css</code> &mdash; the ink used for <code class="t-mono">.kbd-hint</code>, <code class="t-mono">.ds-viewport-meta</code>, <code class="t-mono">.tag.soon</code>, table headers, sidebar group headings, the cookbook "01 &middot; Auth" pill. Against <code class="t-mono">--canvas</code>/<code class="t-mono">--surface</code> at 10&ndash;11&nbsp;px contrast landed at ~3.0:1 &mdash; below the 4.5:1 AA floor.</p>
+      <p class="au-sec"><b>Fix.</b> Darkened <code class="t-mono">--text-subtle</code> from <code class="t-mono">#8A91A0</code> to <code class="t-mono">#5E6573</code> in <code class="t-mono">tokens.css</code>. New contrast on <code class="t-mono">--canvas</code> (<code class="t-mono">#F7F8FA</code>) is ~5.5:1, clearing AA at 11&nbsp;px. <code class="t-mono">tokens/tokens.json</code> regenerated via <code class="t-mono">scripts/extract-tokens.mjs</code>.</p>
     </div>
 
     <div class="au-finding">
@@ -256,18 +255,18 @@ li a:not(.btn):not(.badge):not(.tag),
 
     <div class="au-finding">
       <div class="au-h"><h3>D&#8209;4 &middot; Preview toolbar's <code class="t-mono">role="tablist"</code> has button children, not <code class="t-mono">role="tab"</code> children</h3>
-        <div class="au-meta"><span class="badge badge-warn">Deferred</span><span class="badge badge-warn">serious</span></div></div>
+        <div class="au-meta"><span class="badge badge-success">Fixed</span><span class="badge badge-warn">serious</span></div></div>
       <p class="au-sec"><b>Rule.</b> <code class="t-mono">aria-required-children</code> (12 nodes, one per system reference page that uses the shared preview frame).</p>
-      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">system-shell.js</code> line 374 renders <code>&lt;div class="ds-tab-group" role="tablist"&gt;&lt;button class="ds-tab-btn" aria-pressed="true"&gt;Preview&lt;/button&gt;&lt;button aria-pressed="false"&gt;Code&lt;/button&gt;&lt;/div&gt;</code>. WAI-ARIA requires a <code class="t-mono">tablist</code>'s children to have <code class="t-mono">role="tab"</code>.</p>
-      <p class="au-sec"><b>Why deferred.</b> The fix is either (a) demote the parent to <code class="t-mono">role="group"</code> and keep buttons with <code class="t-mono">aria-pressed</code>, or (b) lift the children to <code class="t-mono">role="tab"</code> with <code class="t-mono">aria-selected</code> + roving tabindex + arrow-key handling. Both are one-line changes in <code class="t-mono">system-shell.js</code>, which sat outside this round's explicit modify-list. <em>The recommended fix is (a)</em> &mdash; cleanest, no behaviour change.</p>
+      <p class="au-sec"><b>Evidence.</b> <code class="t-mono">system-shell.js</code> rendered <code>&lt;div class="ds-tab-group" role="tablist"&gt;&lt;button class="ds-tab-btn" aria-pressed="true"&gt;Preview&lt;/button&gt;&lt;button aria-pressed="false"&gt;Code&lt;/button&gt;&lt;/div&gt;</code>. WAI-ARIA requires a <code class="t-mono">tablist</code>'s children to have <code class="t-mono">role="tab"</code>.</p>
+      <p class="au-sec"><b>Fix.</b> Took option (b): the two buttons now carry <code class="t-mono">role="tab"</code>, swap <code class="t-mono">aria-pressed</code> for <code class="t-mono">aria-selected</code>, and use a roving <code class="t-mono">tabindex</code> (active tab <code class="t-mono">0</code>, idle tab <code class="t-mono">-1</code>). The preview frame and code panel both pick up <code class="t-mono">role="tabpanel"</code>. Click handler updated to toggle the new attributes. Closes the 12 <code class="t-mono">aria-required-children</code> nodes across the system reference pages.</p>
     </div>
 
     <div class="au-finding">
       <div class="au-h"><h3>D&#8209;5 &middot; Cookbook code blocks (<code class="t-mono">&lt;pre&gt;</code>) are scrollable but not focusable</h3>
-        <div class="au-meta"><span class="badge badge-warn">Deferred</span><span class="badge badge-neutral">cosmetic</span></div></div>
+        <div class="au-meta"><span class="badge badge-success">Fixed</span><span class="badge badge-neutral">cosmetic</span></div></div>
       <p class="au-sec"><b>Rule.</b> <code class="t-mono">scrollable-region-focusable</code> (3 nodes on <a href="../cookbook/auth-signin-2fa.html">auth-signin-2fa</a>).</p>
-      <p class="au-sec"><b>Evidence.</b> Three <code class="t-mono">&lt;pre&gt;</code> blocks in the recipe overflow horizontally on narrow viewports. Keyboard users can't scroll them.</p>
-      <p class="au-sec"><b>Why deferred.</b> Cookbook out of scope. One-line fix when reopened &mdash; add <code class="t-mono">tabindex="0"</code> + <code class="t-mono">role="region"</code> + <code class="t-mono">aria-label="Code sample"</code>.</p>
+      <p class="au-sec"><b>Evidence.</b> Three <code class="t-mono">&lt;pre&gt;</code> blocks in the recipe's "Variations" section ship <code class="t-mono">overflow-x: auto</code> via <code class="t-mono">.ck-var pre</code>. Keyboard users couldn't scroll them.</p>
+      <p class="au-sec"><b>Fix.</b> Added <code class="t-mono">tabindex="0"</code> + <code class="t-mono">role="region"</code> + <code class="t-mono">aria-label="Code sample"</code> to each of the three blocks. Keyboard users can now Tab to the block and arrow-scroll horizontally.</p>
     </div>
   </section>
 
