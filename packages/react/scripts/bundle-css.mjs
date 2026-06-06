@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * Concatenates the Huchu design-system stylesheets (`tokens.css` +
+ * Concatenates the Corelith design-system stylesheets (`tokens.css` +
  * `components.css` from the docs-site root) into the head of the package's
  * own `dist/styles.css`, then rewrites it. Runs as a post-build step (see
  * `package.json` → `build`).
  *
  * The result: consumers can do
  *
- *     import '@huchu/react/styles.css';
+ *     import '@tate2301/corelith/styles.css';
  *
  * and get tokens, fonts, every recipe class name, plus the small portal
  * positioning fallbacks the package itself ships.
@@ -36,7 +36,7 @@ if (!existsSync(dest)) {
 
 const pieces = [];
 pieces.push(
-  '/* @huchu/react — bundled design-system stylesheet. */\n' +
+  '/* @tate2301/corelith — bundled design-system stylesheet. */\n' +
   '/* Generated from packages/react/scripts/bundle-css.mjs. */\n' +
   '/* Source: tokens.css + components.css (docs-site root) + per-component CSS. */\n',
 );

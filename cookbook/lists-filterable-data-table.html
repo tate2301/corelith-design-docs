@@ -79,7 +79,7 @@
       <span class="meta-pill"><span data-icon="filter" data-icon-size="12"></span>Lists</span>
       <span class="meta-pill">2 primitives · 3 blocks · 1 pattern</span>
       <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~40 min</span>
-      <span class="meta-pill">React · <code>@huchu/react</code></span>
+      <span class="meta-pill">React · <code>@tate2301/corelith</code></span>
     </div>
   </header>
 
@@ -160,7 +160,7 @@
   <!-- REQUIRED PIECES -->
   <section id="pieces">
     <h2 class="ds-h2">Required pieces</h2>
-    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>.</p>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@tate2301/corelith</code>.</p>
     <div class="ck-pieces">
       <a class="ck-piece" href="../system/x-data-table.html"><span class="kind">Pattern</span>Data table</a>
       <a class="ck-piece" href="../system/b-data-toolbar.html"><span class="kind">Block</span>Data toolbar</a>
@@ -170,7 +170,7 @@
       <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
       <a class="ck-piece" href="../system/p-empty-state.html"><span class="kind">Primitive</span>Empty state</a>
     </div>
-    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>DataTable</code>, <code>FilterChips</code>, <code>RowCard</code>, <code>Stack</code>, <code>Input</code>, <code>Button</code>, <code>EmptyState</code>, <code>Toast</code>. We also introduce the <code>useFilters</code> hook — it owns the URL sync and the debounce.</p>
+    <p style="margin-top: 12px;"><b>Intended <code>@tate2301/corelith</code> exports used here:</b> <code>DataTable</code>, <code>FilterChips</code>, <code>RowCard</code>, <code>Stack</code>, <code>Input</code>, <code>Button</code>, <code>EmptyState</code>, <code>Toast</code>. We also introduce the <code>useFilters</code> hook — it owns the URL sync and the debounce.</p>
   </section>
 
   <!-- STEP-BY-STEP -->
@@ -181,7 +181,7 @@
     <div class="ck-step"><span class="n">01</span><h3>One filter object, URL-synced — that's the source of truth</h3></div>
     <p>Don't keep <code>search</code>, <code>status</code>, <code>sort</code> and <code>page</code> in four separate <code>useState</code>s. Hoist them into one <code>filters</code> object and write it to the URL. The browser's back button now navigates filter history for free, and a shared link recreates the exact view.</p>
     <div class="ds-specimen"
-         data-code='import { useEffect, useState } from &#39;@huchu/react&#39;;
+         data-code='import { useEffect, useState } from &#39;@tate2301/corelith&#39;;
 
 export type Filters = {
   q: string;                                // search
@@ -250,14 +250,14 @@ export function useFilters() {
           <div style="color: var(--text-subtle);"><code>replaceState</code> not <code>pushState</code> — typing shouldn't bloat history.</div>
         </div>
       </div>
-      <div class="ds-specimen-bar"><span class="label">Step 1 · useFilters hook</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · useFilters hook</span><span class="spacer"></span><span class="t-mono">@tate2301/corelith</span></div>
     </div>
 
     <!-- Step 2 -->
     <div class="ck-step"><span class="n">02</span><h3>Fetch on filter change — debounce only the search, not the chips</h3></div>
     <p>Chip clicks should fire immediately; the user just decided. Search keystrokes should debounce 300&nbsp;ms; otherwise you fire a request per letter. A simple <code>AbortController</code> cancels stale fetches so the last response always wins.</p>
     <div class="ds-specimen"
-         data-code='import { useEffect, useState } from &#39;@huchu/react&#39;;
+         data-code='import { useEffect, useState } from &#39;@tate2301/corelith&#39;;
 
 type ListResponse&lt;T&gt; = { rows: T[]; total: number };
 
@@ -310,7 +310,7 @@ export function useTableData&lt;T&gt;(endpoint: string, filters: Filters) {
     <div class="ck-step"><span class="n">03</span><h3>Render the toolbar: search + chips + bulk-action zone</h3></div>
     <p>The toolbar is sticky on scroll and morphs when rows are selected — chips collapse and bulk actions take their place. That's not decoration; it tells the user the toolbar is now acting on the selection, not the whole list.</p>
     <div class="ds-specimen"
-         data-code='import { Stack, Input, FilterChips, Button } from &#39;@huchu/react&#39;;
+         data-code='import { Stack, Input, FilterChips, Button } from &#39;@tate2301/corelith&#39;;
 
 function Toolbar({
   filters, setFilters, total, selection, onBulkArchive,
@@ -371,7 +371,7 @@ function Toolbar({
     <div class="ck-step"><span class="n">04</span><h3>Render the table — and never skip the empty state</h3></div>
     <p>Three render branches: <code>loading</code>, <code>rows.length === 0</code>, and the table itself. The empty state must offer "Clear filters" — otherwise users with a typo end up convinced the system is broken. Loading shows skeleton rows, not a spinner; the user can already see the shape of what's coming.</p>
     <div class="ds-specimen"
-         data-code='import { DataTable, EmptyState, Button } from &#39;@huchu/react&#39;;
+         data-code='import { DataTable, EmptyState, Button } from &#39;@tate2301/corelith&#39;;
 
 function Body&lt;T extends { id: string }&gt;({
   loading, rows, columns, selection, onSelect, sort, onSort, onClear,
@@ -462,10 +462,10 @@ export function useSavedViews(scope: string) {
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The <code>UsersTable</code> page, assembled. URL-sync, debounced search, server fetch, loading/empty states, bulk actions, saved views.</p>
     <div class="ds-specimen"
-         data-code='import { useEffect, useState } from &#39;@huchu/react&#39;;
+         data-code='import { useEffect, useState } from &#39;@tate2301/corelith&#39;;
 import {
   Stack, Input, FilterChips, Button, DataTable, EmptyState, Toast,
-} from &#39;@huchu/react&#39;;
+} from &#39;@tate2301/corelith&#39;;
 import { useFilters, fromQuery, Filters } from &#39;./useFilters&#39;;
 import { useTableData } from &#39;./useTableData&#39;;
 import { useSavedViews } from &#39;./useSavedViews&#39;;
@@ -622,7 +622,7 @@ async function archive(id: string) {
           </div>
         </div>
       </div>
-      <div class="ds-specimen-bar"><span class="label">UsersTable.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+      <div class="ds-specimen-bar"><span class="label">UsersTable.tsx</span><span class="spacer"></span><span class="t-mono">@tate2301/corelith</span></div>
     </div>
   </section>
 

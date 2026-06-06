@@ -73,7 +73,7 @@ A **recipe** is a senior eng walking a junior through building one screen end-to
    - Name the real noun. "Invoice", "site", "settlement" — never "record" or "entity."
 3. **Eight sections, in order:** header, overview, what you'll build, required pieces, step-by-step (4 numbered steps), final composition, variations, accessibility, related recipes.
 4. **Theme + sidebar:** register the recipe in `huchu-nav.js` under the matching theme group in the Cookbook section. Use the `<Theme> ·  <Name>` label format that the rest of the file uses.
-5. **React API:** import from `@huchu/react`. Named exports only. `useState` / `useReducer` for state. No other libraries.
+5. **React API:** import from `@tate2301/corelith`. Named exports only. `useState` / `useReducer` for state. No other libraries.
 
 ---
 

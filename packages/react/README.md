@@ -1,21 +1,34 @@
-# `@huchu/react`
+# `@tate2301/corelith`
 
-Thin React wrappers over the Huchu design-system CSS. Components render the exact class names already shipped in `components.css`, so any cookbook recipe in the docs site translates verbatim into your app.
+Thin React wrappers over the Corelith design-system CSS. Components render the exact class names already shipped in `components.css`, so any cookbook recipe in the docs site translates verbatim into your app.
 
-> **Status:** `v0.1.1` — gap-closing release. ~50 components, 6 hooks, full TypeScript types, bundled design-system stylesheet.
+> **Status:** `v0.1.2` — published to GitHub Packages under `@tate2301/corelith`. ~50 components, 6 hooks, full TypeScript types, bundled design-system stylesheet.
 
 ## Install
 
+`@tate2301/corelith` is published to **GitHub Packages**, not the public npm registry. You need three lines of setup:
+
 ```bash
-npm install @huchu/react react react-dom
+# 1. Point the @tate2301 scope at GitHub Packages. Either edit ~/.npmrc
+#    globally, or create a repo-level .npmrc next to your package.json:
+echo "@tate2301:registry=https://npm.pkg.github.com" >> ~/.npmrc
+
+# 2. Authenticate. The package is public, so anonymous reads work in CI
+#    (GITHUB_TOKEN has read:packages by default). On a developer machine,
+#    create a Personal Access Token with read:packages scope and add:
+#       //npm.pkg.github.com/:_authToken=YOUR_PAT
+#    to ~/.npmrc (one-time setup).
+
+# 3. Install.
+npm install @tate2301/corelith react react-dom
 # or
-pnpm add @huchu/react react react-dom
+pnpm add @tate2301/corelith react react-dom
 ```
 
 Then import the bundled stylesheet once at the root of your app:
 
 ```ts
-import '@huchu/react/styles.css';
+import '@tate2301/corelith/styles.css';
 ```
 
 That single import pulls in the design-system tokens, `components.css` and the per-component portal-positioning fallbacks the package ships. Nothing else is required — no separate `tokens.css` or font import.
@@ -26,13 +39,13 @@ That single import pulls in the design-system tokens, `components.css` and the p
 import {
   AuthShell, Form, Field, Stack,
   Input, Button, Alert,
-} from '@huchu/react';
-import '@huchu/react/styles.css';
+} from '@tate2301/corelith';
+import '@tate2301/corelith/styles.css';
 
 export function SignIn() {
   return (
     <AuthShell>
-      <AuthShell.Brand product="Huchu" />
+      <AuthShell.Brand product="Corelith" />
       <AuthShell.Card title="Sign in" subtitle="Welcome back">
         <Form onSubmit={(e) => e.preventDefault()}>
           <Stack gap="md">

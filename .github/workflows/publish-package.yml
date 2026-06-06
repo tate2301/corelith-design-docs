@@ -1,0 +1,119 @@
+name: Publish @tate2301/corelith
+
+# Publishes the React package to GitHub Packages when:
+#   - Push to main touches packages/react/** AND the version in
+#     packages/react/package.json hasn't already been published.
+#   - A tag matching corelith-v* is pushed.
+#   - The workflow is dispatched manually.
+#
+# The job is a no-op if the current version is already on the registry,
+# so re-running on green is safe.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/react/**'
+      - '.github/workflows/publish-package.yml'
+    tags:
+      - 'corelith-v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: Build, test, and publish
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/react
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@tate2301'
+
+      - name: Read package version
+        id: pkg
+        run: |
+          version=$(node -p "require('./package.json').version")
+          name=$(node -p "require('./package.json').name")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "Resolved $name@$version"
+
+      - name: Skip if version already published
+        id: skip
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          name='${{ steps.pkg.outputs.name }}'
+          version='${{ steps.pkg.outputs.version }}'
+          if npm view "$name" versions --json 2>/dev/null | grep -q "\"$version\""; then
+            echo "$name@$version is already on the registry — skipping publish."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "$name@$version is new — proceeding."
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install dependencies
+        if: steps.skip.outputs.skip != 'true'
+        run: npm install --no-audit --no-fund --no-workspaces
+
+      - name: Build
+        if: steps.skip.outputs.skip != 'true'
+        run: npm run build
+
+      - name: Test
+        if: steps.skip.outputs.skip != 'true'
+        run: npm test
+
+      - name: Verify CDN bundle exposes window.Corelith
+        if: steps.skip.outputs.skip != 'true'
+        run: |
+          if ! grep -q "Corelith" dist/cdn.global.js; then
+            echo "::error::dist/cdn.global.js does not expose 'Corelith' — build is stale or misconfigured."
+            exit 1
+          fi
+          echo "OK — dist/cdn.global.js references Corelith."
+
+      - name: Publish to GitHub Packages
+        if: steps.skip.outputs.skip != 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm publish
+
+      - name: Announce on commit
+        if: steps.skip.outputs.skip != 'true' && github.event_name == 'push'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const name = '${{ steps.pkg.outputs.name }}';
+            const version = '${{ steps.pkg.outputs.version }}';
+            const sha = context.sha;
+            const body = [
+              `Published \`${name}@${version}\` to GitHub Packages.`,
+              ``,
+              `Install:`,
+              '```bash',
+              `npm install ${name}@${version}`,
+              '```',
+              ``,
+              `View on the [packages page](https://github.com/${context.repo.owner}/${context.repo.repo}/pkgs/npm/corelith).`,
+            ].join('\n');
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: sha,
+              body,
+            });
