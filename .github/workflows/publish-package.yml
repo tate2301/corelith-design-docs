@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write   # required to push the corelith-vX.Y.Z tag + create the Release
   packages: write
 
 jobs:
@@ -93,6 +93,113 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm publish
 
+      # ── Tag + Release ─────────────────────────────────────────
+      # After a successful publish we cut `corelith-vX.Y.Z` and a matching
+      # GitHub Release. The release body comes from the CHANGELOG.md section
+      # for this version; if the helper can't find one we fall back to a
+      # generic body so the release still lands.
+      - name: Extract release notes from CHANGELOG
+        id: notes
+        if: steps.skip.outputs.skip != 'true'
+        run: |
+          version='${{ steps.pkg.outputs.version }}'
+          if body=$(node scripts/extract-changelog-section.mjs "$version" 2>/dev/null); then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+            {
+              echo 'body<<EOF'
+              echo "$body"
+              echo 'EOF'
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create tag + GitHub Release
+        if: steps.skip.outputs.skip != 'true'
+        uses: actions/github-script@v7
+        env:
+          NOTES_FOUND: ${{ steps.notes.outputs.found }}
+          NOTES_BODY: ${{ steps.notes.outputs.body }}
+        with:
+          script: |
+            const name = '${{ steps.pkg.outputs.name }}';
+            const version = '${{ steps.pkg.outputs.version }}';
+            const tag = `corelith-v${version}`;
+            const sha = context.sha;
+
+            // Tag — idempotent: if it exists already on this sha, skip.
+            try {
+              await github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `refs/tags/${tag}`,
+                sha,
+              });
+              core.info(`Created tag ${tag} on ${sha}`);
+            } catch (e) {
+              if (String(e.message).includes('Reference already exists')) {
+                core.info(`Tag ${tag} already exists — leaving it.`);
+              } else {
+                throw e;
+              }
+            }
+
+            // Release body — prefer the CHANGELOG section, fall back gracefully.
+            const installSnippet = [
+              '```bash',
+              `npm install ${name}@${version}`,
+              '```',
+            ].join('\n');
+
+            let body;
+            if (process.env.NOTES_FOUND === 'true' && process.env.NOTES_BODY) {
+              body = `${process.env.NOTES_BODY}\n\n---\n\n### Install\n${installSnippet}`;
+            } else {
+              body = [
+                `Released \`${name}@${version}\` to GitHub Packages.`,
+                ``,
+                `### Install`,
+                installSnippet,
+                ``,
+                `View on the [packages page](https://github.com/${context.repo.owner}/${context.repo.repo}/pkgs/npm/corelith).`,
+              ].join('\n');
+            }
+
+            // Release — idempotent: if it exists, update it; otherwise create.
+            let release;
+            try {
+              release = await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag,
+              });
+              await github.rest.repos.updateRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                release_id: release.data.id,
+                name: `${name} ${version}`,
+                body,
+                draft: false,
+                prerelease: /-(alpha|beta|rc)/.test(version),
+              });
+              core.info(`Updated existing release ${tag}`);
+            } catch (e) {
+              if (e.status === 404) {
+                const created = await github.rest.repos.createRelease({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  tag_name: tag,
+                  name: `${name} ${version}`,
+                  body,
+                  draft: false,
+                  prerelease: /-(alpha|beta|rc)/.test(version),
+                });
+                core.info(`Created release ${tag} → ${created.data.html_url}`);
+              } else {
+                throw e;
+              }
+            }
+
       - name: Announce on commit
         if: steps.skip.outputs.skip != 'true' && github.event_name == 'push'
         uses: actions/github-script@v7
@@ -101,8 +208,11 @@ jobs:
             const name = '${{ steps.pkg.outputs.name }}';
             const version = '${{ steps.pkg.outputs.version }}';
             const sha = context.sha;
+            const releaseUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/releases/tag/corelith-v${version}`;
             const body = [
               `Published \`${name}@${version}\` to GitHub Packages.`,
+              ``,
+              `**Release:** ${releaseUrl}`,
               ``,
               `Install:`,
               '```bash',
