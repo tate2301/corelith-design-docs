@@ -1,4 +1,4 @@
-// @huchu/react — v0.1.0
+// @huchu/react — v0.1.1
 // Public surface. Recipes in /cookbook import from here.
 
 import './styles.css';
@@ -146,6 +146,88 @@ export type { ModalProps } from './components/Modal';
 export { Dialog } from './components/Dialog';
 export type { DialogProps } from './components/Dialog';
 
+// ── Primitives & blocks (new in 0.1.1) ───────────────────────
+export { Card } from './components/Card';
+export type {
+  CardProps,
+  CardHeaderProps,
+  CardTitleProps,
+  CardBodyProps,
+  CardFooterProps,
+} from './components/Card';
+
+export { Calendar } from './components/Calendar';
+export type { CalendarProps } from './components/Calendar';
+
+export { Chart } from './components/Chart';
+export type {
+  ChartPoint,
+  ChartCategoricalDatum,
+  ChartBaseProps,
+  ChartLineProps,
+  ChartBarProps,
+  ChartDonutProps,
+  ChartSparklineProps,
+} from './components/Chart';
+
+export { Checklist } from './components/Checklist';
+export type { ChecklistProps, ChecklistItemProps } from './components/Checklist';
+
+export { Meter } from './components/Meter';
+export type { MeterProps, MeterTone } from './components/Meter';
+
+export { Progress } from './components/Progress';
+export type { ProgressProps } from './components/Progress';
+
+export { SegmentedControl } from './components/SegmentedControl';
+export type { SegmentedControlProps, SegmentedControlOption } from './components/SegmentedControl';
+
+export { MobileShell, Tab, NavItem } from './components/MobileShell';
+export type {
+  MobileShellProps,
+  MobileShellHeaderProps,
+  MobileShellBodyProps,
+  MobileShellTabProps,
+  MobileShellNavItemProps,
+} from './components/MobileShell';
+
+export { InlineEdit } from './components/InlineEdit';
+export type { InlineEditProps } from './components/InlineEdit';
+
+export { TextArea } from './components/TextArea';
+export type { TextAreaProps } from './components/TextArea';
+
+export { DataToolbar } from './components/DataToolbar';
+export type {
+  DataToolbarProps,
+  DataToolbarSearchProps,
+  DataToolbarFiltersProps,
+  DataToolbarActionsProps,
+} from './components/DataToolbar';
+
+export { I18nProvider, useI18n, useT } from './components/I18nProvider';
+export type {
+  I18nProviderProps,
+  I18nContextValue,
+  I18nLocale,
+  I18nMessages,
+} from './components/I18nProvider';
+
+export { LocalePicker } from './components/LocalePicker';
+export type { LocalePickerProps } from './components/LocalePicker';
+
+export { Lightbox, useGallery } from './components/Lightbox';
+export type { LightboxProps, LightboxImage, UseGalleryResult } from './components/Lightbox';
+
+export { FileUpload } from './components/FileUpload';
+export type { FileUploadProps } from './components/FileUpload';
+
+export { KpiGrid } from './components/KpiGrid';
+export type { KpiGridProps } from './components/KpiGrid';
+
+// `Stat` is an alias for `StatCard` — recipes use both names.
+export { StatCard as Stat } from './components/StatCard';
+
 // ── Hooks ─────────────────────────────────────────────────────
 export { useInterval } from './hooks/useInterval';
 export type { UseIntervalOptions } from './hooks/useInterval';
@@ -156,6 +238,7 @@ export { useOptimistic } from './hooks/useOptimistic';
 export type { UseOptimisticResult } from './hooks/useOptimistic';
 
 export { useMatchMedia } from './hooks/useMatchMedia';
+export { useMediaQuery } from './hooks/useMediaQuery';
 
 export { useUpload } from './hooks/useUpload';
 export type { UploadStatus, UploadState, UploadOptions } from './hooks/useUpload';

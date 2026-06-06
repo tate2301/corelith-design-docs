@@ -2,7 +2,7 @@
 
 Thin React wrappers over the Huchu design-system CSS. Components render the exact class names already shipped in `components.css`, so any cookbook recipe in the docs site translates verbatim into your app.
 
-> **Status:** `v0.1.0` — first install-ready release. ~36 components, 5 hooks, full TypeScript types, bundled design-system stylesheet.
+> **Status:** `v0.1.1` — gap-closing release. ~50 components, 6 hooks, full TypeScript types, bundled design-system stylesheet.
 
 ## Install
 
@@ -85,6 +85,12 @@ export function SignIn() {
 | `EmptyState`      | `full` (column) and `inline` (banner) variants                            |
 | `Menu`            | `Menu.Item` + `Menu.Label` + `Menu.Divider`                               |
 | `CommandPalette`  | ⌘K modal with search, groups, keyboard navigation                         |
+| `TextArea`        | Multi-line `<textarea>`; consumes `FieldContext` like `Input`             |
+| `Meter`           | Qualitative meter with `low`/`high` thresholds (`role="meter"`)           |
+| `Progress`        | Determinate or indeterminate progress bar                                 |
+| `SegmentedControl`| Radio-group pill switch with `value`/`onChange`/`options`                 |
+| `InlineEdit`      | Click-to-edit; save on Enter/blur, cancel on Esc                          |
+| `Calendar`        | Month grid; `value`, `onChange`, `min`, `max`, `disabledDates`            |
 
 ### Blocks
 
@@ -98,6 +104,15 @@ export function SignIn() {
 | `RowCard`     | Tap-target row card for mobile lists                                        |
 | `FilterChips` | Horizontal scrolling chip row with selection                                |
 | `BottomSheet` | Portal sheet with focus trap + Escape + backdrop dismiss                    |
+| `Card`        | `Card.Header` / `Card.Title` / `Card.Body` / `Card.Footer` wrapper          |
+| `Checklist`   | First-run onboarding list with `Checklist.Item` (done/title/subtitle)       |
+| `DataToolbar` | `DataToolbar.Search` + `.Filters` + `.Actions` slot wrapper                 |
+| `Chart`       | Inline-SVG `Chart.Line` / `Chart.Bar` / `Chart.Donut` / `Chart.Sparkline`   |
+| `KpiGrid`     | Auto-fit grid wrapper for `StatCard` / `Stat` tiles                         |
+| `Stat`        | Alias for `StatCard` (recipes use both names)                               |
+| `FileUpload`  | Drag-drop + click + paste-image zone (pairs with `useUpload`)               |
+| `Lightbox`    | Portal fullscreen image viewer (pairs with `useGallery`)                    |
+| `LocalePicker`| Locale `<select>` driven by `I18nProvider`                                  |
 
 ### Patterns
 
@@ -111,6 +126,8 @@ export function SignIn() {
 | `Toast`     | `ToastProvider` + `useToast()` → `{ show, dismiss }`                              |
 | `Alert`     | Inline banner with tones                                                          |
 | `Stack`     | `direction`, `gap`, `align`, `justify`, `wrap` flex helper                        |
+| `MobileShell` | `MobileShell.Body` + `.BottomTabs` mobile-first wrapper                         |
+| `I18nProvider` | Tiny i18n context with `{var}` interpolation (`useT()` returns the `t` fn)     |
 
 ## Hooks
 
@@ -121,7 +138,10 @@ export function SignIn() {
 | `useUrlState()`   | Syncs state to `?key=` query param via `history.replaceState`; SSR-safe.                           |
 | `useOptimistic()` | Base / derived / queue mutation pattern. Returns `{ base, derived, mutate, queue }`.               |
 | `useMatchMedia()` | SSR-safe `matchMedia` subscriber.                                                                  |
+| `useMediaQuery()` | Alias for `useMatchMedia()` matching the cookbook naming.                                          |
 | `useUpload()`     | `XMLHttpRequest`-backed file upload with progress fraction and `cancel()`.                         |
+| `useGallery()`    | Tiny `Lightbox` controller: `{ open, index, show, close, next, prev, setIndex }`.                  |
+| `useT()`          | Returns the `t(key, vars?)` translator from `<I18nProvider>`.                                      |
 
 ## TypeScript
 
