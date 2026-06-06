@@ -1,7 +1,7 @@
 /**
  * Builds the IIFE bundle used by the Sandpack bridge.
  *
- *   dist/cdn.global.js   →   window.HuchuReact = { Button, Field, … }
+ *   dist/cdn.global.js   →   window.Corelith = { Button, Field, … }
  *
  * Ships React + ReactDOM externalised against the globals `React` and
  * `ReactDOM` (the bridge loads them from esm.sh first). CSS is *not*
@@ -17,7 +17,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),
-      name: 'HuchuReact',
+      name: 'Corelith',
       formats: ['iife'],
       fileName: () => 'cdn.global.js',
     },

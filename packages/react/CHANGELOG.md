@@ -1,6 +1,33 @@
 # Changelog
 
-All notable changes to `@huchu/react` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+All notable changes to `@tate2301/corelith` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+## [0.1.2] — 2026-06-06
+
+### Changed
+
+- **Renamed package** from `@huchu/react` to `@tate2301/corelith`. The CDN IIFE
+  bundle now exposes `window.Corelith` (previously `window.HuchuReact`).
+- Published to **GitHub Packages** (`https://npm.pkg.github.com`) instead of
+  the public npm registry. See README for one-time `.npmrc` setup.
+- Updated `repository`, `bugs`, `homepage` to point at
+  `tate2301/corelith-design-docs`.
+
+### Migration
+
+```diff
+- import { Button } from '@huchu/react';
++ import { Button } from '@tate2301/corelith';
+
+- import '@huchu/react/styles.css';
++ import '@tate2301/corelith/styles.css';
+```
+
+Add to your `~/.npmrc` (or repo-level `.npmrc`):
+
+```
+@tate2301:registry=https://npm.pkg.github.com
+```
 
 ## [0.1.1] — 2026-06-06
 
@@ -37,7 +64,7 @@ All notable changes to `@huchu/react` are documented here. The format follows [K
   - Patterns: `AppShell` (+ `.Sidebar`/`.Main`/`.TopBar`), `DataTable`, `Modal`, `Dialog`.
 - Hooks: `useInterval`, `useUrlState`, `useOptimistic`, `useMatchMedia`, `useUpload` (plus the existing `useToast`).
 - Vitest smoke tests for every shipped component (55 tests across 4 files).
-- `scripts/bundle-css.mjs` post-build step that concatenates `tokens.css` + `components.css` from the docs-site root onto the head of `dist/styles.css`, so `import '@huchu/react/styles.css'` is enough to get the full design system.
+- `scripts/bundle-css.mjs` post-build step that concatenates `tokens.css` + `components.css` from the docs-site root onto the head of `dist/styles.css`, so `import '@tate2301/corelith/styles.css'` is enough to get the full design system.
 - `vite.config.cdn.ts` IIFE bundle (`dist/cdn.global.js`) used by the Sandpack bridge to mount real components inside cookbook live previews.
 - `package.json` polish: `0.1.0` (drop `-alpha.0`), `engines.node >= 20`, `repository`/`bugs`/`homepage`, `prepublishOnly` runs build + tests.
 

@@ -84,7 +84,7 @@
   }
 
   /* Off-system component roadmap pill — for recipes that compose with
-     components not yet in @huchu/react v0.1.0-alpha.0. */
+     components not yet in @tate2301/corelith v0.1.0-alpha.0. */
   .ck-roadmap-note {
     margin-top: 12px;
     padding: 12px 14px;
@@ -121,7 +121,7 @@
       <span class="meta-pill"><span data-icon="edit" data-icon-size="12"></span>Forms</span>
       <span class="meta-pill">3 primitives · 1 block · 1 pattern</span>
       <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~30 min</span>
-      <span class="meta-pill">React · <code>@huchu/react</code></span>
+      <span class="meta-pill">React · <code>@tate2301/corelith</code></span>
     </div>
   </header>
 
@@ -194,7 +194,7 @@
   <!-- REQUIRED PIECES -->
   <section id="pieces">
     <h2 class="ds-h2">Required pieces</h2>
-    <p class="ds-h2-sub">Everything this recipe pulls from <code>@huchu/react</code>.</p>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@tate2301/corelith</code>.</p>
     <div class="ck-pieces">
       <a class="ck-piece" href="../system/x-data-table.html"><span class="kind">Pattern</span>Data table</a>
       <a class="ck-piece" href="../system/b-row-card.html"><span class="kind">Block</span>Row card</a>
@@ -203,7 +203,7 @@
       <a class="ck-piece" href="../system/p-button.html"><span class="kind">Primitive</span>Button</a>
       <a class="ck-piece" href="../system/p-toast.html"><span class="kind">Primitive</span>Toast</a>
     </div>
-    <p style="margin-top: 12px;"><b>Intended <code>@huchu/react</code> exports used here:</b> <code>DataTable</code>, <code>Input</code>, <code>InputGroup</code>, <code>Button</code>, <code>Toast</code>, <code>Stack</code>. We introduce a small <code>useEditableCell</code> hook here; reuse it on every editable table.</p>
+    <p style="margin-top: 12px;"><b>Intended <code>@tate2301/corelith</code> exports used here:</b> <code>DataTable</code>, <code>Input</code>, <code>InputGroup</code>, <code>Button</code>, <code>Toast</code>, <code>Stack</code>. We introduce a small <code>useEditableCell</code> hook here; reuse it on every editable table.</p>
   </section>
 
   <!-- STEP-BY-STEP -->
@@ -214,7 +214,7 @@
     <div class="ck-step"><span class="n">01</span><h3>Per-cell state — keyed by <code>rowId + colKey</code></h3></div>
     <p>A single <code>editingCell</code> string at the table level means only one cell can be in any non-view state at a time. That's almost always what you want: the user is typing in one place, and a server save for a different cell can race independently. Keep status maps for <code>saving</code> and <code>errors</code> keyed by the same composite key.</p>
     <div class="ds-specimen"
-         data-code='import { useState } from &#39;@huchu/react&#39;;
+         data-code='import { useState } from &#39;@tate2301/corelith&#39;;
 
 type CellKey = `${string}|${string}`;        // `${rowId}|${colKey}`
 const ck = (rowId: string, col: string): CellKey =&gt; `${rowId}|${col}`;
@@ -261,14 +261,14 @@ export function useTableEdit() {
           <p><b>Switch to the Code tab</b> to see the snippet.</p>
         </div>
       </div>
-      <div class="ds-specimen-bar"><span class="label">Step 1 · Per-cell state</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Per-cell state</span><span class="spacer"></span><span class="t-mono">@tate2301/corelith</span></div>
     </div>
 
     <!-- Step 2 -->
     <div class="ck-step"><span class="n">02</span><h3>Optimistic rows — local edits live alongside server data</h3></div>
     <p>Hold a <code>localPatch</code> map keyed by row id; the row renders <code>{ ...server, ...localPatch[rowId] }</code>. On save success we clear that key; on error we keep it and let the cell render its error state so the user can fix or revert.</p>
     <div class="ds-specimen"
-         data-code='import { useState } from &#39;@huchu/react&#39;;
+         data-code='import { useState } from &#39;@tate2301/corelith&#39;;
 
 type StockRow = { id: string; sku: string; qty: number; loc: string };
 
@@ -302,7 +302,7 @@ export function useOptimisticRows(server: StockRow[]) {
     <div class="ck-step"><span class="n">03</span><h3>Keyboard contract: Enter saves, Esc reverts, Tab moves to next editable cell</h3></div>
     <p>Behaviour your users instinctively expect from Excel. Enter blurs and triggers save; Esc blurs without saving; Tab is a save-and-advance. Build the move-to-next as a list of editable column keys per row, so a Tab off the last cell of row N lands on the first editable cell of row N+1.</p>
     <div class="ds-specimen"
-         data-code='import { useRef, useEffect } from &#39;@huchu/react&#39;;
+         data-code='import { useRef, useEffect } from &#39;@tate2301/corelith&#39;;
 
 function EditableCell({
   rowId, col, value, validate, onCommit, onCancel, onAdvance,
@@ -358,7 +358,7 @@ function EditableCell({
     <div class="ck-step"><span class="n">3.5</span><h3>Reusable inline-edit wrapper — compose with the <code>.p-inline-edit</code> primitive</h3></div>
     <p>Every editable cell is the same trio: a text input, a save check, a cancel cross. The new <code>.p-inline-edit</code> primitive in <code>components.css</code> ships exactly that shell — focus ring, hover states, padding, and the two icon slots — so your <code>EditableCell</code> stops carrying its own border / focus / icon-button rules. Compose it like this:</p>
     <div class="ds-specimen"
-         data-code='import { InlineEdit } from &#39;@huchu/react&#39;;
+         data-code='import { InlineEdit } from &#39;@tate2301/corelith&#39;;
 
 function EditableCellShell({ value, onCommit, onCancel, validate }: {
   value: string;
@@ -512,8 +512,8 @@ async function patchCell(rowId: string, col: string, value: string) {
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The <code>StockTable</code>, assembled. Cell state machine, optimistic patches, keyboard contract, error recovery.</p>
     <div class="ds-specimen"
-         data-code='import { useRef, useEffect, useState } from &#39;@huchu/react&#39;;
-import { Stack, Input, Button, Toast, DataTable } from &#39;@huchu/react&#39;;
+         data-code='import { useRef, useEffect, useState } from &#39;@tate2301/corelith&#39;;
+import { Stack, Input, Button, Toast, DataTable } from &#39;@tate2301/corelith&#39;;
 
 type StockRow = { id: string; sku: string; qty: number; loc: string };
 
@@ -739,7 +739,7 @@ export function StockTable({ initialRows }: { initialRows: StockRow[] }) {
           </div>
         </div>
       </div>
-      <div class="ds-specimen-bar"><span class="label">StockTable.tsx</span><span class="spacer"></span><span class="t-mono">@huchu/react</span></div>
+      <div class="ds-specimen-bar"><span class="label">StockTable.tsx</span><span class="spacer"></span><span class="t-mono">@tate2301/corelith</span></div>
     </div>
   </section>
 

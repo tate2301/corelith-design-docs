@@ -1,4 +1,4 @@
-/* Huchu DS — Sandpack bridge
+/* Corelith DS — Sandpack bridge
  *
  * Two responsibilities:
  *
@@ -14,7 +14,7 @@
  *     the first time the tab is clicked.
  *
  * No host React required — uses @codesandbox/sandpack-client via
- * esm.sh. The sandbox iframe loads @huchu/react from esm.sh too;
+ * esm.sh. The sandbox iframe loads @tate2301/corelith from esm.sh too;
  * for v1 we ship a tiny inline shim that re-exports plain DOM
  * elements with the docs-site components.css class names. Real
  * package resolution can land later without touching this file.
@@ -22,12 +22,12 @@
 (function () {
   const CLIENT_URL = 'https://esm.sh/@codesandbox/sandpack-client@2';
 
-  // ── @huchu/react bridge ──────────────────────────────────────
+  // ── @tate2301/corelith bridge ──────────────────────────────────────
   // The package now ships a real IIFE bundle at
   // `packages/react/dist/cdn.global.js` that hangs every export off
-  // `window.HuchuReact`. We resolve its URL from THIS script's own
+  // `window.Corelith`. We resolve its URL from THIS script's own
   // src so it works whether the docs site is served from `/`, a
-  // sub-path, or GitHub Pages, then inject a tiny `/huchu-react.js`
+  // sub-path, or GitHub Pages, then inject a tiny `/corelith.js`
   // shim into each Sandpack sandbox that loads the IIFE inside the
   // iframe and re-exports its named globals.
   //
@@ -46,9 +46,9 @@
   // The bridge module inside each Sandpack runs in its own ESM
   // context. It dynamically loads React + ReactDOM from esm.sh,
   // then injects the IIFE bundle as a <script> tag, then re-exports
-  // every key off `window.HuchuReact`. Hooks like `useState` are
+  // every key off `window.Corelith`. Hooks like `useState` are
   // re-exported straight from React so destructuring imports like
-  // `import { useState } from '@huchu/react'` resolve too.
+  // `import { useState } from '@tate2301/corelith'` resolve too.
   function buildBridgeModule() {
     return [
       "import * as React from 'react';",
@@ -64,20 +64,20 @@
       "",
       "let resolved;",
       "async function load() {",
-      "  if (window.HuchuReact) return window.HuchuReact;",
+      "  if (window.Corelith) return window.Corelith;",
       "  const res = await fetch(" + JSON.stringify(CDN_URL) + ");",
       "  if (!res.ok) throw new Error('failed to fetch ' + " + JSON.stringify(CDN_URL) + " + ' — ' + res.status);",
       "  const code = await res.text();",
       "  // eslint-disable-next-line no-new-func",
       "  new Function(code)();",
-      "  return window.HuchuReact;",
+      "  return window.Corelith;",
       "}",
       "resolved = await load();",
       "",
-      "// Re-export every named global off window.HuchuReact plus all",
+      "// Re-export every named global off window.Corelith plus all",
       "// of React's hook surface so cookbook snippets that mix",
-      "// `import { Button } from '@huchu/react'` and",
-      "// `import { useState } from '@huchu/react'` both work.",
+      "// `import { Button } from '@tate2301/corelith'` and",
+      "// `import { useState } from '@tate2301/corelith'` both work.",
       "export const {",
       "  Alert, AppShell, AuthShell, Avatar, Badge, BottomSheet, BottomTabs,",
       "  Button, Checkbox, Combobox, CommandPalette, DataTable, DayList, Dialog,",
@@ -100,13 +100,13 @@
       "export default resolved;",
     ].join('\n');
   }
-  const HUCHU_SHIM = buildBridgeModule();
+  const CORELITH_SHIM = buildBridgeModule();
 
   // ── Default starter files for a single-file TSX snippet ──────
   function buildFiles(appCode) {
     return {
       '/App.tsx': { code: appCode },
-      '/huchu-react.js': { code: HUCHU_SHIM, hidden: true },
+      '/corelith.js': { code: CORELITH_SHIM, hidden: true },
       '/index.tsx': {
         code:
           "import React from 'react';\n" +
@@ -131,13 +131,13 @@
     };
   }
 
-  // Map bare-name '@huchu/react' imports onto the local bridge module
+  // Map bare-name '@tate2301/corelith' imports onto the local bridge module
   // that loads the CDN IIFE at runtime. (Sandpack also accepts an
   // import-map alternative, but its `react-ts` template already takes
   // local module paths verbatim — so the local mapping is all we need.)
   const IMPORT_MAP = {
     imports: {
-      '@huchu/react': './huchu-react.js',
+      '@tate2301/corelith': './corelith.js',
     },
   };
 
