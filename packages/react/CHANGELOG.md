@@ -2,6 +2,45 @@
 
 All notable changes to `@corelithzw/react` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.1] — 2026-06-07
+
+Ships the **six pattern-sized features** that v0.2.0 deferred. The cookbook is no longer fiction — every recipe that referenced these imports now has a real component to render against.
+
+### Added — components
+
+- **`AlertDialog`** — opinionated confirm/cancel/destructive dialog built on `Modal`. Supports `variant="default" | "danger" | "warning"`, async `onConfirm` (shows a loading state while the promise is pending), and an optional inline icon slot.
+- **`AlertDialog.confirm(options)`** — static imperative helper. Mounts a singleton portal root on first call, renders an `AlertDialog`, and returns `Promise<boolean>`. Tears down the host after dismiss.
+- **`KanbanBoard`** — drag-and-drop kanban with columns + cards. HTML5 drag on desktop, 400ms long-press fallback on touch, keyboard pick-up via `Space` + `←/→/↑/↓`. Column WIP limits render a warn pill once exceeded (warn, don't block).
+- **`CommentsThread`** — flat-`Comment[]` threaded discussion. One nesting level (deeper replies degrade to siblings with a `replying to X` hint). `@mention` autocomplete from a `mentionable` list, edit-in-place (Esc cancels, ⌘/Ctrl-Enter saves), per-comment reactions with six default emojis, resolve hides by default with a `Show resolved (N)` toggle.
+- **`NotificationMatrix`** — settings table of events × channels rendered as a real `<table>` for screen-reader semantics. Master-pause control row with preset buttons (`0`, `1`, `4`, `24`, `until-tomorrow`).
+- **`DatePicker`** — single-date popover composed from `Input` + `Popover` + `Calendar`. Trigger uses a `readonly` styled input with a trailing calendar glyph. Click a day → fires `onChange` + closes the popover.
+
+### Added — hooks
+
+- **`useKanban(initial)`** — drop-in state manager for `KanbanBoard`. Returns `{ items, move, addCard, removeCard, setItems }`.
+- **`useComments(initial?)`** — in-memory store for `CommentsThread`. Returns `{ comments, add, edit, resolve, react, reply }`.
+- **`usePreferences(initial?)`** — paired with `NotificationMatrix`. Returns `{ prefs, set, pauseFor, pause, quietHours, setQuietHours }`. `prefs` is keyed `${eventId}:${channelId}`.
+- **`useDateRange(initial?)`** — paired range hook with named presets (`today`, `yesterday`, `this-week`, `last-week`, `this-month`, `last-month`, `last-7-days`, `last-30-days`, `year-to-date`). `isPreset(id)` returns `true` if the current `from`/`to` matches the preset. `setRange()` swaps `from`/`to` automatically if `from > to`.
+
+### Added — exports
+
+- `DEFAULT_REACTIONS` — the six default emoji reactions used by `CommentsThread` (`👍 ❤️ 😄 🎉 🤔 👀`).
+
+### Added — CSS
+
+New rules in `components.css` (bundled into `dist/styles.css`): `.alert-dialog`, `.alert-dialog-icon`, `.alert-dialog-actions`, `.kanban-board`, `.kanban-column`, `.kanban-column-header`, `.kanban-column-body`, `.kanban-card`, `.kanban-card.is-dragging`, `.kanban-card.is-picked-up`, `.kanban-column.is-drop-target`, `.kanban-wip-warn`, `.comments-thread`, `.comment-row`, `.comment-head`, `.comment-body`, `.comment-meta`, `.comment-actions`, `.comment-replies`, `.comment-react-row`, `.comment.is-resolved`, `.comment-editing`, `.mention-popover`, `.mention-item`, `.notif-matrix`, `.notif-matrix-pause`, `.date-picker-trigger`, `.date-picker-anchor`, `.date-picker-popover`.
+
+### Cookbook reconciliation
+
+The four recipes that previously referenced these speculative imports now render against real components:
+
+- `cookbook/lists-kanban-board.html` — `KanbanBoard` + `useKanban`.
+- `cookbook/communication-comments-thread.html` — `CommentsThread` + `useComments`.
+- `cookbook/settings-notification-preferences.html` — `NotificationMatrix` + `usePreferences`.
+- `cookbook/forms-date-range-picker.html` — `useDateRange`.
+
+`cookbook/forms-multi-step-wizard.html` was scanned — it references `Stepper` rather than `DatePicker`, so no banner removal was needed.
+
 ## [0.2.0] — 2026-06-07
 
 This release closes the **cookbook-as-fiction** gap. Until now several recipes

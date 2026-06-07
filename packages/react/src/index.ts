@@ -1,4 +1,4 @@
-// @corelithzw/react — v0.2.0
+// @corelithzw/react — v0.2.1
 // Public surface. Recipes in /cookbook import from here.
 
 import './styles.css';
@@ -254,3 +254,56 @@ export { useUpload } from './hooks/useUpload';
 export type { UploadStatus, UploadState, UploadOptions } from './hooks/useUpload';
 
 export { usePersistedFlag } from './hooks/usePersistedFlag';
+
+// ── Patterns (new in 0.2.1) ───────────────────────────────────
+export { AlertDialog } from './components/AlertDialog';
+export type {
+  AlertDialogProps,
+  AlertDialogVariant,
+  AlertDialogConfirmOptions,
+} from './components/AlertDialog';
+
+export { KanbanBoard } from './components/KanbanBoard';
+export type {
+  KanbanBoardProps,
+  KanbanColumnDef,
+  KanbanItem,
+  KanbanItems,
+} from './components/KanbanBoard';
+
+export { CommentsThread, DEFAULT_REACTIONS } from './components/CommentsThread';
+export type {
+  CommentsThreadProps,
+  Comment,
+  CommentAuthor,
+  MentionTarget,
+} from './components/CommentsThread';
+
+export { NotificationMatrix } from './components/NotificationMatrix';
+export type {
+  NotificationMatrixProps,
+  NotificationEvent,
+  NotificationChannel,
+  NotificationPrefs,
+  MasterPause,
+} from './components/NotificationMatrix';
+
+export { DatePicker } from './components/DatePicker';
+export type { DatePickerProps } from './components/DatePicker';
+
+// ── Hooks (new in 0.2.1) ──────────────────────────────────────
+export { useKanban } from './hooks/useKanban';
+export type { UseKanbanResult } from './hooks/useKanban';
+
+export { useComments } from './hooks/useComments';
+export type { UseCommentsResult } from './hooks/useComments';
+
+export { usePreferences } from './hooks/usePreferences';
+export type { UsePreferencesResult, QuietHours } from './hooks/usePreferences';
+
+export { useDateRange } from './hooks/useDateRange';
+export type {
+  UseDateRangeResult,
+  DateRangeValue,
+  DateRangePresetId,
+} from './hooks/useDateRange';
