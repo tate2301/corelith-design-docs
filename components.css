@@ -3175,3 +3175,194 @@ textarea:focus-visible:not(.textarea) {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
+
+/* ════════════════════════════════════════════════════════════
+   v0.2.0 — Input with leading/trailing icons, sidebar brand,
+   nav groups, sidebar nav items, collapsible sidebar rail
+   ════════════════════════════════════════════════════════════ */
+
+/* Wraps an `<input>` when it has leading/trailing icons. The bare `<input>`
+   is still used when no icons are present (preserves existing layouts). */
+.input-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0 10px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  min-height: 32px;
+  color: var(--text-body);
+  transition: border-color var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-fast) var(--ease-out);
+}
+.input-wrap:focus-within {
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 3px var(--focus-ring-soft, rgba(0, 0, 0, 0.08));
+}
+.input-wrap.is-invalid { border-color: var(--tone-danger); }
+.input-wrap > .input {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  min-height: auto;
+  flex: 1;
+  box-shadow: none;
+  outline: none;
+}
+.input-wrap > .input:focus { box-shadow: none; }
+.input-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  flex: none;
+}
+.input-icon-trailing { color: var(--text-subtle); }
+
+/* Sidebar brand mark + product name (top-left of the sidebar). */
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  font: 600 12px/1 var(--font-sans);
+  color: var(--text-strong);
+  text-decoration: none;
+  min-height: 34px;
+}
+.sidebar-brand:hover { background: var(--surface-muted); }
+.sidebar-brand-mark {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: var(--brand);
+  display: inline-grid;
+  place-items: center;
+  color: var(--on-brand, #fff);
+  flex: none;
+}
+.sidebar-brand-name { font: inherit; color: inherit; }
+
+/* Labeled <nav> group inside the sidebar. */
+.nav-group {
+  display: grid;
+  gap: 1px;
+}
+.nav-group-label {
+  margin: 0;
+  padding: 4px 8px;
+  font: 500 9px/1 var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+/* Single nav item — anchor with active state, optional icon + badge. */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font: 500 12px/1 var(--font-sans);
+  color: var(--text-body);
+  text-decoration: none;
+  min-height: 28px;
+}
+.nav-item:hover { background: var(--surface-muted); }
+.nav-item.is-active {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
+.nav-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  flex: none;
+  color: currentColor;
+}
+.nav-item-label { font: inherit; color: inherit; flex: 1; min-width: 0; }
+.nav-item-badge {
+  margin-left: auto;
+  font: 500 9px/1 var(--font-mono);
+  background: var(--tone-danger-bg);
+  color: var(--tone-danger);
+  padding: 2px 5px;
+  border-radius: 9999px;
+}
+
+/* Sidebar collapsible head + toggle button. */
+.sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 4px 4px;
+}
+.sidebar-toggle {
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+}
+.sidebar-toggle:hover { color: var(--text-strong); background: var(--surface-muted); }
+.sidebar-toggle:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Inner <nav> rendered automatically inside .sidebar. */
+.sidebar > .sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Collapsed icon-rail variant — applied either via data-collapsed on the
+   shell or directly on the sidebar. Width shrinks to a 56px rail, the nav
+   labels hide, badges become dots. */
+.app-shell[data-collapsed="true"] .sidebar,
+.sidebar[data-collapsed="true"] {
+  width: 56px;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.app-shell[data-collapsed="true"] .sidebar .nav-item-label,
+.app-shell[data-collapsed="true"] .sidebar .nav-group-label,
+.app-shell[data-collapsed="true"] .sidebar .sidebar-brand-name,
+.sidebar[data-collapsed="true"] .nav-item-label,
+.sidebar[data-collapsed="true"] .nav-group-label,
+.sidebar[data-collapsed="true"] .sidebar-brand-name {
+  display: none;
+}
+.app-shell[data-collapsed="true"] .sidebar .nav-item,
+.sidebar[data-collapsed="true"] .nav-item {
+  justify-content: center;
+}
+.app-shell[data-collapsed="true"] .sidebar .nav-item-badge,
+.sidebar[data-collapsed="true"] .nav-item-badge {
+  position: absolute;
+  margin-left: 0;
+  transform: translate(8px, -8px);
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border-radius: 9999px;
+  font-size: 0;
+}

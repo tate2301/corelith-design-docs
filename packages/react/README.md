@@ -59,7 +59,7 @@ export function SignIn() {
 | Component         | Summary                                                                   |
 | ----------------- | ------------------------------------------------------------------------- |
 | `Button`          | Variants (primary/secondary/ghost), tones, sizes, loading, icons          |
-| `Input`           | Auto-wires id, aria-describedby, aria-invalid from nearest `Field`        |
+| `Input`           | Auto-wires id, aria-describedby, aria-invalid from nearest `Field`. `leadingIcon` / `trailingIcon` / `trailingSlot` for icon-chrome inputs. |
 | `InputOtp`        | Per-digit OTP cells, paste-into-all, `autocomplete="one-time-code"`       |
 | `Field`           | Label + description + error wrapper with `Field.Label/.Description/.Error` |
 | `Form`            | `<form>` with `noValidate`, Enter-submit toggle                           |
@@ -83,7 +83,10 @@ export function SignIn() {
 | `SaveBar`         | Sticky save bar that slides in when `dirty`                               |
 | `Grabber`         | Drag handle for reorderable rows                                          |
 | `EmptyState`      | `full` (column) and `inline` (banner) variants                            |
-| `Menu`            | `Menu.Item` + `Menu.Label` + `Menu.Divider`                               |
+| `Menu`            | `Menu.Item` + `Menu.Label` + `Menu.Divider` (also `Menu.Separator`)       |
+| `DropdownMenu`    | Alias for `Menu` (recipes use both names)                                 |
+| `NavGroup`        | Labeled `<nav>` group for sidebar nav items (`label` prop renders an `<h6>`) |
+| `NavItem`         | Sidebar nav item: `active`, `to`, `icon`, `badge`; sets `aria-current="page"` |
 | `CommandPalette`  | ⌘K modal with search, groups, keyboard navigation                         |
 | `TextArea`        | Multi-line `<textarea>`; consumes `FieldContext` like `Input`             |
 | `Meter`           | Qualitative meter with `low`/`high` thresholds (`role="meter"`)           |
@@ -118,7 +121,7 @@ export function SignIn() {
 
 | Component   | Summary                                                                           |
 | ----------- | --------------------------------------------------------------------------------- |
-| `AppShell`  | Desktop sidebar shell: `AppShell.Sidebar` + `AppShell.Main` + `AppShell.TopBar`   |
+| `AppShell`  | Desktop sidebar shell: `AppShell.Sidebar` + `AppShell.Main` + `AppShell.TopBar` (alias `Topbar`) + `AppShell.Brand`. `collapsed` prop drives an icon-rail. `AppShell.Sidebar` accepts `collapsible` + `onToggle`. |
 | `AuthShell` | Centered-card auth shell: `AuthShell.Brand` + `AuthShell.Card`                    |
 | `DataTable` | `<table class="dtable">` with sortable headers + row selection                    |
 | `Modal`     | Centered dialog with focus trap + Escape; bottom-sheet on phone                   |
@@ -142,6 +145,7 @@ export function SignIn() {
 | `useUpload()`     | `XMLHttpRequest`-backed file upload with progress fraction and `cancel()`.                         |
 | `useGallery()`    | Tiny `Lightbox` controller: `{ open, index, show, close, next, prev, setIndex }`.                  |
 | `useT()`          | Returns the `t(key, vars?)` translator from `<I18nProvider>`.                                      |
+| `usePersistedFlag()` | `useState`-shaped boolean persisted to `localStorage`. Survives reload + sign-out; SSR-safe.    |
 
 ## TypeScript
 

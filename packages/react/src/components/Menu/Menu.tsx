@@ -58,9 +58,12 @@ type MenuComponent = typeof MenuRoot & {
   Item: typeof MenuItem;
   Label: typeof MenuLabel;
   Divider: typeof MenuDivider;
+  /** Alias for `Divider` — recipes use both spellings. */
+  Separator: typeof MenuDivider;
 };
 
 export const Menu = MenuRoot as MenuComponent;
 Menu.Item = MenuItem;
 Menu.Label = MenuLabel;
 Menu.Divider = MenuDivider;
+Menu.Separator = MenuDivider;

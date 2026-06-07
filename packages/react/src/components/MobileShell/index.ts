@@ -1,4 +1,4 @@
-export { MobileShell, Tab, NavItem } from './MobileShell';
+export { MobileShell, Tab } from './MobileShell';
 export type {
   MobileShellProps,
   MobileShellHeaderProps,

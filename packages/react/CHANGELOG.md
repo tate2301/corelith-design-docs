@@ -2,6 +2,81 @@
 
 All notable changes to `@corelithzw/react` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.0] — 2026-06-07
+
+This release closes the **cookbook-as-fiction** gap. Until now several recipes
+in `/cookbook` imported APIs the package didn't actually ship —
+`AppShell.Brand`, `NavGroup`, `DropdownMenu`, `Input` with icons, a
+collapsible sidebar, the `usePersistedFlag` hook. The package is now backed
+by every API the recipes import.
+
+### Added — new exports
+
+- **`AppShell.Brand`** — brand mark + product name at the top-left of the
+  sidebar. Renders `<a class="sidebar-brand">` with an optional `mark` slot.
+- **`AppShell.Topbar`** — lowercase-b alias for `AppShell.TopBar`. Both names
+  point at the same component.
+- **`NavGroup`** — labeled `<nav>` group for sidebar nav items. Renders
+  `<nav><h6 class="nav-group-label">label</h6>{children}</nav>`.
+- **`NavItem`** — new top-level export. Renders a single sidebar nav item
+  (`<a class="nav-item">`) with `active`, `to`, `icon`, `badge` props and
+  `aria-current="page"` when active. The mobile bottom-rail variant is still
+  available as `MobileShell.NavItem`.
+- **`DropdownMenu`** — alias for `Menu`. Recipes use the longer name. The
+  `Separator` sub-component is also exposed as an alias for `Divider`.
+- **`usePersistedFlag(key, default)`** — small hook that mirrors `useState`
+  but persists a boolean to `localStorage`. SSR-safe and survives sign-out.
+
+### Added — new props on existing components
+
+- **`Input` → `leadingIcon`, `trailingIcon`, `trailingSlot`** — icons rendered
+  inside the input chrome. When any icon is present the input is wrapped in
+  `<div class="input-wrap">`; otherwise it stays a bare `<input>` so existing
+  call sites are unaffected. `trailingSlot` is an alias accepting non-icon
+  content (e.g. `<Kbd>⌘K</Kbd>`).
+- **`AppShell` → `collapsed`** — boolean that adds `data-collapsed="true"` to
+  the shell root. CSS handles the visual collapse (56px icon-rail, hides nav
+  labels, collapses badges to dots).
+- **`AppShell.Sidebar` → `collapsible`, `onToggle`** — `collapsible` renders a
+  toggle button at the top of the sidebar that calls `onToggle` on click.
+- The sidebar now renders an inner `<nav class="sidebar-nav">` element. This
+  is additive — existing children render unchanged inside it.
+
+### Added — CSS
+
+New rules in `components.css` (bundled into `dist/styles.css`): `.input-wrap`,
+`.input-icon`, `.sidebar-brand`, `.sidebar-brand-mark`, `.nav-group`,
+`.nav-group-label`, `.nav-item`, `.nav-item.is-active`, `.nav-item-icon`,
+`.nav-item-badge`, `.sidebar-head`, `.sidebar-toggle`, `.sidebar-nav`, and
+the `[data-collapsed="true"]` icon-rail variants.
+
+### Changed
+
+- The standalone `NavItem` export now points at the sidebar nav-item rather
+  than the mobile bottom-rail variant. **Breaking** for any caller that
+  destructured `NavItem` and expected the mobile-rail shape — use
+  `MobileShell.NavItem` instead.
+
+### Cookbook reconciliation
+
+Across all 41 recipes carrying the "Intended `@corelithzw/react` exports
+used here…" banner, the leading "Intended" qualifier has been dropped. The
+package now backs every named export those banners mention — except the
+deferred application-level patterns below.
+
+### Deferred — explicitly out of scope for 0.2.0
+
+The following imports still appear in a handful of recipes but are pattern-
+sized features beyond what 0.2.0 is meant to ship. Tracking them for a
+future release:
+
+- `AlertDialog`, `KanbanBoard` + `useKanban`, `CommentsThread` + `useComments`,
+  `NotificationMatrix` + `usePreferences`, `DatePicker`, `useDateRange`.
+
+These remain speculative imports in their respective recipes; we made no
+attempt to rewrite those recipes around the existing primitives, since the
+recipes were written specifically to drive the design of those patterns.
+
 ## [0.1.4] — 2026-06-07
 
 ### Added
