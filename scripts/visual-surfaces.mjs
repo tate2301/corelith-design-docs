@@ -47,8 +47,12 @@ export const SURFACES = [
   // System reference — exercises system.css + shared.css together.
   { key: 'system-shells',  path: '/system/shells.html' },
 
-  // Playground — the all-component sandbox.
-  { key: 'playground',     path: '/playground/index.html' },
+  // Playground — the all-component sandbox. Sandpack streams from esm.sh
+  // continuously, so `networkidle` never settles. Switch to a faster
+  // wait condition that captures the page's own chrome (which IS what
+  // we're regression-testing here — the sandbox iframe is unstable
+  // content anyway and doesn't belong in a pixel-diff suite).
+  { key: 'playground',     path: '/playground/index.html', waitUntil: 'load', settle: 1500 },
 ];
 
 export function baselinePath(surface, viewport) {
@@ -68,10 +72,13 @@ export function diffPath(surface, viewport) {
  * DOMContentLoaded) have flushed. Any per-surface custom waits get
  * added here keyed off `surface.key`. */
 export async function capture(page, url, surface) {
-  await page.goto(url, { waitUntil: 'networkidle', timeout: 20000 });
+  const waitUntil = surface.waitUntil || 'networkidle';
+  const settle = typeof surface.settle === 'number' ? surface.settle : 400;
+  await page.goto(url, { waitUntil, timeout: 20000 });
   // Icons.js renders <span data-icon="…"> asynchronously after
-  // domcontentloaded — give it a beat.
-  await page.waitForTimeout(400);
+  // domcontentloaded — give it a beat. Pages with continuous network
+  // activity (Sandpack iframes etc) override `settle` to wait longer.
+  await page.waitForTimeout(settle);
 
   // Per-surface sign-in flows. Both owner + stash demos boot to a
   // sign-in screen, then a 6-digit OTP. We click through both with
