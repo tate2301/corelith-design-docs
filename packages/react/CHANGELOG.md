@@ -2,6 +2,22 @@
 
 All notable changes to `@corelithzw/react` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.4] — 2026-06-07
+
+### Added
+
+- **Visible loading state on `Button`.** The `loading` prop already wired
+  `is-loading` + `aria-busy="true"` + `disabled`, but nothing showed it on
+  screen. New `.btn.is-loading` rule in `components.css` (which the package
+  bundles into `dist/styles.css`) hides the label and renders a centered
+  16px ring spinner using `currentColor`-derived ink so each variant
+  (primary / secondary / ghost) draws the spinner in the right tone. Sizes
+  `sm` / `md` / `lg` get matching spinner sizes. Honours
+  `prefers-reduced-motion`.
+- Docs: `system/p-button.html` now shows three new States specimens
+  (primary / secondary / ghost loading) next to Disabled, and the Parts
+  table documents the `loading` prop + class contract.
+
 ## [0.1.3] — 2026-06-07
 
 ### Changed
