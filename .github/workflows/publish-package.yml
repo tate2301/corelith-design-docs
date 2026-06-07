@@ -1,13 +1,24 @@
 name: Publish @tate2301/corelith
 
-# Publishes the React package to GitHub Packages when:
+# Publishes the React package to two registries in parallel:
+#
+#   1. GitHub Packages (always, uses GITHUB_TOKEN — no setup required).
+#      Consumers need a PAT to install — GH Packages npm gates ALL reads
+#      behind authentication, even for public packages. This is a long-
+#      known GitHub limitation we can't work around from here.
+#
+#   2. public npm (optional, only if NPM_TOKEN secret is set). This is
+#      what makes `npm install @tate2301/corelith` work anonymously in
+#      any repo, no .npmrc gymnastics required.
+#
+# Triggers:
 #   - Push to main touches packages/react/** AND the version in
 #     packages/react/package.json hasn't already been published.
 #   - A tag matching corelith-v* is pushed.
 #   - The workflow is dispatched manually.
 #
-# The job is a no-op if the current version is already on the registry,
-# so re-running on green is safe.
+# The job skips each registry's publish step if the current version is
+# already on it, so re-running on green is safe.
 
 on:
   push:
@@ -35,12 +46,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node 22
+      - name: Setup Node 22 (npm registry by default)
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@tate2301'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Read package version
         id: pkg
@@ -51,35 +61,51 @@ jobs:
           echo "name=$name" >> "$GITHUB_OUTPUT"
           echo "Resolved $name@$version"
 
-      - name: Skip if version already published
+      - name: Check what's already on each registry
         id: skip
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # use a PAT-flavoured env so npm doesn't try to publish here
+          NPM_CONFIG_USERCONFIG: /dev/null
         run: |
           name='${{ steps.pkg.outputs.name }}'
           version='${{ steps.pkg.outputs.version }}'
-          if npm view "$name" versions --json 2>/dev/null | grep -q "\"$version\""; then
-            echo "$name@$version is already on the registry — skipping publish."
-            echo "skip=true" >> "$GITHUB_OUTPUT"
+
+          # public npm — anonymous read, fast.
+          if npm view "$name" versions --json --registry=https://registry.npmjs.org 2>/dev/null | grep -q "\"$version\""; then
+            echo "npm: $name@$version already published — will skip."
+            echo "skip_npm=true" >> "$GITHUB_OUTPUT"
           else
-            echo "$name@$version is new — proceeding."
-            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "npm: $name@$version is new — will publish (if NPM_TOKEN is set)."
+            echo "skip_npm=false" >> "$GITHUB_OUTPUT"
           fi
 
+          # GitHub Packages — read with the workflow's GITHUB_TOKEN.
+          # We pipe an auth token via NODE_AUTH_TOKEN against the GH registry only for the lookup.
+          export NODE_AUTH_TOKEN="${{ secrets.GITHUB_TOKEN }}"
+          if echo "//npm.pkg.github.com/:_authToken=\${NODE_AUTH_TOKEN}" > .npmrc-gh && \
+             npm view "$name" versions --json --registry=https://npm.pkg.github.com --userconfig .npmrc-gh 2>/dev/null | grep -q "\"$version\""; then
+            echo "ghp: $name@$version already published — will skip."
+            echo "skip_ghp=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ghp: $name@$version is new — will publish."
+            echo "skip_ghp=false" >> "$GITHUB_OUTPUT"
+          fi
+          rm -f .npmrc-gh
+
       - name: Install dependencies
-        if: steps.skip.outputs.skip != 'true'
+        if: steps.skip.outputs.skip_npm != 'true' || steps.skip.outputs.skip_ghp != 'true'
         run: npm install --no-audit --no-fund --no-workspaces
 
       - name: Build
-        if: steps.skip.outputs.skip != 'true'
+        if: steps.skip.outputs.skip_npm != 'true' || steps.skip.outputs.skip_ghp != 'true'
         run: npm run build
 
       - name: Test
-        if: steps.skip.outputs.skip != 'true'
+        if: steps.skip.outputs.skip_npm != 'true' || steps.skip.outputs.skip_ghp != 'true'
         run: npm test
 
       - name: Verify CDN bundle exposes window.Corelith
-        if: steps.skip.outputs.skip != 'true'
+        if: steps.skip.outputs.skip_npm != 'true' || steps.skip.outputs.skip_ghp != 'true'
         run: |
           if ! grep -q "Corelith" dist/cdn.global.js; then
             echo "::error::dist/cdn.global.js does not expose 'Corelith' — build is stale or misconfigured."
@@ -87,11 +113,43 @@ jobs:
           fi
           echo "OK — dist/cdn.global.js references Corelith."
 
+      # ── Public npm ────────────────────────────────────────────
+      # Only attempt if NPM_TOKEN secret exists. The user adds this once
+      # via the repo Settings → Secrets and variables → Actions → New
+      # repository secret, after creating the @tate2301 scope on npmjs.com
+      # (free) and running `npm token create --read-only=false`.
+      - name: Detect NPM_TOKEN
+        id: has_npm_token
+        env:
+          NPM_TOKEN_SET: ${{ secrets.NPM_TOKEN != '' }}
+        run: |
+          if [ "$NPM_TOKEN_SET" = "true" ]; then
+            echo "has=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::NPM_TOKEN secret not set — skipping public npm publish. Add it under Settings → Secrets → Actions to enable anonymous installs."
+          fi
+
+      - name: Publish to public npm
+        if: steps.skip.outputs.skip_npm != 'true' && steps.has_npm_token.outputs.has == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --registry=https://registry.npmjs.org
+
+      # ── GitHub Packages ───────────────────────────────────────
       - name: Publish to GitHub Packages
-        if: steps.skip.outputs.skip != 'true'
+        if: steps.skip.outputs.skip_ghp != 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm publish
+        run: |
+          # Write a scoped .npmrc that points only the @tate2301 scope at GH Packages
+          # so the publish hits GH without affecting the default registry.
+          cat > .npmrc <<EOF
+          @tate2301:registry=https://npm.pkg.github.com
+          //npm.pkg.github.com/:_authToken=\${NODE_AUTH_TOKEN}
+          EOF
+          npm publish --registry=https://npm.pkg.github.com
+          rm -f .npmrc
 
       # ── Tag + Release ─────────────────────────────────────────
       # After a successful publish we cut `corelith-vX.Y.Z` and a matching
@@ -100,7 +158,7 @@ jobs:
       # generic body so the release still lands.
       - name: Extract release notes from CHANGELOG
         id: notes
-        if: steps.skip.outputs.skip != 'true'
+        if: steps.skip.outputs.skip_npm != 'true' || steps.skip.outputs.skip_ghp != 'true'
         run: |
           version='${{ steps.pkg.outputs.version }}'
           if body=$(node scripts/extract-changelog-section.mjs "$version" 2>/dev/null); then
@@ -115,11 +173,13 @@ jobs:
           fi
 
       - name: Create tag + GitHub Release
-        if: steps.skip.outputs.skip != 'true'
+        if: steps.skip.outputs.skip_npm != 'true' || steps.skip.outputs.skip_ghp != 'true'
         uses: actions/github-script@v7
         env:
           NOTES_FOUND: ${{ steps.notes.outputs.found }}
           NOTES_BODY: ${{ steps.notes.outputs.body }}
+          PUBLISHED_NPM: ${{ steps.skip.outputs.skip_npm != 'true' && steps.has_npm_token.outputs.has == 'true' }}
+          PUBLISHED_GHP: ${{ steps.skip.outputs.skip_ghp != 'true' }}
         with:
           script: |
             const name = '${{ steps.pkg.outputs.name }}';
@@ -145,23 +205,24 @@ jobs:
             }
 
             // Release body — prefer the CHANGELOG section, fall back gracefully.
-            const installSnippet = [
-              '```bash',
-              `npm install ${name}@${version}`,
-              '```',
-            ].join('\n');
+            const npmPublished = process.env.PUBLISHED_NPM === 'true';
+            const ghpPublished = process.env.PUBLISHED_GHP === 'true';
+
+            const publishedTo = [];
+            if (npmPublished) publishedTo.push('**public npm** — `npm install @tate2301/corelith`');
+            if (ghpPublished) publishedTo.push('**GitHub Packages** — see `INSTALL.md` for the `.npmrc` setup');
+            const installBlock = publishedTo.length
+              ? `### Install\n\n${publishedTo.map(line => '- ' + line).join('\n')}`
+              : '### Install\n\n```bash\nnpm install ' + name + '@' + version + '\n```';
 
             let body;
             if (process.env.NOTES_FOUND === 'true' && process.env.NOTES_BODY) {
-              body = `${process.env.NOTES_BODY}\n\n---\n\n### Install\n${installSnippet}`;
+              body = `${process.env.NOTES_BODY}\n\n---\n\n${installBlock}`;
             } else {
               body = [
-                `Released \`${name}@${version}\` to GitHub Packages.`,
+                `Released \`${name}@${version}\`.`,
                 ``,
-                `### Install`,
-                installSnippet,
-                ``,
-                `View on the [packages page](https://github.com/${context.repo.owner}/${context.repo.repo}/pkgs/npm/corelith).`,
+                installBlock,
               ].join('\n');
             }
 
@@ -201,26 +262,29 @@ jobs:
             }
 
       - name: Announce on commit
-        if: steps.skip.outputs.skip != 'true' && github.event_name == 'push'
+        if: (steps.skip.outputs.skip_npm != 'true' || steps.skip.outputs.skip_ghp != 'true') && github.event_name == 'push'
         uses: actions/github-script@v7
+        env:
+          PUBLISHED_NPM: ${{ steps.skip.outputs.skip_npm != 'true' && steps.has_npm_token.outputs.has == 'true' }}
+          PUBLISHED_GHP: ${{ steps.skip.outputs.skip_ghp != 'true' }}
         with:
           script: |
             const name = '${{ steps.pkg.outputs.name }}';
             const version = '${{ steps.pkg.outputs.version }}';
             const sha = context.sha;
             const releaseUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/releases/tag/corelith-v${version}`;
+            const npmPublished = process.env.PUBLISHED_NPM === 'true';
+            const ghpPublished = process.env.PUBLISHED_GHP === 'true';
+            const installLines = [];
+            if (npmPublished) installLines.push(`- public npm: \`npm install ${name}@${version}\``);
+            if (ghpPublished) installLines.push(`- GitHub Packages: see [\`INSTALL.md\`](../blob/main/packages/react/INSTALL.md)`);
             const body = [
-              `Published \`${name}@${version}\` to GitHub Packages.`,
+              `Published \`${name}@${version}\`.`,
               ``,
               `**Release:** ${releaseUrl}`,
               ``,
-              `Install:`,
-              '```bash',
-              `npm install ${name}@${version}`,
-              '```',
-              ``,
-              `View on the [packages page](https://github.com/${context.repo.owner}/${context.repo.repo}/pkgs/npm/corelith).`,
-            ].join('\n');
+              installLines.length ? `**Install:**\n${installLines.join('\n')}` : '',
+            ].filter(Boolean).join('\n');
             await github.rest.repos.createCommitComment({
               owner: context.repo.owner,
               repo: context.repo.repo,

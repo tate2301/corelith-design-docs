@@ -6,24 +6,21 @@ Thin React wrappers over the Corelith design-system CSS. Components render the e
 
 ## Install
 
-`@tate2301/corelith` is published to **GitHub Packages**, not the public npm registry. You need three lines of setup:
+The package publishes to **two registries** — pick the one that fits.
+
+### Public npm (recommended, anonymous)
 
 ```bash
-# 1. Point the @tate2301 scope at GitHub Packages. Either edit ~/.npmrc
-#    globally, or create a repo-level .npmrc next to your package.json:
-echo "@tate2301:registry=https://npm.pkg.github.com" >> ~/.npmrc
-
-# 2. Authenticate. The package is public, so anonymous reads work in CI
-#    (GITHUB_TOKEN has read:packages by default). On a developer machine,
-#    create a Personal Access Token with read:packages scope and add:
-#       //npm.pkg.github.com/:_authToken=YOUR_PAT
-#    to ~/.npmrc (one-time setup).
-
-# 3. Install.
 npm install @tate2301/corelith react react-dom
-# or
-pnpm add @tate2301/corelith react react-dom
 ```
+
+No `.npmrc`, no PAT, no setup. Works in any repo, any CI, any Docker container.
+
+### GitHub Packages (auth required)
+
+GitHub Packages npm gates **every** install behind authentication — even for public packages. This is a long-known GitHub limitation, not ours. If you still want to use it (org policy, registry mirroring, etc.) the full setup is documented in **[INSTALL.md](./INSTALL.md)**.
+
+> **First-time owner setup.** To enable the public npm path you (the package owner) need to add an `NPM_TOKEN` repo secret once. The workflow publishes to both registries on every version bump as soon as that secret exists. See [INSTALL.md — Setup once](./INSTALL.md#setup-once--publishing-to-npm).
 
 Then import the bundled stylesheet once at the root of your app:
 
