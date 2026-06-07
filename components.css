@@ -36,6 +36,45 @@
 .btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .btn .icon, .btn svg { width: 16px; height: 16px; flex: none; }
 
+/* Loading state — the React Button toggles `.is-loading` and sets `aria-busy`.
+   The label content stays in the DOM (so the button doesn't reflow), but is
+   hidden by zeroing the text colour; a CSS-only spinner replaces it at the
+   same position. Works for both plain `<button class="btn">Save</button>`
+   markup and the JSX `<Button loading>` variant (which wraps in spans).
+   The spinner uses --btn-loading-ink so it stays visible even though the
+   surrounding text is `color: transparent`. */
+.btn {
+  --btn-loading-ink: currentColor;
+}
+.btn.is-loading {
+  position: relative;
+  cursor: progress;
+  color: transparent !important;
+  pointer-events: none;
+}
+.btn.is-loading > * { visibility: hidden; }
+.btn.is-loading::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--btn-loading-ink);
+  border-top-color: transparent;
+  opacity: 0.85;
+  animation: btn-spin 720ms linear infinite;
+}
+.btn-primary   { --btn-loading-ink: var(--action-primary-fg); }
+.btn-secondary { --btn-loading-ink: var(--text-strong); }
+.btn-ghost     { --btn-loading-ink: var(--text-strong); }
+.btn-sm.is-loading::after { width: 13px; height: 13px; border-width: 1.5px; }
+.btn-lg.is-loading::after { width: 18px; height: 18px; }
+@keyframes btn-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .btn.is-loading::after { animation: none; border-top-color: var(--btn-loading-ink); opacity: 0.5; }
+}
+
 .btn-primary {
   background: var(--action-primary-bg);
   color: var(--action-primary-fg);
