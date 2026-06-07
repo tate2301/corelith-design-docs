@@ -3175,3 +3175,541 @@ textarea:focus-visible:not(.textarea) {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
+
+/* ════════════════════════════════════════════════════════════
+   v0.2.0 — Input with leading/trailing icons, sidebar brand,
+   nav groups, sidebar nav items, collapsible sidebar rail
+   ════════════════════════════════════════════════════════════ */
+
+/* Wraps an `<input>` when it has leading/trailing icons. The bare `<input>`
+   is still used when no icons are present (preserves existing layouts). */
+.input-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0 10px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  min-height: 32px;
+  color: var(--text-body);
+  transition: border-color var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-fast) var(--ease-out);
+}
+.input-wrap:focus-within {
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 3px var(--focus-ring-soft, rgba(0, 0, 0, 0.08));
+}
+.input-wrap.is-invalid { border-color: var(--tone-danger); }
+.input-wrap > .input {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  min-height: auto;
+  flex: 1;
+  box-shadow: none;
+  outline: none;
+}
+.input-wrap > .input:focus { box-shadow: none; }
+.input-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  flex: none;
+}
+.input-icon-trailing { color: var(--text-subtle); }
+
+/* Sidebar brand mark + product name (top-left of the sidebar). */
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  font: 600 12px/1 var(--font-sans);
+  color: var(--text-strong);
+  text-decoration: none;
+  min-height: 34px;
+}
+.sidebar-brand:hover { background: var(--surface-muted); }
+.sidebar-brand-mark {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: var(--brand);
+  display: inline-grid;
+  place-items: center;
+  color: var(--on-brand, #fff);
+  flex: none;
+}
+.sidebar-brand-name { font: inherit; color: inherit; }
+
+/* Labeled <nav> group inside the sidebar. */
+.nav-group {
+  display: grid;
+  gap: 1px;
+}
+.nav-group-label {
+  margin: 0;
+  padding: 4px 8px;
+  font: 500 9px/1 var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+/* Single nav item — anchor with active state, optional icon + badge. */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font: 500 12px/1 var(--font-sans);
+  color: var(--text-body);
+  text-decoration: none;
+  min-height: 28px;
+}
+.nav-item:hover { background: var(--surface-muted); }
+.nav-item.is-active {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
+.nav-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  flex: none;
+  color: currentColor;
+}
+.nav-item-label { font: inherit; color: inherit; flex: 1; min-width: 0; }
+.nav-item-badge {
+  margin-left: auto;
+  font: 500 9px/1 var(--font-mono);
+  background: var(--tone-danger-bg);
+  color: var(--tone-danger);
+  padding: 2px 5px;
+  border-radius: 9999px;
+}
+
+/* Sidebar collapsible head + toggle button. */
+.sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 4px 4px;
+}
+.sidebar-toggle {
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+}
+.sidebar-toggle:hover { color: var(--text-strong); background: var(--surface-muted); }
+.sidebar-toggle:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Inner <nav> rendered automatically inside .sidebar. */
+.sidebar > .sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Collapsed icon-rail variant — applied either via data-collapsed on the
+   shell or directly on the sidebar. Width shrinks to a 56px rail, the nav
+   labels hide, badges become dots. */
+.app-shell[data-collapsed="true"] .sidebar,
+.sidebar[data-collapsed="true"] {
+  width: 56px;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+.app-shell[data-collapsed="true"] .sidebar .nav-item-label,
+.app-shell[data-collapsed="true"] .sidebar .nav-group-label,
+.app-shell[data-collapsed="true"] .sidebar .sidebar-brand-name,
+.sidebar[data-collapsed="true"] .nav-item-label,
+.sidebar[data-collapsed="true"] .nav-group-label,
+.sidebar[data-collapsed="true"] .sidebar-brand-name {
+  display: none;
+}
+.app-shell[data-collapsed="true"] .sidebar .nav-item,
+.sidebar[data-collapsed="true"] .nav-item {
+  justify-content: center;
+}
+.app-shell[data-collapsed="true"] .sidebar .nav-item-badge,
+.sidebar[data-collapsed="true"] .nav-item-badge {
+  position: absolute;
+  margin-left: 0;
+  transform: translate(8px, -8px);
+  width: 6px;
+  height: 6px;
+  padding: 0;
+  border-radius: 9999px;
+  font-size: 0;
+}
+
+/* ── 79 — AlertDialog (v0.2.1) ───────────────────────────────────
+ * Built on .modal-card. Tightens the body padding and adds a
+ * right-aligned actions footer + an inline icon slot. */
+.alert-dialog .modal-h { padding-bottom: 4px; }
+.alert-dialog .modal-b { padding-top: 4px; }
+.alert-dialog-title {
+  display: inline-flex; align-items: center; gap: 10px;
+}
+.alert-dialog-icon {
+  display: inline-grid; place-items: center;
+  width: 28px; height: 28px; border-radius: 9999px;
+  background: var(--surface-muted); color: var(--text-strong);
+  flex: 0 0 28px;
+}
+.alert-dialog-danger .alert-dialog-icon {
+  background: var(--tone-danger-soft, var(--surface-muted));
+  color: var(--tone-danger, var(--text-strong));
+}
+.alert-dialog-warning .alert-dialog-icon {
+  background: var(--tone-warn-soft, var(--surface-muted));
+  color: var(--tone-warn, var(--text-strong));
+}
+.alert-dialog-desc {
+  font: var(--type-body-sm);
+  color: var(--text-body);
+  line-height: 1.55;
+}
+.alert-dialog-actions {
+  display: flex; justify-content: flex-end; gap: 8px;
+}
+
+/* ── 80 — KanbanBoard (v0.2.1) ────────────────────────────────── */
+.kanban-board {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(260px, 1fr);
+  gap: 16px;
+  overflow-x: auto;
+  padding: 4px;
+}
+.kanban-column {
+  background: var(--surface-muted);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex; flex-direction: column; gap: 8px;
+  min-height: 80px;
+  transition: background var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+.kanban-column.is-drop-target {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  border-style: dashed;
+}
+.kanban-column-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px;
+  font: var(--type-label-sm);
+  color: var(--text-strong);
+}
+.kanban-column-title { font-weight: 600; }
+.kanban-column-count {
+  font: var(--type-caption);
+  color: var(--text-muted);
+  background: var(--surface);
+  border-radius: 9999px;
+  padding: 2px 8px;
+  border: 1px solid var(--border-subtle);
+}
+.kanban-wip-warn {
+  background: var(--tone-warn-soft, #fff3cd);
+  color: var(--tone-warn, #8a6d3b);
+  border-color: var(--tone-warn, #f0ad4e);
+}
+.kanban-column-body {
+  display: flex; flex-direction: column; gap: 8px;
+  min-height: 24px;
+}
+.kanban-card {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: grab;
+  user-select: none;
+  box-shadow: var(--shadow-sm, 0 1px 0 rgba(0,0,0,0.04));
+  transition: box-shadow var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+.kanban-card:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.kanban-card.is-dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
+.kanban-card.is-picked-up {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px var(--brand-soft);
+}
+.kanban-card-title {
+  font: var(--type-label-sm); color: var(--text-strong); font-weight: 500;
+}
+.kanban-card-subtitle {
+  font: var(--type-caption); color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ── 81 — CommentsThread (v0.2.1) ─────────────────────────────── */
+.comments-thread {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.comments-thread .comment {
+  /* Override the original grid layout from rule 17 — we use a stacked layout
+   * so the row, replies, and reply-composer can each be full-width. */
+  display: block;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.comments-thread .comment:last-child { border-bottom: 0; }
+.comment-row {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+.comment-row .comment-head {
+  display: contents;
+}
+.comment-row .ca {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--brand-soft); color: var(--brand-strong);
+  display: grid; place-items: center;
+  font: 600 11px/1 var(--font-sans);
+}
+.comment-row .comment-meta {
+  display: flex; align-items: baseline; gap: 8px;
+  flex-wrap: wrap;
+}
+.comment-row .who { font: var(--type-label-sm); color: var(--text-strong); }
+.comment-row .when { font: var(--type-caption); color: var(--text-subtle); }
+.comment-resolved-pill {
+  font: var(--type-caption);
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  border-radius: 9999px;
+  padding: 1px 8px;
+}
+.comment-replying-to {
+  grid-column: 2;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+.comments-thread .comment .comment-body {
+  grid-column: 2;
+  margin-top: 4px;
+  font: var(--type-body-sm);
+  color: var(--text-body);
+  line-height: 1.55;
+}
+.comment-body .mention {
+  color: var(--brand-strong);
+  background: var(--brand-soft);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+.comment-react-row {
+  grid-column: 2;
+  display: flex; flex-wrap: wrap; gap: 4px;
+  margin-top: 6px;
+}
+.comment-react {
+  display: inline-flex; align-items: center; gap: 4px;
+  font: var(--type-caption);
+  background: var(--surface-muted);
+  border: 1px solid var(--border-subtle);
+  border-radius: 9999px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+.comment-react.is-mine {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  color: var(--brand-strong);
+}
+.comment-react .count {
+  font-variant-numeric: tabular-nums;
+}
+.comments-thread .comment .comment-actions {
+  grid-column: 2;
+  display: flex; gap: 12px;
+  margin-top: 8px;
+  font: var(--type-caption);
+  color: var(--text-muted);
+}
+.comments-thread .comment .comment-actions button {
+  background: none; border: 0; padding: 0;
+  color: inherit; cursor: pointer;
+  font: inherit;
+}
+.comments-thread .comment .comment-actions button:hover {
+  color: var(--text-strong);
+}
+.comment.is-resolved {
+  opacity: 0.7;
+}
+.comment.is-resolved .comment-body {
+  text-decoration: line-through;
+}
+.comment-editing .comment-body {
+  background: var(--surface-muted);
+  border-radius: 8px;
+  padding: 8px;
+}
+.comment-replies {
+  margin-top: 8px;
+  padding-left: 40px;
+  border-left: 1px solid var(--border-subtle);
+  margin-left: 14px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.comment-reply-box {
+  grid-column: 2;
+  margin-top: 12px;
+  margin-left: 40px;
+}
+.comment-composer {
+  position: relative;
+  display: flex; flex-direction: column; gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px;
+}
+.comment-composer-input {
+  width: 100%;
+  resize: vertical;
+  border: 0;
+  outline: none;
+  font: var(--type-body-sm);
+  color: var(--text-body);
+  background: transparent;
+}
+.comment-composer-actions {
+  display: flex; justify-content: flex-end; gap: 8px;
+}
+.comments-show-resolved {
+  align-self: flex-start;
+  background: none; border: 0;
+  font: var(--type-caption);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 0;
+}
+.comments-show-resolved:hover { color: var(--text-strong); }
+
+/* ── 82 — Mention autocomplete (v0.2.1) ───────────────────────── */
+.mention-popover {
+  position: absolute;
+  top: 100%; left: 8px;
+  z-index: 20;
+  margin: 4px 0 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-popover);
+  min-width: 180px;
+}
+.mention-popover li { margin: 0; }
+.mention-item {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 6px 8px;
+  background: none; border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font: var(--type-body-sm);
+  color: var(--text-body);
+  text-align: left;
+}
+.mention-item:hover, .mention-item:focus { background: var(--surface-muted); }
+.mention-name { color: var(--text-strong); font-weight: 500; }
+.mention-id { font: var(--type-caption); color: var(--text-muted); }
+
+/* ── 83 — NotificationMatrix (v0.2.1) ─────────────────────────── */
+.notif-matrix-wrap {
+  display: flex; flex-direction: column; gap: 16px;
+}
+.notif-matrix-pause {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 12px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+}
+.notif-matrix-pause-label {
+  font: var(--type-label-sm); color: var(--text-strong);
+  margin-right: 4px;
+}
+.notif-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.notif-matrix thead th {
+  text-align: center;
+  font: var(--type-label-sm); color: var(--text-strong);
+  background: var(--surface-muted);
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.notif-matrix thead th.notif-matrix-corner { text-align: left; }
+.notif-matrix tbody th {
+  text-align: left; font-weight: 500;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: top;
+}
+.notif-matrix-event-label {
+  font: var(--type-label-sm); color: var(--text-strong);
+}
+.notif-matrix-event-desc {
+  font: var(--type-caption); color: var(--text-muted);
+  margin-top: 2px;
+}
+.notif-matrix-cell {
+  text-align: center;
+  padding: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.notif-matrix tbody tr:last-child th,
+.notif-matrix tbody tr:last-child td { border-bottom: 0; }
+
+/* ── 84 — DatePicker trigger (v0.2.1) ─────────────────────────── */
+.date-picker-trigger {
+  cursor: pointer;
+}
+.date-picker-trigger[readonly] {
+  background: var(--surface);
+}

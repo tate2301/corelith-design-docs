@@ -1,4 +1,4 @@
-// @corelithzw/react — v0.1.3
+// @corelithzw/react — v0.2.1
 // Public surface. Recipes in /cookbook import from here.
 
 import './styles.css';
@@ -104,6 +104,9 @@ export type { EmptyStateProps } from './components/EmptyState';
 export { Menu } from './components/Menu';
 export type { MenuProps, MenuItemProps, MenuLabelProps } from './components/Menu';
 
+// Alias — recipes use the longer `DropdownMenu` name for the same component.
+export { Menu as DropdownMenu } from './components/Menu';
+
 export { CommandPalette } from './components/CommandPalette';
 export type { CommandPaletteProps, CommandItem } from './components/CommandPalette';
 
@@ -130,6 +133,7 @@ export type {
   AppShellSidebarProps,
   AppShellMainProps,
   AppShellTopBarProps,
+  AppShellBrandProps,
 } from './components/AppShell';
 
 export { DataTable } from './components/DataTable';
@@ -182,7 +186,7 @@ export type { ProgressProps } from './components/Progress';
 export { SegmentedControl } from './components/SegmentedControl';
 export type { SegmentedControlProps, SegmentedControlOption } from './components/SegmentedControl';
 
-export { MobileShell, Tab, NavItem } from './components/MobileShell';
+export { MobileShell, Tab } from './components/MobileShell';
 export type {
   MobileShellProps,
   MobileShellHeaderProps,
@@ -228,6 +232,12 @@ export type { KpiGridProps } from './components/KpiGrid';
 // `Stat` is an alias for `StatCard` — recipes use both names.
 export { StatCard as Stat } from './components/StatCard';
 
+// ── Nav (new in 0.2.0) ────────────────────────────────────────
+// `NavItem` here is the sidebar-flavoured nav item (`<a class="nav-item">`).
+// The mobile bottom-rail item is still available as `MobileShell.NavItem`.
+export { NavGroup, SidebarNavItem as NavItem } from './components/Nav';
+export type { NavGroupProps, SidebarNavItemProps as NavItemProps } from './components/Nav';
+
 // ── Hooks ─────────────────────────────────────────────────────
 export { useInterval } from './hooks/useInterval';
 export type { UseIntervalOptions } from './hooks/useInterval';
@@ -242,3 +252,58 @@ export { useMediaQuery } from './hooks/useMediaQuery';
 
 export { useUpload } from './hooks/useUpload';
 export type { UploadStatus, UploadState, UploadOptions } from './hooks/useUpload';
+
+export { usePersistedFlag } from './hooks/usePersistedFlag';
+
+// ── Patterns (new in 0.2.1) ───────────────────────────────────
+export { AlertDialog } from './components/AlertDialog';
+export type {
+  AlertDialogProps,
+  AlertDialogVariant,
+  AlertDialogConfirmOptions,
+} from './components/AlertDialog';
+
+export { KanbanBoard } from './components/KanbanBoard';
+export type {
+  KanbanBoardProps,
+  KanbanColumnDef,
+  KanbanItem,
+  KanbanItems,
+} from './components/KanbanBoard';
+
+export { CommentsThread, DEFAULT_REACTIONS } from './components/CommentsThread';
+export type {
+  CommentsThreadProps,
+  Comment,
+  CommentAuthor,
+  MentionTarget,
+} from './components/CommentsThread';
+
+export { NotificationMatrix } from './components/NotificationMatrix';
+export type {
+  NotificationMatrixProps,
+  NotificationEvent,
+  NotificationChannel,
+  NotificationPrefs,
+  MasterPause,
+} from './components/NotificationMatrix';
+
+export { DatePicker } from './components/DatePicker';
+export type { DatePickerProps } from './components/DatePicker';
+
+// ── Hooks (new in 0.2.1) ──────────────────────────────────────
+export { useKanban } from './hooks/useKanban';
+export type { UseKanbanResult } from './hooks/useKanban';
+
+export { useComments } from './hooks/useComments';
+export type { UseCommentsResult } from './hooks/useComments';
+
+export { usePreferences } from './hooks/usePreferences';
+export type { UsePreferencesResult, QuietHours } from './hooks/usePreferences';
+
+export { useDateRange } from './hooks/useDateRange';
+export type {
+  UseDateRangeResult,
+  DateRangeValue,
+  DateRangePresetId,
+} from './hooks/useDateRange';

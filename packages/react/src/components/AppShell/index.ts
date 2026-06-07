@@ -4,4 +4,5 @@ export type {
   AppShellSidebarProps,
   AppShellMainProps,
   AppShellTopBarProps,
+  AppShellBrandProps,
 } from './AppShell';

@@ -79,6 +79,7 @@ MobileShell.BottomTabs = MobileShellBottomTabs;
 MobileShell.Tab = MobileShellTab;
 MobileShell.NavItem = MobileShellNavItem;
 
-// Standalone re-exports for recipes that destructure `Tab` / `NavItem` directly.
+// Standalone re-export for recipes that destructure `Tab` directly.
+// (The standalone `NavItem` export now points at the sidebar nav-item —
+// `MobileShell.NavItem` still resolves to the mobile-shell variant.)
 export const Tab = MobileShellTab;
-export const NavItem = MobileShellNavItem;

@@ -2,7 +2,7 @@
 
 Thin React wrappers over the Corelith design-system CSS. Components render the exact class names already shipped in `components.css`, so any cookbook recipe in the docs site translates verbatim into your app.
 
-> **Status:** `v0.1.3` — published to public npm as `@corelithzw/react`. ~50 components, 6 hooks, full TypeScript types, bundled design-system stylesheet.
+> **Status:** `v0.2.1` — published to public npm as `@corelithzw/react`. ~60 components, 14 hooks, full TypeScript types, bundled design-system stylesheet.
 
 ## Install
 
@@ -59,7 +59,7 @@ export function SignIn() {
 | Component         | Summary                                                                   |
 | ----------------- | ------------------------------------------------------------------------- |
 | `Button`          | Variants (primary/secondary/ghost), tones, sizes, loading, icons          |
-| `Input`           | Auto-wires id, aria-describedby, aria-invalid from nearest `Field`        |
+| `Input`           | Auto-wires id, aria-describedby, aria-invalid from nearest `Field`. `leadingIcon` / `trailingIcon` / `trailingSlot` for icon-chrome inputs. |
 | `InputOtp`        | Per-digit OTP cells, paste-into-all, `autocomplete="one-time-code"`       |
 | `Field`           | Label + description + error wrapper with `Field.Label/.Description/.Error` |
 | `Form`            | `<form>` with `noValidate`, Enter-submit toggle                           |
@@ -83,7 +83,10 @@ export function SignIn() {
 | `SaveBar`         | Sticky save bar that slides in when `dirty`                               |
 | `Grabber`         | Drag handle for reorderable rows                                          |
 | `EmptyState`      | `full` (column) and `inline` (banner) variants                            |
-| `Menu`            | `Menu.Item` + `Menu.Label` + `Menu.Divider`                               |
+| `Menu`            | `Menu.Item` + `Menu.Label` + `Menu.Divider` (also `Menu.Separator`)       |
+| `DropdownMenu`    | Alias for `Menu` (recipes use both names)                                 |
+| `NavGroup`        | Labeled `<nav>` group for sidebar nav items (`label` prop renders an `<h6>`) |
+| `NavItem`         | Sidebar nav item: `active`, `to`, `icon`, `badge`; sets `aria-current="page"` |
 | `CommandPalette`  | ⌘K modal with search, groups, keyboard navigation                         |
 | `TextArea`        | Multi-line `<textarea>`; consumes `FieldContext` like `Input`             |
 | `Meter`           | Qualitative meter with `low`/`high` thresholds (`role="meter"`)           |
@@ -118,7 +121,7 @@ export function SignIn() {
 
 | Component   | Summary                                                                           |
 | ----------- | --------------------------------------------------------------------------------- |
-| `AppShell`  | Desktop sidebar shell: `AppShell.Sidebar` + `AppShell.Main` + `AppShell.TopBar`   |
+| `AppShell`  | Desktop sidebar shell: `AppShell.Sidebar` + `AppShell.Main` + `AppShell.TopBar` (alias `Topbar`) + `AppShell.Brand`. `collapsed` prop drives an icon-rail. `AppShell.Sidebar` accepts `collapsible` + `onToggle`. |
 | `AuthShell` | Centered-card auth shell: `AuthShell.Brand` + `AuthShell.Card`                    |
 | `DataTable` | `<table class="dtable">` with sortable headers + row selection                    |
 | `Modal`     | Centered dialog with focus trap + Escape; bottom-sheet on phone                   |
@@ -128,6 +131,11 @@ export function SignIn() {
 | `Stack`     | `direction`, `gap`, `align`, `justify`, `wrap` flex helper                        |
 | `MobileShell` | `MobileShell.Body` + `.BottomTabs` mobile-first wrapper                         |
 | `I18nProvider` | Tiny i18n context with `{var}` interpolation (`useT()` returns the `t` fn)     |
+| `AlertDialog` | Opinionated confirm/cancel dialog built on `Modal`. Plus `AlertDialog.confirm()` imperative API → `Promise<boolean>` |
+| `KanbanBoard` | Drag-and-drop kanban with WIP limits, touch long-press, keyboard pick-up; pair with `useKanban`     |
+| `CommentsThread` | Flat-`Comment[]` threaded discussion with @mention autocomplete, edit-in-place, reactions, resolve; pair with `useComments` |
+| `NotificationMatrix` | Settings table of events × channels with a master pause row; pair with `usePreferences`        |
+| `DatePicker`  | Single-date popover composed from `Input` + `Popover` + `Calendar`               |
 
 ## Hooks
 
@@ -142,6 +150,11 @@ export function SignIn() {
 | `useUpload()`     | `XMLHttpRequest`-backed file upload with progress fraction and `cancel()`.                         |
 | `useGallery()`    | Tiny `Lightbox` controller: `{ open, index, show, close, next, prev, setIndex }`.                  |
 | `useT()`          | Returns the `t(key, vars?)` translator from `<I18nProvider>`.                                      |
+| `usePersistedFlag()` | `useState`-shaped boolean persisted to `localStorage`. Survives reload + sign-out; SSR-safe.    |
+| `useKanban()`     | State manager for `KanbanBoard`: `{ items, move, addCard, removeCard, setItems }`.                 |
+| `useComments()`   | State manager for `CommentsThread`: `{ comments, add, edit, resolve, react, reply }`.              |
+| `usePreferences()` | State manager for `NotificationMatrix`: `{ prefs, set, pauseFor, pause, quietHours, setQuietHours }`. |
+| `useDateRange()`  | Paired ISO-string date range with presets (`today`, `this-month`, `last-7-days`, …) and `isPreset()`. |
 
 ## TypeScript
 
