@@ -1,4 +1,4 @@
-// @tate2301/corelith — v0.1.2
+// @corelithzw/react — v0.1.3
 // Public surface. Recipes in /cookbook import from here.
 
 import './styles.css';

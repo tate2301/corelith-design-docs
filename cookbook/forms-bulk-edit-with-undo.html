@@ -99,7 +99,7 @@
   }
 
   /* Off-system component roadmap pill — for recipes that compose with
-     components not yet in @tate2301/corelith v0.1.0-alpha.0. */
+     components not yet in @corelithzw/react v0.1.0-alpha.0. */
   .ck-roadmap-note {
     margin-top: 12px;
     padding: 12px 14px;
@@ -136,7 +136,7 @@
       <span class="meta-pill"><span data-icon="edit" data-icon-size="12"></span>Forms</span>
       <span class="meta-pill">3 primitives · 1 block · 2 patterns</span>
       <span class="meta-pill"><span data-icon="clock" data-icon-size="12"></span>~30 min</span>
-      <span class="meta-pill">React · <code>@tate2301/corelith</code></span>
+      <span class="meta-pill">React · <code>@corelithzw/react</code></span>
     </div>
   </header>
 
@@ -207,7 +207,7 @@
   <!-- REQUIRED PIECES -->
   <section id="pieces">
     <h2 class="ds-h2">Required pieces</h2>
-    <p class="ds-h2-sub">Everything this recipe pulls from <code>@tate2301/corelith</code>.</p>
+    <p class="ds-h2-sub">Everything this recipe pulls from <code>@corelithzw/react</code>.</p>
     <div class="ck-pieces">
       <a class="ck-piece" href="../system/x-bulk-edit.html"><span class="kind">Pattern</span>Bulk edit</a>
       <a class="ck-piece" href="../system/p-table.html"><span class="kind">Primitive</span>Table</a>
@@ -216,7 +216,7 @@
       <a class="ck-piece" href="../system/p-toast.html"><span class="kind">Primitive</span>Toast</a>
       <a class="ck-piece" href="../system/b-row-card.html"><span class="kind">Block</span>Row card</a>
     </div>
-    <p style="margin-top: 12px;"><b>Intended <code>@tate2301/corelith</code> exports used here:</b> <code>Stack</code>, <code>Drawer</code>, <code>BottomSheet</code>, <code>Form</code>, <code>Field</code>, <code>Select</code>, <code>Button</code>, <code>Checkbox</code>, <code>useToast</code>, <code>RowCard</code>. The undo logic lives in a tiny <code>useUndoableCommit</code> hook.</p>
+    <p style="margin-top: 12px;"><b>Intended <code>@corelithzw/react</code> exports used here:</b> <code>Stack</code>, <code>Drawer</code>, <code>BottomSheet</code>, <code>Form</code>, <code>Field</code>, <code>Select</code>, <code>Button</code>, <code>Checkbox</code>, <code>useToast</code>, <code>RowCard</code>. The undo logic lives in a tiny <code>useUndoableCommit</code> hook.</p>
   </section>
 
   <!-- STEP-BY-STEP -->
@@ -227,7 +227,7 @@
     <div class="ck-step"><span class="n">01</span><h3>Model selection as a Set, not an array of full rows</h3></div>
     <p>The selection only stores row ids. Looking up the rows themselves happens at render time. That way bulk-editing a 200-row page doesn't re-serialise 200 row objects when the user ticks a checkbox.</p>
     <div class="ds-specimen"
-         data-code='import { useState, useMemo, useCallback } from &#39;@tate2301/corelith&#39;;
+         data-code='import { useState, useMemo, useCallback } from &#39;@corelithzw/react&#39;;
 
 export function useRowSelection&lt;T extends { id: string }&gt;(rows: T[]) {
   const [ids, setIds] = useState&lt;Set&lt;string&gt;&gt;(() =&gt; new Set());
@@ -266,14 +266,14 @@ export function useRowSelection&lt;T extends { id: string }&gt;(rows: T[]) {
           <p><b>Switch to the Code tab</b> to see the snippet.</p>
         </div>
       </div>
-      <div class="ds-specimen-bar"><span class="label">Step 1 · Selection state</span><span class="spacer"></span><span class="t-mono">@tate2301/corelith</span></div>
+      <div class="ds-specimen-bar"><span class="label">Step 1 · Selection state</span><span class="spacer"></span><span class="t-mono">@corelithzw/react</span></div>
     </div>
 
     <!-- Step 2 -->
     <div class="ck-step"><span class="n">02</span><h3>Build the undoable-commit hook — a setTimeout the user can cancel</h3></div>
     <p>The hook stashes the previous state, applies the optimistic update, and schedules the API call in a 5-second timer. Undo clears the timer and restores the stash. No queue, no offline sync — keep the surface area tiny.</p>
     <div class="ds-specimen"
-         data-code='import { useCallback, useRef } from &#39;@tate2301/corelith&#39;;
+         data-code='import { useCallback, useRef } from &#39;@corelithzw/react&#39;;
 
 const UNDO_MS = 5000;  // recipe-opinionated. Don&#39;t parameterise.
 
@@ -326,7 +326,7 @@ export function useUndoableCommit&lt;T&gt;({
     <div class="ck-step"><span class="n">03</span><h3>Render the bulk-edit drawer — fields that say "apply to all N"</h3></div>
     <p>The drawer is a partial form: every field is optional, and the heading says "Edit 3 suppliers" so the user knows the scope. Leaving a field blank means "don't touch this field on any row" — the patch only sends keys with values.</p>
     <div class="ds-specimen"
-         data-code='import { Drawer, Stack, Form, Field, Select, Button } from &#39;@tate2301/corelith&#39;;
+         data-code='import { Drawer, Stack, Form, Field, Select, Button } from &#39;@corelithzw/react&#39;;
 
 type BulkPatch = {
   tier?: &#39;A&#39; | &#39;B&#39; | &#39;C&#39;;
@@ -466,11 +466,11 @@ function BulkEditDrawer({
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The whole <code>SuppliersBulkEdit</code> page, assembled. Table + toolbar + drawer + undoable commit + toast wiring.</p>
     <div class="ds-specimen"
-         data-code='import { useCallback, useMemo, useRef, useState } from &#39;@tate2301/corelith&#39;;
+         data-code='import { useCallback, useMemo, useRef, useState } from &#39;@corelithzw/react&#39;;
 import {
   Stack, Form, Field, Select, Button, Checkbox,
   Drawer, RowCard, useToast,
-} from &#39;@tate2301/corelith&#39;;
+} from &#39;@corelithzw/react&#39;;
 
 // ── Types ──────────────────────────────────────────────────────
 type Supplier = {
@@ -691,7 +691,7 @@ export function SuppliersBulkEdit({
           </div>
         </div>
       </div>
-      <div class="ds-specimen-bar"><span class="label">SuppliersBulkEdit.tsx</span><span class="spacer"></span><span class="t-mono">@tate2301/corelith</span></div>
+      <div class="ds-specimen-bar"><span class="label">SuppliersBulkEdit.tsx</span><span class="spacer"></span><span class="t-mono">@corelithzw/react</span></div>
     </div>
   </section>
 

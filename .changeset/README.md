@@ -1,6 +1,6 @@
 # Changesets
 
-This folder is used by [Changesets](https://github.com/changesets/changesets) to track unreleased changes destined for the next published version of the design-system packages (currently `@tate2301/corelith`, with more to follow).
+This folder is used by [Changesets](https://github.com/changesets/changesets) to track unreleased changes destined for the next published version of the design-system packages (currently `@corelithzw/react`, with more to follow).
 
 ## Adding a changeset
 

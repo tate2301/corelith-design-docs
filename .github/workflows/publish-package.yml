@@ -1,13 +1,17 @@
-name: Publish @tate2301/corelith
+name: Publish @corelithzw/react
 
-# Publishes the React package to GitHub Packages when:
-#   - Push to main touches packages/react/** AND the version in
-#     packages/react/package.json hasn't already been published.
+# Publishes the React package to public npm (registry.npmjs.org).
+#
+# Triggers:
+#   - Push to main that touches packages/react/** (skips publish if the
+#     current version is already on npm; the tag + release steps still
+#     run idempotently).
 #   - A tag matching corelith-v* is pushed.
 #   - The workflow is dispatched manually.
 #
-# The job is a no-op if the current version is already on the registry,
-# so re-running on green is safe.
+# Requires the NPM_TOKEN repo secret (a granular access token scoped to
+# the @corelithzw scope on npmjs.com, with read+write on packages). The
+# workflow fails loudly if it is missing — there is no silent skip.
 
 on:
   push:
@@ -21,7 +25,6 @@ on:
 
 permissions:
   contents: write   # required to push the corelith-vX.Y.Z tag + create the Release
-  packages: write
 
 jobs:
   publish:
@@ -39,8 +42,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@tate2301'
+          registry-url: 'https://registry.npmjs.org'
+          scope: '@corelithzw'
+
+      - name: Require NPM_TOKEN
+        env:
+          NPM_TOKEN_SET: ${{ secrets.NPM_TOKEN != '' }}
+        run: |
+          if [ "$NPM_TOKEN_SET" != "true" ]; then
+            echo "::error::NPM_TOKEN secret is not set. Add it under Settings → Secrets and variables → Actions before this workflow can publish."
+            exit 1
+          fi
 
       - name: Read package version
         id: pkg
@@ -51,35 +63,29 @@ jobs:
           echo "name=$name" >> "$GITHUB_OUTPUT"
           echo "Resolved $name@$version"
 
-      - name: Skip if version already published
+      - name: Check if version is already on npm
         id: skip
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           name='${{ steps.pkg.outputs.name }}'
           version='${{ steps.pkg.outputs.version }}'
           if npm view "$name" versions --json 2>/dev/null | grep -q "\"$version\""; then
-            echo "$name@$version is already on the registry — skipping publish."
+            echo "$name@$version already published — will skip publish step."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
-            echo "$name@$version is new — proceeding."
+            echo "$name@$version is new — will publish."
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Install dependencies
-        if: steps.skip.outputs.skip != 'true'
         run: npm install --no-audit --no-fund --no-workspaces
 
       - name: Build
-        if: steps.skip.outputs.skip != 'true'
         run: npm run build
 
       - name: Test
-        if: steps.skip.outputs.skip != 'true'
         run: npm test
 
       - name: Verify CDN bundle exposes window.Corelith
-        if: steps.skip.outputs.skip != 'true'
         run: |
           if ! grep -q "Corelith" dist/cdn.global.js; then
             echo "::error::dist/cdn.global.js does not expose 'Corelith' — build is stale or misconfigured."
@@ -87,20 +93,14 @@ jobs:
           fi
           echo "OK — dist/cdn.global.js references Corelith."
 
-      - name: Publish to GitHub Packages
+      - name: Publish to npm
         if: steps.skip.outputs.skip != 'true'
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm publish
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
 
-      # ── Tag + Release ─────────────────────────────────────────
-      # After a successful publish we cut `corelith-vX.Y.Z` and a matching
-      # GitHub Release. The release body comes from the CHANGELOG.md section
-      # for this version; if the helper can't find one we fall back to a
-      # generic body so the release still lands.
       - name: Extract release notes from CHANGELOG
         id: notes
-        if: steps.skip.outputs.skip != 'true'
         run: |
           version='${{ steps.pkg.outputs.version }}'
           if body=$(node scripts/extract-changelog-section.mjs "$version" 2>/dev/null); then
@@ -115,7 +115,6 @@ jobs:
           fi
 
       - name: Create tag + GitHub Release
-        if: steps.skip.outputs.skip != 'true'
         uses: actions/github-script@v7
         env:
           NOTES_FOUND: ${{ steps.notes.outputs.found }}
@@ -144,31 +143,21 @@ jobs:
               }
             }
 
-            // Release body — prefer the CHANGELOG section, fall back gracefully.
-            const installSnippet = [
-              '```bash',
-              `npm install ${name}@${version}`,
-              '```',
-            ].join('\n');
-
+            const installBlock = '### Install\n\n```bash\nnpm install ' + name + '@' + version + '\n```';
             let body;
             if (process.env.NOTES_FOUND === 'true' && process.env.NOTES_BODY) {
-              body = `${process.env.NOTES_BODY}\n\n---\n\n### Install\n${installSnippet}`;
+              body = `${process.env.NOTES_BODY}\n\n---\n\n${installBlock}`;
             } else {
               body = [
-                `Released \`${name}@${version}\` to GitHub Packages.`,
+                `Released \`${name}@${version}\`.`,
                 ``,
-                `### Install`,
-                installSnippet,
-                ``,
-                `View on the [packages page](https://github.com/${context.repo.owner}/${context.repo.repo}/pkgs/npm/corelith).`,
+                installBlock,
               ].join('\n');
             }
 
             // Release — idempotent: if it exists, update it; otherwise create.
-            let release;
             try {
-              release = await github.rest.repos.getReleaseByTag({
+              const release = await github.rest.repos.getReleaseByTag({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 tag,
@@ -201,7 +190,7 @@ jobs:
             }
 
       - name: Announce on commit
-        if: steps.skip.outputs.skip != 'true' && github.event_name == 'push'
+        if: github.event_name == 'push'
         uses: actions/github-script@v7
         with:
           script: |
@@ -210,16 +199,11 @@ jobs:
             const sha = context.sha;
             const releaseUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/releases/tag/corelith-v${version}`;
             const body = [
-              `Published \`${name}@${version}\` to GitHub Packages.`,
+              `Published \`${name}@${version}\` to npm.`,
               ``,
               `**Release:** ${releaseUrl}`,
               ``,
-              `Install:`,
-              '```bash',
-              `npm install ${name}@${version}`,
-              '```',
-              ``,
-              `View on the [packages page](https://github.com/${context.repo.owner}/${context.repo.repo}/pkgs/npm/corelith).`,
+              `**Install:** \`npm install ${name}@${version}\``,
             ].join('\n');
             await github.rest.repos.createCommitComment({
               owner: context.repo.owner,

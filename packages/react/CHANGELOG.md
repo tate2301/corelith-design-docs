@@ -1,6 +1,30 @@
 # Changelog
 
-All notable changes to `@tate2301/corelith` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+All notable changes to `@corelithzw/react` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+## [0.1.3] — 2026-06-07
+
+### Changed
+
+- **Renamed package** from `@tate2301/corelith` to `@corelithzw/react`. The
+  CDN IIFE bundle still exposes `window.Corelith` — the brand name of the
+  design system is unchanged, only the npm scope moved.
+- **Dropped GitHub Packages publishing.** The package now ships to public
+  npm only (`registry.npmjs.org`). No `.npmrc`, no PAT required to install.
+- Publish workflow simplified to a single-registry pipeline that fails
+  loudly if `NPM_TOKEN` is missing rather than silently skipping.
+
+### Migration
+
+```diff
+- import { Button } from '@tate2301/corelith';
++ import { Button } from '@corelithzw/react';
+- import '@tate2301/corelith/styles.css';
++ import '@corelithzw/react/styles.css';
+```
+
+Drop any `@tate2301:registry=https://npm.pkg.github.com` line from your
+`.npmrc` — it is no longer needed.
 
 ## [0.1.2] — 2026-06-06
 
@@ -64,7 +88,7 @@ Add to your `~/.npmrc` (or repo-level `.npmrc`):
   - Patterns: `AppShell` (+ `.Sidebar`/`.Main`/`.TopBar`), `DataTable`, `Modal`, `Dialog`.
 - Hooks: `useInterval`, `useUrlState`, `useOptimistic`, `useMatchMedia`, `useUpload` (plus the existing `useToast`).
 - Vitest smoke tests for every shipped component (55 tests across 4 files).
-- `scripts/bundle-css.mjs` post-build step that concatenates `tokens.css` + `components.css` from the docs-site root onto the head of `dist/styles.css`, so `import '@tate2301/corelith/styles.css'` is enough to get the full design system.
+- `scripts/bundle-css.mjs` post-build step that concatenates `tokens.css` + `components.css` from the docs-site root onto the head of `dist/styles.css`, so `import '@corelithzw/react/styles.css'` is enough to get the full design system.
 - `vite.config.cdn.ts` IIFE bundle (`dist/cdn.global.js`) used by the Sandpack bridge to mount real components inside cookbook live previews.
 - `package.json` polish: `0.1.0` (drop `-alpha.0`), `engines.node >= 20`, `repository`/`bugs`/`homepage`, `prepublishOnly` runs build + tests.
 
