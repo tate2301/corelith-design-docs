@@ -19,10 +19,11 @@
     min-height: 100vh;
   }
   .pg-header {
-    display: flex; align-items: center; gap: 16px;
+    display: flex; align-items: center; gap: 14px;
     padding: 14px 24px;
     border-bottom: 1px solid var(--border);
     background: var(--surface);
+    flex-wrap: wrap;
   }
   .pg-brand {
     display: inline-flex; align-items: center; gap: 8px;
@@ -36,7 +37,26 @@
     background: var(--brand-soft); color: var(--brand-strong);
     text-transform: uppercase;
   }
-  .pg-actions { display: flex; gap: 8px; margin-left: auto; }
+  .pg-picker {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-left: 8px;
+    font: 500 13px/1 var(--font-sans); color: var(--text-muted);
+  }
+  .pg-picker select {
+    height: 32px;
+    padding: 0 30px 0 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23808377' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat right 8px center;
+    font: 500 13px/1 var(--font-sans);
+    color: var(--text-strong);
+    appearance: none; -webkit-appearance: none;
+    cursor: pointer;
+    min-width: 200px;
+  }
+  .pg-picker select:hover { border-color: var(--border-strong); }
+  .pg-picker select:focus { outline: 2px solid var(--brand); outline-offset: 1px; }
+  .pg-actions { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
   .pg-btn {
     display: inline-flex; align-items: center; gap: 6px;
     height: 32px; padding: 0 12px;
@@ -58,7 +78,7 @@
     overflow: hidden;
     background: var(--surface);
     border: 1px solid var(--border);
-    height: calc(100vh - 160px);
+    height: calc(100vh - 180px);
     min-height: 500px;
   }
   .pg-sandbox > iframe {
@@ -73,9 +93,85 @@
     border-top: 1px solid var(--border);
     background: var(--surface);
     font: 500 12px/1 var(--font-sans); color: var(--text-muted);
+    flex-wrap: wrap; gap: 10px;
   }
   .pg-footer a { color: var(--brand-strong); text-decoration: none; }
   .pg-footer a:hover { text-decoration: underline; }
+
+  /* Mobile fallback: Sandpack is desktop-first. Show a friendly banner. */
+  .pg-mobile {
+    display: none;
+    margin: 18px 24px;
+    padding: 22px 22px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .pg-mobile h2 { font: 600 18px/1.25 var(--font-sans); color: var(--text-strong); margin: 0 0 8px; }
+  .pg-mobile p { font: 400 14px/1.55 var(--font-sans); color: var(--text-muted); margin: 0 0 16px; }
+  .pg-mobile .pg-mobile-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pg-mobile .pg-btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+
+  @media (max-width: 720px) {
+    .pg-sandbox, .pg-main { display: none; }
+    .pg-mobile { display: block; }
+    .pg-picker { display: none; }
+    .pg-header { padding: 12px 16px; gap: 10px; }
+    .pg-footer { padding: 12px 16px; }
+  }
+
+  /* Modal */
+  .pg-modal-scrim {
+    position: fixed; inset: 0;
+    background: rgba(20, 18, 16, 0.55);
+    display: none;
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .pg-modal-scrim.open { display: flex; }
+  .pg-modal {
+    background: var(--surface);
+    border-radius: 14px;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.18);
+    max-width: 760px; width: 100%;
+    max-height: 90vh;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .pg-modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  .pg-modal-head h3 { font: 600 17px/1.25 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .pg-modal-close {
+    background: transparent; border: 0; color: var(--text-muted);
+    width: 32px; height: 32px; border-radius: 6px;
+    display: grid; place-items: center; cursor: pointer;
+  }
+  .pg-modal-close:hover { background: var(--surface-muted); color: var(--text-strong); }
+  .pg-modal-body { padding: 16px 22px; overflow-y: auto; }
+  .pg-modal-body p { font: 400 14px/1.55 var(--font-sans); color: var(--text-muted); margin: 0 0 12px; }
+  .pg-snippet {
+    background: var(--canvas);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin: 0 0 14px;
+    font: 13px/1.55 var(--font-mono);
+    color: var(--text-strong);
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .pg-snippet-h {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 12px 0 6px;
+  }
+  .pg-snippet-h .nm { font: 600 13px/1 var(--font-sans); color: var(--text-strong); }
+  .pg-snippet-h button { font: 500 12px/1 var(--font-sans); color: var(--brand-strong); background: transparent; border: 0; cursor: pointer; }
+  .pg-snippet-h button:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -87,18 +183,45 @@
       Huchu
       <span class="tag">Playground</span>
     </a>
+    <label class="pg-picker">
+      Example
+      <select id="pg-example" aria-label="Choose a starter example">
+        <option value="signin">SignIn card</option>
+        <option value="dashboard">Dashboard hero</option>
+        <option value="settings">Settings form</option>
+        <option value="table">Data table</option>
+        <option value="sheet">Bottom-sheet flow</option>
+      </select>
+    </label>
     <div class="pg-actions">
+      <button type="button" class="pg-btn" id="pg-copy-project" title="Show package.json and App.tsx for copying into your project">
+        <span data-icon="copy" data-icon-size="13"></span>Copy as project
+      </button>
       <button type="button" class="pg-btn" id="pg-reset" title="Reset to the starter snippet">
         <span data-icon="refresh" data-icon-size="13"></span>Reset
       </button>
       <button type="button" class="pg-btn" id="pg-share" title="Copy a shareable URL of the current snippet">
-        <span data-icon="copy" data-icon-size="13"></span>Share
+        <span data-icon="link" data-icon-size="13"></span>Share
       </button>
       <a class="pg-btn primary" id="pg-export" href="https://codesandbox.io/s/new" target="_blank" rel="noopener">
         <span data-icon="external" data-icon-size="13"></span>Open in CodeSandbox
       </a>
     </div>
   </header>
+
+  <!-- Mobile fallback (<= 720px) -->
+  <section class="pg-mobile" aria-label="Playground unavailable on mobile">
+    <h2>Playground is desktop-first</h2>
+    <p>Sandpack — the live React sandbox that powers this page — needs more screen than a phone can give. To browse what the design system can build on a phone, head to the cookbook: every recipe is responsive and includes its own preview.</p>
+    <div class="pg-mobile-actions">
+      <a class="pg-btn primary" href="../cookbook/index.html">
+        <span data-icon="book" data-icon-size="13"></span>Open recipes instead
+      </a>
+      <a class="pg-btn" href="../index.html">
+        <span data-icon="home" data-icon-size="13"></span>Back home
+      </a>
+    </div>
+  </section>
 
   <main class="pg-main">
     <!-- The bridge mounts a SandpackClient iframe into this div on load.
@@ -112,17 +235,51 @@
   </main>
 
   <footer class="pg-footer">
-    <span>Powered by Sandpack — sandbox runs in your browser.</span>
+    <span>Powered by Sandpack — sandbox runs entirely in your browser. <a href="../system/install.html">Install @corelithzw/react</a> to use these snippets in your own project.</span>
     <a href="../cookbook/index.html">← Back to Cookbook</a>
   </footer>
 
 </div>
 
+<!-- Copy-as-project modal -->
+<div class="pg-modal-scrim" id="pg-modal-scrim" role="dialog" aria-modal="true" aria-labelledby="pg-modal-title">
+  <div class="pg-modal">
+    <div class="pg-modal-head">
+      <h3 id="pg-modal-title">Copy as a real project</h3>
+      <button type="button" class="pg-modal-close" id="pg-modal-close" aria-label="Close">
+        <span data-icon="x" data-icon-size="14"></span>
+      </button>
+    </div>
+    <div class="pg-modal-body">
+      <p>Two files. Drop them in a fresh Vite-React-TS project, install, and run.</p>
+
+      <div class="pg-snippet-h"><span class="nm">package.json (additions)</span>
+        <button type="button" data-copy="pkg">Copy</button></div>
+      <pre class="pg-snippet" id="pg-snippet-pkg">{
+  "dependencies": {
+    "@corelithzw/react": "^0.2.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}</pre>
+
+      <div class="pg-snippet-h"><span class="nm">src/App.tsx (current playground)</span>
+        <button type="button" data-copy="app">Copy</button></div>
+      <pre class="pg-snippet" id="pg-snippet-app"></pre>
+
+      <p style="margin-top: 14px; font-size: 13px;">
+        Need scaffolding too? Run <code style="font: 500 12px/1 var(--font-mono); padding: 2px 6px; background: var(--surface-muted); border-radius: 4px;">npm create vite@latest my-app -- --template react-ts</code> then <code style="font: 500 12px/1 var(--font-mono); padding: 2px 6px; background: var(--surface-muted); border-radius: 4px;">npm i @corelithzw/react</code>.
+      </p>
+    </div>
+  </div>
+</div>
+
 <script type="module">
-  // Default starter — a tiny SignIn-ish component pulling from the
-  // @corelithzw/react shim that the bridge ships. Readers can edit and
-  // see the result in the right pane immediately.
-  const STARTER = `import { Stack, Form, Field, Input, Button, AuthShell, useState } from '@corelithzw/react';
+  // ─── Examples ─────────────────────────────────────────────────────────
+  // Five canned starters. Picking one swaps the playground sandbox content
+  // by re-encoding data-sandpack-files and reloading the bridge.
+  const EXAMPLES = {
+    signin: `import { Stack, Form, Field, Input, Button, AuthShell, useState } from '@corelithzw/react';
 
 export default function App() {
   const [email, setEmail] = useState('');
@@ -158,45 +315,235 @@ export default function App() {
     </AuthShell>
   );
 }
-`;
+`,
 
-  // Encode the starter (and any ?code= override) into the sandbox host
-  // before sandpack-bridge.js boots.
+    dashboard: `import { Stack, RowCard, Badge, Button } from '@corelithzw/react';
+
+export default function App() {
+  return (
+    <Stack gap="lg" style={{ padding: 24, maxWidth: 720, margin: '0 auto' }}>
+      <Stack gap="xs">
+        <h1 style={{ margin: 0 }}>Good morning, Tendai</h1>
+        <p style={{ margin: 0, color: '#666' }}>
+          Three batches need posting before close. Nothing else is on fire.
+        </p>
+      </Stack>
+
+      <Stack gap="sm">
+        <RowCard
+          title="Gold on hand"
+          value="363.9 g"
+          delta="-100 vs last week"
+          deltaTone="negative"
+        />
+        <RowCard
+          title="Cash received today"
+          value="$2,418"
+          delta="+18% vs yesterday"
+          deltaTone="positive"
+        />
+        <RowCard
+          title="Pending payouts"
+          value="$0"
+          subtitle="Nothing waiting"
+        />
+      </Stack>
+
+      <Stack direction="row" gap="sm">
+        <Button variant="primary">Record shift output</Button>
+        <Button variant="secondary">View batches</Button>
+      </Stack>
+    </Stack>
+  );
+}
+`,
+
+    settings: `import { Stack, Form, Field, Input, Select, Switch, Button, useState } from '@corelithzw/react';
+
+export default function App() {
+  const [saved, setSaved] = useState(false);
+  return (
+    <div style={{ padding: 24, maxWidth: 520, margin: '0 auto' }}>
+      <h1>Workspace settings</h1>
+      <Form onSubmit={() => setSaved(true)}>
+        <Stack gap="md">
+          <Field label="Workspace name" name="name">
+            <Input defaultValue="Mukamba Group" />
+          </Field>
+          <Field label="Timezone" name="tz">
+            <Select
+              defaultValue="Africa/Harare"
+              options={[
+                { value: 'Africa/Harare', label: 'Africa/Harare (CAT)' },
+                { value: 'Africa/Johannesburg', label: 'Africa/Johannesburg (SAST)' },
+                { value: 'UTC', label: 'UTC' },
+              ]}
+            />
+          </Field>
+          <Field label="Weekly summary email" name="weekly">
+            <Switch defaultChecked />
+          </Field>
+          <Button type="submit" variant="primary">
+            {saved ? 'Saved' : 'Save changes'}
+          </Button>
+        </Stack>
+      </Form>
+    </div>
+  );
+}
+`,
+
+    table: `import { Stack, Badge, Button } from '@corelithzw/react';
+
+const rows = [
+  { id: 'BAR-0123', site: 'Gokwe', grams: 80.2, status: 'posted' },
+  { id: 'BAR-0122', site: 'Gokwe', grams: 41.0, status: 'posted' },
+  { id: 'BAR-0121', site: 'Kadoma', grams: 19.8, status: 'pending' },
+  { id: 'BAR-0120', site: 'Mutare', grams: 36.5, status: 'failed' },
+];
+
+export default function App() {
+  return (
+    <div style={{ padding: 24, maxWidth: 760, margin: '0 auto' }}>
+      <Stack direction="row" justify="between" align="center" style={{ marginBottom: 12 }}>
+        <h1 style={{ margin: 0 }}>Recent batches</h1>
+        <Button variant="secondary" size="sm">Export</Button>
+      </Stack>
+
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'system-ui' }}>
+        <thead>
+          <tr style={{ textAlign: 'left', borderBottom: '1px solid #e7e3d6' }}>
+            <th style={{ padding: 10 }}>Batch</th>
+            <th style={{ padding: 10 }}>Site</th>
+            <th style={{ padding: 10, textAlign: 'right' }}>Grams</th>
+            <th style={{ padding: 10 }}>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(r => (
+            <tr key={r.id} style={{ borderBottom: '1px solid #f1ede0' }}>
+              <td style={{ padding: 10, fontFamily: 'monospace' }}>{r.id}</td>
+              <td style={{ padding: 10 }}>{r.site}</td>
+              <td style={{ padding: 10, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                {r.grams.toFixed(1)}
+              </td>
+              <td style={{ padding: 10 }}>
+                <Badge tone={r.status === 'posted' ? 'success' : r.status === 'failed' ? 'danger' : 'neutral'}>
+                  {r.status}
+                </Badge>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+`,
+
+    sheet: `import { Stack, Button, BottomSheet, useState } from '@corelithzw/react';
+
+export default function App() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ padding: 24 }}>
+      <h1>Bottom-sheet demo</h1>
+      <p>Tap the button to open a bottom sheet. Drag the handle to dismiss.</p>
+      <Button variant="primary" onClick={() => setOpen(true)}>
+        Open sheet
+      </Button>
+
+      <BottomSheet open={open} onClose={() => setOpen(false)} title="Record shift output">
+        <Stack gap="md" style={{ padding: 16 }}>
+          <p>This sheet is the canonical mobile entry point for any short flow — a record, a payment, a quick confirm.</p>
+          <Stack direction="row" gap="sm">
+            <Button variant="secondary" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button variant="primary" onClick={() => setOpen(false)}>Save</Button>
+          </Stack>
+        </Stack>
+      </BottomSheet>
+    </div>
+  );
+}
+`,
+  };
+
   function b64(s) { return btoa(unescape(encodeURIComponent(s))); }
   function unb64(s) { return decodeURIComponent(escape(atob(s))); }
 
+  // Determine starting example: ?code= wins, else ?example=, else "signin".
   const url = new URL(location.href);
   const shared = url.searchParams.get('code');
-  const code = shared ? unb64(shared) : STARTER;
+  const exampleId = url.searchParams.get('example') || 'signin';
+  const starter = shared ? unb64(shared) : (EXAMPLES[exampleId] || EXAMPLES.signin);
 
-  const files = { '/App.tsx': code };
+  // Set the picker to match.
+  const picker = document.getElementById('pg-example');
+  if (EXAMPLES[exampleId]) picker.value = exampleId;
+
+  // Sync the modal App.tsx snippet with whatever the sandbox is showing.
+  let currentCode = starter;
+  document.getElementById('pg-snippet-app').textContent = currentCode;
+
+  const files = { '/App.tsx': starter };
   document.getElementById('pg-sandbox').setAttribute('data-sandpack-files', b64(JSON.stringify(files)));
 
-  // Now load the bridge — it'll find the div and mount.
+  // Load the bridge — it'll find the div and mount Sandpack.
   await import('../assets/sandpack-bridge.js');
 
-  // Reset wipes any ?code= override and reloads.
+  // ─── Example picker: swap the sandbox content ──────────────────────────
+  picker.addEventListener('change', () => {
+    const u = new URL(location.href);
+    u.searchParams.delete('code');
+    u.searchParams.set('example', picker.value);
+    location.href = u.toString();
+  });
+
+  // ─── Reset: drop any ?code= and reload ────────────────────────────────
   document.getElementById('pg-reset').addEventListener('click', () => {
     const u = new URL(location.href);
     u.searchParams.delete('code');
     location.href = u.toString();
   });
 
-  // Share copies a URL with the current starter (v1: no live editor sync —
-  // future work can wire client.listen() to capture user edits and update
-  // this URL on the fly).
+  // ─── Share: copy URL with the current snippet ─────────────────────────
   document.getElementById('pg-share').addEventListener('click', async () => {
     const u = new URL(location.href);
-    u.searchParams.set('code', b64(code));
+    u.searchParams.set('code', b64(currentCode));
     try {
       await navigator.clipboard.writeText(u.toString());
       const btn = document.getElementById('pg-share');
       const prev = btn.innerHTML;
       btn.innerHTML = '<span data-icon="check" data-icon-size="13"></span>Copied!';
+      if (window.Icons && window.Icons.render) window.Icons.render(btn);
       setTimeout(() => { btn.innerHTML = prev; if (window.Icons) window.Icons.render(btn); }, 1400);
     } catch (e) {
       alert('Share link:\n' + u.toString());
     }
+  });
+
+  // ─── Copy-as-project modal ─────────────────────────────────────────────
+  const scrim = document.getElementById('pg-modal-scrim');
+  function openModal() { scrim.classList.add('open'); }
+  function closeModal() { scrim.classList.remove('open'); }
+  document.getElementById('pg-copy-project').addEventListener('click', openModal);
+  document.getElementById('pg-modal-close').addEventListener('click', closeModal);
+  scrim.addEventListener('click', (e) => { if (e.target === scrim) closeModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+  scrim.addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-copy]');
+    if (!btn) return;
+    const which = btn.getAttribute('data-copy');
+    const src = which === 'pkg'
+      ? document.getElementById('pg-snippet-pkg').textContent
+      : document.getElementById('pg-snippet-app').textContent;
+    try {
+      await navigator.clipboard.writeText(src);
+      const prev = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = prev; }, 1200);
+    } catch (err) { /* clipboard blocked */ }
   });
 </script>
 </body>
