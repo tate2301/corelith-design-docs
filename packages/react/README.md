@@ -10,7 +10,7 @@ Thin React wrappers over the Corelith design-system CSS. Components render the e
 npm install @corelithzw/react react react-dom
 ```
 
-No `.npmrc`, no PAT, no setup. Works in any repo, any CI, any Docker container. Full owner / troubleshooting notes live in **[INSTALL.md](./INSTALL.md)**.
+No `.npmrc`, no PAT, no setup. Works in any repo, any CI, any Docker container. Owner-side publish setup + troubleshooting in **[INSTALL.md](./INSTALL.md)**.
 
 Then import the bundled stylesheet once at the root of your app:
 
