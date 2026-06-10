@@ -31,6 +31,14 @@ const JUSTIFY: Record<StackJustify, CSSProperties['justifyContent']> = {
   around: 'space-around',
 };
 
+/**
+ * Stack — flexbox layout primitive (row/column).
+ *
+ * @example
+ * ```tsx
+ * <Stack />
+ * ```
+ */
 export const Stack = forwardRef<HTMLDivElement, StackProps>(function Stack(
   { as: As = 'div', direction = 'vertical', gap = 'md', align, justify, wrap, className, style, ...rest },
   ref,

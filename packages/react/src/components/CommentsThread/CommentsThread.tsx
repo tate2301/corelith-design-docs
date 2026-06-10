@@ -51,6 +51,14 @@ export const DEFAULT_REACTIONS = ['👍', '❤️', '😄', '🎉', '🤔', '�
  * siblings of the comment they answer; deeper "replies of replies" degrade to
  * the same level with a `replying to X` prefix.
  */
+/**
+ * CommentsThread — threaded comments with reactions.
+ *
+ * @example
+ * ```tsx
+ * <CommentsThread />
+ * ```
+ */
 export function CommentsThread({
   comments,
   currentUser,

@@ -10,6 +10,14 @@ export interface AlertProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'
   icon?: ReactNode;
 }
 
+/**
+ * Alert — inline status banner. Tone drives colour.
+ *
+ * @example
+ * ```tsx
+ * <Alert />
+ * ```
+ */
 export const Alert = forwardRef<HTMLDivElement, AlertProps>(function Alert(
   { tone = 'info', title, icon, className, children, role, ...rest },
   ref,

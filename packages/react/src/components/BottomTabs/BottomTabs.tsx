@@ -69,6 +69,14 @@ function BottomTabsInner<T extends string>(
   );
 }
 
+/**
+ * BottomTabs — mobile bottom navigation rail.
+ *
+ * @example
+ * ```tsx
+ * <BottomTabs />
+ * ```
+ */
 export const BottomTabs = forwardRef(BottomTabsInner) as <T extends string = string>(
   props: BottomTabsProps<T> & { ref?: React.Ref<HTMLElement> },
 ) => React.ReactElement;

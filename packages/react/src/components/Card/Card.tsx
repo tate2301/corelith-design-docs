@@ -44,6 +44,14 @@ type CardComponent = typeof CardRoot & {
   Footer: typeof CardFooter;
 };
 
+/**
+ * Card — compound surface with Header / Body / Footer slots.
+ *
+ * @example
+ * ```tsx
+ * <Card />
+ * ```
+ */
 export const Card = CardRoot as CardComponent;
 Card.Header = CardHeader;
 Card.Title = CardTitle;

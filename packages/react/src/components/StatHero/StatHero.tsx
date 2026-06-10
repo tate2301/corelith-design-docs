@@ -14,6 +14,14 @@ export interface StatHeroProps extends HTMLAttributes<HTMLDivElement> {
   secondaries?: StatHeroSecondary[];
 }
 
+/**
+ * StatHero — large hero metric block.
+ *
+ * @example
+ * ```tsx
+ * <StatHero />
+ * ```
+ */
 export const StatHero = forwardRef<HTMLDivElement, StatHeroProps>(function StatHero(
   { label, value, description, secondaries, className, children, ...rest },
   ref,

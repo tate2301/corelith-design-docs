@@ -19,6 +19,14 @@ export interface InlineEditProps extends Omit<HTMLAttributes<HTMLSpanElement>, '
   editing?: boolean;
 }
 
+/**
+ * InlineEdit — click-to-edit value display.
+ *
+ * @example
+ * ```tsx
+ * <InlineEdit />
+ * ```
+ */
 export const InlineEdit = forwardRef<HTMLSpanElement, InlineEditProps>(function InlineEdit(
   { value, onSave, onCancel, placeholder, disabled, editing: controlledEditing, className, ...rest },
   ref,

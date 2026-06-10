@@ -22,6 +22,14 @@ const sameDay = (a: Date, b: Date) =>
 const isBefore = (a: Date, b: Date) => a.getTime() < new Date(b.getFullYear(), b.getMonth(), b.getDate()).getTime();
 const isAfter = (a: Date, b: Date) => a.getTime() > new Date(b.getFullYear(), b.getMonth(), b.getDate()).getTime();
 
+/**
+ * Calendar — month-grid date picker.
+ *
+ * @example
+ * ```tsx
+ * <Calendar />
+ * ```
+ */
 export const Calendar = forwardRef<HTMLDivElement, CalendarProps>(function Calendar(
   { value, month, onChange, min, max, disabledDates, weekStartsOn = 1, locale, className, ...rest },
   ref,

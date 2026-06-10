@@ -10,6 +10,14 @@ export interface EmptyStateProps extends Omit<HTMLAttributes<HTMLDivElement>, 't
   variant?: 'full' | 'inline';
 }
 
+/**
+ * EmptyState — placeholder for empty collections.
+ *
+ * @example
+ * ```tsx
+ * <EmptyState />
+ * ```
+ */
 export const EmptyState = forwardRef<HTMLDivElement, EmptyStateProps>(function EmptyState(
   { icon, title, description, action, variant = 'full', className, children, ...rest },
   ref,

@@ -20,6 +20,14 @@ export interface TooltipProps extends Omit<HTMLAttributes<HTMLDivElement>, 'chil
   open?: boolean;
 }
 
+/**
+ * Tooltip — Corelith component.
+ *
+ * @example
+ * ```tsx
+ * <Tooltip />
+ * ```
+ */
 export function Tooltip({
   content,
   placement = 'top',

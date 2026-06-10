@@ -140,6 +140,14 @@ interface ToastProps {
   onDismiss: () => void;
 }
 
+/**
+ * Toast — transient notification (use ToastProvider).
+ *
+ * @example
+ * ```tsx
+ * <Toast />
+ * ```
+ */
 export function Toast({ item, onDismiss }: ToastProps) {
   return (
     <div className={cx('toast', `toast-${item.tone}`)} role={item.tone === 'danger' ? 'alert' : 'status'}>

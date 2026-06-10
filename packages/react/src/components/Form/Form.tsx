@@ -7,6 +7,14 @@ export interface FormProps extends FormHTMLAttributes<HTMLFormElement> {
   submitOnEnter?: boolean;
 }
 
+/**
+ * Form — semantic <form> wrapper with sensible defaults.
+ *
+ * @example
+ * ```tsx
+ * <Form />
+ * ```
+ */
 export const Form = forwardRef<HTMLFormElement, FormProps>(function Form(
   { className, submitOnEnter = true, onKeyDown, noValidate = true, ...rest },
   ref,

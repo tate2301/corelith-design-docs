@@ -42,6 +42,14 @@ const NextIcon = (
   </svg>
 );
 
+/**
+ * Lightbox — image gallery overlay.
+ *
+ * @example
+ * ```tsx
+ * <Lightbox />
+ * ```
+ */
 export const Lightbox = forwardRef<HTMLDivElement, LightboxProps>(function Lightbox(
   { images, index, open = true, onClose, onChange, className, ...rest },
   ref,

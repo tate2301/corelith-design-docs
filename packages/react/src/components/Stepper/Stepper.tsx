@@ -62,5 +62,13 @@ type StepperComponent = typeof StepperRoot & {
   Step: typeof StepperStep;
 };
 
+/**
+ * Stepper — multi-step progress indicator.
+ *
+ * @example
+ * ```tsx
+ * <Stepper />
+ * ```
+ */
 export const Stepper = StepperRoot as StepperComponent;
 Stepper.Step = StepperStep;

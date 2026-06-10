@@ -43,6 +43,14 @@ interface DragState {
 
 const LONG_PRESS_MS = 400;
 
+/**
+ * KanbanBoard — keyboard-accessible drag-and-drop board.
+ *
+ * @example
+ * ```tsx
+ * <KanbanBoard />
+ * ```
+ */
 export function KanbanBoard<T extends KanbanItem = KanbanItem>({
   columns,
   items,
@@ -149,6 +157,12 @@ export function KanbanBoard<T extends KanbanItem = KanbanItem>({
       const next = e.key === 'ArrowUp' ? curr - 1 : curr + 1;
       if (next < 0 || next >= (items[columnId] ?? []).length) return;
       onMove?.(itemId, columnId, columnId, next);
+      return;
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      // Enter "drops" the card at its current position — clears pickup state.
+      setPickedUp(null);
       return;
     }
     if (e.key === 'Escape') {

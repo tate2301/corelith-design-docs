@@ -21,6 +21,14 @@ export interface PopoverProps extends Omit<HTMLAttributes<HTMLDivElement>, 'titl
   dismissOnEscape?: boolean;
 }
 
+/**
+ * Popover — anchored floating panel.
+ *
+ * @example
+ * ```tsx
+ * <Popover />
+ * ```
+ */
 export const Popover = forwardRef<HTMLDivElement, PopoverProps>(function Popover(
   {
     open,

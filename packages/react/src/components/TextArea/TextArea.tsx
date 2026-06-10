@@ -7,6 +7,14 @@ export interface TextAreaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
   invalid?: boolean;
 }
 
+/**
+ * TextArea — multi-line text field.
+ *
+ * @example
+ * ```tsx
+ * <TextArea />
+ * ```
+ */
 export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function TextArea(
   { className, id, invalid, 'aria-describedby': ariaDescribedBy, 'aria-invalid': ariaInvalid, ...rest },
   ref,

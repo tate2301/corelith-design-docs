@@ -29,6 +29,14 @@ export interface ComboboxProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onC
   footer?: ReactNode;
 }
 
+/**
+ * Combobox — filterable single-select dropdown body.
+ *
+ * @example
+ * ```tsx
+ * <Combobox />
+ * ```
+ */
 export const Combobox = forwardRef<HTMLDivElement, ComboboxProps>(function Combobox(
   {
     items,

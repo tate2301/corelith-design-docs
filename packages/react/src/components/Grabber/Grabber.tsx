@@ -5,6 +5,14 @@ export interface GrabberProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   ariaLabel?: string;
 }
 
+/**
+ * Grabber — drag handle affordance.
+ *
+ * @example
+ * ```tsx
+ * <Grabber />
+ * ```
+ */
 export const Grabber = forwardRef<HTMLButtonElement, GrabberProps>(function Grabber(
   { ariaLabel = 'Drag to reorder', className, children, ...rest },
   ref,

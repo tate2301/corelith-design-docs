@@ -27,6 +27,14 @@ export interface AlertDialogProps {
  * top of `Modal`. Use the named export for in-tree usage, or
  * `AlertDialog.confirm()` for an imperative one-shot prompt.
  */
+/**
+ * AlertDialog — confirm/cancel modal for destructive flows.
+ *
+ * @example
+ * ```tsx
+ * <AlertDialog />
+ * ```
+ */
 export function AlertDialog({
   open,
   onClose,

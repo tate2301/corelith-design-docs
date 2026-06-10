@@ -38,6 +38,14 @@ function interpolate(template: string, vars?: Record<string, string | number>): 
   return template.replace(/\{(\w+)\}/g, (_, k: string) => (vars[k] != null ? String(vars[k]) : `{${k}}`));
 }
 
+/**
+ * I18nProvider — supplies a locale and message dictionary.
+ *
+ * @example
+ * ```tsx
+ * <I18nProvider />
+ * ```
+ */
 export function I18nProvider({
   locale,
   setLocale,

@@ -1,6 +1,14 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import {
+  forwardRef,
+  useEffect,
+  useId,
+  useImperativeHandle,
+  useRef,
+  type ReactNode,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { cx } from '../../utils/cx';
+import { isTop, popOverlay, pushOverlay } from '../../utils/overlayStack';
 import './Modal.css';
 
 export interface ModalProps {
@@ -21,25 +29,46 @@ export interface ModalProps {
 const FOCUSABLE =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
-export function Modal({
-  open,
-  onClose,
-  title,
-  subtitle,
-  footer,
-  children,
-  size = 'md',
-  dismissOnBackdrop = true,
-  dismissOnEscape = true,
-  container,
-  className,
-}: ModalProps) {
+/**
+ * Modal — accessible dialog rendered in a portal.
+ *
+ * Owns focus trap, Escape handling (innermost overlay wins via global
+ * overlay stack), and focus return on close. The forwarded ref points at the
+ * dialog element (`role="dialog"`).
+ *
+ * @example
+ * ```tsx
+ * const [open, setOpen] = useState(false);
+ * <Modal open={open} onClose={() => setOpen(false)} title="Confirm">
+ *   body
+ * </Modal>
+ * ```
+ */
+export const Modal = forwardRef<HTMLDivElement, ModalProps>(function Modal(
+  {
+    open,
+    onClose,
+    title,
+    subtitle,
+    footer,
+    children,
+    size = 'md',
+    dismissOnBackdrop = true,
+    dismissOnEscape = true,
+    container,
+    className,
+  },
+  forwardedRef,
+) {
   const ref = useRef<HTMLDivElement | null>(null);
   const lastFocus = useRef<HTMLElement | null>(null);
   const titleId = useId();
 
+  useImperativeHandle(forwardedRef, () => ref.current as HTMLDivElement, []);
+
   useEffect(() => {
     if (!open) return;
+    const token = pushOverlay();
     lastFocus.current = (document.activeElement as HTMLElement | null) ?? null;
     const node = ref.current;
     if (node) {
@@ -48,7 +77,9 @@ export function Modal({
     }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && dismissOnEscape) {
+        if (!isTop(token)) return;
         e.preventDefault();
+        e.stopPropagation();
         onClose();
         return;
       }
@@ -70,6 +101,7 @@ export function Modal({
     document.addEventListener('keydown', onKey);
     return () => {
       document.removeEventListener('keydown', onKey);
+      popOverlay(token);
       lastFocus.current?.focus?.();
     };
   }, [open, onClose, dismissOnEscape]);
@@ -101,4 +133,4 @@ export function Modal({
     </div>,
     target,
   );
-}
+});

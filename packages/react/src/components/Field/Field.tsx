@@ -90,6 +90,14 @@ function FieldError(props: HTMLAttributes<HTMLDivElement>) {
   return <div role="alert" className={cx('field-error', className)} {...rest} />;
 }
 
+/**
+ * Field — label + control + help/error wrapper.
+ *
+ * @example
+ * ```tsx
+ * <Field />
+ * ```
+ */
 export const Field = FieldRoot as unknown as FieldComponent;
 Field.Label = FieldLabel;
 Field.Description = FieldDescription;

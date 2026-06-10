@@ -58,6 +58,14 @@ type AuthShellComponent = typeof AuthShellRoot & {
   Card: typeof AuthShellCard;
 };
 
+/**
+ * AuthShell — split-pane sign-in / sign-up layout.
+ *
+ * @example
+ * ```tsx
+ * <AuthShell />
+ * ```
+ */
 export const AuthShell = AuthShellRoot as AuthShellComponent;
 AuthShell.Brand = AuthShellBrand;
 AuthShell.Card = AuthShellCard;

@@ -7,6 +7,14 @@ export interface CheckboxProps extends Omit<InputHTMLAttributes<HTMLInputElement
   indeterminate?: boolean;
 }
 
+/**
+ * Checkbox — styled native checkbox.
+ *
+ * @example
+ * ```tsx
+ * <Checkbox />
+ * ```
+ */
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Checkbox(
   { label, indeterminate, className, id, ...rest },
   ref,

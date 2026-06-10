@@ -5,6 +5,14 @@ export interface SwitchProps extends Omit<InputHTMLAttributes<HTMLInputElement>,
   label?: ReactNode;
 }
 
+/**
+ * Switch — toggle styled as a switch.
+ *
+ * @example
+ * ```tsx
+ * <Switch />
+ * ```
+ */
 export const Switch = forwardRef<HTMLInputElement, SwitchProps>(function Switch(
   { label, className, ...rest },
   ref,

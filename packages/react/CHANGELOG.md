@@ -2,6 +2,45 @@
 
 All notable changes to `@corelithzw/react` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.0] — 2026-06-10
+
+**Standardization release.** No breaking changes — every API consistency fix is additive with a deprecated alias.
+
+### Added — API consistency
+
+- **Uncontrolled mode** on `Tabs`, `SegmentedControl`, `FilterChips`, `RoleSwitcher`: each now accepts `defaultValue` and falls back to internal state when `value` is omitted. The old controlled signature is unchanged.
+- **`forwardRef` on every overlay**: `Modal`, `Drawer`, `Dialog`, `BottomSheet` now forward refs to their `role="dialog"` element. Public API surface compatible.
+- **Overlay stack**: `Modal`, `Drawer`, `BottomSheet` share an internal stack so Escape closes the topmost overlay first. Opening a `Modal` inside a `Drawer` now does the right thing.
+- **Drawer focus trap**: parity with `Modal` — Tab cycles within the drawer; Shift+Tab from the first focusable wraps to the last.
+- **Tabs keyboard navigation**: `ArrowLeft`/`ArrowRight`/`ArrowUp`/`ArrowDown` move + activate; `Home`/`End` jump to the first/last tab. Selection wraps.
+- **KanbanBoard**: `Enter` drops a picked-up card (in addition to the existing `Space` toggle and `Escape` cancel).
+
+### Added — JSDoc
+
+Every public component, hook, and exported type now ships with a JSDoc block that includes a one-line summary and an `@example` snippet. Editor IntelliSense renders these inline.
+
+### Added — public API report
+
+- **`npm run api-report`** — generates `etc/api-report.md` from `dist/index.cjs`. Sorted, one row per export, classified (`forwardRef component`, `forwardRef namespace`, `hook`, …). The file is committed; future PRs diff it so any change to the public surface is explicit.
+
+### Added — tests
+
+`102 → 188`. New behavioural + a11y suites: focus-trap cycling on Modal/Drawer/BottomSheet, the Modal-inside-Drawer Escape chain, Tabs arrow + Home/End nav, InputOtp 6-digit paste distribution, DataTable sort emission, KanbanBoard pickup/move/drop. A11y assertions per interactive cover role + the contract aria-* attributes (hand-rolled, no jest-axe dep).
+
+### Added — package hygiene
+
+- `LICENSE` (MIT) committed.
+- `package.json` `engines.node >= 20` (already set, kept), `exports["./package.json"]`, `sideEffects` extended to include the CDN bundle.
+- `files` field tightened to drop `src` (we ship `dist`, `README`, `CHANGELOG`, `INSTALL`, `LICENSE`).
+
+### Deprecated
+
+- `DataTableSortState.columnId` — use `DataTableSortState.column` instead. The deprecated key is still accepted everywhere; the canonical key is always emitted alongside it. Will be removed in v1.0.
+
+### Versioning policy
+
+See **Versioning & stability** in the README. Summary: minor versions are strictly additive, breaking changes only land in majors, deprecated aliases get one minor of warning before removal in the next major.
+
 ## [0.2.1] — 2026-06-07
 
 Ships the **six pattern-sized features** that v0.2.0 deferred. The cookbook is no longer fiction — every recipe that referenced these imports now has a real component to render against.
