@@ -8,24 +8,58 @@
 <script src="../icons.js" defer></script>
 <script src="../system-shell.js" defer></script>
 <style>
+  .palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+  .sw-tile { border: 1px solid var(--border); border-radius: 12px; overflow: clip; background: var(--surface); cursor: copy; transition: border-color var(--dur-fast) var(--ease-out); }
+  .sw-tile:hover { border-color: var(--border-strong); }
+  .sw-tile.copied { border-color: var(--brand); }
+  .sw-tile .chip { height: 64px; border-bottom: 1px solid var(--border-subtle); }
+  .sw-tile .chip.outlined { border: 1px solid var(--border); border-bottom: 1px solid var(--border-subtle); }
+  .sw-tile .meta { padding: 10px 12px 12px; }
+  .sw-tile .nm { font: 500 12.5px/1.2 var(--font-mono); color: var(--text-strong); word-break: break-all; }
+  .sw-tile .hex { font: 400 11px/1.2 var(--font-mono); color: var(--text-muted); margin-top: 4px; text-transform: uppercase; }
+  .sw-tile .hint { font: 400 10px/1 var(--font-sans); color: var(--text-subtle); margin-top: 6px; }
+  .sw-tile.copied .hint { color: var(--brand-strong); }
+
   .scale { display: grid; grid-template-columns: repeat(11, 1fr); border: 1px solid var(--border); border-radius: 12px; overflow: clip; }
-  .scale .sw { padding: 14px 10px 12px; color: var(--text-strong); }
+  .scale .sw { padding: 14px 10px 12px; color: var(--text-strong); cursor: copy; }
   .scale .sw .nm { font: 500 11px/1 var(--font-mono); }
   .scale .sw .hex { font: 400 10px/1 var(--font-mono); margin-top: 4px; opacity: 0.7; }
   .scale .sw.dark { color: #fff; }
+  .scale.brand { grid-template-columns: repeat(8, 1fr); }
+
   .tone-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
   .tone { border: 1px solid var(--border); border-radius: 12px; overflow: clip; }
-  /* Mobile: fixed-column scales scroll instead of widening the page */
-  @media (max-width: 720px) {
-    .scale { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .scale .sw { min-width: 54px; }
-    .tone-grid { grid-template-columns: repeat(2, 1fr); }
-  }
   .tone .strip { height: 56px; }
   .tone .strip.bg { height: 32px; border-top: 1px solid var(--border); }
   .tone .info { padding: 12px 14px; }
   .tone .nm { font: var(--type-label-sm); color: var(--text-strong); }
   .tone .tok { font: var(--type-caption); font-family: var(--font-mono); color: var(--text-muted); margin-top: 3px; }
+
+  .role-grid { display: grid; gap: 16px; }
+  .role { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); padding: 20px 22px; }
+  .role h3 { font: 600 16px/1.3 var(--font-sans); color: var(--text-strong); margin: 0 0 6px; }
+  .role p.use { color: var(--text-muted); font: var(--type-body-sm); margin: 0 0 16px; }
+  .role .ex { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  .role .ex .ex-card { border-left: 3px solid var(--tone-success); padding: 14px 16px; background: var(--canvas); border-radius: 8px; }
+  .role .ex .ex-card.no { border-left-color: var(--tone-danger); }
+  .role .ex .ex-card .tag { font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--tone-success); margin-bottom: 8px; }
+  .role .ex .ex-card.no .tag { color: var(--tone-danger); }
+
+  .pair-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--border); border-radius: 10px; overflow: clip; font: var(--type-body-sm); }
+  .pair-table th { text-align: left; padding: 12px 16px; font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-subtle); background: var(--surface-muted); border-bottom: 1px solid var(--border); }
+  .pair-table td { padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); vertical-align: middle; font-family: var(--font-mono); }
+  .pair-table tr:last-child td { border-bottom: none; }
+  .pair-table .chip { display: inline-block; width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--hairline); vertical-align: middle; margin-right: 8px; }
+  .pair-table td.tok { color: var(--text-strong); }
+
+  @media (max-width: 720px) {
+    .scale { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .scale .sw { min-width: 56px; }
+    .tone-grid { grid-template-columns: repeat(2, 1fr); }
+    .role .ex { grid-template-columns: 1fr; }
+    .pair-table { font-size: 12px; }
+    .pair-table td, .pair-table th { padding: 10px 10px; }
+  }
 </style>
 </head>
 <body class="ds-doc">
@@ -35,75 +69,238 @@
   <header class="ds-page-head anim-fade-up">
     <div class="crumbs"><a href="../index.html">Home</a><span class="sep">/</span><a href="foundations.html">Foundations</a><span class="sep">/</span><span>Colors</span></div>
     <h1>Colors</h1>
-    <p class="lede">A cool neutral gray scale, one Corelith blue brand, four semantic tones. Saturated colour is reserved for action and state — never decoration.</p>
+    <p class="lede">A cool neutral gray scale, one Corelith blue brand, four semantic tones. Saturated colour is reserved for action and state — never decoration. Every pair below has been measured against WCAG 2.2.</p>
     <div class="meta">
-      <span class="meta-pill">64 tokens</span>
       <span class="meta-pill">Cool neutrals</span>
+      <span class="meta-pill">Measured contrast</span>
       <a class="meta-pill" href="accessibility.html" style="text-decoration: none; color: var(--brand-strong);"><span data-icon="check" data-icon-size="12"></span>See accessibility →</a>
     </div>
   </header>
 
   <section id="neutral">
     <h2 class="ds-h2">Neutral scale</h2>
-    <p class="ds-h2-sub">Cool gray from 50 (canvas) to 950 (deepest ink). Use direct steps when a generic surface or border is needed; prefer semantic aliases (canvas, surface, text-strong, …) everywhere else.</p>
+    <p class="ds-h2-sub">Cool gray from 50 (canvas) to 950 (deepest ink). Click any swatch to copy its token name.</p>
     <div class="scale">
-      <div class="sw" style="background: var(--gray-50);">  <div class="nm">50</div><div class="hex">#F7F8FA</div></div>
-      <div class="sw" style="background: var(--gray-100);"> <div class="nm">100</div><div class="hex">#F1F3F6</div></div>
-      <div class="sw" style="background: var(--gray-200);"> <div class="nm">200</div><div class="hex">#E5E8EE</div></div>
-      <div class="sw" style="background: var(--gray-300);"> <div class="nm">300</div><div class="hex">#D2D7E0</div></div>
-      <div class="sw" style="background: var(--gray-400);"> <div class="nm">400</div><div class="hex">#A6AEBD</div></div>
-      <div class="sw" style="background: var(--gray-500);"> <div class="nm">500</div><div class="hex">#767D8C</div></div>
-      <div class="sw dark" style="background: var(--gray-600);"> <div class="nm">600</div><div class="hex">#565C69</div></div>
-      <div class="sw dark" style="background: var(--gray-700);"> <div class="nm">700</div><div class="hex">#3D424D</div></div>
-      <div class="sw dark" style="background: var(--gray-800);"> <div class="nm">800</div><div class="hex">#262A33</div></div>
-      <div class="sw dark" style="background: var(--gray-900);"> <div class="nm">900</div><div class="hex">#16181D</div></div>
-      <div class="sw dark" style="background: var(--gray-950);"> <div class="nm">950</div><div class="hex">#0C0D11</div></div>
+      <div class="sw" data-copy="--gray-50" style="background: var(--gray-50);"><div class="nm">50</div><div class="hex">#F7F8FA</div></div>
+      <div class="sw" data-copy="--gray-100" style="background: var(--gray-100);"><div class="nm">100</div><div class="hex">#F1F3F6</div></div>
+      <div class="sw" data-copy="--gray-200" style="background: var(--gray-200);"><div class="nm">200</div><div class="hex">#E5E8EE</div></div>
+      <div class="sw" data-copy="--gray-300" style="background: var(--gray-300);"><div class="nm">300</div><div class="hex">#D2D7E0</div></div>
+      <div class="sw" data-copy="--gray-400" style="background: var(--gray-400);"><div class="nm">400</div><div class="hex">#A6AEBD</div></div>
+      <div class="sw" data-copy="--gray-500" style="background: var(--gray-500);"><div class="nm">500</div><div class="hex">#767D8C</div></div>
+      <div class="sw dark" data-copy="--gray-600" style="background: var(--gray-600);"><div class="nm">600</div><div class="hex">#565C69</div></div>
+      <div class="sw dark" data-copy="--gray-700" style="background: var(--gray-700);"><div class="nm">700</div><div class="hex">#3D424D</div></div>
+      <div class="sw dark" data-copy="--gray-800" style="background: var(--gray-800);"><div class="nm">800</div><div class="hex">#262A33</div></div>
+      <div class="sw dark" data-copy="--gray-900" style="background: var(--gray-900);"><div class="nm">900</div><div class="hex">#16181D</div></div>
+      <div class="sw dark" data-copy="--gray-950" style="background: var(--gray-950);"><div class="nm">950</div><div class="hex">#0C0D11</div></div>
     </div>
   </section>
 
   <section id="brand">
     <h2 class="ds-h2">Brand · Corelith blue</h2>
-    <p class="ds-h2-sub">Sampled from the logo. The shield wears 500 solid; primary buttons wear 500 solid; everywhere else use the soft tint.</p>
-    <div class="scale" style="grid-template-columns: repeat(8, 1fr);">
-      <div class="sw" style="background: var(--brand-50);"><div class="nm">50</div><div class="hex">#EEF3FE</div></div>
-      <div class="sw" style="background: var(--brand-100);"><div class="nm">100</div><div class="hex">#DCE5FD</div></div>
-      <div class="sw" style="background: var(--brand-200);"><div class="nm">200</div><div class="hex">#B8CBFB</div></div>
-      <div class="sw" style="background: var(--brand-300);"><div class="nm">300</div><div class="hex">#85A8F8</div></div>
-      <div class="sw dark" style="background: var(--brand-500);"><div class="nm">500</div><div class="hex">#0B5DF0</div></div>
-      <div class="sw dark" style="background: var(--brand-strong);"><div class="nm">700</div><div class="hex">#0944C2</div></div>
-      <div class="sw dark" style="background: var(--brand-deeper);"><div class="nm">800</div><div class="hex">#08379C</div></div>
-      <div class="sw dark" style="background: var(--brand-900);"><div class="nm">900</div><div class="hex">#0A2862</div></div>
+    <p class="ds-h2-sub">Sampled from the logo. 500 is the primary action. 700 is for hover &amp; for text on tinted backgrounds. Soft tints carry active nav and info backgrounds.</p>
+    <div class="scale brand">
+      <div class="sw" data-copy="--brand-50" style="background: var(--brand-50);"><div class="nm">50</div><div class="hex">#EEF3FE</div></div>
+      <div class="sw" data-copy="--brand-100" style="background: var(--brand-100);"><div class="nm">100</div><div class="hex">#DCE5FD</div></div>
+      <div class="sw" data-copy="--brand-200" style="background: var(--brand-200);"><div class="nm">200</div><div class="hex">#B8CBFB</div></div>
+      <div class="sw" data-copy="--brand-300" style="background: var(--brand-300);"><div class="nm">300</div><div class="hex">#85A8F8</div></div>
+      <div class="sw dark" data-copy="--brand" style="background: var(--brand-500);"><div class="nm">500 · brand</div><div class="hex">#0B5DF0</div></div>
+      <div class="sw dark" data-copy="--brand-strong" style="background: var(--brand-strong);"><div class="nm">700 · strong</div><div class="hex">#0944C2</div></div>
+      <div class="sw dark" data-copy="--brand-deeper" style="background: var(--brand-deeper);"><div class="nm">800 · deeper</div><div class="hex">#08379C</div></div>
+      <div class="sw dark" data-copy="--brand-900" style="background: var(--brand-900);"><div class="nm">900</div><div class="hex">#0A2862</div></div>
     </div>
   </section>
 
   <section id="semantic">
     <h2 class="ds-h2">Semantic tones</h2>
-    <p class="ds-h2-sub">For alerts, badges, status. Always paired — a foreground and a soft background.</p>
+    <p class="ds-h2-sub">Each tone ships a foreground, a soft background, and a border. Always paired — never use a tone foreground alone on raw canvas.</p>
     <div class="tone-grid">
-      <div class="tone"><div class="strip" style="background: var(--tone-info);"></div><div class="strip bg" style="background: var(--tone-info-bg);"></div><div class="info"><div class="nm">Info</div><div class="tok">--tone-info</div></div></div>
-      <div class="tone"><div class="strip" style="background: var(--tone-success);"></div><div class="strip bg" style="background: var(--tone-success-bg);"></div><div class="info"><div class="nm">Success</div><div class="tok">--tone-success</div></div></div>
-      <div class="tone"><div class="strip" style="background: var(--tone-warn);"></div><div class="strip bg" style="background: var(--tone-warn-bg);"></div><div class="info"><div class="nm">Warn</div><div class="tok">--tone-warn</div></div></div>
-      <div class="tone"><div class="strip" style="background: var(--tone-danger);"></div><div class="strip bg" style="background: var(--tone-danger-bg);"></div><div class="info"><div class="nm">Danger</div><div class="tok">--tone-danger</div></div></div>
-      <div class="tone"><div class="strip" style="background: var(--tone-neutral);"></div><div class="strip bg" style="background: var(--tone-neutral-bg);"></div><div class="info"><div class="nm">Neutral</div><div class="tok">--tone-neutral</div></div></div>
+      <div class="tone"><div class="strip" style="background: var(--tone-info);"></div><div class="strip bg" style="background: var(--tone-info-bg);"></div><div class="info"><div class="nm">Info</div><div class="tok">--tone-info · #0B5DF0</div></div></div>
+      <div class="tone"><div class="strip" style="background: var(--tone-success);"></div><div class="strip bg" style="background: var(--tone-success-bg);"></div><div class="info"><div class="nm">Success</div><div class="tok">--tone-success · #5E8E54</div></div></div>
+      <div class="tone"><div class="strip" style="background: var(--tone-warn);"></div><div class="strip bg" style="background: var(--tone-warn-bg);"></div><div class="info"><div class="nm">Warn</div><div class="tok">--tone-warn · #B07626</div></div></div>
+      <div class="tone"><div class="strip" style="background: var(--tone-danger);"></div><div class="strip bg" style="background: var(--tone-danger-bg);"></div><div class="info"><div class="nm">Danger</div><div class="tok">--tone-danger · #B83A2A</div></div></div>
+      <div class="tone"><div class="strip" style="background: var(--tone-neutral);"></div><div class="strip bg" style="background: var(--tone-neutral-bg);"></div><div class="info"><div class="nm">Neutral</div><div class="tok">--tone-neutral · text-muted</div></div></div>
     </div>
   </section>
 
+  <section id="palette">
+    <h2 class="ds-h2">Full palette</h2>
+    <p class="ds-h2-sub">Every semantic alias as a copyable swatch. Click to copy the token name to your clipboard.</p>
+    <div class="palette">
+      <div class="sw-tile" data-copy="--canvas"><div class="chip" style="background: #F7F8FA;"></div><div class="meta"><div class="nm">--canvas</div><div class="hex">#F7F8FA</div><div class="hint">Click to copy</div></div></div>
+      <div class="sw-tile" data-copy="--surface"><div class="chip outlined" style="background: #FFFFFF;"></div><div class="meta"><div class="nm">--surface</div><div class="hex">#FFFFFF</div><div class="hint">Click to copy</div></div></div>
+      <div class="sw-tile" data-copy="--surface-muted"><div class="chip" style="background: #F1F3F6;"></div><div class="meta"><div class="nm">--surface-muted</div><div class="hex">#F1F3F6</div><div class="hint">Click to copy</div></div></div>
+      <div class="sw-tile" data-copy="--surface-sunken"><div class="chip" style="background: #E8EBF0;"></div><div class="meta"><div class="nm">--surface-sunken</div><div class="hex">#E8EBF0</div><div class="hint">Click to copy</div></div></div>
+      <div class="sw-tile" data-copy="--text-strong"><div class="chip" style="background: #16181D;"></div><div class="meta"><div class="nm">--text-strong</div><div class="hex">#16181D</div><div class="hint">Click to copy</div></div></div>
+      <div class="sw-tile" data-copy="--text-body"><div class="chip" style="background: #262A33;"></div><div class="meta"><div class="nm">--text-body</div><div class="hex">#262A33</div><div class="hint">Click to copy</div></div></div>
+      <div class="sw-tile" data-copy="--text-muted"><div class="chip" style="background: #565C69;"></div><div class="meta"><div class="nm">--text-muted</div><div class="hex">#565C69</div><div class="hint">Click to copy</div></div></div>
+      <div class="sw-tile" data-copy="--text-subtle"><div class="chip" style="background: #5E6573;"></div><div class="meta"><div class="nm">--text-subtle</div><div class="hex">#5E6573</div><div class="hint">Click to copy</div></div></div>
+      <div class="sw-tile" data-copy="--text-link"><div class="chip" style="background: #0944C2;"></div><div class="meta"><div class="nm">--text-link</div><div class="hex">#0944C2</div><div class="hint">Click to copy</div></div></div>
+      <div class="sw-tile" data-copy="--brand"><div class="chip" style="background: #0B5DF0;"></div><div class="meta"><div class="nm">--brand</div><div class="hex">#0B5DF0</div><div class="hint">Click to copy</div></div></div>
+      <div class="sw-tile" data-copy="--brand-strong"><div class="chip" style="background: #0944C2;"></div><div class="meta"><div class="nm">--brand-strong</div><div class="hex">#0944C2</div><div class="hint">Click to copy</div></div></div>
+      <div class="sw-tile" data-copy="--brand-soft"><div class="chip" style="background: #E8EFFE;"></div><div class="meta"><div class="nm">--brand-soft</div><div class="hex">#E8EFFE</div><div class="hint">Click to copy</div></div></div>
+      <div class="sw-tile" data-copy="--border"><div class="chip" style="background: #E5E8EE;"></div><div class="meta"><div class="nm">--border</div><div class="hex">#E5E8EE</div><div class="hint">Click to copy</div></div></div>
+      <div class="sw-tile" data-copy="--border-strong"><div class="chip" style="background: #D2D7E0;"></div><div class="meta"><div class="nm">--border-strong</div><div class="hex">#D2D7E0</div><div class="hint">Click to copy</div></div></div>
+      <div class="sw-tile" data-copy="--ink"><div class="chip" style="background: #16181D;"></div><div class="meta"><div class="nm">--ink</div><div class="hex">#16181D</div><div class="hint">Click to copy</div></div></div>
+      <div class="sw-tile" data-copy="--action-destructive-bg"><div class="chip" style="background: #B83A2A;"></div><div class="meta"><div class="nm">--action-destructive-bg</div><div class="hex">#B83A2A</div><div class="hint">Click to copy</div></div></div>
+      <div class="sw-tile" data-copy="--action-destructive-soft-bg"><div class="chip" style="background: #6B655A;"></div><div class="meta"><div class="nm">--action-destructive-soft-bg</div><div class="hex">#6B655A</div><div class="hint">Click to copy</div></div></div>
+    </div>
+  </section>
+
+  <section id="contrast">
+    <h2 class="ds-h2">Contrast matrix</h2>
+    <p class="ds-h2-sub">Every text-on-surface combination, measured against WCAG 2.2 with the formula <code class="inline">(L1&nbsp;+&nbsp;0.05) / (L2&nbsp;+&nbsp;0.05)</code> where L is the relative luminance. AAA ≥ 7.0, AA ≥ 4.5, AA Large / UI ≥ 3.0.</p>
+
+    <h3 class="ds-h3">Text × surface (light)</h3>
+    <table class="ds-contrast-table">
+      <thead><tr><th>Foreground</th><th>Background</th><th>Pair</th><th>Ratio</th><th>WCAG</th></tr></thead>
+      <tbody>
+        <tr><td><span class="swatch" style="background:#16181D"></span> --text-strong</td><td><span class="swatch" style="background:#F7F8FA"></span> --canvas</td><td class="pair">Headings on page</td><td class="ratio">16.71 : 1</td><td><span class="grade aaa">AAA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#16181D"></span> --text-strong</td><td><span class="swatch" style="background:#FFFFFF"></span> --surface</td><td class="pair">Headings on cards</td><td class="ratio">17.76 : 1</td><td><span class="grade aaa">AAA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#16181D"></span> --text-strong</td><td><span class="swatch" style="background:#F1F3F6"></span> --surface-muted</td><td class="pair">Headings on hover row</td><td class="ratio">15.98 : 1</td><td><span class="grade aaa">AAA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#16181D"></span> --text-strong</td><td><span class="swatch" style="background:#E8EBF0"></span> --surface-sunken</td><td class="pair">Headings on grouped</td><td class="ratio">14.86 : 1</td><td><span class="grade aaa">AAA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#262A33"></span> --text-body</td><td><span class="swatch" style="background:#F7F8FA"></span> --canvas</td><td class="pair">Body text on page</td><td class="ratio">13.52 : 1</td><td><span class="grade aaa">AAA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#262A33"></span> --text-body</td><td><span class="swatch" style="background:#FFFFFF"></span> --surface</td><td class="pair">Body text on cards</td><td class="ratio">14.37 : 1</td><td><span class="grade aaa">AAA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#262A33"></span> --text-body</td><td><span class="swatch" style="background:#F1F3F6"></span> --surface-muted</td><td class="pair">Body in toolbar</td><td class="ratio">12.93 : 1</td><td><span class="grade aaa">AAA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#262A33"></span> --text-body</td><td><span class="swatch" style="background:#E8EBF0"></span> --surface-sunken</td><td class="pair">Body on grouped</td><td class="ratio">12.02 : 1</td><td><span class="grade aaa">AAA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#565C69"></span> --text-muted</td><td><span class="swatch" style="background:#F7F8FA"></span> --canvas</td><td class="pair">Helpers on page</td><td class="ratio">6.31 : 1</td><td><span class="grade aa">AA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#565C69"></span> --text-muted</td><td><span class="swatch" style="background:#FFFFFF"></span> --surface</td><td class="pair">Helpers on cards</td><td class="ratio">6.71 : 1</td><td><span class="grade aa">AA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#565C69"></span> --text-muted</td><td><span class="swatch" style="background:#F1F3F6"></span> --surface-muted</td><td class="pair">Helpers in toolbar</td><td class="ratio">6.03 : 1</td><td><span class="grade aa">AA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#565C69"></span> --text-muted</td><td><span class="swatch" style="background:#E8EBF0"></span> --surface-sunken</td><td class="pair">Helpers on grouped</td><td class="ratio">5.61 : 1</td><td><span class="grade aa">AA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#5E6573"></span> --text-subtle</td><td><span class="swatch" style="background:#F7F8FA"></span> --canvas</td><td class="pair">Metadata on page</td><td class="ratio">5.51 : 1</td><td><span class="grade aa">AA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#5E6573"></span> --text-subtle</td><td><span class="swatch" style="background:#FFFFFF"></span> --surface</td><td class="pair">Metadata on cards</td><td class="ratio">5.86 : 1</td><td><span class="grade aa">AA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#5E6573"></span> --text-subtle</td><td><span class="swatch" style="background:#F1F3F6"></span> --surface-muted</td><td class="pair">Metadata in toolbar</td><td class="ratio">5.27 : 1</td><td><span class="grade aa">AA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#5E6573"></span> --text-subtle</td><td><span class="swatch" style="background:#E8EBF0"></span> --surface-sunken</td><td class="pair">Metadata on grouped</td><td class="ratio">4.90 : 1</td><td><span class="grade aa">AA</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3 class="ds-h3">Brand &amp; tone pairs</h3>
+    <table class="ds-contrast-table">
+      <thead><tr><th>Foreground</th><th>Background</th><th>Pair</th><th>Ratio</th><th>WCAG</th></tr></thead>
+      <tbody>
+        <tr><td><span class="swatch" style="background:#FFFFFF"></span> #FFFFFF</td><td><span class="swatch" style="background:#0B5DF0"></span> --brand</td><td class="pair">Primary button text</td><td class="ratio">5.47 : 1</td><td><span class="grade aa">AA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#FFFFFF"></span> #FFFFFF</td><td><span class="swatch" style="background:#0944C2"></span> --brand-strong</td><td class="pair">Primary button hover</td><td class="ratio">8.02 : 1</td><td><span class="grade aaa">AAA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#FFFFFF"></span> #FFFFFF</td><td><span class="swatch" style="background:#08379C"></span> --brand-deeper</td><td class="pair">Primary button pressed</td><td class="ratio">10.31 : 1</td><td><span class="grade aaa">AAA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#0944C2"></span> --brand-strong</td><td><span class="swatch" style="background:#FFFFFF"></span> --surface</td><td class="pair">Link on card</td><td class="ratio">8.02 : 1</td><td><span class="grade aaa">AAA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#0944C2"></span> --brand-strong</td><td><span class="swatch" style="background:#F7F8FA"></span> --canvas</td><td class="pair">Link on page</td><td class="ratio">7.55 : 1</td><td><span class="grade aaa">AAA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#0944C2"></span> --brand-strong</td><td><span class="swatch" style="background:#E8EFFE"></span> --brand-soft</td><td class="pair">Active sidebar item</td><td class="ratio">6.96 : 1</td><td><span class="grade aa">AA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#FFFFFF"></span> #FFFFFF</td><td><span class="swatch" style="background:#B83A2A"></span> --tone-danger</td><td class="pair">Destructive button</td><td class="ratio">5.71 : 1</td><td><span class="grade aa">AA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#B83A2A"></span> --tone-danger</td><td><span class="swatch" style="background:#FFFFFF"></span> --surface</td><td class="pair">Danger text on card</td><td class="ratio">5.71 : 1</td><td><span class="grade aa">AA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#7A2419"></span> --tone-danger-strong</td><td><span class="swatch" style="background:#F6E2DD"></span> --tone-danger-bg</td><td class="pair">Danger text on tinted</td><td class="ratio">8.04 : 1</td><td><span class="grade aaa">AAA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#5E8E54"></span> --tone-success</td><td><span class="swatch" style="background:#FFFFFF"></span> --surface</td><td class="pair">Success text on card</td><td class="ratio">3.84 : 1</td><td><span class="grade aa-large">AA Large / UI</span></td></tr>
+        <tr><td><span class="swatch" style="background:#2E5526"></span> --tone-success-strong</td><td><span class="swatch" style="background:#E7EFE0"></span> --tone-success-bg</td><td class="pair">Success text on tinted</td><td class="ratio">7.29 : 1</td><td><span class="grade aaa">AAA</span></td></tr>
+        <tr><td><span class="swatch" style="background:#B07626"></span> --tone-warn</td><td><span class="swatch" style="background:#FFFFFF"></span> --surface</td><td class="pair">Warn text on card</td><td class="ratio">3.84 : 1</td><td><span class="grade aa-large">AA Large / UI</span></td></tr>
+        <tr><td><span class="swatch" style="background:#B07626"></span> --tone-warn</td><td><span class="swatch" style="background:#F4E6C5"></span> --tone-warn-bg</td><td class="pair">Warn text on tinted</td><td class="ratio">3.11 : 1</td><td><span class="grade aa-large">AA Large / UI</span></td></tr>
+        <tr><td><span class="swatch" style="background:#0B5DF0"></span> --tone-info</td><td><span class="swatch" style="background:#FFFFFF"></span> --surface</td><td class="pair">Info text on card</td><td class="ratio">5.47 : 1</td><td><span class="grade aa">AA</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="ds-callout" style="margin-top: 20px;">
+      <span class="ic" data-icon="info" data-icon-size="18"></span>
+      <div>
+        <h4>Worst offenders (still passing)</h4>
+        <p><code class="inline">--tone-warn</code> on <code class="inline">--tone-warn-bg</code> (3.11&nbsp;:&nbsp;1) and the green/amber tones on white (3.84&nbsp;:&nbsp;1) clear the 3.0 UI-component floor but never quite reach 4.5 body-text AA. Use them for badges and icons only, never for body text. For prose-on-tinted, switch to <code class="inline">--tone-success-strong</code> / <code class="inline">--tone-danger-strong</code> — both pass AAA on their soft backgrounds.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="roles">
+    <h2 class="ds-h2">Semantic roles — when to use what</h2>
+    <p class="ds-h2-sub">Five roles, five Do/Don't pairs. Pick the role first; never reach past it to a raw gray.</p>
+
+    <div class="role-grid">
+      <div class="role">
+        <h3>Brand · the single saturated colour</h3>
+        <p class="use">Reserved for the primary action and the focus ring. One brand button per surface — never two competing.</p>
+        <div class="ex">
+          <div class="ex-card"><div class="tag">Do</div><button class="btn btn-primary">Approve settlement</button><div class="t-body-sm t-muted" style="margin-top: 10px;">One brand button. The clear next action.</div></div>
+          <div class="ex-card no"><div class="tag">Don't</div><div style="display: flex; gap: 8px;"><button class="btn btn-primary">Approve</button><button class="btn btn-primary">Decline</button></div><div class="t-body-sm t-muted" style="margin-top: 10px;">Two brand buttons fight for attention. The decline should be ghost or secondary.</div></div>
+        </div>
+      </div>
+
+      <div class="role">
+        <h3>Tone-success · completed, healthy</h3>
+        <p class="use">Past-tense state. The work has finished and there's nothing to do.</p>
+        <div class="ex">
+          <div class="ex-card"><div class="tag">Do</div><span style="display: inline-flex; gap: 6px; align-items: center; padding: 4px 10px; border-radius: 9999px; background: var(--tone-success-bg); color: var(--tone-success-strong); font: var(--type-label-sm);"><span data-icon="check" data-icon-size="12"></span>Posted</span><div class="t-body-sm t-muted" style="margin-top: 10px;">Past tense + check icon + tinted background. Three reinforcing signals.</div></div>
+          <div class="ex-card no"><div class="tag">Don't</div><span style="display: inline-flex; padding: 4px 10px; border-radius: 9999px; background: var(--tone-success); color: white; font: var(--type-label-sm);">SAVED!</span><div class="t-body-sm t-muted" style="margin-top: 10px;">Success isn't loud. No exclamation, no all-caps, no celebration.</div></div>
+        </div>
+      </div>
+
+      <div class="role">
+        <h3>Tone-warn · needs input</h3>
+        <p class="use">Operator action is required, but nothing has broken. Always paired with the count or the next step.</p>
+        <div class="ex">
+          <div class="ex-card"><div class="tag">Do</div><span style="display: inline-flex; gap: 6px; align-items: center; padding: 4px 10px; border-radius: 9999px; background: var(--tone-warn-bg); color: #6E481A; font: var(--type-label-sm);">3 fields outstanding</span><div class="t-body-sm t-muted" style="margin-top: 10px;">Names the count and the noun. The operator knows what to do.</div></div>
+          <div class="ex-card no"><div class="tag">Don't</div><span style="display: inline-flex; padding: 4px 10px; border-radius: 9999px; background: var(--tone-warn-bg); color: var(--tone-warn); font: var(--type-label-sm);">Warning</span><div class="t-body-sm t-muted" style="margin-top: 10px;">Bare "Warning" tells the operator nothing.</div></div>
+        </div>
+      </div>
+
+      <div class="role">
+        <h3>Tone-danger · destructive or failed</h3>
+        <p class="use">Either a destructive action that cannot be silently reversed, or an error the operator needs to address. Never for a low-stakes alert.</p>
+        <div class="ex">
+          <div class="ex-card"><div class="tag">Do</div><button class="btn btn-danger">Void pour GP-4471</button><div class="t-body-sm t-muted" style="margin-top: 10px;">Names the specific object. The operator knows exactly what voids.</div></div>
+          <div class="ex-card no"><div class="tag">Don't</div><button class="btn btn-danger">Delete</button><div class="t-body-sm t-muted" style="margin-top: 10px;">Delete what? Always name the noun.</div></div>
+        </div>
+      </div>
+
+      <div class="role">
+        <h3>Text-muted · helpers &amp; descriptions</h3>
+        <p class="use">Secondary text that explains the primary text. Never for action labels or anything the operator must read.</p>
+        <div class="ex">
+          <div class="ex-card"><div class="tag">Do</div><div><span class="t-label">Branch</span><div class="t-body-sm t-muted">Greendale yard · opens 07:00</div></div><div class="t-body-sm t-muted" style="margin-top: 10px;">Helper text under a strong label. Reads as a hint, not as the answer.</div></div>
+          <div class="ex-card no"><div class="tag">Don't</div><button class="btn btn-secondary" style="color: var(--text-muted);">Save changes</button><div class="t-body-sm t-muted" style="margin-top: 10px;">A primary button label in muted text looks disabled. Use --text-strong.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="dark">
+    <h2 class="ds-h2">Dark-mode pairs</h2>
+    <p class="ds-h2-sub">Every <code class="inline">body.is-dark</code> override mapped to its light counterpart. Saturated brand stays untouched; surfaces, text, and borders all flip.</p>
+    <table class="pair-table">
+      <thead><tr><th>Token</th><th>Light</th><th>Dark</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="tok">--canvas</td><td><span class="chip" style="background: #F7F8FA;"></span>#F7F8FA</td><td><span class="chip" style="background: #0F1115;"></span>#0F1115</td><td>Page background</td></tr>
+        <tr><td class="tok">--surface</td><td><span class="chip" style="background: #FFFFFF; border: 1px solid var(--border);"></span>#FFFFFF</td><td><span class="chip" style="background: #161922;"></span>#161922</td><td>Cards, panels</td></tr>
+        <tr><td class="tok">--surface-muted</td><td><span class="chip" style="background: #F1F3F6;"></span>#F1F3F6</td><td><span class="chip" style="background: #1D2230;"></span>#1D2230</td><td>Hover row, toolbar</td></tr>
+        <tr><td class="tok">--surface-sunken</td><td><span class="chip" style="background: #E8EBF0;"></span>#E8EBF0</td><td><span class="chip" style="background: #252A39;"></span>#252A39</td><td>Grouped areas</td></tr>
+        <tr><td class="tok">--surface-deep</td><td><span class="chip" style="background: #DDE1E7;"></span>#DDE1E7</td><td><span class="chip" style="background: #2F3548;"></span>#2F3548</td><td>Dividers, skeletons</td></tr>
+        <tr><td class="tok">--text-strong</td><td><span class="chip" style="background: #16181D;"></span>#16181D</td><td><span class="chip" style="background: #F5F7FB;"></span>#F5F7FB</td><td>Headings</td></tr>
+        <tr><td class="tok">--text-body</td><td><span class="chip" style="background: #262A33;"></span>#262A33</td><td><span class="chip" style="background: #E1E4ED;"></span>#E1E4ED</td><td>Body</td></tr>
+        <tr><td class="tok">--text-muted</td><td><span class="chip" style="background: #565C69;"></span>#565C69</td><td><span class="chip" style="background: #98A0B5;"></span>#98A0B5</td><td>Helpers</td></tr>
+        <tr><td class="tok">--text-subtle</td><td><span class="chip" style="background: #5E6573;"></span>#5E6573</td><td><span class="chip" style="background: #6B7388;"></span>#6B7388</td><td>Metadata · meets 3:1 on dark canvas</td></tr>
+        <tr><td class="tok">--text-link</td><td><span class="chip" style="background: #0944C2;"></span>#0944C2</td><td><span class="chip" style="background: #85A8F8;"></span>#85A8F8</td><td>Lifted for readability on dark</td></tr>
+        <tr><td class="tok">--border</td><td><span class="chip" style="background: #E5E8EE;"></span>#E5E8EE</td><td><span class="chip" style="background: rgba(255,255,255,0.10); border: 1px solid var(--border-strong);"></span>rgba(255 255 255 / .10)</td><td>Translucent in dark</td></tr>
+        <tr><td class="tok">--border-strong</td><td><span class="chip" style="background: #D2D7E0;"></span>#D2D7E0</td><td><span class="chip" style="background: rgba(255,255,255,0.18); border: 1px solid var(--border-strong);"></span>rgba(255 255 255 / .18)</td><td>Outline buttons, inputs</td></tr>
+        <tr><td class="tok">--brand-soft</td><td><span class="chip" style="background: #E8EFFE;"></span>#E8EFFE</td><td><span class="chip" style="background: rgba(11, 93, 240, 0.18); border: 1px solid var(--border-strong);"></span>rgba(11 93 240 / .18)</td><td>Active nav, info bg</td></tr>
+        <tr><td class="tok">--tone-success</td><td><span class="chip" style="background: #5E8E54;"></span>#5E8E54</td><td><span class="chip" style="background: #9CC290;"></span>#9CC290</td><td>Lifted for dark surface</td></tr>
+        <tr><td class="tok">--tone-warn</td><td><span class="chip" style="background: #B07626;"></span>#B07626</td><td><span class="chip" style="background: #DDB36A;"></span>#DDB36A</td><td>Lifted for dark surface</td></tr>
+        <tr><td class="tok">--tone-danger</td><td><span class="chip" style="background: #B83A2A;"></span>#B83A2A</td><td><span class="chip" style="background: #E08374;"></span>#E08374</td><td>Lifted for dark surface</td></tr>
+        <tr><td class="tok">--tone-info</td><td><span class="chip" style="background: #0B5DF0;"></span>#0B5DF0</td><td><span class="chip" style="background: #85A8F8;"></span>#85A8F8</td><td>Aligns with --text-link in dark</td></tr>
+      </tbody>
+    </table>
+    <p class="t-muted t-body-sm" style="margin-top: 14px;">Dark-mode text × surface measurements: <code class="inline">--text-strong</code> on <code class="inline">--surface</code> is 16.37&nbsp;:&nbsp;1 (AAA); <code class="inline">--text-muted</code> on <code class="inline">--surface</code> is 6.71&nbsp;:&nbsp;1 (AA); <code class="inline">--text-subtle</code> on <code class="inline">--canvas</code> is 3.99&nbsp;:&nbsp;1 (AA Large) — the dark-mode equivalent of the light "metadata" warning.</p>
+  </section>
+
   <section id="aliases">
-    <h2 class="ds-h2">Semantic aliases</h2>
-    <p class="ds-h2-sub">Use these in components — never hard-code a hex.</p>
+    <h2 class="ds-h2">Semantic aliases — quick reference</h2>
+    <p class="ds-h2-sub">Use these in components. Never hard-code a hex.</p>
     <table class="ds-props">
       <thead><tr><th>Token</th><th>Value</th><th>Used for</th></tr></thead>
       <tbody>
-        <tr><td>--canvas</td><td>--gray-50</td><td>The page background</td></tr>
+        <tr><td>--canvas</td><td>--gray-50</td><td>Page background</td></tr>
         <tr><td>--surface</td><td>#FFFFFF</td><td>Cards, panels, inputs</td></tr>
         <tr><td>--surface-muted</td><td>--gray-100</td><td>Hover state, grouped areas</td></tr>
+        <tr><td>--surface-sunken</td><td>#E8EBF0</td><td>Deeper grouped panels</td></tr>
         <tr><td>--text-strong</td><td>--gray-900</td><td>Headings, key values</td></tr>
         <tr><td>--text-body</td><td>--gray-800</td><td>Running text</td></tr>
         <tr><td>--text-muted</td><td>--gray-600</td><td>Descriptions, helpers</td></tr>
-        <tr><td>--text-subtle</td><td>#8A91A0</td><td>Metadata, timestamps</td></tr>
+        <tr><td>--text-subtle</td><td>#5E6573</td><td>Metadata, timestamps</td></tr>
         <tr><td>--border</td><td>--gray-200</td><td>The default hairline</td></tr>
         <tr><td>--border-strong</td><td>--gray-300</td><td>Outline buttons, input border</td></tr>
         <tr><td>--brand</td><td>#0B5DF0</td><td>Primary buttons, focus ring</td></tr>
+        <tr><td>--brand-strong</td><td>#0944C2</td><td>Hover, on-tint text, links</td></tr>
         <tr><td>--brand-soft</td><td>#E8EFFE</td><td>Soft brand background, active nav</td></tr>
       </tbody>
     </table>
@@ -121,9 +318,38 @@
     <li><a href="#neutral" class="current">Neutral scale</a></li>
     <li><a href="#brand">Brand</a></li>
     <li><a href="#semantic">Semantic tones</a></li>
-    <li><a href="#aliases">Semantic aliases</a></li>
+    <li><a href="#palette">Full palette</a></li>
+    <li><a href="#contrast">Contrast matrix</a></li>
+    <li><a href="#roles">Semantic roles</a></li>
+    <li><a href="#dark">Dark-mode pairs</a></li>
+    <li><a href="#aliases">Aliases</a></li>
   </ul>
 </aside>
 </div>
 </main>
+<script>
+  (function() {
+    document.querySelectorAll('[data-copy]').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var name = el.dataset.copy;
+        if (!name) return;
+        var copy = function(text) {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(text).catch(function(){});
+          }
+          var t = document.createElement('textarea');
+          t.value = text; document.body.appendChild(t); t.select();
+          try { document.execCommand('copy'); } catch (e) {}
+          document.body.removeChild(t);
+        };
+        copy(name);
+        el.classList.add('copied');
+        var hint = el.querySelector('.hint');
+        var was = hint ? hint.textContent : null;
+        if (hint) hint.textContent = 'Copied · ' + name;
+        setTimeout(function(){ el.classList.remove('copied'); if (hint) hint.textContent = was; }, 1400);
+      });
+    });
+  })();
+</script>
 </body></html>

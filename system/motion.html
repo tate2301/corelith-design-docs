@@ -53,7 +53,7 @@
       <div class="ds-specimen-stage plain padded stack" style="gap: 14px;">
         <div class="duration-bars">
           <div class="duration-bar"><span class="label">--dur-instant</span><div class="track"><span style="width: 8%;"></span></div><span class="val">80ms</span></div>
-          <div class="duration-bar"><span class="label">--dur-fast</span><div class="track"><span style="width: 18%;"></span></div><span class="val">120ms</span></div>
+          <div class="duration-bar"><span class="label">--dur-fast</span><div class="track"><span style="width: 22%;"></span></div><span class="val">140ms</span></div>
           <div class="duration-bar"><span class="label">--dur-base</span><div class="track"><span style="width: 32%;"></span></div><span class="val">200ms</span></div>
           <div class="duration-bar"><span class="label">--dur-slow</span><div class="track"><span style="width: 52%;"></span></div><span class="val">320ms</span></div>
           <div class="duration-bar"><span class="label">--dur-slower</span><div class="track"><span style="width: 78%;"></span></div><span class="val">480ms</span></div>
@@ -66,7 +66,7 @@
       <thead><tr><th>Token</th><th>Value</th><th>Use for</th></tr></thead>
       <tbody>
         <tr><td>--dur-instant</td><td>80ms</td><td>Tooltips, instant feedback</td></tr>
-        <tr><td>--dur-fast</td><td>120ms</td><td>Hover, button states</td></tr>
+        <tr><td>--dur-fast</td><td>140ms</td><td>Hover, button states</td></tr>
         <tr><td>--dur-base</td><td>200ms</td><td>Popover &amp; modal entry</td></tr>
         <tr><td>--dur-slow</td><td>320ms</td><td>Side sheet, page-section reveals</td></tr>
         <tr><td>--dur-slower</td><td>480ms</td><td>Full-screen transitions</td></tr>
@@ -164,6 +164,58 @@
     </div>
   </section>
 
+  <section id="principles">
+    <h2 class="ds-h2">What animates, what never animates</h2>
+    <p class="ds-h2-sub">The system has a strict contract about what motion is allowed to touch.</p>
+
+    <table class="ds-props">
+      <thead><tr><th>Property</th><th>Status</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">transform</code></td><td><b>Allowed</b></td><td>GPU-compositor only. No layout re-flow.</td></tr>
+        <tr><td><code class="inline">opacity</code></td><td><b>Allowed</b></td><td>GPU-compositor only. Free to animate.</td></tr>
+        <tr><td><code class="inline">filter</code></td><td>With care</td><td>Browser support is fine but it's expensive — only on focus rings and skeletons.</td></tr>
+        <tr><td><code class="inline">background-color</code> on small elements</td><td>With care</td><td>Buttons, chips, list rows — fine. Whole page backgrounds — no.</td></tr>
+        <tr><td><code class="inline">color</code> on text</td><td>With care</td><td>Hover-coloured links, yes. Animating a paragraph's colour — no.</td></tr>
+        <tr><td><code class="inline">width</code> / <code class="inline">height</code></td><td><b>Never</b></td><td>Forces layout. Use scale-transform instead.</td></tr>
+        <tr><td><code class="inline">top</code> / <code class="inline">left</code> / <code class="inline">margin</code></td><td><b>Never</b></td><td>Forces layout. Use translate-transform.</td></tr>
+        <tr><td>Background of a large surface</td><td><b>Never</b></td><td>Repaints the world. Reserved for theme switches, which snap, not fade.</td></tr>
+      </tbody>
+    </table>
+
+    <h3 class="ds-h3" style="margin-top: 28px;">Reduced-motion contract</h3>
+    <p>The token sheet (<code class="inline">tokens.css</code>) ships an unconditional override:</p>
+    <pre class="ds-code"><span class="k">@media</span> (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}</pre>
+    <p>In practice: entrance animations snap to their final frame; state transitions become instantaneous; smooth-scroll becomes a hard jump. If you author a bespoke <code class="inline">@keyframes</code>, you must also test under reduced motion — never use animation alone to convey state.</p>
+  </section>
+
+  <section id="patterns">
+    <h2 class="ds-h2">Standard enter / exit patterns</h2>
+    <p class="ds-h2-sub">Pick one of these — never invent a new curve. The pattern names match the component file in <code class="inline">components.css</code>.</p>
+
+    <table class="ds-props">
+      <thead><tr><th>Pattern</th><th>Surface</th><th>Duration · easing</th><th>Properties animated</th></tr></thead>
+      <tbody>
+        <tr><td><b>Toast fade-in</b></td><td>Toast stack (bottom-right)</td><td>200 ms · <a href="#easings">--ease-out</a> · <code class="inline">cubic-bezier(0.22, 1, 0.36, 1)</code></td><td>opacity 0→1, translateY 8px→0</td></tr>
+        <tr><td><b>Popover open</b></td><td>Dropdown, autocomplete, hover card</td><td>140 ms · <a href="#easings">--ease-out</a></td><td>opacity 0→1, scale 0.98→1</td></tr>
+        <tr><td><b>Modal enter</b></td><td>Modal dialog, alert dialog</td><td>200 ms · <a href="#easings">--ease-out</a></td><td>opacity 0→1 (backdrop), scale 0.96→1 + translateY 4px→0 (panel)</td></tr>
+        <tr><td><b>Drawer slide-in</b></td><td>Side drawer (right or left)</td><td>320 ms · <a href="#easings">--ease-in-out</a> · <code class="inline">cubic-bezier(0.65, 0, 0.35, 1)</code></td><td>translateX 100%→0 + opacity 0→1 (backdrop)</td></tr>
+        <tr><td><b>Sheet slide-up</b></td><td>Bottom sheet (mobile portal)</td><td>320 ms · <a href="#easings">--ease-out</a></td><td>translateY 100%→0</td></tr>
+        <tr><td><b>Tab snap</b></td><td>Segmented control, tab strip</td><td>140 ms · <a href="#easings">--ease-snap</a> · <code class="inline">cubic-bezier(0.7, 0, 0.3, 1)</code></td><td>translateX of the active-pill background</td></tr>
+        <tr><td><b>Status pulse</b></td><td>Recording dot, live indicator</td><td>1.6 s loop · <a href="#easings">--ease-in-out</a></td><td>opacity + box-shadow (kept under reduced-motion)</td></tr>
+        <tr><td><b>Page fade-up</b></td><td>Page-head and first section</td><td>320 ms · <a href="#easings">--ease-out</a></td><td>opacity 0→1, translateY 8px→0</td></tr>
+      </tbody>
+    </table>
+
+    <p class="t-muted t-body-sm" style="margin-top: 12px;">Exit animations use the same duration but <code class="inline">--ease-in-out</code> instead of <code class="inline">--ease-out</code>, and the final frame swaps to the resting transform — never delay the exit on a destructive action.</p>
+  </section>
+
   <section id="rules">
     <h2 class="ds-h2">Do &amp; don't</h2>
     <div class="ds-rules">
@@ -186,6 +238,8 @@
     <li><a href="#durations" class="current">Durations</a></li>
     <li><a href="#easings">Easings</a></li>
     <li><a href="#primitives">Animation primitives</a></li>
+    <li><a href="#principles">What animates</a></li>
+    <li><a href="#patterns">Enter / exit patterns</a></li>
     <li><a href="#rules">Do &amp; don't</a></li>
   </ul>
 </aside>
