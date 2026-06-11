@@ -483,39 +483,37 @@ function SuppliersError({ state, onRetry, render }: {
     <!-- Step 5 -->
     <div class="ck-step"><span class="n">05</span><h3>Optimistic create with rollback on failure</h3></div>
     <p>When the user adds a row, insert it locally with a temp id and a quiet "saving…" caption. On success, swap the temp id for the server's id; on failure, remove the row and show a <code>useToast</code> message that includes "Try again". The rest of the page never enters a loading state.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { useState } from &#39;@corelithzw/react&#39;;
-import { useToast } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { useToast } from &#39;@corelithzw/react&#39;;
 
-type Supplier = { id: string; name: string; pending?: boolean };
+type SupplierRow = { id: string; name: string; pending?: boolean };
 
 function useOptimisticCreate(
-  setData: (fn: (rows: Supplier[]) =&gt; Supplier[]) =&gt; void,
+  setData: (fn: (rows: SupplierRow[]) =&gt; SupplierRow[]) =&gt; void,
   post: (name: string) =&gt; Promise&lt;{ id: string }&gt;,
 ) {
-  const { showToast } = useToast();
+  const toast = useToast();
 
-  return async (name: string) =&gt; {
+  const create = async (name: string): Promise&lt;void&gt; =&gt; {
     const tempId = `tmp_${Date.now()}`;
-    const draft: Supplier = { id: tempId, name, pending: true };
+    const draft: SupplierRow = { id: tempId, name, pending: true };
 
     setData((rows) =&gt; [draft, ...rows]);
 
     try {
       const { id } = await post(name);
-      // Swap the temp id; clear the pending flag.
-      setData((rows) =&gt; rows.map((r) =&gt;
-        r.id === tempId ? { id, name } : r));
+      setData((rows) =&gt; rows.map((r) =&gt; r.id === tempId ? { id, name } : r));
     } catch (e) {
-      // Roll back. Don&#39;t leave a phantom row.
       setData((rows) =&gt; rows.filter((r) =&gt; r.id !== tempId));
-      showToast({
+      toast.show({
         tone: &#39;danger&#39;,
         message: `Could not add ${name}: ${(e as Error).message}`,
-        action: { label: &#39;Try again&#39;, onClick: () =&gt; this(name) },
+        action: { label: &#39;Try again&#39;, onClick: () =&gt; { void create(name); } },
       });
     }
   };
+
+  return create;
 }'>
       <div class="ds-specimen-stage canvas padded">
         <div style="padding: 20px;">
