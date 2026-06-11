@@ -283,8 +283,11 @@ function parseBranches(src: string): Record&lt;string, string&gt; {
     <!-- Step 3 -->
     <div class="ck-step"><span class="n">03</span><h3>State-machine the provider so loading and locale switches are explicit</h3></div>
     <p>The provider has three states: <code>idle</code> (first mount), <code>loading</code> (fetching a new chain), <code>ready</code> (chain available, components render). Reducers make the transitions impossible to corrupt &mdash; a stale fetch can never overwrite a newer one because the reducer ignores results whose request id doesn't match the current one.</p>
+    <!-- Illustrative: shows the internal state-machine the package&#39;s
+         I18nProvider implements. The final snippet uses the real export. -->
     <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { useReducer, useEffect, createContext } from &#39;@corelithzw/react&#39;;
+         data-code='// ... illustrative — the real I18nProvider lives in @corelithzw/react
+import { useReducer, useEffect, createContext } from &#39;@corelithzw/react&#39;;
 
 type State =
   | { status: &#39;idle&#39; }
@@ -351,41 +354,21 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     <!-- Step 4 -->
     <div class="ck-step"><span class="n">04</span><h3>Expose <code>useT()</code> and a tiny picker, and you're done</h3></div>
     <p>The component-facing API is two hooks. <code>useT()</code> returns the formatter; <code>useLocale()</code> returns the current locale plus a setter so the picker can flip it. The picker itself is a segmented control over the supported locales &mdash; nothing exotic.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { useContext } from &#39;@corelithzw/react&#39;;
-import { SegmentedControl } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { useI18n, useT, LocalePicker } from &#39;@corelithzw/react&#39;;
 
-export function useT() {
-  const ctx = useContext(I18nCtx);
-  if (!ctx) throw new Error(&#39;useT must be inside &lt;I18nProvider&gt;&#39;);
-  return (key: string, values?: Record&lt;string, any&gt;) =&gt; {
-    const tpl = resolve(ctx.chain, key);
-    if (tpl == null) return `??${key}??`;     // visible in QA, never crashes
-    return values ? formatICU(tpl, values, ctx.locale) : tpl;
-  };
-}
-
-export function useLocale() {
-  const ctx = useContext(I18nCtx);
-  if (!ctx) throw new Error(&#39;useLocale must be inside &lt;I18nProvider&gt;&#39;);
-  return { locale: ctx.locale, setLocale: ctx.setLocale };
-}
-
-export function LocalePicker() {
-  const { locale, setLocale } = useLocale();
+// The package ships `useT()`, `useI18n()` (locale + setLocale) and
+// `LocalePicker`. A thin wrapper around them gives you a keyed-string
+// call site, and the bound segmented control comes for free.
+export function GreetingHeader() {
   const t = useT();
-  return (
-    &lt;SegmentedControl
-      aria-label={t("settings.language") || "Language"}
-      value={locale}
-      onChange={setLocale}
-      options={[
-        { value: "en", label: "EN" },
-        { value: "sn", label: "SN" },
-        { value: "nd", label: "ND" },
-      ]}
-    /&gt;
-  );
+  return &lt;h1&gt;{t(&#39;auth.welcome&#39;, { name: &#39;Tendai&#39; })}&lt;/h1&gt;;
+}
+
+export function HeaderLocaleSwitch() {
+  const { locales } = useI18n();
+  console.log(&#39;available&#39;, locales);
+  return &lt;LocalePicker label=&quot;Language&quot; /&gt;;
 }'>
       <div class="ds-specimen-stage canvas padded">
         <div class="ck-code-only-note">
@@ -403,12 +386,29 @@ export function LocalePicker() {
   <section id="final" style="margin-top: 40px;">
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">Wire the provider once at the app root, drop the picker in your header, call <code>useT()</code> from anywhere below.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { I18nProvider, useT, LocalePicker, Button, Input } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { useState } from &#39;react&#39;;
+import { I18nProvider, useT, LocalePicker, Button, Input } from &#39;@corelithzw/react&#39;;
+import type { I18nLocale, I18nMessages } from &#39;@corelithzw/react&#39;;
+
+const LOCALES: I18nLocale[] = [
+  { code: &#39;en&#39;, label: &#39;EN&#39; },
+  { code: &#39;sn&#39;, label: &#39;SN&#39; },
+  { code: &#39;nd&#39;, label: &#39;ND&#39; },
+];
+
+const EN: I18nMessages = {
+  &#39;auth.welcome&#39;:     &#39;Welcome back, {name}&#39;,
+  &#39;auth.email&#39;:       &#39;Email&#39;,
+  &#39;auth.password&#39;:    &#39;Password&#39;,
+  &#39;auth.signin&#39;:      &#39;Sign in&#39;,
+  &#39;auth.signin_with_code&#39;: &#39;Sign in with code&#39;,
+};
 
 function App() {
+  const [locale, setLocale] = useState(&#39;en&#39;);
   return (
-    &lt;I18nProvider&gt;
+    &lt;I18nProvider locale={locale} setLocale={setLocale} locales={LOCALES} messages={EN}&gt;
       &lt;AppShell /&gt;
     &lt;/I18nProvider&gt;
   );
@@ -416,8 +416,8 @@ function App() {
 
 function AppShell() {
   return (
-    &lt;div className="app"&gt;
-      &lt;header&gt;&lt;LocalePicker /&gt;&lt;/header&gt;
+    &lt;div className=&quot;app&quot;&gt;
+      &lt;header&gt;&lt;LocalePicker label=&quot;Language&quot; /&gt;&lt;/header&gt;
       &lt;SignIn /&gt;
     &lt;/div&gt;
   );
@@ -427,11 +427,11 @@ function SignIn() {
   const t = useT();
   return (
     &lt;form&gt;
-      &lt;h1&gt;{t("auth.welcome", { name: "Tendai" })}&lt;/h1&gt;
-      &lt;label&gt;{t("auth.email")}&lt;Input type="email" /&gt;&lt;/label&gt;
-      &lt;label&gt;{t("auth.password")}&lt;Input type="password" /&gt;&lt;/label&gt;
-      &lt;Button variant="primary"&gt;{t("auth.signin")}&lt;/Button&gt;
-      &lt;Button variant="secondary"&gt;{t("auth.signin_with_code")}&lt;/Button&gt;
+      &lt;h1&gt;{t(&#39;auth.welcome&#39;, { name: &#39;Tendai&#39; })}&lt;/h1&gt;
+      &lt;label&gt;{t(&#39;auth.email&#39;)}&lt;Input type=&quot;email&quot; /&gt;&lt;/label&gt;
+      &lt;label&gt;{t(&#39;auth.password&#39;)}&lt;Input type=&quot;password&quot; /&gt;&lt;/label&gt;
+      &lt;Button variant=&quot;primary&quot;&gt;{t(&#39;auth.signin&#39;)}&lt;/Button&gt;
+      &lt;Button variant=&quot;secondary&quot;&gt;{t(&#39;auth.signin_with_code&#39;)}&lt;/Button&gt;
     &lt;/form&gt;
   );
 }'>
