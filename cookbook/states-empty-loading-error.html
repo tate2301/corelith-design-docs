@@ -539,32 +539,22 @@ function useOptimisticCreate(
   <section id="final">
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">A reusable <code>Resource</code> component. Pass it a fetcher and a row renderer; it handles loading, empty, loaded, error and "load more". Drop in <code>SuppliersScreen</code> as the shape every list page in the app should follow.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { useEffect, useState } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { useEffect, useState } from &#39;react&#39;;
+import type { ReactNode } from &#39;react&#39;;
 import {
   Stack, Skeleton, Spinner, EmptyState,
-  Alert, Button, RowCard, useToast,
+  Alert, Button, RowCard,
 } from &#39;@corelithzw/react&#39;;
 
-// ── State model (see Step 1) ────────────────────────────────────
-type ResourceState&lt;T&gt; =
-  | { kind: &#39;loading&#39; }
-  | { kind: &#39;empty&#39; }
-  | { kind: &#39;loaded&#39;; data: T[]; nextCursor: string | null; updatedAt: number }
-  | { kind: &#39;error&#39;; message: string; lastGood: T[] | null; updatedAt: number | null };
+async function fetchJson&lt;T&gt;(_url: string): Promise&lt;T&gt; { return {} as T; }
 
-// ── Generic resource component ─────────────────────────────────
 export function Resource&lt;T&gt;({
-  fetcher,
-  renderRow,
-  empty,
-  rowHeight = 56,
-  rowCount = 6,
-  keyOf,
+  fetcher, renderRow, empty, rowHeight = 56, rowCount = 6, keyOf,
 }: {
   fetcher: (cursor: string | null) =&gt; Promise&lt;{ items: T[]; nextCursor: string | null }&gt;;
-  renderRow: (item: T) =&gt; React.ReactNode;
-  empty: { icon: string; title: string; body: string; cta: React.ReactNode };
+  renderRow: (item: T) =&gt; ReactNode;
+  empty: { icon: ReactNode; title: ReactNode; description: ReactNode; cta: ReactNode };
   rowHeight?: number;
   rowCount?: number;
   keyOf: (item: T) =&gt; string;
@@ -578,46 +568,34 @@ export function Resource&lt;T&gt;({
     try {
       const resp = await fetcher(cursor);
       if (cursor) {
-        setState((prev) =&gt; {
-          if (prev.kind !== &#39;loaded&#39;) return prev;
-          return {
-            ...prev,
-            data: [...prev.data, ...resp.items],
-            nextCursor: resp.nextCursor,
-            updatedAt: Date.now(),
-          };
+        setState((prev) =&gt; prev.kind !== &#39;loaded&#39; ? prev : {
+          ...prev,
+          data: [...prev.data, ...resp.items],
+          nextCursor: resp.nextCursor,
+          updatedAt: Date.now(),
         });
       } else if (resp.items.length === 0) {
         setState({ kind: &#39;empty&#39; });
       } else {
-        setState({
-          kind: &#39;loaded&#39;,
-          data: resp.items,
-          nextCursor: resp.nextCursor,
-          updatedAt: Date.now(),
-        });
+        setState({ kind: &#39;loaded&#39;, data: resp.items, nextCursor: resp.nextCursor, updatedAt: Date.now() });
       }
     } catch (e) {
       setState((prev) =&gt; {
         const lastGood = prev.kind === &#39;loaded&#39; ? prev.data : null;
         const at = prev.kind === &#39;loaded&#39; ? prev.updatedAt : null;
-        return { kind: &#39;error&#39;, message: (e as Error).message,
-                 lastGood, updatedAt: at };
+        return { kind: &#39;error&#39;, message: (e as Error).message, lastGood, updatedAt: at };
       });
     } finally {
       setPagingMore(false);
     }
   };
 
-  useEffect(() =&gt; { load(null); /* eslint-disable-next-line */ }, []);
+  useEffect(() =&gt; { void load(null); /* eslint-disable-next-line */ }, []);
 
-  // ── Branches ─────────────────────────────────────────────────
   if (state.kind === &#39;loading&#39;) {
     return (
       &lt;Stack gap=&quot;sm&quot; aria-busy=&quot;true&quot; aria-live=&quot;polite&quot;&gt;
-        {Array.from({ length: rowCount }).map((_, i) =&gt; (
-          &lt;Skeleton key={i} height={rowHeight} radius=&quot;md&quot; /&gt;
-        ))}
+        &lt;Skeleton height={rowHeight} lines={rowCount} gap={8} /&gt;
       &lt;/Stack&gt;
     );
   }
@@ -627,7 +605,7 @@ export function Resource&lt;T&gt;({
       &lt;EmptyState
         icon={empty.icon}
         title={empty.title}
-        body={empty.body}
+        description={empty.description}
         action={empty.cta}
       /&gt;
     );
@@ -637,21 +615,18 @@ export function Resource&lt;T&gt;({
     if (!state.lastGood) {
       return (
         &lt;EmptyState
-          icon=&quot;alert&quot;
-          tone=&quot;danger&quot;
+          icon={&lt;span aria-hidden=&quot;true&quot;&gt;⚠&lt;/span&gt;}
           title=&quot;We couldn&#39;t load&quot;
-          body={`${state.message} Check your connection and try again.`}
-          action={&lt;Button variant=&quot;primary&quot; autoFocus
-                          onClick={() =&gt; load(null)}&gt;Try again&lt;/Button&gt;}
+          description={`${state.message} Check your connection and try again.`}
+          action={&lt;Button variant=&quot;primary&quot; autoFocus onClick={() =&gt; load(null)}&gt;Try again&lt;/Button&gt;}
         /&gt;
       );
     }
     return (
       &lt;Stack gap=&quot;md&quot;&gt;
-        &lt;Alert tone=&quot;warning&quot; action={
+        &lt;Alert tone=&quot;warn&quot;&gt;
+          Showing data from {formatRelative(state.updatedAt!)}. {state.message}{&#39; &#39;}
           &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; load(null)}&gt;Retry&lt;/Button&gt;
-        }&gt;
-          Showing data from {formatRelative(state.updatedAt!)}. {state.message}
         &lt;/Alert&gt;
         &lt;Stack gap=&quot;sm&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
           {state.lastGood.map((it) =&gt; (
@@ -662,7 +637,6 @@ export function Resource&lt;T&gt;({
     );
   }
 
-  // Loaded
   return (
     &lt;Stack gap=&quot;sm&quot;&gt;
       &lt;Stack gap=&quot;sm&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
@@ -671,31 +645,26 @@ export function Resource&lt;T&gt;({
         ))}
       &lt;/Stack&gt;
       {state.nextCursor &amp;&amp; (
-        &lt;Button
-          variant=&quot;ghost&quot;
-          onClick={() =&gt; load(state.nextCursor)}
-          disabled={pagingMore}
-        &gt;
-          {pagingMore ? &lt;Spinner size={14} aria-label=&quot;Loading more&quot; /&gt; : &#39;Load more&#39;}
+        &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; load(state.nextCursor)} disabled={pagingMore}&gt;
+          {pagingMore ? &lt;Spinner aria-label=&quot;Loading more&quot; /&gt; : &#39;Load more&#39;}
         &lt;/Button&gt;
       )}
     &lt;/Stack&gt;
   );
 }
 
-// ── Usage ───────────────────────────────────────────────────────
-type Supplier = { id: string; name: string };
+type SupplierItem = { id: string; name: string };
 
 export function SuppliersScreen({ onAdd }: { onAdd: () =&gt; void }) {
   return (
-    &lt;Resource&lt;Supplier&gt;
+    &lt;Resource&lt;SupplierItem&gt;
       fetcher={(cursor) =&gt; fetchJson(`/api/suppliers?cursor=${cursor ?? &#39;&#39;}`)}
       keyOf={(s) =&gt; s.id}
-      renderRow={(s) =&gt; &lt;RowCard label={s.name} trailing=&quot;chevron&quot; /&gt;}
+      renderRow={(s) =&gt; &lt;RowCard title={s.name} trailing={&lt;span&gt;›&lt;/span&gt;} /&gt;}
       empty={{
-        icon: &#39;user&#39;,
+        icon: &lt;span aria-hidden=&quot;true&quot;&gt;👤&lt;/span&gt;,
         title: &#39;No suppliers yet&#39;,
-        body: &#39;Add your first supplier to start logging deliveries.&#39;,
+        description: &#39;Add your first supplier to start logging deliveries.&#39;,
         cta: &lt;Button variant=&quot;primary&quot; autoFocus onClick={onAdd}&gt;Add supplier&lt;/Button&gt;,
       }}
     /&gt;
