@@ -387,9 +387,12 @@ export function reduceRequest(
     <!-- Step 2 -->
     <div class="ck-step"><span class="n">02</span><h3>Render the inbox with filter chips + status-tinted RowCards</h3></div>
     <p>One <code>FilterChips</code> at the top, one <code>RowCard</code> per request. Tinting the badge — not the whole row — lets the inbox stay scannable while still calling out where work is needed.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { useMemo, useState } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { useMemo, useState } from &#39;react&#39;;
 import { Stack, FilterChips, RowCard, EmptyState } from &#39;@corelithzw/react&#39;;
+
+const formatRange = (from: string, to: string): string =&gt; `${from} – ${to}`;
+const StateBadge = (_props: { state: RequestState }): React.ReactElement =&gt; (&lt;span /&gt;);
 
 type Filter = &#39;all&#39; | &#39;pending&#39; | &#39;mine&#39;;
 
@@ -416,7 +419,7 @@ function Inbox({ requests, me, onOpen }: {
     &lt;Stack gap=&quot;md&quot;&gt;
       &lt;FilterChips
         value={filter}
-        onChange={setFilter}
+        onChange={(v) =&gt; setFilter(v as Filter)}
         options={[
           { value: &#39;all&#39;,     label: `All · ${counts.all}` },
           { value: &#39;pending&#39;, label: `Pending · ${counts.pending}` },
@@ -426,21 +429,21 @@ function Inbox({ requests, me, onOpen }: {
 
       {visible.length === 0 ? (
         &lt;EmptyState
-          icon=&quot;inbox&quot;
+          icon={&lt;span aria-hidden=&quot;true&quot;&gt;📥&lt;/span&gt;}
           title=&quot;Inbox zero&quot;
-          body=&quot;No requests match this filter.&quot;
+          description=&quot;No requests match this filter.&quot;
         /&gt;
       ) : (
         &lt;Stack gap=&quot;xs&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
           {visible.map((r) =&gt; (
-            &lt;RowCard
-              key={r.id}
-              as=&quot;li&quot;
-              onClick={() =&gt; onOpen(r.id)}
-              label={r.employee.name}
-              meta={formatRange(r.from, r.to)}
-              trailing={&lt;StateBadge state={r.state} /&gt;}
-            /&gt;
+            &lt;li key={r.id}&gt;
+              &lt;RowCard
+                onClick={() =&gt; onOpen(r.id)}
+                title={r.employee.name}
+                meta={formatRange(r.from, r.to)}
+                trailing={&lt;StateBadge state={r.state} /&gt;}
+              /&gt;
+            &lt;/li&gt;
           ))}
         &lt;/Stack&gt;
       )}
