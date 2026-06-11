@@ -341,38 +341,31 @@ export function useToast() {
     <!-- Step 3 -->
     <div class="ck-step"><span class="n">03</span><h3>Render the toast region — top-right desktop, top mobile</h3></div>
     <p>The toast region is fixed-position and renders the visible queue. On desktop it lives at top-right; on mobile it slides from the top, centred. Stacking is capped at three visible — older ones queue up behind, not above.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { Toast, Stack, Button } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { ToastProvider, useToast } from &#39;@corelithzw/react&#39;;
 
-const MAX_VISIBLE = 3;
+// The provider IS the region. It owns the queue, mounts a stack
+// portal, and auto-dismisses after `duration` (ms).
+export function App({ children }: { children: React.ReactNode }) {
+  return &lt;ToastProvider defaultDuration={4000}&gt;{children}&lt;/ToastProvider&gt;;
+}
 
-export function ToastRegion() {
-  const { state, dismiss } = useToast();
-  const visible = state.queue.slice(-MAX_VISIBLE);
-
+// Anywhere below, push transient feedback via the hook.
+export function SaveButton({ onSave }: { onSave: () =&gt; Promise&lt;void&gt; }) {
+  const toast = useToast();
   return (
-    &lt;div className=&quot;ds-toast-region&quot; role=&quot;region&quot; aria-label=&quot;Notifications&quot;&gt;
-      &lt;Stack gap=&quot;sm&quot;&gt;
-        {visible.map((t) =&gt; (
-          &lt;Toast
-            key={t.id}
-            tone={t.tone}
-            title={t.title}
-            description={t.description}
-            // assertive for danger so screen readers interrupt; polite otherwise.
-            ariaLive={t.tone === &#39;danger&#39; ? &#39;assertive&#39; : &#39;polite&#39;}
-            onDismiss={() =&gt; dismiss(t.id)}
-            action={t.action &amp;&amp;
-              &lt;Button
-                variant=&quot;ghost&quot;
-                size=&quot;sm&quot;
-                onClick={() =&gt; { t.action!.run(); dismiss(t.id); }}
-              &gt;{t.action.label}&lt;/Button&gt;
-            }
-          /&gt;
-        ))}
-      &lt;/Stack&gt;
-    &lt;/div&gt;
+    &lt;button
+      type=&quot;button&quot;
+      onClick={async () =&gt; {
+        try {
+          await onSave();
+          toast.show({ tone: &#39;success&#39;, title: &#39;Saved&#39; });
+        } catch (e: unknown) {
+          const message = e instanceof Error ? e.message : String(e);
+          toast.show({ tone: &#39;danger&#39;, title: &#39;Save failed&#39;, message });
+        }
+      }}
+    &gt;Save&lt;/button&gt;
   );
 }'>
       <div class="ds-specimen-stage canvas padded">
