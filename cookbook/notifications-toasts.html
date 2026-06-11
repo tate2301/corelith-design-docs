@@ -457,175 +457,104 @@ export function NotificationsBell({
   <section id="final">
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The whole <code>NotificationsCenter</code>, assembled. Provider + region + bell + a sample async handler that uses both surfaces.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import {
-  createContext, useCallback, useContext, useEffect, useReducer,
-} from &#39;@corelithzw/react&#39;;
-import { Toast, Button, Stack, Popover } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { useState, useCallback, createContext, useContext } from &#39;react&#39;;
+import type { ReactNode } from &#39;react&#39;;
+import { ToastProvider, useToast, Stack } from &#39;@corelithzw/react&#39;;
 
-// ── Types (Step 1) ─────────────────────────────────────────────
-export type Tone = &#39;info&#39; | &#39;success&#39; | &#39;danger&#39; | &#39;warning&#39;;
+export type FinalTone = &#39;info&#39; | &#39;success&#39; | &#39;danger&#39; | &#39;warn&#39;;
 
-export type ToastRecord = {
+export interface FinalInbox {
   id: string;
-  tone: Tone;
+  tone: FinalTone;
   title: string;
   description?: string;
-  action?: { label: string; run: () =&gt; void };
-  duration: number;
-  persistent: boolean;
   createdAt: number;
-};
-
-const DEFAULT_DURATIONS: Record&lt;Tone, number&gt; = {
-  info: 4_000, success: 3_000, warning: 6_000, danger: 0,
-};
-
-// ── Provider (Step 2) ──────────────────────────────────────────
-type State = { queue: ToastRecord[]; inbox: ToastRecord[] };
-type Action =
-  | { type: &#39;PUSH&#39;; toast: ToastRecord }
-  | { type: &#39;DISMISS&#39;; id: string }
-  | { type: &#39;MARK_READ&#39;; id: string };
-
-function reducer(s: State, a: Action): State {
-  switch (a.type) {
-    case &#39;PUSH&#39;: {
-      const next = { ...s, queue: [...s.queue, a.toast] };
-      if (a.toast.persistent) next.inbox = [a.toast, ...s.inbox].slice(0, 200);
-      return next;
-    }
-    case &#39;DISMISS&#39;:   return { ...s, queue: s.queue.filter((t) =&gt; t.id !== a.id) };
-    case &#39;MARK_READ&#39;: return { ...s, inbox: s.inbox.filter((t) =&gt; t.id !== a.id) };
-  }
 }
 
-const Ctx = createContext&lt;{
-  state: State;
-  push: (t: Partial&lt;ToastRecord&gt; &amp; { title: string; tone: Tone }) =&gt; void;
-  dismiss: (id: string) =&gt; void;
+// `ToastProvider` from @corelithzw/react owns the *transient* queue
+// (portal + auto-dismiss). A sibling provider owns the *persistent*
+// inbox slice — the timeline the user revisits.
+export function NotificationsCenter({ children }: { children: ReactNode }) {
+  return (
+    &lt;ToastProvider defaultDuration={4000}&gt;
+      &lt;InboxProvider&gt;{children}&lt;/InboxProvider&gt;
+    &lt;/ToastProvider&gt;
+  );
+}
+
+interface InboxApi {
+  inbox: FinalInbox[];
+  push: (r: FinalInbox) =&gt; void;
   markRead: (id: string) =&gt; void;
-} | null&gt;(null);
+}
+const InboxCtx = createContext&lt;InboxApi | null&gt;(null);
 
-export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, { queue: [], inbox: [] });
-
-  const push = useCallback&lt;NonNullable&lt;React.ContextType&lt;typeof Ctx&gt;&gt;[&#39;push&#39;]&gt;((t) =&gt; {
-    dispatch({
-      type: &#39;PUSH&#39;,
-      toast: {
-        id: crypto.randomUUID(),
-        createdAt: Date.now(),
-        duration: t.duration ?? DEFAULT_DURATIONS[t.tone],
-        persistent: t.persistent ?? (t.tone === &#39;danger&#39; || !!t.action),
-        ...t,
-      } as ToastRecord,
-    });
+function InboxProvider({ children }: { children: ReactNode }) {
+  const [inbox, setInbox] = useState&lt;FinalInbox[]&gt;([]);
+  const push = useCallback((r: FinalInbox) =&gt; {
+    setInbox((cur) =&gt; [r, ...cur].slice(0, 200));
   }, []);
-
-  const dismiss = useCallback((id: string) =&gt; dispatch({ type: &#39;DISMISS&#39;, id }), []);
-  const markRead = useCallback((id: string) =&gt; dispatch({ type: &#39;MARK_READ&#39;, id }), []);
-
-  useEffect(() =&gt; {
-    const timers = state.queue
-      .filter((t) =&gt; t.duration &gt; 0)
-      .map((t) =&gt; setTimeout(() =&gt; dismiss(t.id), t.duration));
-    return () =&gt; timers.forEach(clearTimeout);
-  }, [state.queue, dismiss]);
-
-  return &lt;Ctx.Provider value={{ state, push, dismiss, markRead }}&gt;{children}&lt;/Ctx.Provider&gt;;
+  const markRead = useCallback((id: string) =&gt; {
+    setInbox((cur) =&gt; cur.filter((r) =&gt; r.id !== id));
+  }, []);
+  return &lt;InboxCtx.Provider value={{ inbox, push, markRead }}&gt;{children}&lt;/InboxCtx.Provider&gt;;
 }
 
-export function useToast() {
-  const ctx = useContext(Ctx);
-  if (!ctx) throw new Error(&#39;useToast outside &lt;ToastProvider&gt;&#39;);
+export function useInbox(): InboxApi {
+  const ctx = useContext(InboxCtx);
+  if (!ctx) throw new Error(&#39;useInbox outside &lt;NotificationsCenter&gt;&#39;);
   return ctx;
 }
 
-// ── Surfaces (Steps 3 + 4) ─────────────────────────────────────
-const MAX_VISIBLE = 3;
-
-export function ToastRegion() {
-  const { state, dismiss } = useToast();
-  const visible = state.queue.slice(-MAX_VISIBLE);
-  return (
-    &lt;div className=&quot;ds-toast-region&quot; role=&quot;region&quot; aria-label=&quot;Notifications&quot;&gt;
-      &lt;Stack gap=&quot;sm&quot;&gt;
-        {visible.map((t) =&gt; (
-          &lt;Toast
-            key={t.id}
-            tone={t.tone}
-            title={t.title}
-            description={t.description}
-            ariaLive={t.tone === &#39;danger&#39; ? &#39;assertive&#39; : &#39;polite&#39;}
-            onDismiss={() =&gt; dismiss(t.id)}
-            action={t.action &amp;&amp;
-              &lt;Button
-                variant=&quot;ghost&quot; size=&quot;sm&quot;
-                onClick={() =&gt; { t.action!.run(); dismiss(t.id); }}
-              &gt;{t.action.label}&lt;/Button&gt;
-            }
-          /&gt;
-        ))}
-      &lt;/Stack&gt;
-    &lt;/div&gt;
+// `useNotify` writes to BOTH surfaces.
+export function useNotify() {
+  const toast = useToast();
+  const inbox = useInbox();
+  return useCallback(
+    (r: {
+      tone: FinalTone;
+      title: string;
+      message?: string;
+      persistent?: boolean;
+      action?: { label: string; onClick: () =&gt; void };
+    }) =&gt; {
+      const id = toast.show({
+        tone: r.tone,
+        title: r.title,
+        message: r.message,
+        action: r.action,
+      });
+      const stick = r.persistent ?? (r.tone === &#39;danger&#39; || !!r.action);
+      if (stick) {
+        inbox.push({
+          id,
+          tone: r.tone,
+          title: r.title,
+          description: r.message,
+          createdAt: Date.now(),
+        });
+      }
+    },
+    [toast, inbox],
   );
 }
 
-export function NotificationsBell() {
-  const { state, markRead } = useToast();
-  const unread = state.inbox.length;
-  return (
-    &lt;Popover&gt;
-      &lt;Popover.Trigger asChild&gt;
-        &lt;Button variant=&quot;icon&quot; aria-label={`Notifications, ${unread} unread`}&gt;
-          &lt;span data-icon=&quot;bell&quot; data-icon-size=&quot;18&quot; /&gt;
-          {unread &gt; 0 &amp;&amp; &lt;span className=&quot;ds-badge&quot;&gt;{Math.min(unread, 99)}&lt;/span&gt;}
-        &lt;/Button&gt;
-      &lt;/Popover.Trigger&gt;
-      &lt;Popover.Content align=&quot;end&quot; width={360}&gt;
-        &lt;Stack gap=&quot;sm&quot; padding=&quot;md&quot;&gt;
-          &lt;h3&gt;Notifications&lt;/h3&gt;
-          {state.inbox.length === 0 &amp;&amp; &lt;p&gt;You&#39;re caught up.&lt;/p&gt;}
-          {state.inbox.map((t) =&gt; (
-            &lt;button key={t.id} type=&quot;button&quot; className=&quot;ds-inbox-row&quot;
-                    onClick={() =&gt; markRead(t.id)}&gt;
-              &lt;span className={`ds-dot tone-${t.tone}`} /&gt;
-              &lt;div&gt;
-                &lt;div className=&quot;ds-inbox-title&quot;&gt;{t.title}&lt;/div&gt;
-                {t.description &amp;&amp; &lt;div className=&quot;ds-inbox-desc&quot;&gt;{t.description}&lt;/div&gt;}
-              &lt;/div&gt;
-              &lt;time&gt;{timeAgo(t.createdAt)}&lt;/time&gt;
-            &lt;/button&gt;
-          ))}
-        &lt;/Stack&gt;
-      &lt;/Popover.Content&gt;
-    &lt;/Popover&gt;
-  );
-}
+type SaleRecord = { id: string };
+declare const saleApi: { saveSale: (s: SaleRecord) =&gt; Promise&lt;void&gt; };
 
-function timeAgo(t: number): string {
-  const s = (Date.now() - t) / 1000;
-  if (s &lt; 60) return &#39;just now&#39;;
-  if (s &lt; 3600) return `${Math.floor(s / 60)}m`;
-  if (s &lt; 86400) return `${Math.floor(s / 3600)}h`;
-  return `${Math.floor(s / 86400)}d`;
-}
-
-// ── Usage example ──────────────────────────────────────────────
 export function useSaveSale() {
-  const { push } = useToast();
-  return async (sale: Sale) =&gt; {
+  const notify = useNotify();
+  return async (sale: SaleRecord) =&gt; {
     try {
-      await api.saveSale(sale);
-      // Success — silent OR a tiny non-persistent toast.
-      // (We don&#39;t store this in the inbox.)
-    } catch (e: any) {
-      push({
+      await saleApi.saveSale(sale);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      notify({
         tone: &#39;danger&#39;,
         title: &quot;Couldn&#39;t save sale&quot;,
-        description: e.message,
-        action: { label: &#39;Retry&#39;, run: () =&gt; api.saveSale(sale) },
+        message,
+        action: { label: &#39;Retry&#39;, onClick: () =&gt; { void saleApi.saveSale(sale); } },
         persistent: true,
       });
     }

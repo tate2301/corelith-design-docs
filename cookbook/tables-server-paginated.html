@@ -159,7 +159,8 @@
     <div class="ck-step"><span class="n">01</span><h3>URL state — the source of truth for page, sort, filter</h3></div>
     <p>Don't keep page/sort/filter in <code>useState</code>. Keep them in the URL. When the user hits Back, they land on the previous page (the actual previous page, not the previous app state). When they share the URL, the recipient lands on the same view.</p>
     <div class="ds-specimen"
-         data-code='import { useSearchParams } from &#39;react-router-dom&#39;;
+         data-code='// React-router&#39;s useSearchParams is illustrative; this snippet uses the
+// raw window APIs so it stands alone.
 
 type TableQuery = {
   page: number;
@@ -168,21 +169,41 @@ type TableQuery = {
   status: string | null;
 };
 
+const PARSE_PER_PAGE = (raw: string | null): number =&gt; [10, 25, 50, 100].includes(Number(raw)) ? Number(raw) : 25;
+
+const parseSort = (raw: string | null): TableQuery[&#39;sort&#39;] =&gt; {
+  if (!raw) return null;
+  const [field, dir] = raw.split(&#39;:&#39;);
+  if (dir !== &#39;asc&#39; &amp;&amp; dir !== &#39;desc&#39;) return null;
+  return { field, dir };
+};
+
+const serialize = (q: TableQuery): string =&gt; {
+  const params = new URLSearchParams();
+  if (q.page !== 1) params.set(&#39;page&#39;, String(q.page));
+  if (q.perPage !== 25) params.set(&#39;perPage&#39;, String(q.perPage));
+  if (q.sort) params.set(&#39;sort&#39;, `${q.sort.field}:${q.sort.dir}`);
+  if (q.status) params.set(&#39;status&#39;, q.status);
+  return params.toString();
+};
+
 function useTableQuery(): [TableQuery, (next: Partial&lt;TableQuery&gt;) =&gt; void] {
-  const [params, setParams] = useSearchParams();
+  const [version, setVersion] = useState(0);
+  const params = new URLSearchParams(typeof window === &#39;undefined&#39; ? &#39;&#39; : window.location.search);
   const q: TableQuery = {
     page:    Math.max(1, Number(params.get(&#39;page&#39;)) || 1),
-    perPage: [10, 25, 50, 100].includes(Number(params.get(&#39;perPage&#39;)))
-               ? Number(params.get(&#39;perPage&#39;)) : 25,
+    perPage: PARSE_PER_PAGE(params.get(&#39;perPage&#39;)),
     sort:    parseSort(params.get(&#39;sort&#39;)),
     status:  params.get(&#39;status&#39;),
   };
   const set = (next: Partial&lt;TableQuery&gt;) =&gt; {
     const merged = { ...q, ...next };
-    // when filter or sort changes, reset to page 1
     if (next.sort !== undefined || next.status !== undefined) merged.page = 1;
-    setParams(serialize(merged));
+    const search = serialize(merged);
+    window.history.pushState({}, &#39;&#39;, search ? `?${search}` : window.location.pathname);
+    setVersion((v) =&gt; v + 1);
   };
+  void version;
   return [q, set];
 }'>
       <div class="ds-specimen-stage canvas padded">
@@ -197,7 +218,12 @@ function useTableQuery(): [TableQuery, (next: Partial&lt;TableQuery&gt;) =&gt; v
     <div class="ck-step"><span class="n">02</span><h3>Fetch — query keyed by the whole TableQuery</h3></div>
     <p>Every change to query triggers a refetch. Use the query object itself as the cache key. Show a skeleton on initial load, keep the previous rows on subsequent loads — flicker-free page changes are non-negotiable.</p>
     <div class="ds-specimen"
-         data-code='function useInvoicesPage(q: TableQuery) {
+         data-code='type Invoice = { id: string; number: string; amount: number; status: &#39;paid&#39; | &#39;open&#39; | &#39;void&#39; };
+
+const fetchInvoices: (q: TableQuery, signal: AbortSignal) =&gt; Promise&lt;{ rows: Invoice[]; total: number }&gt;
+  = async (_q, _signal) =&gt; ({ rows: [], total: 0 });
+
+function useInvoicesPage(q: TableQuery) {
   const [data, setData] = useState&lt;{ rows: Invoice[]; total: number } | null&gt;(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState&lt;Error | null&gt;(null);
@@ -207,7 +233,7 @@ function useTableQuery(): [TableQuery, (next: Partial&lt;TableQuery&gt;) =&gt; v
     setLoading(true);
     fetchInvoices(q, ctrl.signal)
       .then((r) =&gt; { setData(r); setError(null); })
-      .catch((e) =&gt; { if (e.name !== &#39;AbortError&#39;) setError(e); })
+      .catch((e: Error) =&gt; { if (e.name !== &#39;AbortError&#39;) setError(e); })
       .finally(() =&gt; setLoading(false));
     return () =&gt; ctrl.abort();
   }, [q.page, q.perPage, q.sort?.field, q.sort?.dir, q.status]);
@@ -346,91 +372,67 @@ if (loading &amp;&amp; !data) {
   <section id="final">
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">~150 lines including the URL hook. Pagination + sort + filter + URL, no client-side sorting trick.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
+    <div class="ds-specimen"
          data-code='import { useEffect, useState } from &#39;react&#39;;
-import { useSearchParams } from &#39;react-router-dom&#39;;
-import { Pagination, Select, Button, Skeleton } from &#39;@corelithzw/react&#39;;
+import { DataTable, DataToolbar, Pagination, Select, Button, Skeleton, Alert } from &#39;@corelithzw/react&#39;;
+import type { DataTableColumn, DataTableSortState } from &#39;@corelithzw/react&#39;;
 
-type Invoice = { id: string; number: string; amount: number; status: &#39;paid&#39; | &#39;open&#39; | &#39;void&#39; };
+type InvoiceFinal = { id: string; number: string; amount: number; status: &#39;paid&#39; | &#39;open&#39; | &#39;void&#39; };
 
-export function InvoicesTable() {
-  const [q, setQ] = useTableQuery();
-  const { data, loading, error } = useInvoicesPage(q);
+type ServerQuery = { page: number; perPage: number; sort?: DataTableSortState; status: string };
+
+export function InvoicesTable({ fetchPage }: { fetchPage: (q: ServerQuery, signal: AbortSignal) =&gt; Promise&lt;{ rows: InvoiceFinal[]; total: number }&gt;; }) {
+  const [q, setQ] = useState&lt;ServerQuery&gt;({ page: 1, perPage: 25, sort: undefined, status: &#39;all&#39; });
+  const [data, setData] = useState&lt;{ rows: InvoiceFinal[]; total: number } | null&gt;(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState&lt;Error | null&gt;(null);
+
+  useEffect(() =&gt; {
+    const ctrl = new AbortController();
+    setLoading(true);
+    fetchPage(q, ctrl.signal)
+      .then((r) =&gt; { setData(r); setError(null); })
+      .catch((e: Error) =&gt; { if (e.name !== &#39;AbortError&#39;) setError(e); })
+      .finally(() =&gt; setLoading(false));
+    return () =&gt; ctrl.abort();
+  }, [q, fetchPage]);
+
+  if (error) {
+    return (
+      &lt;Alert tone=&quot;danger&quot; title=&quot;Couldn&#39;t load invoices&quot;&gt;
+        {error.message}
+        &lt;Button onClick={() =&gt; setQ({ ...q })}&gt;Retry&lt;/Button&gt;
+      &lt;/Alert&gt;
+    );
+  }
+
   const rows = data?.rows ?? [];
   const total = data?.total ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / q.perPage));
 
-  const toggleSort = (field: string) =&gt; {
-    if (!q.sort || q.sort.field !== field) setQ({ sort: { field, dir: &#39;asc&#39; } });
-    else if (q.sort.dir === &#39;asc&#39;) setQ({ sort: { field, dir: &#39;desc&#39; } });
-    else setQ({ sort: null });
-  };
+  const columns: DataTableColumn&lt;InvoiceFinal&gt;[] = [
+    { id: &#39;number&#39;, header: &#39;Number&#39;, sortable: true },
+    { id: &#39;amount&#39;, header: &#39;Amount&#39;, sortable: true, numeric: true, cell: (r) =&gt; `$${r.amount.toLocaleString()}` },
+    { id: &#39;status&#39;, header: &#39;Status&#39;, sortable: true },
+  ];
 
-  if (error) {
-    return (
-      &lt;div role=&quot;alert&quot; className=&quot;data-table-error&quot;&gt;
-        &lt;p&gt;Couldn&#39;t load invoices: {error.message}&lt;/p&gt;
-        &lt;Button onClick={() =&gt; setQ({})}&gt;Retry&lt;/Button&gt;
-      &lt;/div&gt;
-    );
-  }
+  const skeletonRows: InvoiceFinal[] = Array.from({ length: q.perPage }, (_, i) =&gt; ({ id: `skeleton-${i}`, number: &#39;&#39;, amount: 0, status: &#39;open&#39; }));
+  const skeletonColumns: DataTableColumn&lt;InvoiceFinal&gt;[] = columns.map((c) =&gt; ({ ...c, cell: () =&gt; &lt;Skeleton width={80} /&gt; }));
 
   return (
     &lt;div className=&quot;data-table&quot; aria-busy={loading}&gt;
-      &lt;div className=&quot;data-table-toolbar&quot;&gt;
-        &lt;Select label=&quot;Status&quot; value={q.status ?? &#39;all&#39;}
-          onChange={(v) =&gt; setQ({ status: v === &#39;all&#39; ? null : v })}
-          options={[
-            { value: &#39;all&#39;,  label: &#39;All&#39; },
+      &lt;DataToolbar&gt;
+        &lt;DataToolbar.Filters&gt;
+          &lt;Select value={q.status} onChange={(e) =&gt; setQ({ ...q, status: e.target.value, page: 1 })} options={[
+            { value: &#39;all&#39;, label: &#39;All&#39; },
             { value: &#39;paid&#39;, label: &#39;Paid&#39; },
             { value: &#39;open&#39;, label: &#39;Open&#39; },
             { value: &#39;void&#39;, label: &#39;Void&#39; },
-          ]}
-        /&gt;
-      &lt;/div&gt;
-
-      &lt;table&gt;
-        &lt;thead&gt;
-          &lt;tr&gt;
-            {[&#39;number&#39;, &#39;amount&#39;, &#39;status&#39;].map(f =&gt; (
-              &lt;th key={f} aria-sort={ariaSort(q.sort, f)}&gt;
-                &lt;button type=&quot;button&quot; onClick={() =&gt; toggleSort(f)}&gt;
-                  {labelFor(f)}
-                  &lt;SortIndicator dir={q.sort?.field === f ? q.sort.dir : null} /&gt;
-                &lt;/button&gt;
-              &lt;/th&gt;
-            ))}
-          &lt;/tr&gt;
-        &lt;/thead&gt;
-        &lt;tbody&gt;
-          {loading &amp;&amp; !data
-            ? Array.from({ length: q.perPage }).map((_, i) =&gt; (
-                &lt;tr key={i}&gt;
-                  &lt;td&gt;&lt;Skeleton width=&quot;80px&quot; /&gt;&lt;/td&gt;
-                  &lt;td&gt;&lt;Skeleton width=&quot;60px&quot; /&gt;&lt;/td&gt;
-                  &lt;td&gt;&lt;Skeleton width=&quot;40px&quot; /&gt;&lt;/td&gt;
-                &lt;/tr&gt;
-              ))
-            : rows.map(r =&gt; (
-                &lt;tr key={r.id}&gt;
-                  &lt;td&gt;{r.number}&lt;/td&gt;
-                  &lt;td className=&quot;num&quot;&gt;${r.amount.toLocaleString()}&lt;/td&gt;
-                  &lt;td&gt;&lt;StatusBadge value={r.status} /&gt;&lt;/td&gt;
-                &lt;/tr&gt;
-              ))}
-        &lt;/tbody&gt;
-      &lt;/table&gt;
-
-      &lt;footer className=&quot;data-table-foot&quot;&gt;
-        &lt;Select label=&quot;Per page&quot; value={String(q.perPage)}
-          onChange={(v) =&gt; setQ({ perPage: Number(v) })}
-          options={[10, 25, 50, 100].map(n =&gt; ({ value: String(n), label: String(n) }))}
-        /&gt;
-        &lt;span aria-live=&quot;polite&quot;&gt;
-          Page {q.page} of {pageCount} · {total.toLocaleString()} total
-        &lt;/span&gt;
-        &lt;Pagination page={q.page} pageCount={pageCount} onChange={(page) =&gt; setQ({ page })} /&gt;
-      &lt;/footer&gt;
+          ]} aria-label=&quot;Status filter&quot; /&gt;
+        &lt;/DataToolbar.Filters&gt;
+      &lt;/DataToolbar&gt;
+      &lt;DataTable columns={loading &amp;&amp; !data ? skeletonColumns : columns} rows={loading &amp;&amp; !data ? skeletonRows : rows} getRowId={(r) =&gt; r.id} sort={q.sort} onSortChange={(sort) =&gt; setQ({ ...q, sort, page: 1 })} ariaLabel=&quot;Invoices&quot; /&gt;
+      &lt;Pagination page={q.page} pageCount={pageCount} onChange={(page) =&gt; setQ({ ...q, page })} total={total} pageSize={q.perPage} pageSizeOptions={[10, 25, 50, 100]} onPageSizeChange={(perPage) =&gt; setQ({ ...q, perPage, page: 1 })} /&gt;
     &lt;/div&gt;
   );
 }'>
