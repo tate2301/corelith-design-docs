@@ -71,7 +71,7 @@
     <div class="when"><b>Use when</b>You need to browse and edit a list of stable records where each row is similar in shape, the operator searches by name or code, and a handful of filters narrow it down.</div>
   </div>
   <div class="dt-cell"
-               data-code='import { DataTable } from &#39;@corelith/design-system&#39;;
+               data-code='import { DataTable } from &#39;@corelithzw/react&#39;;
 
 interface Receipt { id: string; branch: string; total: string; }
 
@@ -245,6 +245,70 @@ export function Example() {
       </tbody>
     </table>
   </div>
+
+  <section id="react-api" style="margin-top: 72px;">
+    <h2 class="ds-h2">React API · <code class="t-mono">DataTable</code></h2>
+    <p class="ds-h2-sub">From <code class="t-mono">@corelithzw/react@0.3.0</code> — <code class="t-mono">DataTableProps&lt;T&gt;</code> in <code class="t-mono">packages/react/src/components/DataTable/DataTable.tsx</code>. Generic over the row type.</p>
+    <table class="ds-props"><thead><tr><th>Prop</th><th>Type</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code class="t-mono">columns</code></td><td><code class="t-mono">DataTableColumn&lt;T&gt;[]</code></td><td>Required. Each: <code>{ id, header, accessor, align?, sortable?, width? }</code>.</td></tr>
+      <tr><td><code class="t-mono">rows</code></td><td><code class="t-mono">T[]</code></td><td>Required.</td></tr>
+      <tr><td><code class="t-mono">getRowId</code></td><td><code class="t-mono">(row: T) => string</code></td><td>Required when <code>selectable</code>.</td></tr>
+      <tr><td><code class="t-mono">selectable</code></td><td><code class="t-mono">boolean</code></td><td>Renders the checkbox column + header select-all.</td></tr>
+      <tr><td><code class="t-mono">selected</code></td><td><code class="t-mono">string[]</code></td><td>Controlled selection ids.</td></tr>
+      <tr><td><code class="t-mono">onSelectionChange</code></td><td><code class="t-mono">(ids: string[]) => void</code></td><td>Called on every selection mutation.</td></tr>
+      <tr><td><code class="t-mono">sort</code></td><td><code class="t-mono">{ columnId: string; direction: 'asc' | 'desc' }</code></td><td>Controlled sort.</td></tr>
+      <tr><td><code class="t-mono">onSortChange</code></td><td><code class="t-mono">(sort) => void</code></td><td>Called when a sortable header is clicked.</td></tr>
+      <tr><td><code class="t-mono">caption</code></td><td><code class="t-mono">ReactNode</code></td><td>Table <code>&lt;caption&gt;</code> (visually hidden but read by AT).</td></tr>
+      <tr><td><code class="t-mono">footer</code></td><td><code class="t-mono">ReactNode</code></td><td>Renders below the table body (pagination, summary).</td></tr>
+      <tr><td><code class="t-mono">emptyState</code></td><td><code class="t-mono">ReactNode</code></td><td>Shown when <code>rows</code> is empty.</td></tr>
+    </tbody>
+    </table>
+  </section>
+
+  <section id="composition" style="margin-top: 56px;">
+    <h2 class="ds-h2">Composition</h2>
+    <p>Data table composes a sticky-header HTML <code>&lt;table&gt;</code> + checkbox column (when selectable) + sortable column headers + footer slot. It's the canonical desktop surface for tabular records; the mobile counterpart is a stack of <a href="b-row-card.html">row cards</a>.</p>
+    <p><strong>Don't use this for:</strong> phone-width browsing — swap to <a href="b-row-card.html">row card</a> stacks below 720 px. For master-data editing with inline edit + drag-reorder, see <a href="x-master-data.html">master data</a>.</p>
+  </section>
+
+  <section id="responsive" style="margin-top: 56px;">
+    <h2 class="ds-h2">Responsive behaviour</h2>
+    <table class="ds-props"><thead><tr><th>Viewport</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr><td>Phone (≤ 720 px)</td><td>Prefer a stack of <a href="b-row-card.html">row cards</a>. If a table is unavoidable, scroll horizontally with a frozen first column.</td></tr>
+      <tr><td>Tablet (720 – 1023 px)</td><td>Drop low-priority columns into an overflow row; sticky header on scroll.</td></tr>
+      <tr><td>Desktop (≥ 1024 px)</td><td>Full table with all columns; sticky header + sticky first column for wide schemas; bulk action bar replaces toolbar on selection.</td></tr>
+    </tbody>
+    </table>
+  </section>
+
+  <section id="keyboard" style="margin-top: 56px;">
+    <h2 class="ds-h2">Keyboard &amp; accessibility</h2>
+    <table class="ds-props"><thead><tr><th>Key</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr><td><code>Tab</code></td><td>Header → checkbox-all → first row checkbox → row action.</td></tr>
+      <tr><td><code>Space (on row checkbox)</code></td><td>Toggle row selection.</td></tr>
+      <tr><td><code>Space (on header checkbox)</code></td><td>Select / deselect all rows on screen.</td></tr>
+      <tr><td><code>Enter (on sortable header)</code></td><td>Cycle sort direction: asc → desc → none.</td></tr>
+    </tbody>
+    </table>
+    <ul class="ds-list" style="margin-top: 14px;">
+      <li>Renders a real <code>&lt;table&gt;</code> with <code>&lt;caption&gt;</code> — screen readers read row / col counts.</li>
+      <li>Sortable headers carry <code>aria-sort="ascending" | "descending" | "none"</code>.</li>
+      <li>Selected count is announced via <code>aria-live="polite"</code> on the bulk-action bar.</li>
+    </ul>
+  </section>
+
+  <section id="related" style="margin-top: 56px;">
+    <h2 class="ds-h2">Related</h2>
+    <ul class="ds-list">
+      <li><a href="b-data-toolbar.html">Data toolbar</a> — the chrome above the table.</li>
+      <li><a href="b-row-card.html">Row card</a> — the mobile equivalent.</li>
+      <li><a href="x-bulk-edit.html">Bulk edit</a> — the pattern that takes over when selection is active.</li>
+      <li><a href="x-detail-view.html">Detail view</a> — what a row opens into.</li>
+    </ul>
+  </section>
 
   <section style="margin-top: 72px;">
     <h2 class="ds-h2">Shared rules</h2>

@@ -29,7 +29,7 @@
   
     <div class="comp-h"><div><div class="num">COMPOSITION 01</div><h3>Sign in · email + password</h3><p>Default flow. Optional "keep me signed in" + SSO escape hatch.</p></div><div class="when"><b>Use when</b>Most users; the standard sign-in experience.</div></div>
     <div class="comp-box"
-               data-code='import { AuthCard, Input, Button } from &#39;@corelith/design-system&#39;;
+               data-code='import { AuthCard, Input, Button } from &#39;@corelithzw/react&#39;;
 
 export function Example() {
   return (
@@ -58,6 +58,62 @@ export function Example() {
     <div class="comp-box"><div style="display: grid; place-items: center;"><div style="width: 460px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 32px;"><div style="display: inline-flex; align-items: center; gap: 10px; margin-bottom: 20px;"><span data-icon="corelith" data-icon-size="26" style="color: var(--brand);"></span><span style="font: 600 18px/1 var(--font-sans);">Huchu</span></div><h2 style="font: 700 22px/1.2 var(--font-sans); margin: 0 0 6px;">Start your free trial</h2><p style="font: var(--type-body-sm); color: var(--text-muted); margin: 0 0 20px;">30 days, all features. No card required.</p><div style="display: grid; gap: 12px;"><div class="field"><label class="field-label">Workspace name</label><input class="input" placeholder="Mukamba Group" /></div><div class="field"><label class="field-label">Your name</label><input class="input" placeholder="Robert Mukamba" /></div><div class="field"><label class="field-label">Email</label><input class="input" placeholder="robert@mukamba.co" /></div><div class="field"><label class="field-label">Primary vertical</label><select class="select" aria-label="Primary vertical"><option>Retail</option><option>Gold ops</option><option>Scrap</option><option>Schools</option></select></div><button class="btn btn-primary btn-lg" style="width: 100%; margin-top: 8px;">Start trial</button></div></div></div></div>
   
   <section style="margin-top: 72px;"><h2 class="ds-h2">Shared rules</h2><div class="ds-rules"><div class="rule do"><span class="tag">Do</span><p>Lead the primary action with a verb — "Sign in", not "Submit".</p></div><div class="rule dont"><span class="tag">Don't</span><p>Show 8 different sign-in options. Email + one SSO is plenty.</p></div><div class="rule do"><span class="tag">Do</span><p>State the workspace name once the user lands.</p></div><div class="rule dont"><span class="tag">Don't</span><p>Send the operator to a generic error page on bad credentials. Show the error inline.</p></div></div></section>
+    <section id="react-api">
+    <h2 class="ds-h2">React API · <code class="t-mono">AuthShell</code></h2>
+    <p class="ds-h2-sub">From <code class="t-mono">@corelithzw/react@0.3.0</code> — <code class="t-mono">AuthShellProps</code> in <code class="t-mono">packages/react/src/components/AuthShell/AuthShell.tsx</code>.</p>
+    <table class="ds-props"><thead><tr><th>Prop</th><th>Type</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code class="t-mono">children</code></td><td><code class="t-mono">ReactNode</code></td><td>Compose with <code class="t-mono">AuthShell.Brand</code> and <code class="t-mono">AuthShell.Card</code>.</td></tr>
+    </tbody>
+    </table>
+  </section>
+  <p class="ds-h2-sub" style="margin-top: 14px;">Slot sub-components:</p>
+  <table class="ds-props"><thead><tr><th>Sub-component</th><th>Props</th></tr></thead>
+  <tbody>
+    <tr><td><code class="t-mono">AuthShell.Brand</code></td><td><code class="t-mono">logo?: ReactNode</code>, <code class="t-mono">product?: ReactNode</code></td></tr>
+    <tr><td><code class="t-mono">AuthShell.Card</code></td><td><code class="t-mono">title?: ReactNode</code>, <code class="t-mono">subtitle?: ReactNode</code>, <code class="t-mono">footer?: ReactNode</code></td></tr>
+  </tbody>
+  </table>
+
+  <section id="composition">
+    <h2 class="ds-h2">Composition</h2>
+    <p>Auth shell composes a split-pane layout — brand on the left, sign-in card on the right. Standalone surface; does not nest inside <a href="x-app-shell.html">app shell</a>.</p><p><strong>Don't use this for:</strong> the in-app account-switcher (use <a href="x-role-gate.html">role gate</a> + a menu instead). For 2FA challenges from inside the app, use <a href="x-modal.html">modal</a>.</p>
+  </section>
+
+  <section id="responsive">
+    <h2 class="ds-h2">Responsive behaviour</h2>
+    <table class="ds-props"><thead><tr><th>Viewport</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr><td>Phone (≤ 720 px)</td><td>Single column. Brand collapses to a centred logo at the top; card fills below.</td></tr>
+      <tr><td>Tablet (720 – 1023 px)</td><td>Single column with a small brand strip at the top.</td></tr>
+      <tr><td>Desktop (≥ 1024 px)</td><td>Split-pane: brand panel left (380 – 480 px), card right (centred).</td></tr>
+    </tbody>
+    </table>
+  </section>
+
+  <section id="a11y">
+    <h2 class="ds-h2">Keyboard &amp; accessibility</h2>
+    <table class="ds-props"><thead><tr><th>Key</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr><td><code>Tab</code></td><td>Move through inputs in DOM order; primary CTA is the last stop.</td></tr>
+      <tr><td><code>Enter</code></td><td>Submit the form.</td></tr>
+      <tr><td><code>Esc (on 2FA / mention picker)</code></td><td>Close the auxiliary surface; keep the parent form.</td></tr>
+    </tbody>
+    </table>
+    <ul class="ds-list" style="margin-top: 14px;">
+      <li>Page title is a single H1 — "Sign in", "Verify it's you", etc.</li>
+      <li>Inline errors render with <code>role="alert"</code> next to the offending field.</li>
+      <li>SSO buttons carry an explicit provider label; the icon alone is not an accessible name.</li>
+    </ul>
+  </section>
+  <section id="related">
+    <h2 class="ds-h2">Related</h2>
+    <ul class="ds-list">
+      <li><a href="x-role-gate.html">Role gate</a> — what follows after sign-in for multi-workspace operators.</li>
+      <li><a href="x-app-shell.html">App shell</a> — the surface the operator lands in after auth.</li>
+      <li><a href="x-onboarding.html">Onboarding</a> — for first-time sign-up flows.</li>
+    </ul>
+  </section>
   <nav class="ds-pager"><a href="x-notifications.html"><div class="pager-label">← Previous</div><div class="pager-title">Notifications</div></a><a href="x-executive-dashboard.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Executive dashboard</div></a></nav>
 </article>
 </main>
