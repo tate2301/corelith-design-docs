@@ -1,7 +1,9 @@
-// Corelith POS — functional prototype
+// Corelith POS — functional prototype  (v1.0)
 // Vanilla ES module. Persists to localStorage under prefix "corelith:pos:".
 // VAT 15% (Zimbabwe), USD with cents.
 // DEMO MANAGER PIN: 4321  (clearly a demo-only secret, hardcoded.)
+// Flows: sale (cash/card/EcoCash/OneMoney/split) → receipt; refund w/ manager PIN;
+// cash-up w/ variance + shift close; z-report list + printable detail.
 
 export const POS = (() => {
   // ---------------------------------------------------------------------------
