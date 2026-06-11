@@ -258,8 +258,8 @@ const isErrored = (t: Task) =&gt; t.state.kind === &#39;error&#39;;'>
     <!-- Step 2 -->
     <div class="ck-step"><span class="n">02</span><h3>Wrap the list in <code>useOptimistic</code></h3></div>
     <p><code>useOptimistic</code> takes a committed list + a reducer for pending intents. The render reads from the optimistic projection; the commit handler is where you make the API call. The hook handles the merge and the rollback — your code is just two functions.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { useOptimistic, useState } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { useOptimistic } from &#39;@corelithzw/react&#39;;
 
 type Intent =
   | { type: &#39;toggle&#39;; id: string; done: boolean }
@@ -287,9 +287,11 @@ function applyIntent(list: Task[], intent: Intent): Task[] {
 }
 
 export function useTasks(serverTasks: Task[]) {
-  const [committed, setCommitted] = useState&lt;Task[]&gt;(serverTasks);
-  const [optimistic, addIntent] = useOptimistic(committed, applyIntent);
-  return { committed, setCommitted, optimistic, addIntent };
+  const { base, setBase, derived, mutate } = useOptimistic&lt;Task[], Intent&gt;(
+    serverTasks,
+    applyIntent,
+  );
+  return { committed: base, setCommitted: setBase, optimistic: derived, addIntent: mutate };
 }'>
       <div class="ds-specimen-stage canvas padded">
         <div class="ck-code-only-note">
