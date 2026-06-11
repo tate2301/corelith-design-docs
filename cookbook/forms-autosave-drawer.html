@@ -286,7 +286,7 @@ export const useRecordEdit = (initial: State) =&gt; useReducer(reducer, initial)
     <!-- Step 2 -->
     <div class="ck-step"><span class="n">02</span><h3>Debounce per field with one shared timer (600&nbsp;ms is the sweet spot)</h3></div>
     <p>200&nbsp;ms feels twitchy; 1.5&nbsp;s feels lossy if the user closes the tab. 600&nbsp;ms is long enough to absorb a fast typist's pauses and short enough that the "Saved 2s ago" line is honest. One shared timer means consecutive edits across different fields coalesce into a single PUT, not five.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
+    <div class="ds-specimen"
          data-code='import { useEffect, useRef } from &#39;@corelithzw/react&#39;;
 
 export function useDebouncedSave(
@@ -412,7 +412,7 @@ function EditUserBody({ s, dispatch }: { s: State; dispatch: (a: Action) =&gt; v
   return (
     &lt;Form&gt;
       &lt;Stack gap=&quot;md&quot;&gt;
-        &lt;Stack direction=&quot;row&quot; justify=&quot;between&quot; align=&quot;center&quot;&gt;
+        &lt;Stack direction=&quot;horizontal&quot; justify=&quot;between&quot; align=&quot;center&quot;&gt;
           &lt;h2&gt;Edit user&lt;/h2&gt;
           &lt;StatusPill status={s.status} lastSavedAt={s.lastSavedAt} /&gt;
         &lt;/Stack&gt;
@@ -420,16 +420,16 @@ function EditUserBody({ s, dispatch }: { s: State; dispatch: (a: Action) =&gt; v
         {s.status === &#39;conflict&#39; &amp;&amp; s.conflict &amp;&amp; (
           &lt;Alert tone=&quot;warn&quot;&gt;
             Tendai also edited this. {&#39; &#39;}
-            &lt;Button variant=&quot;link&quot; onClick={() =&gt; dispatch({ type: &#39;CONFLICT_RESOLVE&#39;, keep: &#39;mine&#39; })}&gt;Keep mine&lt;/Button&gt;
+            &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; dispatch({ type: &#39;CONFLICT_RESOLVE&#39;, keep: &#39;mine&#39; })}&gt;Keep mine&lt;/Button&gt;
             {&#39; or &#39;}
-            &lt;Button variant=&quot;link&quot; onClick={() =&gt; dispatch({ type: &#39;CONFLICT_RESOLVE&#39;, keep: &#39;theirs&#39; })}&gt;Keep theirs&lt;/Button&gt;
+            &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; dispatch({ type: &#39;CONFLICT_RESOLVE&#39;, keep: &#39;theirs&#39; })}&gt;Keep theirs&lt;/Button&gt;
           &lt;/Alert&gt;
         )}
 
-        &lt;Field label=&quot;Name&quot; name=&quot;name&quot;&gt;
+        &lt;Field label=&quot;Name&quot;&gt;
           &lt;Input value={s.data.name} onChange={(v) =&gt; dispatch({ type: &#39;EDIT&#39;, patch: { name: v } })} /&gt;
         &lt;/Field&gt;
-        &lt;Field label=&quot;Email&quot; name=&quot;email&quot;&gt;
+        &lt;Field label=&quot;Email&quot;&gt;
           &lt;Input type=&quot;email&quot; value={s.data.email} onChange={(v) =&gt; dispatch({ type: &#39;EDIT&#39;, patch: { email: v } })} /&gt;
         &lt;/Field&gt;
       &lt;/Stack&gt;
@@ -581,7 +581,7 @@ export function EditUserDrawer({
     &lt;Shell open={open} onClose={onClose} ariaLabel=&quot;Edit user&quot;&gt;
       &lt;Form&gt;
         &lt;Stack gap=&quot;md&quot;&gt;
-          &lt;Stack direction=&quot;row&quot; justify=&quot;between&quot; align=&quot;center&quot;&gt;
+          &lt;Stack direction=&quot;horizontal&quot; justify=&quot;between&quot; align=&quot;center&quot;&gt;
             &lt;h2&gt;Edit user&lt;/h2&gt;
             &lt;StatusLine status={s.status} lastSavedAt={s.lastSavedAt} /&gt;
           &lt;/Stack&gt;
@@ -589,12 +589,12 @@ export function EditUserDrawer({
           {draftPrompt &amp;&amp; (
             &lt;Alert tone=&quot;info&quot;&gt;
               You had unsaved edits from a previous session.{&#39; &#39;}
-              &lt;Button variant=&quot;link&quot; onClick={() =&gt; {
+              &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; {
                 dispatch({ type: &#39;EDIT&#39;, patch: draftPrompt });
                 setDraftPrompt(null);
               }}&gt;Restore&lt;/Button&gt;
               {&#39; · &#39;}
-              &lt;Button variant=&quot;link&quot; onClick={() =&gt; {
+              &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; {
                 sessionStorage.removeItem(`huchu.draft.user.${userId}`);
                 setDraftPrompt(null);
               }}&gt;Discard&lt;/Button&gt;
@@ -604,30 +604,30 @@ export function EditUserDrawer({
           {s.status === &#39;conflict&#39; &amp;&amp; s.conflict &amp;&amp; (
             &lt;Alert tone=&quot;warn&quot; role=&quot;alert&quot;&gt;
               Someone else edited this record. {&#39; &#39;}
-              &lt;Button variant=&quot;link&quot; onClick={() =&gt; dispatch({ type: &#39;CONFLICT_RESOLVE&#39;, keep: &#39;mine&#39; })}&gt;Keep mine&lt;/Button&gt;
+              &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; dispatch({ type: &#39;CONFLICT_RESOLVE&#39;, keep: &#39;mine&#39; })}&gt;Keep mine&lt;/Button&gt;
               {&#39; or &#39;}
-              &lt;Button variant=&quot;link&quot; onClick={() =&gt; dispatch({ type: &#39;CONFLICT_RESOLVE&#39;, keep: &#39;theirs&#39; })}&gt;Keep theirs&lt;/Button&gt;
+              &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; dispatch({ type: &#39;CONFLICT_RESOLVE&#39;, keep: &#39;theirs&#39; })}&gt;Keep theirs&lt;/Button&gt;
             &lt;/Alert&gt;
           )}
 
           {s.status === &#39;error&#39; &amp;&amp; (
             &lt;Alert tone=&quot;danger&quot; role=&quot;alert&quot;&gt;
               {s.errorMessage ?? &#39;Save failed.&#39;}{&#39; &#39;}
-              &lt;Button variant=&quot;link&quot; onClick={() =&gt; dispatch({ type: &#39;EDIT&#39;, patch: {} })}&gt;Retry now&lt;/Button&gt;
+              &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; dispatch({ type: &#39;EDIT&#39;, patch: {} })}&gt;Retry now&lt;/Button&gt;
             &lt;/Alert&gt;
           )}
 
-          &lt;Field label=&quot;Name&quot; name=&quot;name&quot;&gt;
+          &lt;Field label=&quot;Name&quot;&gt;
             &lt;Input value={s.data.name} onChange={(v) =&gt; dispatch({ type: &#39;EDIT&#39;, patch: { name: v } })} /&gt;
           &lt;/Field&gt;
-          &lt;Field label=&quot;Email&quot; name=&quot;email&quot;&gt;
+          &lt;Field label=&quot;Email&quot;&gt;
             &lt;Input type=&quot;email&quot; value={s.data.email} onChange={(v) =&gt; dispatch({ type: &#39;EDIT&#39;, patch: { email: v } })} /&gt;
           &lt;/Field&gt;
-          &lt;Field label=&quot;Role&quot; name=&quot;role&quot;&gt;
+          &lt;Field label=&quot;Role&quot;&gt;
             &lt;Input value={s.data.role} onChange={(v) =&gt; dispatch({ type: &#39;EDIT&#39;, patch: { role: v } })} /&gt;
           &lt;/Field&gt;
 
-          &lt;Stack direction=&quot;row&quot; justify=&quot;end&quot;&gt;
+          &lt;Stack direction=&quot;horizontal&quot; justify=&quot;end&quot;&gt;
             &lt;Button variant=&quot;ghost&quot; onClick={onClose}&gt;Close&lt;/Button&gt;
           &lt;/Stack&gt;
         &lt;/Stack&gt;

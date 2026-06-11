@@ -260,11 +260,291 @@ function ensureReactImport(code) {
   return preamble + code;
 }
 
+// Extract the lexically-top-level type/interface/function/const declarations
+// from a snippet's source so a later snippet in the same recipe can reference
+// them. We keep this deliberately conservative — only declarations that begin
+// at column 0 (no indent) are picked up, which matches the recipe convention
+// of stating shared types before any component body. The original `import`
+// lines are stripped because the wrapping step injects the right imports
+// already.
+function extractTopLevelDecls(code) {
+  const lines = code.split('\n');
+  const out = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    // Top-level only: starts with `type `, `interface `, `const ` or
+    // `function `. We do NOT pull in `let`/`var`/`class`/`enum` — those
+    // are rarer in practice and more likely to contain references the
+    // recipe never defines. Deduped by declared name so a later snippet's
+    // local redeclaration wins over the preamble.
+    const startMatch = line.match(
+      /^(?:export\s+)?(type|interface|const|function)\s/,
+    );
+    if (!startMatch) {
+      i++;
+      continue;
+    }
+    const kind = startMatch[1];
+    // `type` and `const`/`let`/`var` declarations terminate at a top-level
+    // `;`. `interface`/`function`/`class`/`enum` declarations terminate
+    // at a top-level `}` once at least one `{` has been opened.
+    const endsOnSemi = kind === 'type' || kind === 'const';
+    // Capture the block by tracking brace/bracket/paren depth. Single-line
+    // statements (e.g. `type X = string;`) end on the first `;`. Multi-line
+    // blocks end when *all* depths return to 0 after at least one opener,
+    // and we hit either a closing brace/bracket at line start or a trailing
+    // `;` on the line.
+    let block = '';
+    let curlyDepth = 0;
+    let bracketDepth = 0;
+    let parenDepth = 0;
+    let started = false;
+    let inLineComment = false;
+    let inBlockComment = false;
+    let inStr = null;
+    // Regex literal mode + char-class-inside-regex mode. We only enter
+    // regex mode when a `/` appears in a position where a value is expected
+    // — i.e. right after another operator-ish char (`(,=:?!&|+-*<>;{[` or
+    // `return` keyword). Otherwise `/` is division.
+    let inRegex = false;
+    let inRegexClass = false;
+    let lastSignificantChar = '';
+    while (i < lines.length) {
+      const l = lines[i];
+      block += (block ? '\n' : '') + l;
+      inLineComment = false;
+      for (let k = 0; k < l.length; k++) {
+        const c = l[k];
+        const c2 = l[k + 1];
+        if (inLineComment) continue;
+        if (inBlockComment) {
+          if (c === '*' && c2 === '/') {
+            inBlockComment = false;
+            k++;
+          }
+          continue;
+        }
+        if (inStr) {
+          if (c === '\\') { k++; continue; }
+          if (c === inStr) inStr = null;
+          continue;
+        }
+        if (inRegex) {
+          if (c === '\\') { k++; continue; }
+          if (inRegexClass) {
+            if (c === ']') inRegexClass = false;
+          } else {
+            if (c === '[') inRegexClass = true;
+            else if (c === '/') inRegex = false;
+          }
+          continue;
+        }
+        if (c === '/' && c2 === '/') { inLineComment = true; continue; }
+        if (c === '/' && c2 === '*') { inBlockComment = true; k++; continue; }
+        if (c === '"' || c === "'" || c === '`') { inStr = c; lastSignificantChar = c; continue; }
+        // Detect regex literal: a `/` after a value-expecting token. We
+        // deliberately exclude `<` from the value-expecting set because
+        // `</` is a JSX closing-tag, not a regex.
+        if (c === '/') {
+          const valueExpecting =
+            /[(,=:?!&|+\-*>;{[]/.test(lastSignificantChar) ||
+            lastSignificantChar === '';
+          if (valueExpecting) {
+            inRegex = true;
+            continue;
+          }
+        }
+        if (c === '{') { curlyDepth++; started = true; }
+        else if (c === '}') curlyDepth--;
+        else if (c === '[') { bracketDepth++; started = true; }
+        else if (c === ']') bracketDepth--;
+        else if (c === '(') { parenDepth++; }
+        else if (c === ')') parenDepth--;
+        if (!/\s/.test(c)) lastSignificantChar = c;
+      }
+      i++;
+      const trimmed = l.replace(/\/\/.*$/, '').trimEnd();
+      if (endsOnSemi) {
+        // type / const: terminate when at top level and the line ends in `;`.
+        if (curlyDepth === 0 && bracketDepth === 0 && parenDepth === 0 && /;\s*$/.test(trimmed)) {
+          break;
+        }
+      } else {
+        // interface / function / class / enum: terminate after at least
+        // one `{` has been seen, when the line ends in `}` (optionally
+        // followed by `;`) at top level.
+        if (started && curlyDepth === 0 && bracketDepth === 0 && parenDepth === 0 && /\}\s*;?\s*$/.test(trimmed)) {
+          break;
+        }
+      }
+    }
+    out.push(block);
+  }
+  return out;
+}
+
+// Pick out the identifier being declared by a top-level type/interface block
+// so we can drop it from the preamble when the *current* snippet redeclares
+// it. Both forms accepted: `type X<...>` and `interface X<...>`.
+function declaredName(block) {
+  const m = block.match(
+    /^(?:export\s+)?(?:type|interface|const|function)\s+([A-Za-z_$][\w$]*)/,
+  );
+  return m ? m[1] : null;
+}
+
+// Recipes occasionally write `const [edit, setEdit] = useState<…>(…)` at
+// what looks like top-level inside their narrative snippets. Those are
+// not legal at module scope — but later snippets in the same recipe
+// reference `edit` / `setEdit` as if they were. Emit ambient `declare`s
+// so the later snippet still compiles. Returns an array of
+// `declare const X: any;` lines, deduped against names the current
+// snippet already binds.
+function extractAmbientDestructured(code, skipNames) {
+  const out = [];
+  const seen = new Set(skipNames);
+  // `const [a, b, ...] = …;` — match at column 0.
+  const arrRe = /^(?:export\s+)?const\s*\[([^\]]+)\]\s*=/gm;
+  // `const { a, b: ren, ... } = …;` — match at column 0.
+  const objRe = /^(?:export\s+)?const\s*\{([^}]+)\}\s*=/gm;
+  for (const re of [arrRe, objRe]) {
+    let m;
+    while ((m = re.exec(code)) !== null) {
+      for (const raw of m[1].split(',')) {
+        // Strip default-value (`x = 1`), strip rest (`...y`), strip
+        // renames (`a: b` → keep `b`).
+        let name = raw.trim().replace(/\s*=\s*[^,]*$/, '');
+        const renameMatch = name.match(/^\s*[A-Za-z_$][\w$]*\s*:\s*([A-Za-z_$][\w$]*)/);
+        if (renameMatch) name = renameMatch[1];
+        name = name.replace(/^\.\.\./, '');
+        if (!/^[A-Za-z_$][\w$]*$/.test(name)) continue;
+        if (seen.has(name)) continue;
+        seen.add(name);
+        out.push(`declare const ${name}: any;`);
+      }
+    }
+  }
+  return out;
+}
+
+// Pull `import` statements out of a snippet so we can fold them into the
+// preamble — a later snippet's reference to a component named in an
+// earlier snippet only works if the corresponding import survives. We
+// pull both `import { … } from '…'` and side-effect imports.
+function extractImports(code) {
+  // Match `import …;`, supporting both single-line and multi-line
+  // braced-import forms. The `import` keyword must be at column 0; the
+  // statement ends at the next top-level `;` (we approximate by reading
+  // up to the first `;` after the `from '…'` clause, or the first `;`
+  // for side-effect imports).
+  const out = [];
+  const re = /^import\b[\s\S]*?;/gm;
+  let m;
+  while ((m = re.exec(code)) !== null) out.push(m[0]);
+  return out;
+}
+
+function buildRecipePreamble(priorSnippets, currentCode) {
+  const decls = [];
+  const seen = new Set();
+  // Identify identifiers redeclared in the current snippet so we don't
+  // shadow them from the preamble.
+  const localNames = new Set(
+    extractTopLevelDecls(currentCode).map(declaredName).filter(Boolean),
+  );
+  for (const sn of priorSnippets) {
+    for (const block of extractTopLevelDecls(sn)) {
+      const name = declaredName(block);
+      if (!name) continue;
+      if (seen.has(name)) continue;
+      if (localNames.has(name)) continue;
+      seen.add(name);
+      decls.push(block);
+    }
+    // Ambient `declare const X: any;` for destructured bindings.
+    const localImportedNames = new Set(localNames);
+    for (const a of extractAmbientDestructured(sn, [
+      ...seen,
+      ...localImportedNames,
+    ])) {
+      const am = a.match(/declare\s+const\s+([A-Za-z_$][\w$]*)/);
+      if (!am) continue;
+      const name = am[1];
+      if (seen.has(name) || localImportedNames.has(name)) continue;
+      seen.add(name);
+      decls.push(a);
+    }
+  }
+  // Fold in every prior named import, collapsing by source module. We
+  // accumulate `{ source -> Set<imported names> }` across all prior
+  // snippets, then drop any name already imported by the *current*
+  // snippet (so the preamble never duplicates an identifier the snippet
+  // itself binds). The import rewriter (`rewriteCorelithImports`) runs
+  // *after* the preamble is prepended, so `@corelithzw/react` imports
+  // still get split into react-vs-corelith correctly.
+  const localImported = new Set();
+  for (const line of extractImports(currentCode)) {
+    const im = line.match(/\{([\s\S]*?)\}/);
+    if (!im) continue;
+    for (const raw of im[1].split(',')) {
+      const name = stripAlias(raw.trim());
+      if (name) localImported.add(name);
+    }
+  }
+  const namedBySource = new Map();
+  const sideEffect = [];
+  const defaultBySource = new Map();
+  for (const sn of priorSnippets) {
+    for (const line of extractImports(sn)) {
+      const fromMatch = line.match(/from\s+['"]([^'"]+)['"]\s*;/);
+      if (!fromMatch) {
+        // side-effect import like `import './styles.css';`
+        sideEffect.push(line.trim());
+        continue;
+      }
+      const source = fromMatch[1];
+      const namedMatch = line.match(/\{([\s\S]*?)\}/);
+      const defaultMatch = line.match(/^import\s+([A-Za-z_$][\w$]*)\s*[,{]?/);
+      if (defaultMatch && !line.startsWith('import {')) {
+        const def = defaultMatch[1];
+        if (def !== 'import' && !localImported.has(def)) {
+          defaultBySource.set(source, def);
+        }
+      }
+      if (namedMatch) {
+        if (!namedBySource.has(source)) namedBySource.set(source, new Set());
+        for (const raw of namedMatch[1].split(',')) {
+          const name = stripAlias(raw.trim());
+          if (!name) continue;
+          if (localImported.has(name)) continue;
+          namedBySource.get(source).add(raw.trim());
+        }
+      }
+    }
+  }
+  const importLines = [];
+  for (const line of new Set(sideEffect)) importLines.push(line);
+  for (const [source, names] of namedBySource) {
+    if (names.size === 0) continue;
+    importLines.push(`import { ${[...names].join(', ')} } from '${source}';`);
+  }
+  if (!decls.length && !importLines.length) return '';
+  return (
+    '// ── Recipe context: declarations from earlier snippets ──\n' +
+    (importLines.length ? importLines.join('\n') + '\n\n' : '') +
+    decls.join('\n\n') +
+    '\n// ── End recipe context ──\n\n'
+  );
+}
+
 function writeSnippets(items) {
   rmSync(TMP_DIR, { recursive: true, force: true });
   mkdirSync(TMP_DIR, { recursive: true });
   for (const item of items) {
-    const rewritten = rewriteCorelithImports(item.code);
+    const preamble = buildRecipePreamble(item.priorCodes || [], item.code);
+    const combined = preamble + item.code;
+    const rewritten = rewriteCorelithImports(combined);
     const wrapped = ensureReactImport(rewritten);
     writeFileSync(join(TMP_DIR, item.filename), wrapped, 'utf8');
   }
@@ -327,6 +607,21 @@ function main() {
     byRecipe.set(slug, stats);
     totalFound += snippets.length;
 
+    // Accumulate the source of every prior snippet so a later snippet
+    // can reference types/components named earlier in the recipe — the
+    // reader sees the recipe as one continuous narrative. We only carry
+    // forward snippets whose code is parseable; snippets marked as
+    // illustrative (ellipsis, `// ...`, diff syntax) are explicitly
+    // *excluded* because feeding their elided source into the extractor
+    // would inject syntactically invalid tokens into later snippets'
+    // preambles.
+    const ILLUSTRATIVE_REASONS = new Set([
+      'ellipsis (…)',
+      '// ... elision',
+      '/* ... */ elision',
+      'diff syntax (+/- lines)',
+    ]);
+    const priorCodes = [];
     snippets.forEach((sn, idx) => {
       const ord = idx + 1;
       const decision = classify(sn);
@@ -337,11 +632,34 @@ function main() {
         if (flags.verbose) {
           console.log(`  skip  ${slug}#${ord}  (${decision.reason})`);
         }
+        // Even skipped snippets contribute their decls to the recipe
+        // context — *unless* the snippet is explicitly illustrative
+        // (elided / diff). Those would corrupt the preamble. We check
+        // the raw code as well as the classification reason because a
+        // snippet may have been skipped for a different reason while
+        // still containing elision tokens.
+        if (
+          !ILLUSTRATIVE_REASONS.has(decision.reason) &&
+          !sn.code.includes('…') &&
+          !/\/\/\s*\.\.\./.test(sn.code) &&
+          !/\/\*\s*\.\.\.\s*\*\//.test(sn.code) &&
+          !/^[+-] /m.test(sn.code)
+        ) {
+          priorCodes.push(sn.code);
+        }
         return;
       }
       stats.checked++;
       const filename = `${slug}__${String(ord).padStart(2, '0')}.tsx`;
-      toCheck.push({ filename, recipe: slug, ord, code: sn.code, path });
+      toCheck.push({
+        filename,
+        recipe: slug,
+        ord,
+        code: sn.code,
+        path,
+        priorCodes: priorCodes.slice(),
+      });
+      priorCodes.push(sn.code);
     });
   }
 
