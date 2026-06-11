@@ -390,14 +390,19 @@ function ThumbStrip({ photos, index, onPick }: {
   <section id="final">
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The whole gallery — grid, lightbox, keyboard / touch nav, thumbnail strip, and focus restoration.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { useEffect, useRef, useState } from &#39;@corelithzw/react&#39;;
-import { Lightbox, useGallery, Button, Stack } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { useMemo } from &#39;react&#39;;
+import { Lightbox, useGallery } from &#39;@corelithzw/react&#39;;
+import type { LightboxImage } from &#39;@corelithzw/react&#39;;
 
-type Photo = { id: string; src: string; alt: string; width: number; height: number };
+type GalleryPhoto = { id: string; src: string; alt: string; width: number; height: number };
 
-export function Gallery({ photos, title }: { photos: Photo[]; title: string }) {
-  const [openIndex, setOpenIndex] = useState&lt;number | null&gt;(null);
+export function FinalGallery({ photos, title }: { photos: GalleryPhoto[]; title: string }) {
+  const gallery = useGallery(0, photos.length);
+  const images: LightboxImage[] = useMemo(
+    () =&gt; photos.map((p) =&gt; ({ src: p.src, alt: p.alt })),
+    [photos],
+  );
 
   return (
     &lt;section aria-label={title}&gt;
@@ -411,7 +416,7 @@ export function Gallery({ photos, title }: { photos: Photo[]; title: string }) {
               type=&quot;button&quot;
               className=&quot;thumb&quot;
               aria-label={`Open ${p.alt}, ${i + 1} of ${photos.length}`}
-              onClick={() =&gt; setOpenIndex(i)}
+              onClick={() =&gt; gallery.show(i)}
             &gt;
               &lt;img src={p.src} alt={p.alt} loading=&quot;lazy&quot; /&gt;
             &lt;/button&gt;
@@ -419,171 +424,18 @@ export function Gallery({ photos, title }: { photos: Photo[]; title: string }) {
         ))}
       &lt;/ul&gt;
 
-      {openIndex !== null &amp;&amp; (
-        &lt;LightboxView
-          photos={photos}
-          startIndex={openIndex}
-          onClose={() =&gt; setOpenIndex(null)}
-        /&gt;
-      )}
+      &lt;Lightbox
+        images={images}
+        index={gallery.index}
+        open={gallery.open}
+        onChange={gallery.setIndex}
+        onClose={gallery.close}
+      /&gt;
     &lt;/section&gt;
   );
 }
 
-function LightboxView({ photos, startIndex, onClose }: {
-  photos: Photo[];
-  startIndex: number;
-  onClose: () =&gt; void;
-}) {
-  const dialogRef = useRef&lt;HTMLDialogElement&gt;(null);
-  const openerRef = useRef&lt;HTMLElement | null&gt;(null);
-  const stripRef  = useRef&lt;HTMLDivElement&gt;(null);
-
-  const [index, setIndex] = useState(startIndex);
-  const [zoom, setZoom]   = useState(1);
-
-  // Mount: capture opener, show modal.
-  useEffect(() =&gt; {
-    openerRef.current = document.activeElement as HTMLElement;
-    dialogRef.current?.showModal();
-    return () =&gt; {
-      dialogRef.current?.close();
-      // Restore focus — the opener is the thumbnail button.
-      // Scroll position is preserved because the page was inerted,
-      // not scroll-locked.
-      openerRef.current?.focus();
-    };
-  }, []);
-
-  // Reset zoom on every image change.
-  useEffect(() =&gt; { setZoom(1); }, [index]);
-
-  // Keep the current thumb centred in the strip.
-  useEffect(() =&gt; {
-    const el = stripRef.current?.querySelector&lt;HTMLButtonElement&gt;(`[data-i=&quot;${index}&quot;]`);
-    el?.scrollIntoView({ behavior: &#39;smooth&#39;, inline: &#39;center&#39;, block: &#39;nearest&#39; });
-  }, [index]);
-
-  // Keyboard nav.
-  useEffect(() =&gt; {
-    const onKey = (e: KeyboardEvent) =&gt; {
-      if (e.key === &#39;ArrowLeft&#39;)  prev();
-      if (e.key === &#39;ArrowRight&#39;) next();
-      if (e.key === &#39;Escape&#39;)     onClose();
-      if (e.key === &#39;+&#39;)          setZoom((z) =&gt; Math.min(4, z * 1.25));
-      if (e.key === &#39;-&#39;)          setZoom((z) =&gt; Math.max(1, z / 1.25));
-      if (e.key === &#39;0&#39;)          setZoom(1);
-    };
-    window.addEventListener(&#39;keydown&#39;, onKey);
-    return () =&gt; window.removeEventListener(&#39;keydown&#39;, onKey);
-  }, []);
-
-  const prev = () =&gt; setIndex((i) =&gt; (i &gt; 0 ? i - 1 : i));
-  const next = () =&gt; setIndex((i) =&gt; (i &lt; photos.length - 1 ? i + 1 : i));
-
-  // Touch — swipe and pinch.
-  const touchStartX = useRef&lt;number | null&gt;(null);
-  const pinchStart  = useRef&lt;number | null&gt;(null);
-  const baseZoom    = useRef(1);
-
-  const onTouchStart = (e: React.TouchEvent) =&gt; {
-    if (e.touches.length === 1) {
-      touchStartX.current = e.touches[0].clientX;
-    } else if (e.touches.length === 2) {
-      pinchStart.current = distance(e.touches[0], e.touches[1]);
-      baseZoom.current   = zoom;
-    }
-  };
-
-  const onTouchMove = (e: React.TouchEvent) =&gt; {
-    if (e.touches.length === 2 &amp;&amp; pinchStart.current !== null) {
-      const d = distance(e.touches[0], e.touches[1]);
-      const scale = d / pinchStart.current;
-      setZoom(Math.max(1, Math.min(4, baseZoom.current * scale)));
-    }
-  };
-
-  const onTouchEnd = (e: React.TouchEvent) =&gt; {
-    if (touchStartX.current !== null &amp;&amp; e.changedTouches.length === 1 &amp;&amp; zoom === 1) {
-      const dx = e.changedTouches[0].clientX - touchStartX.current;
-      if (dx &lt; -40) next();
-      if (dx &gt;  40) prev();
-    }
-    touchStartX.current = null;
-    pinchStart.current  = null;
-  };
-
-  const p = photos[index];
-
-  return (
-    &lt;dialog
-      ref={dialogRef}
-      className=&quot;lightbox&quot;
-      aria-label={`Image ${index + 1} of ${photos.length}: ${p.alt}`}
-      onClose={onClose}
-      onCancel={(e) =&gt; { e.preventDefault(); onClose(); }}
-    &gt;
-      &lt;header className=&quot;lb-toolbar&quot;&gt;
-        &lt;span&gt;{index + 1} / {photos.length}&lt;/span&gt;
-        &lt;Stack direction=&quot;horizontal&quot; gap=&quot;sm&quot;&gt;
-          &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; setZoom((z) =&gt; Math.max(1, z / 1.25))}&gt;−&lt;/Button&gt;
-          &lt;span aria-live=&quot;polite&quot;&gt;{Math.round(zoom * 100)}%&lt;/span&gt;
-          &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; setZoom((z) =&gt; Math.min(4, z * 1.25))}&gt;＋&lt;/Button&gt;
-          &lt;Button onClick={onClose}&gt;Close&lt;/Button&gt;
-        &lt;/Stack&gt;
-      &lt;/header&gt;
-
-      &lt;div
-        className=&quot;lb-stage&quot;
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-      &gt;
-        &lt;button
-          type=&quot;button&quot;
-          className=&quot;lb-nav prev&quot;
-          aria-label=&quot;Previous image&quot;
-          disabled={index === 0}
-          onClick={prev}
-        &gt;‹&lt;/button&gt;
-
-        &lt;img
-          src={p.src}
-          alt={p.alt}
-          style={{ transform: `scale(${zoom})` }}
-        /&gt;
-
-        &lt;button
-          type=&quot;button&quot;
-          className=&quot;lb-nav next&quot;
-          aria-label=&quot;Next image&quot;
-          disabled={index === photos.length - 1}
-          onClick={next}
-        &gt;›&lt;/button&gt;
-      &lt;/div&gt;
-
-      &lt;div className=&quot;thumb-strip&quot; ref={stripRef} role=&quot;listbox&quot; aria-label=&quot;Image picker&quot;&gt;
-        {photos.map((thumb, i) =&gt; (
-          &lt;button
-            key={thumb.id}
-            type=&quot;button&quot;
-            data-i={i}
-            role=&quot;option&quot;
-            aria-selected={i === index}
-            aria-current={i === index ? &#39;true&#39; : undefined}
-            onClick={() =&gt; setIndex(i)}
-          &gt;
-            &lt;img src={thumb.src} alt=&quot;&quot; loading=&quot;lazy&quot; /&gt;
-          &lt;/button&gt;
-        ))}
-      &lt;/div&gt;
-    &lt;/dialog&gt;
-  );
-}
-
-function distance(a: { clientX: number; clientY: number }, b: { clientX: number; clientY: number }) {
-  return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-}'>
+'>
       <div class="ds-specimen-stage canvas padded">
         <div style="display: grid; place-items: center; padding: 24px;">
           <div style="width: 100%; max-width: 560px; background: #0a0a0a; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px;">
