@@ -307,48 +307,51 @@ export function useTasks(serverTasks: Task[]) {
     <!-- Step 3 -->
     <div class="ck-step"><span class="n">03</span><h3>Wire create / update / delete with rollback</h3></div>
     <p>For create, the optimistic row uses a temp id (<code>tmp_abc</code>); the server returns a real id we swap in. For update / delete, the rollback is just <em>don't apply</em>: if the API fails, the committed list never changes, so the optimistic projection naturally drops the intent on the next render — and you fire a toast so the user knows.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
+    <div class="ds-specimen"
          data-code='import { useToast } from &#39;@corelithzw/react&#39;;
+
+declare const initialTasks: Task[];
 
 const tempId = () =&gt; `tmp_${crypto.randomUUID()}`;
 
 function useTaskMutations() {
-  const { committed, setCommitted, optimistic, addIntent } = useTasks(initialTasks);
+  const { setCommitted, optimistic, addIntent } = useTasks(initialTasks);
   const toast = useToast();
 
   const toggleDone = async (id: string, done: boolean) =&gt; {
-    addIntent({ type: &#39;toggle&#39;, id, done });
+    const handle = addIntent({ type: &#39;toggle&#39;, id, done });
     try {
       const res = await fetch(`/api/tasks/${id}`, {
         method: &#39;PATCH&#39;,
         body: JSON.stringify({ done }),
       });
       if (!res.ok) throw new Error(&quot;Couldn&#39;t save that toggle&quot;);
-      const updated = await res.json();
-      setCommitted((list) =&gt;
-        list.map((t) =&gt; (t.id === id ? { ...updated, state: { kind: &#39;idle&#39; } } : t)));
-    } catch (e: any) {
-      toast.show({ tone: &#39;danger&#39;, title: e.message, action: {
+      const updated = await res.json() as Task;
+      setCommitted(optimistic.map((t) =&gt; (t.id === id ? { ...updated, state: { kind: &#39;idle&#39; } } : t)));
+      handle.confirm();
+    } catch (e: unknown) {
+      handle.rollback();
+      const message = e instanceof Error ? e.message : String(e);
+      toast.show({ tone: &#39;danger&#39;, title: message, action: {
         label: &#39;Retry&#39;,
-        onClick: () =&gt; toggleDone(id, done),
+        onClick: () =&gt; { void toggleDone(id, done); },
       }});
     }
   };
 
   const create = async (title: string) =&gt; {
     const tmp = tempId();
-    addIntent({ type: &#39;create&#39;, tempId: tmp, title });
+    const handle = addIntent({ type: &#39;create&#39;, tempId: tmp, title });
     try {
-      const res = await fetch(&#39;/api/tasks&#39;, {
-        method: &#39;POST&#39;,
-        body: JSON.stringify({ title }),
-      });
+      const res = await fetch(&#39;/api/tasks&#39;, { method: &#39;POST&#39;, body: JSON.stringify({ title }) });
       if (!res.ok) throw new Error(&quot;Couldn&#39;t create that task&quot;);
-      const real = await res.json();
-      // Replace the tempId row, leave order intact.
-      setCommitted((list) =&gt; [{ ...real, state: { kind: &#39;idle&#39; } }, ...list]);
-    } catch (e: any) {
-      toast.show({ tone: &#39;danger&#39;, title: e.message });
+      const real = await res.json() as Task;
+      setCommitted([{ ...real, state: { kind: &#39;idle&#39; } }, ...optimistic.filter((t) =&gt; t.id !== tmp)]);
+      handle.confirm();
+    } catch (e: unknown) {
+      handle.rollback();
+      const message = e instanceof Error ? e.message : String(e);
+      toast.show({ tone: &#39;danger&#39;, title: message });
     }
   };
 
