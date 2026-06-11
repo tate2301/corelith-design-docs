@@ -246,60 +246,36 @@ function reducer(s: Prefs, a: Action): Prefs {
 
     <div class="ck-step"><span class="n">02</span><h3>Render the matrix as a real table</h3></div>
     <p>A real <code>&lt;table&gt;</code> with <code>&lt;th scope="col"&gt;</code> for the channels and <code>&lt;th scope="row"&gt;</code> for the events gives you free a11y. Each cell holds a <code>Switch</code> with an <code>aria-label</code> like "Email when order is placed". The toggle dispatches and persists in one go.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { Switch, Card } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { NotificationMatrix } from &#39;@corelithzw/react&#39;;
+import type {
+  NotificationEvent, NotificationChannel, NotificationPrefs,
+} from &#39;@corelithzw/react&#39;;
 
-const CHANNELS: { id: Channel; label: string }[] = [
+const CHANNELS: NotificationChannel[] = [
   { id: &#39;email&#39;, label: &#39;Email&#39; },
   { id: &#39;push&#39;,  label: &#39;Push&#39; },
   { id: &#39;app&#39;,   label: &#39;In-app&#39; },
   { id: &#39;sms&#39;,   label: &#39;SMS&#39; },
 ];
 
-function Matrix({ events, prefs, dispatch }: {
-  events: Event[];
-  prefs: Prefs;
-  dispatch: React.Dispatch&lt;Action&gt;;
+const EVENTS: NotificationEvent[] = [
+  { id: &#39;order_placed&#39;,  label: &#39;Order placed&#39;,  description: &#39;When a sale rings up&#39; },
+  { id: &#39;refund_issued&#39;, label: &#39;Refund issued&#39;, description: &#39;A till refunded a customer&#39; },
+  { id: &#39;low_stock&#39;,     label: &#39;Low stock&#39;,     description: &#39;A SKU dropped below reorder level&#39; },
+];
+
+function Matrix({ prefs, onToggle }: {
+  prefs: NotificationPrefs;
+  onToggle: (eventId: string, channelId: string, enabled: boolean) =&gt; void;
 }) {
   return (
-    &lt;table className=&quot;prefs-matrix&quot;&gt;
-      &lt;caption className=&quot;sr-only&quot;&gt;
-        Notification preferences. Rows are events, columns are channels.
-      &lt;/caption&gt;
-      &lt;thead&gt;
-        &lt;tr&gt;
-          &lt;th scope=&quot;col&quot;&gt;Event&lt;/th&gt;
-          {CHANNELS.map((c) =&gt; (
-            &lt;th scope=&quot;col&quot; key={c.id}&gt;{c.label}&lt;/th&gt;
-          ))}
-        &lt;/tr&gt;
-      &lt;/thead&gt;
-      &lt;tbody&gt;
-        {events.map((e) =&gt; (
-          &lt;tr key={e.id}&gt;
-            &lt;th scope=&quot;row&quot;&gt;
-              {e.label}
-              {e.critical &amp;&amp; &lt;span className=&quot;tag critical&quot;&gt;Critical&lt;/span&gt;}
-              {e.description &amp;&amp; &lt;p&gt;{e.description}&lt;/p&gt;}
-            &lt;/th&gt;
-            {CHANNELS.map((c) =&gt; {
-              const k = `${e.id}:${c.id}`;
-              return (
-                &lt;td key={c.id}&gt;
-                  &lt;Switch
-                    checked={prefs.matrix[k] ?? false}
-                    onChange={(v) =&gt; dispatch({
-                      type: &#39;TOGGLE&#39;, eventId: e.id, channel: c.id, value: v,
-                    })}
-                    aria-label={`${c.label} when ${e.label.toLowerCase()}`}
-                  /&gt;
-                &lt;/td&gt;
-              );
-            })}
-          &lt;/tr&gt;
-        ))}
-      &lt;/tbody&gt;
-    &lt;/table&gt;
+    &lt;NotificationMatrix
+      events={EVENTS}
+      channels={CHANNELS}
+      value={prefs}
+      onChange={onToggle}
+    /&gt;
   );
 }'>
       <div class="ds-specimen-stage canvas padded">
