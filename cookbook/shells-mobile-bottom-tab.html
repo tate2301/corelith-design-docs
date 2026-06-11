@@ -336,28 +336,29 @@
     <!-- Step 1 -->
     <div class="ck-step"><span class="n">01</span><h3>Lay out three rows: header, body, tab strip</h3></div>
     <p>The shell is a column flex with three children: header (optional), body (scrollable, takes the remaining space), tabs (fixed at the bottom). Use <code>min-height: 100dvh</code> on the root so the iOS URL bar doesn't push your tabs off screen on the first scroll. Pad the strip with <code>env(safe-area-inset-bottom)</code> so the home indicator never overlaps a label.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { MobileShell } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import type { ReactNode } from &#39;react&#39;;
+import { MobileShell } from &#39;@corelithzw/react&#39;;
 
 export function Shell({
   header,
   children,
   tabs,
 }: {
-  header?: React.ReactNode;
-  children: React.ReactNode;
-  tabs: React.ReactNode;
+  header?: ReactNode;
+  children: ReactNode;
+  tabs: ReactNode;
 }) {
   return (
     &lt;MobileShell&gt;
-      {header &amp;&amp; &lt;MobileShell.Header&gt;{header}&lt;/MobileShell.Header&gt;}
+      {header ? &lt;MobileShell.Header&gt;{header}&lt;/MobileShell.Header&gt; : null}
       &lt;MobileShell.Body&gt;{children}&lt;/MobileShell.Body&gt;
-      &lt;MobileShell.Tabs&gt;{tabs}&lt;/MobileShell.Tabs&gt;
+      {tabs}
     &lt;/MobileShell&gt;
   );
 }
 
-// MobileShell.Tabs internally applies:
+// MobileShell.BottomTabs internally applies:
 //   position: sticky; bottom: 0;
 //   padding-bottom: max(8px, env(safe-area-inset-bottom));
 //   transform: translateY(0); transition: transform 180ms ease-out;
@@ -377,8 +378,8 @@ export function Shell({
     <!-- Step 2 -->
     <div class="ck-step"><span class="n">02</span><h3>Render four tabs with brand-pill active state and a badge</h3></div>
     <p>Tabs render as <code>&lt;button&gt;</code>s inside a <code>nav</code>. Active state is a brand-soft rounded background behind icon + label — never just a colour change, which fails for low-vision users. The badge sits on the icon, not the label, so it stays legible even when the tab is wide enough to wrap.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { MobileShell, Tab, Badge } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { MobileShell, type BottomTabItem } from &#39;@corelithzw/react&#39;;
 
 type TabDef = {
   id: string;
@@ -389,10 +390,10 @@ type TabDef = {
 };
 
 const TABS: TabDef[] = [
-  { id: &#39;home&#39;,    label: &#39;Home&#39;,    icon: &#39;home&#39;,    to: &#39;/&#39; },
-  { id: &#39;fees&#39;,    label: &#39;Fees&#39;,    icon: &#39;receipt&#39;, to: &#39;/fees&#39; },
-  { id: &#39;notices&#39;, label: &#39;Notices&#39;, icon: &#39;bell&#39;,    to: &#39;/notices&#39; },
-  { id: &#39;profile&#39;, label: &#39;Profile&#39;, icon: &#39;user&#39;,    to: &#39;/profile&#39; },
+  { id: &#39;home&#39;,    label: &#39;Home&#39;,    icon: &#39;◐&#39;, to: &#39;/&#39; },
+  { id: &#39;fees&#39;,    label: &#39;Fees&#39;,    icon: &#39;▤&#39;, to: &#39;/fees&#39; },
+  { id: &#39;notices&#39;, label: &#39;Notices&#39;, icon: &#39;◔&#39;, to: &#39;/notices&#39; },
+  { id: &#39;profile&#39;, label: &#39;Profile&#39;, icon: &#39;◉&#39;, to: &#39;/profile&#39; },
 ];
 
 function Tabs({
@@ -404,25 +405,20 @@ function Tabs({
   badges: Record&lt;string, number&gt;;
   onSelect: (id: string) =&gt; void;
 }) {
+  const items: BottomTabItem[] = TABS.map((t) =&gt; ({
+    value: t.id,
+    label: t.label,
+    icon: t.icon,
+    badge: badges[t.id] &amp;&amp; badges[t.id] &gt; 0 ? badges[t.id] : undefined,
+  }));
+
   return (
-    &lt;MobileShell.Tabs aria-label=&quot;Primary&quot;&gt;
-      {TABS.map(t =&gt; (
-        &lt;Tab
-          key={t.id}
-          icon={t.icon}
-          label={t.label}
-          active={current === t.id}
-          onClick={() =&gt; onSelect(t.id)}
-          aria-current={current === t.id ? &#39;page&#39; : undefined}
-        &gt;
-          {badges[t.id] &gt; 0 &amp;&amp; (
-            &lt;Badge tone=&quot;danger&quot; aria-label={`${badges[t.id]} unread`}&gt;
-              {badges[t.id]}
-            &lt;/Badge&gt;
-          )}
-        &lt;/Tab&gt;
-      ))}
-    &lt;/MobileShell.Tabs&gt;
+    &lt;MobileShell.BottomTabs
+      ariaLabel=&quot;Primary&quot;
+      value={current}
+      onChange={onSelect}
+      items={items}
+    /&gt;
   );
 }'>
       <div class="ds-specimen-stage canvas padded">
@@ -454,9 +450,10 @@ function Tabs({
     <div class="ck-step"><span class="n">03</span><h3>Hide the strip when the soft keyboard is up</h3></div>
     <p>On iOS, a focused input pushes the visual viewport upward and your sticky tabs end up floating in the middle of the screen. Listen to <code>visualViewport.resize</code> and translate the strip down by its own height when the viewport shrinks. On Android, focus-in / focus-out on inputs is the more reliable signal — listen to both.</p>
     <div class="ds-specimen"
-         data-code='import { useEffect, useState } from &#39;@corelithzw/react&#39;;
+         data-code='import { useEffect, useState } from &#39;react&#39;;
+import { MobileShell, type BottomTabItem } from &#39;@corelithzw/react&#39;;
 
-function useKeyboardOpen(): boolean {
+export function useKeyboardOpen(): boolean {
   const [open, setOpen] = useState(false);
 
   useEffect(() =&gt; {
@@ -489,12 +486,25 @@ function useKeyboardOpen(): boolean {
   return open;
 }
 
-// inside the shell
-const kbOpen = useKeyboardOpen();
-
-&lt;MobileShell.Tabs hidden={kbOpen}&gt;{/* … */}&lt;/MobileShell.Tabs&gt;
-// MobileShell.Tabs translates itself off-screen when hidden=true,
-// using the same 180ms ease-out as the entrance.'>
+// Usage: hide the tab strip when the soft keyboard is up. The shipped
+// BottomTabs has no `hidden` prop, so we just unmount it.
+export function ShellWithKbAwareTabs({
+  current, onSelect, items,
+}: {
+  current: string;
+  onSelect: (id: string) =&gt; void;
+  items: BottomTabItem[];
+}) {
+  const kbOpen = useKeyboardOpen();
+  return kbOpen ? null : (
+    &lt;MobileShell.BottomTabs
+      ariaLabel=&quot;Primary&quot;
+      value={current}
+      onChange={onSelect}
+      items={items}
+    /&gt;
+  );
+}'>
       <div class="ds-specimen-stage canvas padded">
         <div class="ck-code-only-note">
           <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
@@ -510,11 +520,11 @@ const kbOpen = useKeyboardOpen();
     <div class="ck-step"><span class="n">04</span><h3>Spill the 5th+ tab into a "More" bottom sheet</h3></div>
     <p>The moment your app has five tabs you want to show, drop the 5th into a "More" tab that opens a <code>BottomSheet</code> from the strip. The sheet lists the overflow items as a tall scrolling list and inherits the same active state. Never collapse to fewer-than-4 — three tabs on a phone-wide strip leave dead space the user reads as missing nav.</p>
     <div class="ds-specimen"
-         data-code='import { useState } from &#39;@corelithzw/react&#39;;
-import { MobileShell, Tab, BottomSheet, NavItem } from &#39;@corelithzw/react&#39;;
+         data-code='import { useState } from &#39;react&#39;;
+import { MobileShell, BottomSheet, NavItem, type BottomTabItem } from &#39;@corelithzw/react&#39;;
 
 const PRIMARY = TABS.slice(0, 3);
-const OVERFLOW = TABS.slice(3); // marks, attendance, library, calendar…
+const OVERFLOW = TABS.slice(3); // marks, attendance, library, calendar
 
 function TabsWithMore({
   current, onSelect,
@@ -523,25 +533,29 @@ function TabsWithMore({
   onSelect: (id: string) =&gt; void;
 }) {
   const [moreOpen, setMoreOpen] = useState(false);
+  const inOverflow = OVERFLOW.some((t) =&gt; t.id === current);
+
+  const items: BottomTabItem[] = [
+    ...PRIMARY.map((t) =&gt; ({ value: t.id, label: t.label, icon: t.icon })),
+    { value: &#39;__more&#39;, label: &#39;More&#39;, icon: &#39;⋯&#39; },
+  ];
+
+  const handleChange = (value: string) =&gt; {
+    if (value === &#39;__more&#39;) { setMoreOpen(true); return; }
+    onSelect(value);
+  };
 
   return (
     &lt;&gt;
-      &lt;MobileShell.Tabs aria-label=&quot;Primary&quot;&gt;
-        {PRIMARY.map(t =&gt; (
-          &lt;Tab key={t.id} icon={t.icon} label={t.label}
-               active={current === t.id}
-               onClick={() =&gt; onSelect(t.id)} /&gt;
-        ))}
-        &lt;Tab
-          icon=&quot;more&quot;
-          label=&quot;More&quot;
-          active={OVERFLOW.some(t =&gt; t.id === current)}
-          onClick={() =&gt; setMoreOpen(true)}
-        /&gt;
-      &lt;/MobileShell.Tabs&gt;
+      &lt;MobileShell.BottomTabs
+        ariaLabel=&quot;Primary&quot;
+        value={inOverflow ? &#39;__more&#39; : current}
+        onChange={handleChange}
+        items={items}
+      /&gt;
 
       &lt;BottomSheet open={moreOpen} onClose={() =&gt; setMoreOpen(false)} title=&quot;More&quot;&gt;
-        {OVERFLOW.map(t =&gt; (
+        {OVERFLOW.map((t) =&gt; (
           &lt;NavItem
             key={t.id}
             to={t.to}
@@ -584,10 +598,11 @@ function TabsWithMore({
   <section id="final">
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The whole <code>MobileShell</code> wrapper, assembled. Slots, tab definitions, keyboard awareness, badge wiring, More-sheet, slide-up entrance.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { useEffect, useState } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { useEffect, useState, type ReactNode } from &#39;react&#39;;
 import {
-  MobileShell, Tab, Badge, BottomSheet, NavItem,
+  MobileShell, BottomSheet, NavItem,
+  type BottomTabItem,
 } from &#39;@corelithzw/react&#39;;
 
 // ── Tab definitions ────────────────────────────────────────────
@@ -646,62 +661,61 @@ export function MobileTabShell({
 }: {
   current: string;
   badges: Record&lt;string, number&gt;;
-  header?: React.ReactNode;
+  header?: ReactNode;
   onSelect: (id: string) =&gt; void;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const [moreOpen, setMoreOpen] = useState(false);
   const kbOpen = useKeyboardOpen();
-  const inOverflow = OVERFLOW.some(t =&gt; t.id === current);
+  const inOverflow = OVERFLOW.some((t) =&gt; t.id === current);
+
+  const tabItems: BottomTabItem[] = [
+    ...PRIMARY.map((t) =&gt; ({
+      value: t.id,
+      label: t.label,
+      icon: t.icon,
+      badge: badges[t.id] &amp;&amp; badges[t.id] &gt; 0 ? badges[t.id] : undefined,
+    })),
+    { value: &#39;__more&#39;, label: &#39;More&#39;, icon: &#39;⋯&#39; },
+  ];
+
+  const handleChange = (value: string) =&gt; {
+    if (value === &#39;__more&#39;) { setMoreOpen(true); return; }
+    onSelect(value);
+  };
 
   return (
-    &lt;MobileShell entrance=&quot;slide-up&quot;&gt;
-      {header &amp;&amp; &lt;MobileShell.Header&gt;{header}&lt;/MobileShell.Header&gt;}
+    &lt;MobileShell&gt;
+      {header ? &lt;MobileShell.Header&gt;{header}&lt;/MobileShell.Header&gt; : null}
 
       &lt;MobileShell.Body&gt;
         {children}
       &lt;/MobileShell.Body&gt;
 
-      &lt;MobileShell.Tabs hidden={kbOpen} aria-label=&quot;Primary&quot;&gt;
-        {PRIMARY.map(t =&gt; (
-          &lt;Tab
-            key={t.id}
-            icon={t.icon}
-            label={t.label}
-            active={current === t.id}
-            onClick={() =&gt; onSelect(t.id)}
-            aria-current={current === t.id ? &#39;page&#39; : undefined}
-          &gt;
-            {badges[t.id] &gt; 0 &amp;&amp; (
-              &lt;Badge tone=&quot;danger&quot; aria-label={`${badges[t.id]} unread`}&gt;
-                {badges[t.id]}
-              &lt;/Badge&gt;
-            )}
-          &lt;/Tab&gt;
-        ))}
-        &lt;Tab
-          icon=&quot;more&quot;
-          label=&quot;More&quot;
-          active={inOverflow}
-          onClick={() =&gt; setMoreOpen(true)}
-          aria-expanded={moreOpen}
+      {kbOpen ? null : (
+        &lt;MobileShell.BottomTabs
+          ariaLabel=&quot;Primary&quot;
+          value={inOverflow ? &#39;__more&#39; : current}
+          onChange={handleChange}
+          items={tabItems}
         /&gt;
-      &lt;/MobileShell.Tabs&gt;
+      )}
 
       &lt;BottomSheet
         open={moreOpen}
         onClose={() =&gt; setMoreOpen(false)}
         title=&quot;More&quot;
       &gt;
-        {OVERFLOW.map(t =&gt; (
+        {OVERFLOW.map((t) =&gt; (
           &lt;NavItem
             key={t.id}
+            to={t.to}
             icon={t.icon}
+            badge={badges[t.id] &amp;&amp; badges[t.id] &gt; 0 ? badges[t.id] : undefined}
             active={current === t.id}
             onClick={() =&gt; { onSelect(t.id); setMoreOpen(false); }}
           &gt;
             {t.label}
-            {badges[t.id] &gt; 0 &amp;&amp; &lt;Badge tone=&quot;danger&quot;&gt;{badges[t.id]}&lt;/Badge&gt;}
           &lt;/NavItem&gt;
         ))}
       &lt;/BottomSheet&gt;
