@@ -389,53 +389,35 @@ export function usePreferences(initial: NotificationPrefs) {
   <section id="final">
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The whole settings page — matrix, pause, quiet hours, optimistic persistence.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { useReducer } from &#39;@corelithzw/react&#39;;
-import {
-  NotificationMatrix, usePreferences,
-  Switch, Button, Input, Card, Stack, Toast, useToast,
+    <div class="ds-specimen"
+         data-code='import { useState } from &#39;react&#39;;
+import { NotificationMatrix, Stack } from &#39;@corelithzw/react&#39;;
+import type {
+  NotificationEvent, NotificationChannel,
+  NotificationPrefs, MasterPause,
 } from &#39;@corelithzw/react&#39;;
 
-type Channel = &#39;email&#39; | &#39;push&#39; | &#39;app&#39; | &#39;sms&#39;;
-
-type Event = {
-  id: string; label: string;
-  description?: string; critical?: boolean;
-};
-
-type Prefs = {
-  matrix: Record&lt;string, boolean&gt;;
-  pauseUntil: string | null;
-  quietHours: { from: string; to: string } | null;
-};
-
-const CHANNELS: { id: Channel; label: string }[] = [
+const FINAL_CHANNELS: NotificationChannel[] = [
   { id: &#39;email&#39;, label: &#39;Email&#39; },
   { id: &#39;push&#39;,  label: &#39;Push&#39; },
   { id: &#39;app&#39;,   label: &#39;In-app&#39; },
   { id: &#39;sms&#39;,   label: &#39;SMS&#39; },
 ];
 
-const EVENTS: Event[] = [
-  { id: &#39;order_placed&#39;,   label: &#39;Order placed&#39;,   description: &#39;When a sale rings up.&#39; },
-  { id: &#39;refund_issued&#39;,  label: &#39;Refund issued&#39;,  critical: true, description: &#39;A till refunded a customer.&#39; },
-  { id: &#39;low_stock&#39;,      label: &#39;Low stock&#39;,      description: &#39;A SKU dropped below its reorder level.&#39; },
-  { id: &#39;mention&#39;,         label: &#39;Mention&#39;,        description: &#39;Someone @-mentioned you.&#39; },
-  { id: &#39;weekly_report&#39;,   label: &#39;Weekly report&#39;,  description: &#39;Friday close summary.&#39; },
+const FINAL_EVENTS: NotificationEvent[] = [
+  { id: &#39;order_placed&#39;,  label: &#39;Order placed&#39;,  description: &#39;When a sale rings up&#39; },
+  { id: &#39;refund_issued&#39;, label: &#39;Refund issued&#39;, description: &#39;A till refunded a customer&#39; },
+  { id: &#39;low_stock&#39;,     label: &#39;Low stock&#39;,     description: &#39;A SKU dropped below reorder level&#39; },
+  { id: &#39;mention&#39;,       label: &#39;Mention&#39;,       description: &#39;Someone @-mentioned you&#39; },
+  { id: &#39;weekly_report&#39;, label: &#39;Weekly report&#39;, description: &#39;Friday close summary&#39; },
 ];
 
-const PRESETS = [
-  { label: &#39;1 h&#39;,    minutes: 60 },
-  { label: &#39;2 h&#39;,    minutes: 120 },
-  { label: &#39;4 h&#39;,    minutes: 240 },
-  { label: &#39;Until tomorrow&#39;, minutes: 24 * 60 },
-];
-
-const key = (e: string, c: Channel) =&gt; `${e}:${c}`;
-
-export function NotificationPreferences({ initial }: { initial: Prefs }) {
-  const [prefs, dispatch] = usePreferences(initial);
-  const paused = prefs.pauseUntil &amp;&amp; new Date(prefs.pauseUntil) &gt; new Date();
+export function NotificationPreferences({ initial }: { initial: NotificationPrefs }) {
+  // usePreferences (step 4) owns the optimistic PATCH + toast.
+  // NotificationMatrix renders the channels × events grid + the
+  // built-in master-pause row using its own preset buttons.
+  const { prefs, onToggle } = usePreferences(initial);
+  const [pause, setPause] = useState&lt;MasterPause&gt;(0);
 
   return (
     &lt;Stack gap=&quot;lg&quot;&gt;
@@ -443,147 +425,16 @@ export function NotificationPreferences({ initial }: { initial: Prefs }) {
         &lt;h1&gt;Notifications&lt;/h1&gt;
         &lt;p&gt;Choose what reaches you and how. Changes save as you flip them.&lt;/p&gt;
       &lt;/header&gt;
-
-      &lt;Card aria-live=&quot;polite&quot;&gt;
-        {paused ? (
-          &lt;Stack gap=&quot;sm&quot;&gt;
-            &lt;h2&gt;Paused until {new Date(prefs.pauseUntil!).toLocaleTimeString()}&lt;/h2&gt;
-            &lt;p&gt;Critical alerts (refunds, security) still come through.&lt;/p&gt;
-            &lt;Button variant=&quot;primary&quot; onClick={() =&gt; dispatch({ type: &#39;RESUME&#39; })}&gt;Resume now&lt;/Button&gt;
-          &lt;/Stack&gt;
-        ) : (
-          &lt;Stack gap=&quot;sm&quot;&gt;
-            &lt;h2&gt;Pause notifications&lt;/h2&gt;
-            &lt;p&gt;All channels go quiet for the chosen window. Critical alerts still ring.&lt;/p&gt;
-            &lt;Stack direction=&quot;horizontal&quot; gap=&quot;sm&quot; wrap&gt;
-              {PRESETS.map((p) =&gt; (
-                &lt;Button key={p.label} variant=&quot;ghost&quot; onClick={() =&gt; dispatch({
-                  type: &#39;PAUSE&#39;,
-                  until: new Date(Date.now() + p.minutes * 60_000).toISOString(),
-                })}&gt;{p.label}&lt;/Button&gt;
-              ))}
-            &lt;/Stack&gt;
-          &lt;/Stack&gt;
-        )}
-      &lt;/Card&gt;
-
-      &lt;Card&gt;
-        &lt;Stack gap=&quot;sm&quot;&gt;
-          &lt;h2&gt;Quiet hours&lt;/h2&gt;
-          &lt;p&gt;Don&#39;t disturb in this daily window. Critical alerts still ring.&lt;/p&gt;
-          &lt;Stack direction=&quot;horizontal&quot; gap=&quot;sm&quot; align=&quot;center&quot;&gt;
-            &lt;Input
-              type=&quot;time&quot;
-              value={prefs.quietHours?.from ?? &#39;&#39;}
-              aria-label=&quot;Quiet hours start&quot;
-              onChange={(from) =&gt; dispatch({
-                type: &#39;QUIET&#39;,
-                hours: { from, to: prefs.quietHours?.to ?? &#39;06:00&#39; },
-              })}
-            /&gt;
-            &lt;span&gt;to&lt;/span&gt;
-            &lt;Input
-              type=&quot;time&quot;
-              value={prefs.quietHours?.to ?? &#39;&#39;}
-              aria-label=&quot;Quiet hours end&quot;
-              onChange={(to) =&gt; dispatch({
-                type: &#39;QUIET&#39;,
-                hours: { from: prefs.quietHours?.from ?? &#39;22:00&#39;, to },
-              })}
-            /&gt;
-            {prefs.quietHours &amp;&amp; (
-              &lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot; onClick={() =&gt; dispatch({ type: &#39;QUIET&#39;, hours: null })}&gt;
-                Clear
-              &lt;/Button&gt;
-            )}
-          &lt;/Stack&gt;
-        &lt;/Stack&gt;
-      &lt;/Card&gt;
-
-      &lt;Card&gt;
-        &lt;Stack gap=&quot;sm&quot;&gt;
-          &lt;h2&gt;What sends to where&lt;/h2&gt;
-          &lt;p&gt;Off by default. Pick the channels you want for each event.&lt;/p&gt;
-          &lt;table className=&quot;prefs-matrix&quot;&gt;
-            &lt;caption className=&quot;sr-only&quot;&gt;Notification preferences. Rows are events, columns are channels.&lt;/caption&gt;
-            &lt;thead&gt;
-              &lt;tr&gt;
-                &lt;th scope=&quot;col&quot;&gt;Event&lt;/th&gt;
-                {CHANNELS.map((c) =&gt; &lt;th scope=&quot;col&quot; key={c.id}&gt;{c.label}&lt;/th&gt;)}
-              &lt;/tr&gt;
-            &lt;/thead&gt;
-            &lt;tbody&gt;
-              {EVENTS.map((e) =&gt; (
-                &lt;tr key={e.id}&gt;
-                  &lt;th scope=&quot;row&quot;&gt;
-                    &lt;b&gt;{e.label}&lt;/b&gt;
-                    {e.critical &amp;&amp; &lt;span className=&quot;tag critical&quot;&gt;Critical&lt;/span&gt;}
-                    {e.description &amp;&amp; &lt;p&gt;{e.description}&lt;/p&gt;}
-                  &lt;/th&gt;
-                  {CHANNELS.map((c) =&gt; {
-                    const k = key(e.id, c.id);
-                    return (
-                      &lt;td key={c.id}&gt;
-                        &lt;Switch
-                          checked={prefs.matrix[k] ?? false}
-                          onChange={(v) =&gt; dispatch({
-                            type: &#39;TOGGLE&#39;, eventId: e.id, channel: c.id, value: v,
-                          })}
-                          aria-label={`${c.label} when ${e.label.toLowerCase()}`}
-                        /&gt;
-                      &lt;/td&gt;
-                    );
-                  })}
-                &lt;/tr&gt;
-              ))}
-            &lt;/tbody&gt;
-          &lt;/table&gt;
-        &lt;/Stack&gt;
-      &lt;/Card&gt;
+      &lt;NotificationMatrix
+        events={FINAL_EVENTS}
+        channels={FINAL_CHANNELS}
+        value={prefs}
+        onChange={onToggle}
+        masterPauseHours={pause}
+        onMasterPause={setPause}
+      /&gt;
     &lt;/Stack&gt;
   );
-}
-
-function reducer(s: Prefs, a: any): Prefs {
-  switch (a.type) {
-    case &#39;TOGGLE&#39;:
-      return { ...s, matrix: { ...s.matrix, [key(a.eventId, a.channel)]: a.value } };
-    case &#39;PAUSE&#39;:    return { ...s, pauseUntil: a.until };
-    case &#39;RESUME&#39;:   return { ...s, pauseUntil: null };
-    case &#39;QUIET&#39;:    return { ...s, quietHours: a.hours };
-    case &#39;__rollback&#39;: return a.prev;
-    default: return s;
-  }
-}
-
-function usePreferencesImpl(initial: Prefs) {
-  const [prefs, raw] = useReducer(reducer, initial);
-  const toast = useToast();
-
-  const dispatch = (a: any) =&gt; {
-    const before = prefs;
-    raw(a);
-    fetch(&#39;/me/preferences&#39;, {
-      method: &#39;PATCH&#39;,
-      body: JSON.stringify(diffFromAction(a)),
-    }).then((res) =&gt; {
-      if (!res.ok) throw new Error(&#39;Save failed&#39;);
-      toast.show({ tone: &#39;success&#39;, title: &#39;Saved&#39;, ttl: 1200 });
-    }).catch(() =&gt; {
-      raw({ type: &#39;__rollback&#39;, prev: before });
-      toast.show({ tone: &#39;danger&#39;, title: &#39;Could not save preference&#39; });
-    });
-  };
-
-  return [prefs, dispatch] as const;
-}
-
-function diffFromAction(a: any) {
-  if (a.type === &#39;TOGGLE&#39;) return { [`matrix.${key(a.eventId, a.channel)}`]: a.value };
-  if (a.type === &#39;PAUSE&#39;)  return { pauseUntil: a.until };
-  if (a.type === &#39;RESUME&#39;) return { pauseUntil: null };
-  if (a.type === &#39;QUIET&#39;)  return { quietHours: a.hours };
-  return {};
 }'>
       <div class="ds-specimen-stage canvas padded">
         <div style="display: grid; place-items: center; padding: 24px;">
