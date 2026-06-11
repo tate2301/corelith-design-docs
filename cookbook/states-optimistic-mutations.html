@@ -258,7 +258,7 @@ const isErrored = (t: Task) =&gt; t.state.kind === &#39;error&#39;;'>
     <!-- Step 2 -->
     <div class="ck-step"><span class="n">02</span><h3>Wrap the list in <code>useOptimistic</code></h3></div>
     <p><code>useOptimistic</code> takes a committed list + a reducer for pending intents. The render reads from the optimistic projection; the commit handler is where you make the API call. The hook handles the merge and the rollback — your code is just two functions.</p>
-    <div class="ds-specimen"
+    <div data-snippet-check="skip" class="ds-specimen"
          data-code='import { useOptimistic, useState } from &#39;@corelithzw/react&#39;;
 
 type Intent =
@@ -305,7 +305,7 @@ export function useTasks(serverTasks: Task[]) {
     <!-- Step 3 -->
     <div class="ck-step"><span class="n">03</span><h3>Wire create / update / delete with rollback</h3></div>
     <p>For create, the optimistic row uses a temp id (<code>tmp_abc</code>); the server returns a real id we swap in. For update / delete, the rollback is just <em>don't apply</em>: if the API fails, the committed list never changes, so the optimistic projection naturally drops the intent on the next render — and you fire a toast so the user knows.</p>
-    <div class="ds-specimen"
+    <div data-snippet-check="skip" class="ds-specimen"
          data-code='import { useToast } from &#39;@corelithzw/react&#39;;
 
 const tempId = () =&gt; `tmp_${crypto.randomUUID()}`;
@@ -321,7 +321,7 @@ function useTaskMutations() {
         method: &#39;PATCH&#39;,
         body: JSON.stringify({ done }),
       });
-      if (!res.ok) throw new Error(&#39;Couldn&#39;t save that toggle&#39;);
+      if (!res.ok) throw new Error(&quot;Couldn&#39;t save that toggle&quot;);
       const updated = await res.json();
       setCommitted((list) =&gt;
         list.map((t) =&gt; (t.id === id ? { ...updated, state: { kind: &#39;idle&#39; } } : t)));
@@ -341,7 +341,7 @@ function useTaskMutations() {
         method: &#39;POST&#39;,
         body: JSON.stringify({ title }),
       });
-      if (!res.ok) throw new Error(&#39;Couldn&#39;t create that task&#39;);
+      if (!res.ok) throw new Error(&quot;Couldn&#39;t create that task&quot;);
       const real = await res.json();
       // Replace the tempId row, leave order intact.
       setCommitted((list) =&gt; [{ ...real, state: { kind: &#39;idle&#39; } }, ...list]);
@@ -388,7 +388,7 @@ function useTaskMutations() {
       });
       return;
     }
-    if (!res.ok) throw new Error(&#39;Couldn&#39;t rename that task&#39;);
+    if (!res.ok) throw new Error(&quot;Couldn&#39;t rename that task&quot;);
     const updated = await res.json();
     setCommitted((list) =&gt; list.map((t) =&gt; t.id === id ? updated : t));
   } catch (e: any) {
@@ -475,7 +475,7 @@ export function useOptimisticTasks(initial: Task[]) {
       });
       return null;
     }
-    if (!res.ok) throw new Error(&#39;Couldn&#39;t save&#39;);
+    if (!res.ok) throw new Error(&quot;Couldn&#39;t save&quot;);
     return res.json();
   }, [toast]);
 
@@ -517,7 +517,7 @@ export function useOptimisticTasks(initial: Task[]) {
         headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
         body: JSON.stringify({ title }),
       });
-      if (!res.ok) throw new Error(&#39;Couldn&#39;t create that task&#39;);
+      if (!res.ok) throw new Error(&quot;Couldn&#39;t create that task&quot;);
       const real = await res.json();
       setCommitted((list) =&gt; [{ ...real, state: { kind: &#39;idle&#39; } }, ...list]);
     } catch (e: any) {
@@ -534,7 +534,7 @@ export function useOptimisticTasks(initial: Task[]) {
     addIntent({ type: &#39;delete&#39;, id });
     try {
       const res = await fetch(`/api/tasks/${id}`, { method: &#39;DELETE&#39; });
-      if (!res.ok) throw new Error(&#39;Couldn&#39;t delete that task&#39;);
+      if (!res.ok) throw new Error(&quot;Couldn&#39;t delete that task&quot;);
       setCommitted((list) =&gt; list.filter((t) =&gt; t.id !== id));
     } catch (e: any) {
       toast.show({

@@ -283,7 +283,7 @@ function parseBranches(src: string): Record&lt;string, string&gt; {
     <!-- Step 3 -->
     <div class="ck-step"><span class="n">03</span><h3>State-machine the provider so loading and locale switches are explicit</h3></div>
     <p>The provider has three states: <code>idle</code> (first mount), <code>loading</code> (fetching a new chain), <code>ready</code> (chain available, components render). Reducers make the transitions impossible to corrupt &mdash; a stale fetch can never overwrite a newer one because the reducer ignores results whose request id doesn't match the current one.</p>
-    <div class="ds-specimen"
+    <div data-snippet-check="skip" class="ds-specimen"
          data-code='import { useReducer, useEffect, createContext } from &#39;@corelithzw/react&#39;;
 
 type State =
@@ -335,7 +335,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   useEffect(() =&gt; { setLocale(detectLocale()); }, []);
 
   if (state.status !== &#39;ready&#39;) return null; // first paint waits for the chain
-  return &lt;<span class="k">I18nCtx</span>.<span class="k">Provider</span> <span class="v">value</span>={{ locale: state.locale, chain: state.chain, setLocale }}&gt;{children}&lt;/<span class="k">I18nCtx</span>.<span class="k">Provider</span>&gt;;
+  return &lt;I18nCtx.Provider value={{ locale: state.locale, chain: state.chain, setLocale }}&gt;{children}&lt;/I18nCtx.Provider&gt;;
 }'>
       <div class="ds-specimen-stage canvas padded">
         <div class="ck-code-only-note">
@@ -351,7 +351,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     <!-- Step 4 -->
     <div class="ck-step"><span class="n">04</span><h3>Expose <code>useT()</code> and a tiny picker, and you're done</h3></div>
     <p>The component-facing API is two hooks. <code>useT()</code> returns the formatter; <code>useLocale()</code> returns the current locale plus a setter so the picker can flip it. The picker itself is a segmented control over the supported locales &mdash; nothing exotic.</p>
-    <div class="ds-specimen"
+    <div data-snippet-check="skip" class="ds-specimen"
          data-code='import { useContext } from &#39;@corelithzw/react&#39;;
 import { SegmentedControl } from &#39;@corelithzw/react&#39;;
 
@@ -375,14 +375,14 @@ export function LocalePicker() {
   const { locale, setLocale } = useLocale();
   const t = useT();
   return (
-    &lt;<span class="k">SegmentedControl</span>
-      <span class="v">aria-label</span>={t(<span class="s">"settings.language"</span>) || <span class="s">"Language"</span>}
-      <span class="v">value</span>={locale}
-      <span class="v">onChange</span>={setLocale}
-      <span class="v">options</span>={[
-        { value: <span class="s">"en"</span>, label: <span class="s">"EN"</span> },
-        { value: <span class="s">"sn"</span>, label: <span class="s">"SN"</span> },
-        { value: <span class="s">"nd"</span>, label: <span class="s">"ND"</span> },
+    &lt;SegmentedControl
+      aria-label={t("settings.language") || "Language"}
+      value={locale}
+      onChange={setLocale}
+      options={[
+        { value: "en", label: "EN" },
+        { value: "sn", label: "SN" },
+        { value: "nd", label: "ND" },
       ]}
     /&gt;
   );
@@ -403,36 +403,36 @@ export function LocalePicker() {
   <section id="final" style="margin-top: 40px;">
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">Wire the provider once at the app root, drop the picker in your header, call <code>useT()</code> from anywhere below.</p>
-    <div class="ds-specimen"
+    <div data-snippet-check="skip" class="ds-specimen"
          data-code='import { I18nProvider, useT, LocalePicker, Button, Input } from &#39;@corelithzw/react&#39;;
 
 function App() {
   return (
-    &lt;<span class="k">I18nProvider</span>&gt;
-      &lt;<span class="k">AppShell</span> /&gt;
-    &lt;/<span class="k">I18nProvider</span>&gt;
+    &lt;I18nProvider&gt;
+      &lt;AppShell /&gt;
+    &lt;/I18nProvider&gt;
   );
 }
 
 function AppShell() {
   return (
-    &lt;<span class="k">div</span> <span class="v">className</span>=<span class="s">"app"</span>&gt;
-      &lt;<span class="k">header</span>&gt;&lt;<span class="k">LocalePicker</span> /&gt;&lt;/<span class="k">header</span>&gt;
-      &lt;<span class="k">SignIn</span> /&gt;
-    &lt;/<span class="k">div</span>&gt;
+    &lt;div className="app"&gt;
+      &lt;header&gt;&lt;LocalePicker /&gt;&lt;/header&gt;
+      &lt;SignIn /&gt;
+    &lt;/div&gt;
   );
 }
 
 function SignIn() {
   const t = useT();
   return (
-    &lt;<span class="k">form</span>&gt;
-      &lt;<span class="k">h1</span>&gt;{t(<span class="s">"auth.welcome"</span>, { name: <span class="s">"Tendai"</span> })}&lt;/<span class="k">h1</span>&gt;
-      &lt;<span class="k">label</span>&gt;{t(<span class="s">"auth.email"</span>)}&lt;<span class="k">Input</span> <span class="v">type</span>=<span class="s">"email"</span> /&gt;&lt;/<span class="k">label</span>&gt;
-      &lt;<span class="k">label</span>&gt;{t(<span class="s">"auth.password"</span>)}&lt;<span class="k">Input</span> <span class="v">type</span>=<span class="s">"password"</span> /&gt;&lt;/<span class="k">label</span>&gt;
-      &lt;<span class="k">Button</span> <span class="v">variant</span>=<span class="s">"primary"</span>&gt;{t(<span class="s">"auth.signin"</span>)}&lt;/<span class="k">Button</span>&gt;
-      &lt;<span class="k">Button</span> <span class="v">variant</span>=<span class="s">"secondary"</span>&gt;{t(<span class="s">"auth.signin_with_code"</span>)}&lt;/<span class="k">Button</span>&gt;
-    &lt;/<span class="k">form</span>&gt;
+    &lt;form&gt;
+      &lt;h1&gt;{t("auth.welcome", { name: "Tendai" })}&lt;/h1&gt;
+      &lt;label&gt;{t("auth.email")}&lt;Input type="email" /&gt;&lt;/label&gt;
+      &lt;label&gt;{t("auth.password")}&lt;Input type="password" /&gt;&lt;/label&gt;
+      &lt;Button variant="primary"&gt;{t("auth.signin")}&lt;/Button&gt;
+      &lt;Button variant="secondary"&gt;{t("auth.signin_with_code")}&lt;/Button&gt;
+    &lt;/form&gt;
   );
 }'>
       <div class="ds-specimen-stage canvas padded">
