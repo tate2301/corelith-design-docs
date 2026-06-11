@@ -1,0 +1,88 @@
+<!--
+  Corelith email kit — _base.html
+  ===============================
+  This file is the documented shell every transactional template extends.
+  It is NOT meant to be sent as-is — it is a reference for the structural
+  table layout, the inline styles, and the lifted token hexes.
+
+  Email-client reality:
+    - Tables for layout. No flexbox, no grid.
+    - Inline styles for every rendered element. <style> only for hover +
+      mobile @media queries (Gmail webmail often strips <style>, but iOS
+      Mail and Apple Mail respect it for the media query fallback).
+    - Outer table is 600px max. Mobile collapses to 100% via media query.
+    - System font stack only — Atkinson Hyperlegible is not safe in email.
+    - No CSS custom properties anywhere in the body — many clients drop
+      them. Hex values are lifted from tokens.css by hand and pinned in
+      the header comment of each template so a reviewer can diff them.
+
+  Tokens lifted from /tokens.css (light theme :root):
+    --canvas        #F7F8FA   page background behind the card
+    --surface       #FFFFFF   card background
+    --surface-muted #F1F3F6   subtle inset blocks (code box, summary)
+    --text-strong   #16181D   headings, brand wordmark
+    --text-body     #262A33   body copy
+    --text-muted    #565C69   secondary copy, footer
+    --brand         #0B5DF0   primary CTA background
+    --brand-strong  #0944C2   primary CTA hover (in <style> only)
+    --brand-soft    #E8EFFE   tinted info pill
+    --border        #E5E8EE   card border, divider rule
+    --tone-success     #5E8E54   success badge text
+    --tone-success-bg  #E7EFE0   success badge background
+    --tone-warn        #B07626   warn badge text
+    --tone-warn-bg     #F4E6C5   warn badge background
+    --tone-danger      #B83A2A   danger badge text + decline button border
+    --tone-danger-bg   #F6E2DD   danger badge background
+
+  Skeleton:
+    <doctype + meta>
+    <style>           hover + mobile only
+    <body>
+      <preheader>     hidden span, 60-char inbox preview
+      <outer table>   100% width, canvas bg
+        <card table>  600px, surface, border, radius
+          <brand strip>   logo dot + Corelith wordmark
+          <body row>      H1, lede, template content
+          <footer row>    unsub + address
+-->
+<!doctype html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>_base · Corelith email shell</title>
+<style>
+  /* Mobile collapse — iOS Mail + Apple Mail respect this; Gmail webmail
+     may strip but the 600px desktop table still reads on phones. */
+  @media (max-width: 620px) {
+    .em-card { width: 100% !important; border-radius: 0 !important; }
+    .em-pad  { padding: 24px 20px !important; }
+    .em-h    { font-size: 22px !important; line-height: 28px !important; }
+    .em-btn  { display: block !important; width: 100% !important; }
+  }
+  a.em-btn:hover { background: #0944C2 !important; }
+</style>
+</head>
+<body style="margin:0; padding:0; background:#F7F8FA; font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+  <div style="display:none; max-height:0; overflow:hidden; opacity:0;">Preheader text — the 60-char inbox teaser shown next to the subject.</div>
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#F7F8FA;">
+    <tr><td align="center" style="padding: 36px 20px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="em-card" style="background:#FFFFFF; border:1px solid #E5E8EE; border-radius: 14px;">
+        <tr><td class="em-pad" style="padding: 28px 32px 16px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+            <td><div style="width:28px; height:28px; background:#0B5DF0; border-radius:7px;"></div></td>
+            <td style="padding-left:10px; font:600 14px/1 -apple-system,sans-serif; color:#16181D;">Corelith</td>
+          </tr></table>
+        </td></tr>
+        <tr><td class="em-pad" style="padding: 8px 32px 32px;">
+          <h1 class="em-h" style="margin:0 0 12px; font: 600 26px/32px -apple-system,sans-serif; color:#16181D; letter-spacing:-0.01em;">H1 goes here</h1>
+          <p style="margin:0 0 20px; font: 400 15px/22px -apple-system,sans-serif; color:#262A33;">Lede paragraph — one to two sentences that frame the email.</p>
+          <p style="margin:0; font: 400 14px/22px -apple-system,sans-serif; color:#565C69;">Template-specific content goes here. See the six template files for examples.</p>
+        </td></tr>
+        <tr><td class="em-pad" style="padding: 20px 32px 24px; border-top:1px solid #E5E8EE; font:12px/18px -apple-system,sans-serif; color:#565C69;">
+          You're getting this because you have a Corelith account. <a href="{{unsubscribe_url}}" style="color:#565C69;">Unsubscribe</a>.<br>
+          Corelith &middot; Harare, Zimbabwe
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>
