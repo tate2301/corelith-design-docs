@@ -1,168 +1,188 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" /><title>Cash-up · POS portal · Huchu</title>
+<meta charset="utf-8" />
+<title>Cash up · POS · Corelith</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="stylesheet" href="../../tokens.css" />
 <link rel="stylesheet" href="../../components.css" />
-<link rel="stylesheet" href="../../portal-shell.css" />
-<script src="../../icons.js" defer></script>
-<script src="../../device-scale.js" defer></script>
-<style>
-  body { background: var(--gray-100); margin: 0; padding: 24px; min-height: 100vh; display: grid; place-items: center; }
-  .device-tablet { width: 1024px; height: 768px; border-radius: 28px; background: #0F1115; padding: 14px; box-shadow: 0 30px 60px -20px rgba(22,24,29,0.25), 0 0 0 1px rgba(22,24,29,0.08); }
-  .device-tablet .screen { width: 100%; height: 100%; border-radius: 16px; overflow: hidden; background: var(--canvas); position: relative; display: flex; }
-
-  .cashup-side { width: 240px; background: var(--canvas); border-right: 1px solid var(--border); padding: 18px 14px; display: flex; flex-direction: column; gap: 4px; flex: none; }
-  .cashup-side .brand { display: inline-flex; align-items: center; gap: 10px; padding: 6px 8px; font: 600 16px/1 var(--font-sans); color: var(--text-strong); margin-bottom: 12px; }
-  .cashup-side .brand .mark { width: 22px; height: 22px; color: var(--brand); }
-  .cashup-side nav a { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 7px; font: 500 13.5px/1 var(--font-sans); color: var(--text-body); text-decoration: none; }
-  .cashup-side nav a:hover { background: var(--surface-muted); }
-  .cashup-side nav a.active { background: var(--brand-soft); color: var(--brand-strong); }
-  .cashup-side nav a svg { width: 18px; height: 18px; color: var(--text-muted); }
-  .cashup-side nav a.active svg { color: var(--brand); }
-  .cashup-side .sh { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); padding: 14px 10px 8px; }
-  .cashup-side .foot { margin-top: auto; padding: 12px 8px 0; border-top: 1px solid var(--border); display: flex; gap: 10px; align-items: center; }
-  .cashup-side .foot .av { width: 32px; height: 32px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 12px/1 var(--font-sans); }
-  .cashup-side .foot .nm { font: 500 13px/1.3 var(--font-sans); color: var(--text-strong); }
-  .cashup-side .foot .sb { font: 11px/1.2 var(--font-sans); color: var(--text-muted); }
-
-  .cashup-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-  .cashup-top { padding: 16px 28px; display: flex; align-items: center; gap: 18px; border-bottom: 1px solid var(--border); background: var(--surface); }
-  .cashup-top h1 { font: 600 20px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; flex: 1; }
-  .cashup-top .meta { display: inline-flex; gap: 6px; }
-  .cashup-top .pill { padding: 4px 10px; border-radius: 9999px; background: var(--surface-muted); font: 500 12px/1 var(--font-sans); color: var(--text-muted); }
-  .cashup-top .pill.brand { background: var(--brand-soft); color: var(--brand-strong); }
-  .cashup-top .pill.warn { background: var(--tone-warn-bg); color: var(--tone-warn); }
-
-  .cashup-body { padding: 24px 28px; flex: 1; overflow-y: auto; display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; align-items: start; }
-
-  .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: clip; }
-  .summary-card-h { padding: 16px 20px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; }
-  .summary-card-h h2 { font: 600 16px/1.3 var(--font-sans); color: var(--text-strong); margin: 0; }
-  .summary-card-h .ds { font: var(--type-caption); color: var(--text-muted); }
-
-  .row-amount { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 14px 20px; border-bottom: 1px solid var(--border-subtle); align-items: center; }
-  .row-amount:last-child { border-bottom: 0; }
-  .row-amount .nm { font: 500 14px/1.3 var(--font-sans); color: var(--text-strong); }
-  .row-amount .sb { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
-  .row-amount .v { font: 600 16px/1 var(--font-mono); color: var(--text-strong); font-variant-numeric: tabular-nums; text-align: right; }
-  .row-amount.totals { background: var(--brand-soft); }
-  .row-amount.totals .nm { color: var(--brand-strong); }
-  .row-amount.totals .v { color: var(--brand-strong); font-size: 20px; }
-  .row-amount.diff .v { color: var(--tone-success); }
-  .row-amount.diff.neg .v { color: var(--tone-danger); }
-
-  .num-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 16px 20px; }
-  .num-grid .cell { padding: 12px 14px; background: var(--surface-muted); border-radius: 10px; }
-  .num-grid .cell .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
-  .num-grid .cell .v { font: 700 24px/1 var(--font-sans); color: var(--text-strong); margin-top: 8px; font-variant-numeric: tabular-nums; }
-
-  .denominator { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; }
-  .denominator-h { font: 600 16px/1.3 var(--font-sans); color: var(--text-strong); margin: 0 0 12px; }
-  .denom-row { display: grid; grid-template-columns: 60px 1fr 80px 80px; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-subtle); font: 14px/1.4 var(--font-sans); }
-  .denom-row:last-child { border-bottom: 0; }
-  .denom-row .amt { font: 600 13px/1 var(--font-mono); color: var(--text-strong); }
-  .denom-row .ct-input { width: 100%; height: 32px; border: 1px solid var(--border); border-radius: 6px; padding: 0 8px; font: 500 13px/1 var(--font-mono); text-align: right; background: var(--surface); }
-  .denom-row .ct-input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--focus-ring-soft); }
-  .denom-row .sub { text-align: right; font: 500 13px/1 var(--font-mono); color: var(--text-strong); font-variant-numeric: tabular-nums; }
-  .denom-row .lb { font: 12px/1 var(--font-sans); color: var(--text-muted); }
-
-  .denom-total { display: grid; grid-template-columns: 1fr auto; padding: 12px 0 0; border-top: 1px solid var(--border); margin-top: 8px; align-items: baseline; }
-  .denom-total .lbl { font: 500 13px/1 var(--font-sans); color: var(--text-muted); }
-  .denom-total .v { font: 700 22px/1 var(--font-sans); color: var(--text-strong); font-variant-numeric: tabular-nums; text-align: right; }
-
-  .actions-row { padding: 16px 28px; border-top: 1px solid var(--border); background: var(--surface); display: flex; gap: 10px; align-items: center; }
-  .actions-row .spacer { flex: 1; }
-</style>
-<link rel="stylesheet" href="../../huchu-nav.css" />
-<script src="../../huchu-nav.js" defer></script>
+<link rel="stylesheet" href="app.css" />
 </head>
-<body data-kit-nav="pos">
+<body class="pos-functional">
 
-<div class="device-tablet">
-<div class="screen">
-
-<aside class="cashup-side">
-  <a class="brand"><span class="mark" data-icon="corelith"></span> Huchu POS</a>
-  <nav>
-    <a href="#"><span data-icon="receipt"></span> New sale</a>
-    <a href="#" class="active"><span data-icon="coin"></span> Cash-up</a>
-    <a href="#"><span data-icon="list"></span> Receipts</a>
-    <a href="#"><span data-icon="bag"></span> Items</a>
+<header class="pos-topbar">
+  <a class="brand" href="index.html"><span class="mark">C</span> Corelith POS</a>
+  <nav class="pos-tabs" style="border: none;">
+    <a href="sale.html">Sale</a>
+    <a href="item-search.html">Items</a>
+    <a href="refund.html">Refund</a>
+    <a href="cashup.html" class="active">Cash up</a>
+    <a href="z-report.html">Z-reports</a>
   </nav>
-  <div class="sh">Shift</div>
-  <nav>
-    <a href="#"><span data-icon="clock"></span> Shift overview</a>
-    <a href="#"><span data-icon="user"></span> Switch cashier</a>
-  </nav>
-  <div class="foot">
-    <span class="av">FM</span>
-    <div>
-      <div class="nm">Faith Moyo</div>
-      <div class="sb">Cashier · Till 02</div>
-    </div>
-  </div>
-</aside>
+  <span class="shift" id="shift-meta"></span>
+</header>
 
-<main class="cashup-main">
-  <header class="cashup-top">
-    <h1>Close shift &amp; cash-up</h1>
-    <div class="meta">
-      <span class="pill brand">Shift S-2841</span>
-      <span class="pill">Till 02</span>
-      <span class="pill">07:30 – 19:14</span>
-    </div>
-  </header>
-
-  <div class="cashup-body">
-    <!-- Left: Sales summary -->
-    <div class="summary-card">
-      <div class="summary-card-h">
-        <h2>Sales summary</h2>
-        <span class="ds">From transactions in the period</span>
-      </div>
-      <div class="num-grid">
-        <div class="cell"><div class="lbl">Gross sales</div><div class="v">$ 2,816.40</div></div>
-        <div class="cell"><div class="lbl">Refunds</div><div class="v">– $ 38.00</div></div>
-        <div class="cell"><div class="lbl">Discounts</div><div class="v">– $ 112.50</div></div>
-        <div class="cell"><div class="lbl">Receipts</div><div class="v">147</div></div>
-      </div>
-      <div class="row-amount"><div><div class="nm">Cash sales</div><div class="sb">96 receipts · paid at counter</div></div><div class="v">$ 1,842.10</div></div>
-      <div class="row-amount"><div><div class="nm">Card sales</div><div class="sb">38 receipts · POS terminal</div></div><div class="v">$ 624.80</div></div>
-      <div class="row-amount"><div><div class="nm">Mobile money</div><div class="sb">13 receipts · EcoCash + InnBucks</div></div><div class="v">$ 199.00</div></div>
-      <div class="row-amount totals"><div><div class="nm">Expected in drawer</div><div class="sb">Cash sales + opening float</div></div><div class="v">$ 1,942.10</div></div>
-    </div>
-
-    <!-- Right: Cash count -->
-    <div class="denominator">
-      <h2 class="denominator-h">Cash count</h2>
-      <div class="denom-row" style="border-bottom: 1px solid var(--border); font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-subtle); padding-bottom: 6px;">
-        <span>Denom</span><span>Type</span><span style="text-align: right;">Count</span><span style="text-align: right;">Total</span>
-      </div>
-      <div class="denom-row"><span class="amt">$ 50</span><span class="lb">Note</span><input class="ct-input" value="14" /><span class="sub">700.00</span></div>
-      <div class="denom-row"><span class="amt">$ 20</span><span class="lb">Note</span><input class="ct-input" value="32" /><span class="sub">640.00</span></div>
-      <div class="denom-row"><span class="amt">$ 10</span><span class="lb">Note</span><input class="ct-input" value="28" /><span class="sub">280.00</span></div>
-      <div class="denom-row"><span class="amt">$ 5</span><span class="lb">Note</span><input class="ct-input" value="42" /><span class="sub">210.00</span></div>
-      <div class="denom-row"><span class="amt">$ 2</span><span class="lb">Coin</span><input class="ct-input" value="36" /><span class="sub">72.00</span></div>
-      <div class="denom-row"><span class="amt">$ 1</span><span class="lb">Coin</span><input class="ct-input" value="48" /><span class="sub">48.00</span></div>
-
-      <div class="denom-total"><span class="lbl">Counted</span><span class="v">$ 1,950.00</span></div>
-      <div class="row-amount diff" style="background: var(--tone-success-bg); margin: 12px -20px -20px; padding: 14px 20px; border-radius: 0 0 14px 14px;"><div><div class="nm" style="color: var(--tone-success);">Over by</div><div class="sb" style="color: var(--tone-success);">Counted &gt; expected · within tolerance</div></div><div class="v">+ $ 7.90</div></div>
-    </div>
+<main class="pos-app">
+  <div class="pos-app-head">
+    <h1>Cash up &amp; close shift</h1>
+    <div class="pos-meta" id="cashup-meta"></div>
   </div>
 
-  <footer class="actions-row">
-    <button class="btn btn-quiet"><span data-icon="print" data-icon-size="14"></span> Print Z-report</button>
-    <button class="btn btn-quiet"><span data-icon="download" data-icon-size="14"></span> Export</button>
-    <div class="spacer"></div>
-    <button class="btn btn-secondary">Save draft</button>
-    <button class="btn btn-primary">Close shift &amp; deposit</button>
-  </footer>
+  <section class="pos-panel">
+    <div class="pos-panel-h">
+      <h2>Today's sales</h2>
+      <span class="sb">From transactions in the current shift</span>
+    </div>
+    <div class="pos-stats">
+      <div class="pos-stat"><div class="lbl">Receipts</div><div class="v" id="s-receipts">0</div></div>
+      <div class="pos-stat"><div class="lbl">Gross sales</div><div class="v" id="s-gross">$ 0.00</div></div>
+      <div class="pos-stat"><div class="lbl">Cash sales</div><div class="v" id="s-cash">$ 0.00</div></div>
+      <div class="pos-stat"><div class="lbl">Card sales</div><div class="v" id="s-card">$ 0.00</div></div>
+      <div class="pos-stat"><div class="lbl">EcoCash</div><div class="v" id="s-ecocash">$ 0.00</div></div>
+      <div class="pos-stat"><div class="lbl">Cash refunds</div><div class="v" id="s-refunds">$ 0.00</div></div>
+    </div>
+  </section>
+
+  <section class="pos-panel">
+    <div class="pos-panel-h">
+      <h2>Count the till</h2>
+      <span class="sb">Notes &amp; coins · USD</span>
+    </div>
+    <div class="cash-count-grid" id="cash-grid"></div>
+    <div class="pos-totals" style="margin-top:14px;">
+      <div class="row"><span>Opening float</span><span class="v" id="r-float">$ 100.00</span></div>
+      <div class="row"><span>+ Cash sales</span><span class="v" id="r-csales">$ 0.00</span></div>
+      <div class="row"><span>– Cash refunds</span><span class="v" id="r-crefunds">$ 0.00</span></div>
+      <div class="row b"><span>Expected in till</span><span class="v" id="r-expected">$ 100.00</span></div>
+      <div class="row b"><span>Counted</span><span class="v" id="r-counted">$ 0.00</span></div>
+      <div class="row b"><span id="r-vlbl">Variance</span><span class="v" id="r-variance">$ 0.00</span></div>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:14px;">
+      <button class="pos-btn pos-btn-quiet" id="reset-counts" type="button">Reset counts</button>
+      <button class="pos-btn pos-btn-primary" id="close-shift" type="button">Close shift</button>
+    </div>
+  </section>
 </main>
 
-</div>
-</div>
+<script type="module">
+import POS from './app.js';
 
+const denominations = [
+  { v: 100,  type: 'Note' },
+  { v: 50,   type: 'Note' },
+  { v: 20,   type: 'Note' },
+  { v: 10,   type: 'Note' },
+  { v: 5,    type: 'Note' },
+  { v: 1,    type: 'Note' },
+  { v: 0.50, type: 'Coin' },
+  { v: 0.25, type: 'Coin' },
+  { v: 0.10, type: 'Coin' },
+  { v: 0.05, type: 'Coin' },
+];
+const counts = denominations.map(() => 0);
+
+const shiftMeta = document.getElementById('shift-meta');
+const cashupMeta = document.getElementById('cashup-meta');
+const grid = document.getElementById('cash-grid');
+
+const cur = POS.getCurrentShift();
+shiftMeta.innerHTML = `${cur.cashier} · ${cur.till} · Shift <strong>${cur.id}</strong>`;
+cashupMeta.textContent = `Opened ${new Date(cur.openedAt).toLocaleString('en-GB')}`;
+
+function renderGrid() {
+  grid.innerHTML = denominations.map((d, i) => `
+    <div class="cash-count-cell">
+      <span class="denom">$ ${d.v.toFixed(2)}</span>
+      <input type="number" min="0" value="${counts[i]}" inputmode="numeric" aria-label="Count of $${d.v.toFixed(2)} ${d.type}" data-i="${i}" />
+      <span class="sub" data-sub="${i}">$ 0.00</span>
+    </div>
+  `).join('');
+  grid.querySelectorAll('input').forEach((inp) => {
+    inp.addEventListener('input', () => {
+      const i = parseInt(inp.dataset.i);
+      counts[i] = Math.max(0, parseInt(inp.value) || 0);
+      inp.value = counts[i];
+      compute();
+    });
+  });
+}
+
+function compute() {
+  let counted = 0;
+  denominations.forEach((d, i) => {
+    const sub = d.v * counts[i];
+    counted += sub;
+    const subEl = grid.querySelector(`[data-sub="${i}"]`);
+    if (subEl) subEl.textContent = '$ ' + sub.toFixed(2);
+  });
+  const bd = POS.shiftSalesBreakdown(cur.id);
+  const expected = POS.round2(cur.openingFloat + bd.methods.cash - bd.cashRefunds);
+  const variance = POS.round2(counted - expected);
+
+  document.getElementById('s-receipts').textContent = bd.receipts;
+  document.getElementById('s-gross').textContent = POS.moneyPlain(bd.gross);
+  document.getElementById('s-cash').textContent = POS.moneyPlain(bd.methods.cash);
+  document.getElementById('s-card').textContent = POS.moneyPlain(bd.methods.card);
+  document.getElementById('s-ecocash').textContent = POS.moneyPlain(bd.methods.ecocash);
+  document.getElementById('s-refunds').textContent = POS.moneyPlain(bd.cashRefunds);
+
+  document.getElementById('r-float').textContent = POS.moneyPlain(cur.openingFloat);
+  document.getElementById('r-csales').textContent = POS.moneyPlain(bd.methods.cash);
+  document.getElementById('r-crefunds').textContent = POS.moneyPlain(bd.cashRefunds);
+  document.getElementById('r-expected').textContent = POS.moneyPlain(expected);
+  document.getElementById('r-counted').textContent = POS.moneyPlain(counted);
+
+  const v = document.getElementById('r-variance');
+  const lbl = document.getElementById('r-vlbl');
+  v.classList.remove('tone-success', 'tone-danger');
+  if (Math.abs(variance) < 0.005) {
+    lbl.textContent = 'Balanced';
+    v.textContent = '$ 0.00';
+  } else if (variance > 0) {
+    lbl.textContent = 'Over by';
+    v.textContent = '+ ' + POS.moneyPlain(variance);
+    v.classList.add('tone-success');
+  } else {
+    lbl.textContent = 'Short by';
+    v.textContent = '– $ ' + Math.abs(variance).toFixed(2);
+    v.classList.add('tone-danger');
+  }
+  return { counted, expected, variance };
+}
+
+document.getElementById('reset-counts').addEventListener('click', () => {
+  counts.fill(0);
+  renderGrid();
+  compute();
+});
+
+document.getElementById('close-shift').addEventListener('click', () => {
+  const r = compute();
+  POS.openModal(`
+    <div class="pos-modal-head"><h2>Close shift?</h2><button class="pos-modal-close" data-close>×</button></div>
+    <div class="pos-modal-body">
+      <p class="pos-modal-lede">This archives the shift, generates a Z-report, and opens a fresh shift.</p>
+      <div class="pos-totals">
+        <div class="row"><span>Counted</span><span class="v">${POS.moneyPlain(r.counted)}</span></div>
+        <div class="row"><span>Expected</span><span class="v">${POS.moneyPlain(r.expected)}</span></div>
+        <div class="row b"><span>Variance</span><span class="v">${Math.abs(r.variance) < 0.005 ? '$ 0.00' : (r.variance >= 0 ? '+ ' + POS.moneyPlain(r.variance) : '– $ ' + Math.abs(r.variance).toFixed(2))}</span></div>
+      </div>
+    </div>
+    <div class="pos-modal-foot">
+      <button class="pos-btn pos-btn-quiet" data-close>Cancel</button>
+      <button class="pos-btn pos-btn-primary" id="confirm-close">Yes, close shift</button>
+    </div>
+  `);
+  document.getElementById('confirm-close').addEventListener('click', () => {
+    const shift = POS.closeShift(r.counted);
+    POS.closeModal();
+    POS.toast(`Shift ${shift.id} closed`, 'success');
+    setTimeout(() => { location.href = `z-report.html?id=${shift.id}`; }, 600);
+  });
+});
+
+renderGrid();
+compute();
+</script>
 </body>
 </html>

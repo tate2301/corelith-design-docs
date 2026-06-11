@@ -1,157 +1,176 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" /><title>Sale · POS portal · Huchu</title>
+<meta charset="utf-8" />
+<title>New sale · POS · Corelith</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <link rel="stylesheet" href="../../tokens.css" />
 <link rel="stylesheet" href="../../components.css" />
-<link rel="stylesheet" href="../../portal-shell.css" />
-<script src="../../icons.js" defer></script>
-<style>
-  /* Standalone phone preview when opened directly */
-  body { background: var(--gray-100); margin: 0; padding: 24px; min-height: 100vh; display: grid; place-items: center; }
-  .device { width: 390px; height: 844px; border-radius: 48px; background: #0F1115; padding: 12px; box-shadow: 0 30px 60px -20px rgba(22,24,29,0.25), 0 0 0 1px rgba(22,24,29,0.08); position: relative; }
-  .device::before { content: ""; position: absolute; top: 18px; left: 50%; transform: translateX(-50%); width: 110px; height: 30px; background: #0F1115; border-radius: 0 0 18px 18px; z-index: 20; }
-  .device .screen { width: 100%; height: 100%; border-radius: 36px; overflow: hidden; background: var(--canvas); position: relative; display: flex; flex-direction: column; }
-
-  /* Above the page background, the sale lives */
-  .sale-summary { padding: 16px; background: var(--canvas); }
-  .sale-amount { font: 700 44px/1 var(--font-sans); letter-spacing: -0.025em; font-variant-numeric: tabular-nums; color: var(--text-strong); }
-  .sale-amount .cur { font-size: 22px; color: var(--text-muted); font-weight: 500; margin-right: 6px; vertical-align: top; line-height: 1; }
-  .sale-amount .dec { color: var(--text-muted); }
-  .sale-help { font: 13px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 8px; }
-
-  .quick-rail { display: flex; gap: 8px; padding: 12px 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .quick-rail::-webkit-scrollbar { display: none; }
-  .qr-chip { padding: 8px 14px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1 var(--font-sans); color: var(--text-strong); white-space: nowrap; }
-  .qr-chip.active { background: var(--brand); color: #fff; border-color: var(--brand); }
-
-  /* Compact line items */
-  .lines { background: var(--surface); margin: 0 16px; border-radius: 12px; border: 1px solid var(--border); overflow: clip; }
-  .lines-empty { padding: 24px 18px; text-align: center; color: var(--text-muted); font: var(--type-body-sm); }
-</style>
-<link rel="stylesheet" href="../../huchu-nav.css" />
-<script src="../../huchu-nav.js" defer></script>
+<link rel="stylesheet" href="app.css" />
 </head>
-<body data-kit-nav="pos">
+<body class="pos-functional">
 
-<div class="device">
-  <div class="screen">
-  <div class="ps-screen">
-    <!-- Status bar -->
-    <div class="ps-statusbar">
-      <span>9:41</span>
-      <span class="right">
-        <span data-icon="signal"></span>
-        <span data-icon="wifi"></span>
-        <span data-icon="battery"></span>
-      </span>
-    </div>
+<header class="pos-topbar">
+  <a class="brand" href="index.html"><span class="mark">C</span> Corelith POS</a>
+  <nav class="pos-tabs" style="border: none;">
+    <a href="sale.html" class="active">Sale</a>
+    <a href="item-search.html">Items</a>
+    <a href="refund.html">Refund</a>
+    <a href="cashup.html">Cash up</a>
+    <a href="z-report.html">Z-reports</a>
+  </nav>
+  <span class="shift" id="shift-meta"></span>
+</header>
 
-    <!-- App bar -->
-    <div class="ps-appbar">
-      <button class="nav-btn"><span data-icon="menu" data-icon-size="20"></span></button>
-      <h1>New sale</h1>
-      <div class="right">
-        <button class="nav-btn"><span data-icon="search" data-icon-size="18"></span></button>
-        <button class="nav-btn"><span data-icon="qr" data-icon-size="18"></span></button>
-      </div>
-    </div>
-
-    <div class="ps-scroll">
-      <!-- Sale summary -->
-      <div class="sale-summary">
-        <div class="sale-amount"><span class="cur">$</span>284<span class="dec">.50</span></div>
-        <div class="sale-help">4 items · Cash · Branch Park Centre</div>
-      </div>
-
-      <!-- Quick categories -->
-      <div class="quick-rail">
-        <span class="qr-chip active">All</span>
-        <span class="qr-chip">Beverages</span>
-        <span class="qr-chip">Groceries</span>
-        <span class="qr-chip">Tobacco</span>
-        <span class="qr-chip">Frozen</span>
-        <span class="qr-chip">Other</span>
-      </div>
-
-      <!-- Cart lines -->
-      <div class="lines">
-        <div class="sale-line">
-          <div>
-            <div class="nm">Mazoe Orange Crush 2L</div>
-            <div class="sb" style="font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px;">Beverages · #SKU-0421</div>
-          </div>
-          <span class="qty">×2</span>
-          <span class="price">$ 9.00</span>
-        </div>
-        <div class="sale-line">
-          <div>
-            <div class="nm">Pro-bake bread loaf</div>
-            <div class="sb" style="font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px;">Bakery · #SKU-0833</div>
-          </div>
-          <span class="qty">×3</span>
-          <span class="price">$ 4.50</span>
-        </div>
-        <div class="sale-line">
-          <div>
-            <div class="nm">Cooking oil 750ml</div>
-            <div class="sb" style="font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px;">Groceries · #SKU-1102</div>
-          </div>
-          <span class="qty">×1</span>
-          <span class="price">$ 3.20</span>
-        </div>
-        <div class="sale-line" style="background: var(--brand-soft);">
-          <div>
-            <div class="nm" style="color: var(--brand-strong);">Bulk discount</div>
-            <div class="sb" style="font: 12px/1.3 var(--font-sans); color: var(--brand-strong); margin-top: 2px;">Auto-applied · Over $25</div>
-          </div>
-          <span></span>
-          <span class="price" style="color: var(--brand-strong);">– $ 2.20</span>
-        </div>
-      </div>
-
-      <!-- Suggested items -->
-      <div style="padding: 12px 16px 4px;">
-        <div class="psh" style="padding: 6px 0;">Frequently sold with this</div>
-      </div>
-      <div class="pos-grid" style="padding: 0 16px;">
-        <div class="pos-tile">
-          <span data-icon="bag" data-icon-size="22"></span>
-          <div>Sugar 2kg</div>
-          <div class="ct">$ 3.80</div>
-        </div>
-        <div class="pos-tile">
-          <span data-icon="bag" data-icon-size="22"></span>
-          <div>Rice 5kg</div>
-          <div class="ct">$ 9.50</div>
-        </div>
-        <div class="pos-tile">
-          <span data-icon="bag" data-icon-size="22"></span>
-          <div>Soap bar</div>
-          <div class="ct">$ 0.80</div>
-        </div>
-      </div>
-
-      <div style="height: 24px;"></div>
-    </div>
-
-    <!-- Bottom action -->
-    <div class="ps-bottombar" style="gap: 10px;">
-      <button class="btn btn-secondary" style="height: 48px; width: 48px; padding: 0;"><span data-icon="user" data-icon-size="18"></span></button>
-      <button class="btn btn-primary" style="flex: 1; height: 48px; font-size: 16px;">Charge $ 284.50</button>
-    </div>
-
-    <!-- Tab bar -->
-    <div class="ps-tabbar">
-      <a class="ps-tab active" href="#"><span data-icon="receipt"></span>Sale</a>
-      <a class="ps-tab" href="#"><span data-icon="bag"></span>Items</a>
-      <a class="ps-tab" href="#"><span data-icon="list"></span>Receipts</a>
-      <a class="ps-tab" href="#"><span data-icon="more"></span>More</a>
-    </div>
+<main class="pos-app">
+  <div class="pos-app-head">
+    <h1>New sale</h1>
+    <div class="pos-meta" id="cart-summary">Cart empty</div>
   </div>
-  </div>
-</div>
 
+  <div class="sale-layout">
+    <section class="pos-panel" aria-labelledby="catalog-h">
+      <div class="pos-panel-h">
+        <h2 id="catalog-h">Find an item</h2>
+        <span class="sb" id="catalog-count"></span>
+      </div>
+      <input id="catalog-search" type="search" class="pos-search"
+             placeholder="Search by name, SKU or category (mealie, sugar, oil, bread, milk…)"
+             aria-label="Search items" />
+      <div id="catalog-grid" class="pos-cat-grid" role="list" aria-label="Catalog"></div>
+    </section>
+
+    <aside class="pos-panel" aria-labelledby="cart-h">
+      <div class="pos-panel-h">
+        <h2 id="cart-h">Cart</h2>
+        <button class="pos-btn pos-btn-quiet" id="cart-clear" type="button">Clear</button>
+      </div>
+      <div id="cart-list" class="pos-cart"></div>
+      <div class="pos-totals" id="cart-totals" hidden>
+        <div class="row"><span>Subtotal (excl. VAT)</span><span class="v" id="t-net">$ 0.00</span></div>
+        <div class="row"><span>VAT 15%</span><span class="v" id="t-vat">$ 0.00</span></div>
+        <div class="row b"><span>Total</span><span class="v" id="t-total">$ 0.00</span></div>
+      </div>
+      <button id="pay-btn" class="pos-pay-btn" type="button" disabled>
+        <span>Take payment</span><span id="pay-total">$ 0.00</span>
+      </button>
+    </aside>
+  </div>
+</main>
+
+<script type="module">
+import POS from './app.js';
+
+const search = document.getElementById('catalog-search');
+const grid = document.getElementById('catalog-grid');
+const count = document.getElementById('catalog-count');
+const cartList = document.getElementById('cart-list');
+const totalsBox = document.getElementById('cart-totals');
+const tNet = document.getElementById('t-net');
+const tVat = document.getElementById('t-vat');
+const tTotal = document.getElementById('t-total');
+const payTotal = document.getElementById('pay-total');
+const payBtn = document.getElementById('pay-btn');
+const summary = document.getElementById('cart-summary');
+const clearBtn = document.getElementById('cart-clear');
+const shiftMeta = document.getElementById('shift-meta');
+
+function renderShift() {
+  const s = POS.getCurrentShift();
+  shiftMeta.innerHTML = `${s.cashier} · ${s.till} · Shift <strong>${s.id}</strong>`;
+}
+
+function renderCatalog() {
+  const q = (search.value || '').trim().toLowerCase();
+  const items = POS.getCatalog().filter((it) => {
+    if (!q) return true;
+    return it.name.toLowerCase().includes(q)
+        || it.sku.toLowerCase().includes(q)
+        || it.cat.toLowerCase().includes(q);
+  });
+  count.textContent = `${items.length} item${items.length === 1 ? '' : 's'}`;
+  if (!items.length) {
+    grid.innerHTML = `<div class="pos-empty" style="grid-column: 1 / -1;">No items match "${POS.esc(q)}"</div>`;
+    return;
+  }
+  grid.innerHTML = items.map((it) => `
+    <button class="pos-cat-tile" data-sku="${POS.esc(it.sku)}" type="button" role="listitem"
+            aria-label="Add ${POS.esc(it.name)} ($ ${it.price.toFixed(2)})">
+      <span class="cat">${POS.esc(it.cat)}</span>
+      <span class="nm">${POS.esc(it.name)}</span>
+      <span class="price">$ ${it.price.toFixed(2)}</span>
+    </button>
+  `).join('');
+  grid.querySelectorAll('button[data-sku]').forEach((b) => {
+    b.addEventListener('click', () => {
+      POS.addToCart(b.dataset.sku);
+      renderCart();
+      POS.toast(`Added ${b.querySelector('.nm').textContent}`, 'success');
+    });
+  });
+}
+
+function renderCart() {
+  const cart = POS.getCart();
+  if (!cart.length) {
+    cartList.innerHTML = `<div class="pos-empty">Tap an item to add it.</div>`;
+    totalsBox.hidden = true;
+    payBtn.disabled = true;
+    payTotal.textContent = '$ 0.00';
+    summary.textContent = 'Cart empty';
+    return;
+  }
+  cartList.innerHTML = cart.map((l) => `
+    <div class="pos-cart-line" data-sku="${POS.esc(l.sku)}">
+      <div>
+        <div class="nm">${POS.esc(l.name)}</div>
+        <div class="sb">${POS.esc(l.sku)} · $ ${l.price.toFixed(2)} ea</div>
+      </div>
+      <div class="pos-qty">
+        <button type="button" data-act="dec" aria-label="Decrease quantity">−</button>
+        <span class="v">${l.qty}</span>
+        <button type="button" data-act="inc" aria-label="Increase quantity">+</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span class="price">$ ${(l.price * l.qty).toFixed(2)}</span>
+        <button type="button" class="pos-rm" data-act="rm" aria-label="Remove line">×</button>
+      </div>
+    </div>
+  `).join('');
+  cartList.querySelectorAll('.pos-cart-line').forEach((row) => {
+    const sku = row.dataset.sku;
+    row.querySelector('[data-act="inc"]').addEventListener('click', () => {
+      const line = POS.getCart().find((l) => l.sku === sku);
+      POS.updateQty(sku, (line?.qty || 0) + 1); renderCart();
+    });
+    row.querySelector('[data-act="dec"]').addEventListener('click', () => {
+      const line = POS.getCart().find((l) => l.sku === sku);
+      POS.updateQty(sku, (line?.qty || 0) - 1); renderCart();
+    });
+    row.querySelector('[data-act="rm"]').addEventListener('click', () => {
+      POS.removeFromCart(sku); renderCart();
+    });
+  });
+  const t = POS.cartTotals(cart);
+  totalsBox.hidden = false;
+  tNet.textContent = POS.moneyPlain(t.net);
+  tVat.textContent = POS.moneyPlain(t.vat);
+  tTotal.textContent = POS.moneyPlain(t.total);
+  payTotal.textContent = POS.moneyPlain(t.total);
+  payBtn.disabled = false;
+  const itemCount = cart.reduce((s, l) => s + l.qty, 0);
+  summary.textContent = `${itemCount} item${itemCount === 1 ? '' : 's'} · ${POS.moneyPlain(t.total)}`;
+}
+
+search.addEventListener('input', renderCatalog);
+clearBtn.addEventListener('click', () => { POS.clearCart(); renderCart(); });
+payBtn.addEventListener('click', () => {
+  POS.openPaymentPicker(() => { renderCart(); });
+});
+
+renderShift();
+renderCatalog();
+renderCart();
+</script>
 </body>
 </html>
