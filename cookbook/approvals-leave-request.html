@@ -555,8 +555,8 @@ function RequestDrawer({ request, onAction, onClose }: {
     <!-- Step 4 -->
     <div class="ck-step"><span class="n">04</span><h3>Approve optimistically with a 5-second undo window</h3></div>
     <p>Update local state immediately and fire the API call after a 5-second timer so the manager can undo without server churn. If the timer expires, post to the API and notify the employee; if the user clicks Undo, cancel the timer and revert the local state — no network calls at all.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { useRef } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { useRef } from &#39;react&#39;;
 import { useToast } from &#39;@corelithzw/react&#39;;
 
 const UNDO_MS = 5_000;
@@ -570,7 +570,7 @@ function useApproveWithUndo({
   revert: (r: LeaveRequest) =&gt; void;
   commit: (a: ManagerAction, r: LeaveRequest) =&gt; Promise&lt;void&gt;;
 }) {
-  const { showToast } = useToast();
+  const toast = useToast();
   const timers = useRef&lt;Map&lt;string, ReturnType&lt;typeof setTimeout&gt;&gt;&gt;(new Map());
 
   return (action: ManagerAction, request: LeaveRequest) =&gt; {
@@ -582,14 +582,14 @@ function useApproveWithUndo({
         await commit(action, request);
       } catch (e) {
         revert(request);
-        showToast({ tone: &#39;danger&#39;, message: `Could not save: ${(e as Error).message}` });
+        toast.show({ tone: &#39;danger&#39;, title: `Could not save: ${(e as Error).message}` });
       }
     }, UNDO_MS);
     timers.current.set(request.id, timer);
 
-    showToast({
+    toast.show({
       tone: &#39;success&#39;,
-      message: `${labelFor(action)} ${request.employee.name}.`,
+      title: `${labelFor(action)} ${request.employee.name}.`,
       duration: UNDO_MS,
       action: {
         label: &#39;Undo&#39;,
@@ -708,7 +708,7 @@ export function LeaveInbox({
   const [filter,   setFilter]   = useState&lt;Filter&gt;(&#39;pending&#39;);
   const [openId,   setOpenId]   = useState&lt;string | null&gt;(null);
   const [selected, setSelected] = useState&lt;Set&lt;string&gt;&gt;(new Set());
-  const { showToast } = useToast();
+  const toast = useToast();
   const timers = useRef&lt;Map&lt;string, ReturnType&lt;typeof setTimeout&gt;&gt;&gt;(new Map());
 
   // ── Optimistic decide with 5s undo ─────────────────────────────
@@ -731,9 +731,9 @@ export function LeaveInbox({
     }, UNDO_MS);
     timers.current.set(target.id, t);
 
-    showToast({
+    toast.show({
       tone: &#39;success&#39;,
-      message: `${labelFor(action)} ${target.employee.name}.`,
+      title: `${labelFor(action)} ${target.employee.name}.`,
       duration: UNDO_MS,
       action: {
         label: &#39;Undo&#39;,
