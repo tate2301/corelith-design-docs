@@ -346,40 +346,35 @@ function MatrixWithPause({
 
     <div class="ck-step"><span class="n">04</span><h3>Persist per toggle — no Save button</h3></div>
     <p>Each toggle calls <code>PATCH /me/preferences</code> with the single delta. Show a tiny "Saved" toast on success; rollback the optimistic value on failure. No Save button means the user never wonders "did this take effect?" — closing the tab is always safe.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { useEffect, useReducer } from &#39;@corelithzw/react&#39;;
-import { Toast, useToast } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { useState } from &#39;react&#39;;
+import { useToast } from &#39;@corelithzw/react&#39;;
+import type { NotificationPrefs } from &#39;@corelithzw/react&#39;;
 
-export function usePreferences(initial: Prefs) {
-  const [prefs, raw] = useReducer(reducer, initial);
+export function usePreferences(initial: NotificationPrefs) {
+  const [prefs, setPrefs] = useState&lt;NotificationPrefs&gt;(initial);
   const toast = useToast();
 
-  const dispatch = (a: Action) =&gt; {
+  const onToggle = (eventId: string, channelId: string, enabled: boolean) =&gt; {
     const before = prefs;
-    raw(a);
+    const key = `${eventId}:${channelId}`;
+    setPrefs({ ...prefs, [key]: enabled });
 
-    // Build the patch from the single action.
-    let patch: Record&lt;string, unknown&gt; | null = null;
-    if (a.type === &#39;TOGGLE&#39;) patch = { [`matrix.${key(a.eventId, a.channel)}`]: a.value };
-    if (a.type === &#39;PAUSE&#39;)  patch = { pauseUntil: a.until };
-    if (a.type === &#39;RESUME&#39;) patch = { pauseUntil: null };
-    if (a.type === &#39;QUIET&#39;)  patch = { quietHours: a.hours };
-
-    if (patch) {
-      fetch(&#39;/me/preferences&#39;, { method: &#39;PATCH&#39;, body: JSON.stringify(patch) })
-        .then((res) =&gt; {
-          if (!res.ok) throw new Error(&#39;Save failed&#39;);
-          toast.show({ tone: &#39;success&#39;, title: &#39;Saved&#39;, ttl: 1200 });
-        })
-        .catch(() =&gt; {
-          // Rollback by re-applying the previous state.
-          raw({ type: &#39;__rollback&#39; as any, prev: before } as any);
-          toast.show({ tone: &#39;danger&#39;, title: &#39;Could not save preference&#39; });
-        });
-    }
+    fetch(&#39;/me/preferences&#39;, {
+      method: &#39;PATCH&#39;,
+      body: JSON.stringify({ [`matrix.${key}`]: enabled }),
+    })
+      .then((res) =&gt; {
+        if (!res.ok) throw new Error(&#39;Save failed&#39;);
+        toast.show({ tone: &#39;success&#39;, title: &#39;Saved&#39;, duration: 1200 });
+      })
+      .catch(() =&gt; {
+        setPrefs(before);
+        toast.show({ tone: &#39;danger&#39;, title: &#39;Could not save preference&#39; });
+      });
   };
 
-  return [prefs, dispatch] as const;
+  return { prefs, onToggle };
 }'>
       <div class="ds-specimen-stage canvas padded">
         <div style="display: grid; place-items: center; padding: 18px;">
