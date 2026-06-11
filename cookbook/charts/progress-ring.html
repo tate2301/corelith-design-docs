@@ -149,35 +149,45 @@
       <a class="ck-piece" href="../../system/p-progress.html"><span class="kind">Primitive</span>Progress</a>
       <a class="ck-piece" href="../../system/b-stat-hero.html"><span class="kind">Block</span>Stat hero</a>
     </div>
-    <p style="margin-top: 12px;"><b>Intended exports used here:</b> <code>Chart.ProgressRing</code>.</p>
+    <p style="margin-top: 12px;"><b>Exports used here:</b> <code>Chart.Donut</code>, <code>ChartCategoricalDatum</code>.</p>
     <div class="ck-roadmap-note">
-      <b>Roadmap.</b> <code>Chart.ProgressRing</code> ships in <code>@corelithzw/react v0.2</code>. Today, <code>Progress</code> already renders a linear bar with the same prop shape.
+      <b>In v0.3.0.</b> No dedicated <code>Chart.ProgressRing</code> ships yet. The honest workaround is to encode "progress" as a two-slice donut — the filled portion gets the brand colour, the remainder is a muted track. Pick a tone in your component and pass it as the <code>color</code> on the first slice. The centre label is overlaid with an absolutely-positioned <code>&lt;div&gt;</code>.
     </div>
   </section>
 
   <section id="snippet">
     <h2 class="ds-h2">The React snippet</h2>
-    <p class="ds-h2-sub">One value, one max, one optional status function. The component picks its own colour.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
+    <p class="ds-h2-sub">Split the value into a filled slice and a remainder slice. Pick the filled-slice colour from the percentage; overlay the centre label with CSS.</p>
+    <div class="ds-specimen"
          data-code='import { Chart } from &#39;@corelithzw/react&#39;;
+import type { ChartCategoricalDatum } from &#39;@corelithzw/react&#39;;
 
 export function CollectionRing() {
   const value = 48210;
-  const max   = 52400;
+  const max = 52400;
+  const pct = value / max;
+  const tone =
+    pct &gt;= 0.9 ? &#39;var(--tone-success)&#39; :
+    pct &lt; 0.6  ? &#39;var(--tone-danger)&#39;  : &#39;var(--brand)&#39;;
+
+  const slices: ChartCategoricalDatum[] = [
+    { label: &#39;collected&#39;, value, color: tone },
+    { label: &#39;remaining&#39;, value: Math.max(max - value, 0), color: &#39;var(--surface-sunken)&#39; },
+  ];
 
   return (
-    &lt;Chart.ProgressRing
-      value={value}
-      max={max}
-      size={160}
-      thickness={14}
-      tone={(pct) =&gt;
-        pct &gt;= 0.9 ? &#39;success&#39; :
-        pct &lt; 0.6  ? &#39;danger&#39;  : &#39;brand&#39;}
-      label={`${Math.round((value / max) * 100)}%`}
-      sub=&quot;collection rate&quot;
-      aria-label={`Collection rate: ${value} of ${max}`}
-    /&gt;
+    &lt;div style={{ position: &#39;relative&#39;, width: 160, height: 160 }}&gt;
+      &lt;Chart.Donut data={slices} inner={0.78} width={160} height={160} aria-label={`Collection rate: ${value} of ${max}`} /&gt;
+      &lt;div style={{
+        position: &#39;absolute&#39;, inset: 0,
+        display: &#39;grid&#39;, placeItems: &#39;center&#39;,
+        font: &#39;700 24px/1 var(--font-sans)&#39;,
+        color: &#39;var(--text-strong)&#39;,
+        pointerEvents: &#39;none&#39;,
+      }}&gt;
+        {`${Math.round(pct * 100)}%`}
+      &lt;/div&gt;
+    &lt;/div&gt;
   );
 }'>
       <div class="ds-specimen-stage canvas padded">

@@ -325,8 +325,9 @@ export function useUndoableCommit&lt;T&gt;({
     <!-- Step 3 -->
     <div class="ck-step"><span class="n">03</span><h3>Render the bulk-edit drawer — fields that say "apply to all N"</h3></div>
     <p>The drawer is a partial form: every field is optional, and the heading says "Edit 3 suppliers" so the user knows the scope. Leaving a field blank means "don't touch this field on any row" — the patch only sends keys with values.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { Drawer, Stack, Form, Field, Select, Button } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { useState } from &#39;@corelithzw/react&#39;;
+import { Drawer, Stack, Form, Field, Select, Button } from &#39;@corelithzw/react&#39;;
 
 type BulkPatch = {
   tier?: &#39;A&#39; | &#39;B&#39; | &#39;C&#39;;
@@ -356,29 +357,29 @@ function BulkEditDrawer({
   };
 
   return (
-    &lt;Drawer open={open} onClose={onClose} side=&quot;right&quot; width={420}&gt;
+    &lt;Drawer open={open} onClose={onClose} side=&quot;right&quot; title=&quot;Edit suppliers&quot;&gt;
       &lt;Form onSubmit={(e) =&gt; { e.preventDefault(); submit(); }}&gt;
-        &lt;Stack gap=&quot;md&quot; padding=&quot;lg&quot;&gt;
+        &lt;Stack gap=&quot;md&quot;&gt;
           &lt;h2&gt;Edit {count} {count === 1 ? &#39;supplier&#39; : &#39;suppliers&#39;}&lt;/h2&gt;
           &lt;p&gt;Only the fields you change will be applied. Leave blank to keep the existing value.&lt;/p&gt;
 
           &lt;Field label=&quot;Tier&quot;&gt;
-            &lt;Select value={tier} onChange={setTier} options={[
-              { value: &#39;&#39;, label: &quot;— don&#39;t change —&quot; },
+            &lt;Select value={tier} onChange={(e) =&gt; setTier(e.target.value)} options={[
+              { value: &#39;&#39;, label: &quot;don&#39;t change&quot; },
               { value: &#39;A&#39;, label: &#39;Tier A&#39; },
               { value: &#39;B&#39;, label: &#39;Tier B&#39; },
               { value: &#39;C&#39;, label: &#39;Tier C&#39; },
             ]} /&gt;
           &lt;/Field&gt;
           &lt;Field label=&quot;Account manager&quot;&gt;
-            &lt;Select value={mgr} onChange={setMgr} options={[
-              { value: &#39;&#39;, label: &quot;— don&#39;t change —&quot; },
+            &lt;Select value={mgr} onChange={(e) =&gt; setMgr(e.target.value)} options={[
+              { value: &#39;&#39;, label: &quot;don&#39;t change&quot; },
               ...managerOptions,
             ]} /&gt;
           &lt;/Field&gt;
           &lt;Field label=&quot;Status&quot;&gt;
-            &lt;Select value={status} onChange={setStatus} options={[
-              { value: &#39;&#39;, label: &quot;— don&#39;t change —&quot; },
+            &lt;Select value={status} onChange={(e) =&gt; setStatus(e.target.value)} options={[
+              { value: &#39;&#39;, label: &quot;don&#39;t change&quot; },
               { value: &#39;active&#39;, label: &#39;Active&#39; },
               { value: &#39;archived&#39;, label: &#39;Archived&#39; },
             ]} /&gt;
@@ -417,11 +418,27 @@ function BulkEditDrawer({
     <div class="ck-step"><span class="n">04</span><h3>Wire optimistic + Undo — the timer is the contract</h3></div>
     <p>On Save: stash <code>prevRows</code>, apply the patch to local state, schedule the API call, fire a toast with an Undo button. The toast's countdown is decorative; the real clock is the timer inside the hook. Undo clears it; otherwise the call goes.</p>
     <div class="ds-specimen"
-         data-code='function SuppliersPage({ initialRows }: { initialRows: Supplier[] }) {
+         data-code='import { useState } from &#39;react&#39;;
+import { useToast } from &#39;@corelithzw/react&#39;;
+
+type Supplier = { id: string; name: string };
+type BulkPatch = { tier?: &#39;A&#39; | &#39;B&#39; | &#39;C&#39;; accountManagerId?: string; status?: &#39;active&#39; | &#39;archived&#39; };
+
+declare function useBulkSelection&lt;T extends { id: string }&gt;(rows: T[]): {
+  selected: T[];
+  clear: () =&gt; void;
+};
+declare function scheduleUndoableCommit(input: {
+  onCommit: () =&gt; Promise&lt;void&gt;;
+  onRollback: () =&gt; void;
+}): { schedule: () =&gt; void; undo: () =&gt; void };
+declare const api: { bulkPatchSuppliers: (ids: string[], patch: BulkPatch) =&gt; Promise&lt;void&gt; };
+
+function SuppliersPage({ initialRows }: { initialRows: Supplier[] }) {
   const [rows, setRows] = useState&lt;Supplier[]&gt;(initialRows);
-  const sel = useRowSelection(rows);
-  const { push } = useToast();
-  const [drawer, setDrawer] = useState(false);
+  const sel = useBulkSelection(rows);
+  const toast = useToast();
+  const [, setDrawer] = useState(false);
 
   const applyPatch = (patch: BulkPatch) =&gt; {
     const ids = new Set(sel.selected.map((r) =&gt; r.id));
@@ -433,21 +450,21 @@ function BulkEditDrawer({
     sel.clear();
     setDrawer(false);
 
-    const ctrl = makeUndoableCommit({
+    const ctrl = scheduleUndoableCommit({
       onCommit: () =&gt; api.bulkPatchSuppliers(Array.from(ids), patch),
       onRollback: () =&gt; setRows(prev),
     });
     ctrl.schedule();
 
-    push({
+    toast.show({
       tone: &#39;success&#39;,
       title: `${ids.size} ${ids.size === 1 ? &#39;supplier&#39; : &#39;suppliers&#39;} updated`,
-      duration: 5_000,
-      action: { label: &#39;Undo&#39;, run: ctrl.undo },
+      duration: 5000,
+      action: { label: &#39;Undo&#39;, onClick: ctrl.undo },
     });
   };
 
-  // …render table + selection toolbar + drawer
+  return applyPatch;
 }'>
       <div class="ds-specimen-stage canvas padded">
         <div class="ck-code-only-note">

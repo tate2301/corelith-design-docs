@@ -133,19 +133,20 @@
       <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart</a>
       <a class="ck-piece" href="../../system/b-card.html"><span class="kind">Block</span>Card</a>
     </div>
-    <p style="margin-top: 12px;"><b>Intended exports used here:</b> <code>Chart.Bar</code> with <code>group</code>.</p>
+    <p style="margin-top: 12px;"><b>Exports used here:</b> <code>Chart.Bar</code>, <code>ChartCategoricalDatum</code>.</p>
     <div class="ck-roadmap-note">
-      <b>Roadmap.</b> Grouped mode ships with <code>Chart.Bar</code> in <code>@corelithzw/react v0.2</code>.
+      <b>In v0.3.0.</b> <code>Chart.Bar</code> renders one bar per datum; native grouping (side-by-side target/actual) lands in a future release. Today, render the "actual" series with a per-bar <code>color</code> that flips red when it under-shoots target — the colour, not a second bar, carries the comparison. For two-bar groups, render two <code>Chart.Bar</code> instances side-by-side in a grid.
     </div>
   </section>
 
   <section id="snippet">
     <h2 class="ds-h2">The React snippet</h2>
-    <p class="ds-h2-sub">Pass <code>series</code> instead of <code>yAccessor</code>. Conditional colour catches the miss.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
+    <p class="ds-h2-sub">Render two <code>Chart.Bar</code> instances inside a grid — one row for target, one row for actual — and tint the actual bars red when they fall short.</p>
+    <div class="ds-specimen"
          data-code='import { Chart } from &#39;@corelithzw/react&#39;;
+import type { ChartCategoricalDatum } from &#39;@corelithzw/react&#39;;
 
-const data = [
+const rows = [
   { week: &#39;W1&#39;, target: 50, actual: 55 },
   { week: &#39;W2&#39;, target: 55, actual: 62 },
   { week: &#39;W3&#39;, target: 60, actual: 64 },
@@ -153,24 +154,23 @@ const data = [
   { week: &#39;W5&#39;, target: 70, actual: 78 },
 ];
 
+const target: ChartCategoricalDatum[] = rows.map((r) =&gt; ({
+  label: r.week,
+  value: r.target,
+}));
+
+const actual: ChartCategoricalDatum[] = rows.map((r) =&gt; ({
+  label: r.week,
+  value: r.actual,
+  color: r.actual &lt; r.target ? &#39;var(--tone-danger)&#39; : &#39;var(--brand)&#39;,
+}));
+
 export function TargetVsActual() {
   return (
-    &lt;Chart.Bar
-      data={data}
-      xAccessor=&quot;week&quot;
-      group
-      series={[
-        { key: &#39;target&#39;, label: &#39;Target&#39;, color: &#39;brand-300&#39; },
-        {
-          key: &#39;actual&#39;, label: &#39;Actual&#39;,
-          color: (d) =&gt; d.actual &lt; d.target ? &#39;danger&#39; : &#39;brand&#39;,
-        },
-      ]}
-      height={280}
-      legend=&quot;top&quot;
-      yFormat={(v) =&gt; `$${v}k`}
-      aria-label=&quot;Target versus actual, last five weeks&quot;
-    /&gt;
+    &lt;div style={{ display: &#39;grid&#39;, gap: 12 }}&gt;
+      &lt;Chart.Bar data={target} color=&quot;brand-soft&quot; width={640} height={140} aria-label=&quot;Target&quot; /&gt;
+      &lt;Chart.Bar data={actual} width={640} height={140} aria-label=&quot;Actual&quot; /&gt;
+    &lt;/div&gt;
   );
 }'>
       <div class="ds-specimen-stage canvas padded">

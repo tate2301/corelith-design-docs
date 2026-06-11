@@ -351,24 +351,26 @@ export function tryNext(state: State, dispatch: (a: Action) =&gt; void) {
     <!-- Step 3 -->
     <div class="ck-step"><span class="n">03</span><h3>Render the current step — and surface the stepper so the user can JUMP back</h3></div>
     <p>The <code>Stepper</code> primitive is more than decoration. Clicking a previous dot dispatches <code>JUMP</code>, which is the cheapest way to give "let me change my answer on step 1" without throwing away steps 2 and 3. You don't let the user jump <em>forward</em> past an unfilled step — that's what "Next" is for.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { Stepper, Stack, Form, Field, Select, Checkbox, Button, Alert } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { Stepper, Stack, Field, Select, Checkbox } from &#39;@corelithzw/react&#39;;
 
-const STEPS = [
-  { id: 1, label: &#39;Type&#39; },
-  { id: 2, label: &#39;Dates&#39; },
-  { id: 3, label: &#39;Cover&#39; },
-  { id: 4, label: &#39;Review&#39; },
-];
+const STEP_LABELS: Record&lt;Step, string&gt; = {
+  1: &#39;Type&#39;, 2: &#39;Dates&#39;, 3: &#39;Cover&#39;, 4: &#39;Review&#39;,
+};
 
 function StepHeader({ state, dispatch }: { state: State; dispatch: (a: Action) =&gt; void }) {
   return (
-    &lt;Stepper
-      steps={STEPS}
-      current={state.step}
-      // only allow JUMP backwards — never forward past a gate
-      onJump={(id) =&gt; { if (id &lt; state.step) dispatch({ type: &#39;JUMP&#39;, step: id as Step }); }}
-    /&gt;
+    &lt;Stepper current={state.step} labelled&gt;
+      {([1, 2, 3, 4] as Step[]).map((id) =&gt; (
+        &lt;Stepper.Step
+          key={id}
+          label={STEP_LABELS[id]}
+          state={id &lt; state.step ? &#39;done&#39; : id === state.step ? &#39;current&#39; : &#39;pending&#39;}
+          // only allow JUMP backwards — never forward past a gate
+          onClick={() =&gt; { if (id &lt; state.step) dispatch({ type: &#39;JUMP&#39;, step: id }); }}
+        /&gt;
+      ))}
+    &lt;/Stepper&gt;
   );
 }
 
@@ -376,14 +378,11 @@ function StepType({ state, dispatch }: { state: State; dispatch: (a: Action) =&g
   return (
     &lt;Stack gap=&quot;md&quot;&gt;
       &lt;h2&gt;What kind of leave?&lt;/h2&gt;
-      &lt;Field
-        label=&quot;Leave type&quot;
-        name=&quot;type&quot;
-        error={state.errors.type}
-      &gt;
+      &lt;Field label=&quot;Leave type&quot; error={state.errors.type}&gt;
         &lt;Select
+          name=&quot;type&quot;
           value={state.data.type}
-          onChange={(v) =&gt; dispatch({ type: &#39;PATCH&#39;, patch: { type: v as Data[&#39;type&#39;] } })}
+          onChange={(e) =&gt; dispatch({ type: &#39;PATCH&#39;, patch: { type: e.target.value as Data[&#39;type&#39;] } })}
           options={[
             { value: &#39;annual&#39;, label: &#39;Annual leave&#39; },
             { value: &#39;sick&#39;, label: &#39;Sick leave&#39; },
@@ -393,11 +392,10 @@ function StepType({ state, dispatch }: { state: State; dispatch: (a: Action) =&g
         /&gt;
       &lt;/Field&gt;
       &lt;Checkbox
+        label=&quot;This is a half-day request&quot;
         checked={state.data.halfDay}
-        onChange={(v) =&gt; dispatch({ type: &#39;PATCH&#39;, patch: { halfDay: v } })}
-      &gt;
-        This is a half-day request
-      &lt;/Checkbox&gt;
+        onChange={(e) =&gt; dispatch({ type: &#39;PATCH&#39;, patch: { halfDay: e.target.checked } })}
+      /&gt;
     &lt;/Stack&gt;
   );
 }'>

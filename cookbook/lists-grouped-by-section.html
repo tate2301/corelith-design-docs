@@ -187,8 +187,9 @@ function groupByLetter(items: Supplier[]): Map&lt;string, Supplier[]&gt; {
 
     <div class="ck-step"><span class="n">02</span><h3>Render — give each header a stable id for jumping</h3></div>
     <p>The header's <code>id</code> is the jump anchor. <code>scrollIntoView</code> on that node is the entire jump-to-letter implementation. Use <code>section-${'$'}{letter}</code> so it can't collide with another page id.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { Stack, RowCard } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { useMemo } from &#39;react&#39;;
+import { Stack, RowCard } from &#39;@corelithzw/react&#39;;
 
 function SupplierList({ items }: { items: Supplier[] }) {
   const groups = useMemo(() =&gt; groupByLetter(items), [items]);
@@ -201,7 +202,7 @@ function SupplierList({ items }: { items: Supplier[] }) {
           &lt;/h3&gt;
           &lt;Stack gap=&quot;xs&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
             {rows.map(s =&gt; (
-              &lt;RowCard key={s.id} as=&quot;li&quot;
+              &lt;RowCard key={s.id}
                 title={s.name} trailing={s.meta}
               /&gt;
             ))}
@@ -295,17 +296,17 @@ const handleJump = (letter: string) =&gt; {
   <section id="final">
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">Group + render + jump. About 70 lines.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
+    <div class="ds-specimen"
          data-code='import { useMemo } from &#39;react&#39;;
 import { Stack, RowCard } from &#39;@corelithzw/react&#39;;
 
-type Supplier = { id: string; name: string; meta: string };
+type SupplierRow = { id: string; name: string; meta: string };
 
-function groupByLetter(items: Supplier[]): Map&lt;string, Supplier[]&gt; {
+function groupSuppliersByLetter(items: SupplierRow[]): Map&lt;string, SupplierRow[]&gt; {
   const sorted = [...items].sort((a, b) =&gt;
     a.name.localeCompare(b.name, undefined, { sensitivity: &#39;base&#39; })
   );
-  const groups = new Map&lt;string, Supplier[]&gt;();
+  const groups = new Map&lt;string, SupplierRow[]&gt;();
   for (const item of sorted) {
     const c = item.name[0]?.toUpperCase() ?? &#39;#&#39;;
     const key = /[A-Z]/.test(c) ? c : &#39;#&#39;;
@@ -315,8 +316,8 @@ function groupByLetter(items: Supplier[]): Map&lt;string, Supplier[]&gt; {
   return groups;
 }
 
-export function SupplierList({ items }: { items: Supplier[] }) {
-  const groups = useMemo(() =&gt; groupByLetter(items), [items]);
+export function SupplierList({ items }: { items: SupplierRow[] }) {
+  const groups = useMemo(() =&gt; groupSuppliersByLetter(items), [items]);
   const letters = useMemo(() =&gt; [...groups.keys()], [groups]);
 
   const handleJump = (letter: string) =&gt; {
@@ -331,7 +332,7 @@ export function SupplierList({ items }: { items: Supplier[] }) {
           &lt;h3 id={`section-${letter}`} className=&quot;section-header&quot;&gt;{letter}&lt;/h3&gt;
           &lt;Stack gap=&quot;xs&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
             {rows.map(s =&gt; (
-              &lt;RowCard key={s.id} as=&quot;li&quot;
+              &lt;RowCard key={s.id}
                 title={s.name}
                 trailing={s.meta}
               /&gt;

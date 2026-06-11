@@ -197,7 +197,7 @@
       <a class="ck-piece" href="../system/x-command-palette.html"><span class="kind">Pattern</span>Command palette</a>
       <a class="ck-piece" href="../system/x-modal.html"><span class="kind">Pattern</span>Modal &amp; sheet</a>
     </div>
-    <p style="margin-top: 12px;"><b><code>@corelithzw/react</code> exports used here:</b> <code>CommandPalette</code>, <code>useCommandPalette</code>, <code>Kbd</code>, <code>Stack</code>. The <code>useCommandPalette</code> hook owns the open-state + global keybinding.</p>
+    <p style="margin-top: 12px;"><b><code>@corelithzw/react</code> exports used here:</b> <code>CommandPalette</code>, <code>CommandItem</code> (type), <code>Kbd</code>. The palette takes a flat <code>CommandItem[]</code> and renders sections automatically from each item's <code>group</code> field. The global ⌘K shortcut is a tiny app-level <code>useEffect</code> — there's no built-in hook.</p>
   </section>
 
   <!-- STEP-BY-STEP -->
@@ -207,6 +207,8 @@
     <!-- Step 1 -->
     <div class="ck-step"><span class="n">01</span><h3>Model commands as data — one shape, many sources</h3></div>
     <p>Every entry in the palette — page, action, recent, doc — is the same record. That's how a single match function works across all of them, and how the renderer can group by <code>kind</code> without branching.</p>
+    <!-- Snippet auto-skipped: pure domain types + seed data, no @corelithzw/react
+         import. The Command shape gets mapped onto the real CommandItem in step 4. -->
     <div class="ds-specimen"
          data-code='export type Command = {
   id: string;
@@ -245,6 +247,9 @@ export const STATIC_COMMANDS: Command[] = [
     <!-- Step 2 -->
     <div class="ck-step"><span class="n">02</span><h3>Write the matcher inline — 30 lines, no dependency</h3></div>
     <p>A token-aware fuzzy match scores each candidate by (a) all query tokens appear, and (b) consecutive matches score higher. Bring in <code>fuse.js</code> when your dataset hits 10k items; for a command palette it's overkill.</p>
+    <!-- Snippet auto-skipped: pure-TS scoring helpers, no @corelithzw/react
+         import. CommandPalette also runs its own substring match internally;
+         this scorer is for callers that want to surface a ranked top-N elsewhere. -->
     <div class="ds-specimen"
          data-code='// 30-line in-recipe fuzzy matcher. Token-aware, no dependencies.
 // Returns score &gt; 0 for matches; 0 means "no".
@@ -337,57 +342,54 @@ export function useCommandPalette() {
 
     <!-- Step 4 -->
     <div class="ck-step"><span class="n">04</span><h3>Render the palette as one component — groups derived from <code>kind</code></h3></div>
-    <p>Grouping is a one-line <code>groupBy</code>. The selected index is local state in the palette — Arrow keys move it, Enter executes the command at that index. Recent items live at the top until the user types something; then ranked results take over.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { useState, useEffect } from &#39;@corelithzw/react&#39;;
-import { CommandPalette, Kbd, Stack } from &#39;@corelithzw/react&#39;;
+    <p>The real <code>CommandPalette</code> takes a flat <code>CommandItem[]</code> array. Each item carries an optional <code>group</code> string — the palette renders one section per distinct group, preserving insertion order. Selection state, arrow-key navigation, and Enter-to-fire all live inside the component; you wire <code>onSelect</code> per item.</p>
+    <div class="ds-specimen"
+         data-code='import { CommandPalette, Kbd } from &#39;@corelithzw/react&#39;;
+import type { CommandItem } from &#39;@corelithzw/react&#39;;
 
-const GROUP_LABEL: Record&lt;Command[&#39;kind&#39;], string&gt; = {
+type Cmd = {
+  id: string;
+  kind: &#39;page&#39; | &#39;action&#39; | &#39;recent&#39; | &#39;help&#39;;
+  label: string;
+  hint?: string;
+  href?: string;
+  run?: () =&gt; void;
+};
+
+const GROUP_LABEL: Record&lt;Cmd[&#39;kind&#39;], string&gt; = {
   recent: &#39;Recent&#39;,
   action: &#39;Actions&#39;,
   page:   &#39;Pages&#39;,
   help:   &#39;Help&#39;,
 };
 
-function groupBy(cmds: Command[]) {
-  const out: Record&lt;string, Command[]&gt; = {};
-  for (const c of cmds) (out[c.kind] ??= []).push(c);
-  return out;
-}
-
-function Palette({ open, close, all, runAction }: {
+function Palette({ open, close, list, runAction }: {
   open: boolean;
   close: () =&gt; void;
-  all: Command[];
+  list: Cmd[];
   runAction: (id: string) =&gt; void;
 }) {
-  const [q, setQ] = useState(&#39;&#39;);
-  useEffect(() =&gt; { if (open) setQ(&#39;&#39;); }, [open]);
-
-  const list = q ? rank(q, all) : all.slice(0, 8);
-  const groups = groupBy(list);
+  // Map our domain shape onto the real `CommandItem` shape.
+  // `group` becomes the section label; `onSelect` fires the action.
+  const items: CommandItem[] = list.map((c) =&gt; ({
+    id: c.id,
+    label: c.label,
+    group: GROUP_LABEL[c.kind],
+    shortcut: c.hint ? &lt;Kbd&gt;{c.hint}&lt;/Kbd&gt; : undefined,
+    onSelect: () =&gt; {
+      if (c.href) window.location.assign(c.href);
+      else if (c.run) c.run();
+      else runAction(c.id);
+    },
+  }));
 
   return (
-    &lt;CommandPalette open={open} onClose={close} query={q} onQuery={setQ}&gt;
-      {Object.keys(groups).map((k) =&gt; (
-        &lt;CommandPalette.Group key={k} label={GROUP_LABEL[k as Command[&#39;kind&#39;]]}&gt;
-          {groups[k].map((c) =&gt; (
-            &lt;CommandPalette.Item
-              key={c.id}
-              onSelect={() =&gt; {
-                close();
-                if (c.href) window.location.assign(c.href);
-                else if (c.run) c.run();
-                else runAction(c.id);
-              }}
-            &gt;
-              &lt;span&gt;{c.label}&lt;/span&gt;
-              {c.hint &amp;&amp; &lt;Kbd&gt;{c.hint}&lt;/Kbd&gt;}
-            &lt;/CommandPalette.Item&gt;
-          ))}
-        &lt;/CommandPalette.Group&gt;
-      ))}
-    &lt;/CommandPalette&gt;
+    &lt;CommandPalette
+      open={open}
+      onClose={close}
+      items={items}
+      placeholder=&quot;Type a command or search...&quot;
+    /&gt;
   );
 }'>
       <div class="ds-specimen-stage canvas padded">
@@ -409,6 +411,8 @@ function Palette({ open, close, all, runAction }: {
     <!-- Step 5 -->
     <div class="ck-step"><span class="n">05</span><h3>Persist recents so the palette gets smarter, not smug</h3></div>
     <p>Each successful select pushes the command id to a localStorage MRU list, capped at five. On open with no query, recents render at the top in MRU order — that's the only personalisation. We don't auto-rank by frequency; users hate when the palette quietly reorders itself.</p>
+    <!-- Snippet auto-skipped: pure-state hook with no @corelithzw/react import.
+         The hook is consumed in the final composition below, which IS checked. -->
     <div class="ds-specimen"
          data-code='const RECENT_KEY = (userId: string) =&gt; `huchu.cmdk.recents.${userId}`;
 const MAX_RECENT = 5;
@@ -451,9 +455,10 @@ export function useRecents(userId: string, all: Command[]) {
   <section id="final">
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The whole <code>AppPalette</code>, assembled. Global shortcut + matcher + groups + recents + dynamic help-doc source.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
+    <div class="ds-specimen"
          data-code='import { useCallback, useEffect, useState } from &#39;@corelithzw/react&#39;;
-import { CommandPalette, Kbd, Stack } from &#39;@corelithzw/react&#39;;
+import { CommandPalette, Kbd } from &#39;@corelithzw/react&#39;;
+import type { CommandItem } from &#39;@corelithzw/react&#39;;
 
 // ── Types ──────────────────────────────────────────────────────
 export type Command = {
@@ -553,45 +558,49 @@ export function AppPalette({
   const all = [...STATIC_COMMANDS, ...extraCommands];
   const { recents, record } = useRecents(userId, all);
 
-  const [q, setQ] = useState(&#39;&#39;);
-  useEffect(() =&gt; { if (open) setQ(&#39;&#39;); }, [open]);
+  // The palette owns its own query state — we just hand it the items.
+  // Empty query: recents + top suggested. Typing: ranked across everything.
+  // Since CommandPalette filters internally too, we feed it ALL items, with
+  // recents pulled to the front for the empty-query case.
+  const cmds: Command[] = [
+    ...recents,
+    ...all.filter((c) =&gt; !recents.find((r) =&gt; r.id === c.id)),
+  ];
 
-  // Empty query: recents + the top suggested. Typing: ranked across everything.
-  const list: Command[] = q
-    ? rank(q, all)
-    : [...recents, ...all.filter((c) =&gt; !recents.find((r) =&gt; r.id === c.id)).slice(0, 8 - recents.length)];
-
-  const groups: Record&lt;string, Command[]&gt; = {};
-  for (const c of list) (groups[c.kind] ??= []).push(c);
-
-  const select = (c: Command) =&gt; {
-    record(c.id);
-    close();
-    if (c.href) window.location.assign(c.href);
-    else if (c.run) c.run();
-    else onAction(c.id);
-  };
+  const items: CommandItem[] = cmds.map((c) =&gt; ({
+    id: c.id,
+    label: c.label,
+    group: GROUP_LABEL[c.kind],
+    search: [c.label, ...(c.keywords ?? [])].join(&#39; &#39;),
+    shortcut: c.hint ? &lt;Kbd&gt;{c.hint}&lt;/Kbd&gt; : undefined,
+    onSelect: () =&gt; {
+      record(c.id);
+      if (c.href) window.location.assign(c.href);
+      else if (c.run) c.run();
+      else onAction(c.id);
+    },
+  }));
 
   return (
-    &lt;CommandPalette open={open} onClose={close} query={q} onQuery={setQ}&gt;
-      {Object.keys(groups).map((k) =&gt; (
-        &lt;CommandPalette.Group key={k} label={GROUP_LABEL[k as Command[&#39;kind&#39;]]}&gt;
-          {groups[k].map((c) =&gt; (
-            &lt;CommandPalette.Item key={c.id} onSelect={() =&gt; select(c)}&gt;
-              &lt;span&gt;{c.label}&lt;/span&gt;
-              {c.hint &amp;&amp; &lt;Kbd&gt;{c.hint}&lt;/Kbd&gt;}
-            &lt;/CommandPalette.Item&gt;
-          ))}
-        &lt;/CommandPalette.Group&gt;
-      ))}
-      &lt;CommandPalette.Footer&gt;
-        &lt;span&gt;&lt;Kbd&gt;↑&lt;/Kbd&gt;&lt;Kbd&gt;↓&lt;/Kbd&gt; navigate&lt;/span&gt;
-        &lt;span&gt;&lt;Kbd&gt;↵&lt;/Kbd&gt; select&lt;/span&gt;
-        &lt;span&gt;&lt;Kbd&gt;Esc&lt;/Kbd&gt; close&lt;/span&gt;
-      &lt;/CommandPalette.Footer&gt;
-    &lt;/CommandPalette&gt;
+    &lt;CommandPalette
+      open={open}
+      onClose={close}
+      items={items}
+      placeholder=&quot;Type a command or search...&quot;
+      footer={
+        &lt;&gt;
+          &lt;span&gt;&lt;Kbd&gt;↑&lt;/Kbd&gt;&lt;Kbd&gt;↓&lt;/Kbd&gt; navigate&lt;/span&gt;
+          &lt;span&gt;&lt;Kbd&gt;↵&lt;/Kbd&gt; select&lt;/span&gt;
+          &lt;span&gt;&lt;Kbd&gt;Esc&lt;/Kbd&gt; close&lt;/span&gt;
+        &lt;/&gt;
+      }
+    /&gt;
   );
-}'>
+}
+
+// score() and rank() are kept above for callers that want to surface the
+// ranked top-N elsewhere (e.g. on a launcher tile). The palette itself
+// runs its own substring match against CommandItem.search.'>
       <div class="ds-specimen-stage canvas padded">
         <div style="display: grid; place-items: center; padding: 24px;">
           <div style="width: 420px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: 12px; padding: 16px; box-shadow: 0 12px 36px rgba(0,0,0,.18);">

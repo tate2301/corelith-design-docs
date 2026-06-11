@@ -273,41 +273,38 @@
       <a class="ck-piece" href="../../system/b-stat-hero.html"><span class="kind">Block</span>Stat hero</a>
       <a class="ck-piece" href="../../system/b-card.html"><span class="kind">Block</span>Card</a>
     </div>
-    <p style="margin-top: 12px;"><b>Intended exports used here:</b> <code>Chart.Line</code>, <code>Chart.Axis</code>, <code>Chart.Grid</code>, <code>StatHero</code>, <code>Card</code>.</p>
+    <p style="margin-top: 12px;"><b>Exports used here:</b> <code>Chart.Line</code>, <code>ChartPoint</code>.</p>
     <div class="ck-roadmap-note">
-      <b>Roadmap.</b> <code>Chart.*</code> sub-components are planned for <code>@corelithzw/react v0.2</code>. The snippets below show the intended API; until ship, render the SVG you see above inline (or use any headless chart library — the recipe's data shape is what we're committing to).
+      <b>In v0.3.0.</b> <code>Chart.Line</code> takes a flat <code>data: ChartPoint[]</code> array where each point has an <code>x</code> (number or string) and a <code>y</code> (number). Grid lines, axis labels and the area fill seen in the chart above are visual polish drawn around the primitive, not props on it.
     </div>
   </section>
 
   <!-- REACT SNIPPET -->
   <section id="snippet">
     <h2 class="ds-h2">The React snippet</h2>
-    <p class="ds-h2-sub">Minimal opinionated API. <code>data</code> is an array of points, <code>xAccessor</code>/<code>yAccessor</code> are keys, and the chart picks sensible axes for you.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
+    <p class="ds-h2-sub">Minimal opinionated API. <code>data</code> is an array of <code>{ x, y }</code> points; <code>color</code> takes a token name or any CSS colour; <code>axes</code> toggles the baseline; <code>width</code>/<code>height</code> set the drawable area.</p>
+    <div class="ds-specimen"
          data-code='import { Chart } from &#39;@corelithzw/react&#39;;
+import type { ChartPoint } from &#39;@corelithzw/react&#39;;
 
-const data = [
-  { day: &#39;May 1&#39;,  revenue: 1820 },
-  { day: &#39;May 5&#39;,  revenue: 2140 },
-  { day: &#39;May 9&#39;,  revenue: 2380 },
-  { day: &#39;May 13&#39;, revenue: 2510 },
-  { day: &#39;May 17&#39;, revenue: 2890 },
-  { day: &#39;May 21&#39;, revenue: 3320 },
-  { day: &#39;May 25&#39;, revenue: 3870 },
-  { day: &#39;May 30&#39;, revenue: 4820 },
+const data: ChartPoint[] = [
+  { x: &#39;May 1&#39;,  y: 1820 },
+  { x: &#39;May 5&#39;,  y: 2140 },
+  { x: &#39;May 9&#39;,  y: 2380 },
+  { x: &#39;May 13&#39;, y: 2510 },
+  { x: &#39;May 17&#39;, y: 2890 },
+  { x: &#39;May 21&#39;, y: 3320 },
+  { x: &#39;May 25&#39;, y: 3870 },
+  { x: &#39;May 30&#39;, y: 4820 },
 ];
 
 export function RevenueLine() {
   return (
     &lt;Chart.Line
       data={data}
-      xAccessor=&quot;day&quot;
-      yAccessor=&quot;revenue&quot;
       color=&quot;brand&quot;
+      width={640}
       height={240}
-      curve=&quot;smooth&quot;
-      areaFill
-      yFormat={(v) =&gt; `$${(v / 1000).toFixed(1)}k`}
       aria-label=&quot;Daily revenue, last 30 days&quot;
     /&gt;
   );

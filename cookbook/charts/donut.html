@@ -128,42 +128,34 @@
       <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart</a>
       <a class="ck-piece" href="../../system/b-stat-hero.html"><span class="kind">Block</span>Stat hero</a>
     </div>
-    <p style="margin-top: 12px;"><b>Intended exports used here:</b> <code>Chart.Donut</code>, <code>Chart.Legend</code>.</p>
+    <p style="margin-top: 12px;"><b>Exports used here:</b> <code>Chart.Donut</code>, <code>ChartCategoricalDatum</code>.</p>
     <div class="ck-roadmap-note">
-      <b>Roadmap.</b> <code>Chart.Donut</code> ships in <code>@corelithzw/react v0.2</code>.
+      <b>In v0.3.0.</b> <code>Chart.Donut</code> takes a <code>ChartCategoricalDatum[]</code> array (one slice per entry, each with <code>label</code>, <code>value</code>, optional <code>color</code>) plus an <code>inner</code> ratio that sets the donut hole (0 = filled pie, 1 = no donut). The <code>legend</code> boolean toggles a built-in bottom legend. Centre slots and custom hover behaviour are still hand-rolled around the SVG.
     </div>
   </section>
 
   <section id="snippet">
     <h2 class="ds-h2">The React snippet</h2>
-    <p class="ds-h2-sub">Pass slices and a centre slot. The centre is just a React node so you can put anything in it.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
+    <p class="ds-h2-sub">Build the slice list as a flat <code>ChartCategoricalDatum[]</code>. Per-slice <code>color</code> wins over the chart-level fallback; <code>inner</code> controls the hole ratio.</p>
+    <div class="ds-specimen"
          data-code='import { Chart } from &#39;@corelithzw/react&#39;;
+import type { ChartCategoricalDatum } from &#39;@corelithzw/react&#39;;
 
-const slices = [
-  { label: &#39;EcoCash&#39;,       value: 23100, color: &#39;brand&#39; },
-  { label: &#39;Card&#39;,          value: 13500, color: &#39;brand-300&#39; },
-  { label: &#39;Cash&#39;,          value:  8680, color: &#39;success&#39; },
-  { label: &#39;Bank transfer&#39;, value:  2930, color: &#39;muted&#39; },
+const slices: ChartCategoricalDatum[] = [
+  { label: &#39;EcoCash&#39;,       value: 23100, color: &#39;var(--brand)&#39; },
+  { label: &#39;Card&#39;,          value: 13500, color: &#39;var(--brand-300)&#39; },
+  { label: &#39;Cash&#39;,          value:  8680, color: &#39;var(--tone-success)&#39; },
+  { label: &#39;Bank transfer&#39;, value:  2930, color: &#39;var(--text-muted)&#39; },
 ];
-
-const collected = slices.reduce((s, x) =&gt; s + x.value, 0);
-const due = 52400;
 
 export function PaymentsByMethod() {
   return (
     &lt;Chart.Donut
       data={slices}
-      valueAccessor=&quot;value&quot;
-      colorAccessor=&quot;color&quot;
+      inner={0.6}
+      width={300}
       height={300}
-      legend=&quot;right&quot;
-      centre={
-        &lt;&gt;
-          &lt;strong&gt;{Math.round((collected / due) * 100)}%&lt;/strong&gt;
-          &lt;span&gt;collection rate&lt;/span&gt;
-        &lt;/&gt;
-      }
+      legend
       aria-label=&quot;Payments collected by method, May&quot;
     /&gt;
   );

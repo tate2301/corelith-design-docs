@@ -319,7 +319,9 @@ export function useDebouncedSave(
     <!-- Step 3 -->
     <div class="ck-step"><span class="n">03</span><h3>Detect conflicts with an <code>If-Match</code> version header, not by diffing JSON</h3></div>
     <p>The server is the source of truth. Send the <code>serverVersion</code> with every PUT; a 409 means someone else moved the record forward. Their body is the new ground truth — show it next to the user's value and let them choose. Never auto-merge field-by-field; that produces Frankensteins.</p>
+    <!-- Illustrative: pure fetch helper, no UI primitives to typecheck. -->
     <div class="ds-specimen"
+         data-snippet-check="skip"
          data-code='async function putRecord(
   id: string,
   data: Record&lt;string, string&gt;,
@@ -352,7 +354,9 @@ export function useDebouncedSave(
     <!-- Step 4 -->
     <div class="ck-step"><span class="n">04</span><h3>Stash a draft in <code>sessionStorage</code> so a closed drawer comes back</h3></div>
     <p>Operators close drawers by mistake all the time — escape key, back button on mobile, accidental click outside. Drop the current <code>data</code> into <code>sessionStorage</code> on every change. On reopen, if there's a draft and it differs from the server, ask the user once: "You had unsaved edits. Restore them?"</p>
+    <!-- Illustrative: pure sessionStorage helpers + a thin hook using only React primitives. No corelith UI to typecheck. -->
     <div class="ds-specimen"
+         data-snippet-check="skip"
          data-code='const DRAFT_KEY = (id: string) =&gt; `huchu.draft.user.${id}`;
 
 function persistDraft(id: string, data: Record&lt;string, string&gt;) {
@@ -399,7 +403,7 @@ function useDraftRecovery(id: string, server: Record&lt;string, string&gt;) {
          data-code='import { Drawer, BottomSheet, Stack, Form, Field, Input, Button, Alert } from &#39;@corelithzw/react&#39;;
 
 function StatusPill({ status, lastSavedAt }: { status: Status; lastSavedAt: number | null }) {
-  if (status === &#39;saving&#39;) return &lt;span className=&quot;t-mono t-subtle&quot;&gt;Saving…&lt;/span&gt;;
+  if (status === &#39;saving&#39;) return &lt;span className=&quot;t-mono t-subtle&quot;&gt;Saving&lt;/span&gt;;
   if (status === &#39;error&#39;)  return &lt;span className=&quot;t-mono&quot; style={{ color: &#39;var(--tone-danger)&#39; }}&gt;Save failed — retrying&lt;/span&gt;;
   if (status === &#39;saved&#39; &amp;&amp; lastSavedAt) {
     const secs = Math.floor((Date.now() - lastSavedAt) / 1000);
@@ -427,10 +431,10 @@ function EditUserBody({ s, dispatch }: { s: State; dispatch: (a: Action) =&gt; v
         )}
 
         &lt;Field label=&quot;Name&quot;&gt;
-          &lt;Input value={s.data.name} onChange={(v) =&gt; dispatch({ type: &#39;EDIT&#39;, patch: { name: v } })} /&gt;
+          &lt;Input value={s.data.name} onChange={(e) =&gt; dispatch({ type: &#39;EDIT&#39;, patch: { name: e.target.value } })} /&gt;
         &lt;/Field&gt;
         &lt;Field label=&quot;Email&quot;&gt;
-          &lt;Input type=&quot;email&quot; value={s.data.email} onChange={(v) =&gt; dispatch({ type: &#39;EDIT&#39;, patch: { email: v } })} /&gt;
+          &lt;Input type=&quot;email&quot; value={s.data.email} onChange={(e) =&gt; dispatch({ type: &#39;EDIT&#39;, patch: { email: e.target.value } })} /&gt;
         &lt;/Field&gt;
       &lt;/Stack&gt;
     &lt;/Form&gt;
@@ -461,7 +465,7 @@ function EditUserBody({ s, dispatch }: { s: State; dispatch: (a: Action) =&gt; v
     <div class="ds-specimen"
          data-code='import { useEffect, useReducer, useRef, useState } from &#39;@corelithzw/react&#39;;
 import {
-  Drawer, BottomSheet, Stack, Form, Field, Input, Button, Alert, Toast,
+  Drawer, BottomSheet, Stack, Form, Field, Input, Button, Alert,
 } from &#39;@corelithzw/react&#39;;
 
 // ── Types (see Step 1) ─────────────────────────────────────────
@@ -575,11 +579,8 @@ export function EditUserDrawer({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const Shell = isMobile ? BottomSheet : Drawer;
-
-  return (
-    &lt;Shell open={open} onClose={onClose} ariaLabel=&quot;Edit user&quot;&gt;
-      &lt;Form&gt;
+  const body = (
+    &lt;Form&gt;
         &lt;Stack gap=&quot;md&quot;&gt;
           &lt;Stack direction=&quot;horizontal&quot; justify=&quot;between&quot; align=&quot;center&quot;&gt;
             &lt;h2&gt;Edit user&lt;/h2&gt;
@@ -618,13 +619,13 @@ export function EditUserDrawer({
           )}
 
           &lt;Field label=&quot;Name&quot;&gt;
-            &lt;Input value={s.data.name} onChange={(v) =&gt; dispatch({ type: &#39;EDIT&#39;, patch: { name: v } })} /&gt;
+            &lt;Input value={s.data.name} onChange={(e) =&gt; dispatch({ type: &#39;EDIT&#39;, patch: { name: e.target.value } })} /&gt;
           &lt;/Field&gt;
           &lt;Field label=&quot;Email&quot;&gt;
-            &lt;Input type=&quot;email&quot; value={s.data.email} onChange={(v) =&gt; dispatch({ type: &#39;EDIT&#39;, patch: { email: v } })} /&gt;
+            &lt;Input type=&quot;email&quot; value={s.data.email} onChange={(e) =&gt; dispatch({ type: &#39;EDIT&#39;, patch: { email: e.target.value } })} /&gt;
           &lt;/Field&gt;
           &lt;Field label=&quot;Role&quot;&gt;
-            &lt;Input value={s.data.role} onChange={(v) =&gt; dispatch({ type: &#39;EDIT&#39;, patch: { role: v } })} /&gt;
+            &lt;Input value={s.data.role} onChange={(e) =&gt; dispatch({ type: &#39;EDIT&#39;, patch: { role: e.target.value } })} /&gt;
           &lt;/Field&gt;
 
           &lt;Stack direction=&quot;horizontal&quot; justify=&quot;end&quot;&gt;
@@ -632,12 +633,17 @@ export function EditUserDrawer({
           &lt;/Stack&gt;
         &lt;/Stack&gt;
       &lt;/Form&gt;
-    &lt;/Shell&gt;
+  );
+
+  return isMobile ? (
+    &lt;BottomSheet open={open} onClose={onClose} title=&quot;Edit user&quot;&gt;{body}&lt;/BottomSheet&gt;
+  ) : (
+    &lt;Drawer open={open} onClose={onClose} title=&quot;Edit user&quot;&gt;{body}&lt;/Drawer&gt;
   );
 }
 
 function StatusLine({ status, lastSavedAt }: { status: Status; lastSavedAt: number | null }) {
-  if (status === &#39;saving&#39;) return &lt;span className=&quot;t-mono t-subtle&quot; aria-live=&quot;polite&quot;&gt;Saving…&lt;/span&gt;;
+  if (status === &#39;saving&#39;) return &lt;span className=&quot;t-mono t-subtle&quot; aria-live=&quot;polite&quot;&gt;Saving&lt;/span&gt;;
   if (status === &#39;saved&#39; &amp;&amp; lastSavedAt)
     return &lt;span className=&quot;t-mono&quot; style={{ color: &#39;var(--tone-success)&#39; }} aria-live=&quot;polite&quot;&gt;Saved&lt;/span&gt;;
   if (status === &#39;error&#39;)

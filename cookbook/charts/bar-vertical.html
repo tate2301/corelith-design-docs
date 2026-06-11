@@ -145,19 +145,20 @@
       <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart</a>
       <a class="ck-piece" href="../../system/b-card.html"><span class="kind">Block</span>Card</a>
     </div>
-    <p style="margin-top: 12px;"><b>Intended exports used here:</b> <code>Chart.Bar</code>.</p>
+    <p style="margin-top: 12px;"><b>Exports used here:</b> <code>Chart.Bar</code>, <code>ChartCategoricalDatum</code>.</p>
     <div class="ck-roadmap-note">
-      <b>Roadmap.</b> <code>Chart.Bar</code> ships in <code>@corelithzw/react v0.2</code>.
+      <b>In v0.3.0.</b> <code>Chart.Bar</code> takes a flat <code>ChartCategoricalDatum[]</code> array — each entry has a <code>label</code>, a numeric <code>value</code>, and an optional per-bar <code>color</code>. Vertical orientation is the default and only direction shipped today.
     </div>
   </section>
 
   <section id="snippet">
     <h2 class="ds-h2">The React snippet</h2>
-    <p class="ds-h2-sub">Same shape as <code>Chart.Line</code>. Highlight one bar by returning a colour from a per-datum function.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
+    <p class="ds-h2-sub">Map your records into the chart's <code>{ label, value, color? }</code> shape. The highlighted bar gets its <code>color</code> set inline; every other bar falls through to the chart's default colour.</p>
+    <div class="ds-specimen"
          data-code='import { Chart } from &#39;@corelithzw/react&#39;;
+import type { ChartCategoricalDatum } from &#39;@corelithzw/react&#39;;
 
-const data = [
+const raw = [
   { day: &#39;Mon&#39;, pours: 12 },
   { day: &#39;Tue&#39;, pours: 22 },
   { day: &#39;Wed&#39;, pours: 33 },
@@ -168,14 +169,18 @@ const data = [
 ];
 
 export function PoursPerShift() {
+  const peak = Math.max(...raw.map((r) =&gt; r.pours));
+  const data: ChartCategoricalDatum[] = raw.map((r) =&gt; ({
+    label: r.day,
+    value: r.pours,
+    color: r.pours === peak ? &#39;var(--brand)&#39; : undefined,
+  }));
   return (
     &lt;Chart.Bar
       data={data}
-      xAccessor=&quot;day&quot;
-      yAccessor=&quot;pours&quot;
-      color={(d) =&gt; d.pours === Math.max(...data.map(x =&gt; x.pours)) ? &#39;brand&#39; : &#39;brand-soft&#39;}
+      color=&quot;brand-soft&quot;
+      width={640}
       height={260}
-      showValues
       aria-label=&quot;Pours per shift, last seven days&quot;
     /&gt;
   );

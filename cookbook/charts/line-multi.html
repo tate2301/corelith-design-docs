@@ -136,19 +136,20 @@
       <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart</a>
       <a class="ck-piece" href="../../system/b-card.html"><span class="kind">Block</span>Card</a>
     </div>
-    <p style="margin-top: 12px;"><b>Intended exports used here:</b> <code>Chart.Line</code>, <code>Chart.Legend</code>, <code>Chart.Series</code>.</p>
+    <p style="margin-top: 12px;"><b>Exports used here:</b> <code>Chart.Line</code>, <code>ChartPoint</code>.</p>
     <div class="ck-roadmap-note">
-      <b>Roadmap.</b> <code>Chart.Series</code> ships in <code>@corelithzw/react v0.2</code>. Until then, render the SVG inline or use a headless lib — the API shape below is what we're committing to.
+      <b>In v0.3.0.</b> <code>Chart.Line</code> renders a single series per instance. For multi-series comparisons, render N sibling <code>&lt;Chart.Line&gt;</code> instances inside a positioned wrapper, one per series, with shared <code>width</code>/<code>height</code> so they overlap pixel-perfectly. The snippet below uses three siblings — one per metric — with the same dimensions and distinct <code>color</code> props.
     </div>
   </section>
 
   <section id="snippet">
     <h2 class="ds-h2">The React snippet</h2>
-    <p class="ds-h2-sub">Pass an array of series. Each series sets its own colour and an optional dashed style.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
+    <p class="ds-h2-sub">Each series is its own <code>Chart.Line</code>. Stack them inside a relative wrapper so the three polylines overlay on the same coordinate system.</p>
+    <div class="ds-specimen"
          data-code='import { Chart } from &#39;@corelithzw/react&#39;;
+import type { ChartPoint } from &#39;@corelithzw/react&#39;;
 
-const data = [
+const rows = [
   { day: &#39;May 1&#39;,  revenue: 1820, costs: 2000, refunds: 1000 },
   { day: &#39;May 8&#39;,  revenue: 2240, costs: 2020, refunds: 1040 },
   { day: &#39;May 15&#39;, revenue: 2890, costs: 2010, refunds: 1080 },
@@ -156,21 +157,26 @@ const data = [
   { day: &#39;May 30&#39;, revenue: 4820, costs: 2020, refunds: 1200 },
 ];
 
+const revenue: ChartPoint[] = rows.map((d) =&gt; ({ x: d.day, y: d.revenue }));
+const costs:   ChartPoint[] = rows.map((d) =&gt; ({ x: d.day, y: d.costs }));
+const refunds: ChartPoint[] = rows.map((d) =&gt; ({ x: d.day, y: d.refunds }));
+
+const W = 640;
+const H = 280;
+
 export function RevenueCompare() {
   return (
-    &lt;Chart.Line
-      data={data}
-      xAccessor=&quot;day&quot;
-      series={[
-        { key: &#39;revenue&#39;, label: &#39;Revenue&#39;, color: &#39;brand&#39; },
-        { key: &#39;costs&#39;,   label: &#39;Costs&#39;,   color: &#39;success&#39; },
-        { key: &#39;refunds&#39;, label: &#39;Refunds&#39;, color: &#39;danger&#39;, dashed: true },
-      ]}
-      height={280}
-      legend=&quot;top&quot;
-      yFormat={(v) =&gt; `$${(v / 1000).toFixed(1)}k`}
-      aria-label=&quot;Revenue, costs and refunds over the last 30 days&quot;
-    /&gt;
+    &lt;div style={{ position: &#39;relative&#39;, width: W, height: H }}&gt;
+      &lt;div style={{ position: &#39;absolute&#39;, inset: 0 }}&gt;
+        &lt;Chart.Line data={revenue} color=&quot;brand&quot;   width={W} height={H} /&gt;
+      &lt;/div&gt;
+      &lt;div style={{ position: &#39;absolute&#39;, inset: 0 }}&gt;
+        &lt;Chart.Line data={costs}   color=&quot;success&quot; width={W} height={H} axes={false} /&gt;
+      &lt;/div&gt;
+      &lt;div style={{ position: &#39;absolute&#39;, inset: 0 }}&gt;
+        &lt;Chart.Line data={refunds} color=&quot;danger&quot;  width={W} height={H} axes={false} /&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
   );
 }'>
       <div class="ds-specimen-stage canvas padded">
