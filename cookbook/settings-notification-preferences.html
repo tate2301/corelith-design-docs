@@ -304,55 +304,27 @@ function Matrix({ prefs, onToggle }: {
 
     <div class="ck-step"><span class="n">03</span><h3>Add the master pause with quick durations</h3></div>
     <p>The most-requested feature on a notification page is "shut up for the next hour". Provide preset durations (1h, 2h, 4h, 24h) and a "Until I turn it back on". Compute the resume time once on click; don't store a duration and recompute every render.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { Button, Stack } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { NotificationMatrix } from &#39;@corelithzw/react&#39;;
+import type { MasterPause, NotificationPrefs } from &#39;@corelithzw/react&#39;;
 
-const PRESETS = [
-  { label: &#39;1 h&#39;,    minutes: 60 },
-  { label: &#39;2 h&#39;,    minutes: 120 },
-  { label: &#39;4 h&#39;,    minutes: 240 },
-  { label: &#39;Until tomorrow&#39;, minutes: 24 * 60 },
-];
-
-function PauseCard({ prefs, dispatch }: {
-  prefs: Prefs;
-  dispatch: React.Dispatch&lt;Action&gt;;
+function MatrixWithPause({
+  prefs, onToggle, pause, onPause,
+}: {
+  prefs: NotificationPrefs;
+  onToggle: (e: string, c: string, v: boolean) =&gt; void;
+  pause: MasterPause;
+  onPause: (next: MasterPause) =&gt; void;
 }) {
-  const paused = prefs.pauseUntil &amp;&amp; new Date(prefs.pauseUntil) &gt; new Date();
-
-  if (paused) {
-    return (
-      &lt;Card aria-live=&quot;polite&quot;&gt;
-        &lt;Stack gap=&quot;sm&quot;&gt;
-          &lt;h3&gt;Paused until {new Date(prefs.pauseUntil!).toLocaleTimeString()}&lt;/h3&gt;
-          &lt;p&gt;Critical alerts (refunds, security) still come through.&lt;/p&gt;
-          &lt;Button variant=&quot;primary&quot; onClick={() =&gt; dispatch({ type: &#39;RESUME&#39; })}&gt;
-            Resume now
-          &lt;/Button&gt;
-        &lt;/Stack&gt;
-      &lt;/Card&gt;
-    );
-  }
-
   return (
-    &lt;Card&gt;
-      &lt;Stack gap=&quot;sm&quot;&gt;
-        &lt;h3&gt;Pause notifications&lt;/h3&gt;
-        &lt;p&gt;All channels go quiet for the chosen window. Critical alerts still ring.&lt;/p&gt;
-        &lt;Stack direction=&quot;horizontal&quot; gap=&quot;sm&quot;&gt;
-          {PRESETS.map((p) =&gt; (
-            &lt;Button
-              key={p.label}
-              variant=&quot;ghost&quot;
-              onClick={() =&gt; dispatch({
-                type: &#39;PAUSE&#39;,
-                until: new Date(Date.now() + p.minutes * 60_000).toISOString(),
-              })}
-            &gt;{p.label}&lt;/Button&gt;
-          ))}
-        &lt;/Stack&gt;
-      &lt;/Stack&gt;
-    &lt;/Card&gt;
+    &lt;NotificationMatrix
+      events={EVENTS}
+      channels={CHANNELS}
+      value={prefs}
+      onChange={onToggle}
+      masterPauseHours={pause}
+      onMasterPause={onPause}
+    /&gt;
   );
 }'>
       <div class="ds-specimen-stage canvas padded">
