@@ -7,8 +7,9 @@
 <link rel="stylesheet" href="../../tokens.css" />
 <link rel="stylesheet" href="../../components.css" />
 <link rel="stylesheet" href="../../portal-shell.css" />
+<link rel="stylesheet" href="app.css" />
 <script src="../../icons.js" defer></script>
-<script src="../../device-scale.js" defer></script>
+<script src="app.js"></script>
 <style>
   body { background: var(--gray-100); margin: 0; padding: 24px; min-height: 100vh; display: grid; place-items: center; }
   .device-desktop { width: 1280px; max-width: 100%; border-radius: 12px; background: #1A1D24; padding: 0; box-shadow: 0 30px 60px -20px rgba(22,24,29,0.25), 0 0 0 1px rgba(22,24,29,0.1); overflow: hidden; }
@@ -20,15 +21,12 @@
   .st-app { display: grid; grid-template-columns: 220px 1fr 340px; height: 760px; background: var(--canvas); }
 
   .st-nav { background: var(--canvas); border-right: 1px solid var(--border); padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
-  .st-nav .brand { display: inline-flex; align-items: center; gap: 10px; padding: 6px 8px; font: 600 15px/1 var(--font-sans); color: var(--text-strong); margin-bottom: 12px; }
+  .st-nav .brand { display: inline-flex; align-items: center; gap: 10px; padding: 6px 8px; font: 600 15px/1 var(--font-sans); color: var(--text-strong); margin-bottom: 12px; text-decoration: none; }
   .st-nav .brand .mark { width: 22px; height: 22px; color: var(--brand); }
   .st-nav nav { display: grid; gap: 2px; }
   .st-nav nav a { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; font: 500 13.5px/1 var(--font-sans); color: var(--text-body); text-decoration: none; }
   .st-nav nav a:hover { background: var(--surface-muted); }
   .st-nav nav a.active { background: var(--brand-soft); color: var(--brand-strong); }
-  .st-nav nav a svg { width: 16px; height: 16px; color: var(--text-muted); flex: none; }
-  .st-nav nav a.active svg { color: var(--brand); }
-  .st-nav .sh { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); padding: 16px 10px 8px; }
   .st-nav .foot { margin-top: auto; padding: 12px 10px 4px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
   .st-nav .foot .av { width: 30px; height: 30px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 12px/1 var(--font-sans); }
   .st-nav .foot .nm { font: 500 13px/1.3 var(--font-sans); color: var(--text-strong); }
@@ -38,68 +36,50 @@
   .st-top { padding: 14px 24px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
   .st-top h1 { font: 700 20px/1.2 var(--font-sans); letter-spacing: -0.015em; color: var(--text-strong); margin: 0; }
   .search { flex: 1; max-width: 420px; position: relative; }
-  .search input { width: 100%; height: 38px; padding: 0 12px 0 38px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); font: var(--type-body); outline: none; }
+  .search input { width: 100%; height: 38px; padding: 0 12px 0 38px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); font: 14px var(--font-sans); outline: none; box-sizing: border-box; }
   .search > [data-icon] { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-subtle); }
-  .st-top .kbd { padding: 3px 7px; background: var(--surface-muted); border-radius: 4px; font: 500 11px/1 var(--font-mono); color: var(--text-muted); }
-  .st-top .spacer { flex: 1; }
   .st-top .pill { padding: 4px 11px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-muted); font: 500 12px/1 var(--font-sans); }
 
-  .chip-bar { display: flex; gap: 6px; padding: 10px 24px; border-bottom: 1px solid var(--border-subtle); background: var(--surface); overflow-x: auto; }
-  .chipd { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 9999px; background: var(--surface-muted); font: 500 12.5px/1 var(--font-sans); color: var(--text-muted); white-space: nowrap; border: 1px solid transparent; cursor: pointer; }
-  .chipd svg { width: 12px; height: 12px; }
-  .chipd:hover { color: var(--text-strong); }
-  .chipd.active { background: var(--brand-soft); color: var(--brand-strong); border-color: var(--brand-100); }
-  .chipd .ct { font: 500 11px/1 var(--font-mono); color: var(--text-subtle); }
-  .chipd.active .ct { color: var(--brand-strong); }
+  .group-h { padding: 14px 24px 6px; font: 600 11px/1 var(--font-sans); letter-spacing: .12em; text-transform: uppercase; color: var(--text-subtle); }
 
-  .grid { padding: 18px 24px 24px; flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-content: start; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 12px; cursor: pointer; transition: border-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out); }
+  .grid { padding: 6px 24px 24px; flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-content: start; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; cursor: pointer; transition: border-color .15s, transform .15s; }
   .card:hover { border-color: var(--brand-200); transform: translateY(-1px); }
-  .card.selected { border-color: var(--brand); box-shadow: 0 0 0 3px var(--focus-ring-soft); }
   .card .head { display: flex; align-items: center; gap: 12px; }
-  .card .av { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font: 600 14px/1 var(--font-sans); flex: none; }
-  .card .av.a { background: #FEF4DA; color: #6B5119; }
-  .card .av.b { background: #DCFCE7; color: #166534; }
-  .card .av.c { background: #DDEAFE; color: #1E40AF; }
-  .card .av.d { background: #FEDCEA; color: #831843; }
-  .card .av.e { background: #FFE5C8; color: #6B3F19; }
-  .card .av.f { background: var(--brand-soft); color: var(--brand-strong); }
+  .card .av { width: 44px; height: 44px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 14px/1 var(--font-sans); flex: none; }
   .card .nm { font: 600 14px/1.3 var(--font-sans); color: var(--text-strong); }
   .card .rl { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
   .card .meta { display: flex; flex-wrap: wrap; gap: 5px; }
-  .card .pill { padding: 3px 8px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-muted); font: 500 11px/1 var(--font-sans); display: inline-flex; align-items: center; gap: 4px; }
-  .card .pill svg { width: 10px; height: 10px; }
-  .card .acts { display: flex; gap: 6px; margin-top: auto; }
-  .card .acts button { width: 32px; height: 32px; border-radius: 8px; background: var(--surface-muted); color: var(--text-strong); display: grid; place-items: center; }
-  .card .acts button:hover { background: var(--brand-soft); color: var(--brand-strong); }
-  .card .stat { width: 8px; height: 8px; border-radius: 50%; background: var(--tone-success); margin-left: auto; box-shadow: 0 0 0 2px var(--tone-success-bg); }
-  .card .stat.away { background: var(--tone-warn); box-shadow: 0 0 0 2px var(--tone-warn-bg); }
-  .card .stat.off  { background: var(--gray-300); box-shadow: 0 0 0 2px var(--surface-muted); }
+  .card .pill { padding: 3px 8px; border-radius: 9999px; background: var(--surface-muted); color: var(--text-muted); font: 500 11px/1 var(--font-sans); }
 
-  /* Right detail panel */
+  /* Detail */
   .det { background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
-  .det-hero { padding: 24px 22px 18px; background: linear-gradient(135deg, #FEF4DA 0%, #FFE5C8 100%); border-bottom: 1px solid var(--border-subtle); display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
-  .det-hero .av { width: 76px; height: 76px; border-radius: 50%; background: #FEF4DA; color: #6B5119; display: grid; place-items: center; font: 600 24px/1 var(--font-sans); border: 3px solid #fff; box-shadow: 0 4px 10px -4px rgba(0,0,0,0.2); }
-  .det-hero .nm { font: 700 19px/1.2 var(--font-sans); color: var(--text-strong); letter-spacing: -0.01em; }
+  .det-empty { padding: 60px 28px; text-align: center; color: var(--text-muted); font: 13px/1.5 var(--font-sans); }
+  .det-hero { padding: 24px 22px 18px; background: linear-gradient(135deg, var(--brand-soft) 0%, #FFE5C8 100%); border-bottom: 1px solid var(--border-subtle); display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+  .det-hero .av { width: 76px; height: 76px; border-radius: 50%; background: #fff; color: var(--brand-strong); display: grid; place-items: center; font: 600 24px/1 var(--font-sans); border: 3px solid #fff; box-shadow: 0 4px 10px -4px rgba(0,0,0,0.2); }
+  .det-hero .nm { font: 700 19px/1.2 var(--font-sans); color: var(--text-strong); }
   .det-hero .rl { font: 13px/1.3 var(--font-sans); color: var(--text-muted); }
-  .det-hero .status { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: rgba(255,255,255,0.7); border-radius: 9999px; font: 500 11.5px/1 var(--font-sans); color: var(--tone-success); }
-  .det-hero .status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--tone-success); }
-
-  .det-acts { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 14px 18px; border-bottom: 1px solid var(--border-subtle); }
-  .det-acts a { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 6px; border-radius: 10px; background: var(--surface-muted); color: var(--text-strong); text-decoration: none; font: 500 11px/1 var(--font-sans); }
+  .det-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 14px 18px; border-bottom: 1px solid var(--border-subtle); }
+  .det-acts a { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 10px 6px; border-radius: 10px; background: var(--surface-muted); color: var(--text-strong); text-decoration: none; font: 500 11.5px/1 var(--font-sans); }
   .det-acts a:hover { background: var(--brand-soft); color: var(--brand-strong); }
-
   .det-section { padding: 14px 22px; border-bottom: 1px solid var(--border-subtle); }
+  .det-section:last-child { border-bottom: 0; }
   .det-section .sh { font: 500 10px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); margin-bottom: 8px; }
   .kv { display: grid; grid-template-columns: 90px 1fr; gap: 6px 12px; font: 13px/1.4 var(--font-sans); }
   .kv .k { color: var(--text-muted); }
-  .kv .v { color: var(--text-strong); font-weight: 500; }
+  .kv .v { color: var(--text-strong); font-weight: 500; word-break: break-word; }
   .kv .v.mono { font-family: var(--font-mono); }
+
+  @media (max-width: 720px) {
+    .st-app { grid-template-columns: 1fr !important; }
+    .det { display: none; }
+    .det.mobile-open { display: flex; position: fixed; inset: 0; z-index: 60; background: var(--surface); }
+    .det.mobile-open .close-mobile { display: inline-flex; }
+  }
+  .det .close-mobile { display: none; position: absolute; top: 12px; right: 12px; border: 0; background: rgba(255,255,255,0.85); border-radius: 50%; width: 32px; height: 32px; align-items: center; justify-content: center; cursor: pointer; }
 </style>
-<link rel="stylesheet" href="../../huchu-nav.css" />
-<script src="../../huchu-nav.js" defer></script>
 </head>
-<body data-portal-kit="staff" data-portal-screen="directory" data-kit-nav="staff">
+<body data-portal-kit="staff" data-portal-screen="directory">
 
 <div class="device-desktop">
   <div class="chrome">
@@ -110,25 +90,18 @@
   <div class="st-app">
 
     <aside class="st-nav">
-      <a class="brand"><span class="mark" data-icon="corelith"></span> Huchu Staff</a>
+      <a class="brand" href="index.html"><span class="mark" data-icon="corelith"></span> Huchu Staff</a>
       <nav>
         <a href="dashboard.html"><span data-icon="home"></span> Home</a>
         <a href="payslip.html"><span data-icon="card"></span> My pay</a>
         <a href="leave.html"><span data-icon="calendar"></span> Leave</a>
         <a href="time-clock.html"><span data-icon="clock"></span> Time</a>
         <a href="directory.html" class="active"><span data-icon="user"></span> Directory</a>
-        <a href="#"><span data-icon="settings"></span> Profile</a>
-      </nav>
-      <div class="sh">Saved views</div>
-      <nav>
-        <a href="#"><span data-icon="star"></span> Park Centre team</a>
-        <a href="#"><span data-icon="star"></span> Regional managers</a>
-        <a href="#"><span data-icon="star"></span> HR contacts</a>
       </nav>
       <div class="foot">
-        <span class="av">CM</span>
+        <span class="av" id="user-initials">CM</span>
         <div>
-          <div class="nm">Chipo Mutasa</div>
+          <div class="nm" id="user-name">Chipo Mutasa</div>
           <div class="sb">Branch supervisor</div>
         </div>
       </div>
@@ -139,271 +112,164 @@
         <h1>Directory</h1>
         <div class="search">
           <span data-icon="search"></span>
-          <input placeholder="Search staff, role, department…" />
+          <input id="search-input" placeholder="Search by name, role, department…" autocomplete="off" />
         </div>
-        <span class="kbd">⌘K</span>
-        <div class="spacer"></div>
-        <span class="pill">186 people</span>
+        <span class="pill" id="count-pill">0 people</span>
       </header>
 
-      <div class="chip-bar">
-        <span class="chipd active">All <span class="ct">186</span></span>
-        <span class="chipd"><span data-icon="building"></span> Department <span data-icon="chevron"></span></span>
-        <span class="chipd"><span data-icon="warehouse"></span> Branch <span data-icon="chevron"></span></span>
-        <span class="chipd">Operations <span class="ct">64</span></span>
-        <span class="chipd">Finance <span class="ct">18</span></span>
-        <span class="chipd">HR <span class="ct">9</span></span>
-        <span class="chipd">IT <span class="ct">12</span></span>
-        <span class="chipd">Park Centre <span class="ct">22</span></span>
-        <span class="chipd">Bulawayo <span class="ct">31</span></span>
-        <span class="chipd">Mutare <span class="ct">14</span></span>
-      </div>
-
-      <div class="grid">
-
-        <div class="card selected">
-          <div class="head">
-            <span class="av a">TM</span>
-            <div>
-              <div class="nm">Tendai Moyo</div>
-              <div class="rl">Operations manager</div>
-            </div>
-            <span class="stat" title="Online"></span>
-          </div>
-          <div class="meta">
-            <span class="pill"><span data-icon="building"></span> Operations</span>
-            <span class="pill"><span data-icon="warehouse"></span> Park Centre</span>
-          </div>
-          <div class="acts">
-            <button title="Call"><span data-icon="phone" data-icon-size="14"></span></button>
-            <button title="Email"><span data-icon="mail" data-icon-size="14"></span></button>
-            <button title="Chat"><span data-icon="chat" data-icon-size="14"></span></button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="head">
-            <span class="av b">RC</span>
-            <div>
-              <div class="nm">Rumbidzai Chivasa</div>
-              <div class="rl">HR business partner</div>
-            </div>
-            <span class="stat"></span>
-          </div>
-          <div class="meta">
-            <span class="pill"><span data-icon="building"></span> HR</span>
-            <span class="pill"><span data-icon="warehouse"></span> Head office</span>
-          </div>
-          <div class="acts">
-            <button><span data-icon="phone" data-icon-size="14"></span></button>
-            <button><span data-icon="mail" data-icon-size="14"></span></button>
-            <button><span data-icon="chat" data-icon-size="14"></span></button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="head">
-            <span class="av c">BS</span>
-            <div>
-              <div class="nm">Brighton Sibanda</div>
-              <div class="rl">Regional manager · Matabeleland</div>
-            </div>
-            <span class="stat away" title="In a meeting"></span>
-          </div>
-          <div class="meta">
-            <span class="pill"><span data-icon="building"></span> Operations</span>
-            <span class="pill"><span data-icon="warehouse"></span> Bulawayo</span>
-          </div>
-          <div class="acts">
-            <button><span data-icon="phone" data-icon-size="14"></span></button>
-            <button><span data-icon="mail" data-icon-size="14"></span></button>
-            <button><span data-icon="chat" data-icon-size="14"></span></button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="head">
-            <span class="av d">FM</span>
-            <div>
-              <div class="nm">Faith Moyo</div>
-              <div class="rl">Senior cashier</div>
-            </div>
-            <span class="stat"></span>
-          </div>
-          <div class="meta">
-            <span class="pill"><span data-icon="building"></span> Retail</span>
-            <span class="pill"><span data-icon="warehouse"></span> Park Centre</span>
-          </div>
-          <div class="acts">
-            <button><span data-icon="phone" data-icon-size="14"></span></button>
-            <button><span data-icon="mail" data-icon-size="14"></span></button>
-            <button><span data-icon="chat" data-icon-size="14"></span></button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="head">
-            <span class="av e">AN</span>
-            <div>
-              <div class="nm">Anesu Ncube</div>
-              <div class="rl">Assistant supervisor</div>
-            </div>
-            <span class="stat"></span>
-          </div>
-          <div class="meta">
-            <span class="pill"><span data-icon="building"></span> Retail</span>
-            <span class="pill"><span data-icon="warehouse"></span> Park Centre</span>
-          </div>
-          <div class="acts">
-            <button><span data-icon="phone" data-icon-size="14"></span></button>
-            <button><span data-icon="mail" data-icon-size="14"></span></button>
-            <button><span data-icon="chat" data-icon-size="14"></span></button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="head">
-            <span class="av f">PD</span>
-            <div>
-              <div class="nm">Patience Dube</div>
-              <div class="rl">Finance officer</div>
-            </div>
-            <span class="stat off" title="Off-shift"></span>
-          </div>
-          <div class="meta">
-            <span class="pill"><span data-icon="building"></span> Finance</span>
-            <span class="pill"><span data-icon="warehouse"></span> Head office</span>
-          </div>
-          <div class="acts">
-            <button><span data-icon="phone" data-icon-size="14"></span></button>
-            <button><span data-icon="mail" data-icon-size="14"></span></button>
-            <button><span data-icon="chat" data-icon-size="14"></span></button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="head">
-            <span class="av a">SM</span>
-            <div>
-              <div class="nm">Simbarashe Maposa</div>
-              <div class="rl">IT support engineer</div>
-            </div>
-            <span class="stat"></span>
-          </div>
-          <div class="meta">
-            <span class="pill"><span data-icon="building"></span> IT</span>
-            <span class="pill"><span data-icon="warehouse"></span> Head office</span>
-          </div>
-          <div class="acts">
-            <button><span data-icon="phone" data-icon-size="14"></span></button>
-            <button><span data-icon="mail" data-icon-size="14"></span></button>
-            <button><span data-icon="chat" data-icon-size="14"></span></button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="head">
-            <span class="av b">NM</span>
-            <div>
-              <div class="nm">Nyasha Mhlanga</div>
-              <div class="rl">Warehouse lead</div>
-            </div>
-            <span class="stat away"></span>
-          </div>
-          <div class="meta">
-            <span class="pill"><span data-icon="building"></span> Logistics</span>
-            <span class="pill"><span data-icon="warehouse"></span> Msasa DC</span>
-          </div>
-          <div class="acts">
-            <button><span data-icon="phone" data-icon-size="14"></span></button>
-            <button><span data-icon="mail" data-icon-size="14"></span></button>
-            <button><span data-icon="chat" data-icon-size="14"></span></button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="head">
-            <span class="av c">TK</span>
-            <div>
-              <div class="nm">Takudzwa Kativhu</div>
-              <div class="rl">Branch supervisor · Mutare</div>
-            </div>
-            <span class="stat"></span>
-          </div>
-          <div class="meta">
-            <span class="pill"><span data-icon="building"></span> Retail</span>
-            <span class="pill"><span data-icon="warehouse"></span> Mutare</span>
-          </div>
-          <div class="acts">
-            <button><span data-icon="phone" data-icon-size="14"></span></button>
-            <button><span data-icon="mail" data-icon-size="14"></span></button>
-            <button><span data-icon="chat" data-icon-size="14"></span></button>
-          </div>
-        </div>
-
-      </div>
+      <div id="results"></div>
     </section>
 
-    <!-- Detail panel -->
-    <aside class="det">
-      <div class="det-hero">
-        <span class="av">TM</span>
-        <div>
-          <div class="nm">Tendai Moyo</div>
-          <div class="rl">Operations manager · Park Centre</div>
-        </div>
-        <span class="status">Online · responds within ~10 min</span>
-      </div>
-
-      <div class="det-acts">
-        <a href="#"><span data-icon="phone" data-icon-size="16"></span> Call</a>
-        <a href="#"><span data-icon="mail" data-icon-size="16"></span> Email</a>
-        <a href="#"><span data-icon="chat" data-icon-size="16"></span> Chat</a>
-      </div>
-
-      <div class="det-section">
-        <div class="sh">Contact</div>
-        <div class="kv">
-          <div class="k">Mobile</div><div class="v mono">+263 77 414 0298</div>
-          <div class="k">Desk</div><div class="v mono">+263 4 783 220 ext 14</div>
-          <div class="k">Email</div><div class="v">tendai.moyo@huchu.co.zw</div>
-          <div class="k">Slack</div><div class="v mono">@tendai.m</div>
-        </div>
-      </div>
-
-      <div class="det-section">
-        <div class="sh">Role &amp; reporting</div>
-        <div class="kv">
-          <div class="k">Department</div><div class="v">Operations</div>
-          <div class="k">Reports to</div><div class="v">Brighton Sibanda</div>
-          <div class="k">Direct reports</div><div class="v">12 (incl. supervisors)</div>
-          <div class="k">Joined</div><div class="v">04 February 2019</div>
-          <div class="k">Employee ID</div><div class="v mono">EMP-00142</div>
-        </div>
-      </div>
-
-      <div class="det-section">
-        <div class="sh">Workspace</div>
-        <div class="kv">
-          <div class="k">Branch</div><div class="v">Park Centre, Harare</div>
-          <div class="k">Address</div><div class="v">Cnr Borrowdale Rd &amp; Whitwell Rd</div>
-          <div class="k">Shift</div><div class="v">Mon–Sat · 07:30 – 17:00</div>
-          <div class="k">Time zone</div><div class="v">Africa/Harare (CAT)</div>
-        </div>
-      </div>
-
-      <div class="det-section" style="border-bottom: 0;">
-        <div class="sh">Approves for you</div>
-        <div class="kv">
-          <div class="k">Leave</div><div class="v">Annual, sick, compassionate</div>
-          <div class="k">Time-sheets</div><div class="v">Fortnightly close-off</div>
-          <div class="k">Expenses</div><div class="v">Up to $ 250</div>
-        </div>
+    <aside class="det" id="detail">
+      <div class="det-empty">
+        Select a colleague to see their contact card.
       </div>
     </aside>
-
   </div>
 </div>
+
+<nav class="staff-mobile-tabs">
+  <a href="dashboard.html"><span data-icon="home"></span>Home</a>
+  <a href="payslip.html"><span data-icon="card"></span>Pay</a>
+  <a href="leave.html"><span data-icon="calendar"></span>Leave</a>
+  <a href="time-clock.html"><span data-icon="clock"></span>Time</a>
+  <a href="directory.html" class="active"><span data-icon="user"></span>Directory</a>
+</nav>
+
+<script>
+(function () {
+  const $ = (sel) => document.querySelector(sel);
+
+  const user = Staff.user();
+  $('#user-initials').textContent = user.initials;
+  $('#user-name').textContent = user.name;
+
+  let query = '';
+  let selectedId = null;
+
+  function filtered() {
+    const all = Staff.directory().slice().sort((a, b) => a.name.localeCompare(b.name));
+    if (!query) return all;
+    const q = query.toLowerCase();
+    return all.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      p.role.toLowerCase().includes(q) ||
+      p.dept.toLowerCase().includes(q) ||
+      p.branch.toLowerCase().includes(q)
+    );
+  }
+
+  function renderList() {
+    const list = filtered();
+    $('#count-pill').textContent = list.length + (list.length === 1 ? ' person' : ' people');
+
+    const container = $('#results');
+    container.innerHTML = '';
+
+    if (!list.length) {
+      container.innerHTML = '<div class="empty">No colleagues match "' + (query.replace(/</g,'&lt;')) + '".</div>';
+      return;
+    }
+
+    // Group alphabetically by first letter
+    const grouped = {};
+    list.forEach(p => {
+      const k = p.name[0].toUpperCase();
+      (grouped[k] = grouped[k] || []).push(p);
+    });
+    const letters = Object.keys(grouped).sort();
+    letters.forEach(letter => {
+      const groupH = document.createElement('div');
+      groupH.className = 'group-h';
+      groupH.textContent = letter;
+      container.appendChild(groupH);
+      const grid = document.createElement('div');
+      grid.className = 'grid';
+      grouped[letter].forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'card' + (selectedId === p.id ? ' selected' : '');
+        card.innerHTML =
+          '<div class="head">' +
+          '  <span class="av">' + p.initials + '</span>' +
+          '  <div>' +
+          '    <div class="nm">' + p.name + '</div>' +
+          '    <div class="rl">' + p.role + '</div>' +
+          '  </div>' +
+          '</div>' +
+          '<div class="meta">' +
+          '  <span class="pill">' + p.dept + '</span>' +
+          '  <span class="pill">' + p.branch + '</span>' +
+          '</div>';
+        card.addEventListener('click', () => select(p.id));
+        grid.appendChild(card);
+      });
+      container.appendChild(grid);
+    });
+    if (window.Icons) Icons.render(container);
+  }
+
+  function renderDetail() {
+    const det = $('#detail');
+    if (!selectedId) {
+      det.innerHTML = '<div class="det-empty">Select a colleague to see their contact card.</div>';
+      return;
+    }
+    const p = Staff.directoryById(selectedId);
+    if (!p) { det.innerHTML = '<div class="det-empty">Not found.</div>'; return; }
+    det.innerHTML =
+      '<button class="close-mobile" id="close-detail" aria-label="Close">&times;</button>' +
+      '<div class="det-hero">' +
+      '  <span class="av">' + p.initials + '</span>' +
+      '  <div class="nm">' + p.name + '</div>' +
+      '  <div class="rl">' + p.role + ' · ' + p.branch + '</div>' +
+      '</div>' +
+      '<div class="det-acts">' +
+      '  <a href="tel:' + p.phone.replace(/\s/g, '') + '"><span data-icon="phone" data-icon-size="16"></span> Call</a>' +
+      '  <a href="mailto:' + p.email + '"><span data-icon="mail" data-icon-size="16"></span> Message</a>' +
+      '</div>' +
+      '<div class="det-section">' +
+      '  <div class="sh">Contact</div>' +
+      '  <div class="kv">' +
+      '    <div class="k">Phone</div><div class="v mono">' + p.phone + '</div>' +
+      '    <div class="k">Email</div><div class="v">' + p.email + '</div>' +
+      '    <div class="k">Office</div><div class="v">' + p.office + '</div>' +
+      '  </div>' +
+      '</div>' +
+      '<div class="det-section">' +
+      '  <div class="sh">Role &amp; reporting</div>' +
+      '  <div class="kv">' +
+      '    <div class="k">Department</div><div class="v">' + p.dept + '</div>' +
+      '    <div class="k">Branch</div><div class="v">' + p.branch + '</div>' +
+      '    <div class="k">Manager</div><div class="v">' + p.manager + '</div>' +
+      '    <div class="k">Employee ID</div><div class="v mono">' + p.id + '</div>' +
+      '  </div>' +
+      '</div>';
+
+    det.classList.add('mobile-open');
+    const closeBtn = document.getElementById('close-detail');
+    if (closeBtn) closeBtn.addEventListener('click', () => {
+      selectedId = null;
+      det.classList.remove('mobile-open');
+      renderDetail(); renderList();
+    });
+    if (window.Icons) Icons.render(det);
+  }
+
+  function select(id) {
+    selectedId = id;
+    renderList();
+    renderDetail();
+  }
+
+  $('#search-input').addEventListener('input', (e) => {
+    query = e.target.value.trim();
+    renderList();
+  });
+
+  renderList();
+  renderDetail();
+})();
+</script>
 
 </body>
 </html>

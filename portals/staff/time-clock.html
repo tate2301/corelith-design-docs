@@ -7,173 +7,140 @@
 <link rel="stylesheet" href="../../tokens.css" />
 <link rel="stylesheet" href="../../components.css" />
 <link rel="stylesheet" href="../../portal-shell.css" />
+<link rel="stylesheet" href="app.css" />
 <script src="../../icons.js" defer></script>
-<script src="../../device-scale.js" defer></script>
+<script src="app.js"></script>
 <style>
   body { background: var(--gray-100); margin: 0; padding: 24px; min-height: 100vh; display: grid; place-items: center; }
   .device-phone { width: 390px; height: 844px; border-radius: 48px; background: #0F1115; padding: 12px; box-shadow: 0 30px 60px -20px rgba(22,24,29,0.25), 0 0 0 1px rgba(22,24,29,0.08); position: relative; }
   .device-phone::before { content: ""; position: absolute; top: 18px; left: 50%; transform: translateX(-50%); width: 110px; height: 30px; background: #0F1115; border-radius: 0 0 18px 18px; z-index: 20; }
   .device-phone .screen { width: 100%; height: 100%; border-radius: 36px; overflow: hidden; background: var(--canvas); position: relative; display: flex; flex-direction: column; }
 
-  .clock-hero { padding: 18px 18px 14px; display: flex; flex-direction: column; gap: 14px; }
-  .clock-status { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--tone-success-bg); border-radius: 9999px; align-self: flex-start; font: 500 12px/1 var(--font-sans); color: var(--tone-success); }
-  .clock-status .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--tone-success); box-shadow: 0 0 0 3px rgba(34,197,94,0.18); }
-  .clock-card { background: linear-gradient(135deg, var(--brand-strong), var(--brand)); border-radius: 22px; padding: 22px 20px 22px; color: #fff; display: flex; flex-direction: column; gap: 18px; }
+  .ps-screen { display: flex; flex-direction: column; height: 100%; }
+  .ps-statusbar { display: flex; justify-content: space-between; padding: 14px 24px 6px; font: 600 14px/1 var(--font-sans); color: var(--text-strong); }
+  .ps-statusbar .right { display: inline-flex; align-items: center; gap: 6px; }
+  .ps-appbar { padding: 8px 18px 12px; display: flex; align-items: center; gap: 10px; }
+  .ps-appbar h1 { font: 700 22px/1 var(--font-sans); color: var(--text-strong); margin: 0; flex: 1; }
+  .ps-scroll { flex: 1; overflow-y: auto; padding-bottom: 70px; }
+
+  .clock-hero { padding: 14px 18px; display: flex; flex-direction: column; gap: 12px; }
+  .clock-status {
+    display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px;
+    background: var(--surface-muted); border-radius: 9999px; align-self: flex-start;
+    font: 500 12px/1 var(--font-sans); color: var(--text-muted);
+  }
+  .clock-status.in { background: var(--tone-success-bg); color: var(--tone-success); }
+  .clock-status .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+  .clock-card {
+    background: linear-gradient(135deg, var(--brand-strong), var(--brand)); border-radius: 22px;
+    padding: 22px 20px; color: #fff; display: flex; flex-direction: column; gap: 18px;
+  }
   .clock-card .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.85; }
   .clock-card .time { font: 700 44px/1 var(--font-sans); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
   .clock-card .date { font: 12.5px/1.3 var(--font-sans); opacity: 0.85; }
   .clock-card .stack { display: flex; flex-direction: column; gap: 4px; }
-  .clock-card .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .clock-card .summary .cell { background: rgba(255,255,255,0.12); border-radius: 12px; padding: 12px; }
-  .clock-card .summary .ck { font: 500 11px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.85; }
-  .clock-card .summary .cv { font: 700 22px/1 var(--font-sans); font-variant-numeric: tabular-nums; margin-top: 6px; }
-  .clock-card .summary .csb { font: 11px/1.3 var(--font-sans); opacity: 0.8; margin-top: 4px; }
 
-  .clock-btn { display: block; width: 100%; height: 64px; border-radius: 16px; background: #fff; color: var(--brand-strong); font: 700 18px/1 var(--font-sans); letter-spacing: -0.01em; display: inline-flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 18px -8px rgba(0,0,0,0.35); border: 0; }
+  .clock-btn {
+    display: block; width: 100%; height: 60px; border-radius: 16px; background: #fff;
+    color: var(--brand-strong); font: 700 17px/1 var(--font-sans); border: 0;
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    box-shadow: 0 8px 18px -8px rgba(0,0,0,0.35); cursor: pointer;
+  }
   .clock-btn.out { background: var(--ink); color: #fff; }
 
   .geo { margin: 0 18px; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); background: var(--surface); }
-  .geo .map { height: 110px; position: relative; background: linear-gradient(180deg, #E6EFE0 0%, #D6E4DA 100%); }
-  .geo .map::before { content: ""; position: absolute; inset: 0; background-image:
-      linear-gradient(0deg, rgba(60,90,60,0.08) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(60,90,60,0.08) 1px, transparent 1px);
-    background-size: 24px 24px; }
-  .geo .road { position: absolute; height: 14px; background: #fff; opacity: 0.85; border-radius: 2px; }
-  .geo .road.h1 { top: 40px; left: -10px; right: 30%; transform: rotate(-3deg); }
-  .geo .road.h2 { bottom: 22px; left: 20%; right: -10px; transform: rotate(2deg); }
-  .geo .road.v1 { width: 12px; height: auto; top: -10px; bottom: -10px; left: 55%; }
-  .geo .fence { position: absolute; width: 110px; height: 110px; border-radius: 50%; border: 2px dashed var(--brand); background: rgba(124,86,40,0.10); left: 50%; top: 50%; transform: translate(-50%, -50%); }
-  .geo .pin { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -100%); width: 22px; height: 22px; border-radius: 50% 50% 50% 0; background: var(--brand); transform-origin: center bottom; rotate: -45deg; box-shadow: 0 4px 8px -2px rgba(0,0,0,0.35); }
-  .geo .pin::after { content: ""; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(45deg); width: 8px; height: 8px; border-radius: 50%; background: #fff; }
-  .geo .bar { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--border-subtle); }
-  .geo .bar .ic { width: 26px; height: 26px; border-radius: 7px; background: var(--tone-success-bg); color: var(--tone-success); display: grid; place-items: center; }
-  .geo .bar .nm { font: 500 13px/1.3 var(--font-sans); color: var(--text-strong); }
-  .geo .bar .sb { font: 11px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 1px; }
+  .geo .bar { display: flex; align-items: center; gap: 10px; padding: 12px; }
+  .geo .bar .ic { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; flex: none; }
+  .geo .bar.ok .ic { background: var(--tone-success-bg); color: var(--tone-success); }
+  .geo .bar.warn .ic { background: var(--tone-warn-bg); color: var(--tone-warn); }
+  .geo .bar .nm { font: 600 13px/1.3 var(--font-sans); color: var(--text-strong); }
+  .geo .bar .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 1px; }
 
-  .events { padding: 6px 0; }
+  .psh {
+    padding: 14px 18px 8px; display: flex; justify-content: space-between; align-items: center;
+    font: 500 11px/1 var(--font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--text-subtle);
+  }
+
+  .events { display: flex; flex-direction: column; }
   .ev-row { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 10px 18px; }
-  .ev-row .ic { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; background: var(--surface-muted); color: var(--text-strong); }
+  .ev-row .ic { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; }
   .ev-row .ic.in { background: var(--tone-success-bg); color: var(--tone-success); }
   .ev-row .ic.out { background: var(--surface-muted); color: var(--text-strong); }
   .ev-row .nm { font: 500 14px/1.3 var(--font-sans); color: var(--text-strong); }
   .ev-row .sb { font: 11.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 1px; }
   .ev-row .tm { font: 600 14px/1 var(--font-mono); color: var(--text-strong); font-variant-numeric: tabular-nums; }
+
+  .weekpanel { margin: 8px 18px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+  .weekpanel .h { padding: 12px 14px 6px; display: flex; justify-content: space-between; align-items: center; }
+  .weekpanel .h h3 { margin: 0; font: 600 13px/1 var(--font-sans); color: var(--text-strong); }
+  .weekpanel .h .tot { font: 600 12px/1 var(--font-mono); color: var(--brand-strong); }
+
+  .ps-tabbar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    background: var(--surface); border-top: 1px solid var(--border);
+    padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+  }
+  .ps-tab { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px 4px; border-radius: 8px; text-decoration: none; color: var(--text-muted); font: 500 10px/1 var(--font-sans); }
+  .ps-tab.active { color: var(--brand-strong); background: var(--brand-soft); }
+
+  /* Mobile-first: when viewport is small, drop the phone bezel */
+  @media (max-width: 720px) {
+    body { padding: 0; }
+    .device-phone { width: 100vw; height: 100vh; border-radius: 0; padding: 0; box-shadow: none; }
+    .device-phone::before { display: none; }
+    .device-phone .screen { border-radius: 0; }
+  }
 </style>
-<link rel="stylesheet" href="../../huchu-nav.css" />
-<script src="../../huchu-nav.js" defer></script>
 </head>
-<body data-portal-kit="staff" data-portal-screen="time-clock" data-kit-nav="staff">
+<body data-portal-kit="staff" data-portal-screen="time-clock">
 
 <div class="device-phone">
 <div class="screen">
 <div class="ps-screen">
 
-  <div class="ps-statusbar"><span>9:41</span><span class="right"><span data-icon="signal"></span><span data-icon="wifi"></span><span data-icon="battery"></span></span></div>
+  <div class="ps-statusbar"><span id="status-time">9:41</span><span class="right"><span data-icon="signal"></span><span data-icon="wifi"></span><span data-icon="battery"></span></span></div>
 
-  <div class="ps-appbar transparent">
+  <div class="ps-appbar">
     <h1>Time clock</h1>
-    <div class="right">
-      <button class="nav-btn"><span data-icon="calendar" data-icon-size="18"></span></button>
-      <button class="nav-btn"><span data-icon="user" data-icon-size="18"></span></button>
-    </div>
   </div>
 
   <div class="ps-scroll">
 
     <div class="clock-hero">
-      <span class="clock-status"><span class="dot"></span> Clocked in · 1h 19m so far</span>
+      <span class="clock-status" id="clock-status"><span class="dot"></span> <span id="status-text">Not clocked in</span></span>
 
       <div class="clock-card">
         <div class="stack">
           <span class="lbl">Right now</span>
-          <span class="time">09:01:24</span>
-          <span class="date">Friday, 22 May 2026 · Park Centre branch</span>
+          <span class="time" id="now-time">--:--:--</span>
+          <span class="date" id="now-date">—</span>
         </div>
 
-        <div class="summary">
-          <div class="cell">
-            <div class="ck">Today</div>
-            <div class="cv">1h 19m</div>
-            <div class="csb">In at 07:42 · target 8h</div>
-          </div>
-          <div class="cell">
-            <div class="ck">This pay period</div>
-            <div class="cv">86h 40m</div>
-            <div class="csb">Of 96h · 4 days left</div>
-          </div>
-        </div>
-
-        <button class="clock-btn out"><span data-icon="pause" data-icon-size="20"></span> Clock out</button>
+        <button class="clock-btn" id="clock-btn">Clock in</button>
       </div>
     </div>
 
-    <div style="padding: 0 18px;">
-      <div class="psh">Location · geo-fence check</div>
-    </div>
-
-    <div class="geo">
-      <div class="map">
-        <div class="road h1"></div>
-        <div class="road h2"></div>
-        <div class="road v1"></div>
-        <div class="fence"></div>
-        <div class="pin"></div>
-      </div>
-      <div class="bar">
+    <div class="geo" id="geo-panel" style="display:none;">
+      <div class="bar ok" id="geo-bar">
         <span class="ic"><span data-icon="check" data-icon-size="14"></span></span>
         <div>
-          <div class="nm">Inside Park Centre fence</div>
-          <div class="sb">18m from till counter · accuracy ±8m</div>
+          <div class="nm" id="geo-nm">Inside Avondale Branch fence</div>
+          <div class="sb" id="geo-sb">Last clock-in 07:42 · ±8m accuracy</div>
         </div>
-        <span style="margin-left: auto; font: 500 11px/1 var(--font-mono); color: var(--text-subtle);">GPS</span>
       </div>
     </div>
 
-    <div style="padding: 8px 18px 0;">
-      <div class="psh">Recent clock events<a href="#">All</a></div>
-    </div>
+    <div class="psh">Today's timeline</div>
+    <div class="events" id="today-events"></div>
 
-    <div class="events">
-      <div class="ev-row">
-        <span class="ic in"><span data-icon="play" data-icon-size="14"></span></span>
-        <div>
-          <div class="nm">Clocked in</div>
-          <div class="sb">Today 07:42 · Park Centre · on time</div>
-        </div>
-        <span class="tm">07:42</span>
+    <div class="weekpanel">
+      <div class="h">
+        <h3>Last 7 days</h3>
+        <span class="tot" id="week-total">0h 00m</span>
       </div>
-      <div class="ev-row">
-        <span class="ic out"><span data-icon="pause" data-icon-size="14"></span></span>
-        <div>
-          <div class="nm">Clocked out</div>
-          <div class="sb">Thu 21 May · 17:08 · 9h 26m total</div>
-        </div>
-        <span class="tm">17:08</span>
-      </div>
-      <div class="ev-row">
-        <span class="ic in"><span data-icon="play" data-icon-size="14"></span></span>
-        <div>
-          <div class="nm">Clocked in</div>
-          <div class="sb">Thu 21 May · 07:42 · Park Centre</div>
-        </div>
-        <span class="tm">07:42</span>
-      </div>
-      <div class="ev-row">
-        <span class="ic out"><span data-icon="pause" data-icon-size="14"></span></span>
-        <div>
-          <div class="nm">Clocked out</div>
-          <div class="sb">Wed 20 May · 17:14 · 9h 32m total</div>
-        </div>
-        <span class="tm">17:14</span>
-      </div>
-      <div class="ev-row">
-        <span class="ic in"><span data-icon="play" data-icon-size="14"></span></span>
-        <div>
-          <div class="nm">Clocked in</div>
-          <div class="sb">Wed 20 May · 07:42 · Park Centre</div>
-        </div>
-        <span class="tm">07:42</span>
-      </div>
+      <div class="weekbars" id="weekbars"></div>
     </div>
 
     <div style="height: 16px;"></div>
@@ -182,12 +149,130 @@
   <div class="ps-tabbar">
     <a class="ps-tab" href="dashboard.html"><span data-icon="home"></span>Home</a>
     <a class="ps-tab" href="payslip.html"><span data-icon="card"></span>Pay</a>
+    <a class="ps-tab" href="leave.html"><span data-icon="calendar"></span>Leave</a>
     <a class="ps-tab active" href="time-clock.html"><span data-icon="clock"></span>Time</a>
-    <a class="ps-tab" href="#"><span data-icon="user"></span>Profile</a>
+    <a class="ps-tab" href="directory.html"><span data-icon="user"></span>Directory</a>
   </div>
 </div>
 </div>
 </div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  const $ = (sel) => document.querySelector(sel);
+
+  // Live clock
+  function tick() {
+    const now = new Date();
+    $('#now-time').textContent = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0');
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    $('#now-date').textContent = days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear() + ' · Avondale Branch';
+    $('#status-time').textContent = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  }
+  tick(); setInterval(tick, 1000);
+
+  function showToast(msg) {
+    const el = $('#toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 1800);
+  }
+
+  function render() {
+    const clockedIn = Staff.isClockedIn();
+    const btn = $('#clock-btn');
+    const status = $('#clock-status');
+    if (clockedIn) {
+      const mins = Staff.todayMinutesSoFar();
+      $('#status-text').textContent = 'Clocked in · ' + Staff.fmtHM(mins) + ' so far';
+      status.classList.add('in');
+      btn.textContent = 'Clock out';
+      btn.classList.add('out');
+
+      // show geo status from last in event
+      const evs = Staff.clockEvents();
+      const lastIn = [...evs].reverse().find(e => e.type === 'in');
+      if (lastIn) {
+        $('#geo-panel').style.display = '';
+        const bar = $('#geo-bar');
+        if (lastIn.withinGeofence) {
+          bar.classList.add('ok'); bar.classList.remove('warn');
+          $('#geo-nm').textContent = 'Avondale Branch · within geofence';
+          $('#geo-sb').textContent = 'Clocked in ' + Staff.fmtTime(lastIn.ts) + ' · ±8m GPS';
+        } else {
+          bar.classList.add('warn'); bar.classList.remove('ok');
+          $('#geo-nm').textContent = 'Out of geofence — flagged';
+          $('#geo-sb').textContent = 'Clocked in ' + Staff.fmtTime(lastIn.ts) + ' · supervisor will review';
+        }
+      }
+    } else {
+      $('#status-text').textContent = 'Not clocked in';
+      status.classList.remove('in');
+      btn.textContent = 'Clock in';
+      btn.classList.remove('out');
+      $('#geo-panel').style.display = 'none';
+    }
+
+    // Today's events
+    const todays = Staff.todayEvents().sort((a, b) => a.ts.localeCompare(b.ts));
+    const ev = $('#today-events');
+    if (!todays.length) {
+      ev.innerHTML = '<div class="empty" style="padding: 16px 18px;">No events today yet.</div>';
+    } else {
+      ev.innerHTML = '';
+      todays.forEach(t => {
+        const row = document.createElement('div');
+        row.className = 'ev-row';
+        const isIn = t.type === 'in';
+        const fence = t.withinGeofence ? '· within geofence' : '· flagged: out of geofence';
+        row.innerHTML =
+          '<span class="ic ' + (isIn ? 'in' : 'out') + '"><span data-icon="' + (isIn ? 'play' : 'pause') + '" data-icon-size="14"></span></span>' +
+          '<div><div class="nm">Clocked ' + (isIn ? 'in' : 'out') + '</div><div class="sb">' + t.location + ' ' + (isIn ? fence : '') + '</div></div>' +
+          '<span class="tm">' + Staff.fmtTime(t.ts) + '</span>';
+        ev.appendChild(row);
+      });
+    }
+
+    // Week summary
+    const week = Staff.weekSummary();
+    const max = Math.max(60, ...week.map(d => d.minutes));
+    const wb = $('#weekbars');
+    wb.innerHTML = '';
+    let totalMin = 0;
+    const dayLabel = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    week.forEach(d => {
+      totalMin += d.minutes;
+      const dt = new Date(d.day);
+      const h = Math.max(4, Math.round((d.minutes / max) * 100));
+      const cell = document.createElement('div');
+      cell.className = 'wb';
+      cell.innerHTML = '<div class="bar"><i style="height: ' + h + '%;"></i></div>' +
+        '<div class="d">' + dayLabel[dt.getDay()] + '</div>' +
+        '<div class="v">' + (d.minutes > 0 ? Staff.fmtHM(d.minutes) : '—') + '</div>';
+      wb.appendChild(cell);
+    });
+    $('#week-total').textContent = Staff.fmtHM(totalMin);
+
+    if (window.Icons) Icons.render(document);
+  }
+
+  $('#clock-btn').addEventListener('click', () => {
+    if (Staff.isClockedIn()) {
+      Staff.clockOut();
+      showToast('Clocked out');
+    } else {
+      const ev = Staff.clockIn();
+      showToast(ev.withinGeofence ? 'Clocked in · within geofence' : 'Clocked in · flagged out of geofence');
+    }
+    render();
+  });
+
+  render();
+})();
+</script>
 
 </body>
 </html>
