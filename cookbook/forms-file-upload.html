@@ -218,9 +218,11 @@
     <!-- Step 1 -->
     <div class="ck-step"><span class="n">01</span><h3>Model each file as a state machine</h3></div>
     <p>Every picked file lives in one of a handful of states. Branch the renderer per state, not per boolean. <code>'failed'</code> carries the retry handle; <code>'uploading'</code> carries progress; <code>'done'</code> carries the server-side id.</p>
-    <!-- Illustrative: pure type / preflight definitions, no Corelith UI primitives to typecheck. -->
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='export type UploadState =
+    <div class="ds-specimen"
+         data-code='import type { UploadStatus } from &#39;@corelithzw/react&#39;;
+void (null as UploadStatus | null);
+
+export type UploadState =
   | { kind: &#39;queued&#39; }
   | { kind: &#39;uploading&#39;; progress: number; abort: () =&gt; void }
   | { kind: &#39;done&#39;; remoteId: string; url: string }
@@ -318,12 +320,14 @@ export function useFilePicker(onFiles: (files: File[]) =&gt; void) {
     <!-- Step 3 -->
     <div class="ck-step"><span class="n">03</span><h3>Upload each file independently — with retry built in</h3></div>
     <p>Each file owns its own <code>XMLHttpRequest</code> so progress is per-file. <code>onerror</code> moves it to <code>'failed'</code> with a retry handle that re-runs the same upload from scratch. The hook never re-renders the rest of the form when one file's progress changes — uploads live in their own state slice.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
+    <div class="ds-specimen"
          data-code='import { useState, useCallback } from &#39;@corelithzw/react&#39;;
 
-const RESUMABLE_THRESHOLD = 5 * 1024 * 1024;  // 5MB
+const RESUMABLE_THRESHOLD = 5 * 1024 * 1024;
 
-export function useUpload({
+declare const uploadResumable: (id: string, file: File, endpoint: string, update: (id: string, patch: Partial&lt;Upload&gt; | ((u: Upload) =&gt; Upload)) =&gt; void) =&gt; Promise&lt;void&gt;;
+
+export function useUploadQueue({
   endpoint,
   resumableEndpoint,
 }: {
