@@ -681,11 +681,11 @@ function BatchActionBar({ selected, requests, onApproveAll, onClear }: {
   <section id="final">
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The whole <code>LeaveInbox</code>, assembled. Filter chips, multi-select, drawer with context, optimistic decide with 5-second undo, batch approve.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { useMemo, useRef, useState } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { useMemo, useRef, useState } from &#39;react&#39;;
 import {
   Stack, FilterChips, RowCard, EmptyState,
-  Drawer, Alert, Button, useToast,
+  Drawer, Button, useToast,
 } from &#39;@corelithzw/react&#39;;
 
 const UNDO_MS = 5_000;
@@ -724,8 +724,8 @@ export function LeaveInbox({
       try { await commitAction(action, target); }
       catch (e) {
         revert();
-        showToast({ tone: &#39;danger&#39;,
-          message: `Could not save: ${(e as Error).message}` });
+        toast.show({ tone: &#39;danger&#39;,
+          title: `Could not save: ${(e as Error).message}` });
       }
     }, UNDO_MS);
     timers.current.set(target.id, t);
@@ -783,7 +783,7 @@ export function LeaveInbox({
     &lt;Stack gap=&quot;md&quot;&gt;
       &lt;FilterChips
         value={filter}
-        onChange={setFilter}
+        onChange={(v) =&gt; setFilter(v as Filter)}
         options={[
           { value: &#39;all&#39;,     label: `All · ${counts.all}` },
           { value: &#39;pending&#39;, label: `Pending · ${counts.pending}` },
@@ -792,22 +792,30 @@ export function LeaveInbox({
       /&gt;
 
       {visible.length === 0 ? (
-        &lt;EmptyState icon=&quot;inbox&quot; title=&quot;Inbox zero&quot;
-                    body=&quot;Nothing matches that filter.&quot; /&gt;
+        &lt;EmptyState
+          icon={&lt;span aria-hidden=&quot;true&quot;&gt;📥&lt;/span&gt;}
+          title=&quot;Inbox zero&quot;
+          description=&quot;Nothing matches that filter.&quot;
+        /&gt;
       ) : (
         &lt;Stack gap=&quot;xs&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
           {visible.map((r) =&gt; (
-            &lt;RowCard
-              key={r.id}
-              as=&quot;li&quot;
-              selectable
-              selected={selected.has(r.id)}
-              onSelectChange={() =&gt; toggle(r.id)}
-              onClick={() =&gt; setOpenId(r.id)}
-              label={r.employee.name}
-              meta={formatRange(r.from, r.to)}
-              trailing={&lt;StateBadge state={r.state} /&gt;}
-            /&gt;
+            &lt;li key={r.id}&gt;
+              &lt;label&gt;
+                &lt;input
+                  type=&quot;checkbox&quot;
+                  checked={selected.has(r.id)}
+                  onChange={() =&gt; toggle(r.id)}
+                  aria-label={`Select ${r.employee.name}`}
+                /&gt;
+              &lt;/label&gt;
+              &lt;RowCard
+                onClick={() =&gt; setOpenId(r.id)}
+                title={r.employee.name}
+                meta={formatRange(r.from, r.to)}
+                trailing={&lt;StateBadge state={r.state} /&gt;}
+              /&gt;
+            &lt;/li&gt;
           ))}
         &lt;/Stack&gt;
       )}
@@ -829,23 +837,29 @@ export function LeaveInbox({
       )}
 
       {opened &amp;&amp; (
-        &lt;Drawer open onClose={() =&gt; setOpenId(null)} title={opened.employee.name}&gt;
-          {/* (see Step 3 for the drawer body) */}
-          &lt;Drawer.Footer&gt;
-            &lt;Button variant=&quot;ghost&quot;
-                    onClick={() =&gt; decide({ kind: &#39;ASK_INFO&#39;, question: &#39;&#39; }, opened)}&gt;
-              Ask for more
-            &lt;/Button&gt;
-            &lt;div style={{ flex: 1 }} /&gt;
-            &lt;Button variant=&quot;secondary&quot;
-                    onClick={() =&gt; { decide({ kind: &#39;REJECT&#39;, reason: &#39;&#39; }, opened); setOpenId(null); }}&gt;
-              Reject
-            &lt;/Button&gt;
-            &lt;Button variant=&quot;primary&quot;
-                    onClick={() =&gt; { decide({ kind: &#39;APPROVE&#39; }, opened); setOpenId(null); }}&gt;
-              Approve
-            &lt;/Button&gt;
-          &lt;/Drawer.Footer&gt;
+        &lt;Drawer
+          open
+          onClose={() =&gt; setOpenId(null)}
+          title={opened.employee.name}
+          footer={
+            &lt;Stack direction=&quot;horizontal&quot; gap=&quot;sm&quot;&gt;
+              &lt;Button variant=&quot;ghost&quot;
+                      onClick={() =&gt; decide({ kind: &#39;ASK_INFO&#39;, question: &#39;&#39; }, opened)}&gt;
+                Ask for more
+              &lt;/Button&gt;
+              &lt;div style={{ flex: 1 }} /&gt;
+              &lt;Button variant=&quot;secondary&quot;
+                      onClick={() =&gt; { decide({ kind: &#39;REJECT&#39;, reason: &#39;&#39; }, opened); setOpenId(null); }}&gt;
+                Reject
+              &lt;/Button&gt;
+              &lt;Button variant=&quot;primary&quot;
+                      onClick={() =&gt; { decide({ kind: &#39;APPROVE&#39; }, opened); setOpenId(null); }}&gt;
+                Approve
+              &lt;/Button&gt;
+            &lt;/Stack&gt;
+          }
+        &gt;
+          &lt;div&gt;Drawer body — see step 3.&lt;/div&gt;
         &lt;/Drawer&gt;
       )}
     &lt;/Stack&gt;
