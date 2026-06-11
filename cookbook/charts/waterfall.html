@@ -150,10 +150,14 @@
   </section>
 
   <section id="snippet">
-    <h2 class="ds-h2">React snippet</h2>
-    <p class="ds-h2-sub">Steps as objects with a <code>type</code> (<code>'start' | 'change' | 'total'</code>) and a <code>value</code>.</p>
+    <h2 class="ds-h2">React snippet (planned API)</h2>
+    <p class="ds-h2-sub">Future shape. Steps as objects with a <code>type</code> (<code>'start' | 'change' | 'total'</code>) and a <code>value</code>.</p>
+    <!-- snippet-skip-reason: documents future Chart.Waterfall primitive — not in v0.3.0 -->
     <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { Chart } from &#39;@corelithzw/react&#39;;
+         data-code='// Planned API — Chart.Waterfall ships in a future release. Until then,
+// see &quot;Available today&quot; below for a signed-bar fallback.
+// ...
+import { Chart } from &#39;@corelithzw/react&#39;;
 
 const cashBridge = [
   { type: &#39;start&#39;,  label: &#39;Opening&#39;,    value:  120000 },
@@ -190,6 +194,50 @@ export function CashWaterfall() {
         </svg>
       </div>
       <div class="ds-specimen-bar"><span class="label">Chart.Waterfall</span><span class="spacer"></span><span class="t-mono">@corelithzw/react</span></div>
+    </div>
+  </section>
+
+  <section id="available-today">
+    <h2 class="ds-h2">Available today</h2>
+    <p class="ds-h2-sub">Render the changes as a single <code>Chart.Bar</code> with positive bars green and negative bars red. You lose the cumulative-stack effect; you keep the &quot;which line items moved cash&quot; story. Print the opening and closing balances in markup as bookends.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart } from &#39;@corelithzw/react&#39;;
+import type { ChartCategoricalDatum } from &#39;@corelithzw/react&#39;;
+
+type Step = { label: string; value: number };
+
+const cashChanges: Step[] = [
+  { label: &#39;Revenue&#39;,    value:  80000 },
+  { label: &#39;Tax refund&#39;, value:  10000 },
+  { label: &#39;Payroll&#39;,    value: -60000 },
+  { label: &#39;Rent&#39;,       value: -28000 },
+  { label: &#39;Supplies&#39;,   value: -27000 },
+];
+
+export function CashWaterfall() {
+  const data: ChartCategoricalDatum[] = cashChanges.map((s) =&gt; ({
+    label: s.label,
+    value: Math.abs(s.value),
+    color: s.value &gt;= 0 ? &#39;var(--tone-success)&#39; : &#39;var(--tone-danger)&#39;,
+  }));
+  return (
+    &lt;div&gt;
+      &lt;div&gt;Opening: $120k&lt;/div&gt;
+      &lt;Chart.Bar
+        data={data}
+        width={640}
+        height={240}
+        legend
+        aria-label=&quot;Q3 cash changes, opening $120k to closing $95k&quot;
+      /&gt;
+      &lt;div&gt;Closing: $95k&lt;/div&gt;
+    &lt;/div&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="legend" style="font: var(--type-body-sm); color: var(--text-muted);">Signed-bar fallback with text bookends.</div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">CashWaterfall.tsx</span><span class="spacer"></span><span class="t-mono">@corelithzw/react</span></div>
     </div>
   </section>
 

@@ -138,10 +138,14 @@
   </section>
 
   <section id="snippet">
-    <h2 class="ds-h2">React snippet</h2>
-    <p class="ds-h2-sub">Pass a flat array of <code>{date, value}</code>; the component handles the week/day grid.</p>
+    <h2 class="ds-h2">React snippet (planned API)</h2>
+    <p class="ds-h2-sub">Future shape. Pass a flat array of <code>{date, value}</code>; the component will handle the week/day grid.</p>
+    <!-- snippet-skip-reason: documents future Chart.Heatmap primitive — not in v0.3.0 -->
     <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { Chart } from &#39;@corelithzw/react&#39;;
+         data-code='// Planned API — Chart.Heatmap ships in a future release. Until then,
+// see &quot;Available today&quot; below for a per-week sparkline approximation.
+// ...
+import { Chart } from &#39;@corelithzw/react&#39;;
 
 type Entry = { date: string; value: number };
 
@@ -173,6 +177,43 @@ export function EntriesHeatmap({ data }: { data: Entry[] }) {
         </svg>
       </div>
       <div class="ds-specimen-bar"><span class="label">Chart.Heatmap</span><span class="spacer"></span><span class="t-mono">@corelithzw/react</span></div>
+    </div>
+  </section>
+
+  <section id="available-today">
+    <h2 class="ds-h2">Available today</h2>
+    <p class="ds-h2-sub">Roll up daily entries into weekly totals and render a single <code>Chart.Sparkline</code> — the trend reads at a glance even without the day-cell detail. For dense calendar grids, hand-roll the SVG until <code>Chart.Heatmap</code> ships.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart } from &#39;@corelithzw/react&#39;;
+
+type DailyEntry = { date: string; value: number };
+
+function weeklyTotals(data: DailyEntry[]): number[] {
+  const weeks: number[] = [];
+  for (let i = 0; i &lt; data.length; i += 7) {
+    let sum = 0;
+    for (let j = i; j &lt; i + 7 &amp;&amp; j &lt; data.length; j++) sum += data[j]!.value;
+    weeks.push(sum);
+  }
+  return weeks;
+}
+
+export function EntriesHeatmap({ data }: { data: DailyEntry[] }) {
+  const weeks = weeklyTotals(data);
+  return (
+    &lt;Chart.Sparkline
+      data={weeks}
+      width={520}
+      height={48}
+      color=&quot;brand&quot;
+      aria-label=&quot;Operator weekly entries, last 52 weeks&quot;
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="legend" style="font: var(--type-body-sm); color: var(--text-muted);">Weekly-roll-up sparkline fallback.</div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">EntriesHeatmap.tsx</span><span class="spacer"></span><span class="t-mono">@corelithzw/react</span></div>
     </div>
   </section>
 
