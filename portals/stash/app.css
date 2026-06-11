@@ -1,0 +1,185 @@
+/* ============================================================
+   Stash — additive styles for the functional-prototype layer
+   (FAB, category-chip picker, amount-row, budget tip, etc.)
+   All scoped via prefix so we don't collide with demo.html.
+   ============================================================ */
+
+/* ===== FAB ===== */
+.stash-fab {
+  position: fixed;
+  right: 16px;
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--st-brand, #7CC4A9);
+  color: #0B0D11;
+  border: 0;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  z-index: 85; /* below the bottom-sheet scrim (90) */
+  box-shadow: 0 8px 24px rgba(0,0,0,0.32), 0 2px 6px rgba(0,0,0,0.4);
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms;
+}
+/* When a modal/sheet is open, demo populates #modal-host. Hide FAB so it
+   doesn't peek above the bottom-tab strip but stays below the scrim. */
+#modal-host:not(:empty) ~ .st-app .stash-fab,
+body:has(#modal-host:not(:empty)) .stash-fab { display: none; }
+.stash-fab:hover { background: var(--st-brand-2, #5BAA8B); transform: translateY(-1px); }
+.stash-fab:active { transform: translateY(0); }
+.stash-fab:focus-visible {
+  outline: 3px solid var(--st-brand, #7CC4A9);
+  outline-offset: 3px;
+}
+
+/* Hide FAB when fullscreen-modal etc. — also hide on sign-in (no .st-main) */
+body.is-signed-out .stash-fab { display: none; }
+body.is-fullscreen .stash-fab { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+
+/* ===== Amount input (big numeric) ===== */
+.stash-amt-wrap {
+  display: grid; gap: 10px;
+  padding: 8px 0 18px;
+  text-align: center;
+  border-bottom: 1px solid var(--st-border, rgba(255,255,255,0.06));
+  margin-bottom: 16px;
+}
+.stash-ccy {
+  display: inline-flex; gap: 4px;
+  padding: 3px;
+  background: var(--st-surface, #15181F);
+  border: 1px solid var(--st-border, rgba(255,255,255,0.06));
+  border-radius: 9999px;
+  margin: 0 auto;
+}
+.stash-ccy-btn {
+  padding: 6px 14px;
+  border: 0;
+  background: transparent;
+  color: var(--st-text-mute, rgba(229,232,238,0.62));
+  font: 600 12px/1 var(--font-sans);
+  border-radius: 9999px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+}
+.stash-ccy-btn.on {
+  background: var(--st-brand, #7CC4A9);
+  color: #0B0D11;
+}
+.stash-amt-row {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+}
+.stash-amt-sym {
+  font: 600 22px/1 var(--font-sans);
+  color: var(--st-text-mute, rgba(229,232,238,0.62));
+}
+.stash-amt-input {
+  font: 700 44px/1 var(--font-sans);
+  background: transparent;
+  border: 0;
+  color: #fff;
+  text-align: left;
+  width: 220px;
+  max-width: 60vw;
+  padding: 4px 0;
+  letter-spacing: -0.02em;
+  outline: 0;
+  -moz-appearance: textfield;
+}
+.stash-amt-input::-webkit-outer-spin-button,
+.stash-amt-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.stash-amt-input::placeholder { color: rgba(229,232,238,0.22); }
+.stash-amt-help {
+  font: 12px/1.4 var(--font-sans);
+  color: var(--st-text-sub, rgba(229,232,238,0.38));
+}
+
+/* ===== Two-column row for date + account inside the sheet ===== */
+.stash-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ===== Category chips ===== */
+.stash-cat-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.stash-cat-chip {
+  --cc: #7CC4A9;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 12px;
+  border-radius: 9999px;
+  background: var(--st-surface-2, #1B1F27);
+  border: 1px solid var(--st-border, rgba(255,255,255,0.06));
+  color: var(--st-text-mute, rgba(229,232,238,0.62));
+  font: 500 12.5px/1 var(--font-sans);
+  cursor: pointer;
+  min-height: 36px;
+  transition: border-color 120ms, color 120ms, background 120ms;
+}
+.stash-cat-chip:hover { color: #fff; border-color: var(--st-border-2, rgba(255,255,255,0.1)); }
+.stash-cat-chip .stash-cat-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--cc);
+  flex: none;
+}
+.stash-cat-chip.on {
+  background: color-mix(in srgb, var(--cc) 18%, transparent);
+  border-color: var(--cc);
+  color: #fff;
+}
+.stash-cat-chip.on .stash-cat-dot {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--cc) 30%, transparent);
+}
+
+/* ===== Read-only field display ===== */
+.stash-readonly {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--st-surface-2, #1B1F27);
+  border: 1px solid var(--st-border, rgba(255,255,255,0.06));
+  color: var(--st-text, #E5E8EE);
+  font: 500 14px var(--font-sans);
+}
+
+/* ===== Budget tip callout ===== */
+.stash-budget-tip {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--st-warn-soft, rgba(224,180,93,0.16));
+  border: 1px solid rgba(224,180,93,0.3);
+  color: var(--st-text, #E5E8EE);
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.stash-budget-tip .stash-tip-ic {
+  color: var(--st-warn, #E0B45D);
+  flex: none;
+  width: 22px; height: 22px;
+  display: grid; place-items: center;
+}
+.stash-budget-tip .bd .ttl {
+  font: 600 13.5px/1.3 var(--font-sans);
+  color: #fff;
+}
+.stash-budget-tip .bd .tx {
+  font: 12.5px/1.45 var(--font-sans);
+  color: var(--st-text-mute, rgba(229,232,238,0.78));
+  margin-top: 3px;
+}
+
+/* ===== Small toast dot ===== */
+.stash-toast-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--st-brand, #7CC4A9);
+  margin-right: 8px;
+  vertical-align: middle;
+}
