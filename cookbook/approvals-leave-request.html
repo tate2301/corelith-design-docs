@@ -470,60 +470,67 @@ function Inbox({ requests, me, onOpen }: {
     <!-- Step 3 -->
     <div class="ck-step"><span class="n">03</span><h3>Open the drawer with full decision context</h3></div>
     <p>The drawer shows everything the manager would otherwise have to go look up: dates, days, balance after the leave, conflicts with teammates, history. The conflict warning uses <code>Alert tone="warning"</code> because it's an "I-still-might-approve-this" signal, not a hard block.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
+    <div class="ds-specimen"
          data-code='import { Drawer, Stack, Field, Alert, Button } from &#39;@corelithzw/react&#39;;
+
+const formatMonth = (iso: string): string =&gt; new Date(iso).toLocaleString(&#39;default&#39;, { month: &#39;short&#39; });
 
 function RequestDrawer({ request, onAction, onClose }: {
   request: LeaveRequest;
   onAction: (a: ManagerAction) =&gt; void;
   onClose: () =&gt; void;
 }) {
+  const footer = (
+    &lt;Stack direction=&quot;horizontal&quot; gap=&quot;sm&quot;&gt;
+      &lt;Button variant=&quot;ghost&quot;
+              onClick={() =&gt; onAction({ kind: &#39;ASK_INFO&#39;, question: &#39;&#39; })}&gt;
+        Ask for more
+      &lt;/Button&gt;
+      &lt;div style={{ flex: 1 }} /&gt;
+      &lt;Button variant=&quot;secondary&quot;
+              onClick={() =&gt; onAction({ kind: &#39;REJECT&#39;, reason: &#39;&#39; })}&gt;
+        Reject
+      &lt;/Button&gt;
+      &lt;Button variant=&quot;primary&quot;
+              onClick={() =&gt; onAction({ kind: &#39;APPROVE&#39; })}&gt;
+        Approve
+      &lt;/Button&gt;
+    &lt;/Stack&gt;
+  );
+
   return (
-    &lt;Drawer open onClose={onClose} title={request.employee.name}&gt;
+    &lt;Drawer open onClose={onClose} title={request.employee.name} footer={footer}&gt;
       &lt;Stack gap=&quot;md&quot;&gt;
         &lt;Field label=&quot;Dates&quot;&gt;
-          {formatRange(request.from, request.to)} ({request.days} days)
+          &lt;div&gt;{formatRange(request.from, request.to)} ({request.days} days)&lt;/div&gt;
         &lt;/Field&gt;
 
         &lt;Field label=&quot;Balance after this leave&quot;&gt;
-          {request.employee.balance - request.days} days{&#39; &#39;}
-          &lt;span style={{ color: &#39;var(--text-muted)&#39; }}&gt;
-            (was {request.employee.balance})
-          &lt;/span&gt;
+          &lt;div&gt;
+            {request.employee.balance - request.days} days{&#39; &#39;}
+            &lt;span style={{ color: &#39;var(--text-muted)&#39; }}&gt;(was {request.employee.balance})&lt;/span&gt;
+          &lt;/div&gt;
         &lt;/Field&gt;
 
         {request.conflicts.length &gt; 0 &amp;&amp; (
-          &lt;Alert tone=&quot;warning&quot;&gt;
+          &lt;Alert tone=&quot;warn&quot;&gt;
             {request.conflicts.length === 1
               ? `${request.conflicts[0].name} is also off ${request.conflicts[0].date}.`
               : `${request.conflicts.length} teammates are off in this window.`}
           &lt;/Alert&gt;
         )}
 
-        &lt;Field label=&quot;Reason&quot;&gt;{request.reason}&lt;/Field&gt;
+        &lt;Field label=&quot;Reason&quot;&gt;
+          &lt;div&gt;{request.reason}&lt;/div&gt;
+        &lt;/Field&gt;
 
         &lt;Field label=&quot;History&quot;&gt;
-          {request.history.approved} approved · {request.history.rejected} rejected
-          {request.history.lastDecidedAt
-            &amp;&amp; ` · last ${formatMonth(request.history.lastDecidedAt)}`}
+          &lt;div&gt;
+            {request.history.approved} approved · {request.history.rejected} rejected
+            {request.history.lastDecidedAt &amp;&amp; ` · last ${formatMonth(request.history.lastDecidedAt)}`}
+          &lt;/div&gt;
         &lt;/Field&gt;
       &lt;/Stack&gt;
-
-      &lt;Drawer.Footer&gt;
-        &lt;Button variant=&quot;ghost&quot;
-                onClick={() =&gt; onAction({ kind: &#39;ASK_INFO&#39;, question: &#39;&#39; })}&gt;
-          Ask for more
-        &lt;/Button&gt;
-        &lt;div style={{ flex: 1 }} /&gt;
-        &lt;Button variant=&quot;secondary&quot;
-                onClick={() =&gt; onAction({ kind: &#39;REJECT&#39;, reason: &#39;&#39; })}&gt;
-          Reject
-        &lt;/Button&gt;
-        &lt;Button variant=&quot;primary&quot;
-                onClick={() =&gt; onAction({ kind: &#39;APPROVE&#39; })}&gt;
-          Approve
-        &lt;/Button&gt;
-      &lt;/Drawer.Footer&gt;
     &lt;/Drawer&gt;
   );
 }'>
