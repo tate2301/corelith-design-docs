@@ -1,0 +1,348 @@
+/* =========================================================================
+   print.css — Huchu DS print stylesheet (P3·03)
+   -------------------------------------------------------------------------
+   A11y-first, ink-budget conscious print contract.
+   Reuses design-system tokens but flattens visuals: no shadows, no
+   gradients, no soft surfaces. Pure black text on white, A4 + Letter
+   both supported.
+
+   Load AFTER tokens.css + components.css:
+     <link rel="stylesheet" href="../tokens.css" />
+     <link rel="stylesheet" href="../components.css" />
+     <link rel="stylesheet" href="../print.css" />
+
+   Contract attributes:
+     data-print="hide"    → display: none in print
+     data-print="block"   → display: block in print (force-show)
+     data-print-quiet     → suppress URL footer annotation on links inside
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   Screen-side helpers — visible always so authors can preview print state.
+   ------------------------------------------------------------------------- */
+.print-only          { display: none; }
+.print-toolbar       { display: flex; gap: 8px; align-items: center;
+                       margin: 0 0 16px; }
+.print-toolbar .btn  { font-family: var(--font-sans), system-ui, sans-serif; }
+.print-paper {
+  /* Screen preview of a paper sheet — print sees through this. */
+  background: #fff;
+  color: var(--text-body, #16181D);
+  max-width: 210mm;
+  margin: 0 auto;
+  padding: 18mm 16mm;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  border-radius: 2px;
+}
+.print-paper--receipt {
+  max-width: 76mm;
+  padding: 6mm 4mm;
+  font-family: var(--font-mono), ui-monospace, "Courier New", monospace;
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+/* =========================================================================
+   PRINT — applied when actually printing.
+   ========================================================================= */
+@media print {
+
+  /* Page geometry — A4 default. */
+  @page {
+    size: A4;
+    margin: 18mm 16mm;
+  }
+
+  /* ----- Token flattening: collapse the palette to ink ------------------- */
+  :root {
+    --canvas:           #fff;
+    --surface:          #fff;
+    --surface-muted:    #fff;
+    --surface-sunken:   #fff;
+    --surface-deep:     #fff;
+    --text:             #000;
+    --text-strong:      #000;
+    --text-body:        #000;
+    --text-muted:       #333;
+    --text-subtle:      #555;
+    --text-inverse:     #000;
+    --text-link:        #000;
+    --border:           #000;
+    --border-strong:    #000;
+    --border-subtle:    #888;
+    --brand:            #000;
+    --brand-strong:     #000;
+    --brand-deeper:     #000;
+    --brand-soft:       #fff;
+    --brand-tint:       transparent;
+    --shadow-rest:      none;
+    --shadow-popover:   none;
+    --shadow-modal:     none;
+    --shadow-elevated:  none;
+  }
+
+  /* ----- Body baseline --------------------------------------------------- */
+  html, body {
+    background: #fff !important;
+    color: #000 !important;
+    font-family: var(--font-sans), Georgia, serif;
+    font-size: 10pt;
+    line-height: 1.4;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Strip all shadows and gradients everywhere — ink budget. */
+  *,
+  *::before,
+  *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    background-image: none !important;
+  }
+
+  /* ----- Hide navigation chrome ----------------------------------------- */
+  .hx-topbar,
+  .hx-footer,
+  .ds-sidebar,
+  .ds-doc-layout > nav,
+  .ds-doc-layout > aside,
+  .ds-toc,
+  .ds-pager,
+  .ds-page-head .meta,
+  .huchu-side,
+  .huchu-topbar,
+  .toc,
+  .ds-specimen-bar,
+  .print-toolbar,
+  nav[role="navigation"],
+  [data-print="hide"] {
+    display: none !important;
+  }
+
+  /* ----- Force-show overrides ------------------------------------------- */
+  [data-print="block"] { display: block !important; }
+  .print-only          { display: block !important; }
+
+  /* Reveal the paper preview surface as the actual page. */
+  .print-paper {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+  }
+
+  /* ----- Headings -------------------------------------------------------- */
+  h1 { font-size: 18pt; font-weight: 700; margin: 0 0 6pt; color: #000; }
+  h2 { font-size: 13pt; font-weight: 700; margin: 14pt 0 4pt; color: #000;
+       page-break-after: avoid; }
+  h3 { font-size: 11pt; font-weight: 700; margin: 10pt 0 3pt; color: #000;
+       page-break-after: avoid; }
+  h1, h2 { page-break-before: auto; }
+  p, li  { color: #000; orphans: 3; widows: 3; }
+
+  /* ----- Tables: the workhorse of audit + invoice ----------------------- */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+    margin: 6pt 0;
+    page-break-inside: auto;
+  }
+  th, td {
+    border: 1pt solid #000;
+    padding: 4pt 6pt;
+    text-align: left;
+    vertical-align: top;
+    color: #000;
+    background: #fff !important;
+  }
+  th {
+    font-weight: 700;
+    background: #fff !important;
+    border-bottom: 1.5pt solid #000;
+  }
+  tr            { page-break-inside: avoid; page-break-after: auto; }
+  thead         { display: table-header-group; }   /* repeat header per page */
+  tfoot         { display: table-footer-group; }
+
+  /* Right-align money / numeric columns by convention. */
+  .num, td.num, th.num,
+  td[data-num], th[data-num] {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-family: var(--font-mono), ui-monospace, "Courier New", monospace;
+  }
+
+  /* ----- Cards: keep them whole ----------------------------------------- */
+  .b-card, .surface-card, .ds-callout, .p-alert, .b-callout,
+  figure, blockquote, pre {
+    page-break-inside: avoid;
+    border: 1pt solid #000 !important;
+    background: #fff !important;
+    color: #000 !important;
+    padding: 6pt 8pt;
+    margin: 6pt 0;
+    border-radius: 0 !important;
+  }
+
+  /* ----- Buttons turn into quiet text labels in print ------------------- */
+  .btn, button {
+    border: 1pt solid #000 !important;
+    background: #fff !important;
+    color: #000 !important;
+    padding: 2pt 6pt;
+  }
+  .btn[data-print="hide"], button[data-print="hide"] { display: none !important; }
+
+  /* ----- Links: keep visible, annotate URL ------------------------------ */
+  a, a:visited {
+    color: #000 !important;
+    text-decoration: underline;
+  }
+  /* Anchor full URLs after body links, except in quiet zones. */
+  a[href^="http"]::after,
+  a[href^="mailto:"]::after {
+    content: " (" attr(href) ")";
+    font-size: 8pt;
+    color: #555;
+    font-weight: 400;
+  }
+  [data-print-quiet] a[href]::after,
+  a[data-print-quiet]::after,
+  nav a::after,
+  .crumbs a::after,
+  .meta a::after {
+    content: "" !important;
+  }
+
+  /* ----- Images: don't bleed past the page ------------------------------ */
+  img, svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* ----- Footnotes ------------------------------------------------------- */
+  .footnote, .print-footnote, small.print {
+    font-size: 8pt;
+    color: #333;
+  }
+
+  /* =======================================================================
+     Document type: RECEIPT (76mm thermal width)
+     ======================================================================= */
+  .receipt {
+    width: 72mm;
+    margin: 0 auto;
+    font-family: var(--font-mono), ui-monospace, "Courier New", monospace;
+    font-size: 9pt;
+    line-height: 1.35;
+  }
+  .receipt h1     { font-size: 11pt; text-align: center; margin: 0 0 2mm; }
+  .receipt .meta  { text-align: center; font-size: 8pt; margin-bottom: 3mm; }
+  .receipt hr     { border: 0; border-top: 1pt dashed #000; margin: 2mm 0; }
+  .receipt table  { font-size: 9pt; }
+  .receipt th,
+  .receipt td     { border: 0 !important; padding: 1pt 2pt; }
+  .receipt .totals td { border: 0 !important; padding: 1pt 0; }
+  .receipt .totals .grand td {
+    border-top: 1pt solid #000 !important;
+    font-weight: 700;
+  }
+  .receipt .thanks { text-align: center; margin-top: 4mm; font-size: 8pt; }
+
+  /* When a receipt prints, use a smaller page — most thermal printers
+     pick their own paper. We give @page a hint for desktop printers
+     using a smaller stationery size. */
+  @page receipt {
+    size: 80mm auto;
+    margin: 4mm 4mm;
+  }
+  .receipt-page { page: receipt; }
+
+  /* =======================================================================
+     Document type: INVOICE (A4)
+     ======================================================================= */
+  .invoice .header-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10mm;
+    margin-bottom: 8mm;
+    page-break-inside: avoid;
+  }
+  .invoice .header-grid .meta-block {
+    text-align: right;
+    font-size: 9pt;
+  }
+  .invoice .bill-to {
+    border: 1pt solid #000;
+    padding: 4mm;
+    margin-bottom: 6mm;
+    page-break-inside: avoid;
+  }
+  .invoice .totals-block {
+    margin-top: 6mm;
+    display: flex;
+    justify-content: flex-end;
+  }
+  .invoice .totals-block table {
+    width: 70mm;
+    font-size: 9pt;
+  }
+  .invoice .totals-block td { border: 0 !important; padding: 2pt 4pt; }
+  .invoice .totals-block tr.grand td {
+    border-top: 1.5pt solid #000 !important;
+    font-weight: 700;
+    font-size: 10pt;
+  }
+  .invoice .footer-block {
+    margin-top: 12mm;
+    border-top: 1pt solid #000;
+    padding-top: 4mm;
+    font-size: 8pt;
+    color: #333;
+    page-break-inside: avoid;
+  }
+  .invoice .signature {
+    margin-top: 16mm;
+    border-top: 1pt solid #000;
+    width: 60mm;
+    padding-top: 2mm;
+    font-size: 8pt;
+  }
+
+  /* =======================================================================
+     Document type: AUDIT TRAIL (A4 landscape feels right but keep portrait
+     by default — caller can override with @page rule.)
+     ======================================================================= */
+  .audit table { font-size: 8pt; }
+  .audit th    { font-size: 8pt; }
+  .audit .hash {
+    font-family: var(--font-mono), ui-monospace, "Courier New", monospace;
+    font-size: 8pt;
+    letter-spacing: 0.02em;
+  }
+  .audit .page-header {
+    display: block !important;
+    font-size: 8pt;
+    color: #333;
+    border-bottom: 0.5pt solid #000;
+    padding-bottom: 2mm;
+    margin-bottom: 4mm;
+  }
+}
+
+/* =========================================================================
+   PRINT — Letter (US) overrides.
+   We can't query paper size directly across all engines, so we use a
+   width-based heuristic (Letter is narrower than A4 in mm) plus an
+   explicit @page block.
+   ========================================================================= */
+@media print and (max-width: 9in) {
+  @page {
+    size: Letter;
+    margin: 0.75in 0.6in;
+  }
+}

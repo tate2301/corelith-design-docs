@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Print stylesheet · Huchu DS</title>
+<link rel="stylesheet" href="../tokens.css" />
+<link rel="stylesheet" href="../components.css" />
+<link rel="stylesheet" href="../system.css" />
+<link rel="stylesheet" href="../print.css" />
+<script src="../icons.js" defer></script>
+<script src="../system-shell.js" defer></script>
+</head>
+<body class="ds-doc">
+<main class="ds-content">
+<div class="ds-doc-layout">
+<article>
+
+  <header class="ds-page-head anim-fade-up" data-print-quiet>
+    <div class="crumbs"><a href="../index.html">Home</a><span class="sep">/</span><a href="primitives.html">Components</a><span class="sep">/</span><span>Print</span></div>
+    <h1>Print stylesheet</h1>
+    <p class="lede">
+      A single <code>print.css</code> file that turns any portal page,
+      receipt, invoice, or audit view into a clean, ink-budget-conscious
+      printed page. A4 and US Letter both supported.
+    </p>
+    <div class="meta">
+      <span class="meta-pill"><span data-icon="check" data-icon-size="12"></span>Stable</span>
+      <span class="meta-pill"><span class="t-mono">print.css</span></span>
+      <span class="meta-pill">A4 + Letter</span>
+      <span class="meta-pill">Pure black on white</span>
+      <span class="meta-pill" data-meta="api-status" style="background: var(--brand-soft); color: var(--brand-strong);">CSS only</span>
+    </div>
+  </header>
+
+  <!-- =================================================================
+       Contract
+       ================================================================= -->
+  <section id="contract">
+    <h2 class="ds-h2">The contract</h2>
+    <p class="ds-h2-sub">
+      Load <code>print.css</code> <strong>after</strong>
+      <code>tokens.css</code> and <code>components.css</code>. Everything
+      below kicks in only inside <code>@media print</code>.
+    </p>
+
+    <div class="b-card" style="padding: 16px;">
+      <pre style="margin:0; font: 12px/1.45 var(--font-mono);"><code>&lt;link rel="stylesheet" href="../tokens.css" /&gt;
+&lt;link rel="stylesheet" href="../components.css" /&gt;
+&lt;link rel="stylesheet" href="../print.css" /&gt;</code></pre>
+    </div>
+
+    <h3>Behaviour</h3>
+    <ul>
+      <li>Strips shadows, gradients, soft surfaces — pure ink only.</li>
+      <li>Forces pure black <code>#000</code> text on white background.</li>
+      <li>Body sets to <strong>10pt</strong>; tables <strong>9pt</strong>; footnotes <strong>8pt</strong>.</li>
+      <li><code>@page</code> defaults to A4 with 18mm/16mm margins.</li>
+      <li>US Letter is honoured via the
+        <code>@media print and (max-width: 9in)</code> branch with 0.75in/0.6in margins.</li>
+      <li>Hides navigation: <code>.hx-topbar</code>, <code>.hx-footer</code>,
+        <code>.ds-sidebar</code>, <code>.huchu-side</code>, <code>.ds-toc</code>,
+        <code>.ds-pager</code>, and any element with <code>data-print="hide"</code>.</li>
+      <li>Tables use <code>border-collapse: collapse</code> with
+        1pt black borders and prevent breaking mid-row.</li>
+      <li>Cards (<code>.b-card</code>, <code>.surface-card</code>,
+        <code>.b-callout</code>) keep
+        <code>page-break-inside: avoid</code>.</li>
+      <li>Body links get their URL annotated:
+        <code>a (https://example.com)</code> — except inside
+        <code>[data-print-quiet]</code> zones.</li>
+    </ul>
+  </section>
+
+  <!-- =================================================================
+       Attribute contract
+       ================================================================= -->
+  <section id="tokens-collapsed">
+    <h2 class="ds-h2">Attribute contract</h2>
+    <p class="ds-h2-sub">
+      Three opt-in attributes that any page author can sprinkle on a
+      DOM node to control how it prints.
+    </p>
+
+    <div class="ds-specimen" data-print-quiet>
+      <div class="ds-specimen-stage plain padded">
+        <table style="width:100%; border-collapse: collapse; font-size: 13px;">
+          <thead>
+            <tr style="background: var(--surface-muted);">
+              <th style="text-align:left; padding: 8px 10px; border-bottom: 1px solid var(--border);">Attribute</th>
+              <th style="text-align:left; padding: 8px 10px; border-bottom: 1px solid var(--border);">Effect on print</th>
+              <th style="text-align:left; padding: 8px 10px; border-bottom: 1px solid var(--border);">Use it for</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding: 8px 10px; border-bottom: 1px solid var(--border); font-family: var(--font-mono);">data-print="hide"</td>
+              <td style="padding: 8px 10px; border-bottom: 1px solid var(--border);"><code>display: none !important;</code></td>
+              <td style="padding: 8px 10px; border-bottom: 1px solid var(--border);">Toolbars, "Print" buttons, in-app banners.</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 10px; border-bottom: 1px solid var(--border); font-family: var(--font-mono);">data-print="block"</td>
+              <td style="padding: 8px 10px; border-bottom: 1px solid var(--border);"><code>display: block !important;</code></td>
+              <td style="padding: 8px 10px; border-bottom: 1px solid var(--border);">Force-show a page header or stamp that's hidden on screen.</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 10px; font-family: var(--font-mono);">data-print-quiet</td>
+              <td style="padding: 8px 10px;">Suppresses the <code>(url)</code> annotation after links inside the element.</td>
+              <td style="padding: 8px 10px;">Header crumbs, in-text app links, breadcrumb trails.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h3>Tokens that are collapsed</h3>
+    <p>The print media block flattens the design-system palette so
+       every token resolves to pure ink:</p>
+    <ul>
+      <li><code>--canvas</code>, <code>--surface</code>, <code>--surface-muted</code>, <code>--brand-soft</code> &rarr; <code>#fff</code></li>
+      <li><code>--text</code>, <code>--text-strong</code>, <code>--text-body</code>, <code>--brand</code> &rarr; <code>#000</code></li>
+      <li><code>--text-muted</code> &rarr; <code>#333</code>; <code>--text-subtle</code> &rarr; <code>#555</code></li>
+      <li><code>--border</code> &rarr; <code>#000</code>; <code>--border-subtle</code> &rarr; <code>#888</code></li>
+      <li>All <code>--shadow-*</code> &rarr; <code>none</code></li>
+    </ul>
+  </section>
+
+  <!-- =================================================================
+       Samples
+       ================================================================= -->
+  <section id="samples">
+    <h2 class="ds-h2">Sample pages</h2>
+    <p class="ds-h2-sub">
+      Three full reference pages. Open each, click Print
+      (or use Chrome &rarr; File &rarr; Print preview) and you should see
+      a clean black-on-white printable page with no nav chrome.
+    </p>
+
+    <div class="ds-specimen" data-print-quiet>
+      <div class="ds-specimen-stage plain padded" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+
+        <a class="b-card" href="p-receipt.html"
+           style="display: block; padding: 16px; text-decoration: none; color: inherit;">
+          <strong style="display: block; margin-bottom: 4px;">Receipt</strong>
+          <span style="font-size: 13px; color: var(--text-muted);">
+            76 mm thermal till receipt. Mono font, dashed dividers,
+            stacked totals.
+          </span>
+          <div style="margin-top: 10px; font-family: var(--font-mono); font-size: 12px; color: var(--brand);">p-receipt.html &rarr;</div>
+        </a>
+
+        <a class="b-card" href="p-invoice.html"
+           style="display: block; padding: 16px; text-decoration: none; color: inherit;">
+          <strong style="display: block; margin-bottom: 4px;">Invoice</strong>
+          <span style="font-size: 13px; color: var(--text-muted);">
+            A4 tax invoice. Vendor + meta grid, bill-to block,
+            line items, totals, banking footer, signature.
+          </span>
+          <div style="margin-top: 10px; font-family: var(--font-mono); font-size: 12px; color: var(--brand);">p-invoice.html &rarr;</div>
+        </a>
+
+        <a class="b-card" href="p-audit-print.html"
+           style="display: block; padding: 16px; text-decoration: none; color: inherit;">
+          <strong style="display: block; margin-bottom: 4px;">Audit trail</strong>
+          <span style="font-size: 13px; color: var(--text-muted);">
+            Append-only event report. Timestamp / actor / action /
+            object / from &rarr; to / SHA hash.
+          </span>
+          <div style="margin-top: 10px; font-family: var(--font-mono); font-size: 12px; color: var(--brand);">p-audit-print.html &rarr;</div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- =================================================================
+       Tips
+       ================================================================= -->
+  <section id="tips">
+    <h2 class="ds-h2">Tips for authors</h2>
+    <p class="ds-h2-sub">
+      Three things that make a page print well on the first try.
+    </p>
+
+    <div class="ds-callout info" role="note" style="margin: 12px 0;">
+      <div class="alert-body">
+        <strong>Tip.</strong> Open Chrome DevTools &rarr; Rendering tab
+        &rarr; <em>Emulate CSS media</em> &rarr; <code>print</code>
+        to see what the printer will see, without having to hit Print
+        every time you tweak a rule.
+      </div>
+    </div>
+
+    <ol>
+      <li>
+        <strong>Wrap the document in a container.</strong> The samples
+        use <code>&lt;article class="print-paper"&gt;</code>. On screen
+        that gives you a paper-like card; in print it collapses to the
+        full page.
+      </li>
+      <li>
+        <strong>Mark chrome with <code>data-print="hide"</code>.</strong>
+        Anything the printer shouldn't see — Print buttons, in-page
+        toolbars, intro paragraphs — gets this attribute.
+      </li>
+      <li>
+        <strong>Right-align money.</strong> Use <code>class="num"</code>
+        on <code>&lt;td&gt;</code> and <code>&lt;th&gt;</code> for any
+        numeric column — it switches to tabular mono and right-aligns.
+      </li>
+      <li>
+        <strong>Test both papers.</strong> Print preview &rarr; switch
+        between A4 and Letter and make sure the totals block, signature,
+        and footer still fit on the page.
+      </li>
+    </ol>
+
+    <h3>Page-break helpers</h3>
+    <ul>
+      <li><code>tr { page-break-inside: avoid; }</code> — rows stay whole.</li>
+      <li><code>thead { display: table-header-group; }</code> — header repeats on every page of a long table.</li>
+      <li><code>.b-card, .surface-card { page-break-inside: avoid; }</code> — small cards don't split.</li>
+      <li><code>h2 { page-break-after: avoid; }</code> — headings don't orphan from their first paragraph.</li>
+    </ul>
+
+    <h3>What we punted</h3>
+    <ul>
+      <li>Custom paper sizes beyond A4 and US Letter (no Legal, A5, B5,
+          or thermal-specific @page rules — the receipt sample provides
+          an opt-in <code>@page receipt</code> hint only).</li>
+      <li>Running headers/footers via <code>position: running()</code>
+          (Paged Media Level 3) — currently only Prince/AntennaHouse
+          render it. The audit sample fakes the page header with a
+          plain block instead.</li>
+      <li>Watermarks, barcode rendering, and digital-signature glyphs
+          — provided by downstream renderers, not the stylesheet.</li>
+    </ul>
+  </section>
+
+</article>
+</div>
+</main>
+</body>
+</html>
