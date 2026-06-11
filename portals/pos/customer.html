@@ -1,91 +1,256 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<title>Sales history · POS · Corelith</title>
+<meta charset="utf-8" /><title>Customer lookup · POS portal · Huchu</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="stylesheet" href="../../tokens.css" />
 <link rel="stylesheet" href="../../components.css" />
-<link rel="stylesheet" href="app.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../device-scale.js" defer></script>
+<style>
+  body { background: var(--gray-100); margin: 0; padding: 24px; min-height: 100vh; display: grid; place-items: center; }
+  .device-tablet { width: 1024px; height: 768px; border-radius: 28px; background: #0F1115; padding: 14px; box-shadow: 0 30px 60px -20px rgba(22,24,29,0.25), 0 0 0 1px rgba(22,24,29,0.08); }
+  .device-tablet .screen { width: 100%; height: 100%; border-radius: 16px; overflow: hidden; background: var(--canvas); position: relative; display: flex; }
+
+  .cust-side { width: 320px; background: var(--canvas); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex: none; }
+  .cust-side .search { padding: 16px 16px 12px; }
+  .cust-side .search-field { display: flex; align-items: center; gap: 8px; padding: 0 12px; height: 42px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); }
+  .cust-side .search-field [data-icon] { color: var(--text-muted); }
+  .cust-side .search-field input { flex: 1; border: 0; outline: 0; background: transparent; font: 500 14px/1 var(--font-sans); color: var(--text-strong); }
+  .cust-side .search-field input::placeholder { color: var(--text-subtle); font-weight: 400; }
+
+  .cust-side .sh { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-subtle); padding: 6px 18px 8px; }
+  .cust-list { flex: 1; overflow-y: auto; }
+  .cust-row { display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); align-items: center; cursor: pointer; }
+  .cust-row:hover { background: var(--surface-muted); }
+  .cust-row.active { background: var(--brand-soft); }
+  .cust-row .av { width: 40px; height: 40px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: grid; place-items: center; font: 600 13px/1 var(--font-sans); }
+  .cust-row.active .av { background: var(--brand); color: #fff; }
+  .cust-row .nm { font: 500 14px/1.3 var(--font-sans); color: var(--text-strong); }
+  .cust-row .sb { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .cust-row .v { font: 500 12px/1 var(--font-sans); color: var(--text-muted); }
+  .cust-row.active .v { color: var(--brand-strong); font-weight: 600; }
+
+  .cust-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .cust-top { padding: 16px 24px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .cust-top h1 { font: 600 19px/1.2 var(--font-sans); color: var(--text-strong); margin: 0; flex: 1; }
+  .cust-top .pill { padding: 4px 10px; border-radius: 9999px; background: var(--brand-soft); color: var(--brand-strong); font: 500 12px/1 var(--font-sans); }
+
+  .profile-hero { display: grid; grid-template-columns: 1fr auto; gap: 16px; padding: 22px 24px; background: linear-gradient(135deg, var(--brand), var(--brand-strong)); color: #fff; }
+  .profile-hero .pa { display: flex; gap: 14px; align-items: center; }
+  .profile-hero .pa .big-av { width: 54px; height: 54px; border-radius: 50%; background: rgba(255,255,255,0.18); display: grid; place-items: center; font: 600 18px/1 var(--font-sans); color: #fff; }
+  .profile-hero .nm { font: 600 22px/1.2 var(--font-sans); }
+  .profile-hero .sb { font: 13px/1.5 var(--font-sans); opacity: 0.85; margin-top: 4px; }
+  .profile-hero .credit { text-align: right; }
+  .profile-hero .credit .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; }
+  .profile-hero .credit .v { font: 700 28px/1 var(--font-sans); margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .profile-hero .credit .ds { font: 12px/1.3 var(--font-sans); opacity: 0.8; margin-top: 4px; }
+
+  .cust-body { flex: 1; overflow-y: auto; padding: 18px 24px 24px; display: grid; grid-template-columns: 1fr 1.1fr; gap: 16px; align-items: start; }
+
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: clip; }
+  .panel-h { padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between; }
+  .panel-h h2 { font: 600 14px/1.3 var(--font-sans); color: var(--text-strong); margin: 0; }
+  .panel-h .ds { font: 12px/1 var(--font-sans); color: var(--text-muted); }
+
+  .loyalty-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px 16px; }
+  .loyalty-grid .cell { padding: 12px; background: var(--surface-muted); border-radius: 10px; }
+  .loyalty-grid .cell .lbl { font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+  .loyalty-grid .cell .v { font: 700 22px/1 var(--font-sans); color: var(--text-strong); margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .loyalty-grid .cell .sb { font: 11px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 4px; }
+
+  .tier-bar { padding: 4px 16px 16px; }
+  .tier-line { display: flex; align-items: center; justify-content: space-between; font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-bottom: 6px; }
+  .tier-line strong { color: var(--text-strong); font-weight: 600; }
+  .tier-track { height: 8px; border-radius: 4px; background: var(--surface-muted); overflow: hidden; }
+  .tier-fill { height: 100%; width: 68%; background: var(--brand); border-radius: 4px; }
+
+  .order-row { display: grid; grid-template-columns: 1fr 90px 90px; gap: 12px; padding: 11px 16px; border-bottom: 1px solid var(--border-subtle); align-items: center; }
+  .order-row:last-child { border-bottom: 0; }
+  .order-row .nm { font: 500 13.5px/1.3 var(--font-sans); color: var(--text-strong); }
+  .order-row .sb { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .order-row .dt { font: 12px/1.3 var(--font-sans); color: var(--text-muted); text-align: right; }
+  .order-row .v { font: 600 13px/1 var(--font-mono); color: var(--text-strong); font-variant-numeric: tabular-nums; text-align: right; }
+
+  .actions-row { padding: 14px 24px; border-top: 1px solid var(--border); background: var(--surface); display: flex; gap: 10px; align-items: center; }
+  .actions-row .spacer { flex: 1; }
+</style>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
 </head>
-<body class="pos-functional">
+<body data-portal-kit="pos" data-portal-screen="customer" data-kit-nav="pos">
 
-<header class="pos-topbar">
-  <a class="brand" href="index.html"><span class="mark">C</span> Corelith POS</a>
-  <nav class="pos-tabs" style="border: none;">
-    <a href="sale.html">Sale</a>
-    <a href="item-search.html">Items</a>
-    <a href="customer.html" class="active">Receipts</a>
-    <a href="refund.html">Refund</a>
-    <a href="cashup.html">Cash up</a>
-    <a href="z-report.html">Z-reports</a>
-  </nav>
-  <span class="shift" id="shift-meta"></span>
-</header>
+<div class="device-tablet">
+<div class="screen">
 
-<main class="pos-app">
-  <div class="pos-app-head">
-    <h1>Receipts &amp; history</h1>
-    <div class="pos-meta" id="meta">All recorded sales for this terminal.</div>
+<!-- Left: search + recent customers -->
+<aside class="cust-side">
+  <div class="search">
+    <label class="search-field">
+      <span data-icon="search" data-icon-size="16"></span>
+      <input placeholder="Search name, phone, or loyalty card" value="Joyce" />
+    </label>
+  </div>
+  <div class="sh">Recent customers · this shift</div>
+  <div class="cust-list">
+    <div class="cust-row active">
+      <span class="av">JM</span>
+      <div>
+        <div class="nm">Joyce Mukamba</div>
+        <div class="sb">+263 77 482 0011 · 138 pts</div>
+      </div>
+      <span class="v">11:42</span>
+    </div>
+    <div class="cust-row">
+      <span class="av">TC</span>
+      <div>
+        <div class="nm">Tatenda Chari</div>
+        <div class="sb">+263 71 233 8819 · 64 pts</div>
+      </div>
+      <span class="v">11:18</span>
+    </div>
+    <div class="cust-row">
+      <span class="av">RN</span>
+      <div>
+        <div class="nm">Rumbidzai Ndoro</div>
+        <div class="sb">+263 78 661 0042 · 220 pts</div>
+      </div>
+      <span class="v">10:54</span>
+    </div>
+    <div class="cust-row">
+      <span class="av">KM</span>
+      <div>
+        <div class="nm">Kuda Marimo</div>
+        <div class="sb">+263 77 109 4471 · 41 pts</div>
+      </div>
+      <span class="v">10:21</span>
+    </div>
+    <div class="cust-row">
+      <span class="av">SG</span>
+      <div>
+        <div class="nm">Sibusiso Gumbo</div>
+        <div class="sb">+263 71 553 2200 · 9 pts</div>
+      </div>
+      <span class="v">09:48</span>
+    </div>
+    <div class="cust-row">
+      <span class="av">FN</span>
+      <div>
+        <div class="nm">Fadzai Nyathi</div>
+        <div class="sb">+263 78 117 8801 · 312 pts</div>
+      </div>
+      <span class="v">09:12</span>
+    </div>
+    <div class="cust-row">
+      <span class="av">+</span>
+      <div>
+        <div class="nm" style="color: var(--brand-strong);">Add new customer</div>
+        <div class="sb">Walk-in not yet on file</div>
+      </div>
+      <span data-icon="plus" data-icon-size="14" style="color: var(--brand);"></span>
+    </div>
+  </div>
+</aside>
+
+<!-- Right: profile -->
+<main class="cust-main">
+  <header class="cust-top">
+    <h1>Customer profile</h1>
+    <span class="pill">Loyalty · Gold tier</span>
+    <button class="btn btn-quiet"><span data-icon="edit" data-icon-size="14"></span> Edit</button>
+  </header>
+
+  <!-- Profile hero -->
+  <div class="profile-hero">
+    <div class="pa">
+      <span class="big-av">JM</span>
+      <div>
+        <div class="nm">Joyce Mukamba</div>
+        <div class="sb">+263 77 482 0011 · joyce.m@mukamba-group.co.zw</div>
+        <div class="sb">Member since Aug 2024 · Park Centre · Loyalty #LY-30412</div>
+      </div>
+    </div>
+    <div class="credit">
+      <div class="lbl">Store credit</div>
+      <div class="v">$ 24.80</div>
+      <div class="ds">From refund R-18904 · expires Dec 2026</div>
+    </div>
   </div>
 
-  <section class="pos-panel">
-    <input id="hist-search" type="search" class="pos-search" placeholder="Search receipt ID, cashier or method…" aria-label="Search history" />
-    <div id="hist-list" class="pos-list" style="margin-top:14px;"></div>
-  </section>
+  <div class="cust-body">
+    <!-- Loyalty + tier -->
+    <div class="panel">
+      <div class="panel-h"><h2>Loyalty</h2><span class="ds">Mukamba Group rewards</span></div>
+      <div class="loyalty-grid">
+        <div class="cell"><div class="lbl">Points balance</div><div class="v">138</div><div class="sb">≈ $ 13.80 redeemable</div></div>
+        <div class="cell"><div class="lbl">Lifetime spend</div><div class="v">$ 1,486</div><div class="sb">Over 47 visits</div></div>
+        <div class="cell"><div class="lbl">Avg basket</div><div class="v">$ 31.60</div><div class="sb">Last 8 weeks</div></div>
+        <div class="cell"><div class="lbl">Tier</div><div class="v" style="font-size: 16px; margin-top: 12px;">Gold</div><div class="sb">68% to Platinum</div></div>
+      </div>
+      <div class="tier-bar">
+        <div class="tier-line"><span>Gold · 138 pts</span><span><strong>62 pts</strong> to Platinum</span></div>
+        <div class="tier-track"><div class="tier-fill"></div></div>
+      </div>
+    </div>
+
+    <!-- Last 5 orders -->
+    <div class="panel">
+      <div class="panel-h"><h2>Recent orders</h2><span class="ds">Last 5 · all branches</span></div>
+      <div class="order-row">
+        <div>
+          <div class="nm">Receipt #R-19218</div>
+          <div class="sb">6 items · Cash · Park Centre</div>
+        </div>
+        <div class="dt">Today<br/>11:42</div>
+        <div class="v">$ 47.30</div>
+      </div>
+      <div class="order-row">
+        <div>
+          <div class="nm">Receipt #R-19022</div>
+          <div class="sb">3 items · EcoCash · Park Centre</div>
+        </div>
+        <div class="dt">Tue<br/>14 May</div>
+        <div class="v">$ 18.40</div>
+      </div>
+      <div class="order-row">
+        <div>
+          <div class="nm">Receipt #R-18904</div>
+          <div class="sb">Refund of R-18891 · store credit</div>
+        </div>
+        <div class="dt">Mon<br/>13 May</div>
+        <div class="v" style="color: var(--tone-danger);">– $ 24.80</div>
+      </div>
+      <div class="order-row">
+        <div>
+          <div class="nm">Receipt #R-18742</div>
+          <div class="sb">11 items · Card · Avondale</div>
+        </div>
+        <div class="dt">Sat<br/>11 May</div>
+        <div class="v">$ 84.20</div>
+      </div>
+      <div class="order-row">
+        <div>
+          <div class="nm">Receipt #R-18519</div>
+          <div class="sb">4 items · Cash · Park Centre</div>
+        </div>
+        <div class="dt">Wed<br/>08 May</div>
+        <div class="v">$ 22.10</div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="actions-row">
+    <button class="btn btn-quiet"><span data-icon="phone" data-icon-size="14"></span> Call</button>
+    <button class="btn btn-quiet"><span data-icon="mail" data-icon-size="14"></span> Receipt by email</button>
+    <div class="spacer"></div>
+    <button class="btn btn-secondary">View all orders</button>
+    <a class="btn btn-primary" href="sale.html">Start sale for Joyce <span data-icon="arrow" data-icon-size="14"></span></a>
+  </footer>
 </main>
 
-<script type="module">
-import POS from './app.js';
+</div>
+</div>
 
-const search = document.getElementById('hist-search');
-const list = document.getElementById('hist-list');
-const meta = document.getElementById('meta');
-const shiftMeta = document.getElementById('shift-meta');
-const s = POS.getCurrentShift();
-shiftMeta.innerHTML = `${s.cashier} · ${s.till} · Shift <strong>${s.id}</strong>`;
-
-function render() {
-  const q = (search.value || '').trim().toLowerCase();
-  const all = POS.getSales().filter((s) => !q
-    || s.id.toLowerCase().includes(q)
-    || s.cashier.toLowerCase().includes(q)
-    || s.payment.method.toLowerCase().includes(q));
-  meta.textContent = `${all.length} sale${all.length === 1 ? '' : 's'} stored.`;
-  if (!all.length) {
-    list.innerHTML = `<div class="pos-empty">No receipts yet. Make a sale on the Sale tab.</div>`;
-    return;
-  }
-  list.innerHTML = all.map((s) => {
-    const dt = new Date(s.at).toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' });
-    return `
-      <div class="pos-list-row" data-id="${POS.esc(s.id)}" tabindex="0">
-        <div>
-          <div class="nm">${POS.esc(s.id)} ${s.refunded ? '<span class="badge refunded">Refunded</span>' : ''}</div>
-          <div class="sb">${dt} · ${s.lines.length} item${s.lines.length === 1 ? '' : 's'} · ${POS.labelMethod(s.payment.method)} · ${POS.esc(s.cashier)}</div>
-        </div>
-        <div class="v">${POS.moneyPlain(s.totals.total)}</div>
-      </div>
-    `;
-  }).join('');
-  list.querySelectorAll('[data-id]').forEach((r) => {
-    const open = () => {
-      const sale = POS.getSales().find((s) => s.id === r.dataset.id);
-      if (!sale) return;
-      POS.openModal(`
-        <div class="pos-modal-head"><h2>Receipt ${POS.esc(sale.id)}</h2><button class="pos-modal-close" data-close>×</button></div>
-        <div class="pos-modal-body pos-receipt-body">${POS.renderReceipt(sale)}</div>
-        <div class="pos-modal-foot">
-          <button class="pos-btn pos-btn-quiet" data-close>Close</button>
-        </div>
-      `);
-    };
-    r.addEventListener('click', open);
-    r.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
-  });
-}
-search.addEventListener('input', render);
-render();
-</script>
 </body>
 </html>

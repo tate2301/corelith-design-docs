@@ -1,96 +1,175 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<title>Void cart · POS · Corelith</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="utf-8" /><title>Void · POS portal · Huchu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <link rel="stylesheet" href="../../tokens.css" />
 <link rel="stylesheet" href="../../components.css" />
-<link rel="stylesheet" href="app.css" />
+<link rel="stylesheet" href="../../portal-shell.css" />
+<script src="../../icons.js" defer></script>
+<script src="../../device-scale.js" defer></script>
+<style>
+  body { background: var(--gray-100); margin: 0; padding: 24px; min-height: 100vh; display: grid; place-items: center; }
+  .device { width: 390px; height: 844px; border-radius: 48px; background: #0F1115; padding: 12px; box-shadow: 0 30px 60px -20px rgba(22,24,29,0.25), 0 0 0 1px rgba(22,24,29,0.08); position: relative; }
+  .device::before { content: ""; position: absolute; top: 18px; left: 50%; transform: translateX(-50%); width: 110px; height: 30px; background: #0F1115; border-radius: 0 0 18px 18px; z-index: 20; }
+  .device .screen { width: 100%; height: 100%; border-radius: 36px; overflow: hidden; background: var(--canvas); position: relative; display: flex; flex-direction: column; }
+
+  .vline { display: grid; grid-template-columns: 28px 1fr auto; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border-subtle); align-items: center; }
+  .vline:last-child { border-bottom: 0; }
+  .vline.checked { background: var(--tone-danger-bg, #FEE2E2); }
+  .vline .tog { width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--border); background: var(--surface); display: grid; place-items: center; color: transparent; }
+  .vline.checked .tog { background: var(--tone-danger); border-color: var(--tone-danger); color: #fff; }
+  .vline .nm { font: 500 14px/1.3 var(--font-sans); color: var(--text-strong); }
+  .vline .sb { font: 12px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+  .vline.checked .nm { text-decoration: line-through; color: var(--text-muted); }
+  .vline .pr { font: 600 14px/1 var(--font-mono); color: var(--text-strong); font-variant-numeric: tabular-nums; }
+  .vline.checked .pr { color: var(--tone-danger); text-decoration: line-through; }
+
+  .reason-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 16px 12px; }
+  .reason-chip { padding: 9px 14px; border-radius: 9999px; background: var(--surface); border: 1px solid var(--border); font: 500 13px/1 var(--font-sans); color: var(--text-strong); }
+  .reason-chip.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+  .pin-stage { padding: 18px 16px 24px; }
+  .pin-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px 18px; text-align: center; }
+  .pin-lock { width: 56px; height: 56px; border-radius: 50%; background: var(--brand-soft); color: var(--brand-strong); display: inline-grid; place-items: center; }
+  .pin-h { font: 600 17px/1.3 var(--font-sans); color: var(--text-strong); margin-top: 12px; }
+  .pin-sb { font: 13px/1.5 var(--font-sans); color: var(--text-muted); margin-top: 4px; }
+  .pin-dots { display: flex; justify-content: center; gap: 14px; margin: 18px 0 4px; }
+  .pin-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--surface-muted); border: 1px solid var(--border); }
+  .pin-dot.filled { background: var(--brand); border-color: var(--brand); }
+
+  .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 8px 32px 0; }
+  .keypad .k { height: 50px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); font: 600 20px/1 var(--font-sans); color: var(--text-strong); display: grid; place-items: center; }
+
+  .impact { margin: 0 16px; padding: 12px 14px; background: var(--tone-warn-bg); border: 1px solid #FEDFB1; border-radius: 10px; display: flex; gap: 10px; align-items: flex-start; }
+  .impact .ic { color: var(--tone-warn); flex: none; margin-top: 1px; }
+  .impact .tx { font: 13px/1.4 var(--font-sans); color: var(--tone-warn); }
+  .impact .tx strong { font-weight: 600; }
+</style>
+<link rel="stylesheet" href="../../huchu-nav.css" />
+<script src="../../huchu-nav.js" defer></script>
 </head>
-<body class="pos-functional">
+<body data-portal-kit="pos" data-portal-screen="void" data-kit-nav="pos">
 
-<header class="pos-topbar">
-  <a class="brand" href="index.html"><span class="mark">C</span> Corelith POS</a>
-  <nav class="pos-tabs" style="border: none;">
-    <a href="sale.html">Sale</a>
-    <a href="item-search.html">Items</a>
-    <a href="refund.html">Refund</a>
-    <a href="void.html" class="active">Void</a>
-    <a href="cashup.html">Cash up</a>
-    <a href="z-report.html">Z-reports</a>
-  </nav>
-  <span class="shift" id="shift-meta"></span>
-</header>
+<div class="device device-phone">
+<div class="screen">
+<div class="ps-screen">
+  <div class="ps-statusbar"><span>9:41</span><span class="right"><span data-icon="signal"></span><span data-icon="wifi"></span><span data-icon="battery"></span></span></div>
 
-<main class="pos-app">
-  <div class="pos-app-head">
-    <h1>Void cart lines</h1>
-    <div class="pos-meta">Cancel items from the active cart. Manager approval required.</div>
+  <div class="ps-appbar">
+    <button class="nav-btn"><span data-icon="back" data-icon-size="20"></span></button>
+    <h1>Void items</h1>
+    <div class="right">
+      <button class="nav-btn"><span data-icon="info" data-icon-size="18"></span></button>
+    </div>
   </div>
 
-  <section class="pos-panel">
-    <div class="pos-panel-h">
-      <h2>Active cart</h2>
-      <span class="sb" id="cart-summary"></span>
-    </div>
-    <div id="cart-list" class="pos-cart"></div>
-    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:14px;">
-      <a href="sale.html" class="pos-btn pos-btn-quiet">Back to sale</a>
-      <button class="pos-btn pos-btn-danger" id="void-all" type="button">Void entire cart</button>
-    </div>
-  </section>
-</main>
-
-<script type="module">
-import POS from './app.js';
-
-const cartList = document.getElementById('cart-list');
-const summary = document.getElementById('cart-summary');
-const shiftMeta = document.getElementById('shift-meta');
-const s = POS.getCurrentShift();
-shiftMeta.innerHTML = `${s.cashier} · ${s.till} · Shift <strong>${s.id}</strong>`;
-
-function render() {
-  const cart = POS.getCart();
-  if (!cart.length) {
-    cartList.innerHTML = `<div class="pos-empty">The cart is empty. Nothing to void.</div>`;
-    summary.textContent = '';
-    return;
-  }
-  summary.textContent = `${cart.length} line${cart.length === 1 ? '' : 's'}`;
-  cartList.innerHTML = cart.map((l) => `
-    <div class="pos-cart-line" data-sku="${POS.esc(l.sku)}">
-      <div>
-        <div class="nm">${POS.esc(l.name)}</div>
-        <div class="sb">${l.qty} × $ ${l.price.toFixed(2)}</div>
+  <div class="ps-scroll">
+    <!-- Receipt header -->
+    <div style="padding: 12px 16px 8px;">
+      <div style="display: flex; align-items: baseline; justify-content: space-between;">
+        <div>
+          <div style="font: 600 16px/1.2 var(--font-sans); color: var(--text-strong);">Receipt #R-19281</div>
+          <div style="font: 12px/1.4 var(--font-sans); color: var(--text-muted); margin-top: 2px;">Open · Park Centre · Till 02</div>
+        </div>
+        <div style="font: 700 18px/1 var(--font-sans); color: var(--text-strong); font-variant-numeric: tabular-nums;">$ 17.21</div>
       </div>
-      <span class="price">$ ${(l.price * l.qty).toFixed(2)}</span>
-      <button class="pos-btn pos-btn-danger" data-act="void" type="button">Void line</button>
     </div>
-  `).join('');
-  cartList.querySelectorAll('[data-act="void"]').forEach((b) => {
-    b.addEventListener('click', async () => {
-      const sku = b.closest('.pos-cart-line').dataset.sku;
-      const ok = await POS.promptManagerPin();
-      if (!ok) return;
-      POS.removeFromCart(sku);
-      POS.toast('Line voided', 'success');
-      render();
-    });
-  });
-}
 
-document.getElementById('void-all').addEventListener('click', async () => {
-  if (!POS.getCart().length) return;
-  const ok = await POS.promptManagerPin();
-  if (!ok) return;
-  POS.clearCart();
-  POS.toast('Cart voided', 'success');
-  render();
-});
+    <!-- Line items with void toggles -->
+    <div style="margin: 6px 16px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: clip;">
+      <div class="vline checked">
+        <span class="tog"><span data-icon="check" data-icon-size="14"></span></span>
+        <div>
+          <div class="nm">Mazoe Orange Crush 2L</div>
+          <div class="sb">×2 · Beverages · #SKU-0421</div>
+        </div>
+        <span class="pr">$ 9.00</span>
+      </div>
+      <div class="vline">
+        <span class="tog"></span>
+        <div>
+          <div class="nm">Pro-bake bread loaf</div>
+          <div class="sb">×3 · Bakery · #SKU-0833</div>
+        </div>
+        <span class="pr">$ 4.50</span>
+      </div>
+      <div class="vline checked">
+        <span class="tog"><span data-icon="check" data-icon-size="14"></span></span>
+        <div>
+          <div class="nm">Cooking oil 750ml</div>
+          <div class="sb">×1 · Groceries · #SKU-1102</div>
+        </div>
+        <span class="pr">$ 3.20</span>
+      </div>
+      <div class="vline">
+        <span class="tog"></span>
+        <div>
+          <div class="nm">Tea bags (Tanganda)</div>
+          <div class="sb">×2 · Beverages · #SKU-0676</div>
+        </div>
+        <span class="pr">$ 4.40</span>
+      </div>
+    </div>
 
-render();
-</script>
+    <!-- Reason chips -->
+    <div style="padding: 0 16px 6px;">
+      <div class="psh" style="padding: 4px 0;">Void reason</div>
+    </div>
+    <div class="reason-chips">
+      <span class="reason-chip">Wrong item</span>
+      <span class="reason-chip active">Customer changed mind</span>
+      <span class="reason-chip">Damaged</span>
+      <span class="reason-chip">Other</span>
+    </div>
+
+    <!-- Impact callout -->
+    <div class="impact">
+      <span class="ic" data-icon="info" data-icon-size="16"></span>
+      <div class="tx"><strong>2 lines · $ 12.20</strong> will be voided. Supervisor PIN required to continue. Action logged to audit trail.</div>
+    </div>
+
+    <!-- Supervisor PIN -->
+    <div class="pin-stage">
+      <div class="pin-box">
+        <span class="pin-lock"><span data-icon="lock" data-icon-size="22"></span></span>
+        <div class="pin-h">Supervisor PIN</div>
+        <div class="pin-sb">Enter PIN for shift S-2841 to confirm void</div>
+        <div class="pin-dots">
+          <span class="pin-dot filled"></span>
+          <span class="pin-dot filled"></span>
+          <span class="pin-dot filled"></span>
+          <span class="pin-dot"></span>
+        </div>
+        <div class="keypad">
+          <button class="k">1</button><button class="k">2</button><button class="k">3</button>
+          <button class="k">4</button><button class="k">5</button><button class="k">6</button>
+          <button class="k">7</button><button class="k">8</button><button class="k">9</button>
+          <button class="k" style="background: transparent; border-color: transparent;"></button>
+          <button class="k">0</button>
+          <button class="k" style="background: transparent; border-color: transparent;"><span data-icon="back" data-icon-size="18"></span></button>
+        </div>
+      </div>
+    </div>
+
+    <div style="height: 8px;"></div>
+  </div>
+
+  <!-- Bottom action -->
+  <div class="ps-bottombar" style="gap: 10px;">
+    <button class="btn btn-secondary" style="height: 48px; flex: 0 0 110px;">Cancel</button>
+    <button class="btn btn-primary" style="flex: 1; height: 48px; font-size: 15px; background: var(--tone-danger); border-color: var(--tone-danger);">Void 2 lines · $ 12.20</button>
+  </div>
+
+  <div class="ps-tabbar">
+    <a class="ps-tab" href="sale.html"><span data-icon="receipt"></span>Sale</a>
+    <a class="ps-tab" href="#"><span data-icon="bag"></span>Items</a>
+    <a class="ps-tab active" href="#"><span data-icon="folderx"></span>Void</a>
+    <a class="ps-tab" href="#"><span data-icon="more"></span>More</a>
+  </div>
+</div>
+</div>
+</div>
+
 </body>
 </html>
