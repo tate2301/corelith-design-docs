@@ -306,7 +306,12 @@ export function useRole() {
     <div class="ck-step"><span class="n">03</span><h3>Build the in-component gate — hide, don't disable</h3></div>
     <p>If the user can't do something, the button isn't there. A disabled button is a tease — it advertises a feature the user can never use, and forces them to inspect it to find out why. The exception is when the user could realistically be promoted — then disable + tooltip.</p>
     <div class="ds-specimen"
-         data-code='function PriceOverrideButton({ saleId }: { saleId: string }) {
+         data-code='import { Button } from &#39;@corelithzw/react&#39;;
+
+const openOverride = (_saleId: string): void =&gt; {};
+const openRefund = (_saleId: string): void =&gt; {};
+
+function PriceOverrideButton({ saleId }: { saleId: string }) {
   const { can } = useRole();
   // Manager+ feature. Clerks never see the button.
   if (!can(&#39;sale.override_price&#39;)) return null;
@@ -347,8 +352,10 @@ function RefundButton({ saleId }: { saleId: string }) {
     <!-- Step 4 -->
     <div class="ck-step"><span class="n">04</span><h3>Build the route-level gate — fall back to "ask Tendai"</h3></div>
     <p>Wrap the page in <code>RequireRole</code>. When the check fails, render a friendly empty state that names the role required and the on-shift manager. Never a 404; never a blank screen; never the same page with everything disabled.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { EmptyState, Stack, Button } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { EmptyState, Button } from &#39;@corelithzw/react&#39;;
+
+declare function openHandoffRequest(userId: string): void;
 
 export function RequireRole({
   permission,
@@ -368,18 +375,17 @@ export function RequireRole({
       title=&quot;Manager only&quot;
       description={
         managerOnShift
-          ? `${managerOnShift.name} is on shift and can open this for you.`
+          ? `${managerOnShift.name} is on shift and can open this for you.${identity ? ` Signed in as ${identity.name}.` : &#39;&#39;}`
           : `Ask a manager to open this for you.`
       }
-      cta={managerOnShift &amp;&amp; (
+      action={managerOnShift ? (
         &lt;Button
           variant=&quot;primary&quot;
           onClick={() =&gt; openHandoffRequest(managerOnShift.userId)}
         &gt;
           Ask {managerOnShift.name.split(&#39; &#39;)[0]} to open this
         &lt;/Button&gt;
-      )}
-      meta={identity &amp;&amp; `Signed in as ${identity.name}`}
+      ) : null}
     /&gt;
   );
 }'>
@@ -402,9 +408,9 @@ export function RequireRole({
   <section id="final">
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The whole identity layer, assembled. Provider + hook + route gate + in-component gates + a sample router setup.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
-         data-code='import { createContext, useContext } from &#39;@corelithzw/react&#39;;
-import { EmptyState, Stack, Button } from &#39;@corelithzw/react&#39;;
+    <div class="ds-specimen"
+         data-code='import { createContext, useContext, type ReactNode } from &#39;react&#39;;
+import { EmptyState, Button } from &#39;@corelithzw/react&#39;;
 
 // ── Types &amp; data (Step 1) ──────────────────────────────────────
 export type Permission =
@@ -431,7 +437,7 @@ export type Identity = {
 const IdentityCtx = createContext&lt;Identity | null&gt;(null);
 
 export function IdentityProvider({ identity, children }: {
-  identity: Identity | null; children: React.ReactNode;
+  identity: Identity | null; children: ReactNode;
 }) {
   return &lt;IdentityCtx.Provider value={identity}&gt;{children}&lt;/IdentityCtx.Provider&gt;;
 }
@@ -444,13 +450,22 @@ export function useRole() {
   return { identity: id, role, can: (p: Permission) =&gt; grants.has(p) };
 }
 
+// Stubs for the surrounding app — replaced by your router + handlers in real code.
+const askManager = (_userId: string): void =&gt; {};
+const getOnShiftManager = (): { name: string; userId: string } | undefined =&gt; undefined;
+declare const Routes: (p: { children?: ReactNode }) =&gt; JSX.Element;
+declare const Route: (p: { path: string; element: ReactNode }) =&gt; JSX.Element;
+declare const SalePage: () =&gt; JSX.Element;
+declare const PayrollPage: () =&gt; JSX.Element;
+declare const TeamSettingsPage: () =&gt; JSX.Element;
+
 // ── Route gate (Step 4) ────────────────────────────────────────
 export function RequireRole({
   permission, managerOnShift, children,
 }: {
   permission: Permission;
   managerOnShift?: { name: string; userId: string };
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const { can, identity } = useRole();
   if (can(permission)) return &lt;&gt;{children}&lt;/&gt;;
@@ -461,15 +476,14 @@ export function RequireRole({
       title=&quot;Manager only&quot;
       description={
         managerOnShift
-          ? `${managerOnShift.name} is on shift and can open this for you.`
+          ? `${managerOnShift.name} is on shift and can open this for you.${identity ? ` Signed in as ${identity.name}.` : &#39;&#39;}`
           : &#39;Ask a manager to open this for you.&#39;
       }
-      cta={managerOnShift &amp;&amp; (
+      action={managerOnShift ? (
         &lt;Button variant=&quot;primary&quot; onClick={() =&gt; askManager(managerOnShift.userId)}&gt;
           Ask {managerOnShift.name.split(&#39; &#39;)[0]} to open this
         &lt;/Button&gt;
-      )}
-      meta={identity &amp;&amp; `Signed in as ${identity.name}`}
+      ) : null}
     /&gt;
   );
 }
