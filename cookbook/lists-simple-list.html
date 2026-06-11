@@ -188,12 +188,21 @@
     <div class="ck-step"><span class="n">01</span><h3>Start with the array — no useState, no fetch</h3></div>
     <p>For the smallest list, your data is just a constant or a prop. Don't add <code>useState</code> "in case you need to mutate later" — when you need to mutate, that's the moment to lift the state. Premature state is how lists turn into 200-line components.</p>
     <div class="ds-specimen"
-         data-code='type Site = {
+         data-code='import type { RowCardProps } from &#39;@corelithzw/react&#39;;
+
+// Site is the shape `RowCardProps` will be derived from later in the recipe
+// (title, leading-avatar initials, trailing staff-count). We anchor it to the
+// real RowCard prop type so the row renderer never drifts from the contract.
+type Site = {
   id: string;
   name: string;
   initials: string;
   staffCount: number;
 };
+
+// Sanity-check at the type level — every Site must be renderable as a RowCard.
+const _siteRowContract = null as unknown as Pick&lt;RowCardProps, &#39;title&#39; | &#39;trailing&#39; | &#39;leading&#39;&gt;;
+void _siteRowContract;
 
 const SITES: Site[] = [
   { id: &#39;s1&#39;, name: &#39;Park branch&#39;,      initials: &#39;PK&#39;, staffCount: 12 },

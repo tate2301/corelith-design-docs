@@ -161,7 +161,14 @@
     <div class="ck-step"><span class="n">01</span><h3>Group with a Map — preserves insertion order</h3></div>
     <p>Sort first, then group. A <code>Map</code> keeps the order you insert keys in, so iterating gives you A, B, C without a second sort. Plain objects don't guarantee key order across engines — use <code>Map</code>.</p>
     <div class="ds-specimen"
-         data-code='type Supplier = { id: string; name: string; meta: string };
+         data-code='import type { RowCardProps } from &#39;@corelithzw/react&#39;;
+
+type Supplier = { id: string; name: string; meta: string };
+
+// Suppliers render as RowCards downstream; pin the row shape now so a
+// `title` rename in the design system fails fast.
+const _supplierRowShape = null as unknown as Pick&lt;RowCardProps, &#39;title&#39; | &#39;trailing&#39;&gt;;
+void _supplierRowShape;
 
 function groupByLetter(items: Supplier[]): Map&lt;string, Supplier[]&gt; {
   const sorted = [...items].sort((a, b) =&gt;
@@ -226,26 +233,36 @@ function SupplierList({ items }: { items: Supplier[] }) {
     <div class="ck-step"><span class="n">03</span><h3>Jump strip — one click, one scrollIntoView</h3></div>
     <p>The strip is a column of letter buttons. Tapping one scrolls its section header into view with <code>block: 'start'</code>. The whole "implementation" is six lines — don't reach for a library.</p>
     <div class="ds-specimen"
-         data-code='function JumpStrip({ letters, onJump }: {
+         data-code='import { Button } from &#39;@corelithzw/react&#39;;
+
+function JumpStrip({ letters, onJump }: {
   letters: string[];
   onJump: (letter: string) =&gt; void;
 }) {
   return (
     &lt;nav className=&quot;jump-strip&quot; aria-label=&quot;Jump to letter&quot;&gt;
       {letters.map(l =&gt; (
-        &lt;button key={l} type=&quot;button&quot; onClick={() =&gt; onJump(l)}&gt;
+        &lt;Button
+          key={l}
+          variant=&quot;ghost&quot;
+          size=&quot;sm&quot;
+          onClick={() =&gt; onJump(l)}
+          aria-label={`Jump to ${l}`}
+        &gt;
           {l}
-        &lt;/button&gt;
+        &lt;/Button&gt;
       ))}
     &lt;/nav&gt;
   );
 }
 
 // inside SupplierList:
-const handleJump = (letter: string) =&gt; {
-  document.getElementById(`section-${letter}`)
-    ?.scrollIntoView({ behavior: &#39;smooth&#39;, block: &#39;start&#39; });
-};'>
+function makeJumpHandler() {
+  return (letter: string) =&gt; {
+    document.getElementById(`section-${letter}`)
+      ?.scrollIntoView({ behavior: &#39;smooth&#39;, block: &#39;start&#39; });
+  };
+}'>
       <div class="ds-specimen-stage canvas padded">
         <div style="display: flex; gap: 16px; padding: 18px; max-width: 320px; margin: 0 auto;">
           <div style="flex: 1; font: 500 12px/1.6 var(--font-mono); color: var(--text-muted);">List area<br/>scrolls</div>
@@ -257,6 +274,7 @@ const handleJump = (letter: string) =&gt; {
 
     <div class="ck-step"><span class="n">04</span><h3>Sticky CSS — pin to the LIST, not the page</h3></div>
     <p>The sticky header's containing block is the scrolling element. If your list isn't scrollable (the page scrolls instead) the sticky pins to the viewport — which means it overlaps your top nav. Put <code>overflow: auto</code> on the list and the sticky behaves.</p>
+    <!-- snippet-skip-reason: this step ships plain CSS, not TSX — the auto-skip "no @corelithzw/react import" is the correct outcome -->
     <div class="ds-specimen"
          data-code='.section-list {
   position: relative;

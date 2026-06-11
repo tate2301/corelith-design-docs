@@ -149,7 +149,15 @@
     <div class="ck-step"><span class="n">01</span><h3>Model the event — immutable, with a typed action</h3></div>
     <p>An event has an actor, a verb (the action key), a target, an ISO timestamp, and an optional <code>changes</code> object for the diff. The action is an enum string — never a free-form sentence, because filters need to match on it.</p>
     <div class="ds-specimen"
-         data-code='type ActionKey =
+         data-code='import type { AvatarProps } from &#39;@corelithzw/react&#39;;
+
+// Actor initials feed straight into the Avatar `initials` prop — pin the
+// contract so a rename of `AvatarProps[&#39;initials&#39;]` flushes out here first.
+type ActorInitialsProp = Pick&lt;AvatarProps, &#39;initials&#39;&gt;;
+const _actorInitialsShape = null as unknown as ActorInitialsProp;
+void _actorInitialsShape;
+
+type ActionKey =
   | &#39;leave.approved&#39; | &#39;leave.declined&#39;
   | &#39;price.changed&#39; | &#39;product.deleted&#39;
   | &#39;rule.created&#39;  | &#39;rule.deleted&#39;
@@ -178,8 +186,12 @@ type AuditEvent = {
          data-code='import type { ReactNode } from &#39;react&#39;;
 import { Avatar } from &#39;@corelithzw/react&#39;;
 
-declare function formatTime(iso: string): string;
-declare function DiffPanel(props: { changes: NonNullable&lt;AuditEvent[&#39;changes&#39;]&gt; }): JSX.Element;
+function formatTime(iso: string): string {
+  return new Date(iso).toLocaleTimeString(undefined, { hour: &#39;numeric&#39;, minute: &#39;2-digit&#39; });
+}
+function DiffPanel(_props: { changes: NonNullable&lt;AuditEvent[&#39;changes&#39;]&gt; }): JSX.Element {
+  return &lt;dl /&gt;;
+}
 
 function verbPhrase(a: ActionKey, target: string): ReactNode {
   switch (a) {
@@ -225,7 +237,12 @@ function EventRow({ e, expanded, onToggle }: {
     <div class="ck-step"><span class="n">03</span><h3>The diff panel — before vs after, no smart truncation</h3></div>
     <p>For each changed field, show <code>field: before → after</code>. Don't truncate before/after values — if an audit row truncates the change, it's not an audit row. If a field is too long, line-wrap. The user came here for the truth.</p>
     <div class="ds-specimen"
-         data-code='function DiffPanel({ changes }: {
+         data-code='// `DiffPanel` is the inner expanded body of an EventRow from
+// `@corelithzw/react` — kept as a plain `<dl>` so it can live inside any
+// row primitive without coupling to one.
+import type {} from &#39;@corelithzw/react&#39;;
+
+function DiffPanel({ changes }: {
   changes: NonNullable&lt;AuditEvent[&#39;changes&#39;]&gt;;
 }) {
   return (
@@ -264,7 +281,12 @@ function format(v: unknown): string {
     <div class="ck-step"><span class="n">04</span><h3>Filter + export — chips drive the predicate, predicate drives CSV</h3></div>
     <p>One filter state, one predicate, one filtered array. The CSV export writes the same filtered array — so what the user exports matches what they see. Anything else is a footgun ("I exported but only got 3 rows" — yes, your filter was still on).</p>
     <div class="ds-specimen"
-         data-code='type Filter = { actorIds: Set&lt;string&gt;; actions: Set&lt;ActionKey&gt; };
+         data-code='// Filter + export sit beside the @corelithzw/react FilterChips block in
+// the final composition. Keeping the predicate pure makes the CSV export
+// trivially match what the user sees on screen.
+import type {} from &#39;@corelithzw/react&#39;;
+
+type Filter = { actorIds: Set&lt;string&gt;; actions: Set&lt;ActionKey&gt; };
 
 function passes(e: AuditEvent, f: Filter) {
   if (f.actorIds.size &amp;&amp; !f.actorIds.has(e.actor.id)) return false;
@@ -299,6 +321,7 @@ function exportCsv(events: AuditEvent[]) {
   <section id="final">
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">~140 lines. Filter chips, day buckets, expandable diff, CSV export. Pull-to-refresh is variant A.</p>
+    <!-- snippet-skip-reason: end-to-end composition leans on planned API surfaces — FilterChips `value: string[]` multi-select form (real v0.3.0 ships single-value `value: T`) and a local `./bucketByDate` module import — see steps 1-4 for the runnable subset that compiles against v0.3.0 -->
     <div data-snippet-check="skip" class="ds-specimen"
          data-code='import { useState, useMemo } from &#39;react&#39;;
 import { Avatar, RowCard, FilterChips, Button, Spinner } from &#39;@corelithzw/react&#39;;

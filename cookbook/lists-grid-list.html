@@ -151,6 +151,7 @@
 
     <div class="ck-step"><span class="n">01</span><h3>Lay out the grid with CSS — not JS, not a library</h3></div>
     <p>A CSS grid template with <code>auto-fill</code> + <code>minmax</code> handles every breakpoint without a media query. The card's natural minimum width sets the column count. Save the media-query-juggling for layouts that genuinely can't be solved by <code>minmax</code>.</p>
+    <!-- snippet-skip-reason: this step is plain CSS, not @corelithzw/react TSX — the auto-skip "no @corelithzw/react import" is correct here -->
     <div class="ds-specimen"
          data-code='// Tailwind: grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4
 // Plain CSS:
@@ -213,20 +214,21 @@ function InventoryCard({ item, onOpen }: {
 
     <div class="ck-step"><span class="n">03</span><h3>Multi-select with a Set, not a boolean-per-item</h3></div>
     <p>Lift a <code>Set&lt;string&gt;</code> of selected ids. Don't add an <code>isSelected</code> field to each item — that pulls selection into your data model where it doesn't belong. A Set keeps the selection orthogonal to the array and gives you O(1) toggling.</p>
-    <!-- snippet-skip-reason: narrative cut — uses ellipsis for image/title/meta and calls an undefined archive() helper -->
     <div class="ds-specimen"
          data-code='import { useState } from &#39;react&#39;;
 import { Card, Checkbox, DataToolbar, Button } from &#39;@corelithzw/react&#39;;
 
-function GridList({ items, onOpen }: {
+function GridList({ items, onOpen, onArchive }: {
   items: Item[];
   onOpen: (id: string) =&gt; void;
+  onArchive: (ids: string[]) =&gt; void;
 }) {
   const [selected, setSelected] = useState&lt;Set&lt;string&gt;&gt;(new Set());
 
   const toggle = (id: string) =&gt; setSelected((prev) =&gt; {
     const next = new Set(prev);
-    next.has(id) ? next.delete(id) : next.add(id);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
     return next;
   });
 
@@ -235,7 +237,7 @@ function GridList({ items, onOpen }: {
       {selected.size &gt; 0 &amp;&amp; (
         &lt;DataToolbar&gt;
           &lt;span&gt;{selected.size} selected&lt;/span&gt;
-          &lt;Button onClick={() =&gt; archive(selected)}&gt;Archive&lt;/Button&gt;
+          &lt;Button onClick={() =&gt; onArchive([...selected])}&gt;Archive&lt;/Button&gt;
           &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; setSelected(new Set())}&gt;
             Clear
           &lt;/Button&gt;
@@ -253,7 +255,9 @@ function GridList({ items, onOpen }: {
               onChange={() =&gt; toggle(item.id)}
               aria-label={`Select ${item.title}`}
             /&gt;
-            {/* …image + title + meta… */}
+            &lt;img src={item.preview} alt=&quot;&quot; loading=&quot;lazy&quot; /&gt;
+            &lt;h3&gt;{item.title}&lt;/h3&gt;
+            &lt;p&gt;{item.meta}&lt;/p&gt;
           &lt;/Card&gt;
         ))}
       &lt;/div&gt;

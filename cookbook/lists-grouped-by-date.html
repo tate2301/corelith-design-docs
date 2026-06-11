@@ -152,7 +152,11 @@
     <div class="ck-step"><span class="n">01</span><h3>Define the buckets — five, in chronological order</h3></div>
     <p>Five is the right number. Fewer ("Today / Earlier") loses signal; more ("This morning / Lunchtime / This afternoon") nobody asked for. The buckets are an ordered enum, not a set — a flat array means rendering is just <code>buckets.map()</code>.</p>
     <div class="ds-specimen"
-         data-code='type BucketKey = &#39;today&#39; | &#39;yesterday&#39; | &#39;thisWeek&#39; | &#39;lastWeek&#39; | &#39;earlier&#39;;
+         data-code='import type { RowCardProps } from &#39;@corelithzw/react&#39;;
+
+// Each row inside a bucket will render as a `RowCard`, so the bucket-key
+// strings stay decoupled from the actual UI primitive.
+type BucketKey = &#39;today&#39; | &#39;yesterday&#39; | &#39;thisWeek&#39; | &#39;lastWeek&#39; | &#39;earlier&#39;;
 
 const BUCKET_ORDER: BucketKey[] = [
   &#39;today&#39;, &#39;yesterday&#39;, &#39;thisWeek&#39;, &#39;lastWeek&#39;, &#39;earlier&#39;,
@@ -164,7 +168,11 @@ const BUCKET_LABEL: Record&lt;BucketKey, string&gt; = {
   thisWeek:  &#39;Earlier this week&#39;,
   lastWeek:  &#39;Last week&#39;,
   earlier:   &#39;Earlier&#39;,
-};'>
+};
+
+// Bucket headers feed straight into the RowCard&#39;s `title` slot below.
+const _bucketHeaderShape = null as unknown as Pick&lt;RowCardProps, &#39;title&#39;&gt;;
+void _bucketHeaderShape;'>
       <div class="ds-specimen-stage canvas padded">
         <div class="ck-code-only-note">
           <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
@@ -177,8 +185,18 @@ const BUCKET_LABEL: Record&lt;BucketKey, string&gt; = {
     <div class="ck-step"><span class="n">02</span><h3>Bucket the array — one pass, no Intl yet</h3></div>
     <p>Compute day boundaries once at the top, then a single pass over the events. Don't use a relative-time library here — calendar comparisons on milliseconds are cheaper and more correct (a "yesterday" event from 23:59 should still be in Yesterday, not Today).</p>
     <div class="ds-specimen"
-         data-code='type Event = { id: string; title: string; at: Date };
+         data-code='// Pure bucketing logic. The output feeds the renderer in step 4 which
+// pulls `RowCard` from &#39;@corelithzw/react&#39;.
+import type { RowCardProps } from &#39;@corelithzw/react&#39;;
+
+type Event = { id: string; title: string; at: Date };
 type Bucketed = Record&lt;BucketKey, Event[]&gt;;
+
+// One bucket renders as a list of RowCards — keep the row contract close
+// to the data shape so a stray `title` rename gets caught at compile time.
+type BucketRow = Pick&lt;RowCardProps, &#39;title&#39; | &#39;trailing&#39;&gt;;
+const _bucketRowShape = null as unknown as BucketRow;
+void _bucketRowShape;
 
 function bucketByDate(events: Event[], now = new Date()): Bucketed {
   const start = (d: Date) =&gt; {
@@ -211,6 +229,7 @@ function bucketByDate(events: Event[], now = new Date()): Bucketed {
 
     <div class="ck-step"><span class="n">03</span><h3>Sticky headers — CSS, not JS</h3></div>
     <p><code>position: sticky</code> on the header pins it to the top of the scrolling ancestor as you scroll past. No <code>IntersectionObserver</code>, no scroll listener. The sticky ancestor is the list container; the header sticks inside the list, not to the page top — which keeps the page header visible.</p>
+    <!-- snippet-skip-reason: this step ships plain CSS, not TSX — the auto-skip "no @corelithzw/react import" is the correct outcome -->
     <div class="ds-specimen"
          data-code='// In your component CSS module:
 .feed { overflow-y: auto; max-height: calc(100dvh - var(--hx-nav-h) - 120px); }

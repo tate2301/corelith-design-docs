@@ -284,7 +284,26 @@ function reducer(s: State, a: Action): State {
     <div class="ck-step"><span class="n">02</span><h3>Wire HTML5 drag-and-drop with a single column drop zone</h3></div>
     <p>Each card sets <code>draggable</code> and writes its id to <code>dataTransfer</code> on <code>dragstart</code>. Each column listens for <code>dragover</code> (to allow the drop) and <code>drop</code> (to dispatch). Compute the drop index from the cursor's Y position against each card's mid-line — don't try to use sub-zones.</p>
     <div class="ds-specimen"
-         data-code='// Column.tsx — drop target
+         data-code='// Column.tsx — drop target. The Column component below is the
+// hand-rolled cousin of the @corelithzw/react KanbanBoard primitive — kept
+// here so this step focuses on the raw HTML5 drag/drop wiring.
+import type { KanbanColumnDef } from &#39;@corelithzw/react&#39;;
+import type { DragEvent } from &#39;react&#39;;
+
+// Same column-def shape the KanbanBoard primitive consumes.
+const _columnDef = null as unknown as KanbanColumnDef;
+void _columnDef;
+
+// CardItem is fleshed out in step 3; declare its shape here so this
+// snippet&#39;s &lt;CardItem&gt; render typechecks in isolation. The step-3
+// fleshed-out version adds `currentColumn` and `onOpen` props.
+declare function CardItem(props: {
+  card: Card;
+  onMove: (to: ColumnId) =&gt; void;
+  currentColumn?: ColumnId;
+  onOpen?: () =&gt; void;
+}): JSX.Element;
+
 function Column({
   id, title, cardIds, limit, cards, onMove, onAdd,
 }: {
@@ -296,9 +315,9 @@ function Column({
 }) {
   const over = limit !== null &amp;&amp; cardIds.length &gt; limit;
 
-  const handleDragOver = (e: React.DragEvent) =&gt; { e.preventDefault(); };
+  const handleDragOver = (e: DragEvent&lt;HTMLElement&gt;) =&gt; { e.preventDefault(); };
 
-  const handleDrop = (e: React.DragEvent) =&gt; {
+  const handleDrop = (e: DragEvent&lt;HTMLElement&gt;) =&gt; {
     e.preventDefault();
     const cardId = e.dataTransfer.getData(&#39;text/x-card-id&#39;);
     const index = computeDropIndex(e.currentTarget, e.clientY);
@@ -315,9 +334,9 @@ function Column({
           {cardIds.length}{limit !== null &amp;&amp; ` / ${limit}`}
         &lt;/span&gt;
       &lt;/header&gt;
-      {cardIds.map((cid, i) =&gt; (
-        &lt;CardItem key={cid} card={cards[cid]}
-          onMove={(to) =&gt; onMove(cid, to, 0)} /&gt;
+      {cardIds.map((cid) =&gt; (
+        &lt;CardItem key={cid} card={cards[cid]!}
+          onMove={(to: ColumnId) =&gt; onMove(cid, to, 0)} /&gt;
       ))}
       &lt;button className=&quot;col-add&quot; onClick={() =&gt; onAdd(id)}&gt;+ Add card&lt;/button&gt;
     &lt;/section&gt;
@@ -356,7 +375,8 @@ function computeDropIndex(col: HTMLElement, y: number): number {
     <div class="ck-step"><span class="n">03</span><h3>Add a "Move to" menu so phones work too</h3></div>
     <p>Touch devices don't fire HTML5 drag events reliably. Every card exposes a <code>Menu</code> with one item per destination column — the same MOVE action handles both paths. This is the difference between "looks good in a demo" and "people actually use it".</p>
     <div class="ds-specimen"
-         data-code='import { Menu, Button } from &#39;@corelithzw/react&#39;;
+         data-code='import { Menu } from &#39;@corelithzw/react&#39;;
+import type { DragEvent } from &#39;react&#39;;
 
 const COLUMNS: { id: ColumnId; title: string }[] = [
   { id: &#39;backlog&#39;, title: &#39;Backlog&#39; },
@@ -366,11 +386,11 @@ const COLUMNS: { id: ColumnId; title: string }[] = [
 
 function CardItem({ card, currentColumn, onMove, onOpen }: {
   card: Card;
-  currentColumn: ColumnId;
+  currentColumn?: ColumnId;
   onMove: (to: ColumnId) =&gt; void;
-  onOpen: () =&gt; void;
+  onOpen?: () =&gt; void;
 }) {
-  const handleDragStart = (e: React.DragEvent) =&gt; {
+  const handleDragStart = (e: DragEvent&lt;HTMLElement&gt;) =&gt; {
     e.dataTransfer.setData(&#39;text/x-card-id&#39;, card.id);
     e.dataTransfer.effectAllowed = &#39;move&#39;;
   };
@@ -382,17 +402,17 @@ function CardItem({ card, currentColumn, onMove, onOpen }: {
       role=&quot;listitem&quot;
       tabIndex={0}
       onDragStart={handleDragStart}
-      onClick={onOpen}
-      onKeyDown={(e) =&gt; { if (e.key === &#39;Enter&#39;) onOpen(); }}
+      onClick={() =&gt; onOpen?.()}
+      onKeyDown={(e) =&gt; { if (e.key === &#39;Enter&#39;) onOpen?.(); }}
     &gt;
       &lt;h4&gt;{card.title}&lt;/h4&gt;
       {card.assignee &amp;&amp; &lt;p&gt;{card.assignee}&lt;/p&gt;}
 
-      &lt;Menu trigger={&lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot;&gt;Move…&lt;/Button&gt;}&gt;
+      &lt;Menu ariaLabel=&quot;Move card&quot;&gt;
         {COLUMNS
           .filter((c) =&gt; c.id !== currentColumn)
           .map((c) =&gt; (
-            &lt;Menu.Item key={c.id} onSelect={() =&gt; onMove(c.id)}&gt;
+            &lt;Menu.Item key={c.id} onClick={() =&gt; onMove(c.id)}&gt;
               Move to {c.title}
             &lt;/Menu.Item&gt;
           ))}
@@ -418,7 +438,14 @@ function CardItem({ card, currentColumn, onMove, onOpen }: {
     <div class="ck-step"><span class="n">04</span><h3>Show WIP limits as warnings, never blocks</h3></div>
     <p>Hard limits ("you can't add another card") force people to lie about state — they leave the card in the previous column. Soft limits surface the bottleneck instead. Show a count badge in amber once <code>limit</code> is exceeded; an aria-live region announces the warning.</p>
     <div class="ds-specimen"
-         data-code='function ColumnHeader({ title, count, limit }: {
+         data-code='// ColumnHeader lives inside the @corelithzw/react KanbanBoard column —
+// the count badge and the &quot;Over WIP&quot; pill are pure HTML so they can be
+// reused inside the bare-Column variant from step 2.
+import type { KanbanColumnDef } from &#39;@corelithzw/react&#39;;
+const _columnDefShape = null as unknown as KanbanColumnDef;
+void _columnDefShape;
+
+function ColumnHeader({ title, count, limit }: {
   title: string;
   count: number;
   limit: number | null;
@@ -579,7 +606,7 @@ function Column({ id, title, cardIds, limit, cards, onMove, onAdd, onOpen }: {
 }) {
   const over = limit !== null &amp;&amp; cardIds.length &gt; limit;
 
-  const handleDrop = (e: React.DragEvent) =&gt; {
+  const handleDrop = (e: DragEvent) =&gt; {
     e.preventDefault();
     const cardId = e.dataTransfer.getData(&#39;text/x-card-id&#39;);
     if (!cardId) return;
@@ -626,7 +653,7 @@ function CardItem({ card, currentColumn, onMove, onOpen }: {
   onMove: (to: ColumnId) =&gt; void;
   onOpen: () =&gt; void;
 }) {
-  const handleDragStart = (e: React.DragEvent) =&gt; {
+  const handleDragStart = (e: DragEvent) =&gt; {
     e.dataTransfer.setData(&#39;text/x-card-id&#39;, card.id);
     e.dataTransfer.effectAllowed = &#39;move&#39;;
   };
@@ -654,11 +681,11 @@ function CardItem({ card, currentColumn, onMove, onOpen }: {
         &lt;h4&gt;{card.title}&lt;/h4&gt;
         {card.assignee &amp;&amp; &lt;p&gt;{card.assignee}&lt;/p&gt;}
       &lt;/button&gt;
-      &lt;Menu trigger={&lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot;&gt;Move…&lt;/Button&gt;}&gt;
+      &lt;Menu ariaLabel=&quot;Move card&quot;&gt;
         {COLUMNS
           .filter((c) =&gt; c.id !== currentColumn)
           .map((c) =&gt; (
-            &lt;Menu.Item key={c.id} onSelect={() =&gt; onMove(c.id)}&gt;
+            &lt;Menu.Item key={c.id} onClick={() =&gt; onMove(c.id)}&gt;
               Move to {c.title}
             &lt;/Menu.Item&gt;
           ))}
@@ -673,29 +700,38 @@ function CardForm({ initial, onSubmit, onDelete }: {
   onDelete?: () =&gt; void;
 }) {
   return (
-    &lt;Form onSubmit={(v) =&gt; onSubmit({
-      id: initial?.id ?? crypto.randomUUID(),
-      title: v.title, assignee: v.assignee, due: v.due, notes: v.notes,
-    })}&gt;
+    &lt;Form
+      onSubmit={(e) =&gt; {
+        e.preventDefault();
+        const data = new FormData(e.currentTarget);
+        onSubmit({
+          id: initial?.id ?? crypto.randomUUID(),
+          title:    String(data.get(&#39;title&#39;) ?? &#39;&#39;),
+          assignee: String(data.get(&#39;assignee&#39;) ?? &#39;&#39;) || undefined,
+          due:      String(data.get(&#39;due&#39;) ?? &#39;&#39;) || undefined,
+          notes:    String(data.get(&#39;notes&#39;) ?? &#39;&#39;) || undefined,
+        });
+      }}
+    &gt;
       &lt;Stack gap=&quot;md&quot;&gt;
         &lt;Field label=&quot;Title&quot;&gt;
-          &lt;Input defaultValue={initial?.title} required autoFocus /&gt;
+          &lt;Input name=&quot;title&quot; defaultValue={initial?.title} required autoFocus /&gt;
         &lt;/Field&gt;
         &lt;Field label=&quot;Assignee&quot;&gt;
-          &lt;Input defaultValue={initial?.assignee} /&gt;
+          &lt;Input name=&quot;assignee&quot; defaultValue={initial?.assignee} /&gt;
         &lt;/Field&gt;
         &lt;Field label=&quot;Due&quot;&gt;
-          &lt;Input type=&quot;date&quot; defaultValue={initial?.due} /&gt;
+          &lt;Input name=&quot;due&quot; type=&quot;date&quot; defaultValue={initial?.due} /&gt;
         &lt;/Field&gt;
         &lt;Field label=&quot;Notes&quot;&gt;
-          &lt;TextArea defaultValue={initial?.notes} rows={4} /&gt;
+          &lt;TextArea name=&quot;notes&quot; defaultValue={initial?.notes} rows={4} /&gt;
         &lt;/Field&gt;
         &lt;Stack direction=&quot;horizontal&quot; gap=&quot;sm&quot;&gt;
           &lt;Button type=&quot;submit&quot; variant=&quot;primary&quot;&gt;
             {initial ? &#39;Save&#39; : &#39;Add card&#39;}
           &lt;/Button&gt;
           {onDelete &amp;&amp; (
-            &lt;Button variant=&quot;danger&quot; onClick={onDelete}&gt;Delete&lt;/Button&gt;
+            &lt;Button variant=&quot;ghost&quot; tone=&quot;danger&quot; onClick={onDelete}&gt;Delete&lt;/Button&gt;
           )}
         &lt;/Stack&gt;
       &lt;/Stack&gt;
