@@ -391,9 +391,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
     <!-- Step 2 -->
     <div class="ck-step"><span class="n">02</span><h3>Compose the sidebar: brand, search, nav, tenant switcher, sign-out</h3></div>
     <p>The sidebar reads top-to-bottom in the same order on every Huchu app: brand → search → primary nav → spacer → tenant + user menu. Use <code>NavItem</code> with the route's <code>match</code> so the active state lights up automatically — no <code>useLocation</code> sprinkled across the tree. The tenant switcher and sign-out live in a single <code>DropdownMenu</code> anchored to the user avatar.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
+    <div class="ds-specimen"
          data-code='import {
-  AppShell, NavItem, NavGroup, Avatar, DropdownMenu,
+  AppShell, NavItem, NavGroup, Avatar, Menu,
   Input, Kbd,
 } from &#39;@corelithzw/react&#39;;
 
@@ -414,47 +414,44 @@ function Sidebar({
       &lt;Input
         placeholder=&quot;Search&quot;
         onFocus={onSearchFocus}
-        leadingIcon=&quot;search&quot;
+        leadingIcon={&lt;span aria-hidden=&quot;true&quot;&gt;⌕&lt;/span&gt;}
         trailingSlot={&lt;Kbd&gt;⌘ K&lt;/Kbd&gt;}
       /&gt;
 
       &lt;NavGroup label=&quot;Workspace&quot;&gt;
-        &lt;NavItem to=&quot;/&quot;          icon=&quot;dashboard&quot;&gt;Overview&lt;/NavItem&gt;
-        &lt;NavItem to=&quot;/receipts&quot;  icon=&quot;receipt&quot;   badge={3}&gt;Receipts&lt;/NavItem&gt;
-        &lt;NavItem to=&quot;/inventory&quot; icon=&quot;bag&quot;&gt;Inventory&lt;/NavItem&gt;
-        &lt;NavItem to=&quot;/staff&quot;     icon=&quot;user&quot;&gt;Staff&lt;/NavItem&gt;
-        &lt;NavItem to=&quot;/reports&quot;   icon=&quot;chart&quot;&gt;Reports&lt;/NavItem&gt;
+        &lt;NavItem to=&quot;/&quot;          icon=&quot;◐&quot;&gt;Overview&lt;/NavItem&gt;
+        &lt;NavItem to=&quot;/receipts&quot;  icon=&quot;▤&quot; badge={3}&gt;Receipts&lt;/NavItem&gt;
+        &lt;NavItem to=&quot;/inventory&quot; icon=&quot;▣&quot;&gt;Inventory&lt;/NavItem&gt;
+        &lt;NavItem to=&quot;/staff&quot;     icon=&quot;◉&quot;&gt;Staff&lt;/NavItem&gt;
+        &lt;NavItem to=&quot;/reports&quot;   icon=&quot;◰&quot;&gt;Reports&lt;/NavItem&gt;
       &lt;/NavGroup&gt;
 
       &lt;NavGroup label=&quot;Admin&quot;&gt;
-        &lt;NavItem to=&quot;/settings&quot;  icon=&quot;settings&quot;&gt;Settings&lt;/NavItem&gt;
+        &lt;NavItem to=&quot;/settings&quot;  icon=&quot;✱&quot;&gt;Settings&lt;/NavItem&gt;
       &lt;/NavGroup&gt;
 
-      &lt;AppShell.Sidebar.Footer&gt;
-        &lt;DropdownMenu
-          trigger={
-            &lt;button className=&quot;tenant-trigger&quot;&gt;
-              &lt;Avatar initials={user.initials} /&gt;
-              &lt;span&gt;{user.name}&lt;/span&gt;
-            &lt;/button&gt;
-          }
-        &gt;
-          &lt;DropdownMenu.Label&gt;Workspaces&lt;/DropdownMenu.Label&gt;
-          {tenants.map(t =&gt; (
-            &lt;DropdownMenu.Item
+      &lt;div className=&quot;sidebar-foot&quot;&gt;
+        &lt;button type=&quot;button&quot; className=&quot;tenant-trigger&quot;&gt;
+          &lt;Avatar initials={user.initials} name={user.name} /&gt;
+          &lt;span&gt;{user.name}&lt;/span&gt;
+        &lt;/button&gt;
+        &lt;Menu ariaLabel=&quot;Workspaces and account&quot;&gt;
+          &lt;Menu.Label&gt;Workspaces&lt;/Menu.Label&gt;
+          {tenants.map((t) =&gt; (
+            &lt;Menu.Item
               key={t.id}
-              onSelect={() =&gt; onSwitchTenant(t.id)}
-              checked={t.id === tenant.id}
+              onClick={() =&gt; onSwitchTenant(t.id)}
+              aria-checked={t.id === tenant.id}
             &gt;
               {t.name}
-            &lt;/DropdownMenu.Item&gt;
+            &lt;/Menu.Item&gt;
           ))}
-          &lt;DropdownMenu.Separator /&gt;
-          &lt;DropdownMenu.Item onSelect={onSignOut} tone=&quot;danger&quot;&gt;
+          &lt;Menu.Separator /&gt;
+          &lt;Menu.Item onClick={onSignOut} destructive&gt;
             Sign out
-          &lt;/DropdownMenu.Item&gt;
-        &lt;/DropdownMenu&gt;
-      &lt;/AppShell.Sidebar.Footer&gt;
+          &lt;/Menu.Item&gt;
+        &lt;/Menu&gt;
+      &lt;/div&gt;
     &lt;/&gt;
   );
 }'>
@@ -479,7 +476,7 @@ function Sidebar({
     <!-- Step 3 -->
     <div class="ck-step"><span class="n">03</span><h3>Compose the topbar: breadcrumb, bell, command palette trigger</h3></div>
     <p>The topbar is the one piece of chrome that knows what page you're on. Render a breadcrumb on the left (route-driven), a search-button on the right that opens the same command palette as Cmd+K, and a bell that shows unread notifications. Keep it under 56&nbsp;px tall — anything more eats content the operator came here to see.</p>
-    <div data-snippet-check="skip" class="ds-specimen"
+    <div class="ds-specimen"
          data-code='import { AppShell, Button, Badge } from &#39;@corelithzw/react&#39;;
 
 function Topbar({
@@ -494,30 +491,30 @@ function Topbar({
   onOpenNotifications: () =&gt; void;
 }) {
   return (
-    &lt;&gt;
-      &lt;AppShell.Topbar.Breadcrumbs&gt;
+    &lt;AppShell.TopBar&gt;
+      &lt;nav className=&quot;crumbs&quot; aria-label=&quot;Breadcrumb&quot;&gt;
         {crumbs.map((c, i) =&gt; (
           c.href
             ? &lt;a key={i} href={c.href}&gt;{c.label}&lt;/a&gt;
             : &lt;span key={i}&gt;{c.label}&lt;/span&gt;
         ))}
-      &lt;/AppShell.Topbar.Breadcrumbs&gt;
+      &lt;/nav&gt;
 
-      &lt;AppShell.Topbar.Actions&gt;
+      &lt;div className=&quot;topbar-actions&quot;&gt;
         &lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot; onClick={onCommand}&gt;
           Search &amp; jump
         &lt;/Button&gt;
         &lt;Button
           variant=&quot;ghost&quot;
           size=&quot;sm&quot;
-          icon=&quot;bell&quot;
+          icon={&lt;span aria-hidden=&quot;true&quot;&gt;🔔&lt;/span&gt;}
           aria-label={`Notifications (${unread} unread)`}
           onClick={onOpenNotifications}
         &gt;
-          {unread &gt; 0 &amp;&amp; &lt;Badge tone=&quot;danger&quot;&gt;{unread}&lt;/Badge&gt;}
+          {unread &gt; 0 ? &lt;Badge tone=&quot;danger&quot;&gt;{unread}&lt;/Badge&gt; : null}
         &lt;/Button&gt;
-      &lt;/AppShell.Topbar.Actions&gt;
-    &lt;/&gt;
+      &lt;/div&gt;
+    &lt;/AppShell.TopBar&gt;
   );
 }'>
       <div class="ds-specimen-stage canvas padded">
@@ -537,43 +534,44 @@ function Topbar({
     <div class="ck-step"><span class="n">04</span><h3>Wire the keyboard shortcuts: Cmd+K, Cmd+B, Esc</h3></div>
     <p>Three shortcuts cover 95% of operator nav: Cmd+K opens the command palette, Cmd+B toggles the sidebar, Esc closes whichever overlay is open. Bind them at the shell level with one <code>useEffect</code>; never re-bind in pages or you'll get drift the day someone forgets to unmount a listener.</p>
     <div class="ds-specimen"
-         data-code='import { useEffect, useState } from &#39;@corelithzw/react&#39;;
-import { CommandPalette } from &#39;@corelithzw/react&#39;;
+         data-code='import { useEffect, useState } from &#39;react&#39;;
+import { CommandPalette, type CommandItem } from &#39;@corelithzw/react&#39;;
 
-function useShortcuts({
-  onTogglePalette,
-  onToggleSidebar,
-  onEscape,
-}: {
-  onTogglePalette: () =&gt; void;
-  onToggleSidebar: () =&gt; void;
-  onEscape: () =&gt; void;
+export function useShortcuts(handlers: {
+  togglePalette: () =&gt; void;
+  toggleSidebar: () =&gt; void;
+  escape: () =&gt; void;
 }) {
   useEffect(() =&gt; {
     const onKey = (e: KeyboardEvent) =&gt; {
       const mod = e.metaKey || e.ctrlKey;
-      if (mod &amp;&amp; e.key.toLowerCase() === &#39;k&#39;) { e.preventDefault(); onTogglePalette(); }
-      else if (mod &amp;&amp; e.key.toLowerCase() === &#39;b&#39;) { e.preventDefault(); onToggleSidebar(); }
-      else if (e.key === &#39;Escape&#39;) onEscape();
+      if (mod &amp;&amp; e.key.toLowerCase() === &#39;k&#39;) { e.preventDefault(); handlers.togglePalette(); }
+      else if (mod &amp;&amp; e.key.toLowerCase() === &#39;b&#39;) { e.preventDefault(); handlers.toggleSidebar(); }
+      else if (e.key === &#39;Escape&#39;) handlers.escape();
     };
     window.addEventListener(&#39;keydown&#39;, onKey);
     return () =&gt; window.removeEventListener(&#39;keydown&#39;, onKey);
-  }, [onTogglePalette, onToggleSidebar, onEscape]);
+  }, [handlers]);
 }
 
-// usage inside &lt;Shell&gt;
-const [paletteOpen, setPaletteOpen] = useState(false);
-useShortcuts({
-  onTogglePalette: () =&gt; setPaletteOpen(o =&gt; !o),
-  onToggleSidebar: () =&gt; setCollapsed(c =&gt; !c),
-  onEscape:        () =&gt; setPaletteOpen(false),
-});
-
-&lt;CommandPalette
-  open={paletteOpen}
-  onClose={() =&gt; setPaletteOpen(false)}
-  groups={[/* …routes, recent items, actions */]}
-/&gt;'>
+// Usage inside the shell — paletteOpen drives the overlay.
+export function ShellShortcutsExample({ items }: { items: CommandItem[] }) {
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  useShortcuts({
+    togglePalette: () =&gt; setPaletteOpen((o) =&gt; !o),
+    toggleSidebar: () =&gt; setCollapsed((c) =&gt; !c),
+    escape:        () =&gt; setPaletteOpen(false),
+  });
+  void collapsed;
+  return (
+    &lt;CommandPalette
+      open={paletteOpen}
+      onClose={() =&gt; setPaletteOpen(false)}
+      items={items}
+    /&gt;
+  );
+}'>
       <div class="ds-specimen-stage canvas padded">
         <div style="display: grid; gap: 12px; padding: 24px; font: 500 12px/1.4 var(--font-sans); color: var(--text-muted); text-align: center;">
           <div style="display: inline-flex; gap: 6px; justify-content: center; align-items: center; font-family: var(--font-mono);">
@@ -593,10 +591,11 @@ useShortcuts({
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The whole <code>Shell</code> component, assembled. Sidebar slots, topbar slots, palette, shortcuts, persistence. Drop your route output into <code>&lt;Shell&gt;</code> and every page inherits the chrome.</p>
     <div class="ds-specimen"
-         data-code='import { useEffect, useState } from &#39;@corelithzw/react&#39;;
+         data-code='import { useEffect, useState, type ReactNode } from &#39;react&#39;;
 import {
-  AppShell, NavItem, NavGroup, Avatar, DropdownMenu,
+  AppShell, NavItem, NavGroup, Avatar, Menu,
   Input, Kbd, Button, Badge, CommandPalette,
+  type CommandItem,
 } from &#39;@corelithzw/react&#39;;
 
 // ── Hooks ──────────────────────────────────────────────────────
@@ -643,7 +642,7 @@ export function Shell({
   unread: number;
   onSwitchTenant: (id: string) =&gt; void;
   onSignOut: () =&gt; void;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const [collapsed, setCollapsed] = usePersistedFlag(&#39;shell.collapsed&#39;, false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -653,6 +652,15 @@ export function Shell({
     toggleSidebar: () =&gt; setCollapsed(c =&gt; !c),
     escape:        () =&gt; setPaletteOpen(false),
   });
+
+  const paletteItems: CommandItem[] = [
+    { id: &#39;home&#39;,       label: &#39;Overview&#39;,      group: &#39;Jump to&#39;, onSelect: () =&gt; { window.location.assign(&#39;/&#39;); } },
+    { id: &#39;receipts&#39;,   label: &#39;Receipts&#39;,      group: &#39;Jump to&#39;, onSelect: () =&gt; { window.location.assign(&#39;/receipts&#39;); } },
+    { id: &#39;inventory&#39;,  label: &#39;Inventory&#39;,     group: &#39;Jump to&#39;, onSelect: () =&gt; { window.location.assign(&#39;/inventory&#39;); } },
+    { id: &#39;staff&#39;,      label: &#39;Staff&#39;,         group: &#39;Jump to&#39;, onSelect: () =&gt; { window.location.assign(&#39;/staff&#39;); } },
+    { id: &#39;new-sale&#39;,   label: &#39;Start a sale&#39;,  group: &#39;Actions&#39;, shortcut: &lt;Kbd&gt;N&lt;/Kbd&gt; },
+    { id: &#39;close-till&#39;, label: &#39;Close till...&#39;, group: &#39;Actions&#39;, shortcut: &lt;Kbd&gt;X&lt;/Kbd&gt; },
+  ];
 
   return (
     &lt;AppShell collapsed={collapsed}&gt;
@@ -667,72 +675,69 @@ export function Shell({
         &lt;Input
           placeholder=&quot;Search&quot;
           onFocus={() =&gt; setPaletteOpen(true)}
-          leadingIcon=&quot;search&quot;
+          leadingIcon={&lt;span aria-hidden=&quot;true&quot;&gt;⌕&lt;/span&gt;}
           trailingSlot={&lt;Kbd&gt;⌘ K&lt;/Kbd&gt;}
         /&gt;
 
         &lt;NavGroup label=&quot;Workspace&quot;&gt;
-          &lt;NavItem to=&quot;/&quot;          icon=&quot;dashboard&quot;&gt;Overview&lt;/NavItem&gt;
-          &lt;NavItem to=&quot;/receipts&quot;  icon=&quot;receipt&quot;   badge={unread}&gt;Receipts&lt;/NavItem&gt;
-          &lt;NavItem to=&quot;/inventory&quot; icon=&quot;bag&quot;&gt;Inventory&lt;/NavItem&gt;
-          &lt;NavItem to=&quot;/staff&quot;     icon=&quot;user&quot;&gt;Staff&lt;/NavItem&gt;
-          &lt;NavItem to=&quot;/reports&quot;   icon=&quot;chart&quot;&gt;Reports&lt;/NavItem&gt;
+          &lt;NavItem to=&quot;/&quot;          icon=&quot;◐&quot;&gt;Overview&lt;/NavItem&gt;
+          &lt;NavItem to=&quot;/receipts&quot;  icon=&quot;▤&quot; badge={unread}&gt;Receipts&lt;/NavItem&gt;
+          &lt;NavItem to=&quot;/inventory&quot; icon=&quot;▣&quot;&gt;Inventory&lt;/NavItem&gt;
+          &lt;NavItem to=&quot;/staff&quot;     icon=&quot;◉&quot;&gt;Staff&lt;/NavItem&gt;
+          &lt;NavItem to=&quot;/reports&quot;   icon=&quot;◰&quot;&gt;Reports&lt;/NavItem&gt;
         &lt;/NavGroup&gt;
 
         &lt;NavGroup label=&quot;Admin&quot;&gt;
-          &lt;NavItem to=&quot;/settings&quot;  icon=&quot;settings&quot;&gt;Settings&lt;/NavItem&gt;
+          &lt;NavItem to=&quot;/settings&quot;  icon=&quot;✱&quot;&gt;Settings&lt;/NavItem&gt;
         &lt;/NavGroup&gt;
 
-        &lt;AppShell.Sidebar.Footer&gt;
-          &lt;DropdownMenu
-            trigger={
-              &lt;button className=&quot;tenant-trigger&quot;&gt;
-                &lt;Avatar initials={user.initials} /&gt;
-                &lt;span&gt;{user.name}&lt;/span&gt;
-              &lt;/button&gt;
-            }
-          &gt;
-            &lt;DropdownMenu.Label&gt;Workspaces&lt;/DropdownMenu.Label&gt;
-            {tenants.map(t =&gt; (
-              &lt;DropdownMenu.Item
+        &lt;div className=&quot;sidebar-foot&quot;&gt;
+          &lt;button type=&quot;button&quot; className=&quot;tenant-trigger&quot;&gt;
+            &lt;Avatar initials={user.initials} name={user.name} /&gt;
+            &lt;span&gt;{user.name}&lt;/span&gt;
+          &lt;/button&gt;
+          &lt;Menu ariaLabel=&quot;Workspaces and account&quot;&gt;
+            &lt;Menu.Label&gt;Workspaces&lt;/Menu.Label&gt;
+            {tenants.map((t) =&gt; (
+              &lt;Menu.Item
                 key={t.id}
-                onSelect={() =&gt; onSwitchTenant(t.id)}
-                checked={t.id === tenant.id}
+                onClick={() =&gt; onSwitchTenant(t.id)}
+                aria-checked={t.id === tenant.id}
               &gt;
                 {t.name}
-              &lt;/DropdownMenu.Item&gt;
+              &lt;/Menu.Item&gt;
             ))}
-            &lt;DropdownMenu.Separator /&gt;
-            &lt;DropdownMenu.Item onSelect={onSignOut} tone=&quot;danger&quot;&gt;
+            &lt;Menu.Separator /&gt;
+            &lt;Menu.Item onClick={onSignOut} destructive&gt;
               Sign out
-            &lt;/DropdownMenu.Item&gt;
-          &lt;/DropdownMenu&gt;
-        &lt;/AppShell.Sidebar.Footer&gt;
+            &lt;/Menu.Item&gt;
+          &lt;/Menu&gt;
+        &lt;/div&gt;
       &lt;/AppShell.Sidebar&gt;
 
       {/* ── Topbar ─────────────────────────────────────── */}
-      &lt;AppShell.Topbar&gt;
-        &lt;AppShell.Topbar.Breadcrumbs&gt;
+      &lt;AppShell.TopBar&gt;
+        &lt;nav className=&quot;crumbs&quot; aria-label=&quot;Breadcrumb&quot;&gt;
           {crumbs.map((c, i) =&gt; (
             c.href
               ? &lt;a key={i} href={c.href}&gt;{c.label}&lt;/a&gt;
               : &lt;span key={i}&gt;{c.label}&lt;/span&gt;
           ))}
-        &lt;/AppShell.Topbar.Breadcrumbs&gt;
-        &lt;AppShell.Topbar.Actions&gt;
+        &lt;/nav&gt;
+        &lt;div className=&quot;topbar-actions&quot;&gt;
           &lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot; onClick={() =&gt; setPaletteOpen(true)}&gt;
             Search &amp; jump
           &lt;/Button&gt;
           &lt;Button
             variant=&quot;ghost&quot;
             size=&quot;sm&quot;
-            icon=&quot;bell&quot;
+            icon={&lt;span aria-hidden=&quot;true&quot;&gt;🔔&lt;/span&gt;}
             aria-label={`Notifications (${unread} unread)`}
           &gt;
-            {unread &gt; 0 &amp;&amp; &lt;Badge tone=&quot;danger&quot;&gt;{unread}&lt;/Badge&gt;}
+            {unread &gt; 0 ? &lt;Badge tone=&quot;danger&quot;&gt;{unread}&lt;/Badge&gt; : null}
           &lt;/Button&gt;
-        &lt;/AppShell.Topbar.Actions&gt;
-      &lt;/AppShell.Topbar&gt;
+        &lt;/div&gt;
+      &lt;/AppShell.TopBar&gt;
 
       {/* ── Main ───────────────────────────────────────── */}
       &lt;AppShell.Main&gt;
@@ -743,24 +748,7 @@ export function Shell({
       &lt;CommandPalette
         open={paletteOpen}
         onClose={() =&gt; setPaletteOpen(false)}
-        groups={[
-          {
-            label: &#39;Jump to&#39;,
-            items: [
-              { id: &#39;home&#39;,      label: &#39;Overview&#39;,  to: &#39;/&#39;,        icon: &#39;dashboard&#39; },
-              { id: &#39;receipts&#39;,  label: &#39;Receipts&#39;,  to: &#39;/receipts&#39;, icon: &#39;receipt&#39;   },
-              { id: &#39;inventory&#39;, label: &#39;Inventory&#39;, to: &#39;/inventory&#39;,icon: &#39;bag&#39;       },
-              { id: &#39;staff&#39;,     label: &#39;Staff&#39;,     to: &#39;/staff&#39;,    icon: &#39;user&#39;      },
-            ],
-          },
-          {
-            label: &#39;Actions&#39;,
-            items: [
-              { id: &#39;new-sale&#39;,   label: &#39;Start a sale&#39;,    icon: &#39;plus&#39;,  shortcut: &#39;N&#39; },
-              { id: &#39;close-till&#39;, label: &#39;Close till…&#39;,     icon: &#39;check&#39;, shortcut: &#39;X&#39; },
-            ],
-          },
-        ]}
+        items={paletteItems}
       /&gt;
     &lt;/AppShell&gt;
   );
