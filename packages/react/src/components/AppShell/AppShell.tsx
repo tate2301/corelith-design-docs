@@ -108,6 +108,14 @@ type AppShellComponent = typeof AppShellRoot & {
   Brand: typeof AppShellBrand;
 };
 
+/**
+ * AppShell — sidebar + top-bar app chrome.
+ *
+ * @example
+ * ```tsx
+ * <AppShell />
+ * ```
+ */
 export const AppShell = AppShellRoot as AppShellComponent;
 AppShell.Sidebar = AppShellSidebar;
 AppShell.Main = AppShellMain;

@@ -307,20 +307,19 @@
     <div class="ck-step"><span class="n">01</span><h3>Lay out three bands with CSS Grid, not flex stacks</h3></div>
     <p>Grid lets you declare the row heights — auto, 1fr, auto — so the middle panel absorbs the leftover viewport. A flex column would let the panels overflow and ruin the no-scroll promise. Set <code>min-height: 0</code> on the scrollable children so the grid actually clips.</p>
     <div class="ds-specimen"
-         data-code='import { Stack } from &#39;@corelithzw/react&#39;;
+         data-code='import type { ReactNode } from &#39;react&#39;;
+import { Stack } from &#39;@corelithzw/react&#39;;
 
 function OverviewLayout({ kpi, tasks, flags, activity }: {
-  kpi: React.ReactNode;
-  tasks: React.ReactNode;
-  flags: React.ReactNode;
-  activity: React.ReactNode;
+  kpi: ReactNode;
+  tasks: ReactNode;
+  flags: ReactNode;
+  activity: ReactNode;
 }) {
   return (
-    &lt;div
+    &lt;Stack
+      gap=&quot;md&quot;
       style={{
-        display: &#39;grid&#39;,
-        gridTemplateRows: &#39;auto 1fr auto&#39;,
-        gap: 16,
         height: &#39;calc(100vh - var(--hx-nav-h))&#39;,
         padding: 16,
       }}
@@ -330,14 +329,19 @@ function OverviewLayout({ kpi, tasks, flags, activity }: {
         display: &#39;grid&#39;,
         gridTemplateColumns: &#39;1fr 1fr&#39;,
         gap: 16,
+        flex: 1,
         minHeight: 0, // critical — lets children scroll
       }}&gt;
         &lt;Panel title=&quot;Today&#39;s tasks&quot;&gt;{tasks}&lt;/Panel&gt;
         &lt;Panel title=&quot;Flagged anomalies&quot;&gt;{flags}&lt;/Panel&gt;
       &lt;/div&gt;
       &lt;div&gt;{activity}&lt;/div&gt;
-    &lt;/div&gt;
+    &lt;/Stack&gt;
   );
+}
+
+function Panel(_props: { title: string; children?: ReactNode }): ReactNode {
+  return null;
 }'>
       <div class="ds-specimen-stage canvas padded">
         <div class="ck-code-only-note">
@@ -353,11 +357,11 @@ function OverviewLayout({ kpi, tasks, flags, activity }: {
 
     <!-- Step 2 -->
     <div class="ck-step"><span class="n">02</span><h3>Build the KPI strip from one source array</h3></div>
-    <p>Feed <code>KpiGrid</code> a flat array of items and let the role filter remove the ones a clerk shouldn't see. The grid handles spacing, deltas and alignment so you only think about the data.</p>
+    <p><code>KpiGrid</code> is a responsive auto-wrap container — it lays out a row of <code>StatCard</code> tiles and re-flows on narrow screens. Filter your KPI source by role before you render so a clerk never sees a tile they shouldn't.</p>
     <div class="ds-specimen"
-         data-code='import { KpiGrid } from &#39;@corelithzw/react&#39;;
+         data-code='import { KpiGrid, StatCard } from &#39;@corelithzw/react&#39;;
 
-type Role = &#39;clerk&#39; | &#39;manager&#39; | &#39;owner&#39;;
+export type Role = &#39;clerk&#39; | &#39;manager&#39; | &#39;owner&#39;;
 
 type Kpi = {
   id: string;
@@ -377,11 +381,20 @@ const ALL_KPIS: Kpi[] = [
 ];
 
 function KpiStrip({ role }: { role: Role }) {
-  const items = ALL_KPIS
-    .filter((k) =&gt; ROLE_RANK[role] &gt;= ROLE_RANK[k.minRole])
-    .map(({ id: _id, minRole: _r, ...rest }) =&gt; rest);
-
-  return &lt;KpiGrid columns={items.length} items={items} tone=&quot;neutral&quot; /&gt;;
+  const visible = ALL_KPIS.filter((k) =&gt; ROLE_RANK[role] &gt;= ROLE_RANK[k.minRole]);
+  return (
+    &lt;KpiGrid minWidth={140}&gt;
+      {visible.map((k) =&gt; (
+        &lt;StatCard
+          key={k.id}
+          label={k.label}
+          value={k.value}
+          delta={k.delta == null ? undefined : `${k.delta >= 0 ? &#39;+&#39; : &#39;&#39;}${k.delta}%`}
+          deltaTone={k.delta == null ? &#39;neutral&#39; : k.delta >= 0 ? &#39;up&#39; : &#39;down&#39;}
+        /&gt;
+      ))}
+    &lt;/KpiGrid&gt;
+  );
 }'>
       <div class="ds-specimen-stage canvas padded">
         <div style="padding: 18px;">
@@ -400,11 +413,14 @@ function KpiStrip({ role }: { role: Role }) {
     <div class="ck-step"><span class="n">03</span><h3>Two panels: tasks and flags, both scrollable</h3></div>
     <p>Each panel is a tiny header plus a vertically-scrolling list of <code>RowCard</code>s. The list — not the whole page — owns the scrollbar, so the KPI strip and the activity bar stay locked in place.</p>
     <div class="ds-specimen"
-         data-code='import { Stack, RowCard, EmptyState } from &#39;@corelithzw/react&#39;;
+         data-code='import type { ReactNode } from &#39;react&#39;;
+import { Stack, RowCard, EmptyState } from &#39;@corelithzw/react&#39;;
+
+export type Task = { id: string; label: string; due: string; href: string };
 
 function Panel({ title, children }: {
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     &lt;section
@@ -434,9 +450,8 @@ function Panel({ title, children }: {
 function TasksList({ items }: { items: Task[] }) {
   if (!items.length) return (
     &lt;EmptyState
-      icon=&quot;check&quot;
       title=&quot;Inbox zero&quot;
-      body=&quot;Nothing assigned to you right now.&quot;
+      description=&quot;Nothing assigned to you right now.&quot;
     /&gt;
   );
   return (
@@ -445,9 +460,9 @@ function TasksList({ items }: { items: Task[] }) {
         &lt;RowCard
           key={t.id}
           href={t.href}
-          label={t.label}
+          title={t.label}
           meta={t.due}
-          trailing=&quot;chevron&quot;
+          trailing={&lt;span aria-hidden=&quot;true&quot;&gt;›&lt;/span&gt;}
         /&gt;
       ))}
     &lt;/Stack&gt;
@@ -476,10 +491,18 @@ function TasksList({ items }: { items: Task[] }) {
 
     <!-- Step 4 -->
     <div class="ck-step"><span class="n">04</span><h3>Refresh quietly with useInterval — no spinner</h3></div>
-    <p>The first load shows a skeleton, but every subsequent refresh updates in place. Show a tiny "Updated 12s ago" caption so the operator knows the screen is alive without anything moving. Pause the interval when the tab is hidden so you don't drain laptop batteries.</p>
+    <p>The first load shows a skeleton, but every subsequent refresh updates in place. Show a tiny "Updated 12s ago" caption so the operator knows the screen is alive without anything moving. <code>useInterval</code> keeps the loop aligned with the latest <code>load</code> closure and tears down on unmount — pass <code>{ paused: true }</code> (or set <code>delay</code> to <code>null</code>) when you need to stop it.</p>
     <div class="ds-specimen"
-         data-code='import { useEffect, useState } from &#39;@corelithzw/react&#39;;
+         data-code='import { useEffect, useState } from &#39;react&#39;;
 import { useInterval } from &#39;@corelithzw/react&#39;;
+
+export type Overview = {
+  asOf: string;
+  kpis: { label: string; value: string; delta?: number | null }[];
+  tasks: Task[];
+  flags: { id: string; severity: &#39;warn&#39; | &#39;danger&#39;; label: string; href: string }[];
+  activity: { id: string; at: string; text: string }[];
+};
 
 const REFRESH_MS = 30_000;
 
@@ -503,8 +526,9 @@ function useOverview(role: Role) {
   // Initial load — fires once on mount.
   useEffect(() =&gt; { load(); /* eslint-disable-next-line */ }, []);
 
-  // Quiet 30-second refresh. useInterval pauses when document.hidden.
-  useInterval(load, REFRESH_MS, { pauseWhenHidden: true });
+  // Quiet 30-second refresh — `useInterval` keeps the interval in sync
+  // with the latest `load` reference and tears it down on unmount.
+  useInterval(load, REFRESH_MS);
 
   return { data, error, lastFetch, reload: load };
 }'>
@@ -525,22 +549,23 @@ function useOverview(role: Role) {
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The whole <code>OperatorOverview</code>, assembled. Layout, role filter, 30-second poll, skeleton on first load, inline error.</p>
     <div class="ds-specimen"
-         data-code='import { useEffect, useState } from &#39;@corelithzw/react&#39;;
+         data-code='import { useEffect, useState } from &#39;react&#39;;
+import type { ReactNode } from &#39;react&#39;;
 import {
-  Stack, KpiGrid, RowCard, EmptyState,
+  Stack, KpiGrid, StatCard, RowCard, EmptyState,
   Alert, Skeleton, Button, useInterval,
 } from &#39;@corelithzw/react&#39;;
 
 // ── Types ───────────────────────────────────────────────────────
-type Role = &#39;clerk&#39; | &#39;manager&#39; | &#39;owner&#39;;
-type Kpi  = { label: string; value: string; delta?: number | null };
-type Task = { id: string; label: string; due: string; href: string };
+type OperatorRole = &#39;clerk&#39; | &#39;manager&#39; | &#39;owner&#39;;
+type OvKpi  = { label: string; value: string; delta?: number | null };
+type OvTask = { id: string; label: string; due: string; href: string };
 type Flag = { id: string; severity: &#39;warn&#39; | &#39;danger&#39;; label: string; href: string };
 type Activity = { id: string; at: string; text: string };
-type Overview = {
+type OperatorOverviewData = {
   asOf: string;
-  kpis: Kpi[];
-  tasks: Task[];
+  kpis: OvKpi[];
+  tasks: OvTask[];
   flags: Flag[];
   activity: Activity[];
 };
@@ -548,8 +573,8 @@ type Overview = {
 // ── Data hook ───────────────────────────────────────────────────
 const REFRESH_MS = 30_000;
 
-function useOverview(role: Role) {
-  const [data, setData]   = useState&lt;Overview | null&gt;(null);
+function useOperatorOverview(role: OperatorRole) {
+  const [data, setData]   = useState&lt;OperatorOverviewData | null&gt;(null);
   const [error, setError] = useState&lt;string | null&gt;(null);
   const [updatedAt, setUpdatedAt] = useState&lt;number&gt;(0);
 
@@ -564,12 +589,12 @@ function useOverview(role: Role) {
   };
 
   useEffect(() =&gt; { load(); /* eslint-disable-next-line */ }, [role]);
-  useInterval(load, REFRESH_MS, { pauseWhenHidden: true });
+  useInterval(load, REFRESH_MS);
   return { data, error, updatedAt, reload: load };
 }
 
 // ── Panel shell ─────────────────────────────────────────────────
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+function OvPanel({ title, children }: { title: string; children: ReactNode }) {
   return (
     &lt;section aria-label={title}
       style={{
@@ -587,69 +612,81 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
 }
 
 // ── Component ───────────────────────────────────────────────────
-export function OperatorOverview({ role }: { role: Role }) {
-  const { data, error, updatedAt, reload } = useOverview(role);
+export function OperatorOverview({ role }: { role: OperatorRole }) {
+  const { data, error, updatedAt, reload } = useOperatorOverview(role);
 
   if (!data &amp;&amp; !error) {
     return (
       &lt;Stack gap=&quot;md&quot; aria-busy=&quot;true&quot;&gt;
-        &lt;Skeleton height={64} radius=&quot;md&quot; /&gt;
-        &lt;Skeleton height={280} radius=&quot;lg&quot; /&gt;
+        &lt;Skeleton height={64} /&gt;
+        &lt;Skeleton height={280} /&gt;
       &lt;/Stack&gt;
     );
   }
 
   return (
-    &lt;div style={{
-      display: &#39;grid&#39;, gridTemplateRows: &#39;auto 1fr auto&#39;,
-      gap: 16, height: &#39;calc(100vh - var(--hx-nav-h))&#39;, padding: 16,
-    }}&gt;
+    &lt;Stack
+      gap=&quot;md&quot;
+      style={{
+        height: &#39;calc(100vh - var(--hx-nav-h))&#39;,
+        padding: 16,
+      }}
+    &gt;
       {/* ── KPI strip ───────────────────────────────────────────── */}
       &lt;div&gt;
         {error &amp;&amp; (
-          &lt;Alert tone=&quot;warning&quot;&gt;
+          &lt;Alert tone=&quot;warn&quot;&gt;
             Showing stale data. {error}{&#39; &#39;}
-            &lt;Button variant=&quot;link&quot; onClick={reload}&gt;Retry&lt;/Button&gt;
+            &lt;Button variant=&quot;ghost&quot; onClick={reload}&gt;Retry&lt;/Button&gt;
           &lt;/Alert&gt;
         )}
-        &lt;KpiGrid columns={data?.kpis.length ?? 4}
-                 items={data?.kpis ?? []} tone=&quot;neutral&quot; /&gt;
+        &lt;KpiGrid minWidth={140}&gt;
+          {(data?.kpis ?? []).map((k) =&gt; (
+            &lt;StatCard
+              key={k.label}
+              label={k.label}
+              value={k.value}
+              delta={k.delta == null ? undefined : `${k.delta >= 0 ? &#39;+&#39; : &#39;&#39;}${k.delta}%`}
+              deltaTone={k.delta == null ? &#39;neutral&#39; : k.delta >= 0 ? &#39;up&#39; : &#39;down&#39;}
+            /&gt;
+          ))}
+        &lt;/KpiGrid&gt;
       &lt;/div&gt;
 
       {/* ── Two-column panels ──────────────────────────────────── */}
       &lt;div style={{
         display: &#39;grid&#39;, gridTemplateColumns: &#39;1fr 1fr&#39;,
-        gap: 16, minHeight: 0,
+        gap: 16, flex: 1, minHeight: 0,
       }}&gt;
-        &lt;Panel title=&quot;Today&#39;s tasks&quot;&gt;
+        &lt;OvPanel title=&quot;Today&#39;s tasks&quot;&gt;
           {(data?.tasks ?? []).length === 0 ? (
-            &lt;EmptyState icon=&quot;check&quot; title=&quot;Inbox zero&quot;
-                        body=&quot;Nothing assigned to you right now.&quot; /&gt;
+            &lt;EmptyState title=&quot;Inbox zero&quot;
+                        description=&quot;Nothing assigned to you right now.&quot; /&gt;
           ) : (
             &lt;Stack gap=&quot;xs&quot;&gt;
               {data!.tasks.map((t) =&gt; (
                 &lt;RowCard key={t.id} href={t.href}
-                         label={t.label} meta={t.due}
-                         trailing=&quot;chevron&quot; /&gt;
+                         title={t.label} meta={t.due}
+                         trailing={&lt;span aria-hidden=&quot;true&quot;&gt;›&lt;/span&gt;} /&gt;
               ))}
             &lt;/Stack&gt;
           )}
-        &lt;/Panel&gt;
-        &lt;Panel title=&quot;Flagged anomalies&quot;&gt;
+        &lt;/OvPanel&gt;
+        &lt;OvPanel title=&quot;Flagged anomalies&quot;&gt;
           {(data?.flags ?? []).length === 0 ? (
-            &lt;EmptyState icon=&quot;shield&quot; title=&quot;No flags today&quot;
-                        body=&quot;The day looks clean. Keep going.&quot; /&gt;
+            &lt;EmptyState title=&quot;No flags today&quot;
+                        description=&quot;The day looks clean. Keep going.&quot; /&gt;
           ) : (
             &lt;Stack gap=&quot;xs&quot;&gt;
               {data!.flags.map((f) =&gt; (
                 &lt;RowCard key={f.id} href={f.href}
-                         tone={f.severity}
-                         label={f.label}
-                         trailing=&quot;chevron&quot; /&gt;
+                         title={f.label}
+                         meta={f.severity}
+                         trailing={&lt;span aria-hidden=&quot;true&quot;&gt;›&lt;/span&gt;} /&gt;
               ))}
             &lt;/Stack&gt;
           )}
-        &lt;/Panel&gt;
+        &lt;/OvPanel&gt;
       &lt;/div&gt;
 
       {/* ── Activity strip ─────────────────────────────────────── */}
@@ -668,7 +705,7 @@ export function OperatorOverview({ role }: { role: Role }) {
           Updated {Math.floor((Date.now() - updatedAt) / 1000)}s ago
         &lt;/span&gt;
       &lt;/footer&gt;
-    &lt;/div&gt;
+    &lt;/Stack&gt;
   );
 }'>
       <div class="ds-specimen-stage canvas padded">

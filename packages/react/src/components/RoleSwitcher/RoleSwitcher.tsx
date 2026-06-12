@@ -1,4 +1,10 @@
-import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
+import {
+  forwardRef,
+  useState,
+  type HTMLAttributes,
+  type MouseEvent as ReactMouseEvent,
+  type ReactNode,
+} from 'react';
 import { cx } from '../../utils/cx';
 
 export interface RoleSwitcherOption<T extends string = string> {
@@ -7,18 +13,51 @@ export interface RoleSwitcherOption<T extends string = string> {
   disabled?: boolean;
 }
 
+/**
+ * Props for `RoleSwitcher`. Supports controlled (`value` + `onChange`) and
+ * uncontrolled (`defaultValue`) modes.
+ */
 export interface RoleSwitcherProps<T extends string = string>
   extends Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> {
-  value: T;
-  onChange: (value: T) => void;
+  /** Selected role (controlled). */
+  value?: T;
+  /** Initial selected role (uncontrolled). */
+  defaultValue?: T;
+  /** Value-first change handler. */
+  onChange?: (value: T, event?: ReactMouseEvent<HTMLButtonElement>) => void;
   options: RoleSwitcherOption<T>[];
   ariaLabel?: string;
 }
 
+/**
+ * RoleSwitcher — toggle between user roles (e.g. "Driver" / "Admin").
+ *
+ * @example
+ * ```tsx
+ * <RoleSwitcher
+ *   defaultValue="driver"
+ *   options={[
+ *     { value: 'driver', label: 'Driver' },
+ *     { value: 'admin', label: 'Admin' },
+ *   ]}
+ * />
+ * ```
+ */
 function RoleSwitcherInner<T extends string>(
-  { value, onChange, options, ariaLabel, className, ...rest }: RoleSwitcherProps<T>,
+  {
+    value,
+    defaultValue,
+    onChange,
+    options,
+    ariaLabel,
+    className,
+    ...rest
+  }: RoleSwitcherProps<T>,
   ref: React.Ref<HTMLDivElement>,
 ) {
+  const [internal, setInternal] = useState<T | undefined>(defaultValue);
+  const isControlled = value !== undefined;
+  const current = isControlled ? value : internal;
   return (
     <div
       ref={ref}
@@ -28,14 +67,17 @@ function RoleSwitcherInner<T extends string>(
       {...rest}
     >
       {options.map((opt) => {
-        const pressed = opt.value === value;
+        const pressed = opt.value === current;
         return (
           <button
             key={opt.value}
             type="button"
             aria-pressed={pressed}
             disabled={opt.disabled}
-            onClick={() => onChange(opt.value)}
+            onClick={() => {
+              if (!isControlled) setInternal(opt.value);
+              onChange?.(opt.value);
+            }}
           >
             {opt.label}
           </button>

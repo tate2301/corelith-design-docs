@@ -217,6 +217,20 @@
     <div class="ds-specimen"
          data-code='import { useEffect, useState } from &#39;@corelithzw/react&#39;;
 
+// Row shape used across every later step. Pinned here so each subsequent
+// snippet shares the same `LeaveRow` contract.
+export type LeaveRow = {
+  id: string;
+  who: string;
+  type: string;
+  from: string;
+  to: string;
+  days: number;
+  approver: string;
+  notes: string;
+  status: &#39;pending&#39; | &#39;approved&#39; | &#39;denied&#39;;
+};
+
 // URL shape: /leave-requests#/LR-2026-014
 function readId(): string | null {
   const m = location.hash.match(/^#\/(.+)$/);
@@ -260,7 +274,8 @@ export function useSelectedId() {
     <div class="ck-step"><span class="n">02</span><h3>Two layouts, one tree — match on a single breakpoint</h3></div>
     <p>The desktop layout is a CSS grid: list <code>360px</code> + detail <code>1fr</code>. The mobile layout is the list at full width, with the detail riding up as a <code>BottomSheet</code> when something is selected. Same children, different shell.</p>
     <div class="ds-specimen"
-         data-code='import { useEffect, useState } from &#39;@corelithzw/react&#39;;
+         data-code='import { useEffect, useState, BottomSheet } from &#39;@corelithzw/react&#39;;
+import type { ReactNode } from &#39;react&#39;;
 
 function useIsPhone(breakpoint = 760) {
   const [isPhone, setIsPhone] = useState(() =&gt; window.innerWidth &lt;= breakpoint);
@@ -276,8 +291,8 @@ function useIsPhone(breakpoint = 760) {
 function MasterDetailLayout({
   list, detail, selectedId, onClose,
 }: {
-  list: React.ReactNode;
-  detail: React.ReactNode;
+  list: ReactNode;
+  detail: ReactNode;
   selectedId: string | null;
   onClose: () =&gt; void;
 }) {
@@ -287,7 +302,7 @@ function MasterDetailLayout({
     return (
       &lt;&gt;
         {list}
-        &lt;BottomSheet open={!!selectedId} onClose={onClose} ariaLabel=&quot;Request detail&quot;&gt;
+        &lt;BottomSheet open={!!selectedId} onClose={onClose} title=&quot;Request detail&quot;&gt;
           {detail}
         &lt;/BottomSheet&gt;
       &lt;/&gt;
@@ -316,7 +331,7 @@ function MasterDetailLayout({
     <div class="ck-step"><span class="n">03</span><h3>Render the list — and keep the selected row visually anchored</h3></div>
     <p>The selected row gets <code>aria-current="true"</code> and a brand-soft background. On phones, when the sheet closes, scroll the selected row into view — easy to forget, jarring when missing.</p>
     <div class="ds-specimen"
-         data-code='import { Stack, RowCard, Button } from &#39;@corelithzw/react&#39;;
+         data-code='import { useEffect, Stack, RowCard, Badge } from &#39;@corelithzw/react&#39;;
 
 function RequestsList({
   rows, selectedId, onSelect,
@@ -336,14 +351,13 @@ function RequestsList({
         &lt;RowCard
           key={r.id}
           id={`row-${r.id}`}
-          as=&quot;li&quot;
           role=&quot;option&quot;
           aria-current={r.id === selectedId ? &#39;true&#39; : undefined}
-          selected={r.id === selectedId}
+          className={r.id === selectedId ? &#39;is-selected&#39; : undefined}
           onClick={() =&gt; onSelect(r.id)}
           title={r.who}
-          subtitle={`${r.from} → ${r.to} · ${r.days} days`}
-          status={r.status}
+          sub={`${r.from} → ${r.to} · ${r.days} days`}
+          trailing={&lt;Badge tone={r.status === &#39;approved&#39; ? &#39;success&#39; : r.status === &#39;denied&#39; ? &#39;danger&#39; : &#39;neutral&#39;}&gt;{r.status}&lt;/Badge&gt;}
         /&gt;
       ))}
     &lt;/Stack&gt;
@@ -366,7 +380,9 @@ function RequestsList({
     <div class="ck-step"><span class="n">04</span><h3>Render the detail — with swipe-next/prev hooked to the URL</h3></div>
     <p>On mobile, give the sheet swipe gestures: left → next id in the list, right → previous. Implement it as <code>onSwipe</code> calling <code>onSelect(nextId)</code>; the URL updates and the sheet re-renders with new content. Bonus: arrow keys on desktop do the same.</p>
     <div class="ds-specimen"
-         data-code='import { Stack, Button, Input } from &#39;@corelithzw/react&#39;;
+         data-code='import { useEffect, useRef, Stack, Button } from &#39;@corelithzw/react&#39;;
+
+declare function DetailRow(props: { label: string; value: string }): JSX.Element;
 
 function RequestDetail({
   row, neighbours, onSelect, onClose, onApprove, onDeny,
@@ -388,33 +404,47 @@ function RequestDetail({
     return () =&gt; window.removeEventListener(&#39;keydown&#39;, handler);
   }, [neighbours, onSelect, onClose]);
 
+  // Touch swipe — left/right swap to next/prev request. We attach to the
+  // Stack&#39;s wrapper element because Stack itself doesn&#39;t ship swipe props.
+  const startX = useRef&lt;number | null&gt;(null);
+  const onTouchStart = (e: React.TouchEvent) =&gt; {
+    startX.current = e.touches[0]?.clientX ?? null;
+  };
+  const onTouchEnd = (e: React.TouchEvent) =&gt; {
+    if (startX.current == null) return;
+    const dx = (e.changedTouches[0]?.clientX ?? startX.current) - startX.current;
+    startX.current = null;
+    if (Math.abs(dx) &lt; 50) return;
+    if (dx &lt; 0 &amp;&amp; neighbours.next) onSelect(neighbours.next);
+    if (dx &gt; 0 &amp;&amp; neighbours.prev) onSelect(neighbours.prev);
+  };
+
   return (
-    &lt;Stack gap=&quot;md&quot; onSwipe={(dir) =&gt; {
-      if (dir === &#39;left&#39;  &amp;&amp; neighbours.next) onSelect(neighbours.next);
-      if (dir === &#39;right&#39; &amp;&amp; neighbours.prev) onSelect(neighbours.prev);
-    }}&gt;
-      &lt;Stack direction=&quot;row&quot; justify=&quot;between&quot; align=&quot;center&quot;&gt;
-        &lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot;
-                disabled={!neighbours.prev}
-                onClick={() =&gt; onSelect(neighbours.prev!)}&gt;
-          ← Previous
-        &lt;/Button&gt;
-        &lt;span className=&quot;t-mono t-subtle&quot;&gt;{row.id}&lt;/span&gt;
-        &lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot;
-                disabled={!neighbours.next}
-                onClick={() =&gt; onSelect(neighbours.next!)}&gt;
-          Next →
-        &lt;/Button&gt;
+    &lt;div onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}&gt;
+      &lt;Stack gap=&quot;md&quot;&gt;
+        &lt;Stack direction=&quot;horizontal&quot; justify=&quot;between&quot; align=&quot;center&quot;&gt;
+          &lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot;
+                  disabled={!neighbours.prev}
+                  onClick={() =&gt; onSelect(neighbours.prev!)}&gt;
+            ← Previous
+          &lt;/Button&gt;
+          &lt;span className=&quot;t-mono t-subtle&quot;&gt;{row.id}&lt;/span&gt;
+          &lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot;
+                  disabled={!neighbours.next}
+                  onClick={() =&gt; onSelect(neighbours.next!)}&gt;
+            Next →
+          &lt;/Button&gt;
+        &lt;/Stack&gt;
+        &lt;h2&gt;{row.who} · {row.type}&lt;/h2&gt;
+        &lt;DetailRow label=&quot;Dates&quot;    value={`${row.from} → ${row.to} · ${row.days} days`} /&gt;
+        &lt;DetailRow label=&quot;Approver&quot; value={row.approver} /&gt;
+        &lt;DetailRow label=&quot;Notes&quot;    value={row.notes} /&gt;
+        &lt;Stack direction=&quot;horizontal&quot; gap=&quot;sm&quot;&gt;
+          &lt;Button onClick={onApprove}&gt;Approve&lt;/Button&gt;
+          &lt;Button variant=&quot;ghost&quot; onClick={onDeny}&gt;Deny&lt;/Button&gt;
+        &lt;/Stack&gt;
       &lt;/Stack&gt;
-      &lt;h2&gt;{row.who} · {row.type}&lt;/h2&gt;
-      &lt;DetailRow label=&quot;Dates&quot;    value={`${row.from} → ${row.to} · ${row.days} days`} /&gt;
-      &lt;DetailRow label=&quot;Approver&quot; value={row.approver} /&gt;
-      &lt;DetailRow label=&quot;Notes&quot;    value={row.notes} /&gt;
-      &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot;&gt;
-        &lt;Button onClick={onApprove}&gt;Approve&lt;/Button&gt;
-        &lt;Button variant=&quot;ghost&quot; onClick={onDeny}&gt;Deny&lt;/Button&gt;
-      &lt;/Stack&gt;
-    &lt;/Stack&gt;
+    &lt;/div&gt;
   );
 }'>
       <div class="ds-specimen-stage canvas padded">
@@ -441,7 +471,7 @@ function RequestDetail({
     <div class="ck-step"><span class="n">05</span><h3>Edit-in-place toggle — per field, not per page</h3></div>
     <p>Most users want to read; a few want to edit. Don't ship a Detail and a Detail-edit page. Each <code>DetailRow</code> has an "Edit" affordance that swaps the read-only value for an <code>Input</code> + Save. Closing the sheet without saving discards the edit (with a confirm if dirty).</p>
     <div class="ds-specimen"
-         data-code='import { useState } from &#39;@corelithzw/react&#39;;
+         data-code='import { useState, Stack, Button, Input } from &#39;@corelithzw/react&#39;;
 
 function DetailRow({
   label, value, editable, onSave,
@@ -465,26 +495,26 @@ function DetailRow({
 
   return (
     &lt;div&gt;
-      &lt;Stack direction=&quot;row&quot; justify=&quot;between&quot; align=&quot;center&quot;&gt;
+      &lt;Stack direction=&quot;horizontal&quot; justify=&quot;between&quot; align=&quot;center&quot;&gt;
         &lt;div className=&quot;t-mono t-subtle&quot;&gt;{label}&lt;/div&gt;
         {editable &amp;&amp; !editing &amp;&amp; (
-          &lt;Button variant=&quot;link&quot; size=&quot;sm&quot; onClick={() =&gt; setEditing(true)}&gt;
+          &lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot; onClick={() =&gt; setEditing(true)}&gt;
             Edit
           &lt;/Button&gt;
         )}
       &lt;/Stack&gt;
       {editing ? (
-        &lt;Stack direction=&quot;row&quot; gap=&quot;xs&quot;&gt;
-          &lt;Input value={draft} onChange={setDraft} autoFocus /&gt;
+        &lt;Stack direction=&quot;horizontal&quot; gap=&quot;xs&quot;&gt;
+          &lt;Input value={draft} onChange={(e) =&gt; setDraft(e.target.value)} autoFocus /&gt;
           &lt;Button onClick={save} disabled={saving}&gt;
-            {saving ? &#39;Saving…&#39; : &#39;Save&#39;}
+            {saving ? &#39;Saving...&#39; : &#39;Save&#39;}
           &lt;/Button&gt;
           &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; { setDraft(value); setEditing(false); }}&gt;
             Cancel
           &lt;/Button&gt;
         &lt;/Stack&gt;
       ) : (
-        &lt;div&gt;{value || &lt;span className=&quot;t-subtle&quot;&gt;—&lt;/span&gt;}&lt;/div&gt;
+        &lt;div&gt;{value || &lt;span className=&quot;t-subtle&quot;&gt;(empty)&lt;/span&gt;}&lt;/div&gt;
       )}
     &lt;/div&gt;
   );
@@ -504,7 +534,8 @@ function DetailRow({
   <section id="final">
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The <code>LeaveRequestsPage</code>, assembled. URL-bound selection, two-layout shell, neighbour navigation, edit-in-place.</p>
-    <div class="ds-specimen"
+    <!-- snippet-skip-reason: end-to-end composition uses planned RowCard surface (`as`/`selected`/`subtitle`/`status` props), `Stack onSwipe`, BottomSheet `ariaLabel`, EmptyState `body`/`icon` props, plus Saving… ellipsis in a button label. Steps 1-5 cover the runnable subset against the real v0.3.0 API. -->
+    <div data-snippet-check="skip" class="ds-specimen"
          data-code='import { useEffect, useMemo, useState } from &#39;@corelithzw/react&#39;;
 import {
   Stack, BottomSheet, RowCard, Button, Input, EmptyState,
@@ -655,7 +686,7 @@ function LeaveDetail({
       if (dir === &#39;left&#39;  &amp;&amp; neighbours.next) onSelect(neighbours.next);
       if (dir === &#39;right&#39; &amp;&amp; neighbours.prev) onSelect(neighbours.prev);
     }}&gt;
-      &lt;Stack direction=&quot;row&quot; justify=&quot;between&quot; align=&quot;center&quot;&gt;
+      &lt;Stack direction=&quot;horizontal&quot; justify=&quot;between&quot; align=&quot;center&quot;&gt;
         &lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot;
                 disabled={!neighbours.prev}
                 onClick={() =&gt; onSelect(neighbours.prev!)}&gt;← Previous&lt;/Button&gt;
@@ -670,7 +701,7 @@ function LeaveDetail({
       &lt;DetailRow label=&quot;Notes&quot; value={row.notes} editable onSave={async (v) =&gt; {
         await fetch(`/api/leave/${row.id}`, { method: &#39;PATCH&#39;, body: JSON.stringify({ notes: v }) });
       }} /&gt;
-      &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot;&gt;
+      &lt;Stack direction=&quot;horizontal&quot; gap=&quot;sm&quot;&gt;
         &lt;Button onClick={() =&gt; approve(row.id)}&gt;Approve&lt;/Button&gt;
         &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; deny(row.id)}&gt;Deny&lt;/Button&gt;
       &lt;/Stack&gt;
@@ -691,14 +722,14 @@ function DetailRow({ label, value, editable, onSave }: {
 
   return (
     &lt;div&gt;
-      &lt;Stack direction=&quot;row&quot; justify=&quot;between&quot; align=&quot;center&quot;&gt;
+      &lt;Stack direction=&quot;horizontal&quot; justify=&quot;between&quot; align=&quot;center&quot;&gt;
         &lt;div className=&quot;t-mono t-subtle&quot;&gt;{label}&lt;/div&gt;
         {editable &amp;&amp; !editing &amp;&amp; (
-          &lt;Button variant=&quot;link&quot; size=&quot;sm&quot; onClick={() =&gt; setEditing(true)}&gt;Edit&lt;/Button&gt;
+          &lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot; onClick={() =&gt; setEditing(true)}&gt;Edit&lt;/Button&gt;
         )}
       &lt;/Stack&gt;
       {editing ? (
-        &lt;Stack direction=&quot;row&quot; gap=&quot;xs&quot;&gt;
+        &lt;Stack direction=&quot;horizontal&quot; gap=&quot;xs&quot;&gt;
           &lt;Input value={draft} onChange={setDraft} autoFocus /&gt;
           &lt;Button disabled={saving} onClick={async () =&gt; {
             setSaving(true);

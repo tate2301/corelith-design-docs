@@ -224,6 +224,14 @@ const Sparkline = forwardRef<SVGSVGElement, ChartSparklineProps>(function ChartS
   );
 });
 
+/**
+ * Chart — namespace of small SVG charts: Line, Bar, Donut, Sparkline.
+ *
+ * @example
+ * ```tsx
+ * <Chart />
+ * ```
+ */
 export const Chart = {
   Line: LineChart,
   Bar: BarChart,

@@ -388,8 +388,11 @@ export function reduceRequest(
     <div class="ck-step"><span class="n">02</span><h3>Render the inbox with filter chips + status-tinted RowCards</h3></div>
     <p>One <code>FilterChips</code> at the top, one <code>RowCard</code> per request. Tinting the badge — not the whole row — lets the inbox stay scannable while still calling out where work is needed.</p>
     <div class="ds-specimen"
-         data-code='import { useMemo, useState } from &#39;@corelithzw/react&#39;;
+         data-code='import { useMemo, useState } from &#39;react&#39;;
 import { Stack, FilterChips, RowCard, EmptyState } from &#39;@corelithzw/react&#39;;
+
+const formatRange = (from: string, to: string): string =&gt; `${from} – ${to}`;
+const StateBadge = (_props: { state: RequestState }): React.ReactElement =&gt; (&lt;span /&gt;);
 
 type Filter = &#39;all&#39; | &#39;pending&#39; | &#39;mine&#39;;
 
@@ -416,7 +419,7 @@ function Inbox({ requests, me, onOpen }: {
     &lt;Stack gap=&quot;md&quot;&gt;
       &lt;FilterChips
         value={filter}
-        onChange={setFilter}
+        onChange={(v) =&gt; setFilter(v as Filter)}
         options={[
           { value: &#39;all&#39;,     label: `All · ${counts.all}` },
           { value: &#39;pending&#39;, label: `Pending · ${counts.pending}` },
@@ -426,21 +429,21 @@ function Inbox({ requests, me, onOpen }: {
 
       {visible.length === 0 ? (
         &lt;EmptyState
-          icon=&quot;inbox&quot;
+          icon={&lt;span aria-hidden=&quot;true&quot;&gt;📥&lt;/span&gt;}
           title=&quot;Inbox zero&quot;
-          body=&quot;No requests match this filter.&quot;
+          description=&quot;No requests match this filter.&quot;
         /&gt;
       ) : (
         &lt;Stack gap=&quot;xs&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
           {visible.map((r) =&gt; (
-            &lt;RowCard
-              key={r.id}
-              as=&quot;li&quot;
-              onClick={() =&gt; onOpen(r.id)}
-              label={r.employee.name}
-              meta={formatRange(r.from, r.to)}
-              trailing={&lt;StateBadge state={r.state} /&gt;}
-            /&gt;
+            &lt;li key={r.id}&gt;
+              &lt;RowCard
+                onClick={() =&gt; onOpen(r.id)}
+                title={r.employee.name}
+                meta={formatRange(r.from, r.to)}
+                trailing={&lt;StateBadge state={r.state} /&gt;}
+              /&gt;
+            &lt;/li&gt;
           ))}
         &lt;/Stack&gt;
       )}
@@ -468,59 +471,66 @@ function Inbox({ requests, me, onOpen }: {
     <div class="ck-step"><span class="n">03</span><h3>Open the drawer with full decision context</h3></div>
     <p>The drawer shows everything the manager would otherwise have to go look up: dates, days, balance after the leave, conflicts with teammates, history. The conflict warning uses <code>Alert tone="warning"</code> because it's an "I-still-might-approve-this" signal, not a hard block.</p>
     <div class="ds-specimen"
-         data-code='import { Drawer, Stack, Alert, Button } from &#39;@corelithzw/react&#39;;
+         data-code='import { Drawer, Stack, Field, Alert, Button } from &#39;@corelithzw/react&#39;;
+
+const formatMonth = (iso: string): string =&gt; new Date(iso).toLocaleString(&#39;default&#39;, { month: &#39;short&#39; });
 
 function RequestDrawer({ request, onAction, onClose }: {
   request: LeaveRequest;
   onAction: (a: ManagerAction) =&gt; void;
   onClose: () =&gt; void;
 }) {
+  const footer = (
+    &lt;Stack direction=&quot;horizontal&quot; gap=&quot;sm&quot;&gt;
+      &lt;Button variant=&quot;ghost&quot;
+              onClick={() =&gt; onAction({ kind: &#39;ASK_INFO&#39;, question: &#39;&#39; })}&gt;
+        Ask for more
+      &lt;/Button&gt;
+      &lt;div style={{ flex: 1 }} /&gt;
+      &lt;Button variant=&quot;secondary&quot;
+              onClick={() =&gt; onAction({ kind: &#39;REJECT&#39;, reason: &#39;&#39; })}&gt;
+        Reject
+      &lt;/Button&gt;
+      &lt;Button variant=&quot;primary&quot;
+              onClick={() =&gt; onAction({ kind: &#39;APPROVE&#39; })}&gt;
+        Approve
+      &lt;/Button&gt;
+    &lt;/Stack&gt;
+  );
+
   return (
-    &lt;Drawer open onClose={onClose} title={request.employee.name}&gt;
+    &lt;Drawer open onClose={onClose} title={request.employee.name} footer={footer}&gt;
       &lt;Stack gap=&quot;md&quot;&gt;
         &lt;Field label=&quot;Dates&quot;&gt;
-          {formatRange(request.from, request.to)} ({request.days} days)
+          &lt;div&gt;{formatRange(request.from, request.to)} ({request.days} days)&lt;/div&gt;
         &lt;/Field&gt;
 
         &lt;Field label=&quot;Balance after this leave&quot;&gt;
-          {request.employee.balance - request.days} days{&#39; &#39;}
-          &lt;span style={{ color: &#39;var(--text-muted)&#39; }}&gt;
-            (was {request.employee.balance})
-          &lt;/span&gt;
+          &lt;div&gt;
+            {request.employee.balance - request.days} days{&#39; &#39;}
+            &lt;span style={{ color: &#39;var(--text-muted)&#39; }}&gt;(was {request.employee.balance})&lt;/span&gt;
+          &lt;/div&gt;
         &lt;/Field&gt;
 
         {request.conflicts.length &gt; 0 &amp;&amp; (
-          &lt;Alert tone=&quot;warning&quot;&gt;
+          &lt;Alert tone=&quot;warn&quot;&gt;
             {request.conflicts.length === 1
               ? `${request.conflicts[0].name} is also off ${request.conflicts[0].date}.`
               : `${request.conflicts.length} teammates are off in this window.`}
           &lt;/Alert&gt;
         )}
 
-        &lt;Field label=&quot;Reason&quot;&gt;{request.reason}&lt;/Field&gt;
+        &lt;Field label=&quot;Reason&quot;&gt;
+          &lt;div&gt;{request.reason}&lt;/div&gt;
+        &lt;/Field&gt;
 
         &lt;Field label=&quot;History&quot;&gt;
-          {request.history.approved} approved · {request.history.rejected} rejected
-          {request.history.lastDecidedAt
-            &amp;&amp; ` · last ${formatMonth(request.history.lastDecidedAt)}`}
+          &lt;div&gt;
+            {request.history.approved} approved · {request.history.rejected} rejected
+            {request.history.lastDecidedAt &amp;&amp; ` · last ${formatMonth(request.history.lastDecidedAt)}`}
+          &lt;/div&gt;
         &lt;/Field&gt;
       &lt;/Stack&gt;
-
-      &lt;Drawer.Footer&gt;
-        &lt;Button variant=&quot;ghost&quot;
-                onClick={() =&gt; onAction({ kind: &#39;ASK_INFO&#39;, question: &#39;&#39; })}&gt;
-          Ask for more
-        &lt;/Button&gt;
-        &lt;div style={{ flex: 1 }} /&gt;
-        &lt;Button variant=&quot;secondary&quot;
-                onClick={() =&gt; onAction({ kind: &#39;REJECT&#39;, reason: &#39;&#39; })}&gt;
-          Reject
-        &lt;/Button&gt;
-        &lt;Button variant=&quot;primary&quot;
-                onClick={() =&gt; onAction({ kind: &#39;APPROVE&#39; })}&gt;
-          Approve
-        &lt;/Button&gt;
-      &lt;/Drawer.Footer&gt;
     &lt;/Drawer&gt;
   );
 }'>
@@ -546,7 +556,7 @@ function RequestDrawer({ request, onAction, onClose }: {
     <div class="ck-step"><span class="n">04</span><h3>Approve optimistically with a 5-second undo window</h3></div>
     <p>Update local state immediately and fire the API call after a 5-second timer so the manager can undo without server churn. If the timer expires, post to the API and notify the employee; if the user clicks Undo, cancel the timer and revert the local state — no network calls at all.</p>
     <div class="ds-specimen"
-         data-code='import { useRef } from &#39;@corelithzw/react&#39;;
+         data-code='import { useRef } from &#39;react&#39;;
 import { useToast } from &#39;@corelithzw/react&#39;;
 
 const UNDO_MS = 5_000;
@@ -560,7 +570,7 @@ function useApproveWithUndo({
   revert: (r: LeaveRequest) =&gt; void;
   commit: (a: ManagerAction, r: LeaveRequest) =&gt; Promise&lt;void&gt;;
 }) {
-  const { showToast } = useToast();
+  const toast = useToast();
   const timers = useRef&lt;Map&lt;string, ReturnType&lt;typeof setTimeout&gt;&gt;&gt;(new Map());
 
   return (action: ManagerAction, request: LeaveRequest) =&gt; {
@@ -572,14 +582,14 @@ function useApproveWithUndo({
         await commit(action, request);
       } catch (e) {
         revert(request);
-        showToast({ tone: &#39;danger&#39;, message: `Could not save: ${(e as Error).message}` });
+        toast.show({ tone: &#39;danger&#39;, title: `Could not save: ${(e as Error).message}` });
       }
     }, UNDO_MS);
     timers.current.set(request.id, timer);
 
-    showToast({
+    toast.show({
       tone: &#39;success&#39;,
-      message: `${labelFor(action)} ${request.employee.name}.`,
+      title: `${labelFor(action)} ${request.employee.name}.`,
       duration: UNDO_MS,
       action: {
         label: &#39;Undo&#39;,
@@ -616,8 +626,7 @@ function labelFor(a: ManagerAction) {
     <div class="ck-step"><span class="n">05</span><h3>Batch-approve from the inbox header</h3></div>
     <p>Multi-select with a checkbox column reveals a sticky action bar — "Approve all 4" with a single confirm. Each request still passes through the same approve-with-undo helper, so individual undo works even after a batch.</p>
     <div class="ds-specimen"
-         data-code='import { useState } from &#39;@corelithzw/react&#39;;
-import { Stack, BottomSheet, Button } from &#39;@corelithzw/react&#39;;
+         data-code='import { Button } from &#39;@corelithzw/react&#39;;
 
 function BatchActionBar({ selected, requests, onApproveAll, onClear }: {
   selected: Set&lt;string&gt;;
@@ -640,10 +649,10 @@ function BatchActionBar({ selected, requests, onApproveAll, onClear }: {
         display: &#39;flex&#39;, gap: 8, alignItems: &#39;center&#39;,
       }}
     &gt;
-      &lt;span style={{ flex: 1, font: &#39;500 13px/1 var(--font-sans)&#39; }}&gt;
+      &lt;span style={{ flex: 1 }}&gt;
         {selected.size} selected
         {blockers.length &gt; 0 &amp;&amp; (
-          &lt;span style={{ color: &#39;var(--tone-warning)&#39;, marginLeft: 8 }}&gt;
+          &lt;span style={{ color: &#39;var(--tone-warn)&#39;, marginLeft: 8 }}&gt;
             · {blockers.length} with conflicts
           &lt;/span&gt;
         )}
@@ -673,10 +682,10 @@ function BatchActionBar({ selected, requests, onApproveAll, onClear }: {
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The whole <code>LeaveInbox</code>, assembled. Filter chips, multi-select, drawer with context, optimistic decide with 5-second undo, batch approve.</p>
     <div class="ds-specimen"
-         data-code='import { useMemo, useRef, useState } from &#39;@corelithzw/react&#39;;
+         data-code='import { useMemo, useRef, useState } from &#39;react&#39;;
 import {
   Stack, FilterChips, RowCard, EmptyState,
-  Drawer, Alert, Button, useToast,
+  Drawer, Button, useToast,
 } from &#39;@corelithzw/react&#39;;
 
 const UNDO_MS = 5_000;
@@ -698,7 +707,7 @@ export function LeaveInbox({
   const [filter,   setFilter]   = useState&lt;Filter&gt;(&#39;pending&#39;);
   const [openId,   setOpenId]   = useState&lt;string | null&gt;(null);
   const [selected, setSelected] = useState&lt;Set&lt;string&gt;&gt;(new Set());
-  const { showToast } = useToast();
+  const toast = useToast();
   const timers = useRef&lt;Map&lt;string, ReturnType&lt;typeof setTimeout&gt;&gt;&gt;(new Map());
 
   // ── Optimistic decide with 5s undo ─────────────────────────────
@@ -715,15 +724,15 @@ export function LeaveInbox({
       try { await commitAction(action, target); }
       catch (e) {
         revert();
-        showToast({ tone: &#39;danger&#39;,
-          message: `Could not save: ${(e as Error).message}` });
+        toast.show({ tone: &#39;danger&#39;,
+          title: `Could not save: ${(e as Error).message}` });
       }
     }, UNDO_MS);
     timers.current.set(target.id, t);
 
-    showToast({
+    toast.show({
       tone: &#39;success&#39;,
-      message: `${labelFor(action)} ${target.employee.name}.`,
+      title: `${labelFor(action)} ${target.employee.name}.`,
       duration: UNDO_MS,
       action: {
         label: &#39;Undo&#39;,
@@ -774,7 +783,7 @@ export function LeaveInbox({
     &lt;Stack gap=&quot;md&quot;&gt;
       &lt;FilterChips
         value={filter}
-        onChange={setFilter}
+        onChange={(v) =&gt; setFilter(v as Filter)}
         options={[
           { value: &#39;all&#39;,     label: `All · ${counts.all}` },
           { value: &#39;pending&#39;, label: `Pending · ${counts.pending}` },
@@ -783,22 +792,30 @@ export function LeaveInbox({
       /&gt;
 
       {visible.length === 0 ? (
-        &lt;EmptyState icon=&quot;inbox&quot; title=&quot;Inbox zero&quot;
-                    body=&quot;Nothing matches that filter.&quot; /&gt;
+        &lt;EmptyState
+          icon={&lt;span aria-hidden=&quot;true&quot;&gt;📥&lt;/span&gt;}
+          title=&quot;Inbox zero&quot;
+          description=&quot;Nothing matches that filter.&quot;
+        /&gt;
       ) : (
         &lt;Stack gap=&quot;xs&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
           {visible.map((r) =&gt; (
-            &lt;RowCard
-              key={r.id}
-              as=&quot;li&quot;
-              selectable
-              selected={selected.has(r.id)}
-              onSelectChange={() =&gt; toggle(r.id)}
-              onClick={() =&gt; setOpenId(r.id)}
-              label={r.employee.name}
-              meta={formatRange(r.from, r.to)}
-              trailing={&lt;StateBadge state={r.state} /&gt;}
-            /&gt;
+            &lt;li key={r.id}&gt;
+              &lt;label&gt;
+                &lt;input
+                  type=&quot;checkbox&quot;
+                  checked={selected.has(r.id)}
+                  onChange={() =&gt; toggle(r.id)}
+                  aria-label={`Select ${r.employee.name}`}
+                /&gt;
+              &lt;/label&gt;
+              &lt;RowCard
+                onClick={() =&gt; setOpenId(r.id)}
+                title={r.employee.name}
+                meta={formatRange(r.from, r.to)}
+                trailing={&lt;StateBadge state={r.state} /&gt;}
+              /&gt;
+            &lt;/li&gt;
           ))}
         &lt;/Stack&gt;
       )}
@@ -820,23 +837,29 @@ export function LeaveInbox({
       )}
 
       {opened &amp;&amp; (
-        &lt;Drawer open onClose={() =&gt; setOpenId(null)} title={opened.employee.name}&gt;
-          {/* (see Step 3 for the drawer body) */}
-          &lt;Drawer.Footer&gt;
-            &lt;Button variant=&quot;ghost&quot;
-                    onClick={() =&gt; decide({ kind: &#39;ASK_INFO&#39;, question: &#39;&#39; }, opened)}&gt;
-              Ask for more
-            &lt;/Button&gt;
-            &lt;div style={{ flex: 1 }} /&gt;
-            &lt;Button variant=&quot;secondary&quot;
-                    onClick={() =&gt; { decide({ kind: &#39;REJECT&#39;, reason: &#39;&#39; }, opened); setOpenId(null); }}&gt;
-              Reject
-            &lt;/Button&gt;
-            &lt;Button variant=&quot;primary&quot;
-                    onClick={() =&gt; { decide({ kind: &#39;APPROVE&#39; }, opened); setOpenId(null); }}&gt;
-              Approve
-            &lt;/Button&gt;
-          &lt;/Drawer.Footer&gt;
+        &lt;Drawer
+          open
+          onClose={() =&gt; setOpenId(null)}
+          title={opened.employee.name}
+          footer={
+            &lt;Stack direction=&quot;horizontal&quot; gap=&quot;sm&quot;&gt;
+              &lt;Button variant=&quot;ghost&quot;
+                      onClick={() =&gt; decide({ kind: &#39;ASK_INFO&#39;, question: &#39;&#39; }, opened)}&gt;
+                Ask for more
+              &lt;/Button&gt;
+              &lt;div style={{ flex: 1 }} /&gt;
+              &lt;Button variant=&quot;secondary&quot;
+                      onClick={() =&gt; { decide({ kind: &#39;REJECT&#39;, reason: &#39;&#39; }, opened); setOpenId(null); }}&gt;
+                Reject
+              &lt;/Button&gt;
+              &lt;Button variant=&quot;primary&quot;
+                      onClick={() =&gt; { decide({ kind: &#39;APPROVE&#39; }, opened); setOpenId(null); }}&gt;
+                Approve
+              &lt;/Button&gt;
+            &lt;/Stack&gt;
+          }
+        &gt;
+          &lt;div&gt;Drawer body — see step 3.&lt;/div&gt;
         &lt;/Drawer&gt;
       )}
     &lt;/Stack&gt;

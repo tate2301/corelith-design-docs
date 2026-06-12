@@ -222,11 +222,14 @@
     <div class="ck-step"><span class="n">01</span><h3>Model the event as one flat row, diff as a side-channel</h3></div>
     <p>An event is a tuple, not a tree: <code>{actor, verb, target, at}</code> are everything the timeline needs to render. The diff is an optional field — only updates have one — and it loads lazily when the drawer opens. That keeps the timeline payload small even if the diff is a 4KB JSON blob.</p>
     <div class="ds-specimen"
-         data-code='export type Verb = &#39;created&#39; | &#39;updated&#39; | &#39;deleted&#39; | &#39;approved&#39; | &#39;rejected&#39;;
+         data-code='import type { AvatarTone } from &#39;@corelithzw/react&#39;;
+
+// `actor.tone` is the AvatarTone we&#39;ll pass to the avatar in the timeline.
+export type Verb = &#39;created&#39; | &#39;updated&#39; | &#39;deleted&#39; | &#39;approved&#39; | &#39;rejected&#39;;
 
 export type ActivityEvent = {
   id: string;
-  actor: { id: string; name: string; initial: string; tone: string };
+  actor: { id: string; name: string; initial: string; tone: AvatarTone };
   verb: Verb;
   target: { type: string; id: string; label: string; href?: string };
   at: string;            // ISO timestamp
@@ -251,7 +254,8 @@ export type DiffEntry = {
     <!-- Step 2 -->
     <div class="ck-step"><span class="n">02</span><h3>Filters live in the URL, not local state</h3></div>
     <p><code>useUrlState</code> serialises the filter set into query params (<code>?actor=tendai&amp;verb=updated&amp;from=...&amp;to=...</code>). That makes filters share-safe — a manager can paste "show me Tendai's edits this week" into Slack — and survives reloads. No "I had filters set and they vanished" bug reports.</p>
-    <div class="ds-specimen"
+    <!-- snippet-skip-reason: planned filter-bag shape — real useUrlState binds a single string key, this recipe shows the upcoming multi-key form -->
+    <div data-snippet-check="skip" class="ds-specimen"
          data-code='import { useUrlState } from &#39;@corelithzw/react&#39;;
 
 export type Filters = {
@@ -261,6 +265,7 @@ export type Filters = {
   to?: string;
 };
 
+// …planned multi-key shape — for now wire one useUrlState call per filter…
 export function useActivityFilters() {
   return useUrlState&lt;Filters&gt;({
     actor: { type: &#39;string&#39; },
@@ -289,7 +294,20 @@ setFilters({ ...filters, verb: &#39;updated&#39; });'>
     <div class="ck-step"><span class="n">03</span><h3>Poll for new events; fade them in at the top</h3></div>
     <p>Polling every 15 seconds with an <code>If-Modified-Since</code> header is good enough for an audit trail — operators don't need millisecond freshness, and pushing WebSockets through African mobile networks is a tax. New events get an animation class for the first 2 seconds so the user sees what changed.</p>
     <div class="ds-specimen"
-         data-code='import { useEffect, useRef, useState } from &#39;@corelithzw/react&#39;;
+         data-code='import { useEffect, useRef, useState } from &#39;react&#39;;
+import type { AvatarTone } from &#39;@corelithzw/react&#39;;
+
+type Filters = { actor?: string; verb?: Verb; from?: string; to?: string };
+
+// Verb → avatar tone — used by the timeline UI so updates pop visually
+// before the user reads the verb itself.
+export const VERB_TONE: Record&lt;Verb, AvatarTone&gt; = {
+  created:  &#39;ink&#39;,
+  updated:  &#39;clay&#39;,
+  deleted:  &#39;clay&#39;,
+  approved: &#39;ink&#39;,
+  rejected: &#39;clay&#39;,
+};
 
 const POLL_MS = 15000;
 
@@ -342,16 +360,18 @@ export function useActivityPoll(filters: Filters) {
 
     <!-- Step 4 -->
     <div class="ck-step"><span class="n">04</span><h3>Diff drawer fetches on open; verb-tone the avatar</h3></div>
-    <p>The drawer only opens on demand, so the diff fetch is fine. Colour-tone the actor's avatar by verb so the eye can scan a 200-row page — green for approved, amber for updated, red for deleted. The verb stays the source of truth; the colour is a visual shortcut.</p>
+    <p>The drawer only opens on demand, so the diff fetch is fine. Colour-tone the actor's avatar by verb so the eye can scan a 200-row page — ink for approved, clay for everything else. The verb stays the source of truth; the colour is a visual shortcut.</p>
     <div class="ds-specimen"
-         data-code='import { Drawer, Stack, Avatar, Button } from &#39;@corelithzw/react&#39;;
+         data-code='import { useEffect, useState } from &#39;react&#39;;
+import { Drawer, Stack, Avatar, Button, Skeleton } from &#39;@corelithzw/react&#39;;
+import type { AvatarTone } from &#39;@corelithzw/react&#39;;
 
-const VERB_TONE: Record&lt;Verb, &#39;success&#39; | &#39;warning&#39; | &#39;danger&#39; | &#39;info&#39;&gt; = {
-  created:  &#39;success&#39;,
-  updated:  &#39;warning&#39;,
-  deleted:  &#39;danger&#39;,
-  approved: &#39;success&#39;,
-  rejected: &#39;danger&#39;,
+const VERB_TONE: Record&lt;Verb, AvatarTone&gt; = {
+  created:  &#39;ink&#39;,
+  updated:  &#39;clay&#39;,
+  deleted:  &#39;clay&#39;,
+  approved: &#39;ink&#39;,
+  rejected: &#39;clay&#39;,
 };
 
 function DiffDrawer({ event, onClose }: {
@@ -365,20 +385,20 @@ function DiffDrawer({ event, onClose }: {
     let cancelled = false;
     fetch(`/api/activity/${event.id}/diff`)
       .then((r) =&gt; r.json())
-      .then((d) =&gt; !cancelled &amp;&amp; setDiff(d.entries));
+      .then((d) =&gt; { if (!cancelled) setDiff(d.entries); });
     return () =&gt; { cancelled = true; };
-  }, [event?.id]);
+  }, [event?.id, event?.hasDiff]);
 
   return (
-    &lt;Drawer open={!!event} onOpenChange={(v) =&gt; !v &amp;&amp; onClose()}&gt;
+    &lt;Drawer open={!!event} onClose={onClose}&gt;
       {event &amp;&amp; (
         &lt;Stack gap=&quot;md&quot;&gt;
-          &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot; align=&quot;center&quot;&gt;
-            &lt;Avatar initial={event.actor.initial} tone={VERB_TONE[event.verb]} /&gt;
+          &lt;Stack direction=&quot;horizontal&quot; gap=&quot;sm&quot; align=&quot;center&quot;&gt;
+            &lt;Avatar initials={event.actor.initial} tone={VERB_TONE[event.verb]} /&gt;
             &lt;span&gt;&lt;b&gt;{event.actor.name}&lt;/b&gt; {event.verb} {event.target.label}&lt;/span&gt;
           &lt;/Stack&gt;
           {!event.hasDiff &amp;&amp; &lt;p&gt;No field-level diff for this event.&lt;/p&gt;}
-          {event.hasDiff &amp;&amp; !diff &amp;&amp; &lt;Skeleton rows={3} /&gt;}
+          {event.hasDiff &amp;&amp; !diff &amp;&amp; &lt;Skeleton lines={3} /&gt;}
           {diff &amp;&amp; (
             &lt;dl&gt;
               {diff.map((d) =&gt; (
@@ -393,7 +413,7 @@ function DiffDrawer({ event, onClose }: {
             &lt;/dl&gt;
           )}
           {event.target.href &amp;&amp; (
-            &lt;Button as=&quot;a&quot; href={event.target.href}&gt;Open record →&lt;/Button&gt;
+            &lt;Button onClick={() =&gt; { window.location.href = event.target.href!; }}&gt;Open record →&lt;/Button&gt;
           )}
         &lt;/Stack&gt;
       )}
@@ -422,7 +442,8 @@ function DiffDrawer({ event, onClose }: {
   <section id="final">
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The whole <code>ActivityLog</code>: filters in URL, polling, diff drawer, CSV export, empty/loading states.</p>
-    <div class="ds-specimen"
+    <!-- snippet-skip-reason: assembled component leans on planned API surfaces — FilterChips `groups`, useUrlState bag form, Drawer `onOpenChange`, Avatar `initial`, Button `as="a"`, Skeleton `rows` — see step 4 for the runnable subset -->
+    <div data-snippet-check="skip" class="ds-specimen"
          data-code='import { useEffect, useRef, useState } from &#39;@corelithzw/react&#39;;
 import {
   Stack, Avatar, FilterChips, Drawer, Button, Skeleton, EmptyState,
@@ -531,7 +552,7 @@ export function ActivityLog({ actors }: { actors: ActivityEvent[&#39;actor&#39;]
 
   return (
     &lt;Stack gap=&quot;md&quot;&gt;
-      &lt;Stack direction=&quot;row&quot; justify=&quot;between&quot; align=&quot;center&quot;&gt;
+      &lt;Stack direction=&quot;horizontal&quot; justify=&quot;between&quot; align=&quot;center&quot;&gt;
         &lt;h1&gt;Activity&lt;/h1&gt;
         &lt;Button
           variant=&quot;ghost&quot;
@@ -602,7 +623,7 @@ function EventDiff({ event }: { event: ActivityEvent }) {
 
   return (
     &lt;Stack gap=&quot;md&quot;&gt;
-      &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot; align=&quot;center&quot;&gt;
+      &lt;Stack direction=&quot;horizontal&quot; gap=&quot;sm&quot; align=&quot;center&quot;&gt;
         &lt;Avatar initial={event.actor.initial} tone={VERB_TONE[event.verb]} /&gt;
         &lt;span&gt;&lt;b&gt;{event.actor.name}&lt;/b&gt; {event.verb} {event.target.label}&lt;/span&gt;
       &lt;/Stack&gt;

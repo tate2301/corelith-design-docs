@@ -179,7 +179,7 @@
     <div class="comp-h .when"><div class="when"><b>Use when</b>The operator drilled into a single record and you need to show the full detail without leaving the list. The sheet keeps context — closing returns to the scroll position.</div></div>
   </div>
   <div class="comp-box"
-       data-code='import { BottomSheet, Button } from &#39;@corelith/design-system&#39;;
+       data-code='import { BottomSheet, Button } from &#39;@corelithzw/react&#39;;
 
 export function Example({ open, onClose }) {
   return (
@@ -303,6 +303,51 @@ export function Example({ open, onClose }) {
       </div>
     </div>
   </div>
+
+  <section id="react-api" style="margin-top: 56px;">
+    <h2 class="ds-h2">React API · <code class="t-mono">BottomSheet</code></h2>
+    <p class="ds-h2-sub">From <code class="t-mono">@corelithzw/react@0.3.0</code> — <code class="t-mono">BottomSheetProps</code> in <code class="t-mono">packages/react/src/components/BottomSheet/BottomSheet.tsx</code>. Renders into a portal; manages focus trap, escape handling, and backdrop dismiss.</p>
+    <table class="ds-props"><thead><tr><th>Prop</th><th>Type</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code class="t-mono">open</code></td><td><code class="t-mono">boolean</code></td><td>Required. Controls visibility.</td></tr>
+      <tr><td><code class="t-mono">onClose</code></td><td><code class="t-mono">() => void</code></td><td>Required. Called on backdrop tap, Escape, drag-dismiss, or explicit close.</td></tr>
+      <tr><td><code class="t-mono">title</code></td><td><code class="t-mono">ReactNode</code></td><td>Sheet header. Becomes the <code>aria-labelledby</code> target.</td></tr>
+      <tr><td><code class="t-mono">children</code></td><td><code class="t-mono">ReactNode</code></td><td>Scrollable body content.</td></tr>
+      <tr><td><code class="t-mono">dismissOnBackdrop</code></td><td><code class="t-mono">boolean</code></td><td>Default <code>true</code>. Set <code>false</code> for destructive confirms.</td></tr>
+      <tr><td><code class="t-mono">dismissOnEscape</code></td><td><code class="t-mono">boolean</code></td><td>Default <code>true</code>.</td></tr>
+      <tr><td><code class="t-mono">container</code></td><td><code class="t-mono">HTMLElement | null</code></td><td>Portal target. Defaults to <code>document.body</code>.</td></tr>
+    </tbody>
+    </table>
+  </section>
+
+  <section id="composition" style="margin-top: 56px;">
+    <h2 class="ds-h2">Composition</h2>
+    <p>Bottom sheet composes a portal scrim + animated panel + sticky header + scrollable body + sticky footer. It is the canonical mobile overlay — sheet-on-phone, modal-on-desktop. <a href="x-modal.html">Modal</a> defers to this primitive for any flow where a phone is in play.</p>
+    <p><strong>Don't use this for:</strong> page-level navigation (sidebar / drawer) — those belong in <a href="x-app-shell.html">app shell</a>. For desktop-only blocking confirms, see <a href="x-modal.html">modal</a>.</p>
+  </section>
+
+  <section id="responsive" style="margin-top: 56px;">
+    <h2 class="ds-h2">Responsive behaviour</h2>
+    <table class="ds-props"><thead><tr><th>Viewport</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr><td>Phone (≤ 720 px)</td><td>Anchored to the bottom edge; grab handle visible; entrance translates 100% → 0 over 260 ms. Max height 90 vh; body scrolls internally.</td></tr>
+      <tr><td>Tablet (720 – 1023 px)</td><td>Centred dialog with 14 px radius; grab handle hidden. Entrance translates 20 px → 0 with fade.</td></tr>
+      <tr><td>Desktop (≥ 1024 px)</td><td>Centred dialog max 540 px wide, 80 vh tall; scrim at 55% ink. Drag-to-dismiss disabled — Esc or close button only.</td></tr>
+    </tbody>
+    </table>
+  </section>
+
+  <section id="keyboard" style="margin-top: 56px;">
+    <h2 class="ds-h2">Keyboard contract</h2>
+    <table class="ds-props"><thead><tr><th>Key</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr><td><code>Tab / Shift + Tab</code></td><td>Cycle focus through interactive children; trapped inside the sheet.</td></tr>
+      <tr><td><code>Esc</code></td><td>Close (unless <code>dismissOnEscape</code> is false). Restores focus to the trigger.</td></tr>
+      <tr><td><code>Enter (on focused row)</code></td><td>Activate the focused control.</td></tr>
+      <tr><td><code>Drag handle (touch)</code></td><td>Drag down past 30% threshold to dismiss. Visual only — keyboard users use Esc.</td></tr>
+    </tbody>
+    </table>
+  </section>
 
   <section style="margin-top: 56px;">
     <h2 class="ds-h2">Parts</h2>

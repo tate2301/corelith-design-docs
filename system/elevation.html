@@ -109,6 +109,34 @@
     </div>
   </section>
 
+  <section id="zindex">
+    <h2 class="ds-h2">Z-index ladder</h2>
+    <p class="ds-h2-sub">Nine reserved bands. Component CSS picks a band; never invent a one-off number. Audit comes from <code class="inline">huchu-nav.css</code>, <code class="inline">components.css</code>, <code class="inline">shared.css</code>, <code class="inline">system.css</code>, <code class="inline">portal-shell.css</code> and React component CSS.</p>
+
+    <table class="ds-props">
+      <thead><tr><th>Band</th><th>Z-index</th><th>What lives here</th><th>Rationale</th></tr></thead>
+      <tbody>
+        <tr><td><b>Base</b></td><td>auto · 0</td><td>Page content, cards, tables.</td><td>Default flow. Nothing earned a stacking context.</td></tr>
+        <tr><td><b>Local lift</b></td><td>1–5</td><td>Sticky table headers, hovered row, focus halo.</td><td>Lifts a paint sibling above the resting row without overlapping the chrome.</td></tr>
+        <tr><td><b>In-page sticky</b></td><td>20–30</td><td>Portal sticky toolbar, embedded mini-phone chrome.</td><td>Sits above content, below the global nav.</td></tr>
+        <tr><td><b>Sidebar / system rails</b></td><td>44–55</td><td>Doc-shell TOC (44), sidebar (45), command palette inline (50), settings rail (55).</td><td>Below the top nav so the nav always reads as the highest-level frame.</td></tr>
+        <tr><td><b>Top nav</b></td><td>60</td><td>Primary nav bar (huchu-nav), bottom-tab bar, sticky save-bar.</td><td>The chrome that frames the product is always above scrolling content.</td></tr>
+        <tr><td><b>Drawer / sheet</b></td><td>80–81</td><td>Side drawer (80), drawer focus halo (81), Drawer overlay (React 9998), Drawer panel (React 9999) — the React stack uses the four-figure block to stay above any host page.</td><td>Non-modal overlays — they cover content but don't block the operator.</td></tr>
+        <tr><td><b>Popover / menu</b></td><td>90</td><td>Dropdown menus, autocomplete, date-picker pop, hover cards.</td><td>Above drawers (so a date-picker inside a drawer renders), below modals.</td></tr>
+        <tr><td><b>Modal</b></td><td>100 · React 9999</td><td>Modal dialogs, alert dialogs, command palette (full-screen), bottom-sheet (mobile portal). The React-package modals share the 9999 ceiling for portal-rooted rendering.</td><td>Always blocks the page. Esc closes; focus is trapped.</td></tr>
+        <tr><td><b>Toast / system message</b></td><td>200 · React 9999</td><td>Toast stack, system banners, offline indicator.</td><td>Above modals on purpose — a critical announcement must always be readable.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="ds-callout" style="margin-top: 16px;">
+      <span class="ic" data-icon="info" data-icon-size="18"></span>
+      <div>
+        <h4>Why React components jump to 9998/9999</h4>
+        <p>React-package components (<code class="inline">Modal</code>, <code class="inline">Drawer</code>, <code class="inline">Toast</code>, <code class="inline">CommandPalette</code>) are designed to be portaled into any host page, including pages built outside Corelith. The high values are a defensive ceiling — they reach above third-party site chrome. Inside a Corelith page, the relative ordering is identical to the document-level ladder above.</p>
+      </div>
+    </div>
+  </section>
+
   <section id="anatomy">
     <h2 class="ds-h2">Tokens</h2>
     <table class="ds-props">
@@ -117,8 +145,13 @@
         <tr><td>--shadow-none</td><td>none</td><td>Default. Cards and panels at rest.</td></tr>
         <tr><td>--shadow-rest</td><td>0 1px 0 / .04</td><td>The faintest cue for raised buttons.</td></tr>
         <tr><td>--shadow-hover</td><td>0 2px 4px / .06</td><td>Hover on interactive cards.</td></tr>
-        <tr><td>--shadow-popover</td><td>0 12px 32px / .18</td><td>Popovers, dropdowns, autocomplete.</td></tr>
-        <tr><td>--shadow-modal</td><td>0 24px 64px / .24</td><td>Modal dialogs only.</td></tr>
+        <tr><td>--shadow-popover</td><td>0 12px 32px / .18 + 0 2px 6px / .06</td><td>Popovers, dropdowns, autocomplete.</td></tr>
+        <tr><td>--shadow-modal</td><td>0 24px 64px / .24 + 0 4px 12px / .08</td><td>Modal dialogs only.</td></tr>
+        <tr><td>--shadow-inset-rest</td><td>0 1px 0 / .06 inset</td><td>Resting state on a segmented control's active item.</td></tr>
+        <tr><td>--shadow-inset-soft</td><td>0 1px 2px / .06 inset</td><td>Soft inner lift for the pressed tab in a strip.</td></tr>
+        <tr><td>--shadow-bar-bottom</td><td>0 -6px 18px -8px / .10</td><td>Bars that sit above content with shadow pointing up — bottom-tab bar, save-bar.</td></tr>
+        <tr><td>--shadow-sheet-bottom</td><td>0 -20px 40px -10px / .30</td><td>Bottom sheet — deeper upward throw than a bar.</td></tr>
+        <tr><td>--shadow-thumb</td><td>0 1px 2px / .18</td><td>Switch thumb — a physical knob, not a card.</td></tr>
       </tbody>
     </table>
   </section>
@@ -143,6 +176,7 @@
   <ul>
     <li><a href="#levels" class="current">Five levels</a></li>
     <li><a href="#examples">In use</a></li>
+    <li><a href="#zindex">Z-index ladder</a></li>
     <li><a href="#anatomy">Tokens</a></li>
     <li><a href="#rules">Do &amp; don't</a></li>
   </ul>

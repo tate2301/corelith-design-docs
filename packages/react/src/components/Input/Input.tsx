@@ -13,6 +13,14 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   trailingSlot?: ReactNode;
 }
 
+/**
+ * Input — Corelith component.
+ *
+ * @example
+ * ```tsx
+ * <Input />
+ * ```
+ */
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   {
     className,

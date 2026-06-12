@@ -448,3 +448,38 @@ body.no-hx-float-btn .hx-float-btn { display: none; }
     grid-template-columns: 1fr !important;
   }
 }
+
+/* ============================================================
+   Cookbook .ck-a11y fix — every recipe ships an inline <style>
+   `.ck-a11y li { display: grid; grid-template-columns: 20px 1fr }`.
+   With a bold heading + <pre>/<code> + bare text inside the <li>,
+   grid auto-placement drops the subsequent block children and text
+   nodes into the 20px icon column of new implicit rows, squeezing
+   prose to a sliver and bleeding code blocks over neighbouring
+   content on phones. This rule lives in a LINKED stylesheet (loaded
+   before the inline <style>) and uses `html .ck-a11y li` for higher
+   specificity so it wins the cascade. The icon becomes an
+   absolutely-positioned ::before; content flows as a normal block.
+   ============================================================ */
+html .ck-a11y li {
+  display: block;
+  grid-template-columns: none;
+  position: relative;
+  padding: 12px 14px 12px 38px;
+}
+html .ck-a11y li::before {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  margin-top: 0;
+}
+html .ck-a11y li > b,
+html .ck-a11y li > strong { display: block; margin-bottom: 4px; }
+html .ck-a11y li pre,
+html .ck-a11y li code {
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre;
+  -webkit-overflow-scrolling: touch;
+}
+html .ck-a11y li pre { display: block; margin: 8px 0; }

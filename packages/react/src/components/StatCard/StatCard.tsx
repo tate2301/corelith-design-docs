@@ -14,6 +14,14 @@ export interface StatCardProps extends HTMLAttributes<HTMLDivElement> {
   tone?: StatCardTone;
 }
 
+/**
+ * StatCard — single metric tile.
+ *
+ * @example
+ * ```tsx
+ * <StatCard />
+ * ```
+ */
 export const StatCard = forwardRef<HTMLDivElement, StatCardProps>(function StatCard(
   { label, value, unit, delta, deltaTone = 'neutral', tone = 'default', className, ...rest },
   ref,

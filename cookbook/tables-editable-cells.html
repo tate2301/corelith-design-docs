@@ -229,7 +229,8 @@ function Cell({ addr, value, isEditing, draft, error, onEnter, onChange, onCommi
     <div class="ck-step"><span class="n">03</span><h3>Validation — per-cell, per-column</h3></div>
     <p>Each column owns a validator: <code>(raw, row) =&gt; string | null</code> — returns the error message or null. Validate on every keystroke so the error appears as the user types. Block the save (don't dismiss the editor) until validation passes — Excel teaches users that the cell stays "hot" until it's valid.</p>
     <div class="ds-specimen"
-         data-code='type Validator&lt;Row&gt; = (raw: string, row: Row) =&gt; string | null;
+         data-code='type Stock = { id: string; sku: string; qty: number; price: number };
+type Validator&lt;Row&gt; = (raw: string, row: Row) =&gt; string | null;
 
 const VALIDATORS: Record&lt;string, Validator&lt;Stock&gt;&gt; = {
   price: (raw) =&gt; {
@@ -247,14 +248,16 @@ const VALIDATORS: Record&lt;string, Validator&lt;Stock&gt;&gt; = {
   },
 };
 
-// in the commit handler:
-function commit() {
-  if (edit.kind !== &#39;editing&#39;) return;
-  const err = VALIDATORS[edit.addr.col]?.(edit.draft, rows.find(r =&gt; r.id === edit.addr.rowId)!);
-  if (err) return;                 // stay in edit mode, show error
-  saveCell(edit.addr, edit.draft);
-  setEdit({ kind: &#39;idle&#39; });
-}'>
+// in the commit handler — sketch (real wiring lives in the table component):
+//
+//   if (edit.kind !== &#39;editing&#39;) return;
+//   const err = VALIDATORS[edit.addr.col]?.(
+//     edit.draft,
+//     rows.find((r) =&gt; r.id === edit.addr.rowId)!,
+//   );
+//   if (err) return;
+//   saveCell(edit.addr, edit.draft);
+//   setEdit({ kind: &#39;idle&#39; });'>
       <div class="ds-specimen-stage canvas padded">
         <div class="ck-code-only-note">
           <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
@@ -267,31 +270,41 @@ function commit() {
     <div class="ck-step"><span class="n">04</span><h3>Optimistic save + undo Toast</h3></div>
     <p>Update the row immediately, fire the mutation, show a 5-second Toast with "Undo". On error, revert and surface the failure. The user sees the change happen instantly — that's what makes the table feel like Excel.</p>
     <div class="ds-specimen"
-         data-code='import { Toast } from &#39;@corelithzw/react&#39;;
+         data-code='import type { Dispatch, SetStateAction } from &#39;react&#39;;
+import { useToast } from &#39;@corelithzw/react&#39;;
 
-async function saveCell(addr: CellAddr, next: string) {
-  const before = rows.find(r =&gt; r.id === addr.rowId)![addr.col];
-  // optimistic
-  setRows(rs =&gt; rs.map(r =&gt; r.id === addr.rowId ? { ...r, [addr.col]: next } : r));
+type StockRow = { id: string; sku: string; qty: number; price: number };
 
-  Toast.show({
-    message: `Saved ${addr.col}`,
-    action: {
-      label: &#39;Undo&#39;,
-      onClick: () =&gt; {
-        setRows(rs =&gt; rs.map(r =&gt; r.id === addr.rowId ? { ...r, [addr.col]: before } : r));
-        api.saveCell(addr, before).catch(/* fire-and-forget */);
+export function useSaveCell(
+  rows: StockRow[],
+  setRows: Dispatch&lt;SetStateAction&lt;StockRow[]&gt;&gt;,
+  api: { saveCell: (addr: CellAddr, value: string) =&gt; Promise&lt;void&gt; },
+) {
+  const toast = useToast();
+  return async (addr: CellAddr, next: string) =&gt; {
+    const row = rows.find((r) =&gt; r.id === addr.rowId);
+    if (!row) return;
+    const before = String(row[addr.col as keyof StockRow]);
+    setRows((rs) =&gt; rs.map((r) =&gt; (r.id === addr.rowId ? { ...r, [addr.col]: next } : r)));
+    toast.show({
+      title: `Saved ${addr.col}`,
+      duration: 5000,
+      action: {
+        label: &#39;Undo&#39;,
+        onClick: () =&gt; {
+          setRows((rs) =&gt; rs.map((r) =&gt; (r.id === addr.rowId ? { ...r, [addr.col]: before } : r)));
+          void api.saveCell(addr, before).catch(() =&gt; { /* fire-and-forget */ });
+        },
       },
-    },
-    duration: 5000,
-  });
-
-  try {
-    await api.saveCell(addr, next);
-  } catch (err) {
-    setRows(rs =&gt; rs.map(r =&gt; r.id === addr.rowId ? { ...r, [addr.col]: before } : r));
-    Toast.show({ message: `Save failed: ${err.message}`, tone: &#39;danger&#39; });
-  }
+    });
+    try {
+      await api.saveCell(addr, next);
+    } catch (e) {
+      const err = e as Error;
+      setRows((rs) =&gt; rs.map((r) =&gt; (r.id === addr.rowId ? { ...r, [addr.col]: before } : r)));
+      toast.show({ tone: &#39;danger&#39;, title: `Save failed: ${err.message}` });
+    }
+  };
 }'>
       <div class="ds-specimen-stage canvas padded">
         <div style="padding: 18px; max-width: 320px; margin: 0 auto;">
@@ -345,19 +358,19 @@ useEffect(() =&gt; {
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">~200 lines: state machine, cell renderer, validation, optimistic save, fill-down, undo.</p>
     <div class="ds-specimen"
-         data-code='import { useState, useRef, useEffect } from &#39;react&#39;;
-import { Input, Toast } from &#39;@corelithzw/react&#39;;
+         data-code='import { useState, useRef } from &#39;react&#39;;
+import { Input, useToast } from &#39;@corelithzw/react&#39;;
 
-type Stock = { id: string; sku: string; qty: number; price: number };
-type Col = &#39;sku&#39; | &#39;qty&#39; | &#39;price&#39;;
-type CellAddr = { rowId: string; col: Col };
-type EditState =
+type StockFinal = { id: string; sku: string; qty: number; price: number };
+type ColFinal = &#39;sku&#39; | &#39;qty&#39; | &#39;price&#39;;
+type CellAddrFinal = { rowId: string; col: ColFinal };
+type EditStateFinal =
   | { kind: &#39;idle&#39; }
-  | { kind: &#39;editing&#39;; addr: CellAddr; draft: string; original: string };
+  | { kind: &#39;editing&#39;; addr: CellAddrFinal; draft: string; original: string };
 
-const EDITABLE: Col[] = [&#39;qty&#39;, &#39;price&#39;];
+const EDITABLE_FINAL: ColFinal[] = [&#39;qty&#39;, &#39;price&#39;];
 
-const VALIDATORS: Partial&lt;Record&lt;Col, (raw: string) =&gt; string | null&gt;&gt; = {
+const VALIDATORS_FINAL: Partial&lt;Record&lt;ColFinal, (raw: string) =&gt; string | null&gt;&gt; = {
   price: (raw) =&gt; {
     const n = Number(raw);
     if (Number.isNaN(n)) return &#39;Must be a number.&#39;;
@@ -372,43 +385,50 @@ const VALIDATORS: Partial&lt;Record&lt;Col, (raw: string) =&gt; string | null&gt
   },
 };
 
+const parseCellFinal = (col: ColFinal, raw: string): string | number =&gt;
+  col === &#39;sku&#39; ? raw : Number(raw);
+
 export function StockTable({ initial, api }: {
-  initial: Stock[];
-  api: { saveCell: (addr: CellAddr, value: string) =&gt; Promise&lt;void&gt; };
+  initial: StockFinal[];
+  api: { saveCell: (addr: CellAddrFinal, value: string) =&gt; Promise&lt;void&gt; };
 }) {
   const [rows, setRows] = useState(initial);
-  const [edit, setEdit] = useState&lt;EditState&gt;({ kind: &#39;idle&#39; });
-  const history = useRef&lt;Array&lt;{ addr: CellAddr; before: string }&gt;&gt;([]);
+  const [edit, setEdit] = useState&lt;EditStateFinal&gt;({ kind: &#39;idle&#39; });
+  const history = useRef&lt;Array&lt;{ addr: CellAddrFinal; before: string }&gt;&gt;([]);
+  const toast = useToast();
 
-  const enterEdit = (addr: CellAddr) =&gt; {
-    const cur = String(rows.find(r =&gt; r.id === addr.rowId)![addr.col]);
+  const enterEdit = (addr: CellAddrFinal) =&gt; {
+    const cur = String(rows.find((r) =&gt; r.id === addr.rowId)![addr.col]);
     setEdit({ kind: &#39;editing&#39;, addr, draft: cur, original: cur });
   };
 
   const error = edit.kind === &#39;editing&#39;
-    ? VALIDATORS[edit.addr.col]?.(edit.draft) ?? null
+    ? VALIDATORS_FINAL[edit.addr.col]?.(edit.draft) ?? null
     : null;
 
   const commit = async () =&gt; {
     if (edit.kind !== &#39;editing&#39;) return;
-    if (error) return;                                // stay hot
-    if (edit.draft === edit.original) {               // no-op
-      setEdit({ kind: &#39;idle&#39; }); return;
+    if (error) return;
+    if (edit.draft === edit.original) {
+      setEdit({ kind: &#39;idle&#39; });
+      return;
     }
     history.current.push({ addr: edit.addr, before: edit.original });
     const addr = edit.addr;
     const next = edit.draft;
+    const before = edit.original;
     setEdit({ kind: &#39;idle&#39; });
-
-    setRows(rs =&gt; rs.map(r =&gt; r.id === addr.rowId ? { ...r, [addr.col]: parse(addr.col, next) } : r));
-    Toast.show({
-      message: `Saved ${addr.col}`,
+    setRows((rs) =&gt; rs.map((r) =&gt; (r.id === addr.rowId ? { ...r, [addr.col]: parseCellFinal(addr.col, next) } : r)));
+    toast.show({
+      title: `Saved ${addr.col}`,
       action: { label: &#39;Undo&#39;, onClick: () =&gt; { /* see step 5 */ } },
     });
-    try { await api.saveCell(addr, next); }
-    catch (err) {
-      setRows(rs =&gt; rs.map(r =&gt; r.id === addr.rowId ? { ...r, [addr.col]: parse(addr.col, edit.original) } : r));
-      Toast.show({ message: `Save failed: ${err.message}`, tone: &#39;danger&#39; });
+    try {
+      await api.saveCell(addr, next);
+    } catch (e) {
+      const err = e as Error;
+      setRows((rs) =&gt; rs.map((r) =&gt; (r.id === addr.rowId ? { ...r, [addr.col]: parseCellFinal(addr.col, before) } : r)));
+      toast.show({ tone: &#39;danger&#39;, title: `Save failed: ${err.message}` });
     }
   };
 
@@ -418,14 +438,15 @@ export function StockTable({ initial, api }: {
     if (edit.kind !== &#39;editing&#39;) return;
     if (error) return;
     const { rowId, col } = edit.addr;
-    const colIdx = EDITABLE.indexOf(col);
-    const rowIdx = rows.findIndex(r =&gt; r.id === rowId);
-    let nextRow = rowIdx, nextCol = colIdx;
-    if (dir === &#39;right&#39;) nextCol = colIdx + 1 &lt; EDITABLE.length ? colIdx + 1 : 0;
-    if (dir === &#39;left&#39;)  nextCol = colIdx - 1 &gt;= 0 ? colIdx - 1 : EDITABLE.length - 1;
+    const colIdx = EDITABLE_FINAL.indexOf(col);
+    const rowIdx = rows.findIndex((r) =&gt; r.id === rowId);
+    let nextRow = rowIdx;
+    let nextCol = colIdx;
+    if (dir === &#39;right&#39;) nextCol = colIdx + 1 &lt; EDITABLE_FINAL.length ? colIdx + 1 : 0;
+    if (dir === &#39;left&#39;)  nextCol = colIdx - 1 &gt;= 0 ? colIdx - 1 : EDITABLE_FINAL.length - 1;
     if (dir === &#39;down&#39;)  nextRow = Math.min(rowIdx + 1, rows.length - 1);
     if (dir === &#39;up&#39;)    nextRow = Math.max(rowIdx - 1, 0);
-    commit().then(() =&gt; enterEdit({ rowId: rows[nextRow].id, col: EDITABLE[nextCol] }));
+    void commit().then(() =&gt; enterEdit({ rowId: rows[nextRow].id, col: EDITABLE_FINAL[nextCol] }));
   };
 
   return (
@@ -437,20 +458,30 @@ export function StockTable({ initial, api }: {
         {rows.map((row) =&gt; (
           &lt;tr key={row.id}&gt;
             &lt;td&gt;{row.sku}&lt;/td&gt;
-            {EDITABLE.map((col) =&gt; {
+            {EDITABLE_FINAL.map((col) =&gt; {
               const isEd = edit.kind === &#39;editing&#39; &amp;&amp; edit.addr.rowId === row.id &amp;&amp; edit.addr.col === col;
+              const draft = isEd ? edit.draft : &#39;&#39;;
               return (
-                &lt;Cell key={col}
-                  addr={{ rowId: row.id, col }}
-                  value={String(row[col])}
-                  isEditing={isEd}
-                  draft={isEd ? edit.draft : &#39;&#39;}
-                  error={isEd ? error : null}
-                  onEnter={() =&gt; enterEdit({ rowId: row.id, col })}
-                  onChange={(v) =&gt; setEdit({ ...(edit as Extract&lt;EditState, {kind:&#39;editing&#39;}&gt;), draft: v })}
-                  onCommit={commit} onCancel={cancel}
-                  onNav={nav}
-                /&gt;
+                &lt;td key={col}&gt;
+                  {isEd ? (
+                    &lt;Input
+                      autoFocus
+                      value={draft}
+                      invalid={!!error}
+                      onChange={(e) =&gt; setEdit({ ...(edit as Extract&lt;EditStateFinal, { kind: &#39;editing&#39; }&gt;), draft: e.target.value })}
+                      onBlur={() =&gt; { void commit(); }}
+                      onKeyDown={(e) =&gt; {
+                        if (e.key === &#39;Enter&#39;) { e.preventDefault(); void commit(); }
+                        else if (e.key === &#39;Escape&#39;) { e.preventDefault(); cancel(); }
+                        else if (e.key === &#39;Tab&#39;)   { e.preventDefault(); nav(e.shiftKey ? &#39;left&#39; : &#39;right&#39;); }
+                      }}
+                    /&gt;
+                  ) : (
+                    &lt;button type=&quot;button&quot; className=&quot;cell-read&quot; onClick={() =&gt; enterEdit({ rowId: row.id, col })}&gt;
+                      {String(row[col])}
+                    &lt;/button&gt;
+                  )}
+                &lt;/td&gt;
               );
             })}
           &lt;/tr&gt;

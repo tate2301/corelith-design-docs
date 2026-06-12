@@ -145,17 +145,18 @@
       <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart</a>
       <a class="ck-piece" href="../../system/b-card.html"><span class="kind">Block</span>Card</a>
     </div>
-    <p style="margin-top: 12px;"><b>Intended exports used here:</b> <code>Chart.Bar</code> with <code>orientation="horizontal"</code>.</p>
+    <p style="margin-top: 12px;"><b>Exports used here:</b> <code>Chart.Bar</code>, <code>ChartCategoricalDatum</code>.</p>
     <div class="ck-roadmap-note">
-      <b>Roadmap.</b> Horizontal orientation ships with <code>Chart.Bar</code> in <code>@corelithzw/react v0.2</code>.
+      <b>In v0.3.0.</b> <code>Chart.Bar</code> only draws vertical columns today — there is no <code>orientation</code> prop. For a "rank these N things by value" question (the use case horizontal bars excel at), sort your data descending and render vertical bars; the eye still gets the ordering for free. When you truly need horizontal layout, hand-roll the SVG above. The snippet below is the vertical fallback.
     </div>
   </section>
 
   <section id="snippet">
     <h2 class="ds-h2">The React snippet</h2>
-    <p class="ds-h2-sub">Same component as vertical bars; flip <code>orientation</code> and sort the data on the way in.</p>
+    <p class="ds-h2-sub">Sort descending, then map into the chart's <code>{ label, value, color? }</code> shape. The leader picks up the bright brand colour; the rest stay quiet.</p>
     <div class="ds-specimen"
          data-code='import { Chart } from &#39;@corelithzw/react&#39;;
+import type { ChartCategoricalDatum } from &#39;@corelithzw/react&#39;;
 
 const raw = [
   { supplier: &#39;Mukamba Holdings&#39;,  spend: 48000 },
@@ -165,19 +166,19 @@ const raw = [
   { supplier: &#39;Mutare Packaging&#39;,  spend: 11000 },
 ];
 
-const data = [...raw].sort((a, b) =&gt; b.spend - a.spend);
-
 export function TopSuppliers() {
+  const sorted = [...raw].sort((a, b) =&gt; b.spend - a.spend);
+  const data: ChartCategoricalDatum[] = sorted.map((d, i) =&gt; ({
+    label: d.supplier,
+    value: d.spend,
+    color: i === 0 ? &#39;var(--brand)&#39; : undefined,
+  }));
   return (
     &lt;Chart.Bar
       data={data}
-      xAccessor=&quot;supplier&quot;
-      yAccessor=&quot;spend&quot;
-      orientation=&quot;horizontal&quot;
-      color={(d, i) =&gt; (i === 0 ? &#39;brand&#39; : &#39;brand-soft&#39;)}
+      color=&quot;brand-soft&quot;
+      width={640}
       height={280}
-      showValues
-      yFormat={(v) =&gt; `$${v / 1000}k`}
       aria-label=&quot;Top suppliers by month-to-date spend&quot;
     /&gt;
   );

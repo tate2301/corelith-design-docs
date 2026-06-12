@@ -62,6 +62,14 @@ type MenuComponent = typeof MenuRoot & {
   Separator: typeof MenuDivider;
 };
 
+/**
+ * Menu — Corelith component.
+ *
+ * @example
+ * ```tsx
+ * <Menu />
+ * ```
+ */
 export const Menu = MenuRoot as MenuComponent;
 Menu.Item = MenuItem;
 Menu.Label = MenuLabel;

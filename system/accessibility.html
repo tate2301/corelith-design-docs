@@ -64,7 +64,30 @@
       </tbody>
     </table>
 
-    <p>Every component page has its own keyboard table covering its specific shortcuts. If a key is documented there, it is wired.</p>
+    <h3 class="ds-h3" style="margin-top: 28px;">Per-component support matrix</h3>
+    <p>What each component family supports. Each row is the contract; a component is not shippable until its row is green.</p>
+    <table class="ds-props">
+      <thead><tr><th>Component family</th><th>Tab</th><th>Enter</th><th>Space</th><th>Esc</th><th>Arrows</th><th>Type-ahead</th></tr></thead>
+      <tbody>
+        <tr><td><b>Button · Link</b></td><td>focus</td><td>activate</td><td>activate</td><td>—</td><td>—</td><td>—</td></tr>
+        <tr><td><b>Input · Textarea</b></td><td>focus / next</td><td>submit form</td><td>insert space</td><td>clear / blur</td><td>caret move</td><td>—</td></tr>
+        <tr><td><b>Checkbox · Switch</b></td><td>focus</td><td>—</td><td>toggle</td><td>—</td><td>—</td><td>—</td></tr>
+        <tr><td><b>Radio group</b></td><td>focus the selected radio</td><td>—</td><td>select</td><td>—</td><td>move + select</td><td>—</td></tr>
+        <tr><td><b>Select · Combobox</b></td><td>focus</td><td>open / select</td><td>open</td><td>close</td><td>move highlight</td><td>jump to match</td></tr>
+        <tr><td><b>Dropdown menu</b></td><td>focus trigger</td><td>open / activate</td><td>open / activate</td><td>close</td><td>move within menu</td><td>jump to match</td></tr>
+        <tr><td><b>Tabs</b></td><td>roving — one stop</td><td>—</td><td>activate (if manual)</td><td>—</td><td>move between tabs</td><td>—</td></tr>
+        <tr><td><b>Listbox</b></td><td>roving — one stop</td><td>—</td><td>select</td><td>—</td><td>move highlight</td><td>jump to match</td></tr>
+        <tr><td><b>Modal · Alert dialog</b></td><td>cycles inside (trap)</td><td>default action</td><td>—</td><td>close + restore focus</td><td>—</td><td>—</td></tr>
+        <tr><td><b>Drawer · Sheet</b></td><td>cycles inside (trap)</td><td>—</td><td>—</td><td>close + restore focus</td><td>—</td><td>—</td></tr>
+        <tr><td><b>Popover · Hover card</b></td><td>focus content</td><td>activate child</td><td>—</td><td>close + restore focus</td><td>—</td><td>—</td></tr>
+        <tr><td><b>Calendar · Date picker</b></td><td>focus the grid</td><td>select day</td><td>select day</td><td>close</td><td>day-by-day / month with PgUp/Dn</td><td>—</td></tr>
+        <tr><td><b>Table</b></td><td>focus first cell action</td><td>activate row action</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+        <tr><td><b>Command palette</b></td><td>—</td><td>execute item</td><td>—</td><td>close</td><td>move highlight</td><td>typed query</td></tr>
+        <tr><td><b>Toast</b></td><td>—</td><td>—</td><td>—</td><td>dismiss top toast</td><td>—</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top: 16px;">Every component page has its own keyboard table covering its specific shortcuts. If a key is documented there, it is wired.</p>
   </section>
 
   <section id="focus">
@@ -72,12 +95,20 @@
     <p class="ds-h2-sub">Focus is never invisible. It moves predictably, returns predictably, and never traps the operator anywhere they didn't ask to be.</p>
 
     <ul>
-      <li><strong>:focus-visible.</strong> Focus rings render only on keyboard focus — never on mouse click. The ring is a 2&nbsp;px solid <code class="inline">--brand</code> outline with a 3&nbsp;px <code class="inline">--focus-ring-soft</code> halo.</li>
+      <li><strong>:focus-visible.</strong> Focus rings render only on keyboard focus — never on mouse click. The ring is a 2&nbsp;px solid <code class="inline">--brand</code> (<code class="inline">#0B5DF0</code>) outline with a 2&nbsp;px offset and a 3&nbsp;px <code class="inline">--focus-ring-soft</code> halo (<code class="inline">rgba(11, 93, 240, 0.22)</code>).</li>
       <li><strong>Programmatic focus on overlays.</strong> Opening a modal, sheet, or alert dialog moves focus to the first focusable control inside. Closing it returns focus to the trigger.</li>
       <li><strong>Focus trap inside dialogs.</strong> While a modal is open, Tab cycles within it. Esc closes and restores focus.</li>
       <li><strong>Roving tabindex.</strong> Composite widgets (tabs, menus, listboxes, segmented control) expose exactly one tab stop; arrow keys move focus within.</li>
       <li><strong>Skip links.</strong> Page shells expose a "Skip to content" link as the first focusable element.</li>
     </ul>
+
+    <pre class="ds-code"><span class="c">/* The system-wide focus-visible policy */</span>
+*:focus-visible {
+  outline: <span class="v">2px solid var(--brand)</span>;
+  outline-offset: <span class="v">2px</span>;
+  box-shadow: <span class="v">0 0 0 5px var(--focus-ring-soft)</span>;
+  border-radius: <span class="v">inherit</span>;
+}</pre>
 
     <div class="ds-callout">
       <span class="ic" data-icon="info" data-icon-size="18"></span>
@@ -107,6 +138,28 @@
       <li><strong>Hidden from everyone</strong> — use <code class="inline">hidden</code> or <code class="inline">display: none</code>.</li>
       <li><strong>Decorative</strong> — apply <code class="inline">aria-hidden="true"</code> to elements that add no information (decorative icons, the chevron next to a label).</li>
     </ul>
+
+    <h3 class="ds-h3">The .sr-only utility</h3>
+    <p>One class for visually-hidden, screen-reader-accessible content. Used on icon-only buttons, on the off-screen labels that describe a chart, on the "Skip to content" link until focus.</p>
+    <pre class="ds-code"><span class="k">.sr-only</span> {
+  position: <span class="v">absolute</span>;
+  width: <span class="v">1px</span>;
+  height: <span class="v">1px</span>;
+  padding: <span class="v">0</span>;
+  margin: <span class="v">-1px</span>;
+  overflow: <span class="v">hidden</span>;
+  clip: <span class="v">rect(0, 0, 0, 0)</span>;
+  white-space: <span class="v">nowrap</span>;
+  border: <span class="v">0</span>;
+}
+<span class="c">/* Reveal on focus — for skip-links */</span>
+<span class="k">.sr-only-focusable:focus</span>,
+<span class="k">.sr-only-focusable:focus-visible</span> {
+  position: <span class="v">static</span>;
+  width: <span class="v">auto</span>;
+  height: <span class="v">auto</span>;
+  clip: <span class="v">auto</span>;
+}</pre>
 
     <h3 class="ds-h3">Naming and grouping</h3>
     <p>Form controls always have a <code class="inline">&lt;label for&gt;</code> or <code class="inline">aria-labelledby</code>. Sections use <code class="inline">aria-labelledby</code> pointing at their heading. Buttons that only contain an icon use <code class="inline">aria-label</code>.</p>
@@ -162,11 +215,18 @@
           <td><span class="grade aa">AA</span></td>
         </tr>
         <tr>
-          <td><span class="a11y-pair"><span class="chip" style="background: #8A91A0;"></span><span>--text-subtle</span></span></td>
+          <td><span class="a11y-pair"><span class="chip" style="background: #5E6573;"></span><span>--text-subtle</span></span></td>
           <td><span class="a11y-pair"><span class="chip" style="background: #FFFFFF;"></span><span>--surface</span></span></td>
           <td class="pair">Metadata, timestamps</td>
-          <td class="ratio">3.16 : 1</td>
-          <td><span class="grade aa-large">AA Large only</span></td>
+          <td class="ratio">5.86 : 1</td>
+          <td><span class="grade aa">AA</span></td>
+        </tr>
+        <tr>
+          <td><span class="a11y-pair"><span class="chip" style="background: #5E6573;"></span><span>--text-subtle</span></span></td>
+          <td><span class="a11y-pair"><span class="chip" style="background: #F7F8FA;"></span><span>--canvas</span></span></td>
+          <td class="pair">Metadata on page</td>
+          <td class="ratio">5.51 : 1</td>
+          <td><span class="grade aa">AA</span></td>
         </tr>
         <tr>
           <td><span class="a11y-pair"><span class="chip" style="background: #0944C2;"></span><span>--brand-strong / --text-link</span></span></td>
@@ -213,7 +273,7 @@
       </tbody>
     </table>
 
-    <p><strong>Known limitations:</strong> <code class="inline">--text-subtle</code> on <code class="inline">--canvas</code> falls just under 3:1 (2.98:1) and is reserved for timestamps and metadata at 14&nbsp;px+ on white only. Success and warn tones meet UI-component contrast (3:1) but should never be the sole indicator of state — pair with an icon.</p>
+    <p><strong>Known limitations:</strong> <code class="inline">--tone-warn</code> on its own <code class="inline">--tone-warn-bg</code> measures 3.11&nbsp;:&nbsp;1 — sufficient for UI components and large text but not for body prose; reach for <code class="inline">#6E481A</code> or darker when running text must sit on a warm tint. Success and warn tones on white meet UI-component contrast (3:1) but should never be the sole indicator of state — pair with an icon and a word. The dark theme's <code class="inline">--text-subtle</code> on <code class="inline">--canvas</code> sits at 3.99&nbsp;:&nbsp;1 — keep it at 14&nbsp;px+ on dark surfaces.</p>
   </section>
 
   <section id="reduced-motion">
@@ -280,7 +340,7 @@
       <div class="a11y-state-row">
         <span class="dot" style="background: var(--tone-warn);"></span>
         <span class="lbl">Needs input</span>
-        <span class="icon-wrap"><span data-icon="alert" data-icon-size="14"></span> 3 fields outstanding</span>
+        <span class="icon-wrap"><span data-icon="flag" data-icon-size="14"></span> 3 fields outstanding</span>
       </div>
       <div class="a11y-state-row">
         <span class="dot" style="background: var(--tone-danger);"></span>
@@ -337,6 +397,14 @@
       <div class="rule dont"><span class="tag">Don't</span><p>Assert "WCAG AA" without measurement. Use the contrast table above as proof.</p></div>
     </div>
   </section>
+
+  <div class="ds-callout" style="margin-top: 32px;">
+    <span class="ic" data-icon="check" data-icon-size="18"></span>
+    <div>
+      <h4>Live state</h4>
+      <p>For the per-component audit — what's measured, what's pending, what's blocked — see <a href="audit-a11y.html">Accessibility audit</a>. Every shipped pattern has a row.</p>
+    </div>
+  </div>
 
   <nav class="ds-pager">
     <a href="voice.html"><div class="pager-label">← Previous</div><div class="pager-title">Voice &amp; writing</div></a>

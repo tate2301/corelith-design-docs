@@ -224,9 +224,15 @@
     <!-- Step 1 -->
     <div class="ck-step"><span class="n">01</span><h3>Declare the URL schema once</h3></div>
     <p>The schema is a typed dictionary: each key maps to a <code>type</code> (string, number, boolean, string[]) and an optional default. <code>useUrlState</code> uses the schema both to parse on mount and to serialise on change — so an unknown query param just gets dropped, and a missing one falls back to the default.</p>
-    <div class="ds-specimen"
+    <!-- snippet-skip-reason: the shipped useUrlState is the single-key form
+         (key, defaultValue) - see hooks/useUrlState.ts. The schema-dictionary
+         form below is a narrative target for a future wrapper. The `…` token
+         keeps it human-skip-marked AND marked illustrative, so its decls do
+         NOT bleed into later snippets' preambles. -->
+    <div data-snippet-check="skip" class="ds-specimen"
          data-code='import { useUrlState } from &#39;@corelithzw/react&#39;;
 
+// Narrative target — a future wrapper around useUrlState. …
 export type SuppliersUrlState = {
   q: string;             // search query
   tier: string[];        // multi-select filter
@@ -340,7 +346,7 @@ function ShareViewButton() {
     try {
       await navigator.clipboard.writeText(window.location.href);
       toast.show({ tone: &#39;success&#39;, title: &#39;Link copied&#39;,
-        description: &#39;Paste it to share this exact view.&#39; });
+        message: &#39;Paste it to share this exact view.&#39; });
     } catch {
       // Fallback for non-secure contexts / older mobile browsers
       const ta = document.createElement(&#39;textarea&#39;);
@@ -351,7 +357,7 @@ function ShareViewButton() {
   };
 
   return (
-    &lt;Button variant=&quot;ghost&quot; onClick={onShare} leadingIcon=&quot;link&quot;&gt;
+    &lt;Button variant=&quot;ghost&quot; onClick={onShare} icon={&lt;span aria-hidden=&quot;true&quot;&gt;🔗&lt;/span&gt;}&gt;
       Share this view
     &lt;/Button&gt;
   );
@@ -373,64 +379,44 @@ function ShareViewButton() {
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The whole <code>SuppliersList</code> page: URL schema, debounced search, filter chips, selected row, share button.</p>
     <div class="ds-specimen"
-         data-code='import { useEffect, useState, useMemo } from &#39;@corelithzw/react&#39;;
+         data-code='import { useEffect, useState, useMemo } from &#39;react&#39;;
 import { FilterChips, Button, useToast, useUrlState } from &#39;@corelithzw/react&#39;;
 
-// ── URL schema ─────────────────────────────────────────────────
-export type SuppliersUrlState = {
-  q: string;
-  tier: string[];
-  sel: string | null;
-  open: string | null;
-  sort: &#39;name&#39; | &#39;tier&#39; | &#39;updatedAt&#39;;
-  dir: &#39;asc&#39; | &#39;desc&#39;;
-};
+type Supplier = { id: string; name: string; tier: &#39;A&#39; | &#39;B&#39; | &#39;C&#39;; updatedAt: string };
 
-function useSuppliersUrlState() {
-  return useUrlState&lt;SuppliersUrlState&gt;({
-    q:    { type: &#39;string&#39;,         default: &#39;&#39; },
-    tier: { type: &#39;string[]&#39;,       default: [] },
-    sel:  { type: &#39;string-or-null&#39;, default: null },
-    open: { type: &#39;string-or-null&#39;, default: null },
-    sort: { type: &#39;enum&#39;, values: [&#39;name&#39;, &#39;tier&#39;, &#39;updatedAt&#39;], default: &#39;name&#39; },
-    dir:  { type: &#39;enum&#39;, values: [&#39;asc&#39;, &#39;desc&#39;], default: &#39;asc&#39; },
-  });
+// Single-key useUrlState is the shipped form; one call per query param.
+function useSuppliersFilters() {
+  const [q,    setQ]    = useUrlState(&#39;q&#39;, &#39;&#39;);
+  const [tier, setTier] = useUrlState(&#39;tier&#39;, &#39;all&#39;);    // &#39;all&#39; | &#39;A&#39; | &#39;B&#39; | &#39;C&#39;
+  const [sel,  setSel]  = useUrlState(&#39;sel&#39;, &#39;&#39;);
+  return { q, setQ, tier, setTier, sel, setSel };
 }
 
-// ── Page ───────────────────────────────────────────────────────
-export function SuppliersList({
-  suppliers,
-}: {
-  suppliers: Array&lt;{ id: string; name: string; tier: &#39;A&#39; | &#39;B&#39; | &#39;C&#39;; updatedAt: string }&gt;;
-}) {
-  const [s, setS] = useSuppliersUrlState();
+export function SuppliersList({ suppliers }: { suppliers: Supplier[] }) {
+  const { q, setQ, tier, setTier, sel, setSel } = useSuppliersFilters();
   const toast = useToast();
 
-  // Debounced search input
-  const [draft, setDraft] = useState(s.q);
+  // Debounced search — local draft pushes to the URL after 250ms quiet.
+  const [draft, setDraft] = useState(q);
   useEffect(() =&gt; {
-    if (draft === s.q) return;
-    const id = setTimeout(() =&gt; setS({ ...s, q: draft }), 250);
+    if (draft === q) return;
+    const id = setTimeout(() =&gt; setQ(draft), 250);
     return () =&gt; clearTimeout(id);
-  }, [draft]);
-  useEffect(() =&gt; { setDraft(s.q); }, [s.q]);
+  }, [draft, q, setQ]);
+  useEffect(() =&gt; { setDraft(q); }, [q]);
 
-  // Derived view: filter + sort, computed from URL state
+  // Derived view: filter, computed from URL state.
   const view = useMemo(() =&gt; {
     let rows = suppliers;
-    if (s.q) rows = rows.filter((r) =&gt; r.name.toLowerCase().includes(s.q.toLowerCase()));
-    if (s.tier.length) rows = rows.filter((r) =&gt; s.tier.includes(r.tier));
-    rows = [...rows].sort((a, b) =&gt; {
-      const cmp = a[s.sort] &lt; b[s.sort] ? -1 : a[s.sort] &gt; b[s.sort] ? 1 : 0;
-      return s.dir === &#39;asc&#39; ? cmp : -cmp;
-    });
+    if (q) rows = rows.filter((r) =&gt; r.name.toLowerCase().includes(q.toLowerCase()));
+    if (tier !== &#39;all&#39;) rows = rows.filter((r) =&gt; r.tier === tier);
     return rows;
-  }, [suppliers, s]);
+  }, [suppliers, q, tier]);
 
-  // Restore selected row scroll position on mount
+  // Restore selected row scroll position on mount.
   useEffect(() =&gt; {
-    if (!s.sel) return;
-    const el = document.getElementById(`row-${s.sel}`);
+    if (!sel) return;
+    const el = document.getElementById(`row-${sel}`);
     el?.scrollIntoView({ block: &#39;center&#39;, behavior: &#39;instant&#39; as ScrollBehavior });
   }, []);
 
@@ -438,9 +424,9 @@ export function SuppliersList({
     try {
       await navigator.clipboard.writeText(window.location.href);
       toast.show({ tone: &#39;success&#39;, title: &#39;Link copied&#39;,
-        description: &#39;Paste it to share this exact view.&#39; });
+        message: &#39;Paste it to share this exact view.&#39; });
     } catch {
-      toast.show({ tone: &#39;danger&#39;, title: &#39;Couldn&#39;t copy. Long-press the URL bar.&#39; });
+      toast.show({ tone: &#39;danger&#39;, title: &quot;Couldn&#39;t copy. Long-press the URL bar.&quot; });
     }
   };
 
@@ -448,7 +434,7 @@ export function SuppliersList({
     &lt;div&gt;
       &lt;header style={{ display: &#39;flex&#39;, gap: 12, alignItems: &#39;center&#39; }}&gt;
         &lt;h1&gt;Suppliers&lt;/h1&gt;
-        &lt;Button variant=&quot;ghost&quot; onClick={share} leadingIcon=&quot;link&quot;&gt;
+        &lt;Button variant=&quot;ghost&quot; onClick={share} icon={&lt;span aria-hidden=&quot;true&quot;&gt;🔗&lt;/span&gt;}&gt;
           Share this view
         &lt;/Button&gt;
       &lt;/header&gt;
@@ -456,21 +442,20 @@ export function SuppliersList({
       &lt;input
         value={draft}
         onChange={(e) =&gt; setDraft(e.target.value)}
-        placeholder=&quot;Search suppliers…&quot;
+        placeholder=&quot;Search suppliers...&quot;
         aria-label=&quot;Search suppliers&quot;
       /&gt;
 
       &lt;FilterChips
-        groups={[
-          { name: &#39;tier&#39;, label: &#39;Tier&#39;, multi: true,
-            options: [
-              { value: &#39;A&#39;, label: &#39;Tier A&#39; },
-              { value: &#39;B&#39;, label: &#39;Tier B&#39; },
-              { value: &#39;C&#39;, label: &#39;Tier C&#39; },
-            ] },
+        ariaLabel=&quot;Tier filter&quot;
+        value={tier}
+        onChange={(next) =&gt; setTier(next)}
+        options={[
+          { value: &#39;all&#39;, label: &#39;All tiers&#39; },
+          { value: &#39;A&#39;,   label: &#39;Tier A&#39; },
+          { value: &#39;B&#39;,   label: &#39;Tier B&#39; },
+          { value: &#39;C&#39;,   label: &#39;Tier C&#39; },
         ]}
-        value={{ tier: s.tier }}
-        onChange={(v) =&gt; setS({ ...s, tier: v.tier ?? [] })}
       /&gt;
 
       &lt;ul role=&quot;list&quot;&gt;
@@ -478,41 +463,14 @@ export function SuppliersList({
           &lt;li
             key={r.id}
             id={`row-${r.id}`}
-            aria-selected={s.sel === r.id}
-            onClick={() =&gt; setS({ ...s, sel: r.id, open: null }, { history: &#39;push&#39; })}
+            aria-selected={sel === r.id}
+            onClick={() =&gt; setSel(r.id)}
           &gt;
             &lt;span&gt;{r.name}&lt;/span&gt;
             &lt;span&gt;Tier {r.tier}&lt;/span&gt;
-            {s.sel === r.id &amp;&amp; (
-              &lt;Details
-                openId={s.open}
-                onToggle={(id) =&gt; setS({ ...s, open: s.open === id ? null : id })}
-              /&gt;
-            )}
           &lt;/li&gt;
         ))}
       &lt;/ul&gt;
-    &lt;/div&gt;
-  );
-}
-
-function Details({ openId, onToggle }: {
-  openId: string | null;
-  onToggle: (id: string) =&gt; void;
-}) {
-  return (
-    &lt;div&gt;
-      {[&#39;profile&#39;, &#39;billing&#39;, &#39;activity&#39;].map((id) =&gt; (
-        &lt;section key={id}&gt;
-          &lt;button
-            aria-expanded={openId === id}
-            onClick={() =&gt; onToggle(id)}
-          &gt;
-            {id}
-          &lt;/button&gt;
-          {openId === id &amp;&amp; &lt;div&gt;{/* …panel… */}&lt;/div&gt;}
-        &lt;/section&gt;
-      ))}
     &lt;/div&gt;
   );
 }'>

@@ -42,6 +42,14 @@ const CalendarGlyph = (
 /**
  * Single-date popover picker. Composes `Input` + `Popover` + `Calendar`.
  */
+/**
+ * DatePicker — input + calendar popover.
+ *
+ * @example
+ * ```tsx
+ * <DatePicker />
+ * ```
+ */
 export function DatePicker({
   value,
   onChange,

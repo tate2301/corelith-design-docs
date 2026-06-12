@@ -8,6 +8,14 @@ export interface KpiGridProps extends HTMLAttributes<HTMLDivElement> {
   children?: ReactNode;
 }
 
+/**
+ * KpiGrid — responsive grid of KPI cards.
+ *
+ * @example
+ * ```tsx
+ * <KpiGrid />
+ * ```
+ */
 export const KpiGrid = forwardRef<HTMLDivElement, KpiGridProps>(function KpiGrid(
   { minWidth, className, style, children, ...rest },
   ref,

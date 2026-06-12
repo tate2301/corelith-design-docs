@@ -1,6 +1,15 @@
-import { useCallback, useEffect, useId, useRef, type ReactNode } from 'react';
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useId,
+  useImperativeHandle,
+  useRef,
+  type ReactNode,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { cx } from '../../utils/cx';
+import { isTop, popOverlay, pushOverlay } from '../../utils/overlayStack';
 import './BottomSheet.css';
 
 export interface BottomSheetProps {
@@ -20,23 +29,42 @@ export interface BottomSheetProps {
 const FOCUSABLE_SELECTOR =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
-export function BottomSheet({
-  open,
-  onClose,
-  title,
-  children,
-  className,
-  dismissOnBackdrop = true,
-  dismissOnEscape = true,
-  container,
-}: BottomSheetProps) {
+/**
+ * BottomSheet — mobile-style sheet anchored to the viewport bottom.
+ *
+ * Owns focus trap and Escape handling via the shared overlay stack. Forwarded
+ * ref points at the sheet's `role="dialog"` element.
+ *
+ * @example
+ * ```tsx
+ * <BottomSheet open={open} onClose={close} title="Filters">
+ *   body
+ * </BottomSheet>
+ * ```
+ */
+export const BottomSheet = forwardRef<HTMLDivElement, BottomSheetProps>(function BottomSheet(
+  {
+    open,
+    onClose,
+    title,
+    children,
+    className,
+    dismissOnBackdrop = true,
+    dismissOnEscape = true,
+    container,
+  },
+  forwardedRef,
+) {
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const lastFocusRef = useRef<HTMLElement | null>(null);
   const titleId = useId();
 
+  useImperativeHandle(forwardedRef, () => sheetRef.current as HTMLDivElement, []);
+
   // Focus management + escape + simple focus trap.
   useEffect(() => {
     if (!open) return;
+    const token = pushOverlay();
     lastFocusRef.current = (document.activeElement as HTMLElement | null) ?? null;
     const node = sheetRef.current;
     if (node) {
@@ -45,7 +73,9 @@ export function BottomSheet({
     }
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && dismissOnEscape) {
+        if (!isTop(token)) return;
         e.preventDefault();
+        e.stopPropagation();
         onClose();
         return;
       }
@@ -70,6 +100,7 @@ export function BottomSheet({
     document.addEventListener('keydown', handleKey);
     return () => {
       document.removeEventListener('keydown', handleKey);
+      popOverlay(token);
       lastFocusRef.current?.focus?.();
     };
   }, [open, onClose, dismissOnEscape]);
@@ -104,4 +135,4 @@ export function BottomSheet({
     </>,
     target,
   );
-}
+});

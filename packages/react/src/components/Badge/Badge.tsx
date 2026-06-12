@@ -15,6 +15,14 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   icon?: ReactNode;
 }
 
+/**
+ * Badge — small status pill.
+ *
+ * @example
+ * ```tsx
+ * <Badge />
+ * ```
+ */
 export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(function Badge(
   { tone = 'neutral', icon, className, children, ...rest },
   ref,

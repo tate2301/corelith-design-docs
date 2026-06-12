@@ -152,7 +152,11 @@
     <div class="ck-step"><span class="n">01</span><h3>Define the buckets — five, in chronological order</h3></div>
     <p>Five is the right number. Fewer ("Today / Earlier") loses signal; more ("This morning / Lunchtime / This afternoon") nobody asked for. The buckets are an ordered enum, not a set — a flat array means rendering is just <code>buckets.map()</code>.</p>
     <div class="ds-specimen"
-         data-code='type BucketKey = &#39;today&#39; | &#39;yesterday&#39; | &#39;thisWeek&#39; | &#39;lastWeek&#39; | &#39;earlier&#39;;
+         data-code='import type { RowCardProps } from &#39;@corelithzw/react&#39;;
+
+// Each row inside a bucket will render as a `RowCard`, so the bucket-key
+// strings stay decoupled from the actual UI primitive.
+type BucketKey = &#39;today&#39; | &#39;yesterday&#39; | &#39;thisWeek&#39; | &#39;lastWeek&#39; | &#39;earlier&#39;;
 
 const BUCKET_ORDER: BucketKey[] = [
   &#39;today&#39;, &#39;yesterday&#39;, &#39;thisWeek&#39;, &#39;lastWeek&#39;, &#39;earlier&#39;,
@@ -164,7 +168,11 @@ const BUCKET_LABEL: Record&lt;BucketKey, string&gt; = {
   thisWeek:  &#39;Earlier this week&#39;,
   lastWeek:  &#39;Last week&#39;,
   earlier:   &#39;Earlier&#39;,
-};'>
+};
+
+// Bucket headers feed straight into the RowCard&#39;s `title` slot below.
+const _bucketHeaderShape = null as unknown as Pick&lt;RowCardProps, &#39;title&#39;&gt;;
+void _bucketHeaderShape;'>
       <div class="ds-specimen-stage canvas padded">
         <div class="ck-code-only-note">
           <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
@@ -177,8 +185,18 @@ const BUCKET_LABEL: Record&lt;BucketKey, string&gt; = {
     <div class="ck-step"><span class="n">02</span><h3>Bucket the array — one pass, no Intl yet</h3></div>
     <p>Compute day boundaries once at the top, then a single pass over the events. Don't use a relative-time library here — calendar comparisons on milliseconds are cheaper and more correct (a "yesterday" event from 23:59 should still be in Yesterday, not Today).</p>
     <div class="ds-specimen"
-         data-code='type Event = { id: string; title: string; at: Date };
+         data-code='// Pure bucketing logic. The output feeds the renderer in step 4 which
+// pulls `RowCard` from &#39;@corelithzw/react&#39;.
+import type { RowCardProps } from &#39;@corelithzw/react&#39;;
+
+type Event = { id: string; title: string; at: Date };
 type Bucketed = Record&lt;BucketKey, Event[]&gt;;
+
+// One bucket renders as a list of RowCards — keep the row contract close
+// to the data shape so a stray `title` rename gets caught at compile time.
+type BucketRow = Pick&lt;RowCardProps, &#39;title&#39; | &#39;trailing&#39;&gt;;
+const _bucketRowShape = null as unknown as BucketRow;
+void _bucketRowShape;
 
 function bucketByDate(events: Event[], now = new Date()): Bucketed {
   const start = (d: Date) =&gt; {
@@ -211,6 +229,7 @@ function bucketByDate(events: Event[], now = new Date()): Bucketed {
 
     <div class="ck-step"><span class="n">03</span><h3>Sticky headers — CSS, not JS</h3></div>
     <p><code>position: sticky</code> on the header pins it to the top of the scrolling ancestor as you scroll past. No <code>IntersectionObserver</code>, no scroll listener. The sticky ancestor is the list container; the header sticks inside the list, not to the page top — which keeps the page header visible.</p>
+    <!-- snippet-skip-reason: this step ships plain CSS, not TSX — the auto-skip "no @corelithzw/react import" is the correct outcome -->
     <div class="ds-specimen"
          data-code='// In your component CSS module:
 .feed { overflow-y: auto; max-height: calc(100dvh - var(--hx-nav-h) - 120px); }
@@ -240,6 +259,8 @@ function bucketByDate(events: Event[], now = new Date()): Bucketed {
 
 const ALWAYS_SHOW: BucketKey[] = [&#39;today&#39;, &#39;yesterday&#39;];
 
+declare function formatTime(d: Date): string;
+
 function ActivityFeed({ events }: { events: Event[] }) {
   const buckets = bucketByDate(events);
   return (
@@ -256,7 +277,7 @@ function ActivityFeed({ events }: { events: Event[] }) {
                 &lt;Stack gap=&quot;xs&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
                   {items.map(e =&gt; (
                     &lt;RowCard
-                      key={e.id} as=&quot;li&quot;
+                      key={e.id}
                       title={e.title}
                       trailing={formatTime(e.at)}
                     /&gt;
@@ -287,24 +308,24 @@ function ActivityFeed({ events }: { events: Event[] }) {
     <div class="ds-specimen"
          data-code='import { Stack, RowCard, EmptyState } from &#39;@corelithzw/react&#39;;
 
-type Event = { id: string; title: string; at: Date };
-type BucketKey = &#39;today&#39; | &#39;yesterday&#39; | &#39;thisWeek&#39; | &#39;lastWeek&#39; | &#39;earlier&#39;;
-type Bucketed  = Record&lt;BucketKey, Event[]&gt;;
+type FeedEvent = { id: string; title: string; at: Date };
+type DateBucketKey = &#39;today&#39; | &#39;yesterday&#39; | &#39;thisWeek&#39; | &#39;lastWeek&#39; | &#39;earlier&#39;;
+type DateBucketed  = Record&lt;DateBucketKey, FeedEvent[]&gt;;
 
-const BUCKET_ORDER: BucketKey[] = [&#39;today&#39;, &#39;yesterday&#39;, &#39;thisWeek&#39;, &#39;lastWeek&#39;, &#39;earlier&#39;];
-const BUCKET_LABEL: Record&lt;BucketKey, string&gt; = {
+const DATE_BUCKET_ORDER: DateBucketKey[] = [&#39;today&#39;, &#39;yesterday&#39;, &#39;thisWeek&#39;, &#39;lastWeek&#39;, &#39;earlier&#39;];
+const DATE_BUCKET_LABEL: Record&lt;DateBucketKey, string&gt; = {
   today: &#39;Today&#39;, yesterday: &#39;Yesterday&#39;,
   thisWeek: &#39;Earlier this week&#39;, lastWeek: &#39;Last week&#39;, earlier: &#39;Earlier&#39;,
 };
-const ALWAYS_SHOW: BucketKey[] = [&#39;today&#39;, &#39;yesterday&#39;];
+const DATE_ALWAYS_SHOW: DateBucketKey[] = [&#39;today&#39;, &#39;yesterday&#39;];
 
-export function bucketByDate(events: Event[], now = new Date()): Bucketed {
+export function bucketByDate(events: FeedEvent[], now = new Date()): DateBucketed {
   const start = (d: Date) =&gt; { const x = new Date(d); x.setHours(0,0,0,0); return x; };
   const today     = start(now).getTime();
   const yesterday = today - 86400_000;
   const weekStart = today - ((now.getDay() || 7) - 1) * 86400_000;
   const lastWeek  = weekStart - 7 * 86400_000;
-  const out: Bucketed = { today: [], yesterday: [], thisWeek: [], lastWeek: [], earlier: [] };
+  const out: DateBucketed = { today: [], yesterday: [], thisWeek: [], lastWeek: [], earlier: [] };
   for (const e of events) {
     const t = start(e.at).getTime();
     if (t === today)         out.today.push(e);
@@ -320,25 +341,25 @@ function formatTime(d: Date) {
   return new Intl.DateTimeFormat(undefined, { hour: &#39;numeric&#39;, minute: &#39;2-digit&#39; }).format(d);
 }
 
-export function ActivityFeed({ events }: { events: Event[] }) {
+export function ActivityFeed({ events }: { events: FeedEvent[] }) {
   if (events.length === 0) {
     return &lt;EmptyState title=&quot;Nothing yet&quot; description=&quot;Activity will show up here as it happens.&quot; /&gt;;
   }
   const buckets = bucketByDate(events);
   return (
     &lt;div className=&quot;feed&quot;&gt;
-      {BUCKET_ORDER.map((key) =&gt; {
+      {DATE_BUCKET_ORDER.map((key) =&gt; {
         const items = buckets[key];
-        if (items.length === 0 &amp;&amp; !ALWAYS_SHOW.includes(key)) return null;
+        if (items.length === 0 &amp;&amp; !DATE_ALWAYS_SHOW.includes(key)) return null;
         return (
-          &lt;section key={key} className=&quot;feed-section&quot; aria-label={BUCKET_LABEL[key]}&gt;
-            &lt;h3 className=&quot;feed-section-header&quot;&gt;{BUCKET_LABEL[key]}&lt;/h3&gt;
+          &lt;section key={key} className=&quot;feed-section&quot; aria-label={DATE_BUCKET_LABEL[key]}&gt;
+            &lt;h3 className=&quot;feed-section-header&quot;&gt;{DATE_BUCKET_LABEL[key]}&lt;/h3&gt;
             {items.length === 0
               ? &lt;p className=&quot;feed-empty&quot;&gt;Nothing happened.&lt;/p&gt;
               : (
                 &lt;Stack gap=&quot;xs&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
                   {items.map(e =&gt; (
-                    &lt;RowCard key={e.id} as=&quot;li&quot;
+                    &lt;RowCard key={e.id}
                       title={e.title}
                       trailing={&lt;time dateTime={e.at.toISOString()}&gt;{formatTime(e.at)}&lt;/time&gt;}
                     /&gt;

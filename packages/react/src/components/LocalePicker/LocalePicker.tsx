@@ -11,6 +11,14 @@ export interface LocalePickerProps extends Omit<SelectHTMLAttributes<HTMLSelectE
   label?: string;
 }
 
+/**
+ * LocalePicker — locale chooser bound to I18nProvider.
+ *
+ * @example
+ * ```tsx
+ * <LocalePicker />
+ * ```
+ */
 export const LocalePicker = forwardRef<HTMLSelectElement, LocalePickerProps>(function LocalePicker(
   { locales, onChange, label, className, ...rest },
   ref,

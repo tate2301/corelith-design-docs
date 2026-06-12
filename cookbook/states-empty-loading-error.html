@@ -377,16 +377,9 @@ export function foldError&lt;T&gt;(
 function SuppliersSkeleton() {
   return (
     &lt;Stack gap=&quot;sm&quot; aria-busy=&quot;true&quot; aria-live=&quot;polite&quot;&gt;
-      {/* The header isn&#39;t a skeleton — it&#39;s real and constant. */}
       &lt;h1 style={{ margin: 0 }}&gt;Suppliers&lt;/h1&gt;
-
-      {/* The toolbar that will hold a search + filter. */}
-      &lt;Skeleton height={36} radius=&quot;md&quot; /&gt;
-
-      {/* Six row-shaped skeletons — same height as the real RowCard. */}
-      {Array.from({ length: 6 }).map((_, i) =&gt; (
-        &lt;Skeleton key={i} height={56} radius=&quot;md&quot; /&gt;
-      ))}
+      &lt;Skeleton height={36} /&gt;
+      &lt;Skeleton height={56} lines={6} gap={8} /&gt;
     &lt;/Stack&gt;
   );
 }'>
@@ -414,9 +407,9 @@ function SuppliersSkeleton() {
 function SuppliersEmpty({ onCreate }: { onCreate: () =&gt; void }) {
   return (
     &lt;EmptyState
-      icon=&quot;user&quot;
+      icon={&lt;span aria-hidden=&quot;true&quot;&gt;👤&lt;/span&gt;}
       title=&quot;No suppliers yet&quot;
-      body=&quot;Add your first supplier to start logging deliveries.&quot;
+      description=&quot;Add your first supplier to start logging deliveries.&quot;
       action={
         &lt;Button variant=&quot;primary&quot; autoFocus onClick={onCreate}&gt;
           Add supplier
@@ -442,37 +435,33 @@ function SuppliersEmpty({ onCreate }: { onCreate: () =&gt; void }) {
     <div class="ck-step"><span class="n">04</span><h3>The error state shows what to do, not what went wrong</h3></div>
     <p>"Network timeout" tells the user nothing they can act on. "We couldn't load — last sync 12 min ago" tells them how stale the screen is and offers Retry. If we have <code>lastGood</code> data, render it underneath with a banner so the page stays useful while the user decides.</p>
     <div class="ds-specimen"
-         data-code='import { Stack, Alert, Button, EmptyState } from &#39;@corelithzw/react&#39;;
+         data-code='import type { ReactNode } from &#39;react&#39;;
+import { Stack, Alert, Button, EmptyState } from &#39;@corelithzw/react&#39;;
+
+const formatRelative = (ts: number): string =&gt; new Date(ts).toLocaleString();
+type Supplier = { id: string; name: string };
 
 function SuppliersError({ state, onRetry, render }: {
   state: Extract&lt;ResourceState&lt;Supplier&gt;, { kind: &#39;error&#39; }&gt;;
   onRetry: () =&gt; void;
-  render: (data: Supplier[]) =&gt; React.ReactNode;
+  render: (data: Supplier[]) =&gt; ReactNode;
 }) {
-  // No stale data — full-screen empty-style error.
   if (!state.lastGood) {
     return (
       &lt;EmptyState
-        icon=&quot;alert&quot;
-        tone=&quot;danger&quot;
+        icon={&lt;span aria-hidden=&quot;true&quot;&gt;⚠&lt;/span&gt;}
         title=&quot;We couldn&#39;t load&quot;
-        body={`${state.message} Check your connection and try again.`}
-        action={
-          &lt;Button variant=&quot;primary&quot; autoFocus onClick={onRetry}&gt;
-            Try again
-          &lt;/Button&gt;
-        }
+        description={`${state.message} Check your connection and try again.`}
+        action={&lt;Button variant=&quot;primary&quot; autoFocus onClick={onRetry}&gt;Try again&lt;/Button&gt;}
       /&gt;
     );
   }
 
-  // Stale data — banner + degraded list.
   return (
     &lt;Stack gap=&quot;md&quot;&gt;
-      &lt;Alert tone=&quot;warning&quot; action={
-        &lt;Button variant=&quot;link&quot; onClick={onRetry}&gt;Retry&lt;/Button&gt;
-      }&gt;
-        Showing data from {formatRelative(state.updatedAt!)}. {state.message}
+      &lt;Alert tone=&quot;warn&quot;&gt;
+        Showing data from {formatRelative(state.updatedAt!)}. {state.message}{&#39; &#39;}
+        &lt;Button variant=&quot;ghost&quot; onClick={onRetry}&gt;Retry&lt;/Button&gt;
       &lt;/Alert&gt;
       {render(state.lastGood)}
     &lt;/Stack&gt;
@@ -495,38 +484,36 @@ function SuppliersError({ state, onRetry, render }: {
     <div class="ck-step"><span class="n">05</span><h3>Optimistic create with rollback on failure</h3></div>
     <p>When the user adds a row, insert it locally with a temp id and a quiet "saving…" caption. On success, swap the temp id for the server's id; on failure, remove the row and show a <code>useToast</code> message that includes "Try again". The rest of the page never enters a loading state.</p>
     <div class="ds-specimen"
-         data-code='import { useState } from &#39;@corelithzw/react&#39;;
-import { useToast } from &#39;@corelithzw/react&#39;;
+         data-code='import { useToast } from &#39;@corelithzw/react&#39;;
 
-type Supplier = { id: string; name: string; pending?: boolean };
+type SupplierRow = { id: string; name: string; pending?: boolean };
 
 function useOptimisticCreate(
-  setData: (fn: (rows: Supplier[]) =&gt; Supplier[]) =&gt; void,
+  setData: (fn: (rows: SupplierRow[]) =&gt; SupplierRow[]) =&gt; void,
   post: (name: string) =&gt; Promise&lt;{ id: string }&gt;,
 ) {
-  const { showToast } = useToast();
+  const toast = useToast();
 
-  return async (name: string) =&gt; {
+  const create = async (name: string): Promise&lt;void&gt; =&gt; {
     const tempId = `tmp_${Date.now()}`;
-    const draft: Supplier = { id: tempId, name, pending: true };
+    const draft: SupplierRow = { id: tempId, name, pending: true };
 
     setData((rows) =&gt; [draft, ...rows]);
 
     try {
       const { id } = await post(name);
-      // Swap the temp id; clear the pending flag.
-      setData((rows) =&gt; rows.map((r) =&gt;
-        r.id === tempId ? { id, name } : r));
+      setData((rows) =&gt; rows.map((r) =&gt; r.id === tempId ? { id, name } : r));
     } catch (e) {
-      // Roll back. Don&#39;t leave a phantom row.
       setData((rows) =&gt; rows.filter((r) =&gt; r.id !== tempId));
-      showToast({
+      toast.show({
         tone: &#39;danger&#39;,
         message: `Could not add ${name}: ${(e as Error).message}`,
-        action: { label: &#39;Try again&#39;, onClick: () =&gt; this(name) },
+        action: { label: &#39;Try again&#39;, onClick: () =&gt; { void create(name); } },
       });
     }
   };
+
+  return create;
 }'>
       <div class="ds-specimen-stage canvas padded">
         <div style="padding: 20px;">
@@ -553,31 +540,21 @@ function useOptimisticCreate(
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">A reusable <code>Resource</code> component. Pass it a fetcher and a row renderer; it handles loading, empty, loaded, error and "load more". Drop in <code>SuppliersScreen</code> as the shape every list page in the app should follow.</p>
     <div class="ds-specimen"
-         data-code='import { useEffect, useState } from &#39;@corelithzw/react&#39;;
+         data-code='import { useEffect, useState } from &#39;react&#39;;
+import type { ReactNode } from &#39;react&#39;;
 import {
   Stack, Skeleton, Spinner, EmptyState,
-  Alert, Button, RowCard, useToast,
+  Alert, Button, RowCard,
 } from &#39;@corelithzw/react&#39;;
 
-// ── State model (see Step 1) ────────────────────────────────────
-type ResourceState&lt;T&gt; =
-  | { kind: &#39;loading&#39; }
-  | { kind: &#39;empty&#39; }
-  | { kind: &#39;loaded&#39;; data: T[]; nextCursor: string | null; updatedAt: number }
-  | { kind: &#39;error&#39;; message: string; lastGood: T[] | null; updatedAt: number | null };
+async function fetchJson&lt;T&gt;(_url: string): Promise&lt;T&gt; { return {} as T; }
 
-// ── Generic resource component ─────────────────────────────────
 export function Resource&lt;T&gt;({
-  fetcher,
-  renderRow,
-  empty,
-  rowHeight = 56,
-  rowCount = 6,
-  keyOf,
+  fetcher, renderRow, empty, rowHeight = 56, rowCount = 6, keyOf,
 }: {
   fetcher: (cursor: string | null) =&gt; Promise&lt;{ items: T[]; nextCursor: string | null }&gt;;
-  renderRow: (item: T) =&gt; React.ReactNode;
-  empty: { icon: string; title: string; body: string; cta: React.ReactNode };
+  renderRow: (item: T) =&gt; ReactNode;
+  empty: { icon: ReactNode; title: ReactNode; description: ReactNode; cta: ReactNode };
   rowHeight?: number;
   rowCount?: number;
   keyOf: (item: T) =&gt; string;
@@ -591,46 +568,34 @@ export function Resource&lt;T&gt;({
     try {
       const resp = await fetcher(cursor);
       if (cursor) {
-        setState((prev) =&gt; {
-          if (prev.kind !== &#39;loaded&#39;) return prev;
-          return {
-            ...prev,
-            data: [...prev.data, ...resp.items],
-            nextCursor: resp.nextCursor,
-            updatedAt: Date.now(),
-          };
+        setState((prev) =&gt; prev.kind !== &#39;loaded&#39; ? prev : {
+          ...prev,
+          data: [...prev.data, ...resp.items],
+          nextCursor: resp.nextCursor,
+          updatedAt: Date.now(),
         });
       } else if (resp.items.length === 0) {
         setState({ kind: &#39;empty&#39; });
       } else {
-        setState({
-          kind: &#39;loaded&#39;,
-          data: resp.items,
-          nextCursor: resp.nextCursor,
-          updatedAt: Date.now(),
-        });
+        setState({ kind: &#39;loaded&#39;, data: resp.items, nextCursor: resp.nextCursor, updatedAt: Date.now() });
       }
     } catch (e) {
       setState((prev) =&gt; {
         const lastGood = prev.kind === &#39;loaded&#39; ? prev.data : null;
         const at = prev.kind === &#39;loaded&#39; ? prev.updatedAt : null;
-        return { kind: &#39;error&#39;, message: (e as Error).message,
-                 lastGood, updatedAt: at };
+        return { kind: &#39;error&#39;, message: (e as Error).message, lastGood, updatedAt: at };
       });
     } finally {
       setPagingMore(false);
     }
   };
 
-  useEffect(() =&gt; { load(null); /* eslint-disable-next-line */ }, []);
+  useEffect(() =&gt; { void load(null); /* eslint-disable-next-line */ }, []);
 
-  // ── Branches ─────────────────────────────────────────────────
   if (state.kind === &#39;loading&#39;) {
     return (
       &lt;Stack gap=&quot;sm&quot; aria-busy=&quot;true&quot; aria-live=&quot;polite&quot;&gt;
-        {Array.from({ length: rowCount }).map((_, i) =&gt; (
-          &lt;Skeleton key={i} height={rowHeight} radius=&quot;md&quot; /&gt;
-        ))}
+        &lt;Skeleton height={rowHeight} lines={rowCount} gap={8} /&gt;
       &lt;/Stack&gt;
     );
   }
@@ -640,7 +605,7 @@ export function Resource&lt;T&gt;({
       &lt;EmptyState
         icon={empty.icon}
         title={empty.title}
-        body={empty.body}
+        description={empty.description}
         action={empty.cta}
       /&gt;
     );
@@ -650,21 +615,18 @@ export function Resource&lt;T&gt;({
     if (!state.lastGood) {
       return (
         &lt;EmptyState
-          icon=&quot;alert&quot;
-          tone=&quot;danger&quot;
+          icon={&lt;span aria-hidden=&quot;true&quot;&gt;⚠&lt;/span&gt;}
           title=&quot;We couldn&#39;t load&quot;
-          body={`${state.message} Check your connection and try again.`}
-          action={&lt;Button variant=&quot;primary&quot; autoFocus
-                          onClick={() =&gt; load(null)}&gt;Try again&lt;/Button&gt;}
+          description={`${state.message} Check your connection and try again.`}
+          action={&lt;Button variant=&quot;primary&quot; autoFocus onClick={() =&gt; load(null)}&gt;Try again&lt;/Button&gt;}
         /&gt;
       );
     }
     return (
       &lt;Stack gap=&quot;md&quot;&gt;
-        &lt;Alert tone=&quot;warning&quot; action={
-          &lt;Button variant=&quot;link&quot; onClick={() =&gt; load(null)}&gt;Retry&lt;/Button&gt;
-        }&gt;
-          Showing data from {formatRelative(state.updatedAt!)}. {state.message}
+        &lt;Alert tone=&quot;warn&quot;&gt;
+          Showing data from {formatRelative(state.updatedAt!)}. {state.message}{&#39; &#39;}
+          &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; load(null)}&gt;Retry&lt;/Button&gt;
         &lt;/Alert&gt;
         &lt;Stack gap=&quot;sm&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
           {state.lastGood.map((it) =&gt; (
@@ -675,7 +637,6 @@ export function Resource&lt;T&gt;({
     );
   }
 
-  // Loaded
   return (
     &lt;Stack gap=&quot;sm&quot;&gt;
       &lt;Stack gap=&quot;sm&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
@@ -684,31 +645,26 @@ export function Resource&lt;T&gt;({
         ))}
       &lt;/Stack&gt;
       {state.nextCursor &amp;&amp; (
-        &lt;Button
-          variant=&quot;ghost&quot;
-          onClick={() =&gt; load(state.nextCursor)}
-          disabled={pagingMore}
-        &gt;
-          {pagingMore ? &lt;Spinner size={14} aria-label=&quot;Loading more&quot; /&gt; : &#39;Load more&#39;}
+        &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; load(state.nextCursor)} disabled={pagingMore}&gt;
+          {pagingMore ? &lt;Spinner aria-label=&quot;Loading more&quot; /&gt; : &#39;Load more&#39;}
         &lt;/Button&gt;
       )}
     &lt;/Stack&gt;
   );
 }
 
-// ── Usage ───────────────────────────────────────────────────────
-type Supplier = { id: string; name: string };
+type SupplierItem = { id: string; name: string };
 
 export function SuppliersScreen({ onAdd }: { onAdd: () =&gt; void }) {
   return (
-    &lt;Resource&lt;Supplier&gt;
+    &lt;Resource&lt;SupplierItem&gt;
       fetcher={(cursor) =&gt; fetchJson(`/api/suppliers?cursor=${cursor ?? &#39;&#39;}`)}
       keyOf={(s) =&gt; s.id}
-      renderRow={(s) =&gt; &lt;RowCard label={s.name} trailing=&quot;chevron&quot; /&gt;}
+      renderRow={(s) =&gt; &lt;RowCard title={s.name} trailing={&lt;span&gt;›&lt;/span&gt;} /&gt;}
       empty={{
-        icon: &#39;user&#39;,
+        icon: &lt;span aria-hidden=&quot;true&quot;&gt;👤&lt;/span&gt;,
         title: &#39;No suppliers yet&#39;,
-        body: &#39;Add your first supplier to start logging deliveries.&#39;,
+        description: &#39;Add your first supplier to start logging deliveries.&#39;,
         cta: &lt;Button variant=&quot;primary&quot; autoFocus onClick={onAdd}&gt;Add supplier&lt;/Button&gt;,
       }}
     /&gt;
@@ -765,7 +721,7 @@ export function SuppliersScreen({ onAdd }: { onAdd: () =&gt; void }) {
   label={row.name}
   tone={row.error ? &#39;danger&#39; : &#39;neutral&#39;}
   trailing={row.error
-    ? &lt;Button variant=&quot;link&quot;
+    ? &lt;Button variant=&quot;ghost&quot;
         onClick={() =&gt; retry(row.id)}&gt;Retry&lt;/Button&gt;
     : &#39;chevron&#39;}
 /&gt;</pre>

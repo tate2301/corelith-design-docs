@@ -224,9 +224,12 @@ const [edit, setEdit] = useState&lt;EditState&gt;({ kind: &#39;idle&#39; });'>
     <div class="ck-step"><span class="n">03</span><h3>Saved views — a serialized TableQuery, named</h3></div>
     <p>A saved view is just <code>{ name, q: TableQuery }</code>. Store an array of them in localStorage. Switching a view = <code>setQ(view.q)</code>. Saving the current view = <code>{ name: prompt('Name?'), q }</code>. No backend required for v1.</p>
     <div class="ds-specimen"
-         data-code='type SavedView = { id: string; name: string; q: TableQuery };
+         data-code='import { Menu } from &#39;@corelithzw/react&#39;;
 
-function ViewMenu({ views, current, onApply, onSave, onDelete }: {
+type TableQuery = { statuses: string[]; dateRange: string; sort?: string; page: number };
+type SavedView = { id: string; name: string; q: TableQuery };
+
+export function ViewMenu({ views, onApply, onSave, onDelete }: {
   views: SavedView[];
   current: TableQuery;
   onApply: (q: TableQuery) =&gt; void;
@@ -234,22 +237,16 @@ function ViewMenu({ views, current, onApply, onSave, onDelete }: {
   onDelete: (id: string) =&gt; void;
 }) {
   return (
-    &lt;DropdownMenu label=&quot;Views&quot;&gt;
-      {views.map(v =&gt; (
-        &lt;DropdownMenu.Item key={v.id}
-          onSelect={() =&gt; onApply(v.q)}
-          active={isSameQuery(v.q, current)}
-        &gt;
+    &lt;Menu ariaLabel=&quot;Saved views&quot;&gt;
+      {views.map((v) =&gt; (
+        &lt;Menu.Item key={v.id} onClick={() =&gt; onApply(v.q)}&gt;
           {v.name}
-          &lt;button onClick={(e) =&gt; { e.stopPropagation(); onDelete(v.id); }}&gt;×&lt;/button&gt;
-        &lt;/DropdownMenu.Item&gt;
+          &lt;button type=&quot;button&quot; aria-label={`Delete view ${v.name}`} onClick={(e) =&gt; { e.stopPropagation(); onDelete(v.id); }}&gt;×&lt;/button&gt;
+        &lt;/Menu.Item&gt;
       ))}
-      &lt;DropdownMenu.Separator /&gt;
-      &lt;DropdownMenu.Item onSelect={() =&gt; {
-        const name = prompt(&#39;Name this view:&#39;);
-        if (name) onSave(name);
-      }}&gt;+ Save current as view&lt;/DropdownMenu.Item&gt;
-    &lt;/DropdownMenu&gt;
+      &lt;Menu.Divider /&gt;
+      &lt;Menu.Item onClick={() =&gt; { const name = prompt(&#39;Name this view:&#39;); if (name) onSave(name); }}&gt;+ Save current as view&lt;/Menu.Item&gt;
+    &lt;/Menu&gt;
   );
 }'>
       <div class="ds-specimen-stage canvas padded">
@@ -266,45 +263,39 @@ function ViewMenu({ views, current, onApply, onSave, onDelete }: {
     <div class="ck-step"><span class="n">04</span><h3>Column visibility + sticky first column</h3></div>
     <p>A checkbox list in a Popover toggles a Set of visible columns. The first column is sticky to the left so the row label stays visible while scrolling horizontally. <code>position: sticky; left: 0</code> on the <code>&lt;th&gt;</code> and <code>&lt;td&gt;</code> of column 0.</p>
     <div class="ds-specimen"
-         data-code='// CSS
-.table-wrap { overflow-x: auto; }
-table.heavy thead th:first-child,
-table.heavy tbody td:first-child {
-  position: sticky;
-  left: 0;
-  background: var(--canvas);
-  z-index: 1;
-}
-table.heavy thead {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: var(--canvas);
-}
+         data-code='/* CSS — sticky first column + sticky header. */
+import { Popover, Stack, Button, Checkbox } from &#39;@corelithzw/react&#39;;
 
-// Column menu
-function ColumnMenu({ all, visible, onChange }: {
+type Col = string;
+
+export function ColumnMenu({ all, visible, onChange }: {
   all: Array&lt;{ key: Col; label: string }&gt;;
   visible: Set&lt;Col&gt;;
   onChange: (next: Set&lt;Col&gt;) =&gt; void;
 }) {
+  const [open, setOpen] = useState(false);
   return (
-    &lt;Popover trigger={&lt;Button&gt;Columns&lt;/Button&gt;}&gt;
-      &lt;Stack gap=&quot;xs&quot;&gt;
-        {all.map(c =&gt; (
-          &lt;Checkbox key={c.key}
-            checked={visible.has(c.key)}
-            label={c.label}
-            onChange={(v) =&gt; {
-              const n = new Set(visible);
-              v ? n.add(c.key) : n.delete(c.key);
-              if (n.size === 0) return;   // keep at least one
-              onChange(n);
-            }}
-          /&gt;
-        ))}
-      &lt;/Stack&gt;
-    &lt;/Popover&gt;
+    &lt;span style={{ position: &#39;relative&#39; }}&gt;
+      &lt;Button onClick={() =&gt; setOpen((p) =&gt; !p)}&gt;Columns&lt;/Button&gt;
+      &lt;Popover open={open} onClose={() =&gt; setOpen(false)} dismissOnOutside dismissOnEscape&gt;
+        &lt;Stack gap=&quot;xs&quot;&gt;
+          {all.map((c) =&gt; (
+            &lt;Checkbox
+              key={c.key}
+              checked={visible.has(c.key)}
+              label={c.label}
+              onChange={(e) =&gt; {
+                const n = new Set(visible);
+                if (e.target.checked) n.add(c.key);
+                else n.delete(c.key);
+                if (n.size === 0) return;
+                onChange(n);
+              }}
+            /&gt;
+          ))}
+        &lt;/Stack&gt;
+      &lt;/Popover&gt;
+    &lt;/span&gt;
   );
 }'>
       <div class="ds-specimen-stage canvas padded">
@@ -360,113 +351,91 @@ function ColumnMenu({ all, visible, onChange }: {
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">~350 lines once you wire it all. The point is the composition tree — each layer is a small file underneath.</p>
     <div class="ds-specimen"
-         data-code='import { useState } from &#39;react&#39;;
+         data-code='import { useMemo, useState } from &#39;react&#39;;
 import {
-  DataToolbar, FilterChips, Checkbox, DropdownMenu, Popover, Button,
-  Pagination, Toast, AlertDialog,
+  DataTable, DataToolbar, FilterChips, Button, Pagination, AlertDialog, useToast,
 } from &#39;@corelithzw/react&#39;;
+import type { DataTableColumn, DataTableSortState, FilterChipOption } from &#39;@corelithzw/react&#39;;
 
-export function HeavyTransactionsTable() {
-  // 1. State layers
-  const [q, setQ] = useTableQuery();
-  const [visibleCols, setVisibleCols] = useLocalStorageList&lt;Col&gt;(&#39;txns:cols&#39;, DEFAULT_COLS);
-  const [views, setViews] = useLocalStorageList&lt;SavedView&gt;(&#39;txns:views&#39;, []);
-  const [selection, setSelection] = useState&lt;Set&lt;string&gt;&gt;(new Set());
-  const [edit, setEdit] = useState&lt;EditState&gt;({ kind: &#39;idle&#39; });
+type Txn = { id: string; ref: string; amount: number; status: &#39;open&#39; | &#39;void&#39; | &#39;paid&#39; };
 
-  // 2. Fetch
-  const { data, loading, error } = useTxnPage(q);
-  const rows = data?.rows ?? [];
+const STATUS_OPTS: FilterChipOption&lt;&#39;all&#39; | Txn[&#39;status&#39;]&gt;[] = [
+  { value: &#39;all&#39;, label: &#39;All&#39; },
+  { value: &#39;open&#39;, label: &#39;Open&#39; },
+  { value: &#39;paid&#39;, label: &#39;Paid&#39; },
+  { value: &#39;void&#39;, label: &#39;Void&#39; },
+];
 
-  // 3. Derived
-  const allSelected = rows.length &gt; 0 &amp;&amp; rows.every(r =&gt; selection.has(r.id));
+const PAGE_SIZE = 25;
 
-  // 4. Render
+export function HeavyTransactionsTable({ rows, refetch, api }: {
+  rows: Txn[];
+  refetch: () =&gt; void;
+  api: { bulkDelete: (ids: string[]) =&gt; Promise&lt;void&gt; };
+}) {
+  const [status, setStatus] = useState&lt;&#39;all&#39; | Txn[&#39;status&#39;]&gt;(&#39;all&#39;);
+  const [page, setPage] = useState(1);
+  const [sort, setSort] = useState&lt;DataTableSortState | undefined&gt;(undefined);
+  const [selected, setSelected] = useState&lt;string[]&gt;([]);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const toast = useToast();
+
+  const filtered = useMemo(() =&gt; (status === &#39;all&#39; ? rows : rows.filter((r) =&gt; r.status === status)), [rows, status]);
+  const sorted = useMemo(() =&gt; {
+    if (!sort) return filtered;
+    const dir = sort.direction === &#39;asc&#39; ? 1 : -1;
+    return [...filtered].sort((a, b) =&gt; {
+      const av = (a as Record&lt;string, unknown&gt;)[sort.column];
+      const bv = (b as Record&lt;string, unknown&gt;)[sort.column];
+      if (typeof av === &#39;number&#39; &amp;&amp; typeof bv === &#39;number&#39;) return (av - bv) * dir;
+      return String(av).localeCompare(String(bv)) * dir;
+    });
+  }, [filtered, sort]);
+  const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const pageRows = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const columns: DataTableColumn&lt;Txn&gt;[] = [
+    { id: &#39;ref&#39;, header: &#39;Ref&#39;, sortable: true },
+    { id: &#39;amount&#39;, header: &#39;Amount&#39;, sortable: true, numeric: true, cell: (r) =&gt; `$${r.amount.toFixed(2)}` },
+    { id: &#39;status&#39;, header: &#39;Status&#39;, sortable: true },
+  ];
+
+  const onConfirmDelete = async () =&gt; {
+    const ids = [...selected];
+    setSelected([]);
+    try {
+      await api.bulkDelete(ids);
+      toast.show({ tone: &#39;success&#39;, title: `Deleted ${ids.length}` });
+    } catch (e) {
+      const err = e as Error;
+      refetch();
+      toast.show({ tone: &#39;danger&#39;, title: `Delete failed: ${err.message}` });
+    }
+  };
+
   return (
-    &lt;div className=&quot;heavy-table&quot; aria-busy={loading}&gt;
-      {/* SWAPPABLE TOOLBAR */}
-      {selection.size === 0 ? (
+    &lt;div className=&quot;heavy-table&quot;&gt;
+      {selected.length === 0 ? (
         &lt;DataToolbar&gt;
-          &lt;FilterChips label=&quot;Status&quot; options={STATUS_OPTS}
-            value={q.statuses}
-            onChange={(v) =&gt; setQ({ statuses: v })} /&gt;
-          &lt;FilterChips label=&quot;Date&quot; options={DATE_OPTS}
-            value={[q.dateRange]} onChange={([v]) =&gt; setQ({ dateRange: v })} /&gt;
-          &lt;DropdownMenu label=&quot;Views&quot;&gt;
-            {views.map(v =&gt; (
-              &lt;DropdownMenu.Item key={v.id} onSelect={() =&gt; setQ(v.q)}&gt;
-                {v.name}
-              &lt;/DropdownMenu.Item&gt;
-            ))}
-            &lt;DropdownMenu.Separator /&gt;
-            &lt;DropdownMenu.Item onSelect={() =&gt; {
-              const name = prompt(&#39;Name this view:&#39;);
-              if (name) setViews([...views, { id: crypto.randomUUID(), name, q }]);
-            }}&gt;+ Save current&lt;/DropdownMenu.Item&gt;
-          &lt;/DropdownMenu&gt;
-          &lt;Popover trigger={&lt;Button&gt;Columns&lt;/Button&gt;}&gt;
-            {ALL_COLS.map(c =&gt; (
-              &lt;Checkbox key={c.key} checked={visibleCols.includes(c.key)} label={c.label}
-                onChange={(v) =&gt; setVisibleCols(
-                  v ? [...visibleCols, c.key] : visibleCols.filter(k =&gt; k !== c.key)
-                )} /&gt;
-            ))}
-          &lt;/Popover&gt;
-          &lt;Button onClick={() =&gt; exportCsv(rows, visibleCols)}&gt;Export CSV&lt;/Button&gt;
+          &lt;DataToolbar.Filters&gt;
+            &lt;FilterChips value={status} onChange={(v) =&gt; { setStatus(v); setPage(1); }} options={STATUS_OPTS} ariaLabel=&quot;Status filter&quot; /&gt;
+          &lt;/DataToolbar.Filters&gt;
+          &lt;DataToolbar.Actions&gt;
+            &lt;Button variant=&quot;secondary&quot;&gt;Export CSV&lt;/Button&gt;
+          &lt;/DataToolbar.Actions&gt;
         &lt;/DataToolbar&gt;
       ) : (
-        &lt;DataToolbar tone=&quot;brand&quot;&gt;
-          &lt;span&gt;{selection.size} selected&lt;/span&gt;
-          &lt;Button onClick={() =&gt; exportCsv(rows.filter(r =&gt; selection.has(r.id)), visibleCols)}&gt;Export&lt;/Button&gt;
-          &lt;Button tone=&quot;warning&quot; onClick={() =&gt; bulkVoid(selection)}&gt;Void&lt;/Button&gt;
-          &lt;Button tone=&quot;danger&quot; onClick={() =&gt; bulkDelete(selection)}&gt;Delete&lt;/Button&gt;
-          &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; setSelection(new Set())}&gt;Cancel&lt;/Button&gt;
+        &lt;DataToolbar&gt;
+          &lt;DataToolbar.Filters&gt;&lt;span&gt;{selected.length} selected&lt;/span&gt;&lt;/DataToolbar.Filters&gt;
+          &lt;DataToolbar.Actions&gt;
+            &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; setSelected([])}&gt;Cancel&lt;/Button&gt;
+            &lt;Button tone=&quot;danger&quot; onClick={() =&gt; setConfirmOpen(true)}&gt;Delete&lt;/Button&gt;
+          &lt;/DataToolbar.Actions&gt;
         &lt;/DataToolbar&gt;
       )}
-
-      {/* THE TABLE */}
-      &lt;div className=&quot;table-wrap&quot;&gt;
-        &lt;table className=&quot;heavy&quot;&gt;
-          &lt;thead&gt;
-            &lt;tr&gt;
-              &lt;th&gt;&lt;Checkbox aria-label=&quot;Select all&quot; checked={allSelected}
-                onChange={(v) =&gt; {
-                  if (v) setSelection(new Set(rows.map(r =&gt; r.id)));
-                  else setSelection(new Set());
-                }} /&gt;&lt;/th&gt;
-              {visibleCols.map(c =&gt; (
-                &lt;th key={c} aria-sort={ariaSort(q.sort, c)}&gt;
-                  &lt;SortButton field={c} q={q} setQ={setQ} /&gt;
-                &lt;/th&gt;
-              ))}
-            &lt;/tr&gt;
-          &lt;/thead&gt;
-          &lt;tbody&gt;
-            {rows.map(row =&gt; (
-              &lt;tr key={row.id} data-selected={selection.has(row.id)}&gt;
-                &lt;td&gt;&lt;Checkbox aria-label={`Select ${row.ref}`}
-                  checked={selection.has(row.id)}
-                  onChange={(v) =&gt; setSelection(s =&gt; {
-                    const n = new Set(s);
-                    v ? n.add(row.id) : n.delete(row.id);
-                    return n;
-                  })} /&gt;&lt;/td&gt;
-                {visibleCols.map(c =&gt; (
-                  &lt;EditableCell key={c}
-                    row={row} col={c}
-                    edit={edit} setEdit={setEdit}
-                  /&gt;
-                ))}
-              &lt;/tr&gt;
-            ))}
-          &lt;/tbody&gt;
-        &lt;/table&gt;
-      &lt;/div&gt;
-
-      {/* PAGER */}
-      &lt;footer className=&quot;heavy-foot&quot;&gt;
-        &lt;Pagination page={q.page} pageCount={pageCount} onChange={(p) =&gt; setQ({ page: p })} /&gt;
-      &lt;/footer&gt;
+      &lt;DataTable columns={columns} rows={pageRows} getRowId={(r) =&gt; r.id} selectable selected={selected} onSelectionChange={setSelected} sort={sort} onSortChange={setSort} ariaLabel=&quot;Transactions&quot; /&gt;
+      &lt;Pagination page={page} pageCount={pageCount} onChange={setPage} total={sorted.length} /&gt;
+      &lt;AlertDialog open={confirmOpen} onClose={() =&gt; setConfirmOpen(false)} title={`Delete ${selected.length} transactions?`} description=&quot;This cannot be undone.&quot; variant=&quot;danger&quot; confirmLabel=&quot;Delete&quot; onConfirm={onConfirmDelete} /&gt;
     &lt;/div&gt;
   );
 }'>

@@ -38,6 +38,14 @@ type DataToolbarComponent = typeof DataToolbarRoot & {
   Actions: typeof DataToolbarActions;
 };
 
+/**
+ * DataToolbar — search/filter/action header for data views.
+ *
+ * @example
+ * ```tsx
+ * <DataToolbar />
+ * ```
+ */
 export const DataToolbar = DataToolbarRoot as DataToolbarComponent;
 DataToolbar.Search = DataToolbarSearch;
 DataToolbar.Filters = DataToolbarFilters;

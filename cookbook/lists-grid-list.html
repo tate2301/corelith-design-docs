@@ -151,6 +151,7 @@
 
     <div class="ck-step"><span class="n">01</span><h3>Lay out the grid with CSS — not JS, not a library</h3></div>
     <p>A CSS grid template with <code>auto-fill</code> + <code>minmax</code> handles every breakpoint without a media query. The card's natural minimum width sets the column count. Save the media-query-juggling for layouts that genuinely can't be solved by <code>minmax</code>.</p>
+    <!-- snippet-skip-reason: this step is plain CSS, not @corelithzw/react TSX — the auto-skip "no @corelithzw/react import" is correct here -->
     <div class="ds-specimen"
          data-code='// Tailwind: grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4
 // Plain CSS:
@@ -170,7 +171,7 @@
     <div class="ck-step"><span class="n">02</span><h3>Build the card — image, title, meta, action</h3></div>
     <p>Each card is a focusable element with a fixed visual structure: image (4:3) on top, a 2-line title, a single line of meta, optional trailing action. Don't make the image clickable separately from the card — that's two tap targets where there should be one.</p>
     <div class="ds-specimen"
-         data-code='import { Card, Stack, Button } from &#39;@corelithzw/react&#39;;
+         data-code='import { Card, Stack } from &#39;@corelithzw/react&#39;;
 
 type Item = {
   id: string;
@@ -185,7 +186,6 @@ function InventoryCard({ item, onOpen }: {
 }) {
   return (
     &lt;Card
-      as=&quot;button&quot;
       onClick={() =&gt; onOpen(item.id)}
       aria-label={`Open ${item.title}`}
     &gt;
@@ -195,7 +195,7 @@ function InventoryCard({ item, onOpen }: {
         loading=&quot;lazy&quot;
         style={{ aspectRatio: &#39;4/3&#39;, objectFit: &#39;cover&#39; }}
       /&gt;
-      &lt;Stack gap=&quot;xs&quot; padding=&quot;md&quot;&gt;
+      &lt;Stack gap=&quot;xs&quot;&gt;
         &lt;h3&gt;{item.title}&lt;/h3&gt;
         &lt;p&gt;{item.meta}&lt;/p&gt;
       &lt;/Stack&gt;
@@ -215,18 +215,20 @@ function InventoryCard({ item, onOpen }: {
     <div class="ck-step"><span class="n">03</span><h3>Multi-select with a Set, not a boolean-per-item</h3></div>
     <p>Lift a <code>Set&lt;string&gt;</code> of selected ids. Don't add an <code>isSelected</code> field to each item — that pulls selection into your data model where it doesn't belong. A Set keeps the selection orthogonal to the array and gives you O(1) toggling.</p>
     <div class="ds-specimen"
-         data-code='import { useState } from &#39;@corelithzw/react&#39;;
+         data-code='import { useState } from &#39;react&#39;;
 import { Card, Checkbox, DataToolbar, Button } from &#39;@corelithzw/react&#39;;
 
-function GridList({ items, onOpen }: {
+function GridList({ items, onOpen, onArchive }: {
   items: Item[];
   onOpen: (id: string) =&gt; void;
+  onArchive: (ids: string[]) =&gt; void;
 }) {
   const [selected, setSelected] = useState&lt;Set&lt;string&gt;&gt;(new Set());
 
   const toggle = (id: string) =&gt; setSelected((prev) =&gt; {
     const next = new Set(prev);
-    next.has(id) ? next.delete(id) : next.add(id);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
     return next;
   });
 
@@ -235,7 +237,7 @@ function GridList({ items, onOpen }: {
       {selected.size &gt; 0 &amp;&amp; (
         &lt;DataToolbar&gt;
           &lt;span&gt;{selected.size} selected&lt;/span&gt;
-          &lt;Button onClick={() =&gt; archive(selected)}&gt;Archive&lt;/Button&gt;
+          &lt;Button onClick={() =&gt; onArchive([...selected])}&gt;Archive&lt;/Button&gt;
           &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; setSelected(new Set())}&gt;
             Clear
           &lt;/Button&gt;
@@ -253,7 +255,9 @@ function GridList({ items, onOpen }: {
               onChange={() =&gt; toggle(item.id)}
               aria-label={`Select ${item.title}`}
             /&gt;
-            {/* …image + title + meta… */}
+            &lt;img src={item.preview} alt=&quot;&quot; loading=&quot;lazy&quot; /&gt;
+            &lt;h3&gt;{item.title}&lt;/h3&gt;
+            &lt;p&gt;{item.meta}&lt;/p&gt;
           &lt;/Card&gt;
         ))}
       &lt;/div&gt;
@@ -276,17 +280,15 @@ function GridList({ items, onOpen }: {
     <div class="ck-step"><span class="n">04</span><h3>Loading skeleton for the image — never a spinner</h3></div>
     <p>Images load asynchronously and stagger as they come in. A spinner says "wait"; a skeleton says "this is the shape of what's coming". The skeleton matches the card's image aspect ratio so the layout doesn't jump when the real image arrives.</p>
     <div class="ds-specimen"
-         data-code='import { Skeleton } from &#39;@corelithzw/react&#39;;
+         data-code='import { useState } from &#39;react&#39;;
+import { Skeleton } from &#39;@corelithzw/react&#39;;
 
 function CardImage({ src, alt }: { src: string; alt: string }) {
   const [loaded, setLoaded] = useState(false);
   return (
     &lt;div style={{ position: &#39;relative&#39;, aspectRatio: &#39;4/3&#39; }}&gt;
       {!loaded &amp;&amp; (
-        &lt;Skeleton
-          variant=&quot;rect&quot;
-          style={{ position: &#39;absolute&#39;, inset: 0 }}
-        /&gt;
+        &lt;Skeleton style={{ position: &#39;absolute&#39;, inset: 0 }} /&gt;
       )}
       &lt;img
         src={src}
@@ -318,7 +320,7 @@ function CardImage({ src, alt }: { src: string; alt: string }) {
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The whole grid list with multi-select, lazy images and skeleton loading. About 120 lines.</p>
     <div class="ds-specimen"
-         data-code='import { useState } from &#39;@corelithzw/react&#39;;
+         data-code='import { useState } from &#39;react&#39;;
 import { Card, Stack, Checkbox, Button, Skeleton, DataToolbar } from &#39;@corelithzw/react&#39;;
 
 type Item = { id: string; title: string; meta: string; preview: string };
@@ -336,7 +338,7 @@ export function InventoryGrid({
 
   const toggle = (id: string) =&gt; setSelected((prev) =&gt; {
     const next = new Set(prev);
-    next.has(id) ? next.delete(id) : next.add(id);
+    if (next.has(id)) next.delete(id); else next.add(id);
     return next;
   });
 
@@ -371,7 +373,6 @@ export function InventoryGrid({
           &lt;ItemCard
             key={item.id}
             item={item}
-            role=&quot;listitem&quot;
             selected={selected.has(item.id)}
             onClick={() =&gt; onCardClick(item.id)}
             onToggle={() =&gt; toggle(item.id)}
@@ -390,14 +391,14 @@ function ItemCard({ item, selected, onClick, onToggle }: {
 }) {
   return (
     &lt;Card
-      as=&quot;button&quot;
       onClick={onClick}
       data-selected={selected}
       aria-pressed={selected}
       aria-label={item.title}
+      role=&quot;listitem&quot;
     &gt;
       &lt;LazyImage src={item.preview} /&gt;
-      &lt;Stack gap=&quot;xs&quot; padding=&quot;sm&quot;&gt;
+      &lt;Stack gap=&quot;xs&quot;&gt;
         &lt;div style={{ display: &#39;flex&#39;, gap: 8, alignItems: &#39;start&#39; }}&gt;
           &lt;Checkbox
             checked={selected}
@@ -420,7 +421,7 @@ function LazyImage({ src }: { src: string }) {
   return (
     &lt;div style={{ position: &#39;relative&#39;, aspectRatio: &#39;4/3&#39; }}&gt;
       {!loaded &amp;&amp; (
-        &lt;Skeleton variant=&quot;rect&quot; style={{ position: &#39;absolute&#39;, inset: 0 }} /&gt;
+        &lt;Skeleton style={{ position: &#39;absolute&#39;, inset: 0 }} /&gt;
       )}
       &lt;img
         src={src} alt=&quot;&quot;

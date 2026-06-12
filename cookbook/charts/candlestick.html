@@ -136,14 +136,18 @@
       <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart.Candlestick</a>
       <a class="ck-piece" href="../../system/p-tooltip.html"><span class="kind">Primitive</span>Tooltip</a>
     </div>
-    <div class="ck-roadmap-note"><b>Roadmap:</b> <code>Chart.Candlestick</code> in v0.2 supports tick patterns, volume overlay, and crosshair tooltips. v0.1-alpha users emit the wick line and rect pair manually.</div>
+    <div class="ck-roadmap-note"><b>Not in v0.3.0.</b> This recipe documents a planned <code>Chart.Candlestick</code> primitive that will land in a future release. Today, hand-roll the SVG above following these design rules: a wick line per session (high-low), an open/close rect coloured green for up-days and red for down-days, and a doji rendered as a 1-2px horizontal line. The snippet below documents the intended API shape.</div>
   </section>
 
   <section id="snippet">
-    <h2 class="ds-h2">React snippet</h2>
-    <p class="ds-h2-sub">Pass <code>data</code> with <code>{date, open, high, low, close}</code>; colour rules ship as defaults.</p>
-    <div class="ds-specimen"
-         data-code='import { Chart } from &#39;@corelithzw/react&#39;;
+    <h2 class="ds-h2">React snippet (planned API)</h2>
+    <p class="ds-h2-sub">Future shape. Pass <code>data</code> with <code>{date, open, high, low, close}</code>; colour rules will ship as defaults.</p>
+    <!-- snippet-skip-reason: documents future Chart.Candlestick primitive — not in v0.3.0 -->
+    <div data-snippet-check="skip" class="ds-specimen"
+         data-code='// Planned API — Chart.Candlestick ships in a future release. Until then,
+// see &quot;Available today&quot; below for a closing-price line fallback.
+// ...
+import { Chart } from &#39;@corelithzw/react&#39;;
 
 type Candle = { date: string; open: number; high: number; low: number; close: number };
 
@@ -180,6 +184,34 @@ export function GoldCandlestick({ data }: { data: Candle[] }) {
         </svg>
       </div>
       <div class="ds-specimen-bar"><span class="label">Chart.Candlestick</span><span class="spacer"></span><span class="t-mono">@corelithzw/react</span></div>
+    </div>
+  </section>
+
+  <section id="available-today">
+    <h2 class="ds-h2">Available today</h2>
+    <p class="ds-h2-sub">For a "where did it close?" view today, plot the closing price as a single <code>Chart.Line</code> — the trend reads, the wicks and bodies don't. When you need OHLC, hand-roll the SVG until <code>Chart.Candlestick</code> ships.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart } from &#39;@corelithzw/react&#39;;
+import type { ChartPoint } from &#39;@corelithzw/react&#39;;
+
+type DailyClose = { date: string; close: number };
+
+export function GoldClose({ data }: { data: DailyClose[] }) {
+  const points: ChartPoint[] = data.map((c) =&gt; ({ x: c.date, y: c.close }));
+  return (
+    &lt;Chart.Line
+      data={points}
+      color=&quot;brand&quot;
+      width={640}
+      height={300}
+      aria-label=&quot;Gold daily close, last 10 sessions&quot;
+    /&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="legend" style="font: var(--type-body-sm); color: var(--text-muted);">Closing-price line fallback.</div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">GoldClose.tsx</span><span class="spacer"></span><span class="t-mono">@corelithzw/react</span></div>
     </div>
   </section>
 

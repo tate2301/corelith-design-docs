@@ -13,6 +13,14 @@ export interface DayListProps extends HTMLAttributes<HTMLDivElement> {
   rows: DayListRow[];
 }
 
+/**
+ * DayList — date-grouped row list (day timeline).
+ *
+ * @example
+ * ```tsx
+ * <DayList />
+ * ```
+ */
 export const DayList = forwardRef<HTMLDivElement, DayListProps>(function DayList(
   { rows, className, ...rest },
   ref,

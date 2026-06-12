@@ -9,6 +9,14 @@ export interface ProgressProps extends HTMLAttributes<HTMLDivElement> {
   label?: ReactNode;
 }
 
+/**
+ * Progress — determinate progress bar (role="progressbar").
+ *
+ * @example
+ * ```tsx
+ * <Progress />
+ * ```
+ */
 export const Progress = forwardRef<HTMLDivElement, ProgressProps>(function Progress(
   { value, max = 1, label, className, ...rest },
   ref,

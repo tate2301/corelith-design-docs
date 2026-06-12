@@ -41,6 +41,14 @@ export interface NotificationMatrixProps {
  * Settings matrix of events × channels. Renders a real `<table>` for proper
  * keyboard navigation and screen-reader semantics.
  */
+/**
+ * NotificationMatrix — channel × event preference grid.
+ *
+ * @example
+ * ```tsx
+ * <NotificationMatrix />
+ * ```
+ */
 export function NotificationMatrix({
   events,
   channels,

@@ -110,10 +110,14 @@
   </section>
 
   <section id="snippet">
-    <h2 class="ds-h2">React snippet</h2>
-    <p class="ds-h2-sub">Pass <code>steps</code> with <code>label</code> and <code>value</code>. Step-to-step rates are computed for you.</p>
-    <div class="ds-specimen"
-         data-code='import { Chart } from &#39;@corelithzw/react&#39;;
+    <h2 class="ds-h2">React snippet (planned API)</h2>
+    <p class="ds-h2-sub">Future shape. Pass <code>steps</code> with <code>label</code> and <code>value</code>; step-to-step rates and worst-step highlighting will be computed for you.</p>
+    <!-- snippet-skip-reason: documents future Chart.Funnel primitive — not in v0.3.0 -->
+    <div data-snippet-check="skip" class="ds-specimen"
+         data-code='// Planned API — Chart.Funnel ships in a future release. Until then,
+// see &quot;Available today&quot; below for a horizontal-bar approximation.
+// ...
+import { Chart } from &#39;@corelithzw/react&#39;;
 
 const oct = [
   { label: &#39;Visits&#39;,         value: 12400 },
@@ -145,6 +149,55 @@ export function OctoberFunnel() {
         </svg>
       </div>
       <div class="ds-specimen-bar"><span class="label">Chart.Funnel</span><span class="spacer"></span><span class="t-mono">@corelithzw/react</span></div>
+    </div>
+  </section>
+
+  <section id="available-today">
+    <h2 class="ds-h2">Available today</h2>
+    <p class="ds-h2-sub">A vertical <code>Chart.Bar</code> with one bar per step reads as a tapering funnel — same data, same leak-spotting. The step-to-step rates print alongside in markup. Swap to <code>Chart.Funnel</code> when it ships.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart } from &#39;@corelithzw/react&#39;;
+import type { ChartCategoricalDatum } from &#39;@corelithzw/react&#39;;
+
+const octSteps: ChartCategoricalDatum[] = [
+  { label: &#39;Visits&#39;,        value: 12400 },
+  { label: &#39;Product views&#39;, value:  8200 },
+  { label: &#39;Carts&#39;,         value:  2100 },
+  { label: &#39;Checkouts&#39;,     value:   720 },
+  { label: &#39;Orders&#39;,        value:   248 },
+];
+
+function stepRates(steps: ChartCategoricalDatum[]): string[] {
+  return steps.map((s, i) =&gt; {
+    if (i === 0) return &#39;—&#39;;
+    const prev = steps[i - 1]!.value;
+    return `${Math.round((s.value / prev) * 100)}%`;
+  });
+}
+
+export function OctoberFunnel() {
+  const rates = stepRates(octSteps);
+  return (
+    &lt;div&gt;
+      &lt;Chart.Bar
+        data={octSteps}
+        width={520}
+        height={220}
+        legend
+        aria-label=&quot;October conversion funnel, 2% overall&quot;
+      /&gt;
+      &lt;ul aria-label=&quot;Step-to-step conversion&quot;&gt;
+        {octSteps.map((s, i) =&gt; (
+          &lt;li key={s.label}&gt;{s.label}: {s.value.toLocaleString()} ({rates[i]})&lt;/li&gt;
+        ))}
+      &lt;/ul&gt;
+    &lt;/div&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="legend" style="font: var(--type-body-sm); color: var(--text-muted);">Vertical-bar approximation with step-rate list.</div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">OctoberFunnel.tsx</span><span class="spacer"></span><span class="t-mono">@corelithzw/react</span></div>
     </div>
   </section>
 

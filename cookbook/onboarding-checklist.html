@@ -312,29 +312,28 @@ function ChecklistPanel({
   items: Array&lt;{ id: string; label: string; cta: string; href: string; done: boolean }&gt;;
   onDismiss: () =&gt; void;
 }) {
-  // The pre-done account step is counted in the header but not rendered as a row
-  // — it would just be a strikethrough nobody clicks. Showing 1/5 done, 4 visible.
-  const visible = items;
-  const visibleDone = done; // account step is folded into the counter
   const headline = done === total
     ? `${total} of ${total} done`
-    : `${done + 1} of ${total + 1} done`; // +1 accounts for the silent &quot;create account&quot; step
+    : `${done + 1} of ${total + 1} done`;
 
   return (
-    &lt;Checklist label=&quot;Set up Mukamba Group&quot; progress={{ done, total }}&gt;
-      &lt;Stack gap=&quot;md&quot;&gt;
-        &lt;p&gt;&lt;b&gt;{headline}.&lt;/b&gt; Pick up where you left off.&lt;/p&gt;
-        {visible.map((t) =&gt; (
+    &lt;Stack gap=&quot;md&quot;&gt;
+      &lt;h2&gt;Set up Mukamba Group&lt;/h2&gt;
+      &lt;p&gt;&lt;b&gt;{headline}.&lt;/b&gt; Pick up where you left off.&lt;/p&gt;
+      &lt;Checklist aria-label=&quot;Onboarding tasks&quot;&gt;
+        {items.map((t) =&gt; (
           &lt;Checklist.Item
             key={t.id}
             done={t.done}
-            label={t.label}
-            cta={&lt;Button as=&quot;a&quot; href={t.href} variant=&quot;ghost&quot; size=&quot;sm&quot;&gt;{t.cta}&lt;/Button&gt;}
+            title={t.label}
+            action={
+              &lt;a className=&quot;btn btn-ghost btn-sm&quot; href={t.href}&gt;{t.cta}&lt;/a&gt;
+            }
           /&gt;
         ))}
-        &lt;Button variant=&quot;link&quot; onClick={onDismiss}&gt;Hide this checklist&lt;/Button&gt;
-      &lt;/Stack&gt;
-    &lt;/Checklist&gt;
+      &lt;/Checklist&gt;
+      &lt;Button variant=&quot;ghost&quot; onClick={onDismiss}&gt;Hide this checklist&lt;/Button&gt;
+    &lt;/Stack&gt;
   );
 }'>
       <div class="ds-specimen-stage canvas padded">
@@ -360,7 +359,7 @@ function ChecklistPanel({
     <div class="ck-step"><span class="n">04</span><h3>Celebrate only at 100% — and only once</h3></div>
     <p>Confetti on partial progress trains the user to dismiss every micro-win. Save the celebration for <code>complete === true</code>, run it once, and then hide the checklist on the next render. The dismissal-on-completion is auto so users don't have to think about cleaning up.</p>
     <div class="ds-specimen"
-         data-code='import { useEffect, useRef } from &#39;@corelithzw/react&#39;;
+         data-code='import { useEffect, useRef } from &#39;react&#39;;
 import { Stack, Button, Alert } from &#39;@corelithzw/react&#39;;
 
 function Celebration({
@@ -408,7 +407,7 @@ function Celebration({
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The whole <code>OnboardingChecklist</code>, assembled. Task list + auto-detection + dismissal + celebration.</p>
     <div class="ds-specimen"
-         data-code='import { useEffect, useMemo, useRef, useState } from &#39;@corelithzw/react&#39;;
+         data-code='import { useEffect, useMemo, useRef, useState } from &#39;react&#39;;
 import { Stack, Button, Alert, Checklist } from &#39;@corelithzw/react&#39;;
 
 // ── Tasks ──────────────────────────────────────────────────────
@@ -507,27 +506,25 @@ export function OnboardingChecklist({
   const headline = `${done + 1} of ${total + 1} done`;
 
   return (
-    &lt;Checklist
-      label={`Set up ${workspaceName}`}
-      progress={{ done: done + 1, total: total + 1 }}
-    &gt;
-      &lt;Stack gap=&quot;md&quot;&gt;
-        &lt;p&gt;&lt;b&gt;{headline}.&lt;/b&gt; Pick up where you left off.&lt;/p&gt;
+    &lt;Stack gap=&quot;md&quot;&gt;
+      &lt;h2&gt;{`Set up ${workspaceName}`}&lt;/h2&gt;
+      &lt;p&gt;&lt;b&gt;{headline}.&lt;/b&gt; Pick up where you left off.&lt;/p&gt;
+      &lt;Checklist aria-label=&quot;Onboarding tasks&quot;&gt;
         {items.map((t) =&gt; (
           &lt;Checklist.Item
             key={t.id}
             done={t.done}
-            label={t.label}
-            cta={
-              &lt;Button as=&quot;a&quot; href={t.href} variant=&quot;ghost&quot; size=&quot;sm&quot; disabled={t.done}&gt;
+            title={t.label}
+            action={
+              &lt;a className=&quot;btn btn-ghost btn-sm&quot; href={t.href}&gt;
                 {t.done ? &#39;Done&#39; : t.cta}
-              &lt;/Button&gt;
+              &lt;/a&gt;
             }
           /&gt;
         ))}
-        &lt;Button variant=&quot;link&quot; onClick={dismiss}&gt;Hide this checklist&lt;/Button&gt;
-      &lt;/Stack&gt;
-    &lt;/Checklist&gt;
+      &lt;/Checklist&gt;
+      &lt;Button variant=&quot;ghost&quot; onClick={dismiss}&gt;Hide this checklist&lt;/Button&gt;
+    &lt;/Stack&gt;
   );
 }'>
       <div class="ds-specimen-stage canvas padded">

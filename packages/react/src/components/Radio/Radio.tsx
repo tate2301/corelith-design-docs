@@ -44,6 +44,14 @@ export interface RadioProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
   value: string;
 }
 
+/**
+ * Radio — single radio control. Use inside <RadioGroup>.
+ *
+ * @example
+ * ```tsx
+ * <Radio />
+ * ```
+ */
 export const Radio = forwardRef<HTMLInputElement, RadioProps>(function Radio(
   { label, className, value, checked, onChange, name, ...rest },
   ref,

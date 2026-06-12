@@ -3,8 +3,17 @@ import { cx } from '../../utils/cx';
 
 export type DataTableSortDir = 'asc' | 'desc';
 
+/**
+ * Sort state for `DataTable`. `column` is the canonical key; `columnId` is a
+ * deprecated alias kept for backwards compatibility.
+ */
 export interface DataTableSortState {
-  columnId: string;
+  /** The sorted column's `id`. */
+  column: string;
+  /**
+   * @deprecated Use {@link DataTableSortState.column} instead. Will be removed in v1.0.
+   */
+  columnId?: string;
   direction: DataTableSortDir;
 }
 
@@ -42,6 +51,22 @@ export interface DataTableProps<Row> {
   ariaLabel?: string;
 }
 
+/**
+ * DataTable — accessible sortable/selectable table primitive.
+ *
+ * Controlled selection and sort; consumers own the row array.
+ *
+ * @example
+ * ```tsx
+ * <DataTable
+ *   columns={[{ id: 'name', header: 'Name', sortable: true }]}
+ *   rows={users}
+ *   getRowId={(u) => u.id}
+ *   sort={sort}
+ *   onSortChange={setSort}
+ * />
+ * ```
+ */
 export function DataTable<Row>({
   columns,
   rows,
@@ -57,6 +82,7 @@ export function DataTable<Row>({
   className,
   ariaLabel,
 }: DataTableProps<Row>) {
+  const sortColumn = sort?.column ?? sort?.columnId;
   const selectedSet = new Set(selected ?? []);
   const allSelected = rows.length > 0 && rows.every((r, i) => selectedSet.has(getRowId(r, i)));
 
@@ -79,10 +105,10 @@ export function DataTable<Row>({
 
   const handleSort = (col: DataTableColumn<Row>) => {
     if (!col.sortable || !onSortChange) return;
-    if (!sort || sort.columnId !== col.id) {
-      onSortChange({ columnId: col.id, direction: 'asc' });
+    if (!sort || sortColumn !== col.id) {
+      onSortChange({ column: col.id, columnId: col.id, direction: 'asc' });
     } else if (sort.direction === 'asc') {
-      onSortChange({ columnId: col.id, direction: 'desc' });
+      onSortChange({ column: col.id, columnId: col.id, direction: 'desc' });
     } else {
       onSortChange(undefined);
     }
@@ -105,7 +131,7 @@ export function DataTable<Row>({
             </th>
           ) : null}
           {columns.map((c) => {
-            const isSorted = sort?.columnId === c.id;
+            const isSorted = sortColumn === c.id;
             const sortClass = c.sortable
               ? cx('sortable', isSorted && sort?.direction)
               : null;

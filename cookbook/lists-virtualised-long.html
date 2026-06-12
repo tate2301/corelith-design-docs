@@ -156,7 +156,10 @@
     <div class="ck-step"><span class="n">01</span><h3>The state machine — scrollTop, viewport, item count</h3></div>
     <p>Three numbers drive the whole virtualiser: how far the user has scrolled, how tall the viewport is, and how many items the data has. Everything else is derived. Don't store start/end indexes — derive them, or they drift out of sync with scrollTop.</p>
     <div class="ds-specimen"
-         data-code='function useVirtualWindow(opts: {
+         data-code='import { useState } from &#39;@corelithzw/react&#39;;
+import type { UIEvent } from &#39;react&#39;;
+
+function useVirtualWindow(opts: {
   count: number;
   estimatedRowHeight: number;
   overscan?: number;
@@ -174,7 +177,7 @@
     start, end,
     totalHeight: count * estimatedRowHeight,
     offsetTop: start * estimatedRowHeight,
-    onScroll: (e: React.UIEvent&lt;HTMLDivElement&gt;) =&gt; setScrollTop(e.currentTarget.scrollTop),
+    onScroll: (e: UIEvent&lt;HTMLDivElement&gt;) =&gt; setScrollTop(e.currentTarget.scrollTop),
     setViewportH,
   };
 }'>
@@ -190,10 +193,13 @@
     <div class="ck-step"><span class="n">02</span><h3>The render shape — spacer above, real rows, spacer below</h3></div>
     <p>The trick: render the visible rows inside a translated container, and let the total scroll height come from a single absolutely-positioned spacer of <code>totalHeight</code>. The scrollbar reads the spacer; the user sees the rows; the browser only paints what's on screen.</p>
     <div class="ds-specimen"
-         data-code='function VirtualList&lt;T&gt;({ items, rowHeight, renderRow }: {
+         data-code='import { useEffect, useRef } from &#39;@corelithzw/react&#39;;
+import type { ReactNode } from &#39;react&#39;;
+
+function VirtualList&lt;T&gt;({ items, rowHeight, renderRow }: {
   items: T[];
   rowHeight: number;
-  renderRow: (item: T, index: number) =&gt; React.ReactNode;
+  renderRow: (item: T, index: number) =&gt; ReactNode;
 }) {
   const containerRef = useRef&lt;HTMLDivElement&gt;(null);
   const { start, end, totalHeight, offsetTop, onScroll, setViewportH } =
@@ -226,7 +232,9 @@
     <div class="ck-step"><span class="n">03</span><h3>Variable heights — measure on first render, cache</h3></div>
     <p>For variable rows, replace the constant <code>rowHeight</code> with a measured map. After each row mounts, store its real height in a ref-cached <code>Map</code>. Re-derive the running offsets on each render. Yes, the first scroll is slightly off — that's the cost.</p>
     <div class="ds-specimen"
-         data-code='function useMeasuredHeights(count: number, estimate: number) {
+         data-code='import { useRef, useState } from &#39;@corelithzw/react&#39;;
+
+function useMeasuredHeights(count: number, estimate: number) {
   const heights = useRef(new Map&lt;number, number&gt;());
   const [, force] = useState(0);
 
@@ -260,8 +268,11 @@
     <div class="ck-step"><span class="n">04</span><h3>Infinite scroll — sentinel at both ends</h3></div>
     <p>An <code>IntersectionObserver</code> on a top sentinel and a bottom sentinel fires the load handler. Older-direction loads must prepend without scroll-jumping — restore scrollTop after the prepend by the prepended-rows height. Otherwise scrolling up teleports you.</p>
     <div class="ds-specimen"
-         data-code='function useInfiniteSentinel({ ref, onVisible, rootMargin = &#39;200px&#39; }: {
-  ref: React.RefObject&lt;HTMLElement&gt;;
+         data-code='import { useEffect } from &#39;@corelithzw/react&#39;;
+import type { RefObject } from &#39;react&#39;;
+
+function useInfiniteSentinel({ ref, onVisible, rootMargin = &#39;200px&#39; }: {
+  ref: RefObject&lt;HTMLElement&gt;;
   onVisible: () =&gt; void;
   rootMargin?: string;
 }) {
@@ -294,12 +305,13 @@ function withAnchor(el: HTMLDivElement, fn: () =&gt; void) {
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">~120 lines, including hooks. Hand-rolled, no library.</p>
     <div class="ds-specimen"
-         data-code='import { useState, useRef, useEffect, useCallback } from &#39;react&#39;;
+         data-code='import { useState, useRef, useEffect } from &#39;@corelithzw/react&#39;;
 import { RowCard, Spinner } from &#39;@corelithzw/react&#39;;
+import type { UIEvent } from &#39;react&#39;;
 
 type Txn = { id: string; ref: string; amount: number };
 
-function useVirtualWindow(count: number, rowH: number, overscan = 5) {
+function useFixedVirtualWindow(count: number, rowH: number, overscan = 5) {
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportH, setViewportH] = useState(0);
   const start = Math.max(0, Math.floor(scrollTop / rowH) - overscan);
@@ -308,7 +320,7 @@ function useVirtualWindow(count: number, rowH: number, overscan = 5) {
     start, end,
     totalHeight: count * rowH,
     offsetTop: start * rowH,
-    onScroll: (e: React.UIEvent&lt;HTMLDivElement&gt;) =&gt; setScrollTop(e.currentTarget.scrollTop),
+    onScroll: (e: UIEvent&lt;HTMLDivElement&gt;) =&gt; setScrollTop(e.currentTarget.scrollTop),
     setViewportH,
   };
 }
@@ -325,7 +337,7 @@ export function VirtualTxnList({
   const topSentinelRef = useRef&lt;HTMLDivElement&gt;(null);
   const bottomSentinelRef = useRef&lt;HTMLDivElement&gt;(null);
   const { start, end, totalHeight, offsetTop, onScroll, setViewportH } =
-    useVirtualWindow(items.length, ROW_H);
+    useFixedVirtualWindow(items.length, ROW_H);
 
   useEffect(() =&gt; {
     if (!containerRef.current) return;
@@ -366,7 +378,7 @@ export function VirtualTxnList({
     &lt;div ref={containerRef} onScroll={onScroll} className=&quot;vlist&quot;
          role=&quot;feed&quot; aria-busy={loadingNewer || loadingOlder}&gt;
       &lt;div ref={topSentinelRef} className=&quot;vlist-sentinel&quot;&gt;
-        {loadingOlder &amp;&amp; &lt;Spinner size=&quot;sm&quot; /&gt;}
+        {loadingOlder &amp;&amp; &lt;Spinner /&gt;}
       &lt;/div&gt;
       &lt;div style={{ height: totalHeight, position: &#39;relative&#39; }}&gt;
         &lt;div style={{ transform: `translateY(${offsetTop}px)` }}&gt;
@@ -383,7 +395,7 @@ export function VirtualTxnList({
         &lt;/div&gt;
       &lt;/div&gt;
       &lt;div ref={bottomSentinelRef} className=&quot;vlist-sentinel&quot;&gt;
-        {loadingNewer &amp;&amp; &lt;Spinner size=&quot;sm&quot; /&gt;}
+        {loadingNewer &amp;&amp; &lt;Spinner /&gt;}
       &lt;/div&gt;
     &lt;/div&gt;
   );

@@ -212,27 +212,27 @@
     <div class="ck-step"><span class="n">01</span><h3>Model the range as <code>{from, to}</code> ISO strings, not Date objects</h3></div>
     <p>Date objects don't serialise into URL params and don't compare with <code>===</code>. ISO date strings (<code>'2026-05-01'</code>) sort lexicographically the same as chronologically, JSON-clone cleanly, and round-trip through the query string. The picker is the only place that ever sees a real <code>Date</code> — and only for rendering the calendar.</p>
     <div class="ds-specimen"
-         data-code='import { useState, useMemo } from &#39;@corelithzw/react&#39;;
+         data-code='import { useDateRange } from &#39;@corelithzw/react&#39;;
 
-export type DateRange = { from: string; to: string }; // ISO YYYY-MM-DD
+// `useDateRange` owns ISO strings (`YYYY-MM-DD`) and presets. It returns
+// `{ from, to, setRange, preset, isPreset }` and auto-swaps when the user
+// hands it `from &gt; to`, so the UI never has to render an &quot;invalid&quot; state.
+export function RangeModel() {
+  const { from, to, setRange, preset, isPreset } = useDateRange({
+    from: &#39;2026-05-01&#39;,
+    to: &#39;2026-05-31&#39;,
+  });
 
-const today = () =&gt; new Date().toISOString().slice(0, 10);
-const addDays = (iso: string, n: number) =&gt; {
-  const d = new Date(iso);
-  d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
-};
+  // Jump to a preset (Sets both `from` and `to` to ISO strings).
+  const pickThisMonth = () =&gt; preset(&#39;this-month&#39;);
 
-export function useDateRange(initial: DateRange) {
-  const [range, setRange] = useState&lt;DateRange&gt;(initial);
+  // Patch one end of the range — the other is preserved.
+  const setStart = (iso: string) =&gt; setRange({ from: iso });
 
-  // Always pin from ≤ to. Swap silently if the user clicks them out of order.
-  const set = (from: string, to: string) =&gt;
-    setRange(from &lt;= to ? { from, to } : { from: to, to: from });
+  // Compare against a preset to highlight the active chip.
+  const isThisMonth = isPreset(&#39;this-month&#39;);
 
-  const isValid = useMemo(() =&gt; range.from &lt;= range.to, [range]);
-
-  return { range, set, isValid };
+  return { from, to, pickThisMonth, setStart, isThisMonth };
 }'>
       <div class="ds-specimen-stage canvas padded">
         <div class="ck-code-only-note">
@@ -249,31 +249,19 @@ export function useDateRange(initial: DateRange) {
     <div class="ck-step"><span class="n">02</span><h3>Build the preset list as plain data, not buttons</h3></div>
     <p>Presets are a static list of <code>{label, range}</code> pairs. Render them with a single <code>map</code>; the active state is whatever preset matches the current range, or <code>'custom'</code> if none do. This means adding "Last 7 days" is a one-line change.</p>
     <div class="ds-specimen"
-         data-code='type Preset = { id: string; label: string; range: (now: string) =&gt; DateRange };
+         data-code='import type { DateRangePresetId } from &#39;@corelithzw/react&#39;;
 
-const startOfWeek = (iso: string) =&gt; {
-  const d = new Date(iso);
-  const day = (d.getDay() + 6) % 7; // Monday = 0
-  d.setDate(d.getDate() - day);
-  return d.toISOString().slice(0, 10);
-};
-const startOfMonth = (iso: string) =&gt;
-  iso.slice(0, 8) + &#39;01&#39;;
-
-export const PRESETS: Preset[] = [
-  { id: &#39;today&#39;,     label: &#39;Today&#39;,      range: (n) =&gt; ({ from: n, to: n }) },
-  { id: &#39;yesterday&#39;, label: &#39;Yesterday&#39;,  range: (n) =&gt; { const y = addDays(n, -1); return { from: y, to: y }; } },
-  { id: &#39;week&#39;,      label: &#39;This week&#39;,  range: (n) =&gt; ({ from: startOfWeek(n), to: n }) },
-  { id: &#39;month&#39;,     label: &#39;This month&#39;, range: (n) =&gt; ({ from: startOfMonth(n), to: n }) },
-];
-
-export function matchPreset(r: DateRange, now: string): string {
-  for (const p of PRESETS) {
-    const pr = p.range(now);
-    if (pr.from === r.from &amp;&amp; pr.to === r.to) return p.id;
-  }
-  return &#39;custom&#39;;
-}'>
+// The preset chip-row is just static label data mapped over a button list.
+// The real `useDateRange().preset(id)` does the date math — you only need
+// to choose which IDs to expose and what to call them in your UI.
+export const PRESET_CHIPS: { id: DateRangePresetId; label: string }[] = [
+  { id: &#39;today&#39;,        label: &#39;Today&#39; },
+  { id: &#39;yesterday&#39;,    label: &#39;Yesterday&#39; },
+  { id: &#39;this-week&#39;,    label: &#39;This week&#39; },
+  { id: &#39;this-month&#39;,   label: &#39;This month&#39; },
+  { id: &#39;last-7-days&#39;,  label: &#39;Last 7 days&#39; },
+  { id: &#39;last-30-days&#39;, label: &#39;Last 30 days&#39; },
+];'>
       <div class="ds-specimen-stage canvas padded">
         <div style="display: grid; place-items: center; padding: 18px;">
           <div style="display: flex; gap: 6px; padding: 6px; background: var(--surface-muted); border-radius: 8px;">
@@ -292,31 +280,31 @@ export function matchPreset(r: DateRange, now: string): string {
     <div class="ck-step"><span class="n">03</span><h3>Pick the surface — Popover on desktop, BottomSheet on mobile</h3></div>
     <p>A two-month calendar floating off a 200px input on a phone is unusable. Switch the wrapper by viewport: <code>Popover</code> above ~720px, <code>BottomSheet</code> below. Both expose the same <code>open</code> / <code>onOpenChange</code> API so the trigger button doesn't care which one's mounted.</p>
     <div class="ds-specimen"
-         data-code='import { Popover, BottomSheet, Button } from &#39;@corelithzw/react&#39;;
-import { useMediaQuery } from &#39;@corelithzw/react&#39;;
+         data-code='import type { ReactNode } from &#39;react&#39;;
+import { Popover, BottomSheet, useMediaQuery } from &#39;@corelithzw/react&#39;;
 
+// Same `{ open, onClose }` shape on both surfaces — the trigger button
+// doesn&#39;t care which one&#39;s mounted. `useMediaQuery` returns a boolean.
 function RangeSurface({
-  open, onOpenChange, trigger, children,
+  open,
+  onClose,
+  children,
 }: {
   open: boolean;
-  onOpenChange: (v: boolean) =&gt; void;
-  trigger: React.ReactNode;
-  children: React.ReactNode;
+  onClose: () =&gt; void;
+  children: ReactNode;
 }) {
   const isMobile = useMediaQuery(&#39;(max-width: 720px)&#39;);
 
   if (isMobile) {
     return (
-      &lt;&gt;
-        {trigger}
-        &lt;BottomSheet open={open} onOpenChange={onOpenChange} title=&quot;Pick a date range&quot;&gt;
-          {children}
-        &lt;/BottomSheet&gt;
-      &lt;/&gt;
+      &lt;BottomSheet open={open} onClose={onClose} title=&quot;Pick a date range&quot;&gt;
+        {children}
+      &lt;/BottomSheet&gt;
     );
   }
   return (
-    &lt;Popover open={open} onOpenChange={onOpenChange} align=&quot;start&quot; trigger={trigger}&gt;
+    &lt;Popover open={open} onClose={onClose} title=&quot;Pick a date range&quot;&gt;
       {children}
     &lt;/Popover&gt;
   );
@@ -335,33 +323,40 @@ function RangeSurface({
     <div class="ck-step"><span class="n">04</span><h3>Wire the two-month calendar with hover preview</h3></div>
     <p><code>Calendar</code> in <code>mode="range"</code> handles the first-click / second-click state internally; you give it <code>numberOfMonths={2}</code> and it lays out the second month to the right. The hover-preview range (between first click and second) is a visual concern only — don't write it back to <code>useDateRange</code> until the user commits.</p>
     <div class="ds-specimen"
-         data-code='import { Calendar, Stack, Button } from &#39;@corelithzw/react&#39;;
+         data-code='import { useState } from &#39;@corelithzw/react&#39;;
+import { Calendar, Stack, Button, useDateRange } from &#39;@corelithzw/react&#39;;
 
-function CustomCalendar({
-  range, onCommit, onCancel,
-}: {
-  range: DateRange;
-  onCommit: (r: DateRange) =&gt; void;
-  onCancel: () =&gt; void;
-}) {
-  const [draft, setDraft] = useState&lt;DateRange&gt;(range);
+// Two-click range pattern over the real `Calendar` primitive (single-date
+// picker, Monday-first weeks). The first click sets `from` and clears `to`;
+// the second click sets `to`. `useDateRange.setRange` swaps if the user
+// picks them out of order, so the hook always exposes `from &lt;= to`.
+const toIso = (d: Date) =&gt;
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, &#39;0&#39;)}-${String(d.getDate()).padStart(2, &#39;0&#39;)}`;
+
+function CustomCalendar({ onCancel }: { onCancel: () =&gt; void }) {
+  const { from, to, setRange } = useDateRange();
+  const [cursor, setCursor] = useState&lt;Date | null&gt;(null);
+
+  const onPick = (d: Date) =&gt; {
+    const iso = toIso(d);
+    if (!from || to) {
+      setRange({ from: iso, to: null });
+    } else {
+      setRange({ to: iso });
+    }
+    setCursor(d);
+  };
 
   return (
     &lt;Stack gap=&quot;md&quot;&gt;
       &lt;Calendar
-        mode=&quot;range&quot;
-        numberOfMonths={2}
-        weekStartsOn={1}                   // Monday
-        value={draft}
-        onChange={setDraft}
+        weekStartsOn={1}
+        value={cursor}
+        onChange={onPick}
       /&gt;
-      &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot; justify=&quot;end&quot;&gt;
+      &lt;Stack direction=&quot;horizontal&quot; gap=&quot;sm&quot; justify=&quot;end&quot;&gt;
         &lt;Button variant=&quot;ghost&quot; onClick={onCancel}&gt;Cancel&lt;/Button&gt;
-        &lt;Button
-          variant=&quot;primary&quot;
-          onClick={() =&gt; onCommit(draft)}
-          disabled={draft.from &gt; draft.to}
-        &gt;
+        &lt;Button variant=&quot;primary&quot; disabled={!from || !to}&gt;
           Apply
         &lt;/Button&gt;
       &lt;/Stack&gt;
@@ -398,154 +393,72 @@ function CustomCalendar({
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The whole <code>DateRangePicker</code> component, assembled. Presets, calendar, responsive surface, validation, ISO output — drop it in.</p>
     <div class="ds-specimen"
-         data-code='import { useState, useMemo } from &#39;@corelithzw/react&#39;;
-import {
-  Button, Popover, BottomSheet, Calendar, Stack, Field, Input,
-  useMediaQuery, useDateRange,
-} from &#39;@corelithzw/react&#39;;
+         data-code='import { useState, type ChangeEvent } from &#39;react&#39;;
+import { Button, Popover, BottomSheet, Stack, Field, Input, useMatchMedia, useDateRange } from &#39;@corelithzw/react&#39;;
 
-export type DateRange = { from: string; to: string };
-
-// ── Helpers ────────────────────────────────────────────────────
-const today = () =&gt; new Date().toISOString().slice(0, 10);
-const addDays = (iso: string, n: number) =&gt; {
-  const d = new Date(iso); d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
-};
-const startOfWeek = (iso: string) =&gt; {
-  const d = new Date(iso);
-  const day = (d.getDay() + 6) % 7;
-  d.setDate(d.getDate() - day);
-  return d.toISOString().slice(0, 10);
-};
-const startOfMonth = (iso: string) =&gt; iso.slice(0, 8) + &#39;01&#39;;
-const fmt = (iso: string) =&gt;
-  new Date(iso).toLocaleDateString(undefined, { day: &#39;numeric&#39;, month: &#39;short&#39;, year: &#39;numeric&#39; });
-
-// ── Presets ────────────────────────────────────────────────────
-type Preset = { id: string; label: string; range: (now: string) =&gt; DateRange };
-const PRESETS: Preset[] = [
-  { id: &#39;today&#39;,     label: &#39;Today&#39;,      range: (n) =&gt; ({ from: n, to: n }) },
-  { id: &#39;yesterday&#39;, label: &#39;Yesterday&#39;,  range: (n) =&gt; { const y = addDays(n, -1); return { from: y, to: y }; } },
-  { id: &#39;week&#39;,      label: &#39;This week&#39;,  range: (n) =&gt; ({ from: startOfWeek(n), to: n }) },
-  { id: &#39;month&#39;,     label: &#39;This month&#39;, range: (n) =&gt; ({ from: startOfMonth(n), to: n }) },
+const PRESETS_FINAL: { id: DateRangePresetId; label: string }[] = [
+  { id: &#39;today&#39;,        label: &#39;Today&#39; },
+  { id: &#39;yesterday&#39;,    label: &#39;Yesterday&#39; },
+  { id: &#39;this-week&#39;,    label: &#39;This week&#39; },
+  { id: &#39;this-month&#39;,   label: &#39;This month&#39; },
+  { id: &#39;last-7-days&#39;,  label: &#39;Last 7 days&#39; },
+  { id: &#39;last-30-days&#39;, label: &#39;Last 30 days&#39; },
 ];
-const matchPreset = (r: DateRange, now: string) =&gt; {
-  for (const p of PRESETS) {
-    const pr = p.range(now);
-    if (pr.from === r.from &amp;&amp; pr.to === r.to) return p.id;
-  }
-  return &#39;custom&#39;;
-};
 
-// ── Component ──────────────────────────────────────────────────
-export function DateRangePicker({
-  value, onChange,
-}: {
-  value: DateRange;
-  onChange: (r: DateRange) =&gt; void;
+const fmtIso = (iso: string | null) =&gt; iso ? new Date(iso).toLocaleDateString(undefined, { day: &#39;numeric&#39;, month: &#39;short&#39;, year: &#39;numeric&#39; }) : &#39;Any&#39;;
+
+export function DateRangePicker({ initial, onChange }: {
+  initial?: { from: string | null; to: string | null };
+  onChange: (range: { from: string | null; to: string | null }) =&gt; void;
 }) {
   const [open, setOpen] = useState(false);
-  const [showCalendar, setShowCalendar] = useState(
-    matchPreset(value, today()) === &#39;custom&#39;,
-  );
-  const [draft, setDraft] = useState&lt;DateRange&gt;(value);
-  const isMobile = useMediaQuery(&#39;(max-width: 720px)&#39;);
-  const active = matchPreset(draft, today());
+  const range = useDateRange(initial);
+  const isMobile = useMatchMedia(&#39;(max-width: 720px)&#39;);
 
-  const commit = (r: DateRange) =&gt; {
-    onChange(r.from &lt;= r.to ? r : { from: r.to, to: r.from });
+  const apply = () =&gt; {
+    onChange({ from: range.from, to: range.to });
     setOpen(false);
   };
 
   const body = (
-    &lt;Stack gap=&quot;md&quot; padding=&quot;md&quot;&gt;
+    &lt;Stack gap=&quot;md&quot;&gt;
       &lt;div role=&quot;group&quot; aria-label=&quot;Date range presets&quot; style={{ display: &#39;flex&#39;, gap: 4, flexWrap: &#39;wrap&#39; }}&gt;
-        {PRESETS.map((p) =&gt; (
-          &lt;Button
-            key={p.id}
-            size=&quot;sm&quot;
-            variant={active === p.id ? &#39;primary&#39; : &#39;ghost&#39;}
-            onClick={() =&gt; { const r = p.range(today()); setDraft(r); setShowCalendar(false); commit(r); }}
-          &gt;
+        {PRESETS_FINAL.map((p) =&gt; (
+          &lt;Button key={p.id} size=&quot;sm&quot; variant={range.isPreset(p.id) ? &#39;primary&#39; : &#39;ghost&#39;} onClick={() =&gt; range.preset(p.id)}&gt;
             {p.label}
           &lt;/Button&gt;
         ))}
-        &lt;Button
-          size=&quot;sm&quot;
-          variant={showCalendar ? &#39;primary&#39; : &#39;ghost&#39;}
-          aria-expanded={showCalendar}
-          onClick={() =&gt; setShowCalendar((v) =&gt; !v)}
-        &gt;
-          Custom
-        &lt;/Button&gt;
       &lt;/div&gt;
-
-      {showCalendar &amp;&amp; (
-        &lt;&gt;
-          &lt;Calendar
-            mode=&quot;range&quot;
-            numberOfMonths={isMobile ? 1 : 2}
-            weekStartsOn={1}
-            value={draft}
-            onChange={setDraft}
-          /&gt;
-          &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot;&gt;
-            &lt;Field label=&quot;From&quot;&gt;
-              &lt;Input
-                type=&quot;date&quot;
-                value={draft.from}
-                onChange={(e) =&gt; setDraft({ ...draft, from: e.target.value })}
-              /&gt;
-            &lt;/Field&gt;
-            &lt;Field label=&quot;To&quot;&gt;
-              &lt;Input
-                type=&quot;date&quot;
-                value={draft.to}
-                onChange={(e) =&gt; setDraft({ ...draft, to: e.target.value })}
-              /&gt;
-            &lt;/Field&gt;
-          &lt;/Stack&gt;
-          &lt;Stack direction=&quot;row&quot; justify=&quot;end&quot; gap=&quot;sm&quot;&gt;
-            &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; setOpen(false)}&gt;Cancel&lt;/Button&gt;
-            &lt;Button
-              variant=&quot;primary&quot;
-              onClick={() =&gt; commit(draft)}
-              disabled={draft.from &gt; draft.to}
-            &gt;
-              Apply
-            &lt;/Button&gt;
-          &lt;/Stack&gt;
-        &lt;/&gt;
-      )}
+      &lt;Stack direction=&quot;horizontal&quot; gap=&quot;sm&quot;&gt;
+        &lt;Field label=&quot;From&quot;&gt;
+          &lt;Input type=&quot;date&quot; value={range.from ?? &#39;&#39;} onChange={(e: ChangeEvent&lt;HTMLInputElement&gt;) =&gt; range.setRange({ from: e.target.value || null })} /&gt;
+        &lt;/Field&gt;
+        &lt;Field label=&quot;To&quot;&gt;
+          &lt;Input type=&quot;date&quot; value={range.to ?? &#39;&#39;} onChange={(e: ChangeEvent&lt;HTMLInputElement&gt;) =&gt; range.setRange({ to: e.target.value || null })} /&gt;
+        &lt;/Field&gt;
+      &lt;/Stack&gt;
+      &lt;Stack direction=&quot;horizontal&quot; justify=&quot;end&quot; gap=&quot;sm&quot;&gt;
+        &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; setOpen(false)}&gt;Cancel&lt;/Button&gt;
+        &lt;Button variant=&quot;primary&quot; onClick={apply} disabled={!range.from || !range.to}&gt;Apply&lt;/Button&gt;
+      &lt;/Stack&gt;
     &lt;/Stack&gt;
   );
 
-  const trigger = (
-    &lt;Button
-      variant=&quot;outline&quot;
-      onClick={() =&gt; setOpen(true)}
-      leadingIcon=&quot;calendar&quot;
-      aria-haspopup=&quot;dialog&quot;
-    &gt;
-      {fmt(value.from)} — {fmt(value.to)}
-    &lt;/Button&gt;
-  );
+  const triggerLabel = `${fmtIso(range.from)} — ${fmtIso(range.to)}`;
 
   if (isMobile) {
     return (
       &lt;&gt;
-        {trigger}
-        &lt;BottomSheet open={open} onOpenChange={setOpen} title=&quot;Pick a date range&quot;&gt;
-          {body}
-        &lt;/BottomSheet&gt;
+        &lt;Button variant=&quot;secondary&quot; onClick={() =&gt; setOpen(true)} aria-haspopup=&quot;dialog&quot;&gt;{triggerLabel}&lt;/Button&gt;
+        &lt;BottomSheet open={open} onClose={() =&gt; setOpen(false)} title=&quot;Pick a date range&quot;&gt;{body}&lt;/BottomSheet&gt;
       &lt;/&gt;
     );
   }
   return (
-    &lt;Popover open={open} onOpenChange={setOpen} align=&quot;start&quot; trigger={trigger}&gt;
-      {body}
-    &lt;/Popover&gt;
+    &lt;span style={{ position: &#39;relative&#39; }}&gt;
+      &lt;Button variant=&quot;secondary&quot; onClick={() =&gt; setOpen(true)} aria-haspopup=&quot;dialog&quot;&gt;{triggerLabel}&lt;/Button&gt;
+      &lt;Popover open={open} onClose={() =&gt; setOpen(false)} dismissOnOutside dismissOnEscape&gt;{body}&lt;/Popover&gt;
+    &lt;/span&gt;
   );
 }'>
       <div class="ds-specimen-stage canvas padded">

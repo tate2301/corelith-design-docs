@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { forwardRef, type ReactNode } from 'react';
 import { Modal, type ModalProps } from '../Modal/Modal';
 
 export interface DialogProps extends ModalProps {
@@ -11,21 +11,39 @@ export interface DialogProps extends ModalProps {
 }
 
 /**
- * `Dialog` is a thin opinionated wrapper around `Modal` that lays out the
- * common title/body/footer slots and (optionally) renders the confirm/cancel
- * action buttons for you.
+ * Dialog — opinionated wrapper around `Modal` with confirm/cancel slots.
+ *
+ * Forwarded ref points at the underlying Modal's dialog element.
+ *
+ * @example
+ * ```tsx
+ * <Dialog
+ *   open={open}
+ *   onClose={close}
+ *   onConfirm={save}
+ *   title="Delete?"
+ *   confirmLabel="Delete"
+ *   cancelLabel="Cancel"
+ *   destructive
+ * >
+ *   This cannot be undone.
+ * </Dialog>
+ * ```
  */
-export function Dialog({
-  confirmLabel,
-  cancelLabel,
-  onConfirm,
-  confirmDisabled,
-  destructive,
-  footer,
-  onClose,
-  children,
-  ...rest
-}: DialogProps) {
+export const Dialog = forwardRef<HTMLDivElement, DialogProps>(function Dialog(
+  {
+    confirmLabel,
+    cancelLabel,
+    onConfirm,
+    confirmDisabled,
+    destructive,
+    footer,
+    onClose,
+    children,
+    ...rest
+  },
+  ref,
+) {
   const resolvedFooter =
     footer ??
     (confirmLabel || cancelLabel ? (
@@ -49,8 +67,8 @@ export function Dialog({
     ) : null);
 
   return (
-    <Modal {...rest} onClose={onClose} footer={resolvedFooter}>
+    <Modal ref={ref} {...rest} onClose={onClose} footer={resolvedFooter}>
       {children}
     </Modal>
   );
-}
+});

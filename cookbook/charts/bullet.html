@@ -97,13 +97,14 @@
       <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart.Bullet</a>
       <a class="ck-piece" href="../../system/b-stat-card.html"><span class="kind">Block</span>Stat card</a>
     </div>
-    <div class="ck-roadmap-note"><b>Roadmap:</b> <code>Chart.Bullet</code> ships in v0.2. For v0.1-alpha, use the inline SVG above — the data props (<code>value</code>, <code>target</code>, <code>bands</code>) match the future API.</div>
+    <div class="ck-roadmap-note"><b>Not in v0.3.0.</b> This recipe documents a planned <code>Chart.Bullet</code> primitive that will land in a future release. Today, hand-roll the SVG above following these design rules: three coloured bands (danger / neutral / brand), a single dark inner bar for the actual value, and a vertical tick marker for the target. The snippet below shows the intended API shape so the swap is a search-and-replace when the component ships.</div>
   </section>
 
   <section id="snippet">
-    <h2 class="ds-h2">React snippet</h2>
-    <p class="ds-h2-sub">Pass <code>value</code>, <code>target</code>, and three <code>bands</code>. Tone defaults are computed from where the value falls.</p>
-    <div class="ds-specimen"
+    <h2 class="ds-h2">React snippet (planned API)</h2>
+    <p class="ds-h2-sub">Future shape. Pass <code>value</code>, <code>target</code>, and three <code>bands</code>; tone defaults will be computed from where the value falls.</p>
+    <!-- snippet-skip-reason: documents future Chart.Bullet primitive — not in v0.3.0 -->
+    <div data-snippet-check="skip" class="ds-specimen"
          data-code='import { Chart, Card } from &#39;@corelithzw/react&#39;;
 
 export function Q3RevenueBullet() {
@@ -137,6 +138,40 @@ export function Q3RevenueBullet() {
         </svg>
       </div>
       <div class="ds-specimen-bar"><span class="label">Chart.Bullet</span><span class="spacer"></span><span class="t-mono">@corelithzw/react</span></div>
+    </div>
+  </section>
+
+  <section id="available-today">
+    <h2 class="ds-h2">Available today</h2>
+    <p class="ds-h2-sub">Approximate a bullet by stacking two single-bar <code>Chart.Bar</code> instances — one for the actual value, one for the target tick — sharing a max so they align. Coloured bands become CSS background rules behind the SVG.</p>
+    <div class="ds-specimen"
+         data-code='import { Chart, Card } from &#39;@corelithzw/react&#39;;
+import type { ChartCategoricalDatum } from &#39;@corelithzw/react&#39;;
+
+export function Q3RevenueBullet() {
+  const value = 72000;
+  const target = 90000;
+  const max = 120000;
+  const actual: ChartCategoricalDatum[] = [
+    { label: &#39;Q3 revenue&#39;, value, color: &#39;var(--text-strong)&#39; },
+    { label: &#39;remaining&#39;, value: max - value, color: &#39;transparent&#39; },
+  ];
+  const tick: ChartCategoricalDatum[] = [
+    { label: &#39;before target&#39;, value: target, color: &#39;transparent&#39; },
+    { label: &#39;target&#39;, value: max * 0.02, color: &#39;var(--tone-danger)&#39; },
+    { label: &#39;after target&#39;, value: max - target - max * 0.02, color: &#39;transparent&#39; },
+  ];
+  return (
+    &lt;Card&gt;
+      &lt;Chart.Bar data={actual} width={520} height={30} axes={false} aria-label=&quot;Q3 revenue actual&quot; /&gt;
+      &lt;Chart.Bar data={tick}   width={520} height={20} axes={false} aria-label=&quot;Q3 revenue target tick&quot; /&gt;
+    &lt;/Card&gt;
+  );
+}'>
+      <div class="ds-specimen-stage canvas padded">
+        <div class="legend" style="font: var(--type-body-sm); color: var(--text-muted);">Stacked two-row bar approximation.</div>
+      </div>
+      <div class="ds-specimen-bar"><span class="label">Q3RevenueBullet.tsx</span><span class="spacer"></span><span class="t-mono">@corelithzw/react</span></div>
     </div>
   </section>
 

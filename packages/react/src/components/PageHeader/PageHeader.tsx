@@ -10,6 +10,14 @@ export interface PageHeaderProps extends Omit<HTMLAttributes<HTMLElement>, 'titl
   actions?: ReactNode;
 }
 
+/**
+ * PageHeader — page title + breadcrumbs + actions row.
+ *
+ * @example
+ * ```tsx
+ * <PageHeader />
+ * ```
+ */
 export const PageHeader = forwardRef<HTMLElement, PageHeaderProps>(function PageHeader(
   { title, onBack, backLabel = 'Back', actions, className, children, ...rest },
   ref,

@@ -326,6 +326,15 @@
 
 type Money = number; // store cents to avoid floating-point pain
 
+export type Snapshot = {
+  asOf: string;
+  cash: Money;
+  sales: Money;
+  ar: Money;
+  ap: Money;
+  last7Closes: Money[];
+};
+
 export type DashboardModel = {
   asOf: string;             // ISO timestamp
   cashOnHand: Money;
@@ -378,21 +387,20 @@ export function buildDashboardModel(today: Snapshot, yesterday: Snapshot | null)
 
     <!-- Step 2 -->
     <div class="ck-step"><span class="n">02</span><h3>Render the hero KPI with delta and a 7-day sparkline</h3></div>
-    <p><code>StatHero</code> takes one big number plus an optional delta and sparkline. Keep the unit ("USD"), the period ("Today, 09:14") and the comparison ("vs yesterday") visible — a naked number on a hero is the kind of thing that ends up screenshotted in the wrong context.</p>
+    <p><code>StatHero</code> takes a <code>label</code>, the big <code>value</code>, and an optional <code>description</code>. Pre-format your money on the way in, and fold the period ("As of 09:14") and the comparison ("vs yesterday") into the <code>description</code> string — a naked number on a hero is the kind of thing that ends up screenshotted in the wrong context. If you need supporting metrics in the same hero block, pass <code>secondaries</code> (an array of <code>{ label, value, sub? }</code>).</p>
     <div class="ds-specimen"
          data-code='import { StatHero } from &#39;@corelithzw/react&#39;;
 
 function CashHero({ model }: { model: DashboardModel }) {
+  const deltaText =
+    model.cashOnHandDeltaPct == null
+      ? &#39;—&#39;
+      : `${model.cashOnHandDeltaPct >= 0 ? &#39;+&#39; : &#39;&#39;}${model.cashOnHandDeltaPct}% vs yesterday`;
   return (
     &lt;StatHero
       label=&quot;Cash on hand&quot;
       value={formatMoney(model.cashOnHand)}
-      unit=&quot;USD&quot;
-      caption={`As of ${formatTime(model.asOf)} · vs yesterday`}
-      delta={model.cashOnHandDeltaPct}
-      tone=&quot;brand&quot;
-      spark={model.spark}
-      sparkLabel=&quot;Last 7 days&quot;
+      description={`As of ${formatTime(model.asOf)} · ${deltaText}`}
     /&gt;
   );
 }
@@ -427,33 +435,23 @@ function formatTime(iso: string) {
 
     <!-- Step 3 -->
     <div class="ck-step"><span class="n">03</span><h3>Three secondary KPIs in a KpiGrid — quieter on purpose</h3></div>
-    <p>Use the neutral tone, not brand. These three exist to give context to the hero; if they shouted as loudly as the hero, nothing would lead. Show deltas as <code>null</code>-safe — "—" beats a misleading "0%".</p>
+    <p>Use the neutral tone, not <code>success</code>/<code>warn</code>/<code>danger</code>. These three exist to give context to the hero; if they shouted as loudly as the hero, nothing would lead. <code>KpiGrid</code> is a responsive container — it wraps a row of <code>StatCard</code> tiles and lets each tile decide whether it shows a delta. Show deltas as <code>null</code>-safe — "—" beats a misleading "0%".</p>
     <div class="ds-specimen"
-         data-code='import { KpiGrid } from &#39;@corelithzw/react&#39;;
+         data-code='import { KpiGrid, StatCard } from &#39;@corelithzw/react&#39;;
 
 function SupportingKpis({ model }: { model: DashboardModel }) {
+  const salesDelta = model.salesDeltaPct;
   return (
-    &lt;KpiGrid
-      columns={3}
-      items={[
-        {
-          label: &#39;Sales today&#39;,
-          value: formatMoney(model.sales),
-          delta: model.salesDeltaPct,
-          tone: &#39;neutral&#39;,
-        },
-        {
-          label: &#39;Money owed to you&#39;,
-          value: formatMoney(model.receivable),
-          tone: &#39;neutral&#39;,
-        },
-        {
-          label: &#39;Money you owe&#39;,
-          value: formatMoney(model.payable),
-          tone: &#39;neutral&#39;,
-        },
-      ]}
-    /&gt;
+    &lt;KpiGrid minWidth={140}&gt;
+      &lt;StatCard
+        label=&quot;Sales today&quot;
+        value={formatMoney(model.sales)}
+        delta={salesDelta == null ? &#39;—&#39; : `${salesDelta >= 0 ? &#39;+&#39; : &#39;&#39;}${salesDelta}%`}
+        deltaTone={salesDelta == null ? &#39;neutral&#39; : salesDelta >= 0 ? &#39;up&#39; : &#39;down&#39;}
+      /&gt;
+      &lt;StatCard label=&quot;Money owed to you&quot; value={formatMoney(model.receivable)} /&gt;
+      &lt;StatCard label=&quot;Money you owe&quot; value={formatMoney(model.payable)} /&gt;
+    &lt;/KpiGrid&gt;
   );
 }'>
       <div class="ds-specimen-stage canvas padded">
@@ -482,7 +480,7 @@ function SupportingKpis({ model }: { model: DashboardModel }) {
 
     <!-- Step 4 -->
     <div class="ck-step"><span class="n">04</span><h3>Map the lines array to RowCards with live values and a chevron</h3></div>
-    <p>One <code>RowCard</code> per drill target. The row's right edge shows the live value, the chevron tells the user it routes, and the whole row is the click target — never just the chevron. If you have a router, hand it the <code>href</code>; if not, <code>RowCard</code> falls back to a plain anchor.</p>
+    <p>One <code>RowCard</code> per drill target. The row's <code>title</code> is the label, the <code>value</code> sits on the trailing edge, and a chevron in <code>trailing</code> tells the user it routes. When <code>href</code> is set <code>RowCard</code> renders as an <code>&lt;a&gt;</code>; otherwise with an <code>onClick</code> it becomes a <code>&lt;button&gt;</code> — the whole row is the click target, never just the chevron.</p>
     <div class="ds-specimen"
          data-code='import { Stack, RowCard } from &#39;@corelithzw/react&#39;;
 
@@ -491,16 +489,15 @@ function DrillRows({ model, onNavigate }: {
   onNavigate: (href: string) =&gt; void;
 }) {
   return (
-    &lt;Stack gap=&quot;sm&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
+    &lt;Stack gap=&quot;sm&quot;&gt;
       {model.lines.map((line) =&gt; (
         &lt;RowCard
           key={line.id}
-          as=&quot;li&quot;
           href={line.href}
           onClick={(e) =&gt; { e.preventDefault(); onNavigate(line.href); }}
-          label={line.label}
+          title={line.label}
           value={formatMoney(line.value)}
-          trailing=&quot;chevron&quot;
+          trailing={&lt;span aria-hidden=&quot;true&quot;&gt;›&lt;/span&gt;}
           aria-label={`${line.label}: ${formatMoney(line.value)}. Open detail.`}
         /&gt;
       ))}
@@ -548,13 +545,11 @@ function NoDataYet({ onOpenDay }: { onOpenDay: () =&gt; void }) {
       &lt;StatHero
         label=&quot;Cash on hand&quot;
         value=&quot;—&quot;
-        caption=&quot;No close yet today&quot;
-        tone=&quot;muted&quot;
+        description=&quot;No close yet today&quot;
       /&gt;
       &lt;EmptyState
-        icon=&quot;clock&quot;
         title=&quot;No data yet today&quot;
-        body=&quot;Open the day to start recording sales, cash and tickets. Yesterday&#39;s totals stay locked.&quot;
+        description=&quot;Open the day to start recording sales, cash and tickets. Yesterday&#39;s totals stay locked.&quot;
         action={
           &lt;Button variant=&quot;primary&quot; onClick={onOpenDay}&gt;Open today&#39;s day&lt;/Button&gt;
         }
@@ -588,9 +583,9 @@ function NoDataYet({ onOpenDay }: { onOpenDay: () =&gt; void }) {
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The whole <code>TodayDashboard</code>, assembled. Loading skeleton, empty branch, error branch, drill routing. Drop it in and wire <code>fetchSnapshots</code> to your API.</p>
     <div class="ds-specimen"
-         data-code='import { useEffect, useState } from &#39;@corelithzw/react&#39;;
+         data-code='import { useEffect, useState } from &#39;react&#39;;
 import {
-  Stack, StatHero, KpiGrid, RowCard,
+  Stack, StatHero, KpiGrid, StatCard, RowCard,
   EmptyState, Skeleton, Alert, Button,
 } from &#39;@corelithzw/react&#39;;
 
@@ -674,9 +669,9 @@ export function TodayDashboard({ onNavigate, onOpenDay }: {
   if (state.kind === &#39;loading&#39;) {
     return (
       &lt;Stack gap=&quot;md&quot; aria-busy=&quot;true&quot; aria-live=&quot;polite&quot;&gt;
-        &lt;Skeleton height={108} radius=&quot;lg&quot; /&gt;
-        &lt;Skeleton height={72} radius=&quot;md&quot; /&gt;
-        &lt;Skeleton height={56} radius=&quot;md&quot; count={4} /&gt;
+        &lt;Skeleton height={108} /&gt;
+        &lt;Skeleton height={72} /&gt;
+        &lt;Skeleton height={56} lines={4} /&gt;
       &lt;/Stack&gt;
     );
   }
@@ -685,7 +680,7 @@ export function TodayDashboard({ onNavigate, onOpenDay }: {
     return (
       &lt;Alert tone=&quot;danger&quot;&gt;
         {state.message}{&#39; &#39;}
-        &lt;Button variant=&quot;link&quot; onClick={() =&gt; setState({ kind: &#39;loading&#39; })}&gt;
+        &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; setState({ kind: &#39;loading&#39; })}&gt;
           Try again
         &lt;/Button&gt;
       &lt;/Alert&gt;
@@ -696,11 +691,10 @@ export function TodayDashboard({ onNavigate, onOpenDay }: {
     return (
       &lt;Stack gap=&quot;md&quot;&gt;
         &lt;StatHero label=&quot;Cash on hand&quot; value=&quot;—&quot;
-                  caption=&quot;No close yet today&quot; tone=&quot;muted&quot; /&gt;
+                  description=&quot;No close yet today&quot; /&gt;
         &lt;EmptyState
-          icon=&quot;clock&quot;
           title=&quot;No data yet today&quot;
-          body=&quot;Open the day to start recording sales, cash and tickets.&quot;
+          description=&quot;Open the day to start recording sales, cash and tickets.&quot;
           action={&lt;Button variant=&quot;primary&quot; onClick={onOpenDay}&gt;Open today&#39;s day&lt;/Button&gt;}
         /&gt;
       &lt;/Stack&gt;
@@ -708,39 +702,38 @@ export function TodayDashboard({ onNavigate, onOpenDay }: {
   }
 
   const m = state.model;
+  const heroDelta =
+    m.cashOnHandDeltaPct == null
+      ? &#39;—&#39;
+      : `${m.cashOnHandDeltaPct >= 0 ? &#39;+&#39; : &#39;&#39;}${m.cashOnHandDeltaPct}% vs yesterday`;
   return (
     &lt;Stack gap=&quot;md&quot;&gt;
       &lt;StatHero
         label=&quot;Cash on hand&quot;
         value={fmtMoney(m.cashOnHand)}
-        unit=&quot;USD&quot;
-        caption={`As of ${new Date(m.asOf).toLocaleTimeString()} · vs yesterday`}
-        delta={m.cashOnHandDeltaPct}
-        tone=&quot;brand&quot;
-        spark={m.spark}
-        sparkLabel=&quot;Last 7 days&quot;
+        description={`As of ${new Date(m.asOf).toLocaleTimeString()} · ${heroDelta}`}
       /&gt;
 
-      &lt;KpiGrid
-        columns={3}
-        items={[
-          { label: &#39;Sales today&#39;,       value: fmtMoney(m.sales),
-            delta: m.salesDeltaPct, tone: &#39;neutral&#39; },
-          { label: &#39;Money owed to you&#39;, value: fmtMoney(m.receivable), tone: &#39;neutral&#39; },
-          { label: &#39;Money you owe&#39;,    value: fmtMoney(m.payable),    tone: &#39;neutral&#39; },
-        ]}
-      /&gt;
+      &lt;KpiGrid minWidth={140}&gt;
+        &lt;StatCard
+          label=&quot;Sales today&quot;
+          value={fmtMoney(m.sales)}
+          delta={m.salesDeltaPct == null ? &#39;—&#39; : `${m.salesDeltaPct >= 0 ? &#39;+&#39; : &#39;&#39;}${m.salesDeltaPct}%`}
+          deltaTone={m.salesDeltaPct == null ? &#39;neutral&#39; : m.salesDeltaPct >= 0 ? &#39;up&#39; : &#39;down&#39;}
+        /&gt;
+        &lt;StatCard label=&quot;Money owed to you&quot; value={fmtMoney(m.receivable)} /&gt;
+        &lt;StatCard label=&quot;Money you owe&quot; value={fmtMoney(m.payable)} /&gt;
+      &lt;/KpiGrid&gt;
 
-      &lt;Stack gap=&quot;sm&quot; as=&quot;ul&quot; role=&quot;list&quot;&gt;
+      &lt;Stack gap=&quot;sm&quot;&gt;
         {m.lines.map((line) =&gt; (
           &lt;RowCard
             key={line.id}
-            as=&quot;li&quot;
             href={line.href}
             onClick={(e) =&gt; { e.preventDefault(); onNavigate(line.href); }}
-            label={line.label}
+            title={line.label}
             value={fmtMoney(line.value)}
-            trailing=&quot;chevron&quot;
+            trailing={&lt;span aria-hidden=&quot;true&quot;&gt;›&lt;/span&gt;}
             aria-label={`${line.label}: ${fmtMoney(line.value)}. Open detail.`}
           /&gt;
         ))}

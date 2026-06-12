@@ -13,6 +13,8 @@
 <script src="../../icons.js" defer></script>
 <link rel="stylesheet" href="../../huchu-nav.css" />
 <script src="../../huchu-nav.js" defer></script>
+<script src="app.js" defer></script>
+<link rel="stylesheet" href="app.css" />
 <style>
   /* ============================================================
      STASH — Personal savings + expense tracking
@@ -1072,11 +1074,12 @@ const ROUTES = ['sign-in','home','transactions','accounts','account-detail','add
 
 /* ===== Persistence ===== */
 const LS = 'huchu-stash-demo:v1';
-const PERSIST = ['signedIn','accounts','transactions','budgets','subs','goals','notifs','settings'];
+const PERSIST = ['signedIn','accounts','transactions','budgets','subs','goals','notifs','settings','_stashExtended'];
 function saveState() {
   try {
     const o = {}; PERSIST.forEach(k => o[k] = state[k]);
     localStorage.setItem(LS, JSON.stringify(o));
+    if (window.StashSidecar) window.StashSidecar.syncMirror(o);
   } catch(e){}
 }
 function loadState() {
@@ -1109,6 +1112,17 @@ function hydrateSeeds() {
   if (!state.subs) state.subs = SEED_SUBS.map(s => ({ ...s }));
   if (!state.goals) state.goals = SEED_GOALS.map(g => ({ ...g }));
   if (!state.notifs) state.notifs = SEED_NOTIFS.map((n, i) => ({ id: 'n'+i, ...n, date: daysAgo(n.d).toISOString() }));
+  /* Sidecar: extend the seed to 30 days × 3-5/day on first hydrate */
+  if (window.StashSidecar && !state._stashExtended) {
+    state.transactions = window.StashSidecar.extendSeed(state.transactions);
+    state._stashExtended = true;
+  }
+  /* Sidecar: keep budget.spent honest */
+  if (window.StashSidecar) {
+    const proxy = { transactions: state.transactions, budgets: state.budgets };
+    window.StashSidecar.recomputeBudgets(proxy);
+    state.budgets = proxy.budgets;
+  }
 }
 function resetDemo() {
   try { localStorage.removeItem(LS); } catch(e){}
@@ -1501,11 +1515,16 @@ function render() {
       </div>
       ${renderTabs()}
       ${renderMoreSheet()}
+      <button id="stash-fab" class="stash-fab" type="button" aria-label="Add expense" title="Add expense">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
     </div>
   `;
   if (window.Icons) window.Icons.render($('#app'));
   wireShell();
   wireRoute();
+  const fab = $('#stash-fab');
+  if (fab) fab.addEventListener('click', openAddExpense);
 }
 
 function wireShell() {
@@ -2298,6 +2317,182 @@ function wireBudgets() {
   const ab = $('#add-budget'); if (ab) ab.addEventListener('click', () => openAddBudget());
   const fb = $('#first-budget'); if (fb) fb.addEventListener('click', () => openAddBudget());
 }
+/* ============================================================
+   ADD EXPENSE — Flow 1 (FAB → bottom sheet → recomputed totals)
+   ============================================================ */
+function todayIsoDay() {
+  const d = TODAY;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
+}
+function getCcyPref() { try { return localStorage.getItem('corelith:stash:ccyPref') || 'USD'; } catch(e) { return 'USD'; } }
+function setCcyPref(c) { try { localStorage.setItem('corelith:stash:ccyPref', c); } catch(e){} }
+function openAddExpense() {
+  const pickable = CATEGORIES.filter(c => c.id !== 'income' && c.id !== 'transfer' && c.id !== 'subs');
+  const ccyPref = getCcyPref();
+  const todayIso = todayIsoDay();
+  const accts = state.accounts || [];
+
+  const body = `
+    <div class="stash-amt-wrap">
+      <div class="stash-ccy" role="tablist" aria-label="Currency">
+        <button type="button" class="stash-ccy-btn ${ccyPref==='USD'?'on':''}" data-ccy="USD" role="tab" aria-selected="${ccyPref==='USD'}">USD</button>
+        <button type="button" class="stash-ccy-btn ${ccyPref==='ZWL'?'on':''}" data-ccy="ZWL" role="tab" aria-selected="${ccyPref==='ZWL'}">ZWL</button>
+      </div>
+      <div class="stash-amt-row">
+        <span class="stash-amt-sym" id="ax-sym">${ccyPref==='ZWL'?'ZWL':'$'}</span>
+        <input class="stash-amt-input" id="ax-amt" type="number" inputmode="decimal" step="0.01" min="0" placeholder="0.00" autocomplete="off" />
+      </div>
+      <div class="stash-amt-help" id="ax-help">Tap a category, then save.</div>
+    </div>
+
+    <div class="field">
+      <label>Category</label>
+      <div class="stash-cat-chips" role="radiogroup" aria-label="Category">
+        ${pickable.map(c => `
+          <button type="button" class="stash-cat-chip" role="radio" aria-checked="false" data-cat="${c.id}" style="--cc:${c.color};">
+            <span class="stash-cat-dot"></span>${escapeHtml(c.name)}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="ax-merchant">Merchant</label>
+      <input class="input" id="ax-merchant" type="text" placeholder="e.g. Pick n Pay" autocomplete="off" />
+    </div>
+
+    <div class="stash-row-2">
+      <div class="field">
+        <label for="ax-date">Date</label>
+        <input class="input" id="ax-date" type="date" value="${todayIso}" max="${todayIso}" />
+      </div>
+      <div class="field">
+        <label for="ax-acct">Account</label>
+        <select class="input" id="ax-acct">
+          ${accts.map(a => `<option value="${a.id}">${escapeHtml(a.nick)}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="ax-note">Note <span style="color:var(--st-text-sub);">(optional)</span></label>
+      <input class="input" id="ax-note" type="text" placeholder="Add a note" />
+    </div>
+  `;
+
+  let selectedCat = null;
+  let ccy = ccyPref;
+
+  openSheet({
+    crumb: 'New expense',
+    title: 'Add expense',
+    body,
+    primaryLabel: 'Save expense',
+    /* We override #sheet-primary's click below so we can validate
+       and keep the sheet open on failure. onPrimary stays a no-op. */
+    onPrimary: () => {},
+  });
+
+  function readForm() {
+    return {
+      amtRaw:    parseFloat(($('#ax-amt')||{}).value || '0'),
+      merchant:  (($('#ax-merchant')||{}).value || '').trim(),
+      dateStr:   (($('#ax-date')||{}).value || todayIso),
+      acctId:    (($('#ax-acct')||{}).value || (accts[0] && accts[0].id)),
+      note:      (($('#ax-note')||{}).value || '').trim(),
+    };
+  }
+  function flashHelp(msg, bad) {
+    const help = $('#ax-help');
+    if (!help) return;
+    help.textContent = msg;
+    help.style.color = bad ? 'var(--st-bad)' : 'var(--st-text-mute)';
+  }
+  function attemptSave() {
+    const f = readForm();
+    if (!(f.amtRaw > 0)) {
+      flashHelp('Enter an amount greater than 0.', true);
+      const amt = $('#ax-amt'); if (amt) { amt.focus(); amt.select(); }
+      return;
+    }
+    if (!selectedCat) {
+      flashHelp('Pick a category to continue.', true);
+      return;
+    }
+    const merchant = f.merchant || catById(selectedCat).name;
+    const rate = (window.StashSidecar && window.StashSidecar.rates[ccy]) || 1;
+    const usdAmt = ccy === 'USD' ? f.amtRaw : Math.round(f.amtRaw * rate * 100) / 100;
+    const tx = {
+      id: 'tx-user-' + Date.now(),
+      date: new Date(f.dateStr + 'T12:00:00').toISOString(),
+      merchant,
+      amt: -Math.round(usdAmt * 100) / 100,
+      cat: selectedCat,
+      acctId: f.acctId,
+      note: f.note,
+      loc: '',
+      hidden: false,
+      smart: false,
+      suggestions: [],
+      seen: true,
+      ccy,
+      origAmt: ccy !== 'USD' ? -f.amtRaw : undefined,
+    };
+    state.transactions.unshift(tx);
+    const acct = (state.accounts||[]).find(a => a.id === f.acctId);
+    if (acct) acct.bal = Math.round((acct.bal - usdAmt) * 100) / 100;
+    if (window.StashSidecar) {
+      const proxy = { transactions: state.transactions, budgets: state.budgets };
+      window.StashSidecar.recomputeBudgets(proxy);
+      state.budgets = proxy.budgets;
+    }
+    toast('Expense saved · ' + usd(usdAmt, 2), 'success');
+    closeModal();
+    render();
+  }
+
+  // Wire chips + ccy + focus + override primary after the sheet is in the DOM.
+  setTimeout(() => {
+    $$('.stash-cat-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        $$('.stash-cat-chip').forEach(c => { c.classList.remove('on'); c.setAttribute('aria-checked', 'false'); });
+        chip.classList.add('on');
+        chip.setAttribute('aria-checked', 'true');
+        selectedCat = chip.dataset.cat;
+        flashHelp(catById(selectedCat).name + ' selected.', false);
+      });
+    });
+    $$('.stash-ccy-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        ccy = b.dataset.ccy;
+        setCcyPref(ccy);
+        $$('.stash-ccy-btn').forEach(x => {
+          const on = x === b;
+          x.classList.toggle('on', on);
+          x.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+        const sym = $('#ax-sym'); if (sym) sym.textContent = ccy === 'ZWL' ? 'ZWL' : '$';
+      });
+    });
+    /* Replace openSheet's primary handler with one that validates first. */
+    const oldP = $('#sheet-primary');
+    if (oldP) {
+      const newP = oldP.cloneNode(true);
+      oldP.parentNode.replaceChild(newP, oldP);
+      newP.addEventListener('click', attemptSave);
+    }
+    /* Submit-on-Enter from the amount field. */
+    const amt = $('#ax-amt');
+    if (amt) {
+      amt.focus();
+      amt.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); attemptSave(); } });
+    }
+  }, 40);
+}
+
 function openAddBudget() {
   openSheet({
     crumb: 'New budget', title: 'Set a monthly cap',
@@ -2334,12 +2529,16 @@ function renderBudgetDetail() {
   const merchEntries = Object.entries(byMerch).sort((a,b)=>b[1]-a[1]).slice(0, 5);
   const palette = ['#7CC4A9','#6FB1E0','#E0B45D','#B49CE8','#E08CB5'];
   const segs = merchEntries.map(([n, v], i) => ({ value: v, color: palette[i % palette.length], label: n }));
+  const showTip = (b.spent / (b.limit||1)) > 0.8 && b.daysLeft > 7;
   return `
     <div class="st-page">
       <div class="st-page-head">
         <div class="crumb"><button class="btn ghost sm" data-go="budgets" style="padding:4px 8px;color:var(--st-text-mute);"><span data-icon="chleft" data-icon-size="12"></span> Budgets</button></div>
         <h2>${escapeHtml(b.name)}</h2>
         <p class="sub">${b.daysLeft} days left this month · ${b.projOver ? 'on track to go over' : 'within budget'}</p>
+        <div class="head-acts">
+          <button class="btn primary" id="edit-budget" data-budget-edit="${b.id}"><span data-icon="edit" data-icon-size="12"></span> Edit budget</button>
+        </div>
       </div>
 
       <div class="b-stat-hero">
@@ -2350,6 +2549,18 @@ function renderBudgetDetail() {
           <div class="st-progress" style="margin-top:14px;background:rgba(255,255,255,0.18);"><div class="fl" style="width:${pct}%;background:#fff;"></div></div>
         </div>
       </div>
+
+      ${showTip ? `
+        <div class="stash-budget-tip" role="status">
+          <span class="stash-tip-ic" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg>
+          </span>
+          <div class="bd">
+            <div class="ttl">Budget tip</div>
+            <div class="tx">You're at <strong>${pct}%</strong> of ${escapeHtml(b.name)} with <strong>${b.daysLeft} days left</strong> this month. Slow this category down to stay under ${usd(b.limit,0)}.</div>
+          </div>
+        </div>
+      ` : ''}
 
       <div class="st-card">
         <div class="hdr"><span class="ttl">Where it went</span></div>
@@ -2371,6 +2582,52 @@ function renderBudgetDetail() {
 function wireBudgetDetail() {
   $$('[data-go]').forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
   $$('[data-tx]').forEach(b => b.addEventListener('click', () => openTxDetail(b.dataset.tx)));
+  $$('[data-budget-edit]').forEach(b => b.addEventListener('click', () => openEditBudget(b.dataset.budgetEdit)));
+}
+function openEditBudget(id) {
+  const b = (state.budgets || []).find(x => x.id === id);
+  if (!b) return;
+  openSheet({
+    crumb: 'Edit budget',
+    title: b.name,
+    body: `
+      <div class="field">
+        <label>Category</label>
+        <div class="stash-readonly">${escapeHtml(b.name)}</div>
+      </div>
+      <div class="field">
+        <label for="eb-limit">Monthly limit (USD)</label>
+        <input class="input" id="eb-limit" type="number" inputmode="decimal" step="1" min="0" value="${b.limit}" />
+      </div>
+      <div class="field">
+        <div class="stash-amt-help">Spent so far: <strong>${usd(b.spent, 2)}</strong></div>
+      </div>
+    `,
+    primaryLabel: 'Save budget',
+    onPrimary: () => {},
+  });
+  setTimeout(() => {
+    const inp = $('#eb-limit'); if (inp) { inp.focus(); inp.select(); }
+    const oldP = $('#sheet-primary');
+    if (oldP) {
+      const newP = oldP.cloneNode(true);
+      oldP.parentNode.replaceChild(newP, oldP);
+      newP.addEventListener('click', () => {
+        const v = parseFloat(($('#eb-limit')||{}).value || '0');
+        if (!(v > 0)) { toast('Enter a limit greater than 0', 'warn'); return; }
+        b.limit = Math.round(v * 100) / 100;
+        if (window.StashSidecar) {
+          const proxy = { transactions: state.transactions, budgets: state.budgets };
+          window.StashSidecar.recomputeBudgets(proxy);
+          state.budgets = proxy.budgets;
+        }
+        toast('Budget updated', 'success');
+        closeModal();
+        render();
+      });
+    }
+    if (inp) inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('#sheet-primary').click(); } });
+  }, 40);
 }
 
 /* ============================================================
@@ -2502,22 +2759,55 @@ function wireGoals() {
   const fg = $('#first-goal'); if (fg) fg.addEventListener('click', () => openAddGoal());
 }
 function openAddGoal() {
+  const def = new Date(TODAY); def.setMonth(def.getMonth() + 6);
+  const todayIso = todayIsoDay();
+  const defIso = (() => { const y=def.getFullYear(), m=String(def.getMonth()+1).padStart(2,'0'), d=String(def.getDate()).padStart(2,'0'); return `${y}-${m}-${d}`; })();
   openSheet({
     crumb: 'New goal', title: 'What are you saving for?',
     body: `
-      <div class="field"><label>Goal name</label><input class="input" id="g-name" placeholder="e.g. Holiday in Vic Falls" /></div>
-      <div class="field"><label>Target amount</label><input class="input" type="number" id="g-target" placeholder="1000" /></div>
-      <div class="field"><label>Weekly contribution</label><input class="input" type="number" id="g-weekly" placeholder="30" /></div>
+      <div class="field"><label for="g-name">Goal name</label><input class="input" id="g-name" placeholder="e.g. Trip to Cape Town" autocomplete="off" /></div>
+      <div class="field"><label for="g-target">Target amount (USD)</label><input class="input" type="number" inputmode="decimal" id="g-target" placeholder="1000" min="1" /></div>
+      <div class="field"><label for="g-by">Target date</label><input class="input" type="date" id="g-by" value="${defIso}" min="${todayIso}" /></div>
+      <div class="field"><div class="stash-amt-help" id="g-help">We'll work out a weekly pace from your date.</div></div>
     `,
     primaryLabel: 'Create goal',
-    onPrimary: () => {
-      const name = ($('#g-name')||{}).value || 'New goal';
-      const tgt = +(($('#g-target')||{}).value || 1000);
-      const wk = +(($('#g-weekly')||{}).value || 30);
-      state.goals.push({ id: 'g-'+Date.now(), name, target: tgt, saved: 0, weekly: wk, ic: 'target', color: '#7CC4A9', eta: 'about ' + Math.ceil(tgt/wk/4) + ' months' });
-      toast('Goal created · keep going', 'success'); render();
-    }
+    onPrimary: () => {},
   });
+  setTimeout(() => {
+    const recalc = () => {
+      const help = $('#g-help'); if (!help) return;
+      const tgt = +(($('#g-target')||{}).value || 0);
+      const by = ($('#g-by')||{}).value;
+      if (tgt > 0 && by) {
+        const days = Math.max(7, Math.round((new Date(by+'T12:00:00') - TODAY) / (1000*60*60*24)));
+        const weekly = Math.ceil(tgt / Math.max(1, days/7));
+        help.textContent = 'About $' + weekly + '/wk to reach ' + usd(tgt,0) + '.';
+      }
+    };
+    const t = $('#g-target'), d = $('#g-by'), n = $('#g-name');
+    if (t) t.addEventListener('input', recalc);
+    if (d) d.addEventListener('change', recalc);
+    if (n) n.focus();
+    const oldP = $('#sheet-primary');
+    if (oldP) {
+      const newP = oldP.cloneNode(true);
+      oldP.parentNode.replaceChild(newP, oldP);
+      newP.addEventListener('click', () => {
+        const name = (($('#g-name')||{}).value || '').trim() || 'New goal';
+        const tgt = +(($('#g-target')||{}).value || 0);
+        if (!(tgt > 0)) { toast('Enter a target amount', 'warn'); return; }
+        const byStr = ($('#g-by')||{}).value || defIso;
+        const days = Math.max(7, Math.round((new Date(byStr+'T12:00:00') - TODAY) / (1000*60*60*24)));
+        const weeks = Math.max(1, Math.round(days / 7));
+        const wk = Math.max(1, Math.ceil(tgt / weeks));
+        const months = Math.max(1, Math.round(days / 30));
+        state.goals.push({ id: 'g-'+Date.now(), name, target: tgt, saved: 0, weekly: wk, ic: 'target', color: '#7CC4A9', eta: 'about ' + months + ' months', byDate: byStr });
+        toast('Goal created · keep going', 'success');
+        closeModal();
+        render();
+      });
+    }
+  }, 40);
 }
 
 /* ============================================================
@@ -2585,18 +2875,34 @@ function openContribute(id) {
   openSheet({
     crumb: 'Contribute', title: 'Add to ' + g.name,
     body: `
-      <div class="field"><label>Amount (USD)</label><input class="input" type="number" id="c-amt" value="50" /></div>
-      <div class="field"><label>From</label>
+      <div class="field"><label for="c-amt">Amount (USD)</label><input class="input" type="number" inputmode="decimal" step="0.01" id="c-amt" value="50" min="1" /></div>
+      <div class="field"><label for="c-from">From</label>
         <select class="input" id="c-from">${state.accounts.map(a => `<option value="${a.id}">${escapeHtml(a.nick)} · $${fmt(a.bal,2)}</option>`).join('')}</select>
       </div>
+      <div class="field"><div class="stash-amt-help">${usd(g.saved,0)} of ${usd(g.target,0)} saved.</div></div>
     `,
     primaryLabel: 'Contribute',
-    onPrimary: () => {
-      const amt = +($('#c-amt')||{}).value || 0;
-      g.saved = Math.min(g.target, g.saved + amt);
-      toast('Added ' + usd(amt,2) + ' to ' + g.name, 'success'); render();
-    }
+    onPrimary: () => {},
   });
+  setTimeout(() => {
+    const amtI = $('#c-amt'); if (amtI) { amtI.focus(); amtI.select(); }
+    const oldP = $('#sheet-primary');
+    if (oldP) {
+      const newP = oldP.cloneNode(true);
+      oldP.parentNode.replaceChild(newP, oldP);
+      newP.addEventListener('click', () => {
+        const amt = +($('#c-amt')||{}).value || 0;
+        if (!(amt > 0)) { toast('Enter an amount', 'warn'); return; }
+        const fromId = ($('#c-from')||{}).value;
+        g.saved = Math.min(g.target, Math.round((g.saved + amt) * 100) / 100);
+        const acct = (state.accounts||[]).find(a => a.id === fromId);
+        if (acct) acct.bal = Math.round((acct.bal - amt) * 100) / 100;
+        toast('Added ' + usd(amt,2) + ' to ' + g.name, 'success');
+        closeModal();
+        render();
+      });
+    }
+  }, 40);
 }
 function openBoost(id) {
   const g = state.goals.find(x => x.id === id); if (!g) return;

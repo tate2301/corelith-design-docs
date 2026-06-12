@@ -51,5 +51,13 @@ type ChecklistComponent = typeof ChecklistRoot & {
   Item: typeof ChecklistItem;
 };
 
+/**
+ * Checklist — interactive task list.
+ *
+ * @example
+ * ```tsx
+ * <Checklist />
+ * ```
+ */
 export const Checklist = ChecklistRoot as ChecklistComponent;
 Checklist.Item = ChecklistItem;

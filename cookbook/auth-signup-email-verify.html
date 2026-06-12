@@ -348,7 +348,7 @@ function reducer(s: State, a: Action): State {
     <div class="ck-step"><span class="n">02</span><h3>Render the sign-up form with real password rules</h3></div>
     <p>Three fields, one strength meter, one required checkbox, one optional. The terms checkbox is the only thing that gates submit alongside the meter — block on the legal click, never on the marketing one. Use the same <code>score()</code> helper as the forgot-password recipe so the strength bar feels consistent across the cluster.</p>
     <div class="ds-specimen"
-         data-code='import { useState } from &#39;@corelithzw/react&#39;;
+         data-code='import { useState } from &#39;react&#39;;
 import { Form, Field, Input, Button, Alert, Checkbox, Meter, Stack } from &#39;@corelithzw/react&#39;;
 
 const MIN_LEN = 10;
@@ -377,7 +377,7 @@ function FormScreen({
 
   return (
     &lt;Form
-      onSubmit={() =&gt; ok &amp;&amp; onSubmit(email, pw, marketing)}
+      onSubmit={(e) =&gt; { e.preventDefault(); if (ok) onSubmit(email, pw, marketing); }}
       aria-describedby={error ? &#39;signup-error&#39; : undefined}
     &gt;
       &lt;Stack gap=&quot;md&quot;&gt;
@@ -385,26 +385,27 @@ function FormScreen({
         &lt;p&gt;30 days free. No card required.&lt;/p&gt;
         {error &amp;&amp; &lt;Alert id=&quot;signup-error&quot; tone=&quot;danger&quot;&gt;{error}&lt;/Alert&gt;}
 
-        &lt;Field label=&quot;Work email&quot; name=&quot;email&quot;&gt;
+        &lt;Field label=&quot;Work email&quot;&gt;
           &lt;Input type=&quot;email&quot; autoComplete=&quot;email&quot;
-                 value={email} onChange={setEmail} autoFocus required /&gt;
+                 value={email} onChange={(e) =&gt; setEmail(e.target.value)} autoFocus required /&gt;
         &lt;/Field&gt;
 
-        &lt;Field label=&quot;Password&quot; name=&quot;password&quot;
-               hint=&quot;At least 10 characters, one uppercase, one number.&quot;&gt;
+        &lt;Field label=&quot;Password&quot;
+               description=&quot;At least 10 characters, one uppercase, one number.&quot;&gt;
           &lt;Input type=&quot;password&quot; autoComplete=&quot;new-password&quot;
-                 value={pw} onChange={setPw} required /&gt;
+                 value={pw} onChange={(e) =&gt; setPw(e.target.value)} required /&gt;
           &lt;Meter value={score(pw)} max={4}
                  label={[&#39;Too short&#39;,&#39;Weak&#39;,&#39;OK&#39;,&#39;Strong&#39;,&#39;Excellent&#39;][score(pw)]} /&gt;
         &lt;/Field&gt;
 
-        &lt;Checkbox checked={terms} onChange={setTerms} required&gt;
-          I agree to the &lt;a href=&quot;/terms&quot;&gt;Terms&lt;/a&gt; and
-          &lt;a href=&quot;/privacy&quot;&gt;Privacy Policy&lt;/a&gt;.
-        &lt;/Checkbox&gt;
-        &lt;Checkbox checked={marketing} onChange={setMarketing}&gt;
-          Send me occasional product updates.
-        &lt;/Checkbox&gt;
+        &lt;Checkbox
+          label={&lt;&gt;I agree to the &lt;a href=&quot;/terms&quot;&gt;Terms&lt;/a&gt; and &lt;a href=&quot;/privacy&quot;&gt;Privacy Policy&lt;/a&gt;.&lt;/&gt;}
+          checked={terms} onChange={(e) =&gt; setTerms(e.target.checked)} required
+        /&gt;
+        &lt;Checkbox
+          label=&quot;Send me occasional product updates.&quot;
+          checked={marketing} onChange={(e) =&gt; setMarketing(e.target.checked)}
+        /&gt;
 
         &lt;Button type=&quot;submit&quot; variant=&quot;primary&quot; size=&quot;lg&quot; disabled={!ok}&gt;
           Create account
@@ -435,7 +436,7 @@ function FormScreen({
     <div class="ck-step"><span class="n">03</span><h3>Build the verify screen — and poll instead of asking the user to refresh</h3></div>
     <p>The verify screen runs a <code>setInterval</code> that pings <code>/api/auth/me</code> every 4 seconds while the tab is visible. When the response flips <code>emailVerified</code> to <code>true</code>, dispatch <code>VERIFIED</code> and the machine advances. Pause polling on tab-hidden — phones throttle aggressively and a poll storm on resume wastes everyone's battery.</p>
     <div class="ds-specimen"
-         data-code='import { useEffect, useState } from &#39;@corelithzw/react&#39;;
+         data-code='import { useEffect, useState } from &#39;react&#39;;
 import { Stack, Button, Alert } from &#39;@corelithzw/react&#39;;
 
 const POLL_MS = 4000;
@@ -481,7 +482,7 @@ function VerifyScreen({
 
   return (
     &lt;Stack gap=&quot;md&quot; align=&quot;center&quot; role=&quot;status&quot; aria-live=&quot;polite&quot;&gt;
-      &lt;MailIcon /&gt;
+      &lt;span aria-hidden=&quot;true&quot; className=&quot;auth-mail-icon&quot;&gt;✉&lt;/span&gt;
       &lt;h1&gt;Verify your email&lt;/h1&gt;
       &lt;p&gt;
         We sent a link to &lt;b&gt;{email}&lt;/b&gt;. Open it on any device — this
@@ -492,7 +493,7 @@ function VerifyScreen({
         variant=&quot;ghost&quot;
         onClick={() =&gt; {
           onResend(); setSecs(RESEND_SECS);
-          setInfo(&#39;Link sent again. Check spam if it&#39;s not there.&#39;);
+          setInfo(&quot;Link sent again. Check spam if it&#39;s not there.&quot;);
         }}
         disabled={secs &gt; 0}
       &gt;
@@ -500,7 +501,7 @@ function VerifyScreen({
           ? `Resend in 0:${String(secs).padStart(2, &#39;0&#39;)}`
           : &#39;Resend link&#39;}
       &lt;/Button&gt;
-      &lt;Button variant=&quot;link&quot; onClick={onBack}&gt;Wrong email?&lt;/Button&gt;
+      &lt;Button variant=&quot;ghost&quot; onClick={onBack}&gt;Wrong email?&lt;/Button&gt;
     &lt;/Stack&gt;
   );
 }'>
@@ -524,7 +525,7 @@ function VerifyScreen({
     <div class="ck-step"><span class="n">04</span><h3>Land on "account active" and hand off to onboarding</h3></div>
     <p>The active stage is a confirmation, not the destination. Use the same tick + status-live pattern as the 2FA recipe. Don't dump the user into the dashboard cold — pass them to a one-screen onboarding wizard (workspace name, vertical, time zone) before the real app opens.</p>
     <div class="ds-specimen"
-         data-code='import { useEffect } from &#39;@corelithzw/react&#39;;
+         data-code='import { useEffect } from &#39;react&#39;;
 import { Stack, Button } from &#39;@corelithzw/react&#39;;
 
 function ActiveScreen({
@@ -541,7 +542,7 @@ function ActiveScreen({
 
   return (
     &lt;Stack gap=&quot;md&quot; align=&quot;center&quot; role=&quot;status&quot; aria-live=&quot;polite&quot;&gt;
-      &lt;Tick /&gt;
+      &lt;span aria-hidden=&quot;true&quot; className=&quot;auth-tick&quot;&gt;✓&lt;/span&gt;
       &lt;h1&gt;Account active&lt;/h1&gt;
       &lt;p&gt;Welcome, &lt;b&gt;{email}&lt;/b&gt;. Let&#39;s set up your workspace.&lt;/p&gt;
       &lt;Button onClick={onContinue} variant=&quot;primary&quot; size=&quot;lg&quot;&gt;
@@ -569,7 +570,7 @@ function ActiveScreen({
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The whole <code>SignUpEmailVerify</code> component. Reducer, three stages, strength meter, terms gate, visibility-aware poller, resend cooldown.</p>
     <div class="ds-specimen"
-         data-code='import { useEffect, useReducer, useState } from &#39;@corelithzw/react&#39;;
+         data-code='import { useEffect, useReducer, useState } from &#39;react&#39;;
 import {
   AuthShell, Form, Field, Stack,
   Input, Button, Alert, Checkbox, Meter,
@@ -617,7 +618,7 @@ async function postSignUp(email: string, password: string, marketing: boolean) {
     body: JSON.stringify({ email, password, marketing }),
   });
   if (res.status === 409) throw new Error(&#39;That email already has an account. Sign in instead.&#39;);
-  if (!res.ok)            throw new Error(&#39;We couldn&#39;t create that account. Try again.&#39;);
+  if (!res.ok)            throw new Error(&quot;We couldn&#39;t create that account. Try again.&quot;);
 }
 async function postResend(email: string) {
   await fetch(&#39;/api/auth/verify/resend&#39;, {
@@ -640,14 +641,17 @@ export function SignUpEmailVerify({ onDone }: { onDone: () =&gt; void }) {
   };
 
   return (
-    &lt;AuthShell brand=&quot;Huchu&quot; workspace=&quot;New workspace&quot;&gt;
-      {s.stage === &#39;form&#39;   &amp;&amp; &lt;SignUpForm error={s.error} onSubmit={handleSubmit} /&gt;}
-      {s.stage === &#39;verify&#39; &amp;&amp; &lt;Verify
-                                  email={s.email}
-                                  onVerified={() =&gt; dispatch({ type: &#39;VERIFIED&#39; })}
-                                  onResend={() =&gt; postResend(s.email)}
-                                  onBack={() =&gt; dispatch({ type: &#39;BACK&#39; })} /&gt;}
-      {s.stage === &#39;active&#39; &amp;&amp; &lt;Active email={s.email} onContinue={onDone} /&gt;}
+    &lt;AuthShell&gt;
+      &lt;AuthShell.Brand logo={&lt;span aria-hidden=&quot;true&quot;&gt;◆&lt;/span&gt;} product=&quot;Huchu&quot; /&gt;
+      &lt;AuthShell.Card subtitle=&quot;New workspace&quot;&gt;
+        {s.stage === &#39;form&#39;   &amp;&amp; &lt;SignUpForm error={s.error} onSubmit={handleSubmit} /&gt;}
+        {s.stage === &#39;verify&#39; &amp;&amp; &lt;Verify
+                                    email={s.email}
+                                    onVerified={() =&gt; dispatch({ type: &#39;VERIFIED&#39; })}
+                                    onResend={() =&gt; { void postResend(s.email); }}
+                                    onBack={() =&gt; dispatch({ type: &#39;BACK&#39; })} /&gt;}
+        {s.stage === &#39;active&#39; &amp;&amp; &lt;Active email={s.email} onContinue={onDone} /&gt;}
+      &lt;/AuthShell.Card&gt;
     &lt;/AuthShell&gt;
   );
 }
@@ -666,7 +670,7 @@ function SignUpForm({ error, onSubmit }: {
 
   return (
     &lt;Form
-      onSubmit={() =&gt; ok &amp;&amp; onSubmit(email, pw, marketing)}
+      onSubmit={(e) =&gt; { e.preventDefault(); if (ok) onSubmit(email, pw, marketing); }}
       aria-describedby={error ? &#39;signup-error&#39; : undefined}
     &gt;
       &lt;Stack gap=&quot;md&quot;&gt;
@@ -674,26 +678,27 @@ function SignUpForm({ error, onSubmit }: {
         &lt;p&gt;30 days free. No card required.&lt;/p&gt;
         {error &amp;&amp; &lt;Alert id=&quot;signup-error&quot; tone=&quot;danger&quot;&gt;{error}&lt;/Alert&gt;}
 
-        &lt;Field label=&quot;Work email&quot; name=&quot;email&quot;&gt;
+        &lt;Field label=&quot;Work email&quot;&gt;
           &lt;Input type=&quot;email&quot; autoComplete=&quot;email&quot;
-                 value={email} onChange={setEmail} autoFocus required /&gt;
+                 value={email} onChange={(e) =&gt; setEmail(e.target.value)} autoFocus required /&gt;
         &lt;/Field&gt;
 
-        &lt;Field label=&quot;Password&quot; name=&quot;password&quot;
-               hint=&quot;At least 10 characters, one uppercase, one number.&quot;&gt;
+        &lt;Field label=&quot;Password&quot;
+               description=&quot;At least 10 characters, one uppercase, one number.&quot;&gt;
           &lt;Input type=&quot;password&quot; autoComplete=&quot;new-password&quot;
-                 value={pw} onChange={setPw} required /&gt;
+                 value={pw} onChange={(e) =&gt; setPw(e.target.value)} required /&gt;
           &lt;Meter value={strength} max={4}
                  label={[&#39;Too short&#39;,&#39;Weak&#39;,&#39;OK&#39;,&#39;Strong&#39;,&#39;Excellent&#39;][strength]} /&gt;
         &lt;/Field&gt;
 
-        &lt;Checkbox checked={terms} onChange={setTerms} required&gt;
-          I agree to the &lt;a href=&quot;/terms&quot;&gt;Terms&lt;/a&gt; and
-          &lt;a href=&quot;/privacy&quot;&gt;Privacy Policy&lt;/a&gt;.
-        &lt;/Checkbox&gt;
-        &lt;Checkbox checked={marketing} onChange={setMarketing}&gt;
-          Send me occasional product updates.
-        &lt;/Checkbox&gt;
+        &lt;Checkbox
+          label={&lt;&gt;I agree to the &lt;a href=&quot;/terms&quot;&gt;Terms&lt;/a&gt; and &lt;a href=&quot;/privacy&quot;&gt;Privacy Policy&lt;/a&gt;.&lt;/&gt;}
+          checked={terms} onChange={(e) =&gt; setTerms(e.target.checked)} required
+        /&gt;
+        &lt;Checkbox
+          label=&quot;Send me occasional product updates.&quot;
+          checked={marketing} onChange={(e) =&gt; setMarketing(e.target.checked)}
+        /&gt;
 
         &lt;Button type=&quot;submit&quot; variant=&quot;primary&quot; size=&quot;lg&quot; disabled={!ok}&gt;
           Create account
@@ -741,7 +746,7 @@ function Verify({ email, onVerified, onResend, onBack }: {
 
   return (
     &lt;Stack gap=&quot;md&quot; align=&quot;center&quot; role=&quot;status&quot; aria-live=&quot;polite&quot;&gt;
-      &lt;MailIcon /&gt;
+      &lt;span aria-hidden=&quot;true&quot; className=&quot;auth-mail-icon&quot;&gt;✉&lt;/span&gt;
       &lt;h1&gt;Verify your email&lt;/h1&gt;
       &lt;p&gt;
         We sent a link to &lt;b&gt;{email}&lt;/b&gt;. Open it on any device — this
@@ -752,7 +757,7 @@ function Verify({ email, onVerified, onResend, onBack }: {
         variant=&quot;ghost&quot;
         onClick={() =&gt; {
           onResend(); setSecs(RESEND_SECS);
-          setInfo(&#39;Link sent again. Check spam if it&#39;s not there.&#39;);
+          setInfo(&quot;Link sent again. Check spam if it&#39;s not there.&quot;);
         }}
         disabled={secs &gt; 0}
       &gt;
@@ -760,7 +765,7 @@ function Verify({ email, onVerified, onResend, onBack }: {
           ? `Resend in 0:${String(secs).padStart(2, &#39;0&#39;)}`
           : &#39;Resend link&#39;}
       &lt;/Button&gt;
-      &lt;Button variant=&quot;link&quot; onClick={onBack}&gt;Wrong email?&lt;/Button&gt;
+      &lt;Button variant=&quot;ghost&quot; onClick={onBack}&gt;Wrong email?&lt;/Button&gt;
     &lt;/Stack&gt;
   );
 }
@@ -776,7 +781,7 @@ function Active({ email, onContinue }: {
 
   return (
     &lt;Stack gap=&quot;md&quot; align=&quot;center&quot; role=&quot;status&quot; aria-live=&quot;polite&quot;&gt;
-      &lt;Tick /&gt;
+      &lt;span aria-hidden=&quot;true&quot; className=&quot;auth-tick&quot;&gt;✓&lt;/span&gt;
       &lt;h1&gt;Account active&lt;/h1&gt;
       &lt;p&gt;Welcome, &lt;b&gt;{email}&lt;/b&gt;. Let&#39;s set up your workspace.&lt;/p&gt;
       &lt;Button onClick={onContinue} variant=&quot;primary&quot; size=&quot;lg&quot;&gt;

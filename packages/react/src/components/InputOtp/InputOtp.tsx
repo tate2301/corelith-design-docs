@@ -24,6 +24,14 @@ export interface InputOtpProps {
   ariaLabel?: string;
 }
 
+/**
+ * InputOtp — Corelith component.
+ *
+ * @example
+ * ```tsx
+ * <InputOtp />
+ * ```
+ */
 export const InputOtp = forwardRef<InputOtpHandle, InputOtpProps>(function InputOtp(
   { length = 6, value, onChange, autoFocus, disabled, invalid, className, id, ariaLabel = 'One-time code' },
   ref,

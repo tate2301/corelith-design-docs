@@ -259,7 +259,7 @@ const isErrored = (t: Task) =&gt; t.state.kind === &#39;error&#39;;'>
     <div class="ck-step"><span class="n">02</span><h3>Wrap the list in <code>useOptimistic</code></h3></div>
     <p><code>useOptimistic</code> takes a committed list + a reducer for pending intents. The render reads from the optimistic projection; the commit handler is where you make the API call. The hook handles the merge and the rollback — your code is just two functions.</p>
     <div class="ds-specimen"
-         data-code='import { useOptimistic, useState } from &#39;@corelithzw/react&#39;;
+         data-code='import { useOptimistic } from &#39;@corelithzw/react&#39;;
 
 type Intent =
   | { type: &#39;toggle&#39;; id: string; done: boolean }
@@ -287,9 +287,11 @@ function applyIntent(list: Task[], intent: Intent): Task[] {
 }
 
 export function useTasks(serverTasks: Task[]) {
-  const [committed, setCommitted] = useState&lt;Task[]&gt;(serverTasks);
-  const [optimistic, addIntent] = useOptimistic(committed, applyIntent);
-  return { committed, setCommitted, optimistic, addIntent };
+  const { base, setBase, derived, mutate } = useOptimistic&lt;Task[], Intent&gt;(
+    serverTasks,
+    applyIntent,
+  );
+  return { committed: base, setCommitted: setBase, optimistic: derived, addIntent: mutate };
 }'>
       <div class="ds-specimen-stage canvas padded">
         <div class="ck-code-only-note">
@@ -308,45 +310,48 @@ export function useTasks(serverTasks: Task[]) {
     <div class="ds-specimen"
          data-code='import { useToast } from &#39;@corelithzw/react&#39;;
 
+declare const initialTasks: Task[];
+
 const tempId = () =&gt; `tmp_${crypto.randomUUID()}`;
 
 function useTaskMutations() {
-  const { committed, setCommitted, optimistic, addIntent } = useTasks(initialTasks);
+  const { setCommitted, optimistic, addIntent } = useTasks(initialTasks);
   const toast = useToast();
 
   const toggleDone = async (id: string, done: boolean) =&gt; {
-    addIntent({ type: &#39;toggle&#39;, id, done });
+    const handle = addIntent({ type: &#39;toggle&#39;, id, done });
     try {
       const res = await fetch(`/api/tasks/${id}`, {
         method: &#39;PATCH&#39;,
         body: JSON.stringify({ done }),
       });
-      if (!res.ok) throw new Error(&#39;Couldn&#39;t save that toggle&#39;);
-      const updated = await res.json();
-      setCommitted((list) =&gt;
-        list.map((t) =&gt; (t.id === id ? { ...updated, state: { kind: &#39;idle&#39; } } : t)));
-    } catch (e: any) {
-      toast.show({ tone: &#39;danger&#39;, title: e.message, action: {
+      if (!res.ok) throw new Error(&quot;Couldn&#39;t save that toggle&quot;);
+      const updated = await res.json() as Task;
+      setCommitted(optimistic.map((t) =&gt; (t.id === id ? { ...updated, state: { kind: &#39;idle&#39; } } : t)));
+      handle.confirm();
+    } catch (e: unknown) {
+      handle.rollback();
+      const message = e instanceof Error ? e.message : String(e);
+      toast.show({ tone: &#39;danger&#39;, title: message, action: {
         label: &#39;Retry&#39;,
-        onClick: () =&gt; toggleDone(id, done),
+        onClick: () =&gt; { void toggleDone(id, done); },
       }});
     }
   };
 
   const create = async (title: string) =&gt; {
     const tmp = tempId();
-    addIntent({ type: &#39;create&#39;, tempId: tmp, title });
+    const handle = addIntent({ type: &#39;create&#39;, tempId: tmp, title });
     try {
-      const res = await fetch(&#39;/api/tasks&#39;, {
-        method: &#39;POST&#39;,
-        body: JSON.stringify({ title }),
-      });
-      if (!res.ok) throw new Error(&#39;Couldn&#39;t create that task&#39;);
-      const real = await res.json();
-      // Replace the tempId row, leave order intact.
-      setCommitted((list) =&gt; [{ ...real, state: { kind: &#39;idle&#39; } }, ...list]);
-    } catch (e: any) {
-      toast.show({ tone: &#39;danger&#39;, title: e.message });
+      const res = await fetch(&#39;/api/tasks&#39;, { method: &#39;POST&#39;, body: JSON.stringify({ title }) });
+      if (!res.ok) throw new Error(&quot;Couldn&#39;t create that task&quot;);
+      const real = await res.json() as Task;
+      setCommitted([{ ...real, state: { kind: &#39;idle&#39; } }, ...optimistic.filter((t) =&gt; t.id !== tmp)]);
+      handle.confirm();
+    } catch (e: unknown) {
+      handle.rollback();
+      const message = e instanceof Error ? e.message : String(e);
+      toast.show({ tone: &#39;danger&#39;, title: message });
     }
   };
 
@@ -388,7 +393,7 @@ function useTaskMutations() {
       });
       return;
     }
-    if (!res.ok) throw new Error(&#39;Couldn&#39;t rename that task&#39;);
+    if (!res.ok) throw new Error(&quot;Couldn&#39;t rename that task&quot;);
     const updated = await res.json();
     setCommitted((list) =&gt; list.map((t) =&gt; t.id === id ? updated : t));
   } catch (e: any) {
@@ -475,7 +480,7 @@ export function useOptimisticTasks(initial: Task[]) {
       });
       return null;
     }
-    if (!res.ok) throw new Error(&#39;Couldn&#39;t save&#39;);
+    if (!res.ok) throw new Error(&quot;Couldn&#39;t save&quot;);
     return res.json();
   }, [toast]);
 
@@ -517,7 +522,7 @@ export function useOptimisticTasks(initial: Task[]) {
         headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
         body: JSON.stringify({ title }),
       });
-      if (!res.ok) throw new Error(&#39;Couldn&#39;t create that task&#39;);
+      if (!res.ok) throw new Error(&quot;Couldn&#39;t create that task&quot;);
       const real = await res.json();
       setCommitted((list) =&gt; [{ ...real, state: { kind: &#39;idle&#39; } }, ...list]);
     } catch (e: any) {
@@ -534,7 +539,7 @@ export function useOptimisticTasks(initial: Task[]) {
     addIntent({ type: &#39;delete&#39;, id });
     try {
       const res = await fetch(`/api/tasks/${id}`, { method: &#39;DELETE&#39; });
-      if (!res.ok) throw new Error(&#39;Couldn&#39;t delete that task&#39;);
+      if (!res.ok) throw new Error(&quot;Couldn&#39;t delete that task&quot;);
       setCommitted((list) =&gt; list.filter((t) =&gt; t.id !== id));
     } catch (e: any) {
       toast.show({

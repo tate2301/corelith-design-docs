@@ -136,19 +136,20 @@
       <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart</a>
       <a class="ck-piece" href="../../system/b-card.html"><span class="kind">Block</span>Card</a>
     </div>
-    <p style="margin-top: 12px;"><b>Intended exports used here:</b> <code>Chart.Bar</code> with <code>stack</code>.</p>
+    <p style="margin-top: 12px;"><b>Exports used here:</b> <code>Chart.Bar</code>, <code>ChartCategoricalDatum</code>.</p>
     <div class="ck-roadmap-note">
-      <b>Roadmap.</b> Stacked mode ships with <code>Chart.Bar</code> in <code>@corelithzw/react v0.2</code>.
+      <b>In v0.3.0.</b> <code>Chart.Bar</code> renders one rectangle per datum; native stacking lands in a future release. The honest move today is to pre-sum your sub-channels into a single <code>total</code> per category and let one bar carry the magnitude. When you need to see the mix, render N sibling <code>Chart.Bar</code> instances (one per channel) stacked in a column.
     </div>
   </section>
 
   <section id="snippet">
     <h2 class="ds-h2">The React snippet</h2>
-    <p class="ds-h2-sub">Same shape as grouped bars; flip <code>group</code> to <code>stack</code>.</p>
+    <p class="ds-h2-sub">Sum the channels into a single <code>total</code> series. The bar's height carries magnitude; the mix lives in the legend below.</p>
     <div class="ds-specimen"
          data-code='import { Chart } from &#39;@corelithzw/react&#39;;
+import type { ChartCategoricalDatum } from &#39;@corelithzw/react&#39;;
 
-const data = [
+const mix = [
   { month: &#39;Jan&#39;, pos: 30, online:  8, wholesale:  0 },
   { month: &#39;Feb&#39;, pos: 32, online: 12, wholesale:  0 },
   { month: &#39;Mar&#39;, pos: 34, online: 18, wholesale:  0 },
@@ -157,20 +158,18 @@ const data = [
   { month: &#39;Jun&#39;, pos: 40, online: 38, wholesale: 28 },
 ];
 
+const data: ChartCategoricalDatum[] = mix.map((m) =&gt; ({
+  label: m.month,
+  value: m.pos + m.online + m.wholesale,
+}));
+
 export function RevenueByChannel() {
   return (
     &lt;Chart.Bar
       data={data}
-      xAccessor=&quot;month&quot;
-      stack
-      series={[
-        { key: &#39;pos&#39;,       label: &#39;POS&#39;,       color: &#39;brand&#39; },
-        { key: &#39;online&#39;,    label: &#39;Online&#39;,    color: &#39;brand-300&#39; },
-        { key: &#39;wholesale&#39;, label: &#39;Wholesale&#39;, color: &#39;brand-100&#39; },
-      ]}
+      color=&quot;brand&quot;
+      width={640}
       height={280}
-      legend=&quot;top&quot;
-      yFormat={(v) =&gt; `$${v}k`}
       aria-label=&quot;Revenue by channel, last six months&quot;
     /&gt;
   );

@@ -302,9 +302,10 @@ export function useOptimisticRows(server: StockRow[]) {
     <div class="ck-step"><span class="n">03</span><h3>Keyboard contract: Enter saves, Esc reverts, Tab moves to next editable cell</h3></div>
     <p>Behaviour your users instinctively expect from Excel. Enter blurs and triggers save; Esc blurs without saving; Tab is a save-and-advance. Build the move-to-next as a list of editable column keys per row, so a Tab off the last cell of row N lands on the first editable cell of row N+1.</p>
     <div class="ds-specimen"
-         data-code='import { useRef, useEffect } from &#39;@corelithzw/react&#39;;
+         data-code='import { useRef, useEffect, type KeyboardEvent, type ChangeEvent } from &#39;react&#39;;
+import { Input } from &#39;@corelithzw/react&#39;;
 
-function EditableCell({
+export function EditableCell({
   rowId, col, value, validate, onCommit, onCancel, onAdvance,
 }: {
   rowId: string;
@@ -316,30 +317,31 @@ function EditableCell({
   onAdvance: () =&gt; void;
 }) {
   const ref = useRef&lt;HTMLInputElement&gt;(null);
+  const [draft, setDraft] = useState(value);
   useEffect(() =&gt; { ref.current?.focus(); ref.current?.select(); }, []);
+
+  const onKeyDown = (e: KeyboardEvent&lt;HTMLInputElement&gt;) =&gt; {
+    if (e.key === &#39;Enter&#39;) {
+      e.preventDefault();
+      if (validate?.(draft)) return;
+      onCommit(draft);
+    } else if (e.key === &#39;Escape&#39;) {
+      e.preventDefault();
+      onCancel();
+    } else if (e.key === &#39;Tab&#39;) {
+      e.preventDefault();
+      if (validate?.(draft)) { onCancel(); return; }
+      onCommit(draft);
+      onAdvance();
+    }
+  };
 
   return (
     &lt;Input
       ref={ref}
-      value={value}
-      onChange={(v) =&gt; ref.current!.value = v}     // controlled by ref to avoid re-render storm
-      onKeyDown={(e: React.KeyboardEvent&lt;HTMLInputElement&gt;) =&gt; {
-        if (e.key === &#39;Enter&#39;) {
-          e.preventDefault();
-          const v = ref.current!.value;
-          const err = validate?.(v);
-          if (err) return; // cell shows the error, stay in edit
-          onCommit(v);
-        } else if (e.key === &#39;Escape&#39;) {
-          e.preventDefault(); onCancel();
-        } else if (e.key === &#39;Tab&#39;) {
-          e.preventDefault();
-          const v = ref.current!.value;
-          if (validate?.(v)) { onCancel(); return; }
-          onCommit(v);
-          onAdvance();
-        }
-      }}
+      value={draft}
+      onChange={(e: ChangeEvent&lt;HTMLInputElement&gt;) =&gt; setDraft(e.target.value)}
+      onKeyDown={onKeyDown}
       aria-label={`${col} for row ${rowId}`}
     /&gt;
   );
@@ -360,28 +362,25 @@ function EditableCell({
     <div class="ds-specimen"
          data-code='import { InlineEdit } from &#39;@corelithzw/react&#39;;
 
-function EditableCellShell({ value, onCommit, onCancel, validate }: {
+export function EditableCellShell({ value, onCommit, onCancel, validate }: {
   value: string;
   onCommit: (v: string) =&gt; void;
   onCancel: () =&gt; void;
   validate?: (v: string) =&gt; string | null;
 }) {
+  const handleSave = (next: string) =&gt; {
+    if (validate?.(next)) return;
+    onCommit(next);
+  };
   return (
     &lt;InlineEdit
-      defaultValue={value}
-      validate={validate}
-      onSave={onCommit}
+      value={value}
+      editing
+      onSave={handleSave}
       onCancel={onCancel}
     /&gt;
   );
-}
-
-// Compiles to the tokenised .p-inline-edit shell:
-//   &lt;span class="p-inline-edit"&gt;
-//     &lt;input value="..." /&gt;
-//     &lt;button class="p-inline-edit-save"   aria-label="Save"&gt;✓&lt;/button&gt;
-//     &lt;button class="p-inline-edit-cancel" aria-label="Cancel"&gt;✕&lt;/button&gt;
-//   &lt;/span&gt;'>
+}'>
       <div class="ds-specimen-stage canvas padded">
         <div style="display: grid; place-items: center; padding: 18px;">
           <span class="p-inline-edit" style="font: 500 13px/1 var(--font-mono);">
@@ -412,7 +411,7 @@ const validators: Record&lt;string, Validator&gt; = {
   sku: (v) =&gt; (v.trim().length === 0 ? &#39;Required&#39; : null),
 };
 
-async function patchCell(rowId: string, col: string, value: string) {
+const patchCell = async (rowId: string, col: string, value: string): Promise&lt;void&gt; =&gt; {
   const res = await fetch(`/api/stock/${rowId}`, {
     method: &#39;PATCH&#39;,
     body: JSON.stringify({ [col]: col === &#39;qty&#39; ? Number(value) : value }),
@@ -422,7 +421,7 @@ async function patchCell(rowId: string, col: string, value: string) {
     throw { kind: &#39;validation&#39; as const, message: body.message as string };
   }
   if (!res.ok) throw { kind: &#39;network&#39; as const, message: &#39;Could not reach server&#39; };
-}'>
+};'>
       <div class="ds-specimen-stage canvas padded">
         <div class="ck-code-only-note">
           <span class="ck-code-only-tag"><span data-icon="code" data-icon-size="11"></span>Code-only step</span>
@@ -438,13 +437,16 @@ async function patchCell(rowId: string, col: string, value: string) {
     <div class="ck-step"><span class="n">05</span><h3>Wire it together — one row renderer, three rendering branches per cell</h3></div>
     <p>The row renderer reads <code>statusOf(rowId, col)</code> for each editable cell and returns one of: read-only value, editing <code>EditableCell</code>, or read-only with error chip below. Saving is just a paint colour — the value already shows the optimistic update.</p>
     <div class="ds-specimen"
-         data-code='function Cell({ row, col, edit, optimistic }: {
+         data-code='import { useToast } from &#39;@corelithzw/react&#39;;
+
+function Cell({ row, col, edit, optimistic }: {
   row: StockRow; col: keyof StockRow;
   edit: ReturnType&lt;typeof useTableEdit&gt;;
   optimistic: ReturnType&lt;typeof useOptimisticRows&gt;;
 }) {
   const status = edit.statusOf(row.id, col as string);
   const value = String(row[col]);
+  const toast = useToast();
 
   const commit = async (v: string) =&gt; {
     optimistic.patch(row.id, { [col]: col === &#39;qty&#39; ? Number(v) : v });
@@ -453,13 +455,18 @@ async function patchCell(rowId: string, col: string, value: string) {
       await patchCell(row.id, col as string, v);
       optimistic.clear(row.id);
       edit.markSaved(row.id, col as string);
-    } catch (e: any) {
-      if (e.kind === &#39;validation&#39;) {
-        edit.markError(row.id, col as string, e.message);
+    } catch (e) {
+      const err = e as { kind: &#39;validation&#39; | &#39;network&#39;; message: string };
+      if (err.kind === &#39;validation&#39;) {
+        edit.markError(row.id, col as string, err.message);
       } else {
         optimistic.rollback(row.id);
-        edit.markError(row.id, col as string, e.message);
-        Toast.show(&#39;Save failed&#39;, { action: { label: &#39;Retry&#39;, onClick: () =&gt; commit(v) } });
+        edit.markError(row.id, col as string, err.message);
+        toast.show({
+          tone: &#39;danger&#39;,
+          title: &#39;Save failed&#39;,
+          action: { label: &#39;Retry&#39;, onClick: () =&gt; { void commit(v); } },
+        });
       }
     }
   };
@@ -471,7 +478,7 @@ async function patchCell(rowId: string, col: string, value: string) {
         col={col as string}
         value={value}
         validate={validators[col as string]}
-        onCommit={commit}
+        onCommit={(v) =&gt; { void commit(v); }}
         onCancel={() =&gt; edit.cancelEdit()}
         onAdvance={() =&gt; { /* delegated up to table */ }}
       /&gt;
@@ -512,70 +519,68 @@ async function patchCell(rowId: string, col: string, value: string) {
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The <code>StockTable</code>, assembled. Cell state machine, optimistic patches, keyboard contract, error recovery.</p>
     <div class="ds-specimen"
-         data-code='import { useRef, useEffect, useState } from &#39;@corelithzw/react&#39;;
-import { Stack, Input, Button, Toast, DataTable } from &#39;@corelithzw/react&#39;;
+         data-code='import { useRef, useEffect, type KeyboardEvent } from &#39;react&#39;;
+import { Input, DataTable, useToast } from &#39;@corelithzw/react&#39;;
+import type { DataTableColumn } from &#39;@corelithzw/react&#39;;
 
-type StockRow = { id: string; sku: string; qty: number; loc: string };
+type StockRowFinal = { id: string; sku: string; qty: number; loc: string };
 
-// ── Per-cell edit state (see Step 1) ───────────────────────────
-type CellKey = `${string}|${string}`;
-const ck = (r: string, c: string): CellKey =&gt; `${r}|${c}`;
+type FinalCellKey = `${string}|${string}`;
+const fck = (r: string, c: string): FinalCellKey =&gt; `${r}|${c}`;
 
-function useTableEdit() {
-  const [editing, setEditing] = useState&lt;CellKey | null&gt;(null);
-  const [saving, setSaving]   = useState&lt;Record&lt;CellKey, boolean&gt;&gt;({});
-  const [errors, setErrors]   = useState&lt;Record&lt;CellKey, string&gt;&gt;({});
+function useFinalTableEdit() {
+  const [editing, setEditing] = useState&lt;FinalCellKey | null&gt;(null);
+  const [saving, setSaving]   = useState&lt;Record&lt;FinalCellKey, boolean&gt;&gt;({});
+  const [errors, setErrors]   = useState&lt;Record&lt;FinalCellKey, string&gt;&gt;({});
 
   return {
-    isEditing: (r: string, c: string) =&gt; editing === ck(r, c),
-    isSaving:  (r: string, c: string) =&gt; !!saving[ck(r, c)],
-    errorOf:   (r: string, c: string) =&gt; errors[ck(r, c)] ?? null,
-    startEdit: (r: string, c: string) =&gt; setEditing(ck(r, c)),
+    isEditing: (r: string, c: string) =&gt; editing === fck(r, c),
+    isSaving:  (r: string, c: string) =&gt; !!saving[fck(r, c)],
+    errorOf:   (r: string, c: string) =&gt; errors[fck(r, c)] ?? null,
+    startEdit: (r: string, c: string) =&gt; setEditing(fck(r, c)),
     cancelEdit: () =&gt; setEditing(null),
     markSaving: (r: string, c: string) =&gt; {
-      const k = ck(r, c);
+      const k = fck(r, c);
       setEditing(null);
-      setSaving(s =&gt; ({ ...s, [k]: true }));
-      setErrors(e =&gt; { const n = { ...e }; delete n[k]; return n; });
+      setSaving((s) =&gt; ({ ...s, [k]: true }));
+      setErrors((e) =&gt; { const n = { ...e }; delete n[k]; return n; });
     },
     markSaved: (r: string, c: string) =&gt;
-      setSaving(s =&gt; { const n = { ...s }; delete n[ck(r, c)]; return n; }),
+      setSaving((s) =&gt; { const n = { ...s }; delete n[fck(r, c)]; return n; }),
     markError: (r: string, c: string, msg: string) =&gt; {
-      const k = ck(r, c);
-      setSaving(s =&gt; { const n = { ...s }; delete n[k]; return n; });
-      setErrors(e =&gt; ({ ...e, [k]: msg }));
+      const k = fck(r, c);
+      setSaving((s) =&gt; { const n = { ...s }; delete n[k]; return n; });
+      setErrors((e) =&gt; ({ ...e, [k]: msg }));
     },
   };
 }
 
-// ── Optimistic rows (see Step 2) ───────────────────────────────
-function useOptimisticRows(server: StockRow[]) {
-  const [patches, setPatches] = useState&lt;Record&lt;string, Partial&lt;StockRow&gt;&gt;&gt;({});
+function useFinalOptimisticRows(server: StockRowFinal[]) {
+  const [patches, setPatches] = useState&lt;Record&lt;string, Partial&lt;StockRowFinal&gt;&gt;&gt;({});
   return {
-    rows: server.map(r =&gt; ({ ...r, ...patches[r.id] })),
-    patch: (id: string, p: Partial&lt;StockRow&gt;) =&gt;
-      setPatches(all =&gt; ({ ...all, [id]: { ...all[id], ...p } })),
+    rows: server.map((r) =&gt; ({ ...r, ...patches[r.id] })),
+    patch: (id: string, p: Partial&lt;StockRowFinal&gt;) =&gt;
+      setPatches((all) =&gt; ({ ...all, [id]: { ...all[id], ...p } })),
     rollback: (id: string) =&gt;
-      setPatches(all =&gt; { const n = { ...all }; delete n[id]; return n; }),
+      setPatches((all) =&gt; { const n = { ...all }; delete n[id]; return n; }),
     clear: (id: string) =&gt;
-      setPatches(all =&gt; { const n = { ...all }; delete n[id]; return n; }),
+      setPatches((all) =&gt; { const n = { ...all }; delete n[id]; return n; }),
   };
 }
 
-// ── Validators (see Step 4) ────────────────────────────────────
-const validators: Record&lt;string, (v: string) =&gt; string | null&gt; = {
+const finalValidators: Record&lt;string, (v: string) =&gt; string | null&gt; = {
   qty: (v) =&gt; {
     const n = Number(v);
-    if (!Number.isFinite(n))   return &#39;Qty must be a number.&#39;;
-    if (n &lt; 0)                 return &quot;Qty can&#39;t be negative.&quot;;
-    if (!Number.isInteger(n))  return &#39;Qty must be a whole number.&#39;;
+    if (!Number.isFinite(n))  return &#39;Qty must be a number.&#39;;
+    if (n &lt; 0)                return &quot;Qty can&#39;t be negative.&quot;;
+    if (!Number.isInteger(n)) return &#39;Qty must be a whole number.&#39;;
     return null;
   },
   loc: (v) =&gt; (/^[A-Z]-\d{1,2}$/.test(v) ? null : &#39;Loc must look like A-3.&#39;),
   sku: (v) =&gt; (v.trim().length === 0 ? &#39;Required&#39; : null),
 };
 
-async function patchCell(id: string, col: string, value: string) {
+const finalPatchCell = async (id: string, col: string, value: string): Promise&lt;void&gt; =&gt; {
   const res = await fetch(`/api/stock/${id}`, {
     method: &#39;PATCH&#39;,
     headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
@@ -586,10 +591,9 @@ async function patchCell(id: string, col: string, value: string) {
     throw { kind: &#39;validation&#39; as const, message: b.message as string };
   }
   if (!res.ok) throw { kind: &#39;network&#39; as const, message: &#39;Could not reach server&#39; };
-}
+};
 
-// ── Editable cell input (see Step 3) ───────────────────────────
-function CellInput({
+function FinalCellInput({
   initial, validate, onCommit, onCancel, onAdvance,
 }: {
   initial: string;
@@ -599,36 +603,39 @@ function CellInput({
   onAdvance: () =&gt; void;
 }) {
   const ref = useRef&lt;HTMLInputElement&gt;(null);
+  const [draft, setDraft] = useState(initial);
   useEffect(() =&gt; { ref.current?.focus(); ref.current?.select(); }, []);
-
   return (
     &lt;Input
       ref={ref}
-      defaultValue={initial}
-      onKeyDown={(e: React.KeyboardEvent&lt;HTMLInputElement&gt;) =&gt; {
-        const v = ref.current!.value;
+      value={draft}
+      onChange={(e) =&gt; setDraft(e.target.value)}
+      onKeyDown={(e: KeyboardEvent&lt;HTMLInputElement&gt;) =&gt; {
         if (e.key === &#39;Enter&#39;) {
           e.preventDefault();
-          if (validate?.(v)) return;
-          onCommit(v);
+          if (validate?.(draft)) return;
+          onCommit(draft);
         } else if (e.key === &#39;Escape&#39;) {
-          e.preventDefault(); onCancel();
+          e.preventDefault();
+          onCancel();
         } else if (e.key === &#39;Tab&#39;) {
           e.preventDefault();
-          if (validate?.(v)) { onCancel(); return; }
-          onCommit(v); onAdvance();
+          if (validate?.(draft)) { onCancel(); return; }
+          onCommit(draft);
+          onAdvance();
         }
       }}
     /&gt;
   );
 }
 
-// ── Table ──────────────────────────────────────────────────────
 const EDITABLE_COLS = [&#39;sku&#39;, &#39;qty&#39;, &#39;loc&#39;] as const;
+type EditableCol = typeof EDITABLE_COLS[number];
 
-export function StockTable({ initialRows }: { initialRows: StockRow[] }) {
-  const edit = useTableEdit();
-  const optimistic = useOptimisticRows(initialRows);
+export function StockTable({ initialRows }: { initialRows: StockRowFinal[] }) {
+  const edit = useFinalTableEdit();
+  const optimistic = useFinalOptimisticRows(initialRows);
+  const toast = useToast();
 
   const advance = (rowIdx: number, colIdx: number) =&gt; {
     const nextCol = colIdx + 1;
@@ -641,47 +648,38 @@ export function StockTable({ initialRows }: { initialRows: StockRow[] }) {
     }
   };
 
-  const commit = async (row: StockRow, col: typeof EDITABLE_COLS[number], v: string) =&gt; {
-    optimistic.patch(row.id, { [col]: col === &#39;qty&#39; ? Number(v) : v } as Partial&lt;StockRow&gt;);
+  const commit = async (row: StockRowFinal, col: EditableCol, v: string) =&gt; {
+    optimistic.patch(row.id, { [col]: col === &#39;qty&#39; ? Number(v) : v } as Partial&lt;StockRowFinal&gt;);
     edit.markSaving(row.id, col);
     try {
-      await patchCell(row.id, col, v);
+      await finalPatchCell(row.id, col, v);
       optimistic.clear(row.id);
       edit.markSaved(row.id, col);
-    } catch (e: any) {
-      if (e.kind === &#39;validation&#39;) {
-        edit.markError(row.id, col, e.message);
+    } catch (e) {
+      const err = e as { kind: &#39;validation&#39; | &#39;network&#39;; message: string };
+      if (err.kind === &#39;validation&#39;) {
+        edit.markError(row.id, col, err.message);
       } else {
         optimistic.rollback(row.id);
-        edit.markError(row.id, col, e.message);
-        Toast.show(&#39;Save failed&#39;, { action: { label: &#39;Retry&#39;, onClick: () =&gt; commit(row, col, v) } });
+        edit.markError(row.id, col, err.message);
+        toast.show({
+          tone: &#39;danger&#39;,
+          title: &#39;Save failed&#39;,
+          action: { label: &#39;Retry&#39;, onClick: () =&gt; { void commit(row, col, v); } },
+        });
       }
     }
   };
 
-  return (
-    &lt;DataTable
-      rows={optimistic.rows}
-      columns={[
-        { key: &#39;sku&#39;, label: &#39;SKU&#39;,
-          render: (r, i) =&gt; renderCell(r, &#39;sku&#39;, i) },
-        { key: &#39;qty&#39;, label: &#39;Qty&#39;,
-          render: (r, i) =&gt; renderCell(r, &#39;qty&#39;, i) },
-        { key: &#39;loc&#39;, label: &#39;Loc&#39;,
-          render: (r, i) =&gt; renderCell(r, &#39;loc&#39;, i) },
-      ]}
-    /&gt;
-  );
-
-  function renderCell(row: StockRow, col: typeof EDITABLE_COLS[number], rowIdx: number) {
+  const renderCell = (row: StockRowFinal, col: EditableCol, rowIdx: number) =&gt; {
     const value = String(row[col]);
     const colIdx = EDITABLE_COLS.indexOf(col);
     if (edit.isEditing(row.id, col)) {
       return (
-        &lt;CellInput
+        &lt;FinalCellInput
           initial={value}
-          validate={validators[col]}
-          onCommit={(v) =&gt; commit(row, col, v)}
+          validate={finalValidators[col]}
+          onCommit={(v) =&gt; { void commit(row, col, v); }}
           onCancel={() =&gt; edit.cancelEdit()}
           onAdvance={() =&gt; advance(rowIdx, colIdx)}
         /&gt;
@@ -711,7 +709,22 @@ export function StockTable({ initialRows }: { initialRows: StockRow[] }) {
         )}
       &lt;/div&gt;
     );
-  }
+  };
+
+  const columns: DataTableColumn&lt;StockRowFinal&gt;[] = [
+    { id: &#39;sku&#39;, header: &#39;SKU&#39;, cell: (r, i) =&gt; renderCell(r, &#39;sku&#39;, i) },
+    { id: &#39;qty&#39;, header: &#39;Qty&#39;, cell: (r, i) =&gt; renderCell(r, &#39;qty&#39;, i), numeric: true },
+    { id: &#39;loc&#39;, header: &#39;Loc&#39;, cell: (r, i) =&gt; renderCell(r, &#39;loc&#39;, i) },
+  ];
+
+  return (
+    &lt;DataTable
+      rows={optimistic.rows}
+      columns={columns}
+      getRowId={(r) =&gt; r.id}
+      ariaLabel=&quot;Stock count&quot;
+    /&gt;
+  );
 }'>
       <div class="ds-specimen-stage canvas padded">
         <div style="display: grid; place-items: center; padding: 24px;">

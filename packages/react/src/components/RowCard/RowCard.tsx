@@ -17,6 +17,14 @@ export interface RowCardProps extends Omit<HTMLAttributes<HTMLElement>, 'title'>
   href?: string;
 }
 
+/**
+ * RowCard — list row with leading icon, title, meta, trailing.
+ *
+ * @example
+ * ```tsx
+ * <RowCard />
+ * ```
+ */
 export const RowCard = forwardRef<HTMLElement, RowCardProps>(function RowCard(
   { title, sub, value, delta, deltaTone = 'neutral', meta, leading, trailing, onClick, href, className, ...rest },
   ref,

@@ -155,7 +155,10 @@
     <div class="ck-step"><span class="n">01</span><h3>Column metadata — one source for both renderers</h3></div>
     <p>Define columns once: key, label, format function, hidden-on-mobile flag. Both the table renderer and the card renderer read the same definition. Drift between them is the cardinal sin of this recipe.</p>
     <div class="ds-specimen"
-         data-code='type Job = {
+         data-code='import { Badge } from &#39;@corelithzw/react&#39;;
+import type { ReactNode } from &#39;react&#39;;
+
+type Job = {
   id: string; title: string;
   dueDate: string; amount: number;
   status: &#39;pending&#39; | &#39;open&#39; | &#39;done&#39;;
@@ -164,18 +167,22 @@
 type Col = {
   key: keyof Job;
   label: string;
-  format: (v: any, row: Job) =&gt; React.ReactNode;
+  format: (row: Job) =&gt; ReactNode;
   // hide from mobile cards entirely (e.g. internal IDs)
   mobileHide?: boolean;
   // the &quot;title&quot; column — promoted to the card&#39;s heading
   isTitle?: boolean;
 };
 
+const formatDate = (raw: string): string =&gt; new Date(raw).toLocaleDateString();
+const statusTone = (s: Job[&#39;status&#39;]): &#39;success&#39; | &#39;info&#39; | &#39;warn&#39; =&gt;
+  s === &#39;done&#39; ? &#39;success&#39; : s === &#39;open&#39; ? &#39;info&#39; : &#39;warn&#39;;
+
 const COLS: Col[] = [
-  { key: &#39;title&#39;,   label: &#39;Job&#39;,    format: (v) =&gt; v, isTitle: true },
-  { key: &#39;dueDate&#39;, label: &#39;Due&#39;,    format: (v) =&gt; formatDate(v) },
-  { key: &#39;amount&#39;,  label: &#39;Amount&#39;, format: (v) =&gt; `$${v.toLocaleString()}` },
-  { key: &#39;status&#39;,  label: &#39;Status&#39;, format: (v) =&gt; &lt;Badge tone={statusTone(v)}&gt;{v}&lt;/Badge&gt; },
+  { key: &#39;title&#39;,   label: &#39;Job&#39;,    format: (r) =&gt; r.title, isTitle: true },
+  { key: &#39;dueDate&#39;, label: &#39;Due&#39;,    format: (r) =&gt; formatDate(r.dueDate) },
+  { key: &#39;amount&#39;,  label: &#39;Amount&#39;, format: (r) =&gt; `$${r.amount.toLocaleString()}` },
+  { key: &#39;status&#39;,  label: &#39;Status&#39;, format: (r) =&gt; &lt;Badge tone={statusTone(r.status)}&gt;{r.status}&lt;/Badge&gt; },
 ];'>
       <div class="ds-specimen-stage canvas padded">
         <div class="ck-code-only-note">
@@ -234,7 +241,7 @@ function JobTable({ rows, onOpen }: { rows: Job[]; onOpen: (id: string) =&gt; vo
       &lt;tbody&gt;
         {rows.map(row =&gt; (
           &lt;tr key={row.id} onClick={() =&gt; onOpen(row.id)}&gt;
-            {COLS.map(c =&gt; &lt;td key={c.key}&gt;{c.format(row[c.key], row)}&lt;/td&gt;)}
+            {COLS.map(c =&gt; &lt;td key={c.key}&gt;{c.format(row)}&lt;/td&gt;)}
           &lt;/tr&gt;
         ))}
       &lt;/tbody&gt;
@@ -249,13 +256,13 @@ function JobCards({ rows, onOpen }: { rows: Job[]; onOpen: (id: string) =&gt; vo
         &lt;li key={row.id}&gt;
           &lt;button type=&quot;button&quot; onClick={() =&gt; onOpen(row.id)} className=&quot;job-card&quot;&gt;
             {COLS.filter(c =&gt; c.isTitle).map(c =&gt; (
-              &lt;h3 key={c.key}&gt;{c.format(row[c.key], row)}&lt;/h3&gt;
+              &lt;h3 key={c.key}&gt;{c.format(row)}&lt;/h3&gt;
             ))}
             &lt;dl&gt;
               {COLS.filter(c =&gt; !c.isTitle &amp;&amp; !c.mobileHide).map(c =&gt; (
                 &lt;div key={c.key}&gt;
                   &lt;dt&gt;{c.label}&lt;/dt&gt;
-                  &lt;dd&gt;{c.format(row[c.key], row)}&lt;/dd&gt;
+                  &lt;dd&gt;{c.format(row)}&lt;/dd&gt;
                 &lt;/div&gt;
               ))}
             &lt;/dl&gt;
@@ -283,12 +290,12 @@ function JobCards({ rows, onOpen }: { rows: Job[]; onOpen: (id: string) =&gt; vo
     <div class="ck-step"><span class="n">04</span><h3>Test both shells in dev — toggle in Storybook or a query string</h3></div>
     <p>The cardinal failure mode: developer never opens phone width, ships an "either" component that's broken on phone. Add a dev-only override (URL param, env var) that forces card mode regardless of viewport, and use it.</p>
     <div class="ds-specimen"
-         data-code='function useResponsiveShell() {
-  const isDesktop = useMatchMedia(&#39;(min-width: 720px)&#39;);
+         data-code='const __DEV__: boolean = false;
 
-  // Dev override: ?shell=mobile or ?shell=desktop forces a shell
-  if (process.env.NODE_ENV !== &#39;production&#39;) {
-    const override = new URLSearchParams(location.search).get(&#39;shell&#39;);
+function useResponsiveShell() {
+  const isDesktop = useMatchMedia(&#39;(min-width: 720px)&#39;);
+  if (__DEV__) {
+    const override = new URLSearchParams(window.location.search).get(&#39;shell&#39;);
     if (override === &#39;mobile&#39;)  return &#39;mobile&#39; as const;
     if (override === &#39;desktop&#39;) return &#39;desktop&#39; as const;
   }
@@ -306,35 +313,48 @@ function JobCards({ rows, onOpen }: { rows: Job[]; onOpen: (id: string) =&gt; vo
     <p class="ds-h2-sub">Columns, hook, two renderers, one entry point. ~90 lines.</p>
     <div class="ds-specimen"
          data-code='import { useState, useEffect } from &#39;react&#39;;
-import { Badge, Button } from &#39;@corelithzw/react&#39;;
+import { Badge, DataTable } from &#39;@corelithzw/react&#39;;
+import type { DataTableColumn, BadgeTone } from &#39;@corelithzw/react&#39;;
 
-type Job = {
+type JobFinal = {
   id: string; title: string; dueDate: string; amount: number;
   status: &#39;pending&#39; | &#39;open&#39; | &#39;done&#39;;
 };
 
-type Col = {
-  key: keyof Job;
+type CardColFinal = {
+  key: keyof JobFinal;
   label: string;
-  format: (v: any, row: Job) =&gt; React.ReactNode;
+  format: (row: JobFinal) =&gt; ReactNode;
   isTitle?: boolean;
   mobileHide?: boolean;
 };
 
-const COLS: Col[] = [
-  { key: &#39;title&#39;,   label: &#39;Job&#39;,    format: (v) =&gt; v, isTitle: true },
-  { key: &#39;dueDate&#39;, label: &#39;Due&#39;,    format: (v) =&gt; new Date(v).toLocaleDateString() },
-  { key: &#39;amount&#39;,  label: &#39;Amount&#39;, format: (v) =&gt; `$${v.toLocaleString()}` },
-  { key: &#39;status&#39;,  label: &#39;Status&#39;, format: (v) =&gt;
-      &lt;Badge tone={v === &#39;done&#39; ? &#39;success&#39; : v === &#39;open&#39; ? &#39;brand&#39; : &#39;warning&#39;}&gt;
-        {v}
-      &lt;/Badge&gt; },
+const STATUS_TONE_FINAL: Record&lt;JobFinal[&#39;status&#39;], BadgeTone&gt; = {
+  done: &#39;success&#39;,
+  open: &#39;info&#39;,
+  pending: &#39;warn&#39;,
+};
+
+const CARD_COLS_FINAL: CardColFinal[] = [
+  { key: &#39;title&#39;,   label: &#39;Job&#39;,    format: (r) =&gt; r.title, isTitle: true },
+  { key: &#39;dueDate&#39;, label: &#39;Due&#39;,    format: (r) =&gt; new Date(r.dueDate).toLocaleDateString() },
+  { key: &#39;amount&#39;,  label: &#39;Amount&#39;, format: (r) =&gt; `$${r.amount.toLocaleString()}` },
+  { key: &#39;status&#39;,  label: &#39;Status&#39;, format: (r) =&gt; (
+    &lt;Badge tone={STATUS_TONE_FINAL[r.status]}&gt;{r.status}&lt;/Badge&gt;
+  ) },
 ];
 
-function useMatchMedia(query: string) {
-  const [m, setM] = useState(() =&gt;
-    typeof window === &#39;undefined&#39; ? false : window.matchMedia(query).matches);
+const TABLE_COLUMNS_FINAL: DataTableColumn&lt;JobFinal&gt;[] = CARD_COLS_FINAL.map((c) =&gt; ({
+  id: c.key,
+  header: c.label,
+  cell: (row) =&gt; c.format(row),
+  numeric: c.key === &#39;amount&#39;,
+}));
+
+function useResponsiveMatchMedia(query: string) {
+  const [m, setM] = useState(() =&gt; typeof window === &#39;undefined&#39; ? false : window.matchMedia(query).matches);
   useEffect(() =&gt; {
+    if (typeof window === &#39;undefined&#39;) return;
     const mql = window.matchMedia(query);
     const fn = () =&gt; setM(mql.matches);
     mql.addEventListener(&#39;change&#39;, fn);
@@ -344,46 +364,30 @@ function useMatchMedia(query: string) {
 }
 
 export function JobList({ rows, onOpen }: {
-  rows: Job[]; onOpen: (id: string) =&gt; void;
+  rows: JobFinal[]; onOpen: (id: string) =&gt; void;
 }) {
-  const isDesktop = useMatchMedia(&#39;(min-width: 720px)&#39;);
+  const isDesktop = useResponsiveMatchMedia(&#39;(min-width: 720px)&#39;);
 
   if (isDesktop) {
     return (
-      &lt;table className=&quot;job-table&quot; aria-label=&quot;Jobs&quot;&gt;
-        &lt;thead&gt;
-          &lt;tr&gt;{COLS.map(c =&gt; &lt;th key={c.key}&gt;{c.label}&lt;/th&gt;)}&lt;/tr&gt;
-        &lt;/thead&gt;
-        &lt;tbody&gt;
-          {rows.map(row =&gt; (
-            &lt;tr key={row.id}
-                tabIndex={0}
-                onClick={() =&gt; onOpen(row.id)}
-                onKeyDown={(e) =&gt; { if (e.key === &#39;Enter&#39;) onOpen(row.id); }}&gt;
-              {COLS.map(c =&gt; (
-                &lt;td key={c.key}&gt;{c.format(row[c.key], row)}&lt;/td&gt;
-              ))}
-            &lt;/tr&gt;
-          ))}
-        &lt;/tbody&gt;
-      &lt;/table&gt;
+      &lt;DataTable columns={TABLE_COLUMNS_FINAL} rows={rows} getRowId={(r) =&gt; r.id} ariaLabel=&quot;Jobs&quot; /&gt;
     );
   }
 
-  const titleCol = COLS.find(c =&gt; c.isTitle)!;
-  const fieldCols = COLS.filter(c =&gt; !c.isTitle &amp;&amp; !c.mobileHide);
+  const titleCol = CARD_COLS_FINAL.find((c) =&gt; c.isTitle)!;
+  const fieldCols = CARD_COLS_FINAL.filter((c) =&gt; !c.isTitle &amp;&amp; !c.mobileHide);
 
   return (
     &lt;ul role=&quot;list&quot; aria-label=&quot;Jobs&quot; className=&quot;job-cards&quot;&gt;
-      {rows.map(row =&gt; (
+      {rows.map((row) =&gt; (
         &lt;li key={row.id}&gt;
           &lt;button type=&quot;button&quot; onClick={() =&gt; onOpen(row.id)} className=&quot;job-card&quot;&gt;
-            &lt;h3&gt;{titleCol.format(row[titleCol.key], row)}&lt;/h3&gt;
+            &lt;h3&gt;{titleCol.format(row)}&lt;/h3&gt;
             &lt;dl&gt;
-              {fieldCols.map(c =&gt; (
+              {fieldCols.map((c) =&gt; (
                 &lt;div key={c.key}&gt;
                   &lt;dt&gt;{c.label}&lt;/dt&gt;
-                  &lt;dd&gt;{c.format(row[c.key], row)}&lt;/dd&gt;
+                  &lt;dd&gt;{c.format(row)}&lt;/dd&gt;
                 &lt;/div&gt;
               ))}
             &lt;/dl&gt;

@@ -188,12 +188,21 @@
     <div class="ck-step"><span class="n">01</span><h3>Start with the array — no useState, no fetch</h3></div>
     <p>For the smallest list, your data is just a constant or a prop. Don't add <code>useState</code> "in case you need to mutate later" — when you need to mutate, that's the moment to lift the state. Premature state is how lists turn into 200-line components.</p>
     <div class="ds-specimen"
-         data-code='type Site = {
+         data-code='import type { RowCardProps } from &#39;@corelithzw/react&#39;;
+
+// Site is the shape `RowCardProps` will be derived from later in the recipe
+// (title, leading-avatar initials, trailing staff-count). We anchor it to the
+// real RowCard prop type so the row renderer never drifts from the contract.
+type Site = {
   id: string;
   name: string;
   initials: string;
   staffCount: number;
 };
+
+// Sanity-check at the type level — every Site must be renderable as a RowCard.
+const _siteRowContract = null as unknown as Pick&lt;RowCardProps, &#39;title&#39; | &#39;trailing&#39; | &#39;leading&#39;&gt;;
+void _siteRowContract;
 
 const SITES: Site[] = [
   { id: &#39;s1&#39;, name: &#39;Park branch&#39;,      initials: &#39;PK&#39;, staffCount: 12 },
@@ -215,7 +224,7 @@ const SITES: Site[] = [
     <div class="ck-step"><span class="n">02</span><h3>Render with RowCard inside a Stack — not a table, not a flex hack</h3></div>
     <p><code>Stack</code> handles the inter-row spacing token; <code>RowCard</code> handles the row itself — title, trailing meta, tap target. The whole list is six lines. If you find yourself adding a custom CSS class to the row, stop — the row should look like every other row in the app.</p>
     <div class="ds-specimen"
-         data-code='import { Stack, RowCard } from &#39;@corelithzw/react&#39;;
+         data-code='import { Stack, RowCard, Avatar } from &#39;@corelithzw/react&#39;;
 
 export function SiteList({ sites, onOpen }: {
   sites: Site[];
@@ -226,7 +235,6 @@ export function SiteList({ sites, onOpen }: {
       {sites.map((s) =&gt; (
         &lt;RowCard
           key={s.id}
-          as=&quot;li&quot;
           leading={&lt;Avatar initials={s.initials} /&gt;}
           title={s.name}
           trailing={`${s.staffCount} staff`}
@@ -249,7 +257,7 @@ export function SiteList({ sites, onOpen }: {
     <div class="ck-step"><span class="n">03</span><h3>Handle empty with EmptyState + one CTA — don't render nothing</h3></div>
     <p>An empty screen is not an empty array — it's a screen that has to teach the user what's missing and tell them how to fix it. One sentence of context plus one action. If you can't think of an action, ask whether the screen should exist at all.</p>
     <div class="ds-specimen"
-         data-code='import { Stack, RowCard, EmptyState, Button } from &#39;@corelithzw/react&#39;;
+         data-code='import { Stack, RowCard, EmptyState, Button, Avatar } from &#39;@corelithzw/react&#39;;
 
 export function SiteList({ sites, onOpen, onAdd }: {
   sites: Site[];
@@ -270,7 +278,6 @@ export function SiteList({ sites, onOpen, onAdd }: {
       {sites.map((s) =&gt; (
         &lt;RowCard
           key={s.id}
-          as=&quot;li&quot;
           leading={&lt;Avatar initials={s.initials} /&gt;}
           title={s.name}
           trailing={`${s.staffCount} staff`}
@@ -297,9 +304,9 @@ export function SiteList({ sites, onOpen, onAdd }: {
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The whole list component. About 40 lines. If yours is longer, you're probably building a different recipe — go check the others.</p>
     <div class="ds-specimen"
-         data-code='import { Stack, RowCard, EmptyState, Button } from &#39;@corelithzw/react&#39;;
+         data-code='import { Stack, RowCard, EmptyState, Button, Avatar } from &#39;@corelithzw/react&#39;;
 
-type Site = {
+type SiteRow = {
   id: string;
   name: string;
   initials: string;
@@ -311,7 +318,7 @@ export function SimpleSiteList({
   onOpen,
   onAdd,
 }: {
-  sites: Site[];
+  sites: SiteRow[];
   onOpen: (id: string) =&gt; void;
   onAdd: () =&gt; void;
 }) {
@@ -332,7 +339,6 @@ export function SimpleSiteList({
       {sites.map((site) =&gt; (
         &lt;RowCard
           key={site.id}
-          as=&quot;li&quot;
           leading={&lt;Avatar initials={site.initials} /&gt;}
           title={site.name}
           trailing={`${site.staffCount} staff`}
@@ -340,22 +346,6 @@ export function SimpleSiteList({
         /&gt;
       ))}
     &lt;/Stack&gt;
-  );
-}
-
-function Avatar({ initials }: { initials: string }) {
-  return (
-    &lt;span
-      aria-hidden=&quot;true&quot;
-      style={{
-        width: 28, height: 28, borderRadius: &#39;50%&#39;,
-        background: &#39;var(--surface-muted)&#39;,
-        display: &#39;grid&#39;, placeItems: &#39;center&#39;,
-        font: &#39;600 11px/1 var(--font-mono)&#39;,
-      }}
-    &gt;
-      {initials}
-    &lt;/span&gt;
   );
 }'>
       <div class="ds-specimen-stage canvas padded">
@@ -422,7 +412,7 @@ function Avatar({ initials }: { initials: string }) {
     <h2 class="ds-h2">Accessibility</h2>
     <p class="ds-h2-sub">A simple list is small enough that you have no excuse to skip these.</p>
     <ul class="ck-a11y">
-      <li><b>The container is a list.</b> <code>&lt;Stack as="ul" role="list"&gt;</code> + <code>RowCard as="li"</code> gives screen readers the "5 items" count up-front so users know how long they're in for.</li>
+      <li><b>The container is a list.</b> <code>&lt;Stack as="ul" role="list"&gt;</code> with <code>RowCard</code> children gives screen readers the "5 items" count up-front so users know how long they're in for.</li>
       <li><b>Rows are buttons, not divs.</b> <code>RowCard</code> with <code>onClick</code> renders a real <code>&lt;button&gt;</code> internally, so Space and Enter both trigger it, and Tab lands on each row in order.</li>
       <li><b>Avatar initials are <code>aria-hidden</code>.</b> The name is in the title; reading "PK Park branch" twice in a row is noise. Hide the decoration.</li>
       <li><b>The list has a label.</b> <code>aria-label="Active sites"</code> on the list so screen-reader users know which list they entered from a heading-jump.</li>

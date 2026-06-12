@@ -130,19 +130,20 @@
       <a class="ck-piece" href="../../system/p-chart.html"><span class="kind">Primitive</span>Chart</a>
       <a class="ck-piece" href="../../system/b-card.html"><span class="kind">Block</span>Card</a>
     </div>
-    <p style="margin-top: 12px;"><b>Intended exports used here:</b> <code>Chart.Area</code>, <code>Chart.Legend</code>.</p>
+    <p style="margin-top: 12px;"><b>Exports used here:</b> <code>Chart.Line</code>, <code>ChartPoint</code>.</p>
     <div class="ck-roadmap-note">
-      <b>Roadmap.</b> <code>Chart.Area</code> with <code>stack</code> ships in <code>@corelithzw/react v0.2</code>.
+      <b>In v0.3.0.</b> Native stacked-area rendering isn't on the primitive yet — <code>Chart.Line</code> draws one polyline per call. Today the honest move is to pre-sum your channels into a single <code>total</code> series and reach for <code>Chart.Line</code>. When you do need to see the per-channel mix, render three sibling <code>&lt;Chart.Line&gt;</code> instances (one per channel) and overlay them with absolute positioning, or hand-roll the stacked SVG above.
     </div>
   </section>
 
   <section id="snippet">
     <h2 class="ds-h2">The React snippet</h2>
-    <p class="ds-h2-sub">Set <code>stack</code> to add the series together rather than overlaying them.</p>
+    <p class="ds-h2-sub">Pre-sum the three channels into a flat <code>total</code> series and pass the points to <code>Chart.Line</code>. The mix lives in your data shape; the chart just draws the silhouette.</p>
     <div class="ds-specimen"
          data-code='import { Chart } from &#39;@corelithzw/react&#39;;
+import type { ChartPoint } from &#39;@corelithzw/react&#39;;
 
-const data = [
+const mix = [
   { day: &#39;May 1&#39;,  pos: 1800, online:  400, wholesale: 200 },
   { day: &#39;May 8&#39;,  pos: 2100, online:  680, wholesale: 320 },
   { day: &#39;May 15&#39;, pos: 2400, online: 1020, wholesale: 580 },
@@ -150,20 +151,19 @@ const data = [
   { day: &#39;May 30&#39;, pos: 2800, online: 2100, wholesale: 1900 },
 ];
 
+const total: ChartPoint[] = mix.map((d) =&gt; ({
+  x: d.day,
+  y: d.pos + d.online + d.wholesale,
+}));
+
 export function RevenueMix() {
   return (
-    &lt;Chart.Area
-      data={data}
-      xAccessor=&quot;day&quot;
-      stack
-      series={[
-        { key: &#39;pos&#39;,       label: &#39;POS&#39;,       color: &#39;brand&#39; },
-        { key: &#39;online&#39;,    label: &#39;Online&#39;,    color: &#39;brand-300&#39; },
-        { key: &#39;wholesale&#39;, label: &#39;Wholesale&#39;, color: &#39;brand-100&#39; },
-      ]}
+    &lt;Chart.Line
+      data={total}
+      color=&quot;brand&quot;
+      width={640}
       height={280}
-      legend=&quot;top&quot;
-      aria-label=&quot;Revenue by channel&quot;
+      aria-label=&quot;Revenue by channel (total silhouette)&quot;
     /&gt;
   );
 }'>

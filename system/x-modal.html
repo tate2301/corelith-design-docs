@@ -175,7 +175,7 @@
     <div class="when"><b>Use when</b>The action is reversible but the operator should pause to confirm — close shift, archive record, send broadcast.</div>
   </div>
   <div class="comp-box"
-             data-code='import { Modal, Button } from &#39;@corelith/design-system&#39;;
+             data-code='import { Modal, Button } from &#39;@corelithzw/react&#39;;
 
 export function Example() {
   return (
@@ -335,6 +335,66 @@ export function Example() {
       </div>
     </div>
   </div>
+
+  <section id="react-api" style="margin-top: 72px;">
+    <h2 class="ds-h2">React API · <code class="t-mono">Modal</code></h2>
+    <p class="ds-h2-sub">From <code class="t-mono">@corelithzw/react@0.3.0</code> — <code class="t-mono">ModalProps</code> in <code class="t-mono">packages/react/src/components/Modal/Modal.tsx</code>. For mobile-first overlays prefer <a href="x-bottom-sheet.html"><code class="t-mono">BottomSheet</code></a>; <code>Modal</code> is the centred desktop-only variant.</p>
+    <table class="ds-props"><thead><tr><th>Prop</th><th>Type</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code class="t-mono">open</code></td><td><code class="t-mono">boolean</code></td><td>Required. Controls visibility.</td></tr>
+      <tr><td><code class="t-mono">onClose</code></td><td><code class="t-mono">() => void</code></td><td>Required.</td></tr>
+      <tr><td><code class="t-mono">title</code></td><td><code class="t-mono">ReactNode</code></td><td>Header; becomes the <code>aria-labelledby</code> target.</td></tr>
+      <tr><td><code class="t-mono">subtitle</code></td><td><code class="t-mono">ReactNode</code></td><td>Optional sub-header line.</td></tr>
+      <tr><td><code class="t-mono">footer</code></td><td><code class="t-mono">ReactNode</code></td><td>Sticky footer (action cluster).</td></tr>
+      <tr><td><code class="t-mono">size</code></td><td><code class="t-mono">'sm' | 'md' | 'lg'</code></td><td>320 / 480 / 640 px max-width.</td></tr>
+      <tr><td><code class="t-mono">dismissOnBackdrop</code></td><td><code class="t-mono">boolean</code></td><td>Default <code>true</code>; <code>false</code> for destructive confirms.</td></tr>
+      <tr><td><code class="t-mono">dismissOnEscape</code></td><td><code class="t-mono">boolean</code></td><td>Default <code>true</code>.</td></tr>
+    </tbody>
+    </table>
+    <p class="ds-h2-sub" style="margin-top: 16px;"><code class="t-mono">Dialog</code> extends <code class="t-mono">Modal</code> with: <code class="t-mono">confirmLabel</code>, <code class="t-mono">cancelLabel</code>, <code class="t-mono">onConfirm</code>, <code class="t-mono">confirmDisabled</code>, <code class="t-mono">destructive</code>. <code class="t-mono">AlertDialog</code> wraps it for irreversible confirmations.</p>
+  </section>
+
+  <section id="composition" style="margin-top: 56px;">
+    <h2 class="ds-h2">Composition</h2>
+    <p>Modal composes a portal scrim + centred panel + header / body / footer. It is the desktop-only variant of <a href="x-bottom-sheet.html">bottom sheet</a> — at phone widths, <code>BottomSheet</code> is canonical.</p>
+    <p><strong>Don't use this for:</strong> mobile-first flows — reach for <a href="x-bottom-sheet.html">bottom sheet</a> instead. For irreversible confirms use <code class="t-mono">AlertDialog</code>; for ⌘K launchers see <a href="x-command-palette.html">command palette</a>.</p>
+  </section>
+
+  <section id="responsive" style="margin-top: 56px;">
+    <h2 class="ds-h2">Responsive behaviour</h2>
+    <table class="ds-props"><thead><tr><th>Viewport</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr><td>Phone (≤ 720 px)</td><td>Defers to <a href="x-bottom-sheet.html">bottom sheet</a> — bottom-anchored with handle.</td></tr>
+      <tr><td>Tablet (720 – 1023 px)</td><td>Centred at <code>size</code> max-width; scrim ink @ 55%; entrance translateY 20 → 0.</td></tr>
+      <tr><td>Desktop (≥ 1024 px)</td><td>Centred; <code>size=sm</code> 320 / <code>md</code> 480 / <code>lg</code> 640 px. Body scrolls when content exceeds 80 vh.</td></tr>
+    </tbody>
+    </table>
+  </section>
+
+  <section id="keyboard" style="margin-top: 56px;">
+    <h2 class="ds-h2">Keyboard contract</h2>
+    <table class="ds-props"><thead><tr><th>Key</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr><td><code>Tab / Shift + Tab</code></td><td>Trap focus inside the modal.</td></tr>
+      <tr><td><code>Esc</code></td><td>Close (unless disabled). Restores focus to the trigger.</td></tr>
+      <tr><td><code>Enter (on primary)</code></td><td>Confirm; equivalent to clicking the primary action.</td></tr>
+    </tbody>
+    </table>
+    <ul class="ds-list" style="margin-top: 14px;">
+      <li>Rendered as <code>role="dialog" aria-modal="true"</code>. <code>title</code> is the <code>aria-labelledby</code> target; <code>subtitle</code> becomes <code>aria-describedby</code>.</li>
+      <li>Open: focus moves to the first interactive child (or close button). Close: focus returns to the opener.</li>
+      <li>Background page is <code>inert</code> while the modal is open — AT can't reach it.</li>
+    </ul>
+  </section>
+
+  <section id="related" style="margin-top: 56px;">
+    <h2 class="ds-h2">Related</h2>
+    <ul class="ds-list">
+      <li><a href="x-bottom-sheet.html">Bottom sheet</a> — the canonical mobile overlay this defers to.</li>
+      <li><a href="x-command-palette.html">Command palette</a> — keyboard-first launcher built on the same overlay primitives.</li>
+      <li><a href="b-conflict-dialog.html">Conflict dialog</a> — purpose-built for save conflicts.</li>
+    </ul>
+  </section>
 
   <section style="margin-top: 72px;">
     <h2 class="ds-h2">Shared rules</h2>

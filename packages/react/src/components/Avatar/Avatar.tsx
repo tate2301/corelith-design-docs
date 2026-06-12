@@ -22,6 +22,14 @@ function deriveInitials(name?: string): string {
   return (parts[0]![0]! + parts[parts.length - 1]![0]!).toUpperCase();
 }
 
+/**
+ * Avatar — circular user portrait with initials fallback.
+ *
+ * @example
+ * ```tsx
+ * <Avatar />
+ * ```
+ */
 export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(function Avatar(
   { size = 'md', tone = 'default', name, src, alt, initials, className, children, ...rest },
   ref,

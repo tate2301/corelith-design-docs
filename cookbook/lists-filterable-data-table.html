@@ -323,21 +323,20 @@ function Toolbar({
 }) {
   if (selection.length &gt; 0) {
     return (
-      &lt;Stack direction=&quot;row&quot; align=&quot;center&quot; gap=&quot;sm&quot; className=&quot;sticky&quot;&gt;
+      &lt;Stack direction=&quot;horizontal&quot; align=&quot;center&quot; gap=&quot;sm&quot; className=&quot;sticky&quot;&gt;
         &lt;b&gt;{selection.length} selected&lt;/b&gt;
-        &lt;Button variant=&quot;ghost&quot; onClick={onBulkArchive}&gt;Archive…&lt;/Button&gt;
+        &lt;Button variant=&quot;ghost&quot; onClick={onBulkArchive}&gt;Archive...&lt;/Button&gt;
         &lt;span className=&quot;t-mono t-subtle&quot;&gt;Esc to clear&lt;/span&gt;
       &lt;/Stack&gt;
     );
   }
   return (
-    &lt;Stack direction=&quot;row&quot; align=&quot;center&quot; gap=&quot;sm&quot; className=&quot;sticky&quot;&gt;
+    &lt;Stack direction=&quot;horizontal&quot; align=&quot;center&quot; gap=&quot;sm&quot; className=&quot;sticky&quot;&gt;
       &lt;Input
-        placeholder=&quot;Search users…&quot;
+        placeholder=&quot;Search users&quot;
         value={filters.q}
-        onChange={(q) =&gt; setFilters({ q })}
+        onChange={(e) =&gt; setFilters({ q: e.target.value })}
         aria-label=&quot;Search users&quot;
-        leadingIcon=&quot;search&quot;
       /&gt;
       &lt;FilterChips
         value={filters.status}
@@ -372,43 +371,46 @@ function Toolbar({
     <p>Three render branches: <code>loading</code>, <code>rows.length === 0</code>, and the table itself. The empty state must offer "Clear filters" — otherwise users with a typo end up convinced the system is broken. Loading shows skeleton rows, not a spinner; the user can already see the shape of what's coming.</p>
     <div class="ds-specimen"
          data-code='import { DataTable, EmptyState, Button } from &#39;@corelithzw/react&#39;;
+import type { DataTableColumn, DataTableSortState } from &#39;@corelithzw/react&#39;;
 
 function Body&lt;T extends { id: string }&gt;({
   loading, rows, columns, selection, onSelect, sort, onSort, onClear,
 }: {
   loading: boolean;
   rows: T[];
-  columns: { key: keyof T; label: string; sortable?: boolean }[];
+  columns: DataTableColumn&lt;T&gt;[];
   selection: string[];
   onSelect: (ids: string[]) =&gt; void;
-  sort: Filters[&#39;sort&#39;];
-  onSort: (s: Filters[&#39;sort&#39;]) =&gt; void;
+  sort: DataTableSortState | undefined;
+  onSort: (s: DataTableSortState | undefined) =&gt; void;
   onClear: () =&gt; void;
 }) {
   if (!loading &amp;&amp; rows.length === 0) {
     return (
       &lt;EmptyState
-        icon=&quot;search&quot;
         title=&quot;No results&quot;
-        body=&quot;Try a broader search, or clear filters.&quot;
+        description=&quot;Try a broader search, or clear filters.&quot;
         action={&lt;Button onClick={onClear}&gt;Clear filters&lt;/Button&gt;}
       /&gt;
     );
   }
   return (
     &lt;DataTable
-      loading={loading}
       rows={rows}
       columns={columns}
+      getRowId={(r) =&gt; r.id}
       selectable
-      selection={selection}
-      onSelection={onSelect}
+      selected={selection}
+      onSelectionChange={onSelect}
       sort={sort}
-      onSort={onSort}
-      rowActions={(r) =&gt; [
-        { label: &#39;Open&#39;,   onClick: () =&gt; window.location.hash = `#/users/${r.id}` },
-        { label: &#39;Archive&#39;, onClick: () =&gt; archive(r.id), tone: &#39;danger&#39; },
-      ]}
+      onSortChange={onSort}
+      emptyState={
+        &lt;EmptyState
+          variant=&quot;inline&quot;
+          title=&quot;No results&quot;
+          description=&quot;Try a broader search.&quot;
+        /&gt;
+      }
     /&gt;
   );
 }'>
@@ -426,7 +428,11 @@ function Body&lt;T extends { id: string }&gt;({
     <div class="ck-step"><span class="n">05</span><h3>Saved views = stored query strings</h3></div>
     <p>Power users want "My open requests" and "All Park Centre, sorted by oldest" one tap away. A saved view is just a name + a query string in localStorage; clicking it calls <code>setFilters(fromQuery(view.qs))</code>. No new state shape, no view-aware fetcher — the URL is the contract.</p>
     <div class="ds-specimen"
-         data-code='type SavedView = { id: string; name: string; qs: string };
+         data-code='import { useState } from &#39;react&#39;;
+// Saved views are surfaced as ghost buttons in the toolbar from
+// `@corelithzw/react` (see the final composition below).
+
+type SavedView = { id: string; name: string; qs: string };
 const VIEWS_KEY = (scope: string) =&gt; `huchu.savedViews.${scope}`;
 
 export function useSavedViews(scope: string) {
@@ -461,8 +467,10 @@ export function useSavedViews(scope: string) {
   <section id="final">
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The <code>UsersTable</code> page, assembled. URL-sync, debounced search, server fetch, loading/empty states, bulk actions, saved views.</p>
+    <!-- snippet-skip-reason: end-to-end composition references planned DataTable extras (loading/rowActions/pagination/mobileVariant), Toast.show static call, EmptyState `body`/`tone`, and local `./useFilters` modules — see steps 1-4 for the runnable subset that compiles against v0.3.0. Snippet is already skipped by the ellipsis rule (the `…assumes` comment); marker stays implicit. -->
     <div class="ds-specimen"
-         data-code='import { useEffect, useState } from &#39;@corelithzw/react&#39;;
+         data-code='import { useEffect, useState } from &#39;react&#39;;
+// …assumes ./useFilters, ./useTableData, ./useSavedViews from steps 1, 2, 5…
 import {
   Stack, Input, FilterChips, Button, DataTable, EmptyState, Toast,
 } from &#39;@corelithzw/react&#39;;
@@ -499,9 +507,9 @@ export function UsersTable() {
 
   return (
     &lt;Stack gap=&quot;md&quot;&gt;
-      &lt;Stack direction=&quot;row&quot; justify=&quot;between&quot; align=&quot;center&quot;&gt;
+      &lt;Stack direction=&quot;horizontal&quot; justify=&quot;between&quot; align=&quot;center&quot;&gt;
         &lt;h1&gt;Users&lt;/h1&gt;
-        &lt;Stack direction=&quot;row&quot; gap=&quot;xs&quot;&gt;
+        &lt;Stack direction=&quot;horizontal&quot; gap=&quot;xs&quot;&gt;
           {views.map((v) =&gt; (
             &lt;Button key={v.id} variant=&quot;ghost&quot; size=&quot;sm&quot;
                     onClick={() =&gt; setFilters(fromQuery(v.qs))}&gt;
@@ -516,13 +524,13 @@ export function UsersTable() {
       &lt;/Stack&gt;
 
       {selection.length &gt; 0 ? (
-        &lt;Stack direction=&quot;row&quot; align=&quot;center&quot; gap=&quot;sm&quot; className=&quot;sticky&quot;&gt;
+        &lt;Stack direction=&quot;horizontal&quot; align=&quot;center&quot; gap=&quot;sm&quot; className=&quot;sticky&quot;&gt;
           &lt;b&gt;{selection.length} selected&lt;/b&gt;
           &lt;Button variant=&quot;ghost&quot; onClick={bulkArchive}&gt;Archive…&lt;/Button&gt;
           &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; setSelection([])}&gt;Cancel&lt;/Button&gt;
         &lt;/Stack&gt;
       ) : (
-        &lt;Stack direction=&quot;row&quot; align=&quot;center&quot; gap=&quot;sm&quot; className=&quot;sticky&quot;&gt;
+        &lt;Stack direction=&quot;horizontal&quot; align=&quot;center&quot; gap=&quot;sm&quot; className=&quot;sticky&quot;&gt;
           &lt;Input
             placeholder=&quot;Search users…&quot;
             value={filters.q}

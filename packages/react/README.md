@@ -2,7 +2,7 @@
 
 Thin React wrappers over the Corelith design-system CSS. Components render the exact class names already shipped in `components.css`, so any cookbook recipe in the docs site translates verbatim into your app.
 
-> **Status:** `v0.2.1` — published to public npm as `@corelithzw/react`. ~60 components, 14 hooks, full TypeScript types, bundled design-system stylesheet.
+> **Status:** `v0.3.0` — published to public npm as `@corelithzw/react`. ~60 components, 14 hooks, full TypeScript types, bundled design-system stylesheet. 188 tests; public API report committed at `etc/api-report.md`.
 
 ## Install
 
@@ -10,7 +10,7 @@ Thin React wrappers over the Corelith design-system CSS. Components render the e
 npm install @corelithzw/react react react-dom
 ```
 
-No `.npmrc`, no PAT, no setup. Works in any repo, any CI, any Docker container. Full owner / troubleshooting notes live in **[INSTALL.md](./INSTALL.md)**.
+No `.npmrc`, no PAT, no setup. Works in any repo, any CI, any Docker container. Owner-side publish setup + troubleshooting in **[INSTALL.md](./INSTALL.md)**.
 
 Then import the bundled stylesheet once at the root of your app:
 
@@ -76,9 +76,9 @@ export function SignIn() {
 | `Kbd`             | Keyboard chip                                                             |
 | `Popover`         | Outside-click + Escape dismissable; optional arrow                        |
 | `Drawer`          | Portal side panel; collapses to bottom-sheet on phone                     |
-| `Tabs`            | `Tabs.List` + `Tabs.Tab` + `Tabs.Panel` with full ARIA wiring             |
+| `Tabs`            | `Tabs.List` + `Tabs.Tab` + `Tabs.Panel`; supports `defaultValue`, arrow/Home/End keyboard nav |
 | `Stepper`         | Pill-style progress; `Stepper.Step` or `total`/`current` shorthand        |
-| `RoleSwitcher`    | Pill-shaped segmented toggle, generic over any string enum                |
+| `RoleSwitcher`    | Pill-shaped segmented toggle, generic over any string enum; supports `defaultValue` |
 | `Pagination`      | Page nav + optional page-size picker                                      |
 | `SaveBar`         | Sticky save bar that slides in when `dirty`                               |
 | `Grabber`         | Drag handle for reorderable rows                                          |
@@ -91,7 +91,7 @@ export function SignIn() {
 | `TextArea`        | Multi-line `<textarea>`; consumes `FieldContext` like `Input`             |
 | `Meter`           | Qualitative meter with `low`/`high` thresholds (`role="meter"`)           |
 | `Progress`        | Determinate or indeterminate progress bar                                 |
-| `SegmentedControl`| Radio-group pill switch with `value`/`onChange`/`options`                 |
+| `SegmentedControl`| Radio-group pill switch; supports controlled `value` and uncontrolled `defaultValue` |
 | `InlineEdit`      | Click-to-edit; save on Enter/blur, cancel on Esc                          |
 | `Calendar`        | Month grid; `value`, `onChange`, `min`, `max`, `disabledDates`            |
 
@@ -105,7 +105,7 @@ export function SignIn() {
 | `DayList`     | Two-column day/value list with optional up/down tone                        |
 | `PageHeader`  | Topbar with optional back button, title, right-side actions slot            |
 | `RowCard`     | Tap-target row card for mobile lists                                        |
-| `FilterChips` | Horizontal scrolling chip row with selection                                |
+| `FilterChips` | Horizontal scrolling chip row; supports controlled `value` and uncontrolled `defaultValue` |
 | `BottomSheet` | Portal sheet with focus trap + Escape + backdrop dismiss                    |
 | `Card`        | `Card.Header` / `Card.Title` / `Card.Body` / `Card.Footer` wrapper          |
 | `Checklist`   | First-run onboarding list with `Checklist.Item` (done/title/subtitle)       |
@@ -124,8 +124,8 @@ export function SignIn() {
 | `AppShell`  | Desktop sidebar shell: `AppShell.Sidebar` + `AppShell.Main` + `AppShell.TopBar` (alias `Topbar`) + `AppShell.Brand`. `collapsed` prop drives an icon-rail. `AppShell.Sidebar` accepts `collapsible` + `onToggle`. |
 | `AuthShell` | Centered-card auth shell: `AuthShell.Brand` + `AuthShell.Card`                    |
 | `DataTable` | `<table class="dtable">` with sortable headers + row selection                    |
-| `Modal`     | Centered dialog with focus trap + Escape; bottom-sheet on phone                   |
-| `Dialog`    | Opinionated `Modal` with built-in confirm/cancel buttons                          |
+| `Modal`     | Centered dialog with focus trap + Escape; participates in overlay stack (nested Modal/Drawer Escape closes innermost first) |
+| `Dialog`    | Opinionated `Modal` with built-in confirm/cancel buttons; forwards ref to the dialog element |
 | `Toast`     | `ToastProvider` + `useToast()` → `{ show, dismiss }`                              |
 | `Alert`     | Inline banner with tones                                                          |
 | `Stack`     | `direction`, `gap`, `align`, `justify`, `wrap` flex helper                        |
@@ -159,6 +159,32 @@ export function SignIn() {
 ## TypeScript
 
 Types are bundled — there's nothing extra to install. Every component exports a named props interface (e.g. `ButtonProps`, `DataTableProps<Row>`). Most components forward refs to the underlying DOM element.
+
+## Versioning & stability
+
+We follow [semver](https://semver.org/), with one extra rule: deprecated APIs always get one minor of warning before removal in the next major.
+
+- **Patch** (`0.x.Y`) — bug fixes only. No public-API changes.
+- **Minor** (`0.X.0`) — strictly **additive**. New components, new props, new exports. Old APIs continue to work. Renames land as new props with the old one kept as a deprecated alias (JSDoc `@deprecated`).
+- **Major** (`X.0.0`) — may remove previously deprecated APIs. Removals are listed in the changelog with the alias that replaces them.
+
+The public surface is enumerated in [`etc/api-report.md`](./etc/api-report.md) — see below.
+
+### Public API report
+
+Every release commits a snapshot of the full public surface to `etc/api-report.md`:
+
+```bash
+npm run api-report
+```
+
+The script imports `dist/index.cjs`, walks every export, classifies it (`forwardRef component`, `forwardRef namespace`, `hook`, `function component`, `constant`, `type-only`, …) and writes a sorted markdown table. PRs that touch the public API must regenerate the file — a diff against `etc/api-report.md` is the source of truth for whether a change is additive or breaking.
+
+### Tree-shaking
+
+The package is a single entrypoint (`index.ts`) that re-exports every component, hook and type. Bundlers that honour `sideEffects` (Webpack, Vite, esbuild with `treeShaking: true`, Rollup) will drop unused exports — the package marks `*.css` and the CDN bundle as the only side-effectful files in `package.json`.
+
+What this means in practice: `import { Button } from '@corelithzw/react'` ships only `Button` (plus its transitive imports) in your bundle, _not_ the entire library. The shared stylesheet is imported once (top of `index.ts`) so the `*.css` `sideEffects` entry keeps it in.
 
 ## Docs
 

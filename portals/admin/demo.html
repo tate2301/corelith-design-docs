@@ -8,9 +8,11 @@
 <link rel="stylesheet" href="../../components.css" />
 <link rel="stylesheet" href="../../shared.css" />
 <link rel="stylesheet" href="../../portal-shell.css" />
+<link rel="stylesheet" href="./app.css" />
 <script src="../../icons.js" defer></script>
 <link rel="stylesheet" href="../../huchu-nav.css" />
 <script src="../../huchu-nav.js" defer></script>
+<script src="./app.js"></script>
 <style>
   /* ===========================================================
      Admin Portal — MOBILE-FIRST stylesheet
@@ -1905,9 +1907,33 @@ function persist() {
       currentRoute: state.route,
     }));
   } catch (_) {}
+  // Persist the flow-3 user/audit/integration state via the AdminApp Store.
+  // (AdminApp.Store keeps each list under a separate corelith:admin:* key.)
+  try {
+    if (window.AdminApp && window.AdminApp.Store) {
+      const S = window.AdminApp.Store;
+      S.save('users', state.users);
+      S.save('audit', state.audit);
+      S.save('integrations', state.integrationsState);
+      S.save('route', state.route);
+    }
+  } catch (_) {}
 }
 
 const PERSISTED = loadPersisted();
+
+/* AdminApp lives in app.js (loaded as a separate <script defer>).
+   It exposes Store.load/save/logAudit and DEFAULTS. We pull the persisted
+   flow-3 lists synchronously here — by the time `init()` runs the script
+   has executed. If for some reason it hasn't (e.g. CSP block), we fall
+   back to inline defaults so the page still renders. */
+const _ADM_ = window.AdminApp || null;
+const _ADM_DEFAULTS_ = (_ADM_ && _ADM_.DEFAULTS) || {
+  users: [], audit: [], integrations: [],
+};
+function _admLoad(key, fb) {
+  return (_ADM_ && _ADM_.Store) ? _ADM_.Store.load(key, fb) : fb;
+}
 
 const state = {
   authed: PERSISTED.authed === true,
@@ -1916,19 +1942,32 @@ const state = {
   route: 'dashboard',
   tenant: (PERSISTED.tenantId && TENANTS.find(t => t.id === PERSISTED.tenantId)) || TENANTS[0],
   tenantMenuOpen: false,
-  users: USERS_SEED.map(u => ({ ...u })),
+  users: _admLoad('users', _ADM_DEFAULTS_.users).map(u => ({ ...u })),
   userFilter: 'all',
   userSearch: '',
   userSort: { key: 'name', dir: 'asc' },
   userSelected: new Set(),
   userPanel: null,    // { user, editing: bool }
   inviteOpen: false,
-  audit: AUDIT_SEED.slice(),
-  auditFilter: { range: 'Last 24 hours', actor: 'Anyone', event: 'Anything', sev: 'Warning or worse' },
-  auditOpen: 'evt_004',
+  audit: _admLoad('audit', _ADM_DEFAULTS_.audit).slice(),
+  auditFilter: { range: 'Last 24 hours', actor: [], event: [], sev: 'Warning or worse' },
+  auditSearch: '',
+  auditDrawerId: null,  // currently-open audit event id in the side drawer
+  auditOpen: null,
+  /* integrationsState: { [id]: { connected: bool, connectedAt: iso|null } } */
+  integrationsState: (function () {
+    const seed = _ADM_DEFAULTS_.integrations || [];
+    const loaded = _admLoad('integrations', seed);
+    const map = {};
+    (Array.isArray(loaded) ? loaded : seed).forEach(i => {
+      map[i.id] = { connected: !!i.connected, connectedAt: i.connectedAt || null };
+    });
+    return map;
+  })(),
   integrationCat: 'all',
   integrationOpen: null, // id
   integrationSearch: '',
+  integrationLoading: null, // id currently mid-connect
   browseAll: false,
   payments: [
     { id: 'pm_nmb', brand: 'NMB Bank', sub: '•••• •••• •••• 4218 · expires 09 / 28 · Tendai Ncube', tag: 'PRIMARY', cls: '' },
@@ -2179,7 +2218,17 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && document.body.classList.contains('is-fullscreen') && !document.fullscreenElement) {
     document.body.classList.remove('is-fullscreen');
     render();
+    return;
   }
+  if (e.key !== 'Escape') return;
+  // Close, in priority order: OAuth modal > generic modal > audit drawer >
+  // user/integration drawer > sheet.
+  const oauth = document.querySelector('.oauth-scrim');
+  if (oauth) { oauth.querySelector('[data-oauth="cancel"]') && oauth.querySelector('[data-oauth="cancel"]').click(); return; }
+  if (state.modal) { closeModal(); return; }
+  if (state.auditDrawerId) { state.auditDrawerId = null; render(); return; }
+  if (state.userPanel || state.inviteOpen || state.integrationOpen) { closeDrawer(); return; }
+  if (state.sheetOpen) { closeMoreSheet(); return; }
 });
 
 /* ============================================================
@@ -2485,15 +2534,21 @@ function renderDashboard() {
               <div class="spacer"></div>
               <a data-go="audit">See all history</a>
             </div>
-            ${state.audit.slice(0, 8).map(e => `
+            ${state.audit.slice(0, 8).map(e => {
+              const v = auditVerb(e);
+              const ts = (e.ts && /^\d{4}-/.test(e.ts) && window.AdminApp)
+                ? window.AdminApp.util.humanDate(e.ts).split(', ')[1] || window.AdminApp.util.humanDate(e.ts)
+                : (e.ts || '');
+              const ip = (e.after && e.after.ip) || e.ip || '—';
+              return `
               <div class="audit-row-d">
                 <span class="av">${initials(e.actor === 'system' ? 'SY' : e.actor).slice(0,2)}</span>
-                <span class="ts">${escapeHtml(e.ts.replace('22 Jun · ', '').replace('21 Jun · ', ''))}</span>
-                <span class="ev"><strong>${escapeHtml(e.desc.split(' · ')[0])}</strong> <span class="who">· ${escapeHtml(e.actor)}</span></span>
-                <span class="ip">${escapeHtml(e.ip)}</span>
-                <span class="sev ${e.sev}">${e.sev}</span>
+                <span class="ts">${escapeHtml(ts)}</span>
+                <span class="ev"><strong>${escapeHtml(v.head)}</strong> <span class="who">· ${escapeHtml(e.actor)}</span></span>
+                <span class="ip">${escapeHtml(ip)}</span>
+                <span class="sev ${v.sev}">${v.sev}</span>
               </div>
-            `).join('')}
+            `;}).join('')}
           </div>
           <aside class="snap">
             <div class="h">
@@ -2679,12 +2734,22 @@ function openUserActionSheet(user) {
     } else if (act === 'reset') {
       toast(`Password reset email sent to ${user.email}`, 'success');
     } else if (act === 'role') {
+      const prev = user.roleLabel;
       user.role = 'admin'; user.roleLabel = 'Branch admin';
+      logAdminAudit('user.role-change', user.email, { role: prev }, { role: user.roleLabel });
       toast(`${user.name} is now an admin`, 'success');
       render();
     } else if (act === 'disable') {
-      if (user.status === 'sus') { user.status = 'active'; toast('User turned back on', 'success'); }
-      else { user.status = 'sus'; toast('User turned off', 'success'); }
+      if (user.status === 'sus') {
+        user.status = 'active';
+        logAdminAudit('user.reactivated', user.email, { status: 'Suspended' }, { status: 'Active' });
+        toast('User turned back on', 'success');
+      } else {
+        const prev = user.status === 'inv' ? 'Invited' : 'Active';
+        user.status = 'sus';
+        logAdminAudit('user.suspended', user.email, { status: prev }, { status: 'Suspended' });
+        toast('User turned off', 'success');
+      }
       render();
     }
   }));
@@ -2746,7 +2811,8 @@ function renderUserDrawer() {
         <button class="btn sec" data-cancel-edit>Cancel</button>
         <button class="btn pri" data-save-edit><span data-icon="check" data-icon-size="13"></span> Save changes</button>
       ` : `
-        <button class="btn danger" data-disable="${user.id}"><span data-icon="x" data-icon-size="13"></span> Turn off account</button>
+        <button class="btn danger-strong" data-remove-user="${user.id}" aria-label="Remove ${escapeHtml(user.name)}"><span data-icon="x" data-icon-size="13"></span> Remove</button>
+        <button class="btn danger" data-disable="${user.id}"><span data-icon="x" data-icon-size="13"></span> Turn off</button>
         <button class="btn sec" data-edit-user>Edit</button>
       `}
     </div>
@@ -2789,86 +2855,194 @@ function renderInviteDrawer() {
 /* ============================================================
    Audit
    ============================================================ */
-function renderAudit() {
-  const openEvent = state.audit.find(e => e.id === state.auditOpen) || state.audit[0];
-  const highCount = state.audit.filter(e => e.sev === 'high').length;
-  const verb = (e) => {
+/* Map a normalized event to a friendly verb/target pair. */
+function auditVerb(e) {
+  // Legacy seed events shaped like { desc: 'X · Y', tag, ip, sev, ts }
+  if (e.desc) {
     const head = e.desc.split(' · ')[0];
     const target = e.desc.split(' · ').slice(1).join(' · ');
-    return { head, target };
+    return { head, target, tag: e.tag || '', sev: e.sev || 'info' };
+  }
+  // New AdminApp events: { action, object, actor, ts, before, after }
+  const head = (window.AdminApp && window.AdminApp.util)
+    ? window.AdminApp.util.actionLabel(e.action || '')
+    : (e.action || '');
+  const target = e.object || '';
+  // Sev heuristic
+  let sev = 'info';
+  if (e.action === 'user.login-failed') sev = 'high';
+  else if (e.action === 'user.removed' || e.action === 'user.suspended' || e.action === 'user.role-change') sev = 'warn';
+  return { head, target, tag: e.action || '', sev };
+}
+
+/* Apply chip + search filters to the audit list. */
+function filteredAudit() {
+  const f = state.auditFilter;
+  const q = (state.auditSearch || '').trim().toLowerCase();
+  return state.audit.filter(e => {
+    // Event-type filter
+    if (Array.isArray(f.event) && f.event.length) {
+      const cat = window.AdminApp && window.AdminApp.util
+        ? window.AdminApp.util.actionCategory(e.action || e.tag || '')
+        : (e.action || e.tag || '');
+      if (!f.event.includes(cat)) return false;
+    }
+    // Actor filter
+    if (Array.isArray(f.actor) && f.actor.length) {
+      if (!f.actor.includes(e.actor)) return false;
+    }
+    // Search
+    if (q) {
+      const v = auditVerb(e);
+      const hay = [e.actor, e.object, e.desc, v.head, v.target, e.action, e.tag].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+const AUDIT_EVENT_TYPES = [
+  { id: 'login',                label: 'Login' },
+  { id: 'role-change',          label: 'Role change' },
+  { id: 'user-removed',         label: 'User changes' },
+  { id: 'integration-toggled',  label: 'Integration toggled' },
+  { id: 'billing-changed',      label: 'Billing' },
+  { id: 'settings-changed',     label: 'Settings' },
+];
+
+function renderAudit() {
+  const list = filteredAudit();
+  // Distinct actors for the actor chip menu.
+  const actors = Array.from(new Set(state.audit.map(e => e.actor))).sort();
+  const verb = auditVerb;
+  const fmtTs = (e) => {
+    if (e.ts && /^\d{4}-/.test(e.ts) && window.AdminApp) {
+      return window.AdminApp.util.humanDate(e.ts);
+    }
+    return e.ts || '';
   };
+  const ipOf = (e) => (e.after && e.after.ip) || e.ip || '—';
+  const total = state.audit.length;
+  const showingLabel = list.length === total ? `${total} events` : `${list.length} of ${total} events`;
 
   return `
     <section class="ad-main">
       <div class="ad-top">
-        <span class="crumb">14,218 events · last 30 days</span>
+        <span class="crumb">${showingLabel}</span>
         <h1>Activity history</h1>
         <div class="spacer"></div>
         <button class="btn-alt" id="export-csv" aria-label="Download CSV"><span data-icon="download" data-icon-size="14"></span> <span>CSV</span></button>
         <button class="btn-alt" id="export-json" aria-label="Download JSON"><span data-icon="download" data-icon-size="14"></span> <span>JSON</span></button>
       </div>
-      ${highCount > 0 ? `
-      <div class="alert-banner">
-        <span class="ic"><span data-icon="shield" data-icon-size="14"></span></span>
-        <div class="msg"><strong>${highCount} serious events in the last 24 hours.</strong> Please check these to make sure they were on purpose.</div>
-        <div class="spacer"></div>
-        <button class="cta" id="audit-review">Check now</button>
-      </div>` : ''}
-      <div class="filter-strip">
-        <button class="fchip active"><span class="k">When</span> · ${escapeHtml(state.auditFilter.range)}</button>
-        <button class="fchip"><span class="k">Who</span> · ${escapeHtml(state.auditFilter.actor)}</button>
-        <button class="fchip"><span class="k">What</span> · ${escapeHtml(state.auditFilter.event)}</button>
-        <button class="fchip active"><span class="k">How serious</span> · ${escapeHtml(state.auditFilter.sev)}</button>
-        <div class="spacer"></div>
-        <div class="search">
-          <span data-icon="search"></span>
-          <input placeholder="Search event, person, IP" />
+      <div class="evt-chips" role="toolbar" aria-label="Event type filters">
+        ${AUDIT_EVENT_TYPES.map(t => `
+          <button type="button" class="evt-chip ${state.auditFilter.event.includes(t.id) ? 'on' : ''}"
+                  data-evt-type="${t.id}"
+                  aria-pressed="${state.auditFilter.event.includes(t.id)}">
+            ${escapeHtml(t.label)}
+          </button>
+        `).join('')}
+        <div style="flex:1"></div>
+        <div class="audit-search-wrap">
+          <span data-icon="search" data-icon-size="14"></span>
+          <input id="audit-search" type="search" placeholder="Search event, person, IP" value="${escapeHtml(state.auditSearch || '')}" aria-label="Search activity" />
         </div>
+      </div>
+      <div class="evt-chips" role="toolbar" aria-label="Actor filters" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+        ${actors.map(a => `
+          <button type="button" class="evt-chip ${state.auditFilter.actor.includes(a) ? 'on' : ''}"
+                  data-actor="${escapeHtml(a)}"
+                  aria-pressed="${state.auditFilter.actor.includes(a)}">
+            ${escapeHtml(a)}
+          </button>
+        `).join('')}
+        ${(state.auditFilter.event.length || state.auditFilter.actor.length || state.auditSearch) ? `
+          <button type="button" class="evt-chip" data-evt-clear>Clear filters</button>
+        ` : ''}
       </div>
       <div class="ad-body">
         <div class="users-split">
           <div class="at-wrap">
-            ${state.audit.map(e => {
+            ${list.map(e => {
               const v = verb(e);
-              const isOpen = e.id === state.auditOpen;
               return `
-                <div class="b-row-card timeline tablet-hide ${isOpen ? 'open' : ''}" data-tc="${e.id}">
+                <div class="b-row-card timeline tablet-hide" data-evt="${e.id}">
                   <div class="b-rc-top">
                     <span class="b-rc-av">${initials(e.actor === 'system' ? 'SY' : e.actor).slice(0,2)}</span>
                     <div class="b-rc-info">
                       <div class="b-rc-nm">${escapeHtml(e.actor)}</div>
-                      <div class="b-rc-sb">${escapeHtml(e.ts)} · ${escapeHtml(e.ip)}</div>
+                      <div class="b-rc-sb">${escapeHtml(fmtTs(e))} · ${escapeHtml(ipOf(e))}</div>
                     </div>
-                    <span class="sev ${e.sev}">${e.sev}</span>
+                    <span class="sev ${v.sev}">${v.sev}</span>
                   </div>
-                  <div class="verb"><strong>${escapeHtml(v.head)}</strong>${v.target ? ` · ${escapeHtml(v.target)}` : ''}<span class="tg">${escapeHtml(e.tag)}</span></div>
-                  <button class="details-btn" data-tc-btn="${e.id}"><span data-icon="${isOpen ? 'chevron' : 'forward'}" data-icon-size="14"></span> ${isOpen ? 'Hide details' : 'See details'}</button>
-                  <div class="details">
-                    ${renderEventDetailMobile(e)}
-                  </div>
+                  <div class="verb"><strong>${escapeHtml(v.head)}</strong>${v.target ? ` · ${escapeHtml(v.target)}` : ''}<span class="tg">${escapeHtml(v.tag)}</span></div>
                 </div>
               `;
             }).join('')}
             <table class="at">
               <thead>
-                <tr><th style="width:120px">When</th><th>Who</th><th>What happened</th><th style="width:120px">IP address</th><th style="width:80px">How serious</th></tr>
+                <tr><th style="width:170px">When</th><th>Who</th><th>What happened</th><th style="width:80px">How serious</th></tr>
               </thead>
               <tbody>
-                ${state.audit.map(e => `
-                  <tr class="${e.id === state.auditOpen ? 'open' : ''}" data-evt="${e.id}">
-                    <td class="ts">${escapeHtml(e.ts)}</td>
+                ${list.map(e => {
+                  const v = verb(e);
+                  return `
+                  <tr data-evt="${e.id}">
+                    <td class="ts">${escapeHtml(fmtTs(e))}</td>
                     <td><div class="actor"><span class="av">${initials(e.actor === 'system' ? 'SY' : e.actor).slice(0,2)}</span><span class="nm">${escapeHtml(e.actor)}</span></div></td>
-                    <td><span class="event">${escapeHtml(verb(e).head)} <span class="tg">${escapeHtml(e.tag)}</span> · ${escapeHtml(verb(e).target)}</span></td>
-                    <td class="ip">${escapeHtml(e.ip)}</td>
-                    <td><span class="sev ${e.sev}">${e.sev}</span></td>
+                    <td><span class="event">${escapeHtml(v.head)} <span class="tg">${escapeHtml(v.tag)}</span>${v.target ? ` · ${escapeHtml(v.target)}` : ''}</span></td>
+                    <td><span class="sev ${v.sev}">${v.sev}</span></td>
                   </tr>
-                `).join('')}
+                `;}).join('')}
+                ${list.length === 0 ? `<tr><td colspan="4"><div class="at-empty"><strong>No events match.</strong>Try a different chip or clear the filters.</div></td></tr>` : ''}
               </tbody>
             </table>
+            ${list.length === 0 ? `<div class="at-empty"><strong>No events match.</strong>Try a different chip or clear the filters.</div>` : ''}
           </div>
         </div>
       </div>
     </section>
+    ${state.auditDrawerId ? renderAuditDrawer(state.audit.find(e => e.id === state.auditDrawerId)) : ''}
+  `;
+}
+
+function renderAuditDrawer(e) {
+  if (!e) return '';
+  const v = auditVerb(e);
+  const fmtTs = (e.ts && /^\d{4}-/.test(e.ts) && window.AdminApp)
+    ? window.AdminApp.util.humanDate(e.ts)
+    : (e.ts || '');
+  const fmtJson = (window.AdminApp && window.AdminApp.util)
+    ? window.AdminApp.util.fmtJson
+    : (v) => JSON.stringify(v, null, 2);
+  const beforeText = e.before == null ? '(no prior state)' : fmtJson(e.before);
+  const afterText = e.after == null ? '(no new state)' : fmtJson(e.after);
+  const beforeLines = String(beforeText).split('\n').map(l => `<span class="diff-rem rem">- ${escapeHtml(l)}</span>`).join('');
+  const afterLines  = String(afterText).split('\n').map(l => `<span class="diff-add add">+ ${escapeHtml(l)}</span>`).join('');
+  return `
+    <div class="audit-drawer-scrim" data-audit-scrim>
+      <div class="audit-drawer" role="dialog" aria-modal="true" aria-label="Event detail" onclick="event.stopPropagation()">
+        <div class="ad-h">
+          <div style="flex:1;">
+            <div class="lbl" style="font: 500 11px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.45);">Event · ${escapeHtml(e.id)}</div>
+            <h3>${escapeHtml(v.head)}${v.target ? ` · ${escapeHtml(v.target)}` : ''}</h3>
+            <div class="ad-h-sb">${escapeHtml(fmtTs)}</div>
+          </div>
+          <button class="ad-h-close" data-audit-close aria-label="Close"><span data-icon="x" data-icon-size="14"></span></button>
+        </div>
+        <div class="ad-b">
+          <dl class="kv">
+            <dt>Actor</dt><dd>${escapeHtml(e.actor || '—')}</dd>
+            <dt>Action</dt><dd>${escapeHtml(e.action || e.tag || '—')}</dd>
+            <dt>Object</dt><dd>${escapeHtml(e.object || e.desc || '—')}</dd>
+            <dt>Severity</dt><dd>${escapeHtml(v.sev)}</dd>
+          </dl>
+          <h4>Before → After</h4>
+          <div class="diff-block">${beforeLines || '<span class="neu">(no prior state)</span>'}
+${afterLines || '<span class="neu">(no new state)</span>'}</div>
+        </div>
+      </div>
+    </div>
   `;
 }
 
@@ -3065,7 +3239,8 @@ function renderIntegrations() {
     `;
   }
   const list = filteredIntegrations();
-  const connectedCount = INTEGRATIONS.filter(i => i.badge === 'on').length;
+  const isConnected = (id) => !!(state.integrationsState[id] && state.integrationsState[id].connected);
+  const connectedCount = INTEGRATIONS.filter(i => isConnected(i.id)).length;
 
   return `
     <section class="ad-main">
@@ -3083,7 +3258,12 @@ function renderIntegrations() {
       </div>
       <div class="ad-body">
         <div class="igrid">
-          ${list.map(i => `
+          ${list.map(i => {
+            const connected = isConnected(i.id);
+            const loading = state.integrationLoading === i.id;
+            const stamp = (state.integrationsState[i.id] && state.integrationsState[i.id].connectedAt) || null;
+            const stampShort = stamp && window.AdminApp ? window.AdminApp.util.isoDate(stamp) : '';
+            return `
             <div class="icard" data-int="${i.id}">
               <div class="top">
                 <span class="logo ${i.logo}">${escapeHtml(i.logoLabel)}</span>
@@ -3094,11 +3274,17 @@ function renderIntegrations() {
               </div>
               <div class="desc">${escapeHtml(i.desc)}</div>
               <div class="foot">
-                <span class="pill ${i.badge}">${i.badge === 'on' ? 'Connected' : i.badge === 'beta' ? 'Beta' : 'Not connected'}</span>
-                <button class="conn-btn ${i.badge === 'on' ? 'off' : ''}" data-int-btn="${i.id}">${i.badge === 'on' ? 'Configure' : 'Connect'}</button>
+                <span class="pill ${connected ? 'on' : i.badge === 'beta' ? 'beta' : 'av'}">${connected ? 'Connected' : i.badge === 'beta' ? 'Beta' : 'Not connected'}</span>
+                <button class="conn-btn ${connected ? 'off' : ''}"
+                        data-conn-btn="${i.id}"
+                        aria-label="${connected ? 'Disconnect ' : 'Connect '}${escapeHtml(i.nm)}"
+                        ${loading ? 'disabled' : ''}>
+                  ${loading ? '<span class="mini-spin" aria-hidden="true"></span>Connecting…' : (connected ? 'Disconnect' : 'Connect')}
+                </button>
               </div>
+              ${connected && stampShort ? `<span class="conn-since">Connected · ${escapeHtml(stampShort)}</span>` : ''}
             </div>
-          `).join('')}
+          `;}).join('')}
           ${list.length === 0 ? `<div class="empty-state" style="grid-column: 1 / -1;"><div class="ic"><span data-icon="search" data-icon-size="22"></span></div><h3>Nothing in this category</h3><p>Try another category or see all 200+ apps.</p></div>` : ''}
         </div>
       </div>
@@ -3109,7 +3295,8 @@ function renderIntegrations() {
 function renderIntegrationDrawer() {
   const i = INTEGRATIONS.find(x => x.id === state.integrationOpen);
   if (!i) return '';
-  const connected = i.badge === 'on';
+  const cur = state.integrationsState[i.id] || {};
+  const connected = !!cur.connected;
   return `
     <div class="dh">
       <div style="flex: 1;">
@@ -3923,16 +4110,43 @@ function wireUsers() {
   const send = $('#inv-send');
   if (send) {
     send.addEventListener('click', () => {
-      const name = $('#inv-name').value.trim() || 'New invitee';
-      const email = $('#inv-email').value.trim() || `${name.toLowerCase().replace(/\s+/g, '.')}@mukamba.co.zw`;
-      const branch = $('#inv-branch').value;
+      const nameField = $('#inv-name');
+      const emailField = $('#inv-email');
+      const name = (nameField && nameField.value.trim()) || '';
+      const email = (emailField && emailField.value.trim()) || '';
+      const branch = ($('#inv-branch') || {}).value || 'All branches';
       const roleEl = $('input[name="invrole"]:checked');
       const role = roleEl ? roleEl.value : 'op';
       const roleLabel = role === 'admin' ? 'Branch admin' : role === 'view' ? 'Read-only' : 'Operator';
-      state.users.unshift({
+
+      // Email validation
+      const valid = window.AdminApp && window.AdminApp.util
+        ? window.AdminApp.util.validateEmail(email)
+        : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      if (!valid) {
+        const f = emailField && emailField.closest('.field');
+        if (f) f.classList.add('has-error');
+        if (emailField && !emailField.parentElement.querySelector('.field-error')) {
+          const err = document.createElement('span');
+          err.className = 'field-error';
+          err.textContent = 'Enter a valid email like name@corelithzw.com.';
+          emailField.parentElement.appendChild(err);
+        }
+        if (emailField) emailField.focus();
+        return;
+      }
+      const finalName = name || email.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const newUser = {
         id: 'u_' + Math.random().toString(36).slice(2, 6),
-        name, email, role, roleLabel, status: 'inv', last: '— never', branch,
-      });
+        name: finalName, email, role, roleLabel, status: 'inv', last: '— never', branch,
+      };
+      state.users.unshift(newUser);
+      // Audit
+      if (window.AdminApp && window.AdminApp.Store) {
+        const ev = window.AdminApp.Store.logAudit(currentActor(), 'user.invited', email, null,
+          { name: finalName, role: roleLabel, branch });
+        state.audit.unshift(ev);
+      }
       closeDrawer();
       toast(`Invite sent to ${email}`, 'success');
     });
@@ -3961,16 +4175,22 @@ function wireUsers() {
         confirmLabel: 'Remove',
         danger: true,
         onConfirm: () => {
+          const removed = state.users.filter(u => state.userSelected.has(u.id));
           state.users = state.users.filter(u => !state.userSelected.has(u.id));
           const n = state.userSelected.size;
           state.userSelected.clear();
+          removed.forEach(u => logAdminAudit('user.removed', u.email,
+            { name: u.name, role: u.roleLabel, status: u.status }, { removed: true }));
           toast(`${n} user(s) removed`, 'success');
           render();
         }
       });
     } else if (action === 'disable') {
+      const affected = state.users.filter(u => state.userSelected.has(u.id));
       state.users.forEach(u => { if (state.userSelected.has(u.id)) u.status = 'sus'; });
       const n = state.userSelected.size; state.userSelected.clear();
+      affected.forEach(u => logAdminAudit('user.suspended', u.email,
+        { status: 'Active' }, { status: 'Suspended' }));
       toast(`${n} user(s) turned off`, 'success'); render();
     } else if (action === 'reset') {
       toast(`Password reset email sent to ${state.userSelected.size} users`, 'success');
@@ -3988,6 +4208,7 @@ function wireUsers() {
   });
   const save = $('[data-save-edit]'); if (save) save.addEventListener('click', () => {
     const u = state.userPanel.user;
+    const beforeRole = u.roleLabel;
     u.name = $('#edit-name').value.trim() || u.name;
     u.email = $('#edit-email').value.trim() || u.email;
     u.branch = $('#edit-branch').value;
@@ -3997,6 +4218,9 @@ function wireUsers() {
       u.roleLabel = u.role === 'admin' ? 'Branch admin' : u.role === 'view' ? 'Read-only' : u.role === 'owner' ? 'Owner' : 'Operator';
     }
     state.userPanel.editing = false;
+    if (beforeRole !== u.roleLabel) {
+      logAdminAudit('user.role-change', u.email, { role: beforeRole }, { role: u.roleLabel });
+    }
     toast('User saved', 'success');
     render();
   });
@@ -4009,13 +4233,52 @@ function wireUsers() {
       danger: true,
       onConfirm: () => {
         const u = state.users.find(x => x.id === id);
-        if (u) u.status = 'sus';
+        if (u) {
+          const prev = u.status;
+          u.status = 'sus';
+          logAdminAudit('user.suspended', u.email,
+            { status: prev === 'inv' ? 'Invited' : 'Active' }, { status: 'Suspended' });
+        }
         state.userPanel = null;
         toast('User turned off', 'success');
         render();
       }
     });
   });
+  // Remove user (drawer footer)
+  const rem = $('[data-remove-user]'); if (rem) rem.addEventListener('click', () => {
+    const id = rem.dataset.removeUser;
+    const u = state.users.find(x => x.id === id);
+    if (!u) return;
+    openConfirm({
+      title: `Remove ${u.name}?`,
+      body: 'The account is deleted and they will be signed out. Activity history is kept.',
+      confirmLabel: 'Remove',
+      danger: true,
+      onConfirm: () => {
+        state.users = state.users.filter(x => x.id !== id);
+        logAdminAudit('user.removed', u.email,
+          { name: u.name, role: u.roleLabel, status: u.status }, { removed: true });
+        state.userPanel = null;
+        toast(`${u.name} removed`, 'success');
+        render();
+      }
+    });
+  });
+}
+
+/* Identify the actor for audit log entries. */
+function currentActor() {
+  const owner = (state.users || []).find(u => u.role === 'owner' || u.role === 'admin');
+  return owner ? owner.name : 'You';
+}
+/* Append an audit entry and keep state.audit in sync with localStorage. */
+function logAdminAudit(action, object, before, after) {
+  if (!window.AdminApp || !window.AdminApp.Store) return null;
+  const ev = window.AdminApp.Store.logAudit(currentActor(), action, object, before, after);
+  // Keep the in-memory audit list in sync so the UI updates instantly.
+  state.audit.unshift(ev);
+  return ev;
 }
 
 function rewireRows() {
@@ -4045,20 +4308,52 @@ function rewireRows() {
 /* === Audit wiring === */
 function wireAudit() {
   $$('[data-evt]').forEach(tr => tr.addEventListener('click', () => {
-    state.auditOpen = tr.dataset.evt; render();
-  }));
-  $$('[data-tc-btn]').forEach(btn => btn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const id = btn.dataset.tcBtn;
-    state.auditOpen = (state.auditOpen === id) ? null : id;
+    state.auditDrawerId = tr.dataset.evt;
     render();
   }));
+  // Event-type chips (multi-select)
+  $$('[data-evt-type]').forEach(b => b.addEventListener('click', () => {
+    const t = b.dataset.evtType;
+    const list = state.auditFilter.event;
+    const i = list.indexOf(t);
+    if (i >= 0) list.splice(i, 1); else list.push(t);
+    render();
+  }));
+  // Actor chips (multi-select)
+  $$('[data-actor]').forEach(b => b.addEventListener('click', () => {
+    const a = b.dataset.actor;
+    const list = state.auditFilter.actor;
+    const i = list.indexOf(a);
+    if (i >= 0) list.splice(i, 1); else list.push(a);
+    render();
+  }));
+  const clr = $('[data-evt-clear]'); if (clr) clr.addEventListener('click', () => {
+    state.auditFilter.event = [];
+    state.auditFilter.actor = [];
+    state.auditSearch = '';
+    render();
+  });
+  // Search input
+  const srch = $('#audit-search');
+  if (srch) {
+    let t = null;
+    srch.addEventListener('input', (e) => {
+      state.auditSearch = e.target.value;
+      if (t) clearTimeout(t);
+      t = setTimeout(() => {
+        render();
+        const ns = $('#audit-search');
+        if (ns) { ns.focus(); ns.setSelectionRange(ns.value.length, ns.value.length); }
+      }, 160);
+    });
+  }
+  // Drawer close
+  const scrim = $('[data-audit-scrim]');
+  if (scrim) scrim.addEventListener('click', () => { state.auditDrawerId = null; render(); });
+  const cl = $('[data-audit-close]'); if (cl) cl.addEventListener('click', () => { state.auditDrawerId = null; render(); });
+
   const c = $('#export-csv'); if (c) c.addEventListener('click', () => toast('Activity history downloaded as CSV', 'success'));
   const j = $('#export-json'); if (j) j.addEventListener('click', () => toast('Activity history downloaded as JSON', 'success'));
-  const r = $('#audit-review'); if (r) r.addEventListener('click', () => {
-    const high = state.audit.find(e => e.sev === 'high');
-    if (high) { state.auditOpen = high.id; render(); }
-  });
 }
 
 /* === Billing wiring === */
@@ -4191,16 +4486,53 @@ function wireIntegrations() {
     state.integrationCat = b.dataset.cat; render();
   }));
   $$('[data-int]').forEach(b => b.addEventListener('click', (e) => {
-    if (e.target.closest('[data-int-btn]')) return; // let the button handler take it
+    if (e.target.closest('[data-conn-btn]')) return; // let the connect button handler take it
     state.integrationOpen = b.dataset.int;
     state.userPanel = null; state.inviteOpen = false;
     render();
   }));
-  $$('[data-int-btn]').forEach(b => b.addEventListener('click', (e) => {
+  // New: Connect / Disconnect button with simulated OAuth modal.
+  $$('[data-conn-btn]').forEach(b => b.addEventListener('click', (e) => {
     e.stopPropagation();
-    state.integrationOpen = b.dataset.intBtn;
-    state.userPanel = null; state.inviteOpen = false;
-    render();
+    const id = b.dataset.connBtn;
+    const provider = INTEGRATIONS.find(x => x.id === id);
+    if (!provider) return;
+    const cur = state.integrationsState[id] || { connected: false };
+    if (cur.connected) {
+      // Disconnect → confirm dialog
+      openConfirm({
+        title: `Disconnect ${provider.nm}?`,
+        body: 'Webhooks stop right away. Historical data is kept.',
+        confirmLabel: 'Disconnect',
+        danger: true,
+        onConfirm: () => {
+          state.integrationsState[id] = { connected: false, connectedAt: null };
+          logAdminAudit('integration.toggled', provider.nm, { connected: true }, { connected: false });
+          toast(`${provider.nm} disconnected`, 'success');
+          render();
+        }
+      });
+      return;
+    }
+    // Connect → simulated OAuth modal
+    if (window.AdminApp && window.AdminApp.openOAuthModal) {
+      window.AdminApp.openOAuthModal({
+        providerName: provider.nm,
+        onAllow: () => {
+          state.integrationLoading = id;
+          render();
+          // The OAuth modal already showed an 800ms spinner before invoking
+          // onAllow, so flip to connected immediately here.
+          state.integrationLoading = null;
+          const now = new Date().toISOString();
+          state.integrationsState[id] = { connected: true, connectedAt: now };
+          logAdminAudit('integration.toggled', provider.nm, { connected: false }, { connected: true });
+          toast(`${provider.nm} connected`, 'success');
+          render();
+        },
+        onCancel: () => { /* no-op */ },
+      });
+    }
   }));
   const ba = $('#browse-all'); if (ba) ba.addEventListener('click', (e) => {
     e.preventDefault(); state.browseAll = true; render();
@@ -4233,13 +4565,15 @@ function wireIntegrations() {
   const dc = $('#disconnect-int');
   if (dc) dc.addEventListener('click', () => {
     const i = INTEGRATIONS.find(x => x.id === state.integrationOpen);
+    if (!i) return;
     openConfirm({
       title: `Disconnect ${i.nm}?`,
       body: 'Active webhooks and scheduled jobs will stop immediately. Historical data is retained.',
       confirmLabel: 'Disconnect',
       danger: true,
       onConfirm: () => {
-        i.badge = 'av';
+        state.integrationsState[i.id] = { connected: false, connectedAt: null };
+        logAdminAudit('integration.toggled', i.nm, { connected: true }, { connected: false });
         state.integrationOpen = null;
         toast(`${i.nm} disconnected`, 'success');
         render();
@@ -4249,10 +4583,18 @@ function wireIntegrations() {
   const co = $('#do-connect');
   if (co) co.addEventListener('click', () => {
     const i = INTEGRATIONS.find(x => x.id === state.integrationOpen);
-    i.badge = 'on';
-    state.integrationOpen = null;
-    toast(`${i.nm} connected`, 'success');
-    render();
+    if (!i || !window.AdminApp || !window.AdminApp.openOAuthModal) return;
+    window.AdminApp.openOAuthModal({
+      providerName: i.nm,
+      onAllow: () => {
+        const now = new Date().toISOString();
+        state.integrationsState[i.id] = { connected: true, connectedAt: now };
+        logAdminAudit('integration.toggled', i.nm, { connected: false }, { connected: true });
+        state.integrationOpen = null;
+        toast(`${i.nm} connected`, 'success');
+        render();
+      }
+    });
   });
 }
 
@@ -4749,7 +5091,10 @@ function init() {
   if (/[?&]fullscreen=1/.test(location.search)) {
     document.body.classList.add('is-fullscreen');
   }
-  const r = (location.hash.replace(/^#\/?/, '') || 'dashboard');
+  // Hash wins; otherwise restore the route the user was on last time.
+  const hashR = location.hash.replace(/^#\/?/, '');
+  const savedR = _admLoad('route', null);
+  const r = hashR || savedR || 'dashboard';
   if (NAV.some(n => n.route === r)) state.route = r;
   // Dark-mode-only portal — `is-dark` flips the shared token cascade in tokens.css.
   document.body.classList.add('is-dark');

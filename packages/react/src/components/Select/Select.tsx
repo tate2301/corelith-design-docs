@@ -15,6 +15,14 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   placeholder?: string;
 }
 
+/**
+ * Select — styled native <select>.
+ *
+ * @example
+ * ```tsx
+ * <Select />
+ * ```
+ */
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
   {
     className,

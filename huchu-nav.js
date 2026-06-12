@@ -118,14 +118,13 @@
       ['States ·  Optimistic mutations',    ROOT + 'cookbook/states-optimistic-mutations.html', 'states-optimistic-mutations', 'New'],
       // ── Settings ────────────────────────────────────────────
       ['Settings ·  Notification preferences', ROOT + 'cookbook/settings-notification-preferences.html', 'settings-notification-preferences', 'New'],
-      ['Settings ·  Profile & security',    '#',                '__', 'Soon'],
-      ['Settings ·  Team & roles',          '#',                '__', 'Soon'],
+      ['Settings ·  Profile & security',    '#',                '__', 'Planned'],
+      ['Settings ·  Team & roles',          '#',                '__', 'Planned'],
       // ── International ───────────────────────────────────────
       ['International ·  Localised app',    ROOT + 'cookbook/i18n-localized-app.html', 'i18n-localized-app', 'New'],
-      ['International ·  RTL layout audit', '#',                '__', 'Soon'],
       // ── Approvals & queues ──────────────────────────────────
       ['Approvals ·  Leave-request workflow',ROOT + 'cookbook/approvals-leave-request.html', 'approvals-leave-request', 'New'],
-      ['Approvals ·  Inbox + bulk actions', '#',                '__', 'Soon'],
+      ['Approvals ·  Inbox + bulk actions', '#',                '__', 'Planned'],
       // ── Charts ──────────────────────────────────────────────
       ['Charts ·  Single-series line',      ROOT + 'cookbook/charts/line-simple.html',    'charts-line-simple',    'New'],
       ['Charts ·  Multi-series line',       ROOT + 'cookbook/charts/line-multi.html',     'charts-line-multi',     'New'],
@@ -255,6 +254,16 @@
     ]},
     { label: 'Page templates', items: [
       ['Pages reference',    ROOT + 'system/pages.html',         'pages'],
+      ['Overview dashboard', ROOT + 'system/pg-overview.html',   'pg-overview'],
+      ['Data tables',        ROOT + 'system/pg-data.html',       'pg-data'],
+      ['Detail page',        ROOT + 'system/pg-detail.html',     'pg-detail'],
+      ['Import & ETL',       ROOT + 'system/pg-import.html',     'pg-import'],
+      ['Inventory',          ROOT + 'system/pg-inventory.html',  'pg-inventory'],
+      ['Customers',          ROOT + 'system/pg-customers.html',  'pg-customers'],
+      ['Products catalog',   ROOT + 'system/pg-products.html',   'pg-products'],
+      ['Retail / POS',       ROOT + 'system/pg-retail.html',     'pg-retail'],
+      ['Posting Studio',     ROOT + 'system/pg-posting.html',    'pg-posting'],
+      ['Sign-in',            ROOT + 'system/pg-signin.html',     'pg-signin'],
     ]},
     { label: 'Guides', items: [
       ['All guides',         ROOT + 'system/guides.html',                  'guides', 'New'],
@@ -475,9 +484,9 @@
     },
     dashboard: {
       label: 'Dashboard kit', home: ROOT + 'index.html',
-      crumbs: [['Home', ROOT + 'index.html'], ['Kits', ROOT + 'index.html#kits'], ['Dashboard', null]],
+      crumbs: [['Home', ROOT + 'index.html'], ['Catalogs', ROOT + 'index.html#verticals'], ['Dashboard kit', null]],
       screens: [
-        ['overview',        'Overview'],
+        ['overview',        'Kit home'],
         ['data-heavy',      'Data tables'],
         ['lists',           'Lists'],
         ['posting-studio',  'Posting'],

@@ -26,6 +26,14 @@ function buildRange(page: number, pageCount: number): Array<number | 'gap'> {
   return out;
 }
 
+/**
+ * Pagination — page selector navigation.
+ *
+ * @example
+ * ```tsx
+ * <Pagination />
+ * ```
+ */
 export const Pagination = forwardRef<HTMLElement, PaginationProps>(function Pagination(
   {
     page,

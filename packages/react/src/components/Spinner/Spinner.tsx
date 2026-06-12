@@ -5,6 +5,14 @@ export interface SpinnerProps extends HTMLAttributes<HTMLSpanElement> {
   label?: string;
 }
 
+/**
+ * Spinner — indeterminate progress indicator.
+ *
+ * @example
+ * ```tsx
+ * <Spinner />
+ * ```
+ */
 export const Spinner = forwardRef<HTMLSpanElement, SpinnerProps>(function Spinner(
   { className, label = 'Loading', ...rest },
   ref,

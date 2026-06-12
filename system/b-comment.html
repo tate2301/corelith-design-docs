@@ -23,7 +23,7 @@
     </div>
   </header>
   <section id="default"><h2 class="ds-h2">Default</h2><p class="ds-h2-sub">A chronological thread. Each comment is an avatar + name + body + timestamp.</p><div class="ds-specimen"
-               data-code='import { Comment, CommentComposer } from &#39;@corelith/design-system&#39;;
+               data-code='import { Comment, CommentComposer } from &#39;@corelithzw/react&#39;;
 
 export function Example() {
   return (
@@ -89,6 +89,82 @@ export function Example() {
           </div>
         </div>
       </div><div class="ds-specimen-bar"><span class="label">Mention chip</span><span class="spacer"></span></div></div></section><section id="rules"><h2 class="ds-h2">Do & don't</h2><div class="ds-rules"><div class="rule do"><span class="tag">Do</span><p>Use comments for the why. The activity feed is for what; comments are for context.</p></div><div class="rule dont"><span class="tag">Don't</span><p>Reply with emoji or "+1". Use a reaction count if the platform supports it.</p></div><div class="rule do"><span class="tag">Do</span><p>Pin the most relevant comment to the top of the thread when investigating an exception.</p></div><div class="rule dont"><span class="tag">Don't</span><p>Allow editing comments after 5 minutes. Edits break the audit trail.</p></div></div></section>
+    <section id="react-api">
+    <h2 class="ds-h2">React API · <code class="t-mono">CommentsThread</code></h2>
+    <p class="ds-h2-sub">From <code class="t-mono">@corelithzw/react@0.3.0</code> — <code class="t-mono">CommentsThreadProps</code> in <code class="t-mono">packages/react/src/components/CommentsThread/CommentsThread.tsx</code>.</p>
+    <table class="ds-props"><thead><tr><th>Prop</th><th>Type</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code class="t-mono">comments</code></td><td><code class="t-mono">Comment[]</code></td><td>Required. Threaded comments — each carries <code class="t-mono">parentId</code>.</td></tr>
+      <tr><td><code class="t-mono">currentUser</code></td><td><code class="t-mono">CommentAuthor</code></td><td>Required. The viewer — drives the composer + edit affordance.</td></tr>
+      <tr><td><code class="t-mono">mentionable</code></td><td><code class="t-mono">MentionTarget[]</code></td><td>Users who can be @mentioned. The composer opens an inline picker on <code>@</code>.</td></tr>
+      <tr><td><code class="t-mono">onAdd</code></td><td><code class="t-mono">(text, parentId?) => void</code></td><td>Called on submit. <code>parentId</code> is set for replies.</td></tr>
+      <tr><td><code class="t-mono">onEdit</code></td><td><code class="t-mono">(id, text) => void</code></td><td>Called when the author saves an edit.</td></tr>
+      <tr><td><code class="t-mono">onResolve</code></td><td><code class="t-mono">(id) => void</code></td><td>Mark a comment as resolved.</td></tr>
+      <tr><td><code class="t-mono">onReact</code></td><td><code class="t-mono">(id, emoji) => void</code></td><td>Add an emoji reaction.</td></tr>
+      <tr><td><code class="t-mono">showResolved</code></td><td><code class="t-mono">boolean</code></td><td>Reveal resolved comments.</td></tr>
+      <tr><td><code class="t-mono">onToggleShowResolved</code></td><td><code class="t-mono">(next) => void</code></td><td>Wired up to the built-in <em>Show resolved (N)</em> button.</td></tr>
+    </tbody>
+    </table>
+  </section>
+
+  <section id="composition">
+    <h2 class="ds-h2">Composition</h2>
+    <p>Comments thread composes from <a href="p-avatar.html">avatar</a> + <a href="p-text.html">text</a> + <a href="p-button.html">button</a> + <a href="p-textarea.html">textarea</a>. The pattern handles threading, mentions, reactions, and resolve in one component.</p><p><strong>Don't use this for:</strong> public-facing comment threads — this is built for an in-product collaboration model with a known mention set. For pure activity logs use <a href="b-activity.html">activity feed</a>.</p>
+  </section>
+
+  <section id="responsive">
+    <h2 class="ds-h2">Responsive behaviour</h2>
+    <table class="ds-props"><thead><tr><th>Viewport</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr><td>Phone (≤ 720 px)</td><td>Avatars at 28 px; replies indent 16 px; composer expands to full width when focused.</td></tr>
+      <tr><td>Tablet (720 – 1023 px)</td><td>Avatars 32 px; replies indent 24 px.</td></tr>
+      <tr><td>Desktop (≥ 1024 px)</td><td>Avatars 36 px; replies indent 32 px; reactions appear on hover, persistent when ≥ 1.</td></tr>
+    </tbody>
+    </table>
+  </section>
+
+  <section id="anatomy">
+    <h2 class="ds-h2">CSS API</h2>
+    <table class="ds-props"><thead><tr><th>Class</th><th>Value</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code class="t-mono">.comments</code></td><td>vertical stack inside a card · padding 16 / 20</td><td>Root container.</td></tr>
+      <tr><td>comment row</td><td>36 px avatar + 1fr · gap 12</td><td>One row per comment.</td></tr>
+      <tr><td>avatar</td><td>32 px circle · 600 12/1</td><td>Initials when no image.</td></tr>
+      <tr><td>name</td><td>500 14/1, --text-strong</td><td>Author name.</td></tr>
+      <tr><td>meta</td><td>12/1 --text-muted · 11/1 mono --text-subtle</td><td>Role label · relative time.</td></tr>
+      <tr><td>body</td><td>400 14/1.55, --text-body</td><td>Prose; supports <code class="t-mono">@mention</code> chips inline.</td></tr>
+      <tr><td>mention chip</td><td>brand-soft pill · 16 px avatar inside</td><td>Renders as an <code>&lt;a&gt;</code> with <code>data-mention-id</code>.</td></tr>
+    </tbody>
+    </table>
+  </section>
+
+  <section id="related">
+    <h2 class="ds-h2">Related</h2>
+    <ul class="ds-list">
+      <li><a href="b-activity.html">Activity feed</a> — for the <em>what</em> (audit log); comments are for the <em>why</em>.</li>
+      <li><a href="x-detail-view.html">Detail view</a> — the surface comments sit inside.</li>
+      <li><a href="p-textarea.html">Textarea</a> — the composer primitive.</li>
+    </ul>
+  </section>
+
+  <section id="keyboard">
+    <h2 class="ds-h2">Keyboard &amp; accessibility</h2>
+    <table class="ds-props"><thead><tr><th>Key</th><th>Behaviour</th></tr></thead>
+    <tbody>
+      <tr><td><code>Tab</code></td><td>Move between composer, reactions, reply/edit/resolve buttons.</td></tr>
+      <tr><td><code>Enter (in composer)</code></td><td>New line.</td></tr>
+      <tr><td><code>⌘ / Ctrl + Enter</code></td><td>Submit the composer.</td></tr>
+      <tr><td><code>@</code></td><td>Open the mention picker — ↑↓ to navigate, Enter to accept.</td></tr>
+      <tr><td><code>Esc</code></td><td>Cancel an open reply / edit / mention picker.</td></tr>
+    </tbody>
+    </table>
+    <ul class="ds-list" style="margin-top: 14px;">
+      <li>Each comment is a <code>&lt;article&gt;</code> with an <code>aria-label</code> composed of author + relative time.</li>
+      <li>Resolved threads collapse behind a <em>Show resolved (N)</em> button that toggles <code>aria-expanded</code>.</li>
+      <li>Mentions render as <code>&lt;a&gt;</code> with <code>data-mention-id</code> so screen readers announce the name, not the @-handle.</li>
+    </ul>
+  </section>
+
   <nav class="ds-pager">
     <a href="b-activity.html"><div class="pager-label">← Previous</div><div class="pager-title">Activity feed</div></a>
     <a href="b-pricing.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Pricing card</div></a>
@@ -96,7 +172,7 @@ export function Example() {
 </article>
 <aside class="ds-toc">
   <div class="toc-label">On this page</div>
-  <ul><li><a href="#default" class="current">Default</a></li><li><a href="#composer">Composer</a></li><li><a href="#mentions">With mentions</a></li><li><a href="#rules">Rules</a></li></ul>
+  <ul><li><a href="#default" class="current">Default</a></li><li><a href="#composer">Composer</a></li><li><a href="#mentions">With mentions</a></li><li><a href="#react-api">React API</a></li><li><a href="#composition">Composition</a></li><li><a href="#responsive">Responsive</a></li><li><a href="#anatomy">CSS API</a></li><li><a href="#keyboard">Keyboard</a></li><li><a href="#rules">Rules</a></li><li><a href="#related">Related</a></li></ul>
 </aside>
 </div>
 </main>

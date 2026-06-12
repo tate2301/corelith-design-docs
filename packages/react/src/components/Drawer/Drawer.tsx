@@ -1,7 +1,18 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import {
+  forwardRef,
+  useEffect,
+  useId,
+  useImperativeHandle,
+  useRef,
+  type ReactNode,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { cx } from '../../utils/cx';
+import { isTop, popOverlay, pushOverlay } from '../../utils/overlayStack';
 import './Drawer.css';
+
+const FOCUSABLE =
+  'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
 export interface DrawerProps {
   open: boolean;
@@ -21,36 +32,78 @@ export interface DrawerProps {
   className?: string;
 }
 
-export function Drawer({
-  open,
-  onClose,
-  title,
-  subtitle,
-  footer,
-  children,
-  side = 'right',
-  dismissOnBackdrop = true,
-  dismissOnEscape = true,
-  container,
-  className,
-}: DrawerProps) {
+/**
+ * Drawer — side-anchored sheet rendered in a portal.
+ *
+ * Participates in the overlay stack — Escape closes the topmost overlay first
+ * (e.g. a Modal opened inside a Drawer closes ahead of the Drawer). Forwarded
+ * ref points at the drawer's `role="dialog"` element.
+ *
+ * @example
+ * ```tsx
+ * <Drawer open={open} onClose={close} side="right" title="Settings">
+ *   body
+ * </Drawer>
+ * ```
+ */
+export const Drawer = forwardRef<HTMLDivElement, DrawerProps>(function Drawer(
+  {
+    open,
+    onClose,
+    title,
+    subtitle,
+    footer,
+    children,
+    side = 'right',
+    dismissOnBackdrop = true,
+    dismissOnEscape = true,
+    container,
+    className,
+  },
+  forwardedRef,
+) {
   const ref = useRef<HTMLDivElement | null>(null);
   const lastFocus = useRef<HTMLElement | null>(null);
   const titleId = useId();
 
+  useImperativeHandle(forwardedRef, () => ref.current as HTMLDivElement, []);
+
   useEffect(() => {
     if (!open) return;
+    const token = pushOverlay();
     lastFocus.current = (document.activeElement as HTMLElement | null) ?? null;
-    ref.current?.focus();
+    const node = ref.current;
+    if (node) {
+      const focusable = node.querySelectorAll<HTMLElement>(FOCUSABLE);
+      (focusable[0] ?? node).focus();
+    }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && dismissOnEscape) {
+        if (!isTop(token)) return;
         e.preventDefault();
+        e.stopPropagation();
         onClose();
+        return;
+      }
+      if (e.key === 'Tab' && node) {
+        const focusable = Array.from(node.querySelectorAll<HTMLElement>(FOCUSABLE));
+        if (focusable.length === 0) return;
+        const first = focusable[0]!;
+        const last = focusable[focusable.length - 1]!;
+        const active = document.activeElement as HTMLElement | null;
+        if (e.shiftKey && active === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     };
     document.addEventListener('keydown', onKey);
     return () => {
       document.removeEventListener('keydown', onKey);
+      popOverlay(token);
       lastFocus.current?.focus?.();
     };
   }, [open, onClose, dismissOnEscape]);
@@ -89,4 +142,4 @@ export function Drawer({
     </>,
     target,
   );
-}
+});

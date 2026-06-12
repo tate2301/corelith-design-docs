@@ -10,6 +10,14 @@ export interface SkeletonProps extends HTMLAttributes<HTMLDivElement> {
   gap?: number;
 }
 
+/**
+ * Skeleton — content placeholder for loading states.
+ *
+ * @example
+ * ```tsx
+ * <Skeleton />
+ * ```
+ */
 export const Skeleton = forwardRef<HTMLDivElement, SkeletonProps>(function Skeleton(
   { width, height, lines = 1, gap = 8, className, style, ...rest },
   ref,

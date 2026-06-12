@@ -17,6 +17,14 @@ export interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement
   children?: ReactNode;
 }
 
+/**
+ * Button — Corelith component.
+ *
+ * @example
+ * ```tsx
+ * <Button />
+ * ```
+ */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
   {
     variant = 'primary',

@@ -26,6 +26,14 @@ function pickFiles(list: FileList | null | undefined): File[] {
   return Array.from(list);
 }
 
+/**
+ * FileUpload — drag-and-drop file picker.
+ *
+ * @example
+ * ```tsx
+ * <FileUpload />
+ * ```
+ */
 export const FileUpload = forwardRef<HTMLDivElement, FileUploadProps>(function FileUpload(
   { onFiles, accept, multiple, disabled, className, children, ...rest },
   ref,

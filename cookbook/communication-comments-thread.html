@@ -263,61 +263,69 @@ function reducer(s: State, a: Action): State {
     <div class="ck-step"><span class="n">02</span><h3>Render the thread with one level of nesting</h3></div>
     <p>Group comments by parentless then attach replies. Each comment is its own component with author, body, time, reactions and a row of actions. Replies indent by a single step; deeper nesting flattens to the same indent so the thread never disappears off the right.</p>
     <div class="ds-specimen"
-         data-code='import { Avatar, Stack, Button } from &#39;@corelithzw/react&#39;;
+         data-code='import { useState } from &#39;react&#39;;
+import { CommentsThread, DEFAULT_REACTIONS } from &#39;@corelithzw/react&#39;;
+import type {
+  CommentsThreadProps, Comment as ThreadComment, CommentAuthor, MentionTarget,
+} from &#39;@corelithzw/react&#39;;
 
-function Thread({ comments, currentUserId, dispatch }: {
-  comments: Comment[];
-  currentUserId: string;
-  dispatch: React.Dispatch&lt;Action&gt;;
+// CommentsThread is the canonical export — it handles one-level
+// nesting, the resolved toggle, reactions (DEFAULT_REACTIONS),
+// and the inline @mention composer. We just feed it data + handlers.
+export function ThreadPanel({
+  initial, currentUser, mentionable,
+}: {
+  initial: ThreadComment[];
+  currentUser: CommentAuthor;
+  mentionable: MentionTarget[];
 }) {
-  const tops = comments.filter((c) =&gt; c.parentId === null);
-  const replies = (id: CommentId) =&gt; comments.filter((c) =&gt; c.parentId === id);
+  const [comments, setComments] = useState&lt;ThreadComment[]&gt;(initial);
+  const [showResolved, setShowResolved] = useState(false);
+
+  const handleAdd: CommentsThreadProps[&#39;onAdd&#39;] = (text, parentId) =&gt; {
+    setComments((cur) =&gt; [
+      ...cur,
+      {
+        id: crypto.randomUUID(),
+        parentId: parentId ?? null,
+        author: currentUser,
+        body: text,
+        createdAt: new Date().toISOString(),
+        reactions: {},
+      },
+    ]);
+  };
+
+  const handleResolve: CommentsThreadProps[&#39;onResolve&#39;] = (id) =&gt; {
+    setComments((cur) =&gt; cur.map((c) =&gt;
+      c.id === id ? { ...c, resolved: !c.resolved } : c,
+    ));
+  };
+
+  // Reaction toggles use the DEFAULT_REACTIONS palette.
+  const handleReact: CommentsThreadProps[&#39;onReact&#39;] = (id, emoji) =&gt; {
+    setComments((cur) =&gt; cur.map((c) =&gt; {
+      if (c.id !== id) return c;
+      const users = c.reactions?.[emoji] ?? [];
+      const mine = users.includes(currentUser.id);
+      const next = mine ? users.filter((u) =&gt; u !== currentUser.id) : [...users, currentUser.id];
+      return { ...c, reactions: { ...c.reactions, [emoji]: next } };
+    }));
+  };
+
+  console.log(&#39;palette&#39;, DEFAULT_REACTIONS);
 
   return (
-    &lt;Stack gap=&quot;md&quot; role=&quot;feed&quot; aria-label=&quot;Comments&quot;&gt;
-      {tops.map((c) =&gt; (
-        &lt;CommentRow key={c.id} c={c} currentUserId={currentUserId} dispatch={dispatch}&gt;
-          {replies(c.id).map((r) =&gt; (
-            &lt;CommentRow
-              key={r.id}
-              c={r}
-              currentUserId={currentUserId}
-              dispatch={dispatch}
-              indent
-            /&gt;
-          ))}
-        &lt;/CommentRow&gt;
-      ))}
-    &lt;/Stack&gt;
-  );
-}
-
-function CommentRow({ c, currentUserId, dispatch, indent, children }: {
-  c: Comment;
-  currentUserId: string;
-  dispatch: React.Dispatch&lt;Action&gt;;
-  indent?: boolean;
-  children?: React.ReactNode;
-}) {
-  const edited = c.edits.length &gt; 0;
-  return (
-    &lt;article
-      className={`comment ${indent ? &#39;is-reply&#39; : &#39;&#39;} ${c.resolved ? &#39;is-resolved&#39; : &#39;&#39;}`}
-      aria-label={`${c.author.name}, ${c.createdAt}`}
-    &gt;
-      &lt;Avatar name={c.author.name} size=&quot;sm&quot; /&gt;
-      &lt;div&gt;
-        &lt;header&gt;
-          &lt;b&gt;{c.author.name}&lt;/b&gt;
-          &lt;time dateTime={c.createdAt}&gt;{relative(c.createdAt)}&lt;/time&gt;
-          {edited &amp;&amp; &lt;span className=&quot;edited&quot; title={`Edited ${c.edits.length}×`}&gt;edited&lt;/span&gt;}
-          {c.resolved &amp;&amp; &lt;span className=&quot;resolved-tag&quot;&gt;resolved&lt;/span&gt;}
-        &lt;/header&gt;
-        &lt;Body body={c.body} /&gt;
-        &lt;CommentActions c={c} currentUserId={currentUserId} dispatch={dispatch} /&gt;
-        {children}
-      &lt;/div&gt;
-    &lt;/article&gt;
+    &lt;CommentsThread
+      comments={comments}
+      currentUser={currentUser}
+      mentionable={mentionable}
+      onAdd={handleAdd}
+      onResolve={handleResolve}
+      onReact={handleReact}
+      showResolved={showResolved}
+      onToggleShowResolved={setShowResolved}
+    /&gt;
   );
 }'>
       <div class="ds-specimen-stage canvas padded">
@@ -430,7 +438,8 @@ function Composer({
     <div class="ck-step"><span class="n">04</span><h3>Edit in place — and keep the history</h3></div>
     <p>Clicking "Edit" replaces the body with a small textarea pre-filled with the current body. Submitting dispatches EDIT, which pushes the old body onto <code>edits[]</code>. The small "edited" indicator hovers a tooltip with the edit count; the change is visible but quiet.</p>
     <div class="ds-specimen"
-         data-code='function EditableBody({
+         data-code='// ... renderMentions, Button, TextArea, Stack come from step 3 imports
+function EditableBody({
   c, onSave,
 }: {
   c: Comment;
@@ -453,7 +462,7 @@ function Composer({
   return (
     &lt;div className=&quot;editor&quot;&gt;
       &lt;TextArea value={draft} onChange={setDraft} autoFocus rows={3} /&gt;
-      &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot;&gt;
+      &lt;Stack direction=&quot;horizontal&quot; gap=&quot;sm&quot;&gt;
         &lt;Button variant=&quot;primary&quot; onClick={() =&gt; {
           onSave(draft.trim());
           setEditing(false);
@@ -484,261 +493,74 @@ function Composer({
     <h2 class="ds-h2">Final composition</h2>
     <p class="ds-h2-sub">The whole <code>CommentsPanel</code> — reducer, thread, composer, edit, resolve toggle.</p>
     <div class="ds-specimen"
-         data-code='import { useReducer, useRef, useState } from &#39;@corelithzw/react&#39;;
-import {
-  CommentsThread, useComments,
-  Avatar, Stack, Button, TextArea, Combobox, Toast, useToast,
+         data-code='import { useState } from &#39;react&#39;;
+import { CommentsThread, useToast } from &#39;@corelithzw/react&#39;;
+import type {
+  Comment as ThreadComment, CommentAuthor, MentionTarget,
 } from &#39;@corelithzw/react&#39;;
 
-type CommentId = string;
-type Edit = { at: string; body: string };
-
-type Comment = {
-  id: CommentId;
-  parentId: CommentId | null;
-  author: { id: string; name: string };
-  body: string;
-  createdAt: string;
-  edits: Edit[];
-  resolved: boolean;
-  reactions: Record&lt;string, string[]&gt;;
-};
-
-type State = { comments: Comment[]; showResolved: boolean };
-
-type Action =
-  | { type: &#39;ADD&#39;;     comment: Comment }
-  | { type: &#39;EDIT&#39;;    id: CommentId; body: string; at: string }
-  | { type: &#39;RESOLVE&#39;; id: CommentId; resolved: boolean }
-  | { type: &#39;REACT&#39;;   id: CommentId; emoji: string; userId: string }
-  | { type: &#39;TOGGLE_RESOLVED_VIEW&#39; };
-
-function reducer(s: State, a: Action): State {
-  switch (a.type) {
-    case &#39;ADD&#39;: return { ...s, comments: [...s.comments, a.comment] };
-    case &#39;EDIT&#39;: return {
-      ...s,
-      comments: s.comments.map((c) =&gt; c.id === a.id ? {
-        ...c,
-        edits: [...c.edits, { at: a.at, body: c.body }],
-        body: a.body,
-      } : c),
-    };
-    case &#39;RESOLVE&#39;: return {
-      ...s,
-      comments: s.comments.map((c) =&gt; c.id === a.id ? { ...c, resolved: a.resolved } : c),
-    };
-    case &#39;REACT&#39;: return {
-      ...s,
-      comments: s.comments.map((c) =&gt; {
-        if (c.id !== a.id) return c;
-        const have = c.reactions[a.emoji] ?? [];
-        const next = have.includes(a.userId)
-          ? have.filter((u) =&gt; u !== a.userId)
-          : [...have, a.userId];
-        return { ...c, reactions: { ...c.reactions, [a.emoji]: next } };
-      }),
-    };
-    case &#39;TOGGLE_RESOLVED_VIEW&#39;:
-      return { ...s, showResolved: !s.showResolved };
-  }
-}
-
+// CommentsThread handles the rendering, threading, edit-in-place,
+// reactions, mentions and resolve-toggle. The parent owns the data.
 export function CommentsPanel({
-  initial, members, currentUserId,
+  initial, mentionable, currentUser,
 }: {
-  initial: Comment[];
-  members: { id: string; name: string }[];
-  currentUserId: string;
+  initial: ThreadComment[];
+  mentionable: MentionTarget[];
+  currentUser: CommentAuthor;
 }) {
-  const [s, dispatch] = useReducer(reducer, {
-    comments: initial,
-    showResolved: false,
-  });
+  const [comments, setComments] = useState&lt;ThreadComment[]&gt;(initial);
+  const [showResolved, setShowResolved] = useState(false);
   const toast = useToast();
 
-  const unresolved = s.comments.filter((c) =&gt; !c.resolved);
-  const resolved   = s.comments.filter((c) =&gt; c.resolved);
-  const view = s.showResolved ? s.comments : unresolved;
-
-  const tops    = view.filter((c) =&gt; c.parentId === null);
-  const replies = (id: CommentId) =&gt; view.filter((c) =&gt; c.parentId === id);
-
-  const add = (parentId: CommentId | null, body: string) =&gt; {
-    const author = members.find((m) =&gt; m.id === currentUserId)!;
-    dispatch({
-      type: &#39;ADD&#39;,
-      comment: {
+  const onAdd = (text: string, parentId?: string | null) =&gt; {
+    setComments((cur) =&gt; [
+      ...cur,
+      {
         id: crypto.randomUUID(),
-        parentId,
-        author,
-        body,
+        parentId: parentId ?? null,
+        author: currentUser,
+        body: text,
         createdAt: new Date().toISOString(),
-        edits: [],
-        resolved: false,
         reactions: {},
       },
-    });
+    ]);
+    toast.show({ tone: &#39;success&#39;, title: &#39;Comment posted&#39; });
+  };
+
+  const onEdit = (id: string, text: string) =&gt; {
+    setComments((cur) =&gt; cur.map((c) =&gt; (c.id === id ? { ...c, body: text } : c)));
+  };
+
+  const onResolve = (id: string) =&gt; {
+    setComments((cur) =&gt; cur.map((c) =&gt; (c.id === id ? { ...c, resolved: !c.resolved } : c)));
+  };
+
+  const onReact = (id: string, emoji: string) =&gt; {
+    setComments((cur) =&gt; cur.map((c) =&gt; {
+      if (c.id !== id) return c;
+      const users = c.reactions?.[emoji] ?? [];
+      const mine = users.includes(currentUser.id);
+      const next = mine ? users.filter((u) =&gt; u !== currentUser.id) : [...users, currentUser.id];
+      return { ...c, reactions: { ...c.reactions, [emoji]: next } };
+    }));
   };
 
   return (
     &lt;section aria-label=&quot;Comments&quot;&gt;
-      &lt;header className=&quot;thread-head&quot;&gt;
-        &lt;h2&gt;{unresolved.length} unresolved&lt;/h2&gt;
-        {resolved.length &gt; 0 &amp;&amp; (
-          &lt;Button
-            variant=&quot;ghost&quot;
-            onClick={() =&gt; dispatch({ type: &#39;TOGGLE_RESOLVED_VIEW&#39; })}
-          &gt;
-            {s.showResolved ? &#39;Hide resolved&#39; : `Show resolved (${resolved.length})`}
-          &lt;/Button&gt;
-        )}
-      &lt;/header&gt;
-
-      &lt;Stack gap=&quot;md&quot; role=&quot;feed&quot;&gt;
-        {tops.map((c) =&gt; (
-          &lt;CommentRow
-            key={c.id}
-            c={c}
-            members={members}
-            currentUserId={currentUserId}
-            dispatch={dispatch}
-            onReply={(body) =&gt; add(c.id, body)}
-            replies={replies(c.id)}
-          /&gt;
-        ))}
-      &lt;/Stack&gt;
-
-      &lt;Composer
-        members={members}
-        currentUserId={currentUserId}
-        onSubmit={(body) =&gt; {
-          add(null, body);
-          toast.show({ tone: &#39;success&#39;, title: &#39;Comment posted&#39; });
-        }}
+      &lt;CommentsThread
+        comments={comments}
+        currentUser={currentUser}
+        mentionable={mentionable}
+        onAdd={onAdd}
+        onEdit={onEdit}
+        onResolve={onResolve}
+        onReact={onReact}
+        showResolved={showResolved}
+        onToggleShowResolved={setShowResolved}
       /&gt;
     &lt;/section&gt;
   );
-}
-
-function CommentRow({
-  c, members, currentUserId, dispatch, onReply, replies,
-}: {
-  c: Comment;
-  members: { id: string; name: string }[];
-  currentUserId: string;
-  dispatch: React.Dispatch&lt;Action&gt;;
-  onReply: (body: string) =&gt; void;
-  replies: Comment[];
-}) {
-  const [editing, setEditing] = useState(false);
-  const [replying, setReplying] = useState(false);
-  const [draft, setDraft] = useState(c.body);
-
-  const edited = c.edits.length &gt; 0;
-
-  return (
-    &lt;article
-      className={`comment ${c.resolved ? &#39;is-resolved&#39; : &#39;&#39;}`}
-      aria-label={`${c.author.name}, ${c.createdAt}`}
-    &gt;
-      &lt;Avatar name={c.author.name} size=&quot;sm&quot; /&gt;
-      &lt;div&gt;
-        &lt;header&gt;
-          &lt;b&gt;{c.author.name}&lt;/b&gt;
-          &lt;time dateTime={c.createdAt}&gt;{relative(c.createdAt)}&lt;/time&gt;
-          {edited &amp;&amp; (
-            &lt;span className=&quot;edited&quot; title={`Edited ${c.edits.length}×`}&gt;edited&lt;/span&gt;
-          )}
-          {c.resolved &amp;&amp; &lt;span className=&quot;resolved-tag&quot;&gt;resolved&lt;/span&gt;}
-        &lt;/header&gt;
-
-        {editing ? (
-          &lt;Stack gap=&quot;sm&quot;&gt;
-            &lt;TextArea value={draft} onChange={setDraft} autoFocus rows={3} /&gt;
-            &lt;Stack direction=&quot;row&quot; gap=&quot;sm&quot;&gt;
-              &lt;Button variant=&quot;primary&quot; onClick={() =&gt; {
-                dispatch({ type: &#39;EDIT&#39;, id: c.id, body: draft.trim(), at: new Date().toISOString() });
-                setEditing(false);
-              }}&gt;Save&lt;/Button&gt;
-              &lt;Button variant=&quot;ghost&quot; onClick={() =&gt; {
-                setDraft(c.body); setEditing(false);
-              }}&gt;Cancel&lt;/Button&gt;
-            &lt;/Stack&gt;
-          &lt;/Stack&gt;
-        ) : (
-          &lt;p&gt;{renderMentions(c.body)}&lt;/p&gt;
-        )}
-
-        &lt;footer className=&quot;actions&quot;&gt;
-          &lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot; onClick={() =&gt; setReplying((v) =&gt; !v)}&gt;
-            Reply
-          &lt;/Button&gt;
-          &lt;ReactionButton
-            comment={c}
-            currentUserId={currentUserId}
-            onToggle={(emoji) =&gt; dispatch({ type: &#39;REACT&#39;, id: c.id, emoji, userId: currentUserId })}
-          /&gt;
-          {c.author.id === currentUserId &amp;&amp; !c.resolved &amp;&amp; (
-            &lt;Button variant=&quot;ghost&quot; size=&quot;sm&quot; onClick={() =&gt; setEditing(true)}&gt;Edit&lt;/Button&gt;
-          )}
-          &lt;Button
-            variant=&quot;ghost&quot;
-            size=&quot;sm&quot;
-            onClick={() =&gt; dispatch({ type: &#39;RESOLVE&#39;, id: c.id, resolved: !c.resolved })}
-          &gt;
-            {c.resolved ? &#39;Reopen&#39; : &#39;Resolve&#39;}
-          &lt;/Button&gt;
-        &lt;/footer&gt;
-
-        {replies.length &gt; 0 &amp;&amp; (
-          &lt;div className=&quot;replies&quot;&gt;
-            {replies.map((r) =&gt; (
-              &lt;CommentRow
-                key={r.id}
-                c={r}
-                members={members}
-                currentUserId={currentUserId}
-                dispatch={dispatch}
-                onReply={onReply}
-                replies={[]}
-              /&gt;
-            ))}
-          &lt;/div&gt;
-        )}
-
-        {replying &amp;&amp; (
-          &lt;Composer
-            members={members}
-            currentUserId={currentUserId}
-            onSubmit={(body) =&gt; { onReply(body); setReplying(false); }}
-          /&gt;
-        )}
-      &lt;/div&gt;
-    &lt;/article&gt;
-  );
-}
-
-function ReactionButton({ comment, currentUserId, onToggle }: {
-  comment: Comment;
-  currentUserId: string;
-  onToggle: (emoji: string) =&gt; void;
-}) {
-  const count = comment.reactions[&#39;👍&#39;]?.length ?? 0;
-  const mine  = comment.reactions[&#39;👍&#39;]?.includes(currentUserId);
-  return (
-    &lt;Button
-      variant={mine ? &#39;primary&#39; : &#39;ghost&#39;}
-      size=&quot;sm&quot;
-      onClick={() =&gt; onToggle(&#39;👍&#39;)}
-      aria-pressed={mine}
-    &gt;
-      👍 {count || &#39;&#39;}
-    &lt;/Button&gt;
-  );
-}
-
-// renderMentions / relative / Composer omitted for brevity — see step 3.'>
+}'>
       <div class="ds-specimen-stage canvas padded">
         <div style="display: grid; place-items: center; padding: 24px;">
           <div style="width: 460px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px;">

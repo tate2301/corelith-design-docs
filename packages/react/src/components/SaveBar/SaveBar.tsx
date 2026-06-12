@@ -16,6 +16,14 @@ export interface SaveBarProps extends Omit<HTMLAttributes<HTMLElement>, 'title'>
   actions?: ReactNode;
 }
 
+/**
+ * SaveBar — sticky save/discard footer for forms.
+ *
+ * @example
+ * ```tsx
+ * <SaveBar />
+ * ```
+ */
 export const SaveBar = forwardRef<HTMLElement, SaveBarProps>(function SaveBar(
   {
     dirty,

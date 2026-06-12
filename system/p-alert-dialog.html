@@ -20,37 +20,32 @@
       <span class="meta-pill"><span data-icon="check" data-icon-size="12"></span>Stable</span>
       <span class="meta-pill"><span class="t-mono">.alert-dialog</span></span>
       <span class="meta-pill">Blocking</span><span class="meta-pill">Use sparingly</span>
-    </div>
+    <span class="meta-pill" data-meta="api-status" style="background: var(--brand-soft); color: var(--brand-strong);">React + CSS</span></div>
   </header>
   <section id="default"><h2 class="ds-h2">Default</h2><p class="ds-h2-sub">Two-button. Cancel left, primary right.</p><div class="ds-specimen"
-               data-code='import {
-  AlertDialog,
-  AlertDialogTrigger,
-  AlertDialogContent,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogCancel,
-  AlertDialogAction,
-  Button,
-} from &#39;@corelith/design-system&#39;;
+               data-code='import { AlertDialog, Button } from &#39;@corelithzw/react&#39;;
+import { useState } from &#39;react&#39;;
 
 export function Example() {
+  const [open, setOpen] = useState(false);
   return (
-    &lt;AlertDialog&gt;
-      &lt;AlertDialogTrigger asChild&gt;
-        &lt;Button variant=&quot;danger&quot;&gt;Void receipt&lt;/Button&gt;
-      &lt;/AlertDialogTrigger&gt;
-      &lt;AlertDialogContent destructive&gt;
-        &lt;AlertDialogTitle&gt;Void receipt #00482?&lt;/AlertDialogTitle&gt;
-        &lt;AlertDialogDescription&gt;
-          This will reverse the $ 1,840.00 sale at Park Centre. The action is logged.
-        &lt;/AlertDialogDescription&gt;
-        &lt;AlertDialogCancel&gt;Cancel&lt;/AlertDialogCancel&gt;
-        &lt;AlertDialogAction danger&gt;Void receipt&lt;/AlertDialogAction&gt;
-      &lt;/AlertDialogContent&gt;
-    &lt;/AlertDialog&gt;
+    &lt;&gt;
+      &lt;Button tone=&quot;danger&quot; onClick={() =&gt; setOpen(true)}&gt;Void receipt&lt;/Button&gt;
+      &lt;AlertDialog
+        open={open}
+        onClose={() =&gt; setOpen(false)}
+        variant=&quot;danger&quot;
+        title=&quot;Void receipt #00482?&quot;
+        description=&quot;This will reverse the $ 1,840.00 sale at Park Centre. The action is logged.&quot;
+        confirmLabel=&quot;Void receipt&quot;
+        onConfirm={async () =&gt; { await voidReceipt(); }}
+      /&gt;
+    &lt;/&gt;
   );
-}'><div class="ds-specimen-stage canvas padded" style="display: block;"><div style="background: var(--surface); border-radius: 14px; box-shadow: var(--shadow-modal); width: 440px; margin: 0 auto;">
+}
+
+// Or imperative:
+// const ok = await AlertDialog.confirm({ title, description, variant: &#39;danger&#39; });'><div class="ds-specimen-stage canvas padded" style="display: block;"><div style="background: var(--surface); border-radius: 14px; box-shadow: var(--shadow-modal); width: 440px; margin: 0 auto;">
         <div style="padding: 24px 24px 18px;">
           <h2 style="font: 600 18px/1.3 var(--font-sans); color: var(--text-strong); margin: 0 0 8px;">Close shift S-2841?</h2>
           <p style="font: var(--type-body); color: var(--text-muted); margin: 0;">This will reconcile cash and lock Till 02. You can’t reopen a closed shift — only the next day.</p>
@@ -71,6 +66,38 @@ export function Example() {
           <button class="btn btn-destructive">Delete workspace</button>
         </div>
       </div></div><div class="ds-specimen-bar"><span class="label">Destructive confirm</span><span class="spacer"></span></div></div></section><section id="rules"><h2 class="ds-h2">Do & don't</h2><div class="ds-rules"><div class="rule do"><span class="tag">Do</span><p>Require a typed confirmation for permanently destructive things — delete workspace, delete employee record.</p></div><div class="rule dont"><span class="tag">Don't</span><p>Use an alert dialog for routine confirmations. Operators learn to dismiss them.</p></div><div class="rule do"><span class="tag">Do</span><p>Lead the body with the consequence — what will be lost.</p></div><div class="rule dont"><span class="tag">Don't</span><p>Default-focus the destructive button. Cancel should be the safe default.</p></div></div></section>
+  <section id="api"><h2 class="ds-h2">React API</h2><p class="ds-h2-sub">From <code class="inline">@corelithzw/react</code> v0.3.0. Single component with controlled <code class="inline">open</code> — no compound subcomponents.</p>
+  <table class="ds-props"><thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead><tbody>
+  <tr><td><code class="inline">open</code></td><td><code class="inline">boolean</code></td><td>—</td><td><b>Required.</b></td></tr>
+  <tr><td><code class="inline">onClose</code></td><td><code class="inline">() =&gt; void</code></td><td>—</td><td><b>Required.</b> Called on Cancel, ESC, scrim click, and after confirm.</td></tr>
+  <tr><td><code class="inline">title</code></td><td><code class="inline">ReactNode</code></td><td>—</td><td><b>Required.</b></td></tr>
+  <tr><td><code class="inline">description</code></td><td><code class="inline">ReactNode</code></td><td>—</td><td>Body copy — lead with the consequence.</td></tr>
+  <tr><td><code class="inline">variant</code></td><td><code class="inline">'default' | 'danger' | 'warning'</code></td><td><code class="inline">'default'</code></td><td>Tone of the confirm button + icon.</td></tr>
+  <tr><td><code class="inline">confirmLabel</code></td><td><code class="inline">ReactNode</code></td><td><code class="inline">'Confirm'</code></td><td></td></tr>
+  <tr><td><code class="inline">cancelLabel</code></td><td><code class="inline">ReactNode</code></td><td><code class="inline">'Cancel'</code></td><td></td></tr>
+  <tr><td><code class="inline">onConfirm</code></td><td><code class="inline">() =&gt; void | Promise&lt;void&gt;</code></td><td>—</td><td>Async returns put the confirm button in a loading state.</td></tr>
+  <tr><td><code class="inline">icon</code></td><td><code class="inline">ReactNode</code></td><td>auto</td><td>Variant-appropriate icon when omitted.</td></tr>
+  </tbody></table>
+  <p class="ds-h2-sub" style="margin-top:14px;">Static: <code class="inline">AlertDialog.confirm({...}) =&gt; Promise&lt;boolean&gt;</code> for imperative use.</p></section>
+  <section id="css"><h2 class="ds-h2">CSS API</h2>
+  <table class="ds-props"><thead><tr><th>Class</th><th>Effect</th></tr></thead><tbody>
+  <tr><td><code class="inline">.alert-dialog</code></td><td>Dialog surface (modal card).</td></tr>
+  <tr><td><code class="inline">.alert-dialog-danger</code> · <code class="inline">.alert-dialog-warning</code></td><td>Variant tone.</td></tr>
+  <tr><td><code class="inline">.alert-dialog-actions</code></td><td>Footer row.</td></tr>
+  </tbody></table></section>
+  <section id="keyboard"><h2 class="ds-h2">Keyboard</h2>
+  <table class="ds-props"><thead><tr><th>Key</th><th>Action</th></tr></thead><tbody>
+  <tr><td><kbd class="kbd">Esc</kbd></td><td>Cancel.</td></tr>
+  <tr><td><kbd class="kbd">Tab</kbd> / <kbd class="kbd">Shift+Tab</kbd></td><td>Focus is trapped inside the dialog.</td></tr>
+  <tr><td><kbd class="kbd">Enter</kbd></td><td>Activates the focused button (default focus is Cancel).</td></tr>
+  </tbody></table></section>
+  <section id="a11y"><h2 class="ds-h2">Accessibility</h2>
+  <table class="ds-props"><thead><tr><th>Concern</th><th>Contract</th></tr></thead><tbody>
+  <tr><td>Role</td><td><code class="inline">role="alertdialog"</code> with <code class="inline">aria-modal="true"</code>.</td></tr>
+  <tr><td>Label</td><td>Title and description are linked via <code class="inline">aria-labelledby</code> and <code class="inline">aria-describedby</code>.</td></tr>
+  <tr><td>Focus</td><td>Auto-focuses Cancel on open. Returns focus to the trigger on close.</td></tr>
+  <tr><td>Scrim click</td><td>Closes — equivalent to Cancel. Destructive flows should keep this safe-side.</td></tr>
+  </tbody></table></section>
   <nav class="ds-pager">
     <a href="p-alert.html"><div class="pager-label">← Previous</div><div class="pager-title">Alert</div></a>
     <a href="p-accordion.html" class="next"><div class="pager-label">Next →</div><div class="pager-title">Accordion</div></a>
@@ -78,7 +105,7 @@ export function Example() {
 </article>
 <aside class="ds-toc">
   <div class="toc-label">On this page</div>
-  <ul><li><a href="#default" class="current">Default</a></li><li><a href="#destructive">Destructive</a></li><li><a href="#rules">Do & don't</a></li></ul>
+  <ul><li><a href="#default" class="current">Default</a></li><li><a href="#destructive">Destructive</a></li><li><a href="#rules">Do & don't</a></li><li><a href="#api">React API</a></li><li><a href="#css">CSS API</a></li><li><a href="#keyboard">Keyboard</a></li><li><a href="#a11y">Accessibility</a></li></ul>
 </aside>
 </div>
 </main>

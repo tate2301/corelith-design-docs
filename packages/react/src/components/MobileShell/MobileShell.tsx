@@ -72,6 +72,14 @@ type MobileShellComponent = typeof MobileShellRoot & {
   NavItem: typeof MobileShellNavItem;
 };
 
+/**
+ * MobileShell — compound mobile app shell with tabs.
+ *
+ * @example
+ * ```tsx
+ * <MobileShell />
+ * ```
+ */
 export const MobileShell = MobileShellRoot as MobileShellComponent;
 MobileShell.Header = MobileShellHeader;
 MobileShell.Body = MobileShellBody;

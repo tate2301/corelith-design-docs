@@ -22,6 +22,14 @@ function pickTone(value: number, low?: number, high?: number): MeterTone {
   return 'default';
 }
 
+/**
+ * Meter — bounded numeric gauge (role="meter").
+ *
+ * @example
+ * ```tsx
+ * <Meter />
+ * ```
+ */
 export const Meter = forwardRef<HTMLDivElement, MeterProps>(function Meter(
   { value, min = 0, max = 100, low, high, optimum, tone, label, className, ...rest },
   ref,

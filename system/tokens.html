@@ -94,7 +94,7 @@
         <tr><td><span class="tok-sw" style="background:#16181D"></span></td><td class="tok-name">--text-strong</td><td class="tok-val">#16181D</td></tr>
         <tr><td><span class="tok-sw" style="background:#262A33"></span></td><td class="tok-name">--text-body</td><td class="tok-val">#262A33</td></tr>
         <tr><td><span class="tok-sw" style="background:#565C69"></span></td><td class="tok-name">--text-muted</td><td class="tok-val">#565C69</td></tr>
-        <tr><td><span class="tok-sw" style="background:#8A91A0"></span></td><td class="tok-name">--text-subtle</td><td class="tok-val">#8A91A0</td></tr>
+        <tr><td><span class="tok-sw" style="background:#5E6573"></span></td><td class="tok-name">--text-subtle</td><td class="tok-val">#5E6573</td></tr>
         <tr><td><span class="tok-sw" style="background:#F7F8FA"></span></td><td class="tok-name">--canvas</td><td class="tok-val">#F7F8FA</td></tr>
         <tr><td><span class="tok-sw" style="background:#FFFFFF"></span></td><td class="tok-name">--surface</td><td class="tok-val">#FFFFFF</td></tr>
         <tr><td><span class="tok-sw" style="background:#F1F3F6"></span></td><td class="tok-name">--surface-muted</td><td class="tok-val">#F1F3F6</td></tr>
@@ -221,6 +221,84 @@
         <tr><td><span class="tok-shadow" style="box-shadow:0 24px 64px -12px rgba(42,38,34,0.24),0 4px 12px rgba(42,38,34,0.08)"></span></td><td class="tok-name">--shadow-modal</td><td>Modals, sheets</td></tr>
       </tbody>
     </table>
+  </section>
+
+  <section id="layout" style="margin-top: 56px;">
+    <h2 class="ds-h2">Layout</h2>
+    <p class="ds-h2-sub">Fixed widths for the chrome around the product.</p>
+    <table class="ds-props">
+      <thead><tr><th>Token</th><th>Value</th><th>Use</th></tr></thead>
+      <tbody>
+        <tr><td class="tok-name">--sidebar-w</td><td class="tok-val">264px</td><td>Default app-shell sidebar</td></tr>
+        <tr><td class="tok-name">--sidebar-w-narrow</td><td class="tok-val">240px</td><td>Dense vertical kits</td></tr>
+        <tr><td class="tok-name">--rail-w</td><td class="tok-val">220px</td><td>Settings rail inside content</td></tr>
+        <tr><td class="tok-name">--content-max</td><td class="tok-val">900px</td><td>Forms, settings, prose</td></tr>
+        <tr><td class="tok-name">--gutter-x</td><td class="tok-val">24px</td><td>Horizontal page gutter</td></tr>
+        <tr><td class="tok-name">--row-y</td><td class="tok-val">12px</td><td>Vertical padding inside list rows</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="z-index" style="margin-top: 56px;">
+    <h2 class="ds-h2">Z-index ladder</h2>
+    <p class="ds-h2-sub">Reserved bands for the stacking order. No CSS custom property — every component picks a band by reading the elevation page. Documented here as a quick lookup.</p>
+    <table class="ds-props">
+      <thead><tr><th>Band</th><th>Z-index</th><th>What lives here</th></tr></thead>
+      <tbody>
+        <tr><td>Base</td><td class="tok-val">auto · 0</td><td>Page content, cards, tables</td></tr>
+        <tr><td>Local lift</td><td class="tok-val">1–5</td><td>Sticky table head, focus halo</td></tr>
+        <tr><td>In-page sticky</td><td class="tok-val">20–30</td><td>Portal sticky toolbar, mini-phone chrome</td></tr>
+        <tr><td>Sidebar / rails</td><td class="tok-val">44–55</td><td>Doc TOC, sidebar, command palette inline, settings rail</td></tr>
+        <tr><td>Top nav</td><td class="tok-val">60</td><td>Primary nav, bottom-tab bar, save-bar</td></tr>
+        <tr><td>Drawer / sheet</td><td class="tok-val">80–81</td><td>Side drawer + halo</td></tr>
+        <tr><td>Popover / menu</td><td class="tok-val">90</td><td>Dropdowns, autocomplete, date-picker</td></tr>
+        <tr><td>Modal</td><td class="tok-val">100</td><td>Modal &amp; alert dialogs</td></tr>
+        <tr><td>Toast</td><td class="tok-val">200</td><td>Toast stack, system banners</td></tr>
+        <tr><td>React portal ceiling</td><td class="tok-val">9998–9999</td><td>React-package overlays (defensive ceiling above third-party host pages)</td></tr>
+      </tbody>
+    </table>
+    <p class="t-muted t-body-sm" style="margin-top: 12px;">See <a href="elevation.html#zindex">Elevation → Z-index ladder</a> for the full rationale.</p>
+  </section>
+
+  <section id="export" style="margin-top: 56px;">
+    <h2 class="ds-h2">JSON export pipeline</h2>
+    <p class="ds-h2-sub">Tokens live in <code class="inline">tokens.css</code> as the source of truth. A small Node script projects them into the design-tokens JSON format used by Style Dictionary, Figma plugins, and downstream platforms.</p>
+
+    <table class="ds-props">
+      <thead><tr><th>File</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code class="inline">tokens.css</code></td><td>Source of truth · CSS custom properties consumed by every page.</td></tr>
+        <tr><td><code class="inline">scripts/extract-tokens.mjs</code></td><td>Parses <code class="inline">tokens.css</code>, splits the <code class="inline">:root</code> and <code class="inline">body.is-dark</code> blocks, and emits both JSON files.</td></tr>
+        <tr><td><code class="inline">tokens/tokens.json</code></td><td>Light / default cascade — design-tokens shape (<code class="inline">{ value, type, description? }</code>).</td></tr>
+        <tr><td><code class="inline">tokens/tokens.dark.json</code></td><td>Dark cascade overrides only — same shape, applied on top of the light file.</td></tr>
+        <tr><td><code class="inline">tokens/style-dictionary.config.json</code></td><td>Style Dictionary configuration — drives the platform-specific builds (Swift, Android, JS).</td></tr>
+      </tbody>
+    </table>
+
+    <h3 class="ds-h3" style="margin-top: 24px;">Workflow</h3>
+    <pre class="ds-code"><span class="c"># 1. Edit tokens.css (the source of truth)</span>
+$ vim tokens.css
+
+<span class="c"># 2. Regenerate the JSON projections</span>
+$ node scripts/extract-tokens.mjs
+  → wrote tokens/tokens.json
+  → wrote tokens/tokens.dark.json
+
+<span class="c"># 3. Optional — feed into Style Dictionary for native platforms</span>
+$ npx style-dictionary build --config tokens/style-dictionary.config.json</pre>
+
+    <p class="t-muted t-body-sm" style="margin-top: 12px;">The script is intentionally dependency-free — it only reads <code class="inline">tokens.css</code> with a regex parser. Adding a new token means adding it to <code class="inline">tokens.css</code> and re-running the script; downstream consumers pick it up automatically.</p>
+  </section>
+
+  <section id="export-use" style="margin-top: 56px;">
+    <h2 class="ds-h2">Use elsewhere</h2>
+    <p class="ds-h2-sub">A second exporter (<code class="inline">scripts/export-tokens.mjs</code>, run via <code class="inline">npm run tokens</code>) ships the same tokens in three downstream-ready shapes.</p>
+    <ul class="ds-list">
+      <li><a href="../tokens/corelith.json"><code class="inline">tokens/corelith.json</code></a> — for Figma (Tokens Studio plugin / W3C Design Tokens shape).</li>
+      <li><a href="../tokens/corelith.tailwind.css"><code class="inline">tokens/corelith.tailwind.css</code></a> — for Tailwind v4: <code class="inline">@import</code> once and the <code class="inline">@theme</code> block is wired up.</li>
+      <li><a href="../tokens/corelith.flat.json"><code class="inline">tokens/corelith.flat.json</code></a> — for raw JS / native pipelines: flat <code class="inline">name → value</code> map with a <code class="inline">_dark</code> overlay.</li>
+    </ul>
+    <p class="t-muted t-body-sm" style="margin-top: 12px;">See <a href="../tokens/README.md"><code class="inline">tokens/README.md</code></a> for the radius-scale mapping and dark-theme conventions.</p>
   </section>
 
   <div class="ds-callout" style="margin-top: 48px;">

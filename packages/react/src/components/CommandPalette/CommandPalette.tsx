@@ -34,6 +34,14 @@ export interface CommandPaletteProps {
   className?: string;
 }
 
+/**
+ * CommandPalette — ⌘K-style modal launcher.
+ *
+ * @example
+ * ```tsx
+ * <CommandPalette />
+ * ```
+ */
 export function CommandPalette({
   open,
   onClose,
