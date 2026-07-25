@@ -14,15 +14,14 @@
  *     the first time the tab is clicked.
  *
  * No host React required — uses @codesandbox/sandpack-client via
- * esm.sh. The sandbox iframe loads @tate2301/corelith from esm.sh too;
- * for v1 we ship a tiny inline shim that re-exports plain DOM
+ * esm.sh. The sandbox iframe maps @corelithzw/react to a tiny inline shim that re-exports plain DOM
  * elements with the docs-site components.css class names. Real
  * package resolution can land later without touching this file.
  */
 (function () {
   const CLIENT_URL = 'https://esm.sh/@codesandbox/sandpack-client@2';
 
-  // ── @tate2301/corelith bridge ──────────────────────────────────────
+  // ── @corelithzw/react bridge ──────────────────────────────────────
   // The package now ships a real IIFE bundle at
   // `packages/react/dist/cdn.global.js` that hangs every export off
   // `window.Corelith`. We resolve its URL from THIS script's own
@@ -48,7 +47,7 @@
   // then injects the IIFE bundle as a <script> tag, then re-exports
   // every key off `window.Corelith`. Hooks like `useState` are
   // re-exported straight from React so destructuring imports like
-  // `import { useState } from '@tate2301/corelith'` resolve too.
+  // `import { useState } from '@corelithzw/react'` resolve too.
   function buildBridgeModule() {
     return [
       "import * as React from 'react';",
@@ -76,8 +75,8 @@
       "",
       "// Re-export every named global off window.Corelith plus all",
       "// of React's hook surface so cookbook snippets that mix",
-      "// `import { Button } from '@tate2301/corelith'` and",
-      "// `import { useState } from '@tate2301/corelith'` both work.",
+      "// `import { Button } from '@corelithzw/react'` and",
+      "// `import { useState } from '@corelithzw/react'` both work.",
       "export const {",
       "  Alert, AppShell, AuthShell, Avatar, Badge, BottomSheet, BottomTabs,",
       "  Button, Checkbox, Combobox, CommandPalette, DataTable, DayList, Dialog,",
@@ -131,13 +130,13 @@
     };
   }
 
-  // Map bare-name '@tate2301/corelith' imports onto the local bridge module
+  // Map bare-name '@corelithzw/react' imports onto the local bridge module
   // that loads the CDN IIFE at runtime. (Sandpack also accepts an
   // import-map alternative, but its `react-ts` template already takes
   // local module paths verbatim — so the local mapping is all we need.)
   const IMPORT_MAP = {
     imports: {
-      '@tate2301/corelith': './corelith.js',
+      '@corelithzw/react': './corelith.js',
     },
   };
 
