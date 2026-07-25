@@ -15,6 +15,7 @@ All notable changes to `@tate2301/corelith` are documented here. The format foll
 
 - Updated complex pattern controls to compose Corelith primitives instead of reimplementing button/chip behavior.
 - Marked hookful, portal, context, and browser-bound modules with `"use client"` for Next.js compatibility.
+- Switched package publishing from GitHub Packages to the public npm registry.
 
 ## [0.1.2] — 2026-06-06
 

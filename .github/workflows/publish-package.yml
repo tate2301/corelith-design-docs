@@ -1,6 +1,6 @@
 name: Publish @tate2301/corelith
 
-# Publishes the React package to GitHub Packages when:
+# Publishes the React package to the public npm registry when:
 #   - Push to main touches packages/react/** AND the version in
 #     packages/react/package.json hasn't already been published.
 #   - A tag matching corelith-v* is pushed.
@@ -21,7 +21,6 @@ on:
 
 permissions:
   contents: write   # required to push the corelith-vX.Y.Z tag + create the Release
-  packages: write
 
 jobs:
   publish:
@@ -39,7 +38,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          registry-url: 'https://npm.pkg.github.com'
+          registry-url: 'https://registry.npmjs.org'
           scope: '@tate2301'
 
       - name: Read package version
@@ -53,8 +52,6 @@ jobs:
 
       - name: Skip if version already published
         id: skip
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           name='${{ steps.pkg.outputs.name }}'
           version='${{ steps.pkg.outputs.version }}'
@@ -87,11 +84,21 @@ jobs:
           fi
           echo "OK — dist/cdn.global.js references Corelith."
 
-      - name: Publish to GitHub Packages
+      - name: Verify npm token is configured
         if: steps.skip.outputs.skip != 'true'
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm publish
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "::error::Missing NPM_TOKEN repository secret. Create an npm automation token with publish access for @tate2301/corelith."
+            exit 1
+          fi
+
+      - name: Publish to npm
+        if: steps.skip.outputs.skip != 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
 
       # ── Tag + Release ─────────────────────────────────────────
       # After a successful publish we cut `corelith-vX.Y.Z` and a matching
@@ -156,12 +163,12 @@ jobs:
               body = `${process.env.NOTES_BODY}\n\n---\n\n### Install\n${installSnippet}`;
             } else {
               body = [
-                `Released \`${name}@${version}\` to GitHub Packages.`,
+                `Released \`${name}@${version}\` to the public npm registry.`,
                 ``,
                 `### Install`,
                 installSnippet,
                 ``,
-                `View on the [packages page](https://github.com/${context.repo.owner}/${context.repo.repo}/pkgs/npm/corelith).`,
+                `View on [npm](https://www.npmjs.com/package/${encodeURIComponent(name).replace('%40', '@')}).`,
               ].join('\n');
             }
 
@@ -210,7 +217,7 @@ jobs:
             const sha = context.sha;
             const releaseUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/releases/tag/corelith-v${version}`;
             const body = [
-              `Published \`${name}@${version}\` to GitHub Packages.`,
+              `Published \`${name}@${version}\` to the public npm registry.`,
               ``,
               `**Release:** ${releaseUrl}`,
               ``,
@@ -219,7 +226,7 @@ jobs:
               `npm install ${name}@${version}`,
               '```',
               ``,
-              `View on the [packages page](https://github.com/${context.repo.owner}/${context.repo.repo}/pkgs/npm/corelith).`,
+              `View on [npm](https://www.npmjs.com/package/${encodeURIComponent(name).replace('%40', '@')}).`,
             ].join('\n');
             await github.rest.repos.createCommitComment({
               owner: context.repo.owner,

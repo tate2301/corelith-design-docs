@@ -2,24 +2,13 @@
 
 Thin React wrappers over the Corelith design-system CSS. Components render the exact class names already shipped in `components.css`, so any cookbook recipe in the docs site translates verbatim into your app.
 
-> **Status:** `v0.3.2` — published to GitHub Packages under `@tate2301/corelith`. ~50 components, 6 hooks, full TypeScript types, bundled design-system stylesheet.
+> **Status:** `v0.3.2` — published to npm under `@tate2301/corelith`. ~50 components, 6 hooks, full TypeScript types, bundled design-system stylesheet.
 
 ## Install
 
-`@tate2301/corelith` is published to **GitHub Packages**, not the public npm registry. You need three lines of setup:
+`@tate2301/corelith` is published to the public npm registry:
 
 ```bash
-# 1. Point the @tate2301 scope at GitHub Packages. Either edit ~/.npmrc
-#    globally, or create a repo-level .npmrc next to your package.json:
-echo "@tate2301:registry=https://npm.pkg.github.com" >> ~/.npmrc
-
-# 2. Authenticate. The package is public, so anonymous reads work in CI
-#    (GITHUB_TOKEN has read:packages by default). On a developer machine,
-#    create a Personal Access Token with read:packages scope and add:
-#       //npm.pkg.github.com/:_authToken=YOUR_PAT
-#    to ~/.npmrc (one-time setup).
-
-# 3. Install.
 npm install @tate2301/corelith react react-dom
 # or
 pnpm add @tate2301/corelith react react-dom
@@ -32,6 +21,10 @@ import '@tate2301/corelith/styles.css';
 ```
 
 That single import pulls in the design-system tokens, `components.css` and the per-component portal-positioning fallbacks the package ships. Nothing else is required — no separate `tokens.css` or font import.
+
+## Publishing
+
+CI publishes releases to npm from `.github/workflows/publish-package.yml`. The repository must have an `NPM_TOKEN` secret with publish access to `@tate2301/corelith`; the workflow uses that token for `npm publish --access public`.
 
 ## 30-second example
 
