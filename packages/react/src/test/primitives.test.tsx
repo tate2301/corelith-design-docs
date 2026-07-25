@@ -7,24 +7,21 @@ import {
   Badge,
   Button,
   Checkbox,
-  Field,
-  Form,
+  Chip,
   Input,
-  InputOtp,
+  InputOTP,
   Kbd,
-  Radio,
-  RadioGroup,
+  Pagination,
   Select,
   Skeleton,
   Spinner,
-  Stack,
   Switch,
 } from '../index';
 
 afterEach(() => cleanup());
 
 describe('Button', () => {
-  it('renders, forwards ref, fires onClick', () => {
+  it('renders the new secondary default and forwards refs', () => {
     const ref = createRef<HTMLButtonElement>();
     const onClick = vi.fn();
     const { getByRole } = render(
@@ -32,187 +29,154 @@ describe('Button', () => {
         Save
       </Button>,
     );
+
     const btn = getByRole('button');
     expect(btn.className).toContain('btn');
-    expect(btn.className).toContain('btn-primary');
+    expect(btn.className).toContain('btn-secondary');
+    expect(btn.getAttribute('data-slot')).toBe('button');
     expect(ref.current).toBe(btn);
     fireEvent.click(btn);
     expect(onClick).toHaveBeenCalledTimes(1);
   });
-  it('applies tone and fullWidth classes', () => {
-    const { getByRole } = render(<Button tone="danger" fullWidth>Delete</Button>);
+
+  it('supports variant, block, loading, and Radix-style asChild', () => {
+    const { getByRole, rerender } = render(
+      <Button variant="destructive" block loading>
+        Delete
+      </Button>,
+    );
     const btn = getByRole('button');
-    expect(btn.className).toContain('btn-danger');
-    expect(btn.className).toContain('btn-full');
-  });
-  it('marks loading as aria-busy and disabled', () => {
-    const { getByRole } = render(<Button loading>Loading</Button>);
-    const btn = getByRole('button');
+    expect(btn.className).toContain('btn-destructive');
+    expect(btn.className).toContain('btn-block');
     expect(btn.getAttribute('aria-busy')).toBe('true');
     expect((btn as HTMLButtonElement).disabled).toBe(true);
-  });
-});
 
-describe('Field + Input', () => {
-  it('wires label htmlFor to input id via context', () => {
-    const { container } = render(
-      <Field label="Email" description="We never share">
-        <Input type="email" />
-      </Field>,
+    rerender(
+      <Button asChild variant="primary">
+        <a href="/docs">Docs</a>
+      </Button>,
     );
-    const label = container.querySelector('label')!;
-    const input = container.querySelector('input')!;
-    expect(label.getAttribute('for')).toBe(input.id);
-    expect(input.getAttribute('aria-describedby')).toBe(`${input.id}-desc`);
-  });
-  it('marks input invalid when Field has error', () => {
-    const { container } = render(
-      <Field label="Name" error="Required">
-        <Input />
-      </Field>,
-    );
-    const input = container.querySelector('input')!;
-    expect(input.getAttribute('aria-invalid')).toBe('true');
+    const link = getByRole('link');
+    expect(link.className).toContain('btn-primary');
+    expect(link.getAttribute('data-slot')).toBe('button');
   });
 });
 
 describe('Input', () => {
-  it('forwards ref and onChange', () => {
+  it('wires label, hint, error, and refs from the component itself', () => {
     const ref = createRef<HTMLInputElement>();
-    const onChange = vi.fn();
-    const { getByRole } = render(<Input ref={ref} role="textbox" onChange={onChange} />);
-    expect(ref.current).toBe(getByRole('textbox'));
-    fireEvent.change(getByRole('textbox'), { target: { value: 'x' } });
-    expect(onChange).toHaveBeenCalled();
+    const { container, rerender } = render(
+      <Input ref={ref} label="Email" hint="Used for receipts" type="email" />,
+    );
+
+    const input = container.querySelector('input')!;
+    const label = container.querySelector('label')!;
+    expect(label.getAttribute('for')).toBe(input.id);
+    expect(input.getAttribute('aria-describedby')).toBe(`${input.id}-hint`);
+    expect(ref.current).toBe(input);
+
+    rerender(<Input label="Email" error="Required" />);
+    const invalid = container.querySelector('input')!;
+    expect(invalid.getAttribute('aria-invalid')).toBe('true');
+    expect(invalid.getAttribute('aria-describedby')).toBe(`${invalid.id}-error`);
   });
 });
 
-describe('InputOtp', () => {
-  it('renders length cells and calls onChange when typing', () => {
-    const onChange = vi.fn();
-    const { container } = render(<InputOtp length={4} value="" onChange={onChange} />);
+describe('InputOTP', () => {
+  it('renders character cells and emits onValueChange', () => {
+    const onValueChange = vi.fn();
+    const { container } = render(<InputOTP length={4} value="" onValueChange={onValueChange} />);
     const cells = container.querySelectorAll('input');
     expect(cells.length).toBe(4);
     fireEvent.change(cells[0]!, { target: { value: '1' } });
-    expect(onChange).toHaveBeenCalledWith('1');
+    expect(onValueChange).toHaveBeenCalledWith('1');
   });
 });
 
-describe('Alert', () => {
-  it('uses role=alert for danger, role=status for info', () => {
-    const { container, rerender } = render(<Alert tone="danger">Bad</Alert>);
-    expect((container.firstChild as HTMLElement).getAttribute('role')).toBe('alert');
-    rerender(<Alert tone="info">Hi</Alert>);
-    expect((container.firstChild as HTMLElement).getAttribute('role')).toBe('status');
-  });
-});
-
-describe('Stack', () => {
-  it('renders with flex direction styles', () => {
-    const { container } = render(<Stack direction="horizontal">a</Stack>);
-    const el = container.firstChild as HTMLElement;
-    expect(el.className).toContain('x-stack');
-    expect(el.style.flexDirection).toBe('row');
-  });
-});
-
-describe('Form', () => {
-  it('renders a form with noValidate and onSubmit', () => {
-    const onSubmit = vi.fn((e: React.FormEvent) => e.preventDefault());
+describe('Selection Primitives', () => {
+  it('renders Checkbox and Switch with native inputs', () => {
+    const onCheckboxChange = vi.fn();
+    const onSwitchChange = vi.fn();
     const { container } = render(
-      <Form onSubmit={onSubmit}>
-        <button type="submit">go</button>
-      </Form>,
+      <>
+        <Checkbox label="Agree" onChange={onCheckboxChange} />
+        <Switch label="Enabled" onChange={onSwitchChange} />
+      </>,
     );
-    const form = container.querySelector('form')!;
-    expect(form.noValidate).toBe(true);
-    fireEvent.submit(form);
-    expect(onSubmit).toHaveBeenCalled();
-  });
-});
 
-describe('Checkbox', () => {
-  it('fires onChange', () => {
-    const onChange = vi.fn();
-    const { container } = render(<Checkbox label="Agree" onChange={onChange} />);
-    const input = container.querySelector('input[type="checkbox"]')!;
-    fireEvent.click(input);
-    expect(onChange).toHaveBeenCalled();
+    const checkbox = container.querySelector<HTMLInputElement>('input[type="checkbox"]:not([role])')!;
+    const sw = container.querySelector<HTMLInputElement>('input[role="switch"]')!;
+    fireEvent.click(checkbox);
+    fireEvent.click(sw);
+    expect(onCheckboxChange).toHaveBeenCalled();
+    expect(onSwitchChange).toHaveBeenCalled();
   });
-});
 
-describe('Radio + RadioGroup', () => {
-  it('selects via group value', () => {
-    const onChange = vi.fn();
+  it('renders Select children with label and helper wiring', () => {
     const { container } = render(
-      <RadioGroup value="b" onChange={onChange}>
-        <Radio value="a" label="A" />
-        <Radio value="b" label="B" />
-      </RadioGroup>,
+      <Select label="Role" hint="Choose access">
+        <option value="admin">Admin</option>
+        <option value="viewer">Viewer</option>
+      </Select>,
     );
-    const inputs = container.querySelectorAll<HTMLInputElement>('input[type="radio"]');
-    expect(inputs[1]!.checked).toBe(true);
-    fireEvent.click(inputs[0]!);
-    expect(onChange).toHaveBeenCalledWith('a');
-  });
-});
 
-describe('Switch', () => {
-  it('renders role=switch', () => {
-    const { container } = render(<Switch label="On" />);
-    const sw = container.querySelector('input[role="switch"]')!;
-    expect(sw).toBeTruthy();
-    expect(sw.className).toContain('switch');
-  });
-});
-
-describe('Select', () => {
-  it('renders options', () => {
-    const { container } = render(
-      <Select
-        options={[
-          { value: 'a', label: 'A' },
-          { value: 'b', label: 'B' },
-        ]}
-      />,
-    );
+    const select = container.querySelector('select')!;
     expect(container.querySelectorAll('option').length).toBe(2);
+    expect(container.querySelector('label')!.getAttribute('for')).toBe(select.id);
+    expect(select.getAttribute('aria-describedby')).toBe(`${select.id}-hint`);
   });
 });
 
-describe('Badge', () => {
-  it('applies tone class', () => {
-    const { container } = render(<Badge tone="success">OK</Badge>);
-    expect((container.firstChild as HTMLElement).className).toContain('badge-success');
-  });
-});
+describe('Display Primitives', () => {
+  it('renders Alert roles, Avatar initials, Spinner, Skeleton, and Kbd', () => {
+    const { container, rerender } = render(<Alert tone="warn">Heads up</Alert>);
+    expect((container.firstChild as HTMLElement).getAttribute('role')).toBe('alert');
 
-describe('Avatar', () => {
-  it('derives initials from name', () => {
-    const { container } = render(<Avatar name="Ada Lovelace" />);
+    rerender(<Alert tone="info">FYI</Alert>);
+    expect((container.firstChild as HTMLElement).getAttribute('role')).toBe('status');
+
+    rerender(<Avatar name="Ada Lovelace" />);
     expect(container.textContent).toBe('AL');
-  });
-});
 
-describe('Spinner', () => {
-  it('renders role=status', () => {
-    const { container } = render(<Spinner label="Saving" />);
-    const el = container.firstChild as HTMLElement;
-    expect(el.getAttribute('role')).toBe('status');
-    expect(el.getAttribute('aria-label')).toBe('Saving');
-  });
-});
+    rerender(<Spinner label="Saving" />);
+    expect((container.firstChild as HTMLElement).getAttribute('role')).toBe('status');
+    expect(container.textContent).toContain('Saving');
 
-describe('Skeleton', () => {
-  it('renders multiple lines', () => {
-    const { container } = render(<Skeleton lines={3} width={200} />);
-    expect(container.querySelectorAll('.skeleton').length).toBe(3);
-  });
-});
+    rerender(<Skeleton variant="circle" width={32} />);
+    expect((container.firstChild as HTMLElement).className).toContain('skeleton');
+    expect((container.firstChild as HTMLElement).style.borderRadius).toBe('9999px');
 
-describe('Kbd', () => {
-  it('renders a kbd element', () => {
-    const { container } = render(<Kbd>⌘K</Kbd>);
+    rerender(<Kbd>Ctrl K</Kbd>);
     expect((container.firstChild as HTMLElement).tagName).toBe('KBD');
+  });
+
+  it('supports asChild on Badge and Chip state hooks', () => {
+    const onRemove = vi.fn();
+    const { getByRole, getByLabelText } = render(
+      <>
+        <Badge asChild tone="success">
+          <a href="/status">Active</a>
+        </Badge>
+        <Chip selected onRemove={onRemove}>
+          Paid
+        </Chip>
+      </>,
+    );
+
+    expect(getByRole('link').className).toContain('badge-success');
+    expect(getByRole('button', { name: /paid/i }).getAttribute('data-state')).toBe('on');
+    fireEvent.click(getByLabelText('Remove'));
+    expect(onRemove).toHaveBeenCalled();
+  });
+});
+
+describe('Pagination', () => {
+  it('uses count and onPageChange without leaking legacy props', () => {
+    const onPageChange = vi.fn();
+    const { container } = render(<Pagination page={2} count={5} onPageChange={onPageChange} />);
+
+    fireEvent.click(container.querySelector('button[aria-label="Next page"]')!);
+    expect(onPageChange).toHaveBeenCalledWith(3);
+    expect(container.querySelector('nav')!.hasAttribute('pageCount')).toBe(false);
   });
 });

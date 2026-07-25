@@ -1,289 +1,189 @@
 import { describe, it, expect, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { render, fireEvent, cleanup } from '@testing-library/react';
 import {
   Calendar,
-  Card,
-  Chart,
-  Checklist,
-  DataToolbar,
-  FileUpload,
-  I18nProvider,
-  InlineEdit,
-  KpiGrid,
-  Lightbox,
-  LocalePicker,
-  Meter,
-  MobileShell,
+  DatePicker,
+  FormShell,
+  Input,
+  ListPageShell,
+  MasterDataShell,
+  MobileActionBar,
+  MobileList,
+  PageSection,
   Progress,
+  ScrollContainer,
   SegmentedControl,
-  Stat,
-  TextArea,
-  useGallery,
+  SettingsShell,
   useMediaQuery,
-  useT,
 } from '../index';
 
 afterEach(() => cleanup());
 
-describe('Card', () => {
-  it('composes Header/Title/Body/Footer', () => {
-    const { container, getByText } = render(
-      <Card>
-        <Card.Header>
-          <Card.Title>Title</Card.Title>
-        </Card.Header>
-        <Card.Body>Body</Card.Body>
-        <Card.Footer>Foot</Card.Footer>
-      </Card>,
-    );
-    expect(container.querySelector('.card')).toBeTruthy();
-    expect(container.querySelector('.card-header')).toBeTruthy();
-    expect(container.querySelector('.card-footer')).toBeTruthy();
-    expect(getByText('Title')).toBeTruthy();
+describe('Foundation exports', () => {
+  it('ships styles, token, and component CSS entrypoints', () => {
+    const pkg = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json'), 'utf8'));
+
+    expect(pkg.exports['./styles.css']).toBe('./dist/styles.css');
+    expect(pkg.exports['./tokens.css']).toBe('./dist/tokens.css');
+    expect(pkg.exports['./components.css']).toBe('./dist/components.css');
+  });
+
+  it('exposes shadcn-compatible token aliases', () => {
+    const tokens = readFileSync(resolve(process.cwd(), 'src/styles/tokens.css'), 'utf8');
+
+    for (const name of [
+      '--background',
+      '--foreground',
+      '--card',
+      '--card-foreground',
+      '--popover',
+      '--popover-foreground',
+      '--primary',
+      '--primary-foreground',
+      '--secondary',
+      '--muted',
+      '--accent',
+      '--destructive',
+      '--input',
+      '--ring',
+      '--radius',
+    ]) {
+      expect(tokens).toContain(name);
+    }
   });
 });
 
-describe('Calendar', () => {
-  it('selects a day and fires onChange', () => {
-    const onChange = vi.fn();
-    const month = new Date(2026, 5, 1); // June 2026
-    const { container } = render(
-      <Calendar month={month} onChange={onChange} weekStartsOn={1} />,
-    );
-    const cells = container.querySelectorAll<HTMLButtonElement>('.cal-day');
-    // Find the cell labelled "15"
-    const fifteenth = Array.from(cells).find((b) => b.textContent === '15' && !b.disabled);
+describe('Calendar and DatePicker', () => {
+  it('uses onValueChange and ARIA grid cells for date selection', () => {
+    const onValueChange = vi.fn();
+    const month = new Date(2026, 5, 1);
+    const { getAllByRole } = render(<Calendar month={month} onValueChange={onValueChange} />);
+
+    const fifteenth = getAllByRole('gridcell').find((cell) => cell.textContent === '15');
     expect(fifteenth).toBeTruthy();
     fireEvent.click(fifteenth!);
-    expect(onChange).toHaveBeenCalled();
+    expect(onValueChange).toHaveBeenCalled();
   });
-});
 
-describe('Chart', () => {
-  it('renders a line chart with a polyline', () => {
-    const { container } = render(
-      <Chart.Line data={[{ x: 0, y: 1 }, { x: 1, y: 5 }, { x: 2, y: 3 }]} />,
+  it('composes DatePicker from Button, Popover, and Calendar', () => {
+    const onValueChange = vi.fn();
+    const { getByRole } = render(<DatePicker value={new Date(2026, 5, 15)} onValueChange={onValueChange} />);
+
+    fireEvent.click(getByRole('textbox'));
+    expect(document.body.querySelector('[role="dialog"]')).toBeTruthy();
+    const day = Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="gridcell"]')).find(
+      (cell) => cell.textContent === '16',
     );
-    expect(container.querySelector('svg polyline')).toBeTruthy();
-  });
-  it('renders bar/donut/sparkline', () => {
-    const { container } = render(
-      <div>
-        <Chart.Bar data={[{ label: 'A', value: 2 }, { label: 'B', value: 5 }]} />
-        <Chart.Donut data={[{ label: 'A', value: 1 }, { label: 'B', value: 2 }]} />
-        <Chart.Sparkline data={[1, 4, 2, 6]} />
-      </div>,
-    );
-    expect(container.querySelectorAll('svg').length).toBeGreaterThanOrEqual(3);
+    fireEvent.click(day!);
+    expect(onValueChange).toHaveBeenCalled();
   });
 });
 
-describe('Checklist', () => {
-  it('toggles an item', () => {
-    const onToggle = vi.fn();
-    const { container } = render(
-      <Checklist>
-        <Checklist.Item title="Sign up" done={false} onToggle={onToggle} />
-      </Checklist>,
-    );
-    fireEvent.click(container.querySelector('button.checklist-check')!);
-    expect(onToggle).toHaveBeenCalledWith(true);
-  });
-});
-
-describe('Meter', () => {
-  it('exposes ARIA meter role and value', () => {
-    const { container } = render(<Meter value={70} low={20} high={80} />);
-    const el = container.querySelector('.meter')!;
-    expect(el.getAttribute('role')).toBe('meter');
-    expect(el.getAttribute('aria-valuenow')).toBe('70');
-  });
-});
-
-describe('Progress', () => {
-  it('renders a progressbar with width', () => {
-    const { container } = render(<Progress value={0.5} />);
+describe('Progress and SegmentedControl', () => {
+  it('renders determinate and indeterminate progress state hooks', () => {
+    const { container, rerender } = render(<Progress value={50} label="Upload" />);
     const el = container.querySelector('.progress')!;
     expect(el.getAttribute('role')).toBe('progressbar');
-    const bar = container.querySelector<HTMLElement>('.progress-bar')!;
-    expect(bar.style.width).toBe('50%');
-  });
-});
+    expect(el.getAttribute('aria-valuenow')).toBe('50');
+    expect(el.getAttribute('data-state')).toBe('determinate');
+    expect((el.firstChild as HTMLElement).style.width).toBe('50%');
 
-describe('SegmentedControl', () => {
-  it('marks active and emits change', () => {
-    const onChange = vi.fn();
-    const { container } = render(
+    rerender(<Progress value={null} label="Upload" />);
+    expect(container.querySelector('.progress')!.getAttribute('data-state')).toBe('indeterminate');
+  });
+
+  it('emits onValueChange from the current segmented control contract', () => {
+    const onValueChange = vi.fn();
+    const { getByRole } = render(
       <SegmentedControl
-        value="a"
-        onChange={onChange}
+        value="list"
+        onValueChange={onValueChange}
         options={[
-          { value: 'a', label: 'A' },
-          { value: 'b', label: 'B' },
+          { value: 'list', label: 'List' },
+          { value: 'grid', label: 'Grid' },
         ]}
       />,
     );
-    const btns = container.querySelectorAll('button');
-    expect(btns[0]!.getAttribute('aria-checked')).toBe('true');
-    fireEvent.click(btns[1]!);
-    expect(onChange).toHaveBeenCalledWith('b');
+
+    expect(getByRole('radio', { name: 'List' }).getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(getByRole('radio', { name: 'Grid' }));
+    expect(onValueChange).toHaveBeenCalledWith('grid');
   });
 });
 
-describe('MobileShell', () => {
-  it('renders body + bottom tabs', () => {
-    const { container } = render(
-      <MobileShell>
-        <MobileShell.Body>body</MobileShell.Body>
-        <MobileShell.BottomTabs
-          value="a"
-          items={[{ value: 'a', label: 'A' }]}
-        />
-      </MobileShell>,
+describe('Mobile and Layout primitives', () => {
+  it('renders MobileList and MobileActionBar item APIs', () => {
+    const action = vi.fn();
+    const { container, getByText } = render(
+      <>
+        <MobileList>
+          <MobileList.Row title="Mukamba Group" subtitle="Supplier" trailing="$48k" />
+        </MobileList>
+        <MobileActionBar fixed={false}>
+          <button type="button" onClick={action}>
+            Save
+          </button>
+        </MobileActionBar>
+      </>,
     );
-    expect(container.querySelector('.mobile-shell')).toBeTruthy();
-    expect(container.querySelector('.b-bottom-tabs')).toBeTruthy();
-  });
-});
 
-describe('InlineEdit', () => {
-  it('saves on Enter', () => {
-    const onSave = vi.fn();
-    function Wrap() {
-      return <InlineEdit value="hi" onSave={onSave} />;
-    }
-    const { container } = render(<Wrap />);
-    fireEvent.click(container.querySelector('.p-inline-edit')!);
-    const input = container.querySelector<HTMLInputElement>('input')!;
-    fireEvent.change(input, { target: { value: 'bye' } });
-    fireEvent.keyDown(input, { key: 'Enter' });
-    expect(onSave).toHaveBeenCalledWith('bye');
+    expect(container.querySelector('.mobile-list')).toBeTruthy();
+    expect(container.querySelector('.action-bar')).toBeTruthy();
+    fireEvent.click(getByText('Save'));
+    expect(action).toHaveBeenCalled();
   });
-});
 
-describe('TextArea', () => {
-  it('renders a textarea element', () => {
-    const { container } = render(<TextArea defaultValue="hi" />);
-    expect(container.querySelector('textarea')).toBeTruthy();
-  });
-});
-
-describe('DataToolbar', () => {
-  it('renders sub-slots', () => {
-    const { container } = render(
-      <DataToolbar>
-        <DataToolbar.Search>s</DataToolbar.Search>
-        <DataToolbar.Filters>f</DataToolbar.Filters>
-        <DataToolbar.Actions>a</DataToolbar.Actions>
-      </DataToolbar>,
+  it('renders PageSection and ScrollContainer structural classes', () => {
+    const { container, getByText } = render(
+      <ScrollContainer>
+        <PageSection title="Overview" description="Today">
+          Body
+        </PageSection>
+      </ScrollContainer>,
     );
-    expect(container.querySelector('.b-data-toolbar-search')).toBeTruthy();
-    expect(container.querySelector('.b-data-toolbar-filters')).toBeTruthy();
-    expect(container.querySelector('.b-data-toolbar-actions')).toBeTruthy();
+
+    expect(container.querySelector('.scroll-area')).toBeTruthy();
+    expect(container.querySelector('.page-section')).toBeTruthy();
+    expect(getByText('Overview')).toBeTruthy();
   });
 });
 
-describe('I18nProvider + useT', () => {
-  it('interpolates messages', () => {
-    function HelloOut() {
-      const t = useT();
-      return <span>{t('hello', { name: 'World' })}</span>;
-    }
-    const { getByText } = render(
-      <I18nProvider locale="en" messages={{ hello: 'Hello, {name}!' }}>
-        <HelloOut />
-      </I18nProvider>,
+describe('Shells', () => {
+  it('renders list, form, settings, and master-data shells with current slots', () => {
+    const { container, getByText } = render(
+      <>
+        <ListPageShell header="Suppliers" toolbar={<Input placeholder="Search" />}>
+          rows
+        </ListPageShell>
+        <FormShell header="Edit supplier" footer={<button type="button">Save</button>} className="dirty">
+          <FormShell.Section title="Identity">fields</FormShell.Section>
+        </FormShell>
+        <SettingsShell
+          title="Settings"
+          sections={[{ label: 'General', items: [{ id: 'profile', label: 'Profile' }] }]}
+        >
+          profile panel
+        </SettingsShell>
+        <MasterDataShell list="list" detail="detail" />
+      </>,
     );
-    expect(getByText('Hello, World!')).toBeTruthy();
-  });
-});
 
-describe('LocalePicker', () => {
-  it('lists locales from context', () => {
-    const setLocale = vi.fn();
-    const { container } = render(
-      <I18nProvider
-        locale="en"
-        setLocale={setLocale}
-        messages={{}}
-        locales={[
-          { code: 'en', label: 'English' },
-          { code: 'fr', label: 'Français' },
-        ]}
-      >
-        <LocalePicker />
-      </I18nProvider>,
-    );
-    const opts = container.querySelectorAll('option');
-    expect(opts.length).toBe(2);
-    fireEvent.change(container.querySelector('select')!, { target: { value: 'fr' } });
-    expect(setLocale).toHaveBeenCalledWith('fr');
-  });
-});
-
-describe('Lightbox + useGallery', () => {
-  it('shows current image and navigates', () => {
-    function Wrap() {
-      const g = useGallery(0, 2);
-      return (
-        <>
-          <button type="button" onClick={() => g.show(0)}>open</button>
-          <Lightbox
-            open={g.open}
-            index={g.index}
-            onClose={g.close}
-            onChange={g.setIndex}
-            images={[
-              { src: 'a.jpg', alt: 'A' },
-              { src: 'b.jpg', alt: 'B' },
-            ]}
-          />
-        </>
-      );
-    }
-    const { getByText, getByAltText } = render(<Wrap />);
-    fireEvent.click(getByText('open'));
-    expect(getByAltText('A')).toBeTruthy();
-  });
-});
-
-describe('FileUpload', () => {
-  it('fires onFiles on input change', () => {
-    const onFiles = vi.fn();
-    const { container } = render(<FileUpload onFiles={onFiles} />);
-    const input = container.querySelector<HTMLInputElement>('input[type="file"]')!;
-    const file = new File(['x'], 'x.txt', { type: 'text/plain' });
-    fireEvent.change(input, { target: { files: [file] } });
-    expect(onFiles).toHaveBeenCalled();
-  });
-});
-
-describe('KpiGrid', () => {
-  it('wraps children in a grid', () => {
-    const { container } = render(
-      <KpiGrid>
-        <div>a</div>
-        <div>b</div>
-      </KpiGrid>,
-    );
-    expect(container.querySelector('.kpi-grid')).toBeTruthy();
-  });
-});
-
-describe('Stat (alias for StatCard)', () => {
-  it('renders label/value', () => {
-    const { container, getByText } = render(<Stat label="Score" value="42" />);
-    expect(container.querySelector('.stat-tile')).toBeTruthy();
-    expect(getByText('42')).toBeTruthy();
+    expect(getByText('Suppliers')).toBeTruthy();
+    expect(container.querySelector('.form-shell.dirty')).toBeTruthy();
+    expect(container.querySelector('.settings-shell')).toBeTruthy();
+    expect(container.querySelector('.master-data-shell')).toBeTruthy();
   });
 });
 
 describe('useMediaQuery', () => {
-  it('returns a boolean', () => {
+  it('returns a boolean in jsdom', () => {
     function Probe() {
-      const m = useMediaQuery('(min-width: 0px)');
-      return <span>{String(m)}</span>;
+      const matches = useMediaQuery('(min-width: 0px)');
+      return <span>{String(matches)}</span>;
     }
+
     const { container } = render(<Probe />);
     expect(['true', 'false']).toContain(container.textContent);
   });
