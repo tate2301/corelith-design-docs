@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to `@tate2301/corelith` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+All notable changes to `@corelithzw/react` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [0.3.2] - 2026-07-26
 
@@ -16,6 +16,7 @@ All notable changes to `@tate2301/corelith` are documented here. The format foll
 - Updated complex pattern controls to compose Corelith primitives instead of reimplementing button/chip behavior.
 - Marked hookful, portal, context, and browser-bound modules with `"use client"` for Next.js compatibility.
 - Switched package publishing from GitHub Packages to the public npm registry.
+- Renamed the npm package target from `@tate2301/corelith` to `@corelithzw/react`.
 
 ## [0.1.2] — 2026-06-06
 

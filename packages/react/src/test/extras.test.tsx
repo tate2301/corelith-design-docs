@@ -25,6 +25,7 @@ describe('Foundation exports', () => {
   it('ships styles, token, and component CSS entrypoints', () => {
     const pkg = JSON.parse(readFileSync(resolve(process.cwd(), 'package.json'), 'utf8'));
 
+    expect(pkg.name).toBe('@corelithzw/react');
     expect(pkg.exports['./styles.css']).toBe('./dist/styles.css');
     expect(pkg.exports['./tokens.css']).toBe('./dist/tokens.css');
     expect(pkg.exports['./components.css']).toBe('./dist/components.css');

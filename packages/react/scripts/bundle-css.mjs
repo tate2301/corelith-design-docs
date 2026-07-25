@@ -7,7 +7,7 @@
  *
  * The result: consumers can do
  *
- *     import '@tate2301/corelith/styles.css';
+ *     import '@corelithzw/react/styles.css';
  *
  * and get tokens, fonts, every recipe class name, plus the small portal
  * positioning fallbacks the package itself ships.
@@ -38,7 +38,7 @@ if (!existsSync(dest)) {
 
 const pieces = [];
 pieces.push(
-  '/* @tate2301/corelith — bundled design-system stylesheet. */\n' +
+  '/* @corelithzw/react — bundled design-system stylesheet. */\n' +
   '/* Generated from packages/react/scripts/bundle-css.mjs. */\n' +
   '/* Source: tokens.css + components.css (docs-site root) + per-component CSS. */\n',
 );

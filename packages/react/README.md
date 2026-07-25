@@ -1,30 +1,30 @@
-# `@tate2301/corelith`
+# `@corelithzw/react`
 
 Thin React wrappers over the Corelith design-system CSS. Components render the exact class names already shipped in `components.css`, so any cookbook recipe in the docs site translates verbatim into your app.
 
-> **Status:** `v0.3.2` — published to npm under `@tate2301/corelith`. ~50 components, 6 hooks, full TypeScript types, bundled design-system stylesheet.
+> **Status:** `v0.3.2` — published to npm under `@corelithzw/react`. ~50 components, 6 hooks, full TypeScript types, bundled design-system stylesheet.
 
 ## Install
 
-`@tate2301/corelith` is published to the public npm registry:
+`@corelithzw/react` is published to the public npm registry:
 
 ```bash
-npm install @tate2301/corelith react react-dom
+npm install @corelithzw/react react react-dom
 # or
-pnpm add @tate2301/corelith react react-dom
+pnpm add @corelithzw/react react react-dom
 ```
 
 Then import the bundled stylesheet once at the root of your app:
 
 ```ts
-import '@tate2301/corelith/styles.css';
+import '@corelithzw/react/styles.css';
 ```
 
 That single import pulls in the design-system tokens, `components.css` and the per-component portal-positioning fallbacks the package ships. Nothing else is required — no separate `tokens.css` or font import.
 
 ## Publishing
 
-CI publishes releases to npm from `.github/workflows/publish-package.yml`. The repository must have an `NPM_TOKEN` secret with publish access to `@tate2301/corelith`; the workflow uses that token for `npm publish --access public`.
+CI publishes releases to npm from `.github/workflows/publish-package.yml`. The repository must have an `NPM_TOKEN` secret with publish access to `@corelithzw/react`; the workflow uses that token for `npm publish --access public`.
 
 ## 30-second example
 
@@ -32,8 +32,8 @@ CI publishes releases to npm from `.github/workflows/publish-package.yml`. The r
 import {
   AuthShell, Form, Field, Stack,
   Input, Button, Alert,
-} from '@tate2301/corelith';
-import '@tate2301/corelith/styles.css';
+} from '@corelithzw/react';
+import '@corelithzw/react/styles.css';
 
 export function SignIn() {
   return (
