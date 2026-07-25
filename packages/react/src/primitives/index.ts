@@ -1,0 +1,46 @@
+// Primitive components — the atoms of the design system.
+// Each primitive maps to a `system/p-*.html` documentation page in the docs site.
+//
+// New primitives are added here. Keep the alphabetical order.
+
+export * from './Accordion';
+export * from './Alert';
+export * from './AlertDialog';
+export * from './AttachmentCenter';
+export * from './Avatar';
+export * from './Badge';
+export * from './Button';
+export * from './ButtonGroup';
+export * from './Calendar';
+export * from './Checkbox';
+export * from './Chip';
+export * from './Combobox';
+export * from './Command';
+export * from './DatePicker';
+export * from './DropdownMenu';
+export * from './ExportMenu';
+export * from './HoverCard';
+export * from './Input';
+export * from './InputGroup';
+export * from './InputOTP';
+export * from './Item';
+export * from './Kbd';
+export * from './MobileActionBar';
+export * from './MobileList';
+export * from './NumericCell';
+export * from './PageSection';
+export * from './Pagination';
+export * from './Popover';
+export * from './Progress';
+export * from './ScrollContainer';
+export * from './SegmentedControl';
+export * from './Select';
+export * from './Skeleton';
+export * from './Spinner';
+export * from './Status';
+export * from './Switch';
+export * from './Table';
+export * from './Tabs';
+export * from './Tag';
+export * from './Toast';
+export * from './Tooltip';

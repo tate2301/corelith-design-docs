@@ -28,6 +28,8 @@ const sources = [
 ];
 
 const dest = resolve(pkgRoot, 'dist', 'styles.css');
+const tokensDest = resolve(pkgRoot, 'dist', 'tokens.css');
+const componentsDest = resolve(pkgRoot, 'dist', 'components.css');
 
 if (!existsSync(dest)) {
   console.error(`[bundle-css] dist/styles.css not found at ${dest}. Did vite build run?`);
@@ -52,6 +54,10 @@ for (const src of sources) {
   pieces.push(body.trim());
   pieces.push(`\n/* ── END ${name} ─────────────────────────────────────────── */\n`);
 }
+
+const [tokensSrc, componentsSrc] = sources;
+if (existsSync(tokensSrc)) writeFileSync(tokensDest, readFileSync(tokensSrc, 'utf8'));
+if (existsSync(componentsSrc)) writeFileSync(componentsDest, readFileSync(componentsSrc, 'utf8'));
 
 const existing = readFileSync(dest, 'utf8');
 pieces.push('\n/* ── Package-shipped per-component fallbacks ────────────── */\n');
