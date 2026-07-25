@@ -2,6 +2,20 @@
 
 All notable changes to `@tate2301/corelith` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.3.2] - 2026-07-26
+
+### Added
+
+- Exported the new primitives, blocks, shells, and patterns barrels from the package root.
+- Added direct `./tokens.css` and `./components.css` package exports alongside `./styles.css`.
+- Added shadcn/Radix migration token aliases including `--background`, `--foreground`, `--primary`, `--destructive`, `--ring`, and `--radius`.
+- Added Radix-style `asChild` support and `data-slot`/state hooks across key primitives and action surfaces.
+
+### Changed
+
+- Updated complex pattern controls to compose Corelith primitives instead of reimplementing button/chip behavior.
+- Marked hookful, portal, context, and browser-bound modules with `"use client"` for Next.js compatibility.
+
 ## [0.1.2] — 2026-06-06
 
 ### Changed

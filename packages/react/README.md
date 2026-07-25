@@ -2,7 +2,7 @@
 
 Thin React wrappers over the Corelith design-system CSS. Components render the exact class names already shipped in `components.css`, so any cookbook recipe in the docs site translates verbatim into your app.
 
-> **Status:** `v0.1.2` — published to GitHub Packages under `@tate2301/corelith`. ~50 components, 6 hooks, full TypeScript types, bundled design-system stylesheet.
+> **Status:** `v0.3.2` — published to GitHub Packages under `@tate2301/corelith`. ~50 components, 6 hooks, full TypeScript types, bundled design-system stylesheet.
 
 ## Install
 
