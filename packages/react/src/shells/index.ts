@@ -2,6 +2,7 @@
 // Each shell maps to a `system/x-*-shell.html` or similar page.
 
 export * from './AppShell';
+export * from './MobileShell';
 export * from './PortalShell';
 export * from './SettingsShell';
 

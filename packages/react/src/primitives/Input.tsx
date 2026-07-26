@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from 'react';
 import { cn } from '../utils/cn';
+import { useFieldContext } from './Field';
 
 export type InputSize = 'sm' | 'md' | 'lg';
 export type InputState = 'default' | 'error' | 'success';
@@ -61,20 +62,23 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     suffix,
     wrapperClassName,
     className,
-    id,
+    id: idProp,
     style,
-    disabled,
+    disabled: disabledProp,
     'aria-invalid': ariaInvalid,
     'aria-describedby': ariaDescribedBy,
     ...rest
   },
   ref,
 ) {
+  const ctx = useFieldContext();
   const autoId = useId();
-  const inputId = id ?? `input-${autoId}`;
+  const inputId = idProp ?? ctx?.id ?? `input-${autoId}`;
+  const disabled = disabledProp ?? ctx?.disabled;
   const hintId = hint ? `${inputId}-hint` : undefined;
-  const errorId = error ? `${inputId}-error` : undefined;
-  const describedBy = [ariaDescribedBy, errorId, hintId].filter(Boolean).join(' ') || undefined;
+  const errorId = error ? `${inputId}-error` : ctx?.errorId;
+  const descriptionId = ctx?.descriptionId;
+  const describedBy = [ariaDescribedBy, errorId, hintId, descriptionId].filter(Boolean).join(' ') || undefined;
 
   const hasLead = leadingIcon || prefix;
   const hasTrail = endIcon || suffix;
