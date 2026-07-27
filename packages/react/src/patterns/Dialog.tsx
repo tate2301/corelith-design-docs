@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { Modal, type ModalProps } from './Modal';
 import { Button } from '../primitives/Button';
 
@@ -14,23 +14,28 @@ export interface DialogProps extends Omit<ModalProps, 'footer'> {
   children?: ReactNode;
 }
 
-export const Dialog = forwardRef<HTMLDivElement, DialogProps>(function Dialog(
-  {
-    confirmLabel = 'Confirm',
-    cancelLabel = 'Cancel',
-    onConfirm,
-    onCancel,
-    tone = 'default',
-    loading = false,
-    onClose,
-    children,
-    ...props
-  },
-  ref,
-) {
+/**
+ * Dialog — a `Modal` with the confirm/cancel footer already built. Reach for it
+ * when the point of the surface is a decision; use `Modal` directly when the
+ * footer is bespoke.
+ *
+ * Closing is reported through `onOpenChange(false)`, the same contract as
+ * `Modal` — cancel, Escape, backdrop and the × button all route through it.
+ */
+export function Dialog({
+  confirmLabel = 'Confirm',
+  cancelLabel = 'Cancel',
+  onConfirm,
+  onCancel,
+  tone = 'default',
+  loading = false,
+  onOpenChange,
+  children,
+  ...props
+}: DialogProps) {
   const handleCancel = () => {
     onCancel?.();
-    onClose();
+    onOpenChange(false);
   };
 
   const footer = (
@@ -49,8 +54,8 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(function Dialog(
   );
 
   return (
-    <Modal ref={ref} onClose={onClose} footer={footer} {...props}>
+    <Modal onOpenChange={onOpenChange} footer={footer} {...props}>
       {children}
     </Modal>
   );
-});
+}

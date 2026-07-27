@@ -1,8 +1,8 @@
 "use client";
 
-import { forwardRef, type SelectHTMLAttributes } from 'react';
+import { forwardRef } from 'react';
 import { cn } from '../utils/cn';
-import { Select } from '../primitives/Select';
+import { Select, type SelectProps } from '../primitives/Select';
 
 export interface LocaleOption {
   code: string;
@@ -10,7 +10,7 @@ export interface LocaleOption {
   flag?: string;
 }
 
-export interface LocalePickerProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'onChange' | 'value'> {
+export interface LocalePickerProps extends Omit<SelectProps, 'onChange' | 'value' | 'children'> {
   value?: string;
   onChange?: (locale: string) => void;
   locales?: LocaleOption[];
@@ -38,12 +38,14 @@ export const LocalePicker = forwardRef<HTMLSelectElement, LocalePickerProps>(fun
       ref={ref}
       value={value}
       onChange={(e) => onChange?.(e.target.value)}
-      options={locales.map((l) => ({
-        value: l.code,
-        label: l.flag ? `${l.flag} ${l.label}` : l.label,
-      }))}
       className={cn('b-locale-picker', className)}
       {...props}
-    />
+    >
+      {locales.map((l) => (
+        <option key={l.code} value={l.code}>
+          {l.flag ? `${l.flag} ${l.label}` : l.label}
+        </option>
+      ))}
+    </Select>
   );
 });

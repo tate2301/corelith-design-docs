@@ -5,6 +5,7 @@ export * from './AppShell';
 export * from './MobileShell';
 export * from './PortalShell';
 export * from './SettingsShell';
+export * from './Sidebar';
 
 // Page-level shells — the standing layouts for list / detail / form / split pages.
 export * from './ListPageShell';

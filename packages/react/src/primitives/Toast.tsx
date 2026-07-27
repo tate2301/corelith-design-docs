@@ -98,6 +98,17 @@ export const toast = Object.assign(
   },
 );
 
+/**
+ * `useToasts()` — subscribe to the live toast stack.
+ *
+ * `Toaster` is the supported host; reach for this only when you need to render
+ * the stack yourself (a custom viewport, an in-page notification list, a test
+ * assertion). Returns the same array identity until the store changes.
+ */
+export function useToasts(): readonly ToastEntry[] {
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}
+
 // ──────────────────────────────────────────────────────────────────────────
 // Toaster host
 // ──────────────────────────────────────────────────────────────────────────
@@ -135,23 +146,13 @@ export function Toaster({ position = 'bottom-right', max = 5, style }: ToasterPr
 
   if (typeof document === 'undefined') return null;
 
-  const [vSide, hSide] = position.split('-') as [string, string];
-  const containerStyle: CSSProperties = {
-    position: 'fixed',
-    [vSide]: 16,
-    ...(hSide === 'center'
-      ? { left: '50%', transform: 'translateX(-50%)' }
-      : { [hSide]: 16 }),
-    display: 'flex',
-    flexDirection: vSide === 'top' ? 'column' : 'column-reverse',
-    gap: 8,
-    zIndex: 1200,
-    pointerEvents: 'none',
-    ...style,
-  } as CSSProperties;
-
   return createPortal(
-    <div role="region" aria-label="Notifications" style={containerStyle}>
+    <div
+      role="region"
+      aria-label="Notifications"
+      className={cn('toast-viewport', position)}
+      style={style}
+    >
       {visible.map((t) => (
         <ToastItem key={t.id} entry={t} />
       ))}
@@ -193,21 +194,14 @@ function ToastItem({ entry }: { entry: ToastEntry }) {
   };
 
   const role = entry.tone === 'danger' ? 'alert' : 'status';
-  const toneClass = entry.tone === 'success' ? 'success' : entry.tone === 'danger' ? 'danger' : undefined;
-  const inlineTone =
-    entry.tone === 'warn'
-      ? { background: 'var(--tone-warn)', color: '#fff' }
-      : undefined;
 
   return (
     <div
       role={role}
       aria-live={entry.tone === 'danger' ? 'assertive' : 'polite'}
-      className={cn('toast', toneClass)}
+      className={cn('toast', entry.tone && entry.tone !== 'default' && `tone-${entry.tone}`)}
       style={{
-        pointerEvents: 'auto',
         gridTemplateColumns: entry.action ? '20px 1fr auto auto' : '20px 1fr auto',
-        ...inlineTone,
       }}
       onPointerEnter={pause}
       onPointerLeave={resume}
@@ -220,19 +214,10 @@ function ToastItem({ entry }: { entry: ToastEntry }) {
       {entry.action ? (
         <button
           type="button"
+          className="t-action"
           onClick={() => {
             entry.action!.onClick();
             dismiss(entry.id);
-          }}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: '#fff',
-            font: '500 13px/1 var(--font-sans)',
-            padding: '4px 10px',
-            borderRadius: 6,
-            cursor: 'pointer',
-            textDecoration: 'underline',
           }}
         >
           {entry.action.label}

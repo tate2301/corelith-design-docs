@@ -1,0 +1,375 @@
+/* Corelith — display primitives.
+ * Added during the huchu convergence: these class names were already emitted
+ * by the React layer but shipped no rules. */
+
+/* ════════════════════════════════════════════════════════════
+   TABS — Tabs primitive
+   Four list/trigger pairs, all emitted by src/primitives/Tabs.tsx:
+     .utabs / .utab   underline  — mirrors the shipped .under-tabs
+     .stabs / .stab   segmented  — mirrors the shipped .seg-tabs
+     .ptabs / .ptab   pill       — derived
+     .vtabs / .vtab   vertical   — derived
+   The selected trigger carries `.current` (not `.active`).
+   ════════════════════════════════════════════════════════════ */
+
+/* — Underline: the default. Brand-coloured active rule. — */
+.utabs {
+  display: flex; align-items: stretch;
+  gap: 24px;
+  border-bottom: 1px solid var(--border);
+  padding: 0 4px;
+}
+.utab {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 0;
+  border: none; background: transparent;
+  font: 500 14px/1 var(--font-sans);
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+.utab:hover { color: var(--text-strong); }
+.utab.current { color: var(--text-strong); border-bottom-color: var(--brand); }
+.utab:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; border-radius: var(--radius-xs); }
+.utab[disabled], .utab[aria-disabled="true"] { opacity: 0.5; pointer-events: none; }
+.utab .icon, .utab svg { width: 16px; height: 16px; flex: none; }
+
+/* — Segmented: inset track, raised active chip. — */
+.stabs {
+  display: inline-flex; align-items: center;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface-muted);
+  border-radius: 8px;
+}
+.stab {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none; background: transparent;
+  font: 500 13px/1 var(--font-sans);
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.stab:hover { color: var(--text-strong); }
+.stab.current { background: var(--surface); color: var(--text-strong); box-shadow: var(--shadow-inset-soft); }
+.stab:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+.stab[disabled], .stab[aria-disabled="true"] { opacity: 0.5; pointer-events: none; }
+.stab .icon, .stab svg { width: 15px; height: 15px; flex: none; }
+
+/* — Pill: free-standing capsules on the canvas, no track. — */
+.ptabs {
+  display: inline-flex; align-items: center; flex-wrap: wrap;
+  gap: 6px;
+}
+.ptab {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  background: transparent;
+  font: 500 13px/1 var(--font-sans);
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.ptab:hover { color: var(--text-strong); background: var(--surface-muted); }
+.ptab.current {
+  background: var(--surface);
+  color: var(--text-strong);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-rest);
+}
+.ptab:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.ptab[disabled], .ptab[aria-disabled="true"] { opacity: 0.5; pointer-events: none; }
+.ptab .icon, .ptab svg { width: 15px; height: 15px; flex: none; }
+
+/* — Vertical: left rail, active marked by a brand edge. — */
+.vtabs {
+  display: flex; flex-direction: column; align-items: stretch;
+  gap: 2px;
+  border-left: 1px solid var(--border);
+}
+.vtab {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px;
+  border: none; background: transparent;
+  border-left: 2px solid transparent;
+  margin-left: -1px;
+  font: 500 14px/1.2 var(--font-sans);
+  color: var(--text-muted);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+.vtab:hover { color: var(--text-strong); background: var(--surface-muted); }
+.vtab.current { color: var(--text-strong); border-left-color: var(--brand); }
+.vtab:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.vtab[disabled], .vtab[aria-disabled="true"] { opacity: 0.5; pointer-events: none; }
+.vtab .icon, .vtab svg { width: 16px; height: 16px; flex: none; }
+
+/* ════════════════════════════════════════════════════════════
+   ITEM — Item primitive
+   Three-column row: [media] [content] [trailing]. The media column is only
+   reserved when a leading node was supplied (`data-leading`).
+   Values below are the ones the component used to set inline, so nothing
+   shifts for existing consumers.
+   ════════════════════════════════════════════════════════════ */
+
+.item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+.item[data-leading] { grid-template-columns: 36px 1fr auto; }
+button.item, a.item { cursor: pointer; }
+button.item:hover, a.item:hover { background: var(--surface-muted); }
+.item:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.item[disabled], .item[aria-disabled="true"] { opacity: 0.5; pointer-events: none; }
+
+.item[data-variant="outline"] { border: 1px solid var(--border); background: var(--surface); }
+.item[data-variant="muted"] { background: var(--surface-muted); }
+
+.item-media {
+  display: grid; place-items: center;
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  overflow: clip;
+}
+.item[data-variant="muted"] .item-media { background: var(--surface); }
+.item-media .icon, .item-media svg { width: 16px; height: 16px; }
+
+.item-content { min-width: 0; }
+.item-title {
+  display: block;
+  font: 500 14px/1.3 var(--font-sans);
+  color: var(--text-strong);
+}
+.item-subtitle {
+  display: block;
+  margin-top: 2px;
+  font: 12.5px/1.3 var(--font-sans);
+  color: var(--text-muted);
+}
+.item-trailing {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--text-subtle);
+}
+.item-trailing .icon, .item-trailing svg { width: 16px; height: 16px; flex: none; }
+
+/* — Compact density — */
+.item[data-size="sm"] { gap: 8px; padding: 6px 8px; border-radius: var(--radius-sm); }
+.item[data-size="sm"][data-leading] { grid-template-columns: 28px 1fr auto; }
+.item[data-size="sm"] .item-media { width: 24px; height: 24px; border-radius: var(--radius-sm); }
+.item[data-size="sm"] .item-media .icon, .item[data-size="sm"] .item-media svg { width: 14px; height: 14px; }
+.item[data-size="sm"] .item-title { font-size: 13px; }
+.item[data-size="sm"] .item-subtitle { font-size: 12px; }
+
+/* — Group, separator, header, footer — */
+.item-group { display: flex; flex-direction: column; }
+.item-separator { height: 1px; background: var(--border); margin: 4px 0; }
+.item-header {
+  padding: 8px 12px 4px;
+  font: var(--type-eyebrow);
+  color: var(--text-subtle);
+}
+.item-footer {
+  padding: 4px 12px 8px;
+  font: var(--type-caption);
+  color: var(--text-subtle);
+}
+
+/* ════════════════════════════════════════════════════════════
+   BUTTON GROUP — ButtonGroup primitive
+   Attached buttons sharing one outer border; inner radii and doubled borders
+   are removed so the run reads as a single control.
+   ════════════════════════════════════════════════════════════ */
+
+.btn-group {
+  display: inline-flex; align-items: stretch;
+  border-radius: 8px;
+  overflow: clip;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+}
+.btn-group > * { border-radius: 0; }
+.btn-group > .btn { border-color: transparent; box-shadow: none; }
+.btn-group > * + *:not(.btn-group-separator) { border-left: 1px solid var(--border-strong); }
+.btn-group > .btn:focus-visible { outline-offset: -2px; z-index: 1; }
+
+.btn-group[data-orientation="vertical"] { flex-direction: column; align-items: stretch; }
+.btn-group[data-orientation="vertical"] > * + *:not(.btn-group-separator) {
+  border-left: 0;
+  border-top: 1px solid var(--border-strong);
+}
+
+/* `.split` also emits `.btn-split`, which already draws its own child borders
+   and translucent divider — so the wrapper border would double up. */
+.btn-group.btn-split { border: 0; background: transparent; }
+.btn-group.btn-split > * + *:not(.btn-group-separator) { border-left: 0; }
+
+.btn-group-text {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: var(--button-height);
+  padding: 0 12px;
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  font: 500 13px/1 var(--font-sans);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.btn-group-separator {
+  flex: none; align-self: stretch;
+  width: 1px;
+  background: var(--border-strong);
+  border: 0; margin: 0;
+}
+.btn-group[data-orientation="vertical"] > .btn-group-separator { width: auto; height: 1px; }
+
+/* ════════════════════════════════════════════════════════════
+   SEPARATOR — Separator primitive
+   Horizontal reuses the shipped `.hr`; the vertical rule is new.
+   ════════════════════════════════════════════════════════════ */
+
+.separator-vertical {
+  flex: none; align-self: stretch;
+  width: 1px; min-height: 1em;
+  background: var(--border);
+  border: 0; margin: 0;
+}
+
+/* ════════════════════════════════════════════════════════════
+   SECTION TABS — SectionTabs primitive
+   A nav-shaped strip for switching sections/routes. Deliberately NOT brand —
+   the active indicator is neutral `--text-strong`, which is what distinguishes
+   it from the brand-underlined in-page `.under-tabs` / `.utabs`.
+   ════════════════════════════════════════════════════════════ */
+
+.section-tabs {
+  display: flex; align-items: stretch;
+  gap: 20px;
+  border-bottom: 1px solid var(--border);
+  padding: 0 4px;
+  overflow-x: auto;
+}
+.section-tab {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 0;
+  border: none; background: transparent;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  font: 500 14px/1 var(--font-sans);
+  color: var(--text-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+.section-tab:hover { color: var(--text-strong); }
+.section-tab.active { color: var(--text-strong); border-bottom-color: var(--text-strong); }
+.section-tab:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; border-radius: var(--radius-xs); }
+.section-tab:disabled, .section-tab[aria-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: default;
+}
+.section-tab .icon, .section-tab svg { width: 16px; height: 16px; flex: none; }
+
+.section-tab-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  color: var(--text-subtle);
+  font: 500 11px/18px var(--font-sans);
+}
+.section-tab.active .section-tab-count { background: var(--surface-sunken); color: var(--text-strong); }
+
+/* ════════════════════════════════════════════════════════════
+   COLLAPSIBLE — Collapsible primitive
+   ════════════════════════════════════════════════════════════ */
+
+.collapsible { display: block; }
+.collapsible-trigger {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: none; background: transparent;
+  padding: 0;
+  font: 500 14px/1.3 var(--font-sans);
+  color: var(--text-strong);
+  text-align: left;
+  cursor: pointer;
+}
+.collapsible-trigger:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; border-radius: var(--radius-xs); }
+.collapsible-trigger[disabled], .collapsible-trigger[aria-disabled="true"] { opacity: 0.5; pointer-events: none; }
+.collapsible-trigger .icon, .collapsible-trigger svg {
+  width: 14px; height: 14px; flex: none;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.collapsible-trigger[data-state="open"] .icon, .collapsible-trigger[data-state="open"] svg { transform: rotate(90deg); }
+
+.collapsible-content[data-state="closed"] { display: none; }
+
+/* ════════════════════════════════════════════════════════════
+   STATUS — element-form dot + size
+   `.status-dot` ships a `::before` dot. When the caller needs a real node to
+   class or size (`dotClassName` / `hideLabel`), the component renders
+   `.status-dot-mark` and adds `.status-dot-el`, which switches the pseudo-
+   element off so the two never double up.
+   ════════════════════════════════════════════════════════════ */
+
+.status-dot.status-dot-el::before { content: none; }
+.status-dot .status-dot-mark {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--dot-idle);
+  flex: none;
+}
+.status-dot.attention .status-dot-mark { background: var(--dot-attention); }
+.status-dot.progress .status-dot-mark  { background: var(--dot-progress); }
+.status-dot.ok .status-dot-mark        { background: var(--dot-ok); }
+.status-dot.idle .status-dot-mark      { background: var(--dot-idle); }
+.status-dot.ring .status-dot-mark {
+  background: transparent;
+  border: 1.5px solid currentColor;
+  box-sizing: border-box;
+}
+
+/* Dot only — no label to sit beside, so drop the gap. */
+.status-dot.status-dot-bare { gap: 0; }
+
+/* Compact scale. `md` is the unmodified default. */
+.status-dot.status-dot-sm { gap: 5px; font-size: 12px; }
+.status-dot.status-dot-sm::before,
+.status-dot.status-dot-sm .status-dot-mark { width: 5px; height: 5px; }

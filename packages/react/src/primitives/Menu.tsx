@@ -15,7 +15,7 @@ export const Menu = forwardRef<HTMLDivElement, MenuProps>(function Menu(
     <div
       ref={ref}
       role="menu"
-      className={cn('p-menu', className)}
+      className={cn('menu', 'p-menu', className)}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -50,7 +50,7 @@ export const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(function Me
       ref={ref}
       role="menuitem"
       type="button"
-      className={cn('p-menu-item', active && 'active', destructive && 'destructive', className)}
+      className={cn('menu-item', 'p-menu-item', active && 'active', destructive && 'danger', className)}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -86,7 +86,7 @@ export const MenuLabel = forwardRef<HTMLDivElement, MenuLabelProps>(function Men
   return (
     <div
       ref={ref}
-      className={cn('p-menu-label', className)}
+      className={cn('menu-label', 'p-menu-label', className)}
       style={{
         padding: '6px 12px 2px',
         font: '600 10px/1 var(--font-mono, monospace)',
@@ -112,7 +112,7 @@ export const MenuDivider = forwardRef<HTMLDivElement, MenuDividerProps>(function
     <div
       ref={ref}
       role="separator"
-      className={cn('p-menu-divider', className)}
+      className={cn('menu-divider', 'p-menu-divider', className)}
       style={{
         height: 1,
         backgroundColor: 'var(--border, #e5e7eb)',
@@ -136,7 +136,7 @@ export const MenuGroup = forwardRef<HTMLDivElement, MenuGroupProps>(function Men
     <div
       ref={ref}
       role="group"
-      className={cn('p-menu-group', className)}
+      className={cn('menu-group', 'p-menu-group', className)}
       style={{ display: 'flex', flexDirection: 'column', ...style }}
       {...props}
     >

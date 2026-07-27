@@ -2,6 +2,74 @@
 
 All notable changes to `@corelithzw/react` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.4.0] - 2026-07-27
+
+Convergence release. Driven by migrating `tate2301/huchu`'s `components/ui/*`
+onto the design system: everything below is either a component that repo needed
+and the package did not have, or a defect that migration exposed.
+
+### Fixed
+
+- **Components emitted class names with no CSS.** `Field`, `Menu`, `Drawer`,
+  `Item`, `ButtonGroup`, `PageSection`, `ScrollContainer`, `AttachmentCenter`,
+  `MobileList` and `MobileActionBar` all rendered `p-`prefixed classes that no
+  stylesheet defined, so their appearance came entirely from inline styles and
+  `className` could not override it. They now emit the styled class name, with
+  the old name kept alongside as a targeting hook.
+- **`Tabs` shipped completely unstyled** — none of `utabs`, `utab`, `stabs`,
+  `stab`, `ptabs`, `ptab`, `vtabs`, `vtab` had a single rule.
+- **`Stepper`'s markup and stylesheet disagreed on both halves** — the JSX
+  emitted `.p-stepper-step` with `active`/`done` while the CSS styled `.p-step`
+  with `done`/`current`/`pending`, so every shipped rule was dead.
+- **`Pagination` rendered unstyled standalone** — it emitted `nav.pg > .pn` but
+  the CSS only matched `.p-pagination .pg-nav .pn`.
+- **`patterns/Dialog` could not compile** — it destructured and called
+  `onClose`, which is not on `ModalProps` (the prop is `onOpenChange`), and
+  passed a `ref` to `Modal`, which is not a `forwardRef`.
+- `.modal-scrim` was `position: absolute`, covering the nearest positioned
+  ancestor rather than the viewport; every consumer overrode it inline.
+- 19 type errors across the package, mostly custom `title` / `onToggle` /
+  `onChange` props colliding with the `HTMLAttributes` they extended.
+- `Table`'s compound statics (`Table.Head` and friends) were attached through a
+  `Record<string, unknown>` cast that erased them from the type.
+- `blocks/LocalePicker` passed an `options` array to `Select`, which takes
+  `<option>` children.
+
+### Added
+
+- `Sidebar` — a full collapsible app sidebar: `SidebarProvider`, `useSidebar`,
+  and 15 parts including `SidebarMenuButton` with `isActive`, `asChild` and
+  collapse-time tooltips. The package previously had no navigation shell beyond
+  `AppShell`'s grid frame.
+- `NavRail`, `NavRailGroup`, `NavRailItem` (aliased `NavGroup` / `NavItem`).
+  The rail CSS existed but was scoped to `.settings-rail`; it now also matches
+  `.nav-rail`, and gained icon, count, trailing and disabled slots.
+- `Separator`, `Collapsible`, `SectionTabs` / `SectionTab`, `ClientDate`,
+  `Label`, `FloatingActionButton` — all new primitives.
+- `WorkflowStep`, `ScrollSnapItem`, `PullToRefreshHint`.
+- `MobileList` gained 11 slot components alongside the existing `MobileListRow`.
+- `useToasts()` exposes the toast store so a custom host can render the stack.
+- CSS for surfaces that shipped none: modal size scale, drawer edge and size
+  variants, toast viewport and action, menu checkbox/radio indicators and
+  submenu caret, table scroll rail and sticky header, `bulk-edit-bar`, and an
+  element-agnostic `.num`.
+
+### Changed
+
+- `SegmentedControl` is now generic over its value type and gained `size`,
+  `variant`, `fullWidth`, and a per-option `count` badge.
+- `Stepper` gained `variant: 'numbered' | 'bars'`, `showCounter`, a visually
+  hidden step list, and **`currentIndex`** — a 0-based alternative to the
+  1-based `current`, so the off-by-one cannot be got wrong.
+- `Tabs` gained `activationMode`; `Tooltip` gained `align`, `sideOffset`, a
+  `TooltipProvider`, and `asChild` on the trigger; `Status` gained `hideLabel`,
+  `dotClassName` and `size`; `Item` and `ButtonGroup` gained `variant`/`size`
+  and `orientation` respectively, each with sibling parts.
+- `ScrollContainer`, `AttachmentCenter`, `PageSection` and `ExportMenu` widened
+  to cover what the migrating call sites needed.
+- Dev types moved to `@types/react@19` to match the primary consumer. The
+  runtime peer range still accepts React 18.
+
 ## [0.3.2] - 2026-07-26
 
 ### Added

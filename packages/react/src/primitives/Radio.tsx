@@ -24,7 +24,7 @@ export function useRadioGroupContext() {
   return useContext(RadioGroupContext);
 }
 
-export interface RadioGroupProps extends HTMLAttributes<HTMLDivElement> {
+export interface RadioGroupProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> {
   name?: string;
   value?: string;
   defaultValue?: string;

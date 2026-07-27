@@ -24,7 +24,8 @@ export interface PaginationProps extends Omit<HTMLAttributes<HTMLElement>, 'onCh
 
 /**
  * Pagination — numbered pager with prev/next, sibling window and ellipsis.
- * Maps to the `.pg` / `.pn` markup style used in the docs (pagination.html).
+ * Renders the `.p-pagination > .pg-nav > .pn` structure the stylesheet styles;
+ * the legacy `.pg` class is kept on the root as a targeting hook.
  *
  * Accessibility:
  *   - Wrapped in `<nav aria-label="Pagination">`.
@@ -84,46 +85,47 @@ export const Pagination = forwardRef<HTMLElement, PaginationProps>(function Pagi
     <nav
       ref={ref}
       aria-label={rest['aria-label'] ?? 'Pagination'}
-      className={cn('pg', className)}
-      style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}
+      className={cn('pg', 'p-pagination', className)}
       {...rest}
     >
-      <button
-        type="button"
-        className="pn nav"
-        aria-label={prevLabel}
-        disabled={page <= 1}
-        onClick={() => go(page - 1)}
-      >
-        ‹
-      </button>
-      {items.map((it, idx) =>
-        it === 'dots' ? (
-          <span key={`dots-${idx}`} className="pn dot" aria-hidden="true">
-            …
-          </span>
-        ) : (
-          <button
-            key={it}
-            type="button"
-            className={cn('pn', it === page && 'current')}
-            aria-current={it === page ? 'page' : undefined}
-            aria-label={`Page ${it}`}
-            onClick={() => go(it)}
-          >
-            {it}
-          </button>
-        ),
-      )}
-      <button
-        type="button"
-        className="pn nav"
-        aria-label={nextLabel}
-        disabled={page >= count}
-        onClick={() => go(page + 1)}
-      >
-        ›
-      </button>
+      <div className="pg-nav">
+        <button
+          type="button"
+          className="pn nav"
+          aria-label={prevLabel}
+          disabled={page <= 1}
+          onClick={() => go(page - 1)}
+        >
+          ‹
+        </button>
+        {items.map((it, idx) =>
+          it === 'dots' ? (
+            <span key={`dots-${idx}`} className="pn dot" aria-hidden="true">
+              …
+            </span>
+          ) : (
+            <button
+              key={it}
+              type="button"
+              className={cn('pn', it === page && 'current')}
+              aria-current={it === page ? 'page' : undefined}
+              aria-label={`Page ${it}`}
+              onClick={() => go(it)}
+            >
+              {it}
+            </button>
+          ),
+        )}
+        <button
+          type="button"
+          className="pn nav"
+          aria-label={nextLabel}
+          disabled={page >= count}
+          onClick={() => go(page + 1)}
+        >
+          ›
+        </button>
+      </div>
     </nav>
   );
 });

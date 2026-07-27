@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, type SVGProps, type HTMLAttributes, type ReactNode } from 'react';
+import { forwardRef, type SVGProps, type HTMLAttributes } from 'react';
 import { cn } from '../utils/cn';
 
 export interface ChartDataPoint {

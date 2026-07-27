@@ -40,7 +40,7 @@ export function RoleProvider({ role, roles, children }: RoleProviderProps) {
   return <RoleContext.Provider value={{ role, roles: userRoles, hasRole }}>{children}</RoleContext.Provider>;
 }
 
-export interface RequireRoleProps extends HTMLAttributes<HTMLDivElement> {
+export interface RequireRoleProps extends Omit<HTMLAttributes<HTMLDivElement>, 'role'> {
   role: string | string[];
   fallback?: ReactNode;
   children?: ReactNode;
@@ -58,8 +58,8 @@ export const RequireRole = forwardRef<HTMLDivElement, RequireRoleProps>(function
     return (
       <div ref={ref} className={cn('x-require-role', className)} {...props}>
         <EmptyState
-          title="Access Denied"
-          description="You do not have permission to view this content."
+          title="Access denied"
+          body="You do not have permission to view this content."
         />
       </div>
     );

@@ -3,7 +3,7 @@
 import {
   createContext,
   forwardRef,
-  useContext,
+  type CSSProperties,
   type HTMLAttributes,
   type TdHTMLAttributes,
   type ThHTMLAttributes,
@@ -23,17 +23,29 @@ const TableContext = createContext<TableContextValue>({ density: 'default', stic
 export interface TableProps extends HTMLAttributes<HTMLTableElement> {
   /** Row density. `compact` maps to the dense `.dtable` styling. @default 'default' */
   density?: TableDensity;
-  /** Pin the header on scroll. @default false */
+  /** Pin the header on scroll — adds `.sticky-head`. @default false */
   stickyHeader?: boolean;
+  /**
+   * Offset in px the pinned header should sit below the scroll port's top
+   * edge (e.g. to clear a sticky app bar). Feeds `--table-sticky-top`.
+   * Only meaningful with `stickyHeader`.
+   */
+  stickyOffset?: number;
   /** Quiet variant — drop the internal row dividers. */
   quiet?: boolean;
   children?: ReactNode;
 }
 
+type TableCssVars = CSSProperties & { '--table-sticky-top'?: string };
+
 /**
  * Table — a semantic table primitive. Composes `.table` (comfortable) or
  * `.dtable` (compact/dense) from components.css, including their `.num`,
  * `.sortable`/`.asc`/`.desc`, `tr.selected`, and `.quiet` modifiers.
+ *
+ * `stickyHeader` adds `.sticky-head` (tables.css) which pins every `th` —
+ * pair it with a scroll port such as `.table-scroll.capped`. `stickyOffset`
+ * sets `--table-sticky-top` so the header can clear a sticky app bar.
  *
  * Accessibility:
  *   - Renders a real `<table>` with `<thead>`/`<tbody>` so AT gets native row
@@ -43,14 +55,21 @@ export interface TableProps extends HTMLAttributes<HTMLTableElement> {
  *   - Row selection uses a checkbox slot in the leading cell; mark the selected
  *     row with `selected` so it gets `aria-selected` + `.selected`.
  */
-export const Table = forwardRef<HTMLTableElement, TableProps>(function Table(
-  { density = 'default', stickyHeader = false, quiet, className, children, ...rest },
+const TableRoot = forwardRef<HTMLTableElement, TableProps>(function Table(
+  { density = 'default', stickyHeader = false, stickyOffset, quiet, className, style, children, ...rest },
   ref,
 ) {
   const base = density === 'compact' ? 'dtable' : 'table';
+  const tableStyle: TableCssVars | undefined =
+    stickyOffset != null ? { '--table-sticky-top': `${stickyOffset}px`, ...style } : style;
   return (
     <TableContext.Provider value={{ density, stickyHeader }}>
-      <table ref={ref} className={cn(base, quiet && 'quiet', className)} {...rest}>
+      <table
+        ref={ref}
+        className={cn(base, stickyHeader && 'sticky-head', quiet && 'quiet', className)}
+        style={tableStyle}
+        {...rest}
+      >
         {children}
       </table>
     </TableContext.Provider>
@@ -61,18 +80,13 @@ export interface TableHeadProps extends HTMLAttributes<HTMLTableSectionElement> 
   children?: ReactNode;
 }
 const TableHead = forwardRef<HTMLTableSectionElement, TableHeadProps>(function TableHead(
-  { className, style, children, ...rest },
+  { className, children, ...rest },
   ref,
 ) {
-  const { stickyHeader } = useContext(TableContext);
+  // Sticky pinning lives on the `<table>` as `.sticky-head` (tables.css), which
+  // pins each `th` — a sticky `<thead>` is not honoured by every engine.
   return (
-    <thead
-      ref={ref}
-      className={cn(className)}
-      // Sticky header is layout-only; no dedicated class exists.
-      style={stickyHeader ? { position: 'sticky', top: 0, zIndex: 1, ...style } : style}
-      {...rest}
-    >
+    <thead ref={ref} className={cn(className)} {...rest}>
       {children}
     </thead>
   );
@@ -184,13 +198,8 @@ const TableHeaderCell = forwardRef<HTMLTableCellElement, TableHeaderCellProps>(
   },
 );
 
-(Table as unknown as Record<string, unknown>).Head = TableHead;
-(Table as unknown as Record<string, unknown>).Body = TableBody;
-(Table as unknown as Record<string, unknown>).Row = TableRow;
-(Table as unknown as Record<string, unknown>).Cell = TableCell;
-(Table as unknown as Record<string, unknown>).HeaderCell = TableHeaderCell;
 
-export type TableComponent = typeof Table & {
+export type TableComponent = typeof TableRoot & {
   Head: typeof TableHead;
   Body: typeof TableBody;
   Row: typeof TableRow;
@@ -199,3 +208,19 @@ export type TableComponent = typeof Table & {
 };
 
 export { TableHead, TableBody, TableRow, TableCell, TableHeaderCell };
+
+/**
+ * Compound access (`Table.Head`) alongside the named exports.
+ *
+ * `Object.assign` returns the intersection, so the statics carry their types.
+ * The previous `(Table as unknown as Record<string, unknown>).Head = …` form
+ * attached them at runtime but erased them from the type, so `<Table.Head>`
+ * failed to compile.
+ */
+export const Table: TableComponent = Object.assign(TableRoot, {
+  Head: TableHead,
+  Body: TableBody,
+  Row: TableRow,
+  Cell: TableCell,
+  HeaderCell: TableHeaderCell,
+});

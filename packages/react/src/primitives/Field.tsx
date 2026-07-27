@@ -70,7 +70,7 @@ export const Field = forwardRef<HTMLDivElement, FieldProps>(function Field(
     <FieldContext.Provider value={contextValue}>
       <div
         ref={ref}
-        className={cn('p-field', (invalid || error) && 'invalid', disabled && 'disabled', className)}
+        className={cn('field', 'p-field', contextValue.invalid && 'invalid', disabled && 'disabled', className)}
         {...props}
       >
         {label && <FieldLabel>{label}</FieldLabel>}
@@ -97,7 +97,7 @@ export const FieldLabel = forwardRef<HTMLLabelElement, FieldLabelProps>(function
     <label
       ref={ref}
       htmlFor={htmlFor}
-      className={cn('p-field-label', className)}
+      className={cn('field-label', 'p-field-label', className)}
       {...props}
     >
       {children}
@@ -119,8 +119,7 @@ export const FieldDescription = forwardRef<HTMLDivElement, FieldDescriptionProps
       <div
         ref={ref}
         id={id}
-        className={cn('p-field-description', className)}
-        style={{ font: 'var(--type-body-sm)', color: 'var(--text-muted)', marginBottom: 4 }}
+        className={cn('field-help', 'p-field-description', className)}
         {...props}
       >
         {children}
@@ -145,8 +144,7 @@ export const FieldError = forwardRef<HTMLDivElement, FieldErrorProps>(function F
       ref={ref}
       id={id}
       role="alert"
-      className={cn('p-field-error', className)}
-      style={{ font: 'var(--type-body-sm)', color: 'var(--tone-danger)', marginTop: 4 }}
+      className={cn('field-error', 'p-field-error', className)}
       {...props}
     >
       {children}

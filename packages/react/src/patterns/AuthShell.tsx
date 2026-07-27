@@ -64,7 +64,7 @@ export const AuthShellBrand = forwardRef<HTMLDivElement, AuthShellBrandProps>(fu
   );
 });
 
-export interface AuthShellCardProps extends HTMLAttributes<HTMLDivElement> {
+export interface AuthShellCardProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   title?: ReactNode;
   subtitle?: ReactNode;
   children?: ReactNode;

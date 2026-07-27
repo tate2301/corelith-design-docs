@@ -16,7 +16,7 @@ export interface NotificationItemSetting {
   channels: Record<string, boolean>;
 }
 
-export interface NotificationMatrixProps extends HTMLAttributes<HTMLDivElement> {
+export interface NotificationMatrixProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onToggle'> {
   channels: NotificationChannel[];
   items: NotificationItemSetting[];
   onToggle?: (itemId: string, channelKey: string, enabled: boolean) => void;

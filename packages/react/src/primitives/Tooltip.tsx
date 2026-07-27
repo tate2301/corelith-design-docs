@@ -2,9 +2,12 @@
 
 import {
   cloneElement,
+  createContext,
   forwardRef,
   isValidElement,
+  useContext,
   useId,
+  useMemo,
   useRef,
   useState,
   type ReactElement,
@@ -12,14 +15,52 @@ import {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '../utils/cn';
-import { usePosition, type Side } from '../utils/usePosition';
+import { Slot } from '../utils/Slot';
+import { usePosition, type Align, type Side } from '../utils/usePosition';
+
+export type { Align as TooltipAlign, Side as TooltipSide };
+
+interface TooltipConfig {
+  /** Default `openDelay` for descendant tooltips, in ms. */
+  delayDuration?: number;
+}
+
+const TooltipConfigContext = createContext<TooltipConfig>({});
+
+export interface TooltipProviderProps extends TooltipConfig {
+  children?: ReactNode;
+}
+
+/**
+ * TooltipProvider — supplies a shared default `openDelay` to every descendant
+ * `Tooltip`. Optional: tooltips work standalone and an explicit `openDelay`
+ * prop on a Tooltip always wins.
+ *
+ * @example
+ * ```tsx
+ * <TooltipProvider delayDuration={0}>
+ *   <Toolbar />
+ * </TooltipProvider>
+ * ```
+ */
+export function TooltipProvider({ delayDuration, children }: TooltipProviderProps) {
+  const value = useMemo(() => ({ delayDuration }), [delayDuration]);
+  return <TooltipConfigContext.Provider value={value}>{children}</TooltipConfigContext.Provider>;
+}
 
 export interface TooltipProps {
   /** Tooltip body content. */
   content: ReactNode;
   /** Preferred placement; auto-flips when out of viewport. @default 'top' */
   side?: Side;
-  /** Delay before showing on hover/focus, in ms. @default 200 */
+  /** Alignment along the cross-axis of `side`. @default 'center' */
+  align?: Align;
+  /** Gap between trigger and tooltip, in px. @default 8 */
+  sideOffset?: number;
+  /**
+   * Delay before showing on hover/focus, in ms. Falls back to the nearest
+   * `TooltipProvider`'s `delayDuration`, then to 200.
+   */
   openDelay?: number;
   /** Delay before hiding when pointer leaves, in ms. @default 100 */
   closeDelay?: number;
@@ -45,16 +86,27 @@ export interface TooltipProps {
  *   - The tooltip carries `role="tooltip"`.
  *   - Tooltips are supplemental only — never put critical info or controls
  *     inside (touch users can't trigger them reliably).
+ *
+ * @example
+ * ```tsx
+ * <Tooltip content="Copy to clipboard" side="bottom" align="start" sideOffset={4}>
+ *   <button className="btn btn-icon" aria-label="Copy"><CopyIcon /></button>
+ * </Tooltip>
+ * ```
  */
 export function Tooltip({
   content,
   side = 'top',
-  openDelay = 200,
+  align = 'center',
+  sideOffset = 8,
+  openDelay: openDelayProp,
   closeDelay = 100,
   open: openProp,
   onOpenChange,
   children,
 }: TooltipProps) {
+  const config = useContext(TooltipConfigContext);
+  const openDelay = openDelayProp ?? config.delayDuration ?? 200;
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const isControlled = openProp !== undefined;
   const open = isControlled ? openProp! : uncontrolledOpen;
@@ -69,7 +121,7 @@ export function Tooltip({
   const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const pos = usePosition(anchorRef, floatingRef, open, { side, sideOffset: 8 });
+  const pos = usePosition(anchorRef, floatingRef, open, { side, align, sideOffset });
 
   const cancelTimers = () => {
     if (openTimer.current) clearTimeout(openTimer.current);
@@ -146,6 +198,8 @@ export function Tooltip({
               role="tooltip"
               id={id}
               className={cn('tooltip')}
+              data-side={pos?.side ?? side}
+              data-align={align}
               onPointerEnter={cancelTimers}
               onPointerLeave={scheduleClose}
               style={{
@@ -165,9 +219,42 @@ export function Tooltip({
   );
 }
 
-/** Convenience: a tooltip-trigger wrapper for spans/text that don't expose ref. */
-export const TooltipTrigger = forwardRef<HTMLSpanElement, React.HTMLAttributes<HTMLSpanElement>>(
-  function TooltipTrigger(props, ref) {
-    return <span ref={ref} tabIndex={0} {...props} />;
+export interface TooltipTriggerProps extends React.HTMLAttributes<HTMLSpanElement> {
+  /**
+   * Project the trigger props onto a single child element instead of wrapping
+   * it in a `<span>` — use this when the child is already focusable (a button,
+   * a link) so the tooltip doesn't add a redundant tab stop.
+   */
+  asChild?: boolean;
+}
+
+/**
+ * Convenience: a tooltip-trigger wrapper for spans/text that don't expose a ref.
+ * Focusable by default (`tabIndex={0}`) so keyboard users can reach the hint;
+ * with `asChild` the child keeps its own tabIndex if it declares one.
+ *
+ * @example
+ * ```tsx
+ * <Tooltip content="Retries left">
+ *   <TooltipTrigger asChild>
+ *     <button className="btn btn-quiet">3</button>
+ *   </TooltipTrigger>
+ * </Tooltip>
+ * ```
+ */
+export const TooltipTrigger = forwardRef<HTMLSpanElement, TooltipTriggerProps>(
+  function TooltipTrigger({ asChild, children, ...props }, ref) {
+    if (asChild) {
+      return (
+        <Slot ref={ref as React.Ref<HTMLElement>} tabIndex={0} {...props}>
+          {children as ReactElement}
+        </Slot>
+      );
+    }
+    return (
+      <span ref={ref} tabIndex={0} {...props}>
+        {children}
+      </span>
+    );
   },
 );

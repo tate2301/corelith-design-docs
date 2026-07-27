@@ -12,7 +12,7 @@ import { cn } from '../utils/cn';
 
 export type DrawerPosition = 'right' | 'left' | 'top' | 'bottom';
 
-export interface DrawerProps extends HTMLAttributes<HTMLDivElement> {
+export interface DrawerProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   open: boolean;
   onClose: () => void;
   position?: DrawerPosition;
@@ -78,7 +78,7 @@ export function Drawer({
         role="dialog"
         aria-modal="true"
         aria-label={typeof title === 'string' ? title : 'Drawer'}
-        className={cn('p-drawer', `p-drawer-${position}`, className)}
+        className={cn('drawer', `drawer-${position}`, 'p-drawer', `p-drawer-${position}`, className)}
         style={{
           position: 'relative',
           backgroundColor: 'var(--surface, #fff)',
@@ -106,7 +106,7 @@ export function Drawer({
   );
 }
 
-export interface DrawerHeaderProps extends HTMLAttributes<HTMLDivElement> {
+export interface DrawerHeaderProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   title?: ReactNode;
   description?: ReactNode;
   onClose?: () => void;
@@ -120,7 +120,7 @@ export const DrawerHeader = forwardRef<HTMLDivElement, DrawerHeaderProps>(functi
   return (
     <div
       ref={ref}
-      className={cn('p-drawer-header', className)}
+      className={cn('drawer-h', 'p-drawer-header', className)}
       style={{
         padding: '16px 20px',
         borderBottom: '1px solid var(--border, #e5e7eb)',
@@ -165,7 +165,7 @@ export const DrawerBody = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivEleme
   return (
     <div
       ref={ref}
-      className={cn('p-drawer-body', className)}
+      className={cn('drawer-body', 'p-drawer-body', className)}
       style={{
         padding: '20px',
         flex: 1,
@@ -186,7 +186,7 @@ export const DrawerFooter = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivEle
   return (
     <div
       ref={ref}
-      className={cn('p-drawer-footer', className)}
+      className={cn('drawer-foot', 'p-drawer-footer', className)}
       style={{
         padding: '12px 20px',
         borderTop: '1px solid var(--border, #e5e7eb)',

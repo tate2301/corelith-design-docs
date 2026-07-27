@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, type FormHTMLAttributes, type FormEvent } from 'react';
+import { forwardRef, type FormHTMLAttributes } from 'react';
 import { cn } from '../utils/cn';
 
 export interface FormProps extends FormHTMLAttributes<HTMLFormElement> {
@@ -12,7 +12,10 @@ export const Form = forwardRef<HTMLFormElement, FormProps>(function Form(
   { preventDefault = false, onSubmit, className, children, noValidate = true, ...props },
   ref,
 ) {
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  // Parameter type is taken from React's own `onSubmit` rather than written out:
+  // React 19 narrowed it from FormEvent to SubmitEvent, and hard-coding either
+  // one breaks against the other set of types.
+  const handleSubmit: NonNullable<FormProps['onSubmit']> = (e) => {
     if (preventDefault) {
       e.preventDefault();
     }

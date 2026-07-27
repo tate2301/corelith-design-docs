@@ -1,0 +1,346 @@
+/* Corelith — mobile surfaces.
+ * Added during the huchu convergence: these class names were already emitted
+ * by the React layer but shipped no rules.
+ *
+ * Everything under MOBILE LIST / MOBILE ACTION BAR below was lifted verbatim
+ * out of the inline styles that MobileList, MobileListRow and MobileActionBar
+ * used to carry, so existing consumers render identically — the values simply
+ * live in CSS now. The composable `.mobile-list-item` family and `.fab` are
+ * new, ported from huchu.
+ * ============================================================ */
+
+:root {
+  /* Mobile list geometry — override per app to retune density. */
+  --mobile-list-item-height:   60px;
+  --mobile-list-icon-size:     40px;
+  --mobile-list-icon-radius:   var(--radius-lg);
+  --mobile-list-divider-color: var(--border-subtle);
+}
+
+/* ════════════════════════════════════════════════════════════
+   MOBILE LIST — container
+   ════════════════════════════════════════════════════════════ */
+
+.mobile-list {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+  overflow: clip;
+}
+
+/* ── Legacy row API (MobileList.Row) ─────────────────────────
+   Four-slot row laid out on a grid: [leading] 1fr [trailing].  */
+
+.mobile-list-row {
+  display: grid;
+  grid-template-columns: 1fr 14px;
+  gap: 14px;
+  align-items: center;
+  width: 100%;
+  padding: 14px 18px;
+  border: 0;
+  border-bottom: 1px solid var(--mobile-list-divider-color);
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+.mobile-list-row[data-leading="true"] { grid-template-columns: 40px 1fr 14px; }
+
+.mobile-list-row-leading {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+}
+
+.mobile-list-row-body     { min-width: 0; }
+.mobile-list-row-title    { font: 500 15px/1.3 var(--font-sans); color: var(--text-strong); }
+.mobile-list-row-subtitle { font: 400 12.5px/1.3 var(--font-sans); color: var(--text-muted); margin-top: 2px; }
+.mobile-list-row-trailing { color: var(--text-subtle); }
+
+/* ── Composable item API (MobileListItem + slots) ────────────
+   Flex row; hairlines are drawn between siblings rather than
+   under every row, so the last item sits flush on the card.   */
+
+.mobile-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--mobile-list-item-height);
+  padding: 12px 18px;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.mobile-list-item + .mobile-list-item { border-top: 1px solid var(--mobile-list-divider-color); }
+.mobile-list-item:active { background: var(--surface-muted); }
+
+a.mobile-list-item,
+a.mobile-list-item:hover { color: inherit; text-decoration: none; }
+a.mobile-list-item:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+
+.mobile-list-item--compact {
+  min-height: 52px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.mobile-list-item--touchable {
+  min-height: 56px;
+  cursor: pointer;
+}
+
+/* ── Item slots ──────────────────────────────────────────── */
+
+.mobile-list-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  overflow: hidden;
+  width: var(--mobile-list-icon-size);
+  height: var(--mobile-list-icon-size);
+  border-radius: var(--mobile-list-icon-radius);
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  color: var(--text-strong);
+  box-shadow: var(--shadow-rest);
+}
+.mobile-list-icon svg { width: 18px; height: 18px; }
+
+.mobile-list-icon--brand {
+  border-color: var(--brand-300);
+  background: var(--brand-50);
+  color: var(--brand-700);
+}
+.mobile-list-icon--ghost {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--button-radius);
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-muted);
+  box-shadow: none;
+}
+.mobile-list-icon--image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mobile-list-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.mobile-list-title {
+  font: 500 14px/1.35 var(--font-sans);
+  color: var(--text-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-list-subtitle {
+  margin: 0;
+  font: 400 13px/1.35 var(--font-sans);
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-list-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex: none;
+  text-align: right;
+}
+
+.mobile-list-meta-text {
+  font: 400 12px/1.4 var(--font-sans);
+  color: var(--text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.mobile-list-chevron {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  color: var(--text-subtle);
+}
+.mobile-list-chevron svg { width: 16px; height: 16px; }
+
+.mobile-list-badge { flex: none; }
+
+.mobile-list-section-header {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 8px 18px;
+  background: var(--surface-muted);
+  font: 600 11px/1.3 var(--font-sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.mobile-list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 200px;
+  padding: 32px 18px;
+  text-align: center;
+}
+.mobile-list-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--mobile-list-icon-radius);
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  box-shadow: var(--shadow-rest);
+}
+.mobile-list-empty-text {
+  margin: 0;
+  font: var(--type-body);
+  color: var(--text-muted);
+}
+
+/* ════════════════════════════════════════════════════════════
+   MOBILE ACTION BAR
+   `default` pins to the bottom edge, `floating` insets into a
+   card, `sheet` rides along in normal flow as a sticky footer.
+   ════════════════════════════════════════════════════════════ */
+
+.action-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  padding: 12px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.action-bar[data-safe-area="false"] { padding-bottom: 18px; }
+
+.action-bar[data-blur="true"] {
+  background: color-mix(in srgb, var(--surface) 95%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+.action-bar--floating {
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow-popover);
+}
+
+.action-bar--sheet {
+  position: sticky;
+  left: auto;
+  right: auto;
+  bottom: 0;
+  z-index: 10;
+  background: var(--surface);
+}
+
+.action-bar-summary { margin-bottom: 8px; }
+
+.action-bar-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-bar-primary   { flex: 1; min-width: 0; }
+.action-bar-secondary { flex-shrink: 0; }
+
+/* ════════════════════════════════════════════════════════════
+   FLOATING ACTION BUTTON
+   Transform is composed from custom properties so the
+   bottom-center centring offset survives hover / press.
+   ════════════════════════════════════════════════════════════ */
+
+.fab {
+  --fab-x: 0;
+  --fab-y: 0;
+  --fab-scale: 1;
+
+  position: fixed;
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 56px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--action-primary-bg);
+  color: var(--action-primary-fg);
+  font: 600 14px/1 var(--font-sans);
+  cursor: pointer;
+  white-space: nowrap;
+  transform: translate(var(--fab-x), var(--fab-y)) scale(var(--fab-scale));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--brand) 35%, transparent);
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.fab:hover {
+  --fab-y: -2px;
+  background: var(--action-primary-hover);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--brand) 45%, transparent);
+}
+.fab:active {
+  --fab-y: 0;
+  --fab-scale: 0.97;
+  background: var(--action-primary-pressed);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--brand) 30%, transparent);
+}
+.fab:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.fab:disabled {
+  --fab-y: 0;
+  --fab-scale: 1;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fab--bottom-right  { right: var(--gutter-x); }
+.fab--bottom-left   { left: var(--gutter-x); }
+.fab--bottom-center { --fab-x: -50%; left: 50%; }
+
+.fab--icon-only { width: 56px; padding: 0; }
+
+.fab-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+.fab-icon svg { width: 20px; height: 20px; }
+
+.fab-label { font: 600 14px/1 var(--font-sans); }

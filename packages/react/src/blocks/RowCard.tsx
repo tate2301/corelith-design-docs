@@ -3,7 +3,7 @@
 import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 import { cn } from '../utils/cn';
 
-export interface RowCardProps extends HTMLAttributes<HTMLDivElement> {
+export interface RowCardProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   icon?: ReactNode;
   title: ReactNode;
   subtitle?: ReactNode;

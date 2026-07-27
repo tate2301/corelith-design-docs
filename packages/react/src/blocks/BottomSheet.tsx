@@ -11,7 +11,7 @@ import { createPortal } from 'react-dom';
 import { cn } from '../utils/cn';
 import { Grabber } from '../primitives/Grabber';
 
-export interface BottomSheetProps extends HTMLAttributes<HTMLDivElement> {
+export interface BottomSheetProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   open: boolean;
   onClose: () => void;
   title?: ReactNode;
@@ -103,7 +103,7 @@ export function BottomSheet({
   );
 }
 
-export interface BottomSheetHeaderProps extends HTMLAttributes<HTMLDivElement> {
+export interface BottomSheetHeaderProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   title?: ReactNode;
   description?: ReactNode;
   onClose?: () => void;

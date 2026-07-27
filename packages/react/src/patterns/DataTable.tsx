@@ -209,74 +209,76 @@ export function DataTable<Row>({
       ) : data.length === 0 ? (
         <EmptyState title="Nothing here yet" body="Rows will appear here once data is available." />
       ) : (
-        <Table density="compact">
-          <TableHead>
-            <TableRow>
-              {selectable ? (
-                <TableHeaderCell style={{ width: 36 }}>
-                  <Checkbox
-                    aria-label="Select all rows on this page"
-                    checked={allSelected}
-                    indeterminate={!allSelected && someSelected}
-                    onChange={toggleAll}
-                  />
-                </TableHeaderCell>
-              ) : null}
-              {columns.map((col) => {
-                const active = sort?.key === col.key;
-                const canSort = Boolean(sortable && col.sortable);
-                return (
-                  <TableHeaderCell
-                    key={col.key}
-                    numeric={col.align === 'right'}
-                    sortable={canSort}
-                    sortDirection={active ? sort?.dir : null}
-                    onSort={() => onHeaderClick(col)}
-                    style={{
-                      width: col.width,
-                      textAlign: col.align === 'center' ? 'center' : undefined,
-                    }}
-                  >
-                    {col.header}
+        <div className="table-scroll">
+          <Table density="compact">
+            <TableHead>
+              <TableRow>
+                {selectable ? (
+                  <TableHeaderCell style={{ width: 36 }}>
+                    <Checkbox
+                      aria-label="Select all rows on this page"
+                      checked={allSelected}
+                      indeterminate={!allSelected && someSelected}
+                      onChange={toggleAll}
+                    />
                   </TableHeaderCell>
-                );
-              })}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {pageRows.map((row, i) => {
-              const key = getKey(row, i);
-              const isSelected = selected.has(key);
-              return (
-                <TableRow
-                  key={key}
-                  selected={isSelected}
-                  onClick={onRowClick ? () => onRowClick(row, i) : undefined}
-                  style={onRowClick ? { cursor: 'pointer' } : undefined}
-                >
-                  {selectable ? (
-                    <TableCell onClick={(e) => e.stopPropagation()} style={{ width: 36 }}>
-                      <Checkbox
-                        aria-label="Select row"
-                        checked={isSelected}
-                        onChange={() => toggleRow(key)}
-                      />
-                    </TableCell>
-                  ) : null}
-                  {columns.map((col) => (
-                    <TableCell
+                ) : null}
+                {columns.map((col) => {
+                  const active = sort?.key === col.key;
+                  const canSort = Boolean(sortable && col.sortable);
+                  return (
+                    <TableHeaderCell
                       key={col.key}
                       numeric={col.align === 'right'}
-                      style={{ textAlign: col.align === 'center' ? 'center' : undefined }}
+                      sortable={canSort}
+                      sortDirection={active ? sort?.dir : null}
+                      onSort={() => onHeaderClick(col)}
+                      style={{
+                        width: col.width,
+                        textAlign: col.align === 'center' ? 'center' : undefined,
+                      }}
                     >
-                      {col.render ? col.render(row, i) : String((row as Record<string, unknown>)[col.key] ?? '')}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                      {col.header}
+                    </TableHeaderCell>
+                  );
+                })}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {pageRows.map((row, i) => {
+                const key = getKey(row, i);
+                const isSelected = selected.has(key);
+                return (
+                  <TableRow
+                    key={key}
+                    selected={isSelected}
+                    onClick={onRowClick ? () => onRowClick(row, i) : undefined}
+                    style={onRowClick ? { cursor: 'pointer' } : undefined}
+                  >
+                    {selectable ? (
+                      <TableCell onClick={(e) => e.stopPropagation()} style={{ width: 36 }}>
+                        <Checkbox
+                          aria-label="Select row"
+                          checked={isSelected}
+                          onChange={() => toggleRow(key)}
+                        />
+                      </TableCell>
+                    ) : null}
+                    {columns.map((col) => (
+                      <TableCell
+                        key={col.key}
+                        numeric={col.align === 'right'}
+                        style={{ textAlign: col.align === 'center' ? 'center' : undefined }}
+                      >
+                        {col.render ? col.render(row, i) : String((row as Record<string, unknown>)[col.key] ?? '')}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       )}
 
       {pagination && data.length > 0 ? (

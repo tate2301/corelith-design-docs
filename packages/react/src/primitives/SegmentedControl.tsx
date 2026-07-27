@@ -10,26 +10,37 @@ import {
 } from 'react';
 import { cn } from '../utils/cn';
 
-export interface SegmentedOption {
+export type SegmentedSize = 'sm' | 'md';
+export type SegmentedVariant = 'default' | 'bordered';
+
+export interface SegmentedOption<V extends string = string> {
   /** Stable value emitted on select. */
-  value: string;
+  value: V;
   /** Visible label. */
   label: ReactNode;
   /** Optional leading icon. */
   icon?: ReactNode;
+  /** Trailing count badge. Values above 99 render as "99+". */
+  count?: number;
   disabled?: boolean;
 }
 
-export interface SegmentedControlProps
+export interface SegmentedControlProps<V extends string = string>
   extends Omit<HTMLAttributes<HTMLDivElement>, 'onChange' | 'defaultValue'> {
   /** Options to render as segments. */
-  options: SegmentedOption[];
+  options: ReadonlyArray<SegmentedOption<V>>;
   /** Controlled selected value. */
-  value?: string;
+  value?: V;
   /** Uncontrolled initial value. */
-  defaultValue?: string;
+  defaultValue?: V;
   /** Fires when the selection changes. */
-  onValueChange?: (value: string) => void;
+  onValueChange?: (value: V) => void;
+  /** Segment density. @default 'md' */
+  size?: SegmentedSize;
+  /** `bordered` draws the track on the surface colour. @default 'default' */
+  variant?: SegmentedVariant;
+  /** Stretch the control to fill its container. @default true */
+  fullWidth?: boolean;
   /** Accessible label for the group, e.g. "View mode". */
   'aria-label'?: string;
 }
@@ -46,9 +57,19 @@ export interface SegmentedControlProps
  *     and Right/Down arrows move (and select) between segments, Home/End jump to
  *     the ends.
  */
-export const SegmentedControl = forwardRef<HTMLDivElement, SegmentedControlProps>(
+const SegmentedControlInner = forwardRef<HTMLDivElement, SegmentedControlProps>(
   function SegmentedControl(
-    { options, value: controlled, defaultValue, onValueChange, className, ...rest },
+    {
+      options,
+      value: controlled,
+      defaultValue,
+      onValueChange,
+      size = 'md',
+      variant = 'default',
+      fullWidth = true,
+      className,
+      ...rest
+    },
     ref,
   ) {
     const baseId = useId();
@@ -92,7 +113,18 @@ export const SegmentedControl = forwardRef<HTMLDivElement, SegmentedControlProps
     };
 
     return (
-      <div ref={ref} role="radiogroup" className={cn('segmented', className)} {...rest}>
+      <div
+        ref={ref}
+        role="radiogroup"
+        className={cn(
+          'segmented',
+          size === 'sm' && 'segmented-sm',
+          variant === 'bordered' && 'segmented-bordered',
+          !fullWidth && 'segmented-auto',
+          className,
+        )}
+        {...rest}
+      >
         {options.map((opt, i) => {
           const selected = opt.value === value;
           return (
@@ -117,6 +149,9 @@ export const SegmentedControl = forwardRef<HTMLDivElement, SegmentedControlProps
                 </span>
               ) : null}
               {opt.label}
+              {opt.count !== undefined ? (
+                <span className="segmented-count">{opt.count > 99 ? '99+' : opt.count}</span>
+              ) : null}
             </button>
           );
         })}
@@ -124,3 +159,15 @@ export const SegmentedControl = forwardRef<HTMLDivElement, SegmentedControlProps
     );
   },
 );
+
+/**
+ * `forwardRef` erases the generic, so the ref-forwarding implementation is
+ * declared against the widened `string` form and re-exported through a callable
+ * type that keeps `V`. Callers get `onValueChange: (value: V) => void` rather
+ * than a bare `string`.
+ */
+export const SegmentedControl = SegmentedControlInner as (<V extends string = string>(
+  props: SegmentedControlProps<V> & { ref?: React.Ref<HTMLDivElement> },
+) => React.ReactElement) & { displayName?: string };
+
+SegmentedControl.displayName = 'SegmentedControl';

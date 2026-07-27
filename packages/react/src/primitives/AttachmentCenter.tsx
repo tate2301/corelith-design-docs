@@ -5,6 +5,7 @@ import {
   useId,
   useRef,
   useState,
+  type CSSProperties,
   type HTMLAttributes,
   type ReactNode,
 } from 'react';
@@ -17,10 +18,21 @@ export interface AttachmentFile {
   name: string;
   /** Meta line (size · type · uploader · date). */
   meta?: ReactNode;
+  /** Secondary sentence under the name — a caption, note, or rejection reason. */
+  description?: ReactNode;
   /** Optional leading icon. */
   icon?: ReactNode;
-  /** Upload progress 0–100. Omit (or 100) for a settled file. */
+  /**
+   * Upload progress 0–100. Omit (or 100) for a settled file.
+   *
+   * NOTE — this is a percentage, whereas `useUpload().progress` is a 0–1
+   * fraction. Multiply by 100 when feeding one into the other:
+   * `progress: upload.progress * 100`.
+   */
   progress?: number;
+  /** When set, the file name renders as a link opening in a new tab. Takes
+   *  precedence over `onOpen`. */
+  href?: string;
 }
 
 export interface AttachmentCenterProps
@@ -29,21 +41,54 @@ export interface AttachmentCenterProps
   files: AttachmentFile[];
   /** Optional title. @default `Attachments · N` */
   title?: ReactNode;
+  /** Supporting copy under the title (accepted types, size caps, retention). */
+  description?: ReactNode;
   /** Fires when files are chosen (button or drop). */
   onUpload?: (files: FileList) => void;
   /** Fires when a file's remove button is pressed. */
   onRemove?: (id: string) => void;
+  /** Fires when a file without an `href` is activated. Renders the file name as
+   *  a button. */
+  onOpen?: (file: AttachmentFile) => void;
   /** Accepted MIME types / extensions for the file input. */
   accept?: string;
   /** Allow choosing multiple files. @default true */
   multiple?: boolean;
+  /** Present the list without any mutation affordances — disables the dropzone,
+   *  the file input, the Upload button and every remove button. @default false */
+  readOnly?: boolean;
+  /** Primary dropzone copy. @default 'Drop files here or click to upload' */
+  dropLabel?: ReactNode;
+  /** Secondary dropzone line (size limits, accepted formats). */
+  dropHint?: ReactNode;
+  /** Copy shown in place of the list when `files` is empty.
+   *  @default 'No attachments yet.' */
+  emptyLabel?: ReactNode;
+  /** Rendered at the bottom of the card, below the dropzone. */
+  footer?: ReactNode;
 }
 
 /**
  * AttachmentCenter — a file list with an upload dropzone, per-file progress,
- * and remove actions. The docs (`p-attachment-center`) reference `.attachments`
- * but no rule exists in components.css, so the card, row, and dropzone chrome
- * are token-driven inline fallbacks. The upload/remove controls reuse `.btn`.
+ * and remove actions. Maps to the `.attachments` family in surfaces.css; the
+ * upload/remove controls reuse `.btn`.
+ *
+ * @example
+ * <AttachmentCenter
+ *   files={files}
+ *   description="PDF or PNG, up to 10 MB each."
+ *   onUpload={(list) => enqueue(list)}
+ *   onRemove={(id) => drop(id)}
+ * />
+ *
+ * @example
+ * // Read-only audit view with links out and a footer summary.
+ * <AttachmentCenter
+ *   files={docs}
+ *   readOnly
+ *   emptyLabel="Nothing was attached to this order."
+ *   footer={<span>{docs.length} document(s) · retained 7 years</span>}
+ * />
  *
  * Accessibility:
  *   - File list is `role="list"` / `role="listitem"`.
@@ -52,10 +97,29 @@ export interface AttachmentCenterProps
  *   - The dropzone has an associated visually-labelled file `<input>`; drag-drop
  *     is an enhancement over the always-present Upload button. Remove buttons
  *     carry an explicit `aria-label`.
+ *   - When `readOnly` the dropzone drops its click/drop handlers and is marked
+ *     `aria-disabled`, so it is inert rather than merely dimmed.
  */
 export const AttachmentCenter = forwardRef<HTMLDivElement, AttachmentCenterProps>(
   function AttachmentCenter(
-    { files, title, onUpload, onRemove, accept, multiple = true, className, style, ...rest },
+    {
+      files,
+      title,
+      description,
+      onUpload,
+      onRemove,
+      onOpen,
+      accept,
+      multiple = true,
+      readOnly = false,
+      dropLabel,
+      dropHint,
+      emptyLabel,
+      footer,
+      className,
+      style,
+      ...rest
+    },
     ref,
   ) {
     const baseId = useId();
@@ -63,38 +127,27 @@ export const AttachmentCenter = forwardRef<HTMLDivElement, AttachmentCenterProps
     const [dragging, setDragging] = useState(false);
 
     const emit = (list: FileList | null) => {
+      if (readOnly) return;
       if (list && list.length) onUpload?.(list);
     };
 
+    const openPicker = () => {
+      if (readOnly) return;
+      inputRef.current?.click();
+    };
+
     return (
-      <div
-        ref={ref}
-        className={cn('attachments', className)}
-        // Token-driven inline fallback: no `.attachments` rule in components.css.
-        style={{
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: 12,
-          padding: '18px 20px',
-          ...style,
-        }}
-        {...rest}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-          <h2
-            style={{
-              font: '600 15px/1.3 var(--font-sans)',
-              color: 'var(--text-strong)',
-              margin: 0,
-              flex: 1,
-            }}
-          >
-            {title ?? `Attachments · ${files.length}`}
-          </h2>
+      <div ref={ref} className={cn('attachments', className)} style={style} {...rest}>
+        <div className="attachments-header">
+          <div className="attachments-heading">
+            <h2 className="attachments-title">{title ?? `Attachments · ${files.length}`}</h2>
+            {description != null ? <p className="attachments-desc">{description}</p> : null}
+          </div>
           <button
             type="button"
             className="btn btn-secondary btn-sm"
-            onClick={() => inputRef.current?.click()}
+            disabled={readOnly}
+            onClick={openPicker}
           >
             Upload
           </button>
@@ -104,127 +157,126 @@ export const AttachmentCenter = forwardRef<HTMLDivElement, AttachmentCenterProps
             type="file"
             accept={accept}
             multiple={multiple}
-            style={{ display: 'none' }}
+            disabled={readOnly}
+            hidden
             onChange={(e) => emit(e.target.files)}
           />
         </div>
 
-        <ul role="list" style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-          {files.map((file) => {
-            const uploading = file.progress != null && file.progress < 100;
-            return (
-              <li
-                key={file.id}
-                role="listitem"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '36px 1fr auto',
-                  gap: 12,
-                  alignItems: 'center',
-                  padding: '10px 0',
-                  borderBottom: '1px solid var(--border-subtle)',
-                }}
-              >
-                <div
-                  aria-hidden="true"
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 6,
-                    background: 'var(--surface-muted)',
-                    color: 'var(--text-muted)',
-                    display: 'grid',
-                    placeItems: 'center',
-                  }}
-                >
-                  {file.icon}
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <div
-                    style={{
-                      font: '500 13.5px/1.3 var(--font-sans)',
-                      color: 'var(--text-strong)',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
+        {files.length === 0 ? (
+          <p className="attachments-empty">{emptyLabel ?? 'No attachments yet.'}</p>
+        ) : (
+          <ul role="list" className="attachments-list">
+            {files.map((file) => {
+              const uploading = file.progress != null && file.progress < 100;
+
+              let nameNode: ReactNode;
+              if (file.href) {
+                nameNode = (
+                  <a
+                    className="attachments-item-name"
+                    href={file.href}
+                    target="_blank"
+                    rel="noreferrer"
                   >
                     {file.name}
-                  </div>
-                  {uploading ? (
-                    <div
-                      role="progressbar"
-                      aria-valuenow={Math.round(file.progress!)}
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-label={`Uploading ${file.name}`}
-                      style={{
-                        height: 4,
-                        borderRadius: 2,
-                        background: 'var(--surface-muted)',
-                        marginTop: 6,
-                        overflow: 'hidden',
-                      }}
-                    >
+                  </a>
+                );
+              } else if (onOpen) {
+                nameNode = (
+                  <button
+                    type="button"
+                    className="attachments-item-name"
+                    onClick={() => onOpen(file)}
+                  >
+                    {file.name}
+                  </button>
+                );
+              } else {
+                nameNode = <span className="attachments-item-name">{file.name}</span>;
+              }
+
+              return (
+                <li key={file.id} role="listitem" className="attachments-item">
+                  <span aria-hidden="true" className="attachments-item-icon">
+                    {file.icon}
+                  </span>
+                  <div className="attachments-item-body">
+                    {nameNode}
+                    {file.description != null ? (
+                      <div className="attachments-item-desc">{file.description}</div>
+                    ) : null}
+                    {uploading ? (
                       <div
-                        style={{
-                          width: `${file.progress}%`,
-                          height: '100%',
-                          background: 'var(--brand)',
-                        }}
-                      />
-                    </div>
-                  ) : file.meta != null ? (
-                    <div
-                      style={{
-                        font: '11px/1.3 var(--font-mono)',
-                        color: 'var(--text-muted)',
-                        marginTop: 2,
-                      }}
-                    >
-                      {file.meta}
-                    </div>
-                  ) : null}
-                </div>
-                <button
-                  type="button"
-                  className="btn btn-quiet btn-icon btn-sm"
-                  aria-label={`Remove ${file.name}`}
-                  onClick={() => onRemove?.(file.id)}
-                >
-                  ×
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+                        role="progressbar"
+                        aria-valuenow={Math.round(file.progress!)}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={`Uploading ${file.name}`}
+                        className="attachments-progress"
+                      >
+                        <div
+                          className="attachments-progress-fill"
+                          style={
+                            { ['--attachments-progress' as string]: `${file.progress}%` } as CSSProperties
+                          }
+                        />
+                      </div>
+                    ) : file.meta != null ? (
+                      <div className="attachments-item-meta">{file.meta}</div>
+                    ) : null}
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-quiet btn-icon btn-sm"
+                    aria-label={`Remove ${file.name}`}
+                    disabled={readOnly}
+                    onClick={() => onRemove?.(file.id)}
+                  >
+                    ×
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
 
         <div
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragging(true);
-          }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragging(false);
-            emit(e.dataTransfer.files);
-          }}
-          onClick={() => inputRef.current?.click()}
-          style={{
-            marginTop: 14,
-            padding: '18px',
-            border: `1.5px dashed ${dragging ? 'var(--brand)' : 'var(--border-strong)'}`,
-            borderRadius: 10,
-            textAlign: 'center',
-            font: 'var(--type-body-sm)',
-            color: 'var(--text-muted)',
-            background: dragging ? 'var(--brand-soft)' : 'transparent',
-            cursor: 'pointer',
-          }}
+          className={cn(
+            'attachments-dropzone',
+            dragging && !readOnly && 'is-dragging',
+            readOnly && 'is-disabled',
+          )}
+          aria-disabled={readOnly || undefined}
+          onDragOver={
+            readOnly
+              ? undefined
+              : (e) => {
+                  e.preventDefault();
+                  setDragging(true);
+                }
+          }
+          onDragLeave={readOnly ? undefined : () => setDragging(false)}
+          onDrop={
+            readOnly
+              ? undefined
+              : (e) => {
+                  e.preventDefault();
+                  setDragging(false);
+                  emit(e.dataTransfer.files);
+                }
+          }
+          onClick={readOnly ? undefined : openPicker}
         >
-          Drop files here or click to upload
+          <span className="attachments-dropzone-label">
+            {dropLabel ?? 'Drop files here or click to upload'}
+          </span>
+          {dropHint != null ? (
+            <span className="attachments-dropzone-hint">{dropHint}</span>
+          ) : null}
         </div>
+
+        {footer != null ? <div className="attachments-footer">{footer}</div> : null}
       </div>
     );
   },

@@ -41,8 +41,10 @@ export interface BulkEditBarProps {
 
 /**
  * BulkEditBar — the action bar that appears when table rows are selected.
- * Composes `Button` primitives; pairs naturally with `DataTable`'s
- * `selectable` + `onSelectionChange`. Hides itself when nothing is selected.
+ * Composes `Button` primitives and the `.bulk-edit-bar` / `.bulk-edit-count` /
+ * `.bulk-edit-actions` rules from tables.css; pairs naturally with
+ * `DataTable`'s `selectable` + `onSelectionChange`. Hides itself when nothing
+ * is selected.
  *
  * Set `floating` to dock it to the bottom of the viewport (portalled), or leave
  * it inline to render in document flow.
@@ -77,26 +79,11 @@ export function BulkEditBar({
   const label = `${selectedCount} ${selectedCount === 1 ? noun[0] : noun[1]} selected`;
 
   const bar = (
-    <div
-      role="region"
-      aria-label="Bulk actions"
-      className={cn('bulk-edit-bar', className)}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 16,
-        padding: '10px 16px',
-        background: 'var(--text-strong)',
-        color: 'var(--surface)',
-        borderRadius: 12,
-        boxShadow: 'var(--shadow-modal, 0 8px 24px rgba(42,38,34,0.18))',
-      }}
-    >
-      <span aria-live="polite" style={{ font: 'var(--type-label)', color: 'inherit', whiteSpace: 'nowrap' }}>
+    <div role="region" aria-label="Bulk actions" className={cn('bulk-edit-bar', className)}>
+      <span className="bulk-edit-count" aria-live="polite">
         {label}
       </span>
-      <span style={{ flex: 1 }} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div className="bulk-edit-actions">
         {actions.map((a) => (
           <Button
             key={a.id}

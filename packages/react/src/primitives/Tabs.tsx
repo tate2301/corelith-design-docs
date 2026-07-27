@@ -17,6 +17,7 @@ import { Slot } from '../utils/Slot';
 
 export type TabsVariant = 'underline' | 'segmented' | 'pill' | 'vertical';
 export type TabsOrientation = 'horizontal' | 'vertical';
+export type TabsActivationMode = 'automatic' | 'manual';
 
 interface TabsContextValue {
   value: string;
@@ -24,6 +25,9 @@ interface TabsContextValue {
   baseId: string;
   variant: TabsVariant;
   orientation: TabsOrientation;
+  activationMode: TabsActivationMode;
+  /** Trigger that currently owns the roving tab stop under `manual`. */
+  focusedValue: string | null;
   registerTrigger: (value: string, el: HTMLButtonElement | null) => void;
   focusByOffset: (currentValue: string, offset: number) => void;
   focusEdge: (which: 'first' | 'last') => void;
@@ -47,21 +51,41 @@ export interface TabsProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onChang
   variant?: TabsVariant;
   /** Tablist orientation. Vertical = up/down arrow nav. @default 'horizontal' */
   orientation?: TabsOrientation;
+  /**
+   * `automatic` selects the tab as soon as arrow keys move focus onto it (the
+   * historical behaviour). `manual` moves focus only — Enter or Space selects.
+   * Prefer `manual` when switching a tab is expensive (a fetch, a route change).
+   * @default 'automatic'
+   */
+  activationMode?: TabsActivationMode;
   children?: ReactNode;
 }
 
 /**
  * Tabs — ARIA-compliant tab control. Maps to `.utabs / .stabs / .ptabs / .vtabs`
- * in the docs (the doc CSS lives in `system/p-tabs.html`; we compose those
- * class names where present, otherwise the segmented/pill stand-ins fall back
- * to inline styling).
+ * (+ `.utab / .stab / .ptab / .vtab` on triggers, `.current` when selected) in
+ * `styles/display.css`. `underline` mirrors the shipped `.under-tabs` look and
+ * `segmented` mirrors `.seg-tabs`; `pill` and `vertical` are derived from them.
  *
  * Accessibility:
  *   - TabsList carries `role="tablist"`, each Trigger `role="tab"`, each Content
  *     `role="tabpanel"`. ARIA `aria-controls`/`aria-labelledby` wire them up.
- *   - Roving tabindex — only the active trigger is focusable.
+ *   - Roving tabindex — only one trigger is in the tab order at a time.
  *   - Arrow keys cycle (Left/Right horizontally, Up/Down vertically), Home/End
- *     jump to first/last. Activation is automatic on focus (most common pattern).
+ *     jump to first/last. `activationMode` decides whether moving focus also
+ *     selects.
+ *
+ * @example
+ * ```tsx
+ * <Tabs defaultValue="overview" variant="underline" activationMode="manual">
+ *   <TabsList aria-label="Account sections">
+ *     <TabsTrigger value="overview">Overview</TabsTrigger>
+ *     <TabsTrigger value="billing">Billing</TabsTrigger>
+ *   </TabsList>
+ *   <TabsContent value="overview">…</TabsContent>
+ *   <TabsContent value="billing">…</TabsContent>
+ * </Tabs>
+ * ```
  */
 export function Tabs({
   value: controlled,
@@ -69,6 +93,7 @@ export function Tabs({
   onValueChange,
   variant = 'underline',
   orientation = variant === 'vertical' ? 'vertical' : 'horizontal',
+  activationMode = 'automatic',
   className,
   children,
   ...rest
@@ -79,6 +104,9 @@ export function Tabs({
   const baseId = useId();
   const triggers = useRef(new Map<string, HTMLButtonElement>());
   const order = useRef<string[]>([]);
+  // Only consulted under `manual`; `automatic` keeps the tab stop on the
+  // selected trigger exactly as before.
+  const [focusedValue, setFocusedValue] = useState<string | null>(null);
 
   const setValue = useCallback(
     (v: string) => {
@@ -98,34 +126,35 @@ export function Tabs({
     }
   }, []);
 
+  const moveTo = useCallback(
+    (next: string) => {
+      const el = triggers.current.get(next);
+      if (!el) return;
+      el.focus();
+      if (activationMode === 'manual') setFocusedValue(next);
+      else setValue(next);
+    },
+    [activationMode, setValue],
+  );
+
   const focusByOffset = useCallback(
     (current: string, offset: number) => {
       const list = order.current;
       if (list.length === 0) return;
       const idx = list.indexOf(current);
       if (idx < 0) return;
-      const next = list[(idx + offset + list.length) % list.length];
-      const el = triggers.current.get(next);
-      if (el) {
-        el.focus();
-        setValue(next);
-      }
+      moveTo(list[(idx + offset + list.length) % list.length]);
     },
-    [setValue],
+    [moveTo],
   );
 
   const focusEdge = useCallback(
     (which: 'first' | 'last') => {
       const list = order.current;
       if (list.length === 0) return;
-      const v = which === 'first' ? list[0] : list[list.length - 1];
-      const el = triggers.current.get(v);
-      if (el) {
-        el.focus();
-        setValue(v);
-      }
+      moveTo(which === 'first' ? list[0] : list[list.length - 1]);
     },
-    [setValue],
+    [moveTo],
   );
 
   return (
@@ -136,6 +165,8 @@ export function Tabs({
         baseId,
         variant,
         orientation,
+        activationMode,
+        focusedValue,
         registerTrigger,
         focusByOffset,
         focusEdge,
@@ -197,6 +228,12 @@ export const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>(funct
 ) {
   const ctx = useTabs();
   const selected = ctx.value === value;
+  // Roving tabindex. Under `manual` the tab stop follows arrow-key focus so a
+  // focused-but-unselected trigger stays reachable; `automatic` is unchanged.
+  const tabStop =
+    ctx.activationMode === 'manual' && ctx.focusedValue !== null
+      ? ctx.focusedValue === value
+      : selected;
   const id = `${ctx.baseId}-trigger-${value}`;
   const panelId = `${ctx.baseId}-panel-${value}`;
   const setRef = (node: HTMLButtonElement | null) => {
@@ -225,6 +262,12 @@ export const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>(funct
     } else if (e.key === 'End') {
       e.preventDefault();
       ctx.focusEdge('last');
+    } else if (ctx.activationMode === 'manual' && (e.key === 'Enter' || e.key === ' ')) {
+      // Manual activation: focus alone never selects, so commit explicitly.
+      // preventDefault also suppresses the synthesised click on native buttons
+      // so `onValueChange` fires exactly once.
+      e.preventDefault();
+      ctx.setValue(value);
     }
     onKeyDown?.(e as React.KeyboardEvent<HTMLButtonElement>);
   };
@@ -237,7 +280,7 @@ export const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>(funct
         role="tab"
         aria-selected={selected}
         aria-controls={panelId}
-        tabIndex={selected ? 0 : -1}
+        tabIndex={tabStop ? 0 : -1}
         className={cn(TRIGGER_CLASS[ctx.variant], selected && 'current', className)}
         data-slot="tabs-trigger"
         data-state={selected ? 'active' : 'inactive'}
@@ -258,7 +301,7 @@ export const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>(funct
       role="tab"
       aria-selected={selected}
       aria-controls={panelId}
-      tabIndex={selected ? 0 : -1}
+      tabIndex={tabStop ? 0 : -1}
       className={cn(TRIGGER_CLASS[ctx.variant], selected && 'current', className)}
       data-slot="tabs-trigger"
       data-state={selected ? 'active' : 'inactive'}

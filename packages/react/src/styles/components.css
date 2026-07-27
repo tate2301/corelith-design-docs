@@ -365,6 +365,46 @@
   color: var(--text-strong);
   box-shadow: 0 1px 0 rgba(42,38,34,0.06), 0 0 0 1px var(--border);
 }
+.segmented-item:disabled { opacity: .5; cursor: not-allowed; }
+.segmented-item:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
+}
+
+/* Segments sized to their content rather than stretched to fill the row. */
+.segmented.segmented-auto { width: auto; grid-auto-columns: auto; }
+
+/* Compact density — filter bars and toolbars, where the default 28px row
+   crowds the controls beside it. */
+.segmented.segmented-sm { padding: 2px; border-radius: 8px; }
+.segmented.segmented-sm .segmented-item {
+  height: 24px;
+  padding: 0 8px;
+  font: 500 12px/1 var(--font-sans);
+  border-radius: 5px;
+}
+
+/* Bordered variant — for use directly on the canvas, where the muted track
+   would otherwise disappear into the background. */
+.segmented.segmented-bordered {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+/* Trailing count on a segment ("Open 12"). Sits after the label. */
+.segmented-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  font: 500 11px/1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+.segmented-item.active .segmented-count {
+  background: var(--surface-muted);
+  color: var(--text-strong);
+}
 
 /* Sidebar navigation items */
 .sb-nav { display: grid; gap: 1px; }
@@ -843,6 +883,32 @@
 .menu .menu-item.danger .icon, .menu .menu-item.danger svg { color: var(--tone-danger); }
 .menu .menu-item .shortcut { color: var(--text-subtle); font: var(--type-mono); }
 .menu .menu-divider { height: 1px; background: var(--border); margin: 4px 0; }
+.menu .menu-group { display: grid; gap: 1px; }
+.menu .menu-item:disabled,
+.menu .menu-item[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
+.menu .menu-item:disabled:hover,
+.menu .menu-item[aria-disabled="true"]:hover { background: transparent; }
+.menu .menu-item:focus-visible,
+.menu .menu-item[data-highlighted] { background: var(--surface-muted); outline: none; }
+
+/* Selectable items. The 16px leading column in `.menu-item` is the indicator
+   slot — these rules fill it rather than adding a second one. */
+.menu .menu-item[role="menuitemcheckbox"] .indicator,
+.menu .menu-item[role="menuitemradio"] .indicator {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px;
+  color: var(--brand);
+}
+.menu .menu-item[aria-checked="false"] .indicator { visibility: hidden; }
+
+/* Submenu caret, sharing the trailing column with `.shortcut`. */
+.menu .menu-item.has-sub::after {
+  content: ''; justify-self: end;
+  width: 6px; height: 6px;
+  border-right: 1.5px solid var(--text-subtle);
+  border-bottom: 1.5px solid var(--text-subtle);
+  transform: rotate(-45deg);
+}
 
 /* — Action button with caret (opens dropdown) — */
 .btn-split {
@@ -892,20 +958,44 @@
 .tooltip-kbd { display: inline-block; margin-left: 6px; padding: 1px 5px; background: rgba(255,255,255,0.15); border-radius: 3px; font: 500 11px/1 var(--font-mono); color: rgba(255,255,255,0.85); }
 
 /* — Modal / Sheet — */
-.modal-scrim { position: absolute; inset: 0; background: rgba(42,38,34,0.32); display: grid; place-items: center; padding: 32px; }
+/* `fixed`, not `absolute`: the scrim covers the viewport, not the nearest
+   positioned ancestor. Every component that used this class was already
+   overriding it inline. */
+.modal-scrim { position: fixed; inset: 0; background: rgba(42,38,34,0.32); display: grid; place-items: center; padding: 32px; z-index: 1100; }
 .modal-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
   box-shadow: var(--shadow-modal);
-  width: 100%; max-width: 480px;
+  width: 100%; max-width: var(--modal-max-w, 480px);
+  max-height: calc(100dvh - 64px);
+  display: flex; flex-direction: column;
   overflow: clip;
 }
-.modal-h { padding: 20px 24px 8px; }
+/* Width scale. `--modal-max-w` is the escape hatch for one-off widths.
+   Named `modal-*` rather than `size-*` because `size-full` is a Tailwind
+   built-in; in a Tailwind app the utilities layer outranks this one, so a
+   shared name loses silently. */
+.modal-card.modal-sm   { --modal-max-w: 420px; }
+.modal-card.modal-md   { --modal-max-w: 560px; }
+.modal-card.modal-lg   { --modal-max-w: 760px; }
+.modal-card.modal-xl   { --modal-max-w: 1000px; }
+.modal-card.modal-full { --modal-max-w: calc(100vw - 64px); }
+
+.modal-h { padding: 20px 24px 8px; flex: none; }
 .modal-h .t { font: var(--type-section-title); color: var(--text-strong); }
 .modal-h .s { color: var(--text-muted); margin-top: 4px; font: var(--type-body-sm); }
-.modal-b { padding: 12px 24px 20px; display: grid; gap: 12px; }
-.modal-f { padding: 14px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; background: var(--surface-muted); }
+/* The body is the only part that scrolls — header and footer stay pinned. */
+.modal-b { padding: 12px 24px 20px; display: grid; gap: 12px; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.modal-f { padding: 14px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; background: var(--surface-muted); flex: none; }
+/* Close affordance for dialogs that are neither a drawer nor a bottom sheet. */
+.modal-card .x {
+  width: 28px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--text-muted); border-radius: 6px; cursor: pointer;
+  background: transparent; border: none;
+}
+.modal-card .x:hover { background: var(--surface-muted); color: var(--text-strong); }
 
 /* — Empty state — */
 .empty-state { padding: 56px 32px; text-align: center; display: grid; gap: 8px; justify-items: center; }
@@ -1186,6 +1276,35 @@
 .toast .t-body  { opacity: 0.85; margin-top: 2px; }
 .toast .x { color: rgba(255,255,255,0.7); background: transparent; border: none; cursor: pointer; padding: 2px; }
 .toast .x:hover { color: #fff; }
+/* Inline action ("Undo"). Previously styled only under `.tone-transient`,
+   which left it unstyled on every other tone. */
+.toast .t-action, .toast button.action {
+  background: transparent; border: none; cursor: pointer;
+  padding: 2px 6px; border-radius: 5px;
+  font: 500 13px/1 var(--font-sans);
+  color: #fff; text-decoration: underline; text-underline-offset: 2px;
+}
+.toast .t-action:hover, .toast button.action:hover { background: rgba(255,255,255,0.15); }
+
+/* Stack container. The React `Toaster` positioned this entirely inline. */
+.toast-viewport {
+  position: fixed;
+  z-index: 1200;
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 16px;
+  pointer-events: none;
+  max-width: min(420px, 100vw);
+}
+.toast-viewport > * { pointer-events: auto; }
+.toast-viewport.top-left      { top: 0; left: 0; }
+.toast-viewport.top-right     { top: 0; right: 0; }
+.toast-viewport.top-center    { top: 0; left: 50%; transform: translateX(-50%); align-items: center; }
+.toast-viewport.bottom-left   { bottom: 0; left: 0; flex-direction: column-reverse; }
+.toast-viewport.bottom-right  { bottom: 0; right: 0; flex-direction: column-reverse; }
+.toast-viewport.bottom-center { bottom: 0; left: 50%; transform: translateX(-50%); flex-direction: column-reverse; align-items: center; }
+@media (max-width: 560px) {
+  .toast-viewport { left: 0; right: 0; max-width: none; transform: none; }
+}
 
 /* — Inline edit / annotate row — */
 .cell-locked { display: inline-flex; align-items: center; gap: 4px; color: var(--text-body); }
@@ -1832,9 +1951,35 @@
   background: var(--surface);
   border-left: 1px solid var(--border);
   box-shadow: var(--shadow-modal);
-  width: 420px;
+  width: var(--drawer-size, 420px);
   height: 100%;
   display: flex; flex-direction: column;
+}
+/* Edge variants. The base rule assumes `right`; each of the others moves the
+   dividing border to the edge that actually faces the content. */
+.drawer.drawer-right  { border-left: 1px solid var(--border); border-right: none; }
+.drawer.drawer-left   { border-right: 1px solid var(--border); border-left: none; }
+.drawer.drawer-top,
+.drawer.drawer-bottom {
+  width: 100%;
+  height: var(--drawer-size, 420px);
+  max-height: calc(100dvh - 32px);
+  border-left: none;
+}
+.drawer.drawer-top    { border-bottom: 1px solid var(--border); }
+.drawer.drawer-bottom { border-top: 1px solid var(--border); }
+/* Size scale along the drawer's main axis. Prefixed for the same reason as
+   the modal scale above — `size-full` is a Tailwind built-in. */
+.drawer.drawer-size-sm   { --drawer-size: 320px; }
+.drawer.drawer-size-md   { --drawer-size: 420px; }
+.drawer.drawer-size-lg   { --drawer-size: 560px; }
+.drawer.drawer-size-xl   { --drawer-size: 720px; }
+.drawer.drawer-size-full { --drawer-size: calc(100vw - 32px); }
+.drawer.drawer-top.drawer-size-full,
+.drawer.drawer-bottom.drawer-size-full { --drawer-size: calc(100dvh - 32px); }
+/* Below the phone breakpoint a side drawer would leave no reading width. */
+@media (max-width: 560px) {
+  .drawer.drawer-left, .drawer.drawer-right { --drawer-size: calc(100vw - 32px); }
 }
 .drawer-h {
   padding: 18px 22px;

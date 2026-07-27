@@ -4,7 +4,7 @@ import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 import { cn } from '../utils/cn';
 import { Checkbox } from '../primitives/Checkbox';
 
-export interface ChecklistItemProps extends HTMLAttributes<HTMLDivElement> {
+export interface ChecklistItemProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title' | 'onToggle'> {
   done?: boolean;
   title: ReactNode;
   subtitle?: ReactNode;

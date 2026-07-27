@@ -31,7 +31,7 @@ export const MobileShell = forwardRef<HTMLDivElement, MobileShellProps>(function
   );
 });
 
-export interface MobileShellHeaderProps extends HTMLAttributes<HTMLDivElement> {
+export interface MobileShellHeaderProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   title?: ReactNode;
   leftAction?: ReactNode;
   rightAction?: ReactNode;

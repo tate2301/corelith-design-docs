@@ -1,0 +1,316 @@
+/* Corelith — nav surfaces.
+ * Added during the huchu convergence: these class names were already emitted
+ * by the React layer but shipped no rules. */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Nav rail — the quiet vertical secondary navigation.
+   `.settings-rail` is the older alias; both roots share one contract so the
+   rail in Accounting reads exactly like the rail in Settings. No outline, no
+   shadow, no link colour, no underline.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.settings-rail, .nav-rail {
+  display: flex; flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.settings-rail .group-label, .nav-rail .group-label {
+  font: var(--type-caption);
+  color: var(--text-subtle);
+  padding: 18px 12px 6px;
+}
+/* The first group in a rail should not push the whole rail down. */
+.settings-rail > .group-label:first-child, .nav-rail > .group-label:first-child { padding-top: 0; }
+
+.settings-rail .rail-item, .nav-rail .rail-item {
+  display: flex; align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
+  font: 500 14px/1 var(--font-sans);
+  color: var(--text-body);
+  cursor: pointer;
+  border: none; background: transparent;
+  box-shadow: none;
+  text-align: left;
+  text-decoration: none;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+.settings-rail .rail-item:hover, .nav-rail .rail-item:hover { background: var(--surface-muted); }
+.settings-rail .rail-item.active, .nav-rail .rail-item.active {
+  background: var(--surface-muted);
+  color: var(--text-strong);
+  font-weight: 500;
+}
+.settings-rail .rail-item:focus-visible, .nav-rail .rail-item:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.settings-rail .rail-item:disabled, .nav-rail .rail-item:disabled,
+.settings-rail .rail-item[aria-disabled="true"], .nav-rail .rail-item[aria-disabled="true"] {
+  color: var(--text-subtle);
+  cursor: not-allowed;
+  opacity: 0.55;
+  pointer-events: none;
+}
+.settings-rail .rail-item .tag, .nav-rail .rail-item .tag { margin-left: var(--space-2); }
+
+/* Inner slots ------------------------------------------------------------- */
+.rail-item-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: none;
+  width: 16px; height: 16px;
+  color: var(--text-muted);
+}
+.rail-item-icon svg { width: 16px; height: 16px; }
+.rail-item.active .rail-item-icon { color: var(--text-strong); }
+
+.rail-item-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rail-item-count {
+  flex: none;
+  margin-left: auto;
+  font: var(--type-caption);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-subtle);
+}
+.rail-item.active .rail-item-count { color: var(--text-muted); }
+
+.rail-item-trailing {
+  display: inline-flex; align-items: center;
+  flex: none;
+  margin-left: var(--space-2);
+  color: var(--text-subtle);
+}
+
+/* Responsive orientation — below 1024px the rail becomes a scrolling strip. */
+@media (max-width: 1023.98px) {
+  .nav-rail[data-orientation="responsive"] {
+    flex-direction: row;
+    gap: var(--space-1);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    padding-bottom: var(--space-1);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .nav-rail[data-orientation="responsive"]::-webkit-scrollbar { display: none; }
+  .nav-rail[data-orientation="responsive"] .group-label { display: none; }
+  .nav-rail[data-orientation="responsive"] .rail-item {
+    width: auto;
+    flex: none;
+    white-space: nowrap;
+  }
+  .nav-rail[data-orientation="responsive"] .rail-item-label { overflow: visible; }
+}
+@media (min-width: 1024px) {
+  .nav-rail[data-orientation="responsive"] { flex-direction: column; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   App sidebar — the collapsible rail + its inset page column.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Sidebar metrics. Declared on the provider (the ancestor) rather than on
+   `.sidebar` itself so a consumer can override them from any wrapper or from
+   the provider's own `style`; every use site repeats the literal fallback so a
+   bare `.sidebar` still measures correctly outside a provider. */
+.sidebar-provider {
+  --sidebar-width: 17.5rem;
+  --sidebar-width-icon: 3.75rem;
+  --sidebar-width-mobile: min(19rem, calc(100vw - 1rem));
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.sidebar {
+  position: relative;
+  display: flex; flex-direction: column;
+  flex: none;
+  width: var(--sidebar-width, 17.5rem);
+  max-width: 100%;
+  height: 100dvh; min-height: 100dvh;
+  background: var(--surface);
+  color: var(--text-body);
+  box-shadow: inset -1px 0 0 0 var(--border);
+  transition: width 160ms ease, background-color 160ms ease;
+}
+/* Inside a grid shell (AppShell fixes its own column width) the rail simply
+   fills the track it was given rather than fighting the grid. */
+.app-shell > .sidebar, .app-shell > * > .sidebar { width: 100%; }
+
+.sidebar[data-state="collapsed"][data-collapsible="icon"] { width: var(--sidebar-width-icon, 3.75rem); }
+.sidebar[data-state="collapsed"][data-collapsible="offcanvas"] {
+  width: 0;
+  overflow: hidden;
+  box-shadow: none;
+}
+.sidebar[data-variant="inset"] {
+  height: auto; min-height: 0;
+  margin: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-rest);
+  overflow: hidden;
+}
+
+/* Mobile: the DS Drawer wraps the rail, so strip the drawer body padding and
+   let the aside own the full sheet. The Drawer sets its body padding inline. */
+.sidebar-drawer .drawer-body { padding: 0 !important; }
+.sidebar-drawer .sidebar { width: 100%; height: 100%; box-shadow: none; }
+
+.sidebar-header {
+  display: flex; flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3) var(--space-2);
+}
+.sidebar-footer {
+  margin-top: auto;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+}
+.sidebar-content {
+  display: flex; flex-direction: column;
+  gap: var(--space-3);
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 var(--space-2) max(var(--space-3), env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.sidebar-group { border-radius: var(--radius-md); min-width: 0; }
+.sidebar-group-label {
+  padding: 0 var(--space-2);
+  font: var(--type-caption);
+  color: var(--text-subtle);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidebar-group-content { display: flex; flex-direction: column; gap: 2px; margin-top: var(--space-1); }
+
+.sidebar-menu { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.sidebar-menu-item { list-style: none; min-width: 0; }
+
+/* A sidebar row is navigation, not a control: no outline, no shadow, and it
+   does not shift on hover. Hover and active are the same soft fill, separated
+   by the weight of the label — the same contract as `.rail-item`. */
+.sidebar-menu-button {
+  position: relative;
+  display: flex; align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 40px;
+  padding: 0 10px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  box-shadow: none;
+  font: 500 14px/1 var(--font-sans);
+  color: var(--text-muted);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+.sidebar-menu-button > svg, .sidebar-menu-button > .icon { flex: none; width: 16px; height: 16px; }
+.sidebar-menu-button:hover { background: var(--surface-muted); color: var(--text-strong); box-shadow: none; }
+.sidebar-menu-button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.sidebar-menu-button.is-active, .sidebar-menu-button[data-active="true"] {
+  background: var(--surface-muted);
+  color: var(--text-strong);
+  font-weight: 600;
+}
+.sidebar-menu-button:disabled, .sidebar-menu-button[aria-disabled="true"] {
+  color: var(--text-subtle);
+  cursor: not-allowed;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.sidebar-menu-button-sm { height: 36px; font-size: 13px; }
+.sidebar-menu-button-lg { height: 44px; }
+.sidebar-menu-button-outline {
+  color: var(--text-body);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-rest);
+}
+.sidebar-menu-button-outline:hover { background: var(--surface-muted); }
+.sidebar-menu-button-outline.is-active { background: var(--surface); border-color: var(--border-strong); }
+
+/* Collapsed to the icon rail: the row becomes a square and the label goes. */
+.sidebar[data-collapsible="icon"] .sidebar-menu-button[data-collapsed="true"] {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto;
+  padding: 0;
+  justify-content: center;
+}
+.sidebar[data-collapsible="icon"] .sidebar-menu-button[data-collapsed="true"] span { display: none; }
+.sidebar[data-collapsible="icon"][data-state="collapsed"] .sidebar-group-label,
+.sidebar[data-collapsible="icon"][data-state="collapsed"] .sidebar-input { display: none; }
+.sidebar[data-collapsible="icon"][data-state="collapsed"] .sidebar-header,
+.sidebar[data-collapsible="icon"][data-state="collapsed"] .sidebar-footer,
+.sidebar[data-collapsible="icon"][data-state="collapsed"] .sidebar-content { padding-left: var(--space-2); padding-right: var(--space-2); }
+
+.sidebar-separator {
+  height: 1px;
+  margin: var(--space-2) var(--space-1);
+  border: 0;
+  background: var(--border);
+}
+
+.sidebar-input { width: 100%; }
+
+.sidebar-trigger { flex: none; }
+
+/* The hover-revealed toggle strip on the rail's trailing edge. */
+.sidebar-rail {
+  position: absolute;
+  top: 50%;
+  right: -6px;
+  width: 4px;
+  height: 48px;
+  transform: translateY(-50%);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--border-strong);
+  box-shadow: var(--shadow-rest);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 120ms ease, background-color 120ms ease;
+  z-index: 1;
+}
+.sidebar:hover .sidebar-rail, .sidebar-rail:hover, .sidebar-rail:focus-visible { opacity: 1; }
+.sidebar-rail:hover { background: var(--brand); }
+.sidebar-rail:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+@media (max-width: 767.98px) {
+  .sidebar-rail { display: none; }
+}
+
+.sidebar-inset {
+  display: flex; flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 100vh;
+  background: var(--canvas);
+}
+.sidebar[data-variant="inset"] ~ .sidebar-inset { background: var(--canvas); }
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar, .sidebar-menu-button, .sidebar-rail,
+  .settings-rail .rail-item, .nav-rail .rail-item { transition: none; }
+}
