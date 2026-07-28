@@ -1,0 +1,327 @@
+/* ============================================================
+   Corelith — Record grid
+   ============================================================
+
+   The compact, spreadsheet-like table: short rows, vertical rules
+   between columns, values carried in chips rather than bare text.
+
+   Why a third density rather than tightening `.dtable`: this grid makes a
+   different trade. `.table` and `.dtable` are *reading* tables — no
+   vertical rules, roomy rows, prose alignment. This one is a *scanning*
+   grid, where the column boundary matters as much as the value and a
+   screenful of records beats a comfortable line height. Both are right;
+   they're just not the same component, and collapsing them would force
+   one set of pages to lose.
+
+   Row height is a variable, so a host can trade density without forking
+   the stylesheet:
+
+       <table class="dtable dtable-grid" style="--grid-row-h: 32px">
+   ============================================================ */
+
+.dtable-grid {
+  --grid-row-h: 36px;
+  --grid-cell-x: 10px;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font: 400 13px/1.4 var(--font-sans);
+  color: var(--text-body);
+}
+
+/* ── Header ───────────────────────────────────────────────
+   Quiet: the header is scaffolding, the rows are the content. */
+.dtable-grid thead th {
+  height: var(--grid-row-h);
+  padding: 0 var(--grid-cell-x);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border-subtle);
+  font: 500 12px/1 var(--font-sans);
+  color: var(--text-muted);
+  text-align: left;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.dtable-grid thead th:last-child { border-right: none; }
+.dtable-grid thead th.num { text-align: right; }
+
+/* Header icon + label. The reference grids lead every column with a type
+   glyph — it tells you what kind of value the column holds before you've
+   read a single row. */
+.grid-th {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.grid-th .grid-th-icon,
+.grid-th svg {
+  width: 14px;
+  height: 14px;
+  color: var(--text-subtle);
+  flex: none;
+}
+.grid-th .grid-th-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+th.num .grid-th { justify-content: flex-end; }
+
+/* ── Body ─────────────────────────────────────────────────── */
+.dtable-grid tbody td {
+  height: var(--grid-row-h);
+  padding: 0 var(--grid-cell-x);
+  border-bottom: 1px solid var(--border-subtle);
+  border-right: 1px solid var(--border-subtle);
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-body);
+}
+.dtable-grid tbody td:last-child { border-right: none; }
+.dtable-grid tbody tr:last-child td { border-bottom: none; }
+.dtable-grid tbody tr:hover td { background: var(--surface-muted); }
+
+.dtable-grid td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
+/* Selected rows get the brand tint. Hover on top of it stays legible
+   because the tint is a step lighter than the hover. */
+.dtable-grid tbody tr.selected td {
+  background: var(--accent-blue-bg);
+  border-bottom-color: var(--accent-blue-bd);
+}
+.dtable-grid tbody tr.selected:hover td { background: var(--accent-blue-bg-hover); }
+
+/* ── Checkbox column ──────────────────────────────────────
+   Fixed narrow, no right rule — the checkbox belongs to the row, not to
+   a column of its own. */
+.dtable-grid th.grid-select,
+.dtable-grid td.grid-select {
+  width: 40px;
+  padding-left: 12px;
+  padding-right: 0;
+  border-right: none;
+  text-align: left;
+}
+/* Brand-blue checkbox, matching the reference. The shipped `.check` is ink;
+   scoping the override to the grid leaves every other surface alone. */
+.dtable-grid .check:checked {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+.dtable-grid .check:indeterminate {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+/* ── Density modifiers ────────────────────────────────────── */
+.dtable-grid.dtable-grid-dense    { --grid-row-h: 30px; font-size: 12.5px; }
+.dtable-grid.dtable-grid-relaxed  { --grid-row-h: 44px; }
+
+/* Rules off, for a grid that needs to read as a list again. */
+.dtable-grid.dtable-grid-borderless thead th,
+.dtable-grid.dtable-grid-borderless tbody td { border-right: none; }
+
+/* Zebra — opt-in; the vertical rules usually make it unnecessary. */
+.dtable-grid.dtable-grid-zebra tbody tr:nth-child(even) td { background: var(--gray-50); }
+.dtable-grid.dtable-grid-zebra tbody tr:hover td { background: var(--surface-muted); }
+.dtable-grid.dtable-grid-zebra tbody tr.selected td { background: var(--accent-blue-bg); }
+
+/* ── Linked-record chip ───────────────────────────────────
+   A reference to another record: avatar + name in a soft pill. The pill is
+   the affordance — it says "this is a record you can open", not "this is a
+   string that happens to be a name".
+   ════════════════════════════════════════════════════════ */
+
+.record-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  height: 24px;
+  padding: 0 8px 0 3px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  color: var(--text-strong);
+  font: 500 13px/1 var(--font-sans);
+  text-decoration: none;
+  cursor: pointer;
+  vertical-align: middle;
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+.record-chip:hover { background: var(--surface-sunken); text-decoration: none; }
+.record-chip:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+
+.record-chip .avatar {
+  width: 18px;
+  height: 18px;
+  font-size: 9px;
+  font-weight: 600;
+  flex: none;
+}
+.record-chip .record-chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+/* Remove affordance for a multi-value reference cell. */
+.record-chip .record-chip-x {
+  width: 14px;
+  height: 14px;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: transparent;
+  color: var(--text-subtle);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  flex: none;
+  padding: 0;
+}
+.record-chip .record-chip-x:hover { background: var(--surface-deep); color: var(--text-strong); }
+
+/* Sizes. `sm` is for a 30 px dense row, `lg` for a detail header. */
+.record-chip.record-chip-sm { height: 20px; font-size: 12px; padding: 0 7px 0 2px; }
+.record-chip.record-chip-sm .avatar { width: 16px; height: 16px; font-size: 8px; }
+.record-chip.record-chip-lg { height: 28px; font-size: 14px; padding: 0 10px 0 4px; }
+.record-chip.record-chip-lg .avatar { width: 22px; height: 22px; font-size: 10px; }
+
+/* No pill — a bare avatar + name, for a cell that already reads as a link. */
+.record-chip.record-chip-plain { background: transparent; padding-left: 0; }
+.record-chip.record-chip-plain:hover { background: transparent; text-decoration: underline; text-underline-offset: 2px; }
+
+/* A row of references, with an overflow counter. */
+.record-chip-group { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; min-width: 0; }
+.record-chip-more {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  color: var(--text-muted);
+  font: 500 12px/1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+
+/* ── Value pill ───────────────────────────────────────────
+   A cell value that is a *typed* value rather than prose — an email, a
+   URL, a select option. Accent-tinted through the `data-accent` channel.
+   ════════════════════════════════════════════════════════ */
+
+.cell-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-bg);
+  color: var(--accent-fg);
+  font: 400 13px/1 var(--font-sans);
+  text-decoration: none;
+  vertical-align: middle;
+}
+a.cell-pill:hover { background: var(--accent-bg-hover); text-decoration: none; }
+.cell-pill .cell-pill-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.cell-pill svg, .cell-pill .icon { width: 12px; height: 12px; flex: none; opacity: 0.75; }
+
+/* ── Selection quick-actions bar ──────────────────────────
+   Floats over the foot of the grid once rows are selected. Light, not the
+   inverted `.bulk-edit-bar` — it sits *on* the table rather than replacing
+   the page's action bar, so it shouldn't outweigh the content behind it.
+   ════════════════════════════════════════════════════════ */
+
+.selection-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-popover);
+  font: var(--type-body-sm);
+}
+
+/* Floating form — sticks to the bottom of the scroll port, centred, and
+   only as wide as its contents. */
+.selection-bar.selection-bar-floating {
+  position: sticky;
+  bottom: 16px;
+  z-index: 20;
+  width: max-content;
+  max-width: 100%;
+  margin: 0 auto;
+  /* Pull it over the last rows instead of adding a gap under the table. */
+  margin-top: -48px;
+}
+
+.selection-bar-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 0 4px;
+  font: var(--type-label-sm);
+  color: var(--text-strong);
+  white-space: nowrap;
+  flex: none;
+}
+.selection-bar-count .selection-bar-n {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: var(--radius-sm);
+  background: var(--brand);
+  color: #fff;
+  font: 600 12px/1 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+.selection-bar-actions { display: flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }
+.selection-bar-divider { width: 1px; align-self: stretch; background: var(--border); margin: 0 2px; }
+
+/* Actions are `.btn.btn-secondary` sized down to the bar's rhythm. */
+.selection-bar .btn {
+  height: 32px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+.selection-bar .btn-icon { width: 32px; padding: 0; }
+
+/* Dismiss — clears the selection. */
+.selection-bar-clear {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  cursor: pointer;
+  flex: none;
+}
+.selection-bar-clear:hover { background: var(--surface-muted); color: var(--text-strong); }
+.selection-bar-clear svg { width: 15px; height: 15px; }
+
+@media (max-width: 720px) {
+  .selection-bar { width: 100%; border-radius: var(--radius-lg); }
+  .selection-bar.selection-bar-floating { margin-top: -8px; bottom: 8px; }
+  /* Labels drop out; the icons carry the actions. */
+  .selection-bar .btn .btn-label { display: none; }
+  .selection-bar .btn { padding: 0 10px; }
+}

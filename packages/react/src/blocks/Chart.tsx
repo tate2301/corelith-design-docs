@@ -2,6 +2,14 @@
 
 import { forwardRef, type SVGProps, type HTMLAttributes } from 'react';
 import { cn } from '../utils/cn';
+import { CHART_SERIES, chartSeriesVar } from '../tokens/accents';
+
+/**
+ * Series colour comes from the `--chart-1…10` tokens rather than literal hex,
+ * so a consumer who retokens the palette gets retinted charts without touching
+ * a component. The old hard-coded defaults (`#10b981`, `#f59e0b`, `#8b5cf6`)
+ * were off-system Tailwind values that matched nothing else on the page.
+ */
 
 export interface ChartDataPoint {
   x: string | number;
@@ -19,7 +27,7 @@ export interface ChartLineProps extends SVGProps<SVGSVGElement> {
 }
 
 export const ChartLine = forwardRef<SVGSVGElement, ChartLineProps>(function ChartLine(
-  { data = [], width = 300, height = 150, stroke = 'var(--brand, #0B5DF0)', strokeWidth = 2, className, ...props },
+  { data = [], width = 300, height = 150, stroke = CHART_SERIES[0], strokeWidth = 2, className, ...props },
   ref,
 ) {
   if (data.length === 0) return <svg ref={ref} width={width} height={height} className={cn('b-chart', className)} {...props} />;
@@ -59,7 +67,7 @@ export interface ChartBarProps extends SVGProps<SVGSVGElement> {
 }
 
 export const ChartBar = forwardRef<SVGSVGElement, ChartBarProps>(function ChartBar(
-  { data = [], width = 300, height = 150, fill = 'var(--brand, #0B5DF0)', orientation = 'vertical', className, ...props },
+  { data = [], width = 300, height = 150, fill = CHART_SERIES[0], orientation = 'vertical', className, ...props },
   ref,
 ) {
   if (data.length === 0) return <svg ref={ref} width={width} height={height} className={cn('b-chart', className)} {...props} />;
@@ -113,7 +121,6 @@ export const ChartDonut = forwardRef<SVGSVGElement, ChartDonutProps>(function Ch
   const circumference = 2 * Math.PI * radius;
   let accumulated = 0;
 
-  const defaultColors = ['#0B5DF0', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   return (
     <svg
@@ -129,7 +136,7 @@ export const ChartDonut = forwardRef<SVGSVGElement, ChartDonutProps>(function Ch
           const strokeDasharray = `${(d.value / total) * circumference} ${circumference}`;
           const strokeDashoffset = -accumulated * circumference;
           accumulated += d.value / total;
-          const color = d.color || defaultColors[i % defaultColors.length];
+          const color = d.color || chartSeriesVar(i);
 
           return (
             <circle
@@ -165,7 +172,7 @@ export const ChartPie = forwardRef<SVGSVGElement, ChartPieProps>(function ChartP
 export interface ChartAreaProps extends ChartLineProps {}
 
 export const ChartArea = forwardRef<SVGSVGElement, ChartAreaProps>(function ChartArea(
-  { data = [], width = 300, height = 150, stroke = 'var(--brand, #0B5DF0)', className, ...props },
+  { data = [], width = 300, height = 150, stroke = CHART_SERIES[0], className, ...props },
   ref,
 ) {
   if (data.length === 0) return <svg ref={ref} width={width} height={height} className={cn('b-chart', className)} {...props} />;
@@ -206,7 +213,7 @@ export interface ChartSparklineProps extends SVGProps<SVGSVGElement> {
 }
 
 export const ChartSparkline = forwardRef<SVGSVGElement, ChartSparklineProps>(function ChartSparkline(
-  { data = [], width = 100, height = 30, color = 'var(--brand, #0B5DF0)', className, ...props },
+  { data = [], width = 100, height = 30, color = CHART_SERIES[0], className, ...props },
   ref,
 ) {
   if (data.length === 0) return <svg ref={ref} width={width} height={height} className={cn('b-chart-sparkline', className)} {...props} />;
@@ -246,7 +253,7 @@ export interface ChartProgressRingProps extends SVGProps<SVGSVGElement> {
 }
 
 export const ChartProgressRing = forwardRef<SVGSVGElement, ChartProgressRingProps>(function ChartProgressRing(
-  { value, max = 100, size = 48, strokeWidth = 4, color = 'var(--brand, #0B5DF0)', className, ...props },
+  { value, max = 100, size = 48, strokeWidth = 4, color = CHART_SERIES[0], className, ...props },
   ref,
 ) {
   const radius = (size - strokeWidth) / 2;

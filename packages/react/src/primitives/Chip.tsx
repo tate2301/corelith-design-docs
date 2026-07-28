@@ -6,8 +6,11 @@ import {
 } from 'react';
 import { cn } from '../utils/cn';
 import { Slot } from '../utils/Slot';
+import { type Accent } from '../tokens/accents';
 
 export interface ChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  /** Accent hue. Tints the chip and deepens on hover. */
+  accent?: Accent;
   /** Optional leading content — typically an icon. */
   leading?: ReactNode;
   /** Optional trailing content — typically a caret or count. Ignored when
@@ -36,6 +39,7 @@ export interface ChipProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  */
 export const Chip = forwardRef<HTMLButtonElement, ChipProps>(function Chip(
   {
+    accent,
     leading,
     trailing,
     onRemove,
@@ -51,16 +55,19 @@ export const Chip = forwardRef<HTMLButtonElement, ChipProps>(function Chip(
   ref,
 ) {
   // Selected style trims to brand colors. Done inline to avoid redefining CSS.
-  const selectedStyle: React.CSSProperties | undefined = selected
-    ? {
-        background: 'var(--brand-soft)',
-        borderColor: 'var(--brand-100)',
-        color: 'var(--brand-strong)',
-      }
-    : undefined;
+  // An accent supersedes it — `.chip-accent` already paints all three
+  // properties, and the inline style would otherwise override the hue.
+  const selectedStyle: React.CSSProperties | undefined =
+    selected && !accent
+      ? {
+          background: 'var(--brand-soft)',
+          borderColor: 'var(--brand-100)',
+          color: 'var(--brand-strong)',
+        }
+      : undefined;
 
   const removeStyle: React.CSSProperties | undefined = onRemove ? { paddingRight: 6 } : undefined;
-  const classes = cn('chip', className);
+  const classes = cn('chip', accent && 'chip-accent', className);
   const composedStyle = { ...selectedStyle, ...removeStyle, ...style };
 
   if (asChild) {
@@ -70,6 +77,7 @@ export const Chip = forwardRef<HTMLButtonElement, ChipProps>(function Chip(
         className={classes}
         style={composedStyle}
         data-slot="chip"
+        data-accent={accent}
         data-state={selected ? 'on' : 'off'}
         {...(rest as React.HTMLAttributes<HTMLElement>)}
       >
@@ -85,6 +93,7 @@ export const Chip = forwardRef<HTMLButtonElement, ChipProps>(function Chip(
       className={classes}
       style={composedStyle}
       data-slot="chip"
+      data-accent={accent}
       data-state={selected ? 'on' : 'off'}
       {...rest}
     >

@@ -49,7 +49,9 @@ for (const src of sources) {
     continue;
   }
   const body = readFileSync(src, 'utf8');
-  const name = src.split('/').pop();
+  // Split on both separators — on Windows `resolve()` returns backslashes, so
+  // splitting on '/' alone put the whole absolute path into the banner.
+  const name = src.split(/[\\/]/).pop();
   pieces.push(`\n/* ── BEGIN ${name} ───────────────────────────────────────── */\n`);
   pieces.push(body.trim());
   pieces.push(`\n/* ── END ${name} ─────────────────────────────────────────── */\n`);

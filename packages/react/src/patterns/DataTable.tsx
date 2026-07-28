@@ -3,6 +3,7 @@
 import {
   useMemo,
   useState,
+  type CSSProperties,
   type ReactNode,
 } from 'react';
 import { cn } from '../utils/cn';
@@ -15,19 +16,26 @@ import {
   TableRow,
   TableCell,
   TableHeaderCell,
+  type GridDensity,
   type SortDirection,
+  type TableDensity,
 } from '../primitives/Table';
 import { DataToolbar } from '../blocks/DataToolbar';
 import { EmptyState } from '../blocks/EmptyState';
+import { SelectionBar, type SelectionAction } from '../blocks/SelectionBar';
 
-export type { SortDirection };
+export type { SortDirection, TableDensity, GridDensity, SelectionAction };
 export type ColumnAlign = 'left' | 'right' | 'center';
+
+type ScrollCssVars = CSSProperties & { '--table-scroll-max-h'?: string };
 
 export interface DataTableColumn<Row> {
   /** Unique key. Used for sorting and as the React key. */
   key: string;
   /** Header label. */
   header: ReactNode;
+  /** Leading type glyph for the header — what kind of value this column holds. */
+  icon?: ReactNode;
   /** Cell renderer. Defaults to `String(row[key])`. */
   render?: (row: Row, index: number) => ReactNode;
   /** Enable client-side sort on this column. */
@@ -81,6 +89,35 @@ export interface DataTableProps<Row> {
   emptyState?: ReactNode;
   /** Fires when a body row is clicked (ignores clicks on the checkbox cell). */
   onRowClick?: (row: Row, index: number) => void;
+  /**
+   * Row density. `grid` is the compact scanning grid — short rows, vertical
+   * column rules, chipped values. @default 'grid'
+   */
+  density?: TableDensity;
+  /** Row height within the `grid` density. @default 'default' (36 px) */
+  gridDensity?: GridDensity;
+  /** Grid only — drop the vertical column rules. */
+  borderless?: boolean;
+  /** Grid only — tint alternate rows. */
+  zebra?: boolean;
+  /** Pin the header while the body scrolls. */
+  stickyHeader?: boolean;
+  /** Pin the leading column while the grid scrolls sideways. */
+  stickyFirstColumn?: boolean;
+  /** Cap the scroll port's height, in px. Implies a vertical scroll rail. */
+  maxHeight?: number;
+  /**
+   * Quick actions offered on the current selection. Renders a floating
+   * {@link SelectionBar} over the foot of the table whenever rows are selected.
+   * Each handler receives the selected keys.
+   */
+  selectionActions?: Array<Omit<SelectionAction, 'onSelect'> & {
+    onSelect?: (keys: Array<string | number>) => void;
+  }>;
+  /** Overflow slot in the selection bar — pass a menu trigger. */
+  selectionOverflow?: ReactNode;
+  /** Noun after the selection count. @default 'selected' */
+  selectionLabel?: string;
   /** Extra className on the wrapping element. */
   className?: string;
 }
@@ -94,28 +131,42 @@ export interface DataTableProps<Row> {
  * For server-driven data, omit `sortable`/`pagination` slicing by passing only
  * the current page of `data` and wiring `pagination.onPageChange` to your fetch.
  *
+ * **Density.** Defaults to `grid` — the compact scanning layout: 36 px rows,
+ * vertical column rules, brand-tinted selected rows. Pass `density="compact"`
+ * for the previous look or `density="default"` for the roomy reading table.
+ *
+ * **Cells.** Reach for `RecordChip` on a reference column and `CellPill` on a
+ * typed value (email, URL, select option) rather than rendering bare strings —
+ * that is most of what separates a legible grid from a gray one.
+ *
+ * **Selection.** With `selectionActions`, a floating `SelectionBar` appears
+ * over the foot of the table once rows are checked; each handler is called
+ * with the selected keys.
+ *
  * @example
  * ```tsx
- * type Supplier = { id: string; name: string; town: string; balance: number };
- * const columns: DataTableColumn<Supplier>[] = [
- *   { key: 'name', header: 'Supplier', sortable: true,
- *     render: (r) => <span className="lead-name">{r.name}</span> },
- *   { key: 'town', header: 'Town', sortable: true },
- *   { key: 'balance', header: 'Balance', align: 'right', sortable: true,
- *     render: (r) => `US$${r.balance.toLocaleString()}` },
+ * type Contact = { id: string; name: string; added: string; email: string };
+ * const columns: DataTableColumn<Contact>[] = [
+ *   { key: 'name', header: 'Contact', icon: <UserIcon />, sortable: true,
+ *     render: (r) => <RecordChip name={r.name} href={`/people/${r.id}`} /> },
+ *   { key: 'added', header: 'Date added', icon: <CalendarIcon />, sortable: true },
+ *   { key: 'email', header: 'Email', icon: <AtIcon />,
+ *     render: (r) => <CellPill accent="violet" href={`mailto:${r.email}`}>{r.email}</CellPill> },
  * ];
- * const data: Supplier[] = [
- *   { id: 'SUP-01', name: 'Mukamba Group', town: 'Harare', balance: 48200 },
- *   { id: 'SUP-02', name: 'Nyaradzo Holdings', town: 'Bulawayo', balance: 12750 },
- * ];
+ *
  * <DataTable
  *   columns={columns}
- *   data={data}
+ *   data={contacts}
  *   rowKey={(r) => r.id}
  *   sortable
  *   selectable
- *   toolbar={{ search: <Input placeholder="Search suppliers" /> }}
- *   pagination={{ page, pageSize: 10, onPageChange: setPage }}
+ *   selectedKeys={selected}
+ *   onSelectionChange={setSelected}
+ *   stickyHeader
+ *   selectionActions={[
+ *     { id: 'add', label: 'Add to collection', icon: <PlusIcon />, onSelect: addAll },
+ *     { id: 'email', label: 'Send email', icon: <MailIcon />, onSelect: emailAll },
+ *   ]}
  * />
  * ```
  */
@@ -131,9 +182,20 @@ export function DataTable<Row>({
   toolbar,
   emptyState,
   onRowClick,
+  density = 'grid',
+  gridDensity,
+  borderless,
+  zebra,
+  stickyHeader,
+  stickyFirstColumn,
+  maxHeight,
+  selectionActions,
+  selectionOverflow,
+  selectionLabel,
   className,
 }: DataTableProps<Row>) {
   const [sort, setSort] = useState<{ key: string; dir: SortDirection } | null>(null);
+  const isGrid = density === 'grid';
 
   const getKey = (row: Row, index: number): string | number =>
     rowKey ? rowKey(row, index) : index;
@@ -209,76 +271,108 @@ export function DataTable<Row>({
       ) : data.length === 0 ? (
         <EmptyState title="Nothing here yet" body="Rows will appear here once data is available." />
       ) : (
-        <div className="table-scroll">
-          <Table density="compact">
-            <TableHead>
-              <TableRow>
-                {selectable ? (
-                  <TableHeaderCell style={{ width: 36 }}>
-                    <Checkbox
-                      aria-label="Select all rows on this page"
-                      checked={allSelected}
-                      indeterminate={!allSelected && someSelected}
-                      onChange={toggleAll}
-                    />
-                  </TableHeaderCell>
-                ) : null}
-                {columns.map((col) => {
-                  const active = sort?.key === col.key;
-                  const canSort = Boolean(sortable && col.sortable);
-                  return (
-                    <TableHeaderCell
-                      key={col.key}
-                      numeric={col.align === 'right'}
-                      sortable={canSort}
-                      sortDirection={active ? sort?.dir : null}
-                      onSort={() => onHeaderClick(col)}
-                      style={{
-                        width: col.width,
-                        textAlign: col.align === 'center' ? 'center' : undefined,
-                      }}
-                    >
-                      {col.header}
+        <>
+          <div
+            className={cn('table-scroll', maxHeight != null && 'capped')}
+            data-sticky-first={stickyFirstColumn ? '' : undefined}
+            style={maxHeight != null ? ({ '--table-scroll-max-h': `${maxHeight}px` } as ScrollCssVars) : undefined}
+          >
+            <Table
+              density={density}
+              gridDensity={gridDensity}
+              borderless={borderless}
+              zebra={zebra}
+              stickyHeader={stickyHeader}
+            >
+              <TableHead>
+                <TableRow>
+                  {selectable ? (
+                    <TableHeaderCell className={isGrid ? 'grid-select' : undefined} style={isGrid ? undefined : { width: 36 }}>
+                      <Checkbox
+                        aria-label="Select all rows on this page"
+                        checked={allSelected}
+                        indeterminate={!allSelected && someSelected}
+                        onChange={toggleAll}
+                      />
                     </TableHeaderCell>
+                  ) : null}
+                  {columns.map((col) => {
+                    const active = sort?.key === col.key;
+                    const canSort = Boolean(sortable && col.sortable);
+                    return (
+                      <TableHeaderCell
+                        key={col.key}
+                        icon={col.icon}
+                        numeric={col.align === 'right'}
+                        sortable={canSort}
+                        sortDirection={active ? sort?.dir : null}
+                        onSort={() => onHeaderClick(col)}
+                        style={{
+                          width: col.width,
+                          textAlign: col.align === 'center' ? 'center' : undefined,
+                        }}
+                      >
+                        {col.header}
+                      </TableHeaderCell>
+                    );
+                  })}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {pageRows.map((row, i) => {
+                  const key = getKey(row, i);
+                  const isSelected = selected.has(key);
+                  return (
+                    <TableRow
+                      key={key}
+                      selected={isSelected}
+                      onClick={onRowClick ? () => onRowClick(row, i) : undefined}
+                      style={onRowClick ? { cursor: 'pointer' } : undefined}
+                    >
+                      {selectable ? (
+                        <TableCell
+                          className={isGrid ? 'grid-select' : undefined}
+                          onClick={(e) => e.stopPropagation()}
+                          style={isGrid ? undefined : { width: 36 }}
+                        >
+                          <Checkbox
+                            aria-label="Select row"
+                            checked={isSelected}
+                            onChange={() => toggleRow(key)}
+                          />
+                        </TableCell>
+                      ) : null}
+                      {columns.map((col) => (
+                        <TableCell
+                          key={col.key}
+                          numeric={col.align === 'right'}
+                          style={{ textAlign: col.align === 'center' ? 'center' : undefined }}
+                        >
+                          {col.render ? col.render(row, i) : String((row as Record<string, unknown>)[col.key] ?? '')}
+                        </TableCell>
+                      ))}
+                    </TableRow>
                   );
                 })}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {pageRows.map((row, i) => {
-                const key = getKey(row, i);
-                const isSelected = selected.has(key);
-                return (
-                  <TableRow
-                    key={key}
-                    selected={isSelected}
-                    onClick={onRowClick ? () => onRowClick(row, i) : undefined}
-                    style={onRowClick ? { cursor: 'pointer' } : undefined}
-                  >
-                    {selectable ? (
-                      <TableCell onClick={(e) => e.stopPropagation()} style={{ width: 36 }}>
-                        <Checkbox
-                          aria-label="Select row"
-                          checked={isSelected}
-                          onChange={() => toggleRow(key)}
-                        />
-                      </TableCell>
-                    ) : null}
-                    {columns.map((col) => (
-                      <TableCell
-                        key={col.key}
-                        numeric={col.align === 'right'}
-                        style={{ textAlign: col.align === 'center' ? 'center' : undefined }}
-                      >
-                        {col.render ? col.render(row, i) : String((row as Record<string, unknown>)[col.key] ?? '')}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Quick actions on the current selection. Sits inside the same
+              stacking context as the grid so it floats over the last rows. */}
+          {selectionActions?.length && selected.size > 0 ? (
+            <SelectionBar
+              count={selected.size}
+              label={selectionLabel}
+              overflow={selectionOverflow}
+              onClear={onSelectionChange ? () => onSelectionChange([]) : undefined}
+              actions={selectionActions.map((a) => ({
+                ...a,
+                onSelect: a.onSelect ? () => a.onSelect!([...selected]) : undefined,
+              }))}
+            />
+          ) : null}
+        </>
       )}
 
       {pagination && data.length > 0 ? (
