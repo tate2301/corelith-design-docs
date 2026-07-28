@@ -11,7 +11,15 @@ import {
 } from 'react';
 import { cn } from '../utils/cn';
 
-export type TableDensity = 'default' | 'compact';
+/**
+ * `default` — the comfortable reading table (`.table`).
+ * `compact`  — the denser reading table (`.dtable`).
+ * `grid`     — the scanning grid: short rows, vertical column rules, chipped
+ *              values (`.dtable.dtable-grid`). Pair with `RecordChip`,
+ *              `CellPill` and `SelectionBar`.
+ */
+export type TableDensity = 'default' | 'compact' | 'grid';
+export type GridDensity = 'dense' | 'default' | 'relaxed';
 export type SortDirection = 'asc' | 'desc';
 
 interface TableContextValue {
@@ -21,8 +29,16 @@ interface TableContextValue {
 const TableContext = createContext<TableContextValue>({ density: 'default', stickyHeader: false });
 
 export interface TableProps extends HTMLAttributes<HTMLTableElement> {
-  /** Row density. `compact` maps to the dense `.dtable` styling. @default 'default' */
+  /** Row density. @default 'default' */
   density?: TableDensity;
+  /** Row height within the `grid` density. @default 'default' (36 px) */
+  gridDensity?: GridDensity;
+  /** Grid only — drop the vertical column rules. */
+  borderless?: boolean;
+  /** Grid only — tint alternate rows. */
+  zebra?: boolean;
+  /** Grid only — override the row height directly, in px. */
+  rowHeight?: number;
   /** Pin the header on scroll — adds `.sticky-head`. @default false */
   stickyHeader?: boolean;
   /**
@@ -36,7 +52,10 @@ export interface TableProps extends HTMLAttributes<HTMLTableElement> {
   children?: ReactNode;
 }
 
-type TableCssVars = CSSProperties & { '--table-sticky-top'?: string };
+type TableCssVars = CSSProperties & {
+  '--table-sticky-top'?: string;
+  '--grid-row-h'?: string;
+};
 
 /**
  * Table — a semantic table primitive. Composes `.table` (comfortable) or
@@ -56,18 +75,53 @@ type TableCssVars = CSSProperties & { '--table-sticky-top'?: string };
  *     row with `selected` so it gets `aria-selected` + `.selected`.
  */
 const TableRoot = forwardRef<HTMLTableElement, TableProps>(function Table(
-  { density = 'default', stickyHeader = false, stickyOffset, quiet, className, style, children, ...rest },
+  {
+    density = 'default',
+    gridDensity = 'default',
+    borderless,
+    zebra,
+    rowHeight,
+    stickyHeader = false,
+    stickyOffset,
+    quiet,
+    className,
+    style,
+    children,
+    ...rest
+  },
   ref,
 ) {
-  const base = density === 'compact' ? 'dtable' : 'table';
+  // `grid` layers onto `.dtable` so it inherits the dense table's sticky-head,
+  // row-action and expander rules rather than restating them.
+  const isGrid = density === 'grid';
+  const base = density === 'default' ? 'table' : 'dtable';
+
   const tableStyle: TableCssVars | undefined =
-    stickyOffset != null ? { '--table-sticky-top': `${stickyOffset}px`, ...style } : style;
+    stickyOffset != null || rowHeight != null
+      ? {
+          ...(stickyOffset != null ? { '--table-sticky-top': `${stickyOffset}px` } : {}),
+          ...(rowHeight != null ? { '--grid-row-h': `${rowHeight}px` } : {}),
+          ...style,
+        }
+      : style;
+
   return (
     <TableContext.Provider value={{ density, stickyHeader }}>
       <table
         ref={ref}
-        className={cn(base, stickyHeader && 'sticky-head', quiet && 'quiet', className)}
+        className={cn(
+          base,
+          isGrid && 'dtable-grid',
+          isGrid && gridDensity === 'dense' && 'dtable-grid-dense',
+          isGrid && gridDensity === 'relaxed' && 'dtable-grid-relaxed',
+          isGrid && borderless && 'dtable-grid-borderless',
+          isGrid && zebra && 'dtable-grid-zebra',
+          stickyHeader && 'sticky-head',
+          quiet && 'quiet',
+          className,
+        )}
         style={tableStyle}
+        data-density={density}
         {...rest}
       >
         {children}
@@ -152,11 +206,16 @@ export interface TableHeaderCellProps extends ThHTMLAttributes<HTMLTableCellElem
   sortDirection?: SortDirection | null;
   /** Fires when a sortable header is activated (click / Enter / Space). */
   onSort?: () => void;
+  /**
+   * Leading type glyph, wrapped with the label in a `.grid-th` flex row. Tells
+   * the reader what kind of value the column holds before they've read a row.
+   */
+  icon?: ReactNode;
   children?: ReactNode;
 }
 const TableHeaderCell = forwardRef<HTMLTableCellElement, TableHeaderCellProps>(
   function TableHeaderCell(
-    { numeric, sortable, sortDirection, onSort, className, children, onClick, onKeyDown, ...rest },
+    { numeric, sortable, sortDirection, onSort, icon, className, children, onClick, onKeyDown, ...rest },
     ref,
   ) {
     const ariaSort = !sortable
@@ -192,7 +251,16 @@ const TableHeaderCell = forwardRef<HTMLTableCellElement, TableHeaderCellProps>(
         }}
         {...rest}
       >
-        {children}
+        {icon ? (
+          <span className="grid-th">
+            <span className="grid-th-icon" aria-hidden="true">
+              {icon}
+            </span>
+            <span className="grid-th-label">{children}</span>
+          </span>
+        ) : (
+          children
+        )}
       </th>
     );
   },

@@ -1,0 +1,491 @@
+/* ============================================================
+   Corelith — Accent palette
+   ============================================================
+
+   The foundation in `tokens.css` is deliberately monochrome: one warm
+   canvas, one saturated brand blue, four semantic tones. That reads well
+   on a settings page and badly on a record page, where the eye needs
+   colour to tell one *kind* of thing from another — the trick Attio and
+   Notion both lean on.
+
+   This file adds that layer. Thirteen hues, each with six roles, plus a
+   single-variable "accent channel" so any component can be recoloured by
+   one attribute instead of thirteen classes.
+
+   ── The six roles ──────────────────────────────────────────
+   --accent-<hue>-solid    saturated fill: dots, avatars, chart series, rails
+   --accent-<hue>-on       foreground that clears AA on `solid`
+   --accent-<hue>-fg       text/icon colour, AA on `bg`
+   --accent-<hue>-bg       soft tint: badges, tags, icon tiles, row highlights
+   --accent-<hue>-bg-hover soft tint, one step down — hover/pressed
+   --accent-<hue>-bd       hairline that sits on `bg`
+
+   ── The accent channel ─────────────────────────────────────
+   `data-accent="violet"` on any element (or any ancestor) rebinds the six
+   unprefixed `--accent-*` variables to that hue. Components then style
+   themselves against `var(--accent-bg)` and inherit whatever hue they're
+   handed:
+
+       <span class="badge badge-accent" data-accent="violet">Publishing</span>
+       <div class="icon-tile" data-accent="teal">…</div>
+
+   Semantic aliases (`brand`, `success`, `warn`, `danger`, `info`,
+   `neutral`) resolve to hues, so the existing tone vocabulary keeps
+   working through the same channel.
+
+   `on` is a real token, not a guess: orange, amber and yellow cannot carry
+   white text at AA, so their `on` is a dark ink while the other ten stay
+   white. Anything painting `--accent-solid` should pair it with
+   `--accent-on` rather than hard-coding #fff.
+   ============================================================ */
+
+:root {
+  /* ── gray ─────────────────────────────────────────────── */
+  --accent-gray-solid:    #6B7280;
+  --accent-gray-on:       #FFFFFF;
+  --accent-gray-fg:       #565C69;
+  --accent-gray-bg:       #F1F3F6;
+  --accent-gray-bg-hover: #E8EBF0;
+  --accent-gray-bd:       #DDE1E7;
+
+  /* ── red ──────────────────────────────────────────────── */
+  --accent-red-solid:    #D6412F;
+  --accent-red-on:       #FFFFFF;
+  --accent-red-fg:       #A6301F;
+  --accent-red-bg:       #FCEBE8;
+  --accent-red-bg-hover: #F9DBD6;
+  --accent-red-bd:       #F3C9C1;
+
+  /* ── orange ───────────────────────────────────────────── */
+  --accent-orange-solid:    #E06A16;
+  --accent-orange-on:       #3A1B02;
+  --accent-orange-fg:       #A24E08;
+  --accent-orange-bg:       #FDEEE0;
+  --accent-orange-bg-hover: #FBDFC7;
+  --accent-orange-bd:       #F6CDAA;
+
+  /* ── amber ────────────────────────────────────────────── */
+  --accent-amber-solid:    #D08A05;
+  --accent-amber-on:       #3D2800;
+  --accent-amber-fg:       #8E6002;
+  --accent-amber-bg:       #FCF2DA;
+  --accent-amber-bg-hover: #F8E6BC;
+  --accent-amber-bd:       #F1D89E;
+
+  /* ── yellow ───────────────────────────────────────────── */
+  --accent-yellow-solid:    #C4A20A;
+  --accent-yellow-on:       #332A00;
+  --accent-yellow-fg:       #7D6704;
+  --accent-yellow-bg:       #FAF5D6;
+  --accent-yellow-bg-hover: #F5ECB6;
+  --accent-yellow-bd:       #EDE199;
+
+  /* ── green ────────────────────────────────────────────── */
+  --accent-green-solid:    #27803F;
+  --accent-green-on:       #FFFFFF;
+  --accent-green-fg:       #1E6733;
+  --accent-green-bg:       #E7F4EA;
+  --accent-green-bg-hover: #D2EAD8;
+  --accent-green-bd:       #BADFC4;
+
+  /* ── teal ─────────────────────────────────────────────── */
+  --accent-teal-solid:    #13857D;
+  --accent-teal-on:       #FFFFFF;
+  --accent-teal-fg:       #0C645E;
+  --accent-teal-bg:       #E1F4F1;
+  --accent-teal-bg-hover: #C8EBE6;
+  --accent-teal-bd:       #ADE0D9;
+
+  /* ── cyan ─────────────────────────────────────────────── */
+  --accent-cyan-solid:    #0C7FA6;
+  --accent-cyan-on:       #FFFFFF;
+  --accent-cyan-fg:       #075E7C;
+  --accent-cyan-bg:       #E2F2F9;
+  --accent-cyan-bg-hover: #C9E8F3;
+  --accent-cyan-bd:       #ACDBEB;
+
+  /* ── blue — the brand hue, restated in accent roles ────── */
+  --accent-blue-solid:    #0B5DF0;
+  --accent-blue-on:       #FFFFFF;
+  --accent-blue-fg:       #0944C2;
+  --accent-blue-bg:       #EAF0FE;
+  --accent-blue-bg-hover: #D9E4FD;
+  --accent-blue-bd:       #C0D3FB;
+
+  /* ── indigo ───────────────────────────────────────────── */
+  --accent-indigo-solid:    #4A4ED4;
+  --accent-indigo-on:       #FFFFFF;
+  --accent-indigo-fg:       #383BA8;
+  --accent-indigo-bg:       #EDEDFC;
+  --accent-indigo-bg-hover: #DDDEF9;
+  --accent-indigo-bd:       #C7C8F3;
+
+  /* ── violet ───────────────────────────────────────────── */
+  --accent-violet-solid:    #7B45D6;
+  --accent-violet-on:       #FFFFFF;
+  --accent-violet-fg:       #5C31A6;
+  --accent-violet-bg:       #F2EBFC;
+  --accent-violet-bg-hover: #E5D9F9;
+  --accent-violet-bd:       #D5C4F3;
+
+  /* ── pink ─────────────────────────────────────────────── */
+  --accent-pink-solid:    #CE3789;
+  --accent-pink-on:       #FFFFFF;
+  --accent-pink-fg:       #A02566;
+  --accent-pink-bg:       #FCEAF3;
+  --accent-pink-bg-hover: #F9D8E8;
+  --accent-pink-bd:       #F3C5DB;
+
+  /* ── brown ────────────────────────────────────────────── */
+  --accent-brown-solid:    #8A6647;
+  --accent-brown-on:       #FFFFFF;
+  --accent-brown-fg:       #6A4C33;
+  --accent-brown-bg:       #F5EEE7;
+  --accent-brown-bg-hover: #EDE0D4;
+  --accent-brown-bd:       #E1D1C0;
+
+  /* ── The channel, unset — resolves to gray so a component
+     that forgets `data-accent` degrades to the old look rather
+     than to `unset`. ─────────────────────────────────────── */
+  --accent-solid:    var(--accent-gray-solid);
+  --accent-on:       var(--accent-gray-on);
+  --accent-fg:       var(--accent-gray-fg);
+  --accent-bg:       var(--accent-gray-bg);
+  --accent-bg-hover: var(--accent-gray-bg-hover);
+  --accent-bd:       var(--accent-gray-bd);
+
+  /* ── Chart series — a rotation picked so neighbours never
+     collide in hue or lightness. Ten is enough; past that a
+     chart needs a different encoding, not more colours. ──── */
+  --chart-1:  var(--accent-blue-solid);
+  --chart-2:  var(--accent-teal-solid);
+  --chart-3:  var(--accent-violet-solid);
+  --chart-4:  var(--accent-amber-solid);
+  --chart-5:  var(--accent-pink-solid);
+  --chart-6:  var(--accent-green-solid);
+  --chart-7:  var(--accent-indigo-solid);
+  --chart-8:  var(--accent-orange-solid);
+  --chart-9:  var(--accent-cyan-solid);
+  --chart-10: var(--accent-brown-solid);
+}
+
+/* ════════════════════════════════════════════════════════════
+   THE ACCENT CHANNEL
+   One selector per hue. Everything downstream reads the six
+   unprefixed variables and never names a hue again.
+   ════════════════════════════════════════════════════════════ */
+
+[data-accent="gray"] {
+  --accent-solid: var(--accent-gray-solid);
+  --accent-on: var(--accent-gray-on);
+  --accent-fg: var(--accent-gray-fg);
+  --accent-bg: var(--accent-gray-bg);
+  --accent-bg-hover: var(--accent-gray-bg-hover);
+  --accent-bd: var(--accent-gray-bd);
+}
+[data-accent="red"] {
+  --accent-solid: var(--accent-red-solid);
+  --accent-on: var(--accent-red-on);
+  --accent-fg: var(--accent-red-fg);
+  --accent-bg: var(--accent-red-bg);
+  --accent-bg-hover: var(--accent-red-bg-hover);
+  --accent-bd: var(--accent-red-bd);
+}
+[data-accent="orange"] {
+  --accent-solid: var(--accent-orange-solid);
+  --accent-on: var(--accent-orange-on);
+  --accent-fg: var(--accent-orange-fg);
+  --accent-bg: var(--accent-orange-bg);
+  --accent-bg-hover: var(--accent-orange-bg-hover);
+  --accent-bd: var(--accent-orange-bd);
+}
+[data-accent="amber"] {
+  --accent-solid: var(--accent-amber-solid);
+  --accent-on: var(--accent-amber-on);
+  --accent-fg: var(--accent-amber-fg);
+  --accent-bg: var(--accent-amber-bg);
+  --accent-bg-hover: var(--accent-amber-bg-hover);
+  --accent-bd: var(--accent-amber-bd);
+}
+[data-accent="yellow"] {
+  --accent-solid: var(--accent-yellow-solid);
+  --accent-on: var(--accent-yellow-on);
+  --accent-fg: var(--accent-yellow-fg);
+  --accent-bg: var(--accent-yellow-bg);
+  --accent-bg-hover: var(--accent-yellow-bg-hover);
+  --accent-bd: var(--accent-yellow-bd);
+}
+[data-accent="green"] {
+  --accent-solid: var(--accent-green-solid);
+  --accent-on: var(--accent-green-on);
+  --accent-fg: var(--accent-green-fg);
+  --accent-bg: var(--accent-green-bg);
+  --accent-bg-hover: var(--accent-green-bg-hover);
+  --accent-bd: var(--accent-green-bd);
+}
+[data-accent="teal"] {
+  --accent-solid: var(--accent-teal-solid);
+  --accent-on: var(--accent-teal-on);
+  --accent-fg: var(--accent-teal-fg);
+  --accent-bg: var(--accent-teal-bg);
+  --accent-bg-hover: var(--accent-teal-bg-hover);
+  --accent-bd: var(--accent-teal-bd);
+}
+[data-accent="cyan"] {
+  --accent-solid: var(--accent-cyan-solid);
+  --accent-on: var(--accent-cyan-on);
+  --accent-fg: var(--accent-cyan-fg);
+  --accent-bg: var(--accent-cyan-bg);
+  --accent-bg-hover: var(--accent-cyan-bg-hover);
+  --accent-bd: var(--accent-cyan-bd);
+}
+[data-accent="blue"] {
+  --accent-solid: var(--accent-blue-solid);
+  --accent-on: var(--accent-blue-on);
+  --accent-fg: var(--accent-blue-fg);
+  --accent-bg: var(--accent-blue-bg);
+  --accent-bg-hover: var(--accent-blue-bg-hover);
+  --accent-bd: var(--accent-blue-bd);
+}
+[data-accent="indigo"] {
+  --accent-solid: var(--accent-indigo-solid);
+  --accent-on: var(--accent-indigo-on);
+  --accent-fg: var(--accent-indigo-fg);
+  --accent-bg: var(--accent-indigo-bg);
+  --accent-bg-hover: var(--accent-indigo-bg-hover);
+  --accent-bd: var(--accent-indigo-bd);
+}
+[data-accent="violet"] {
+  --accent-solid: var(--accent-violet-solid);
+  --accent-on: var(--accent-violet-on);
+  --accent-fg: var(--accent-violet-fg);
+  --accent-bg: var(--accent-violet-bg);
+  --accent-bg-hover: var(--accent-violet-bg-hover);
+  --accent-bd: var(--accent-violet-bd);
+}
+[data-accent="pink"] {
+  --accent-solid: var(--accent-pink-solid);
+  --accent-on: var(--accent-pink-on);
+  --accent-fg: var(--accent-pink-fg);
+  --accent-bg: var(--accent-pink-bg);
+  --accent-bg-hover: var(--accent-pink-bg-hover);
+  --accent-bd: var(--accent-pink-bd);
+}
+[data-accent="brown"] {
+  --accent-solid: var(--accent-brown-solid);
+  --accent-on: var(--accent-brown-on);
+  --accent-fg: var(--accent-brown-fg);
+  --accent-bg: var(--accent-brown-bg);
+  --accent-bg-hover: var(--accent-brown-bg-hover);
+  --accent-bd: var(--accent-brown-bd);
+}
+
+/* Semantic aliases — the existing tone vocabulary, routed through the
+   same channel so `<Badge tone="success">` and `<Badge accent="green">`
+   produce identical pixels. */
+[data-accent="brand"],
+[data-accent="info"] {
+  --accent-solid: var(--accent-blue-solid);
+  --accent-on: var(--accent-blue-on);
+  --accent-fg: var(--accent-blue-fg);
+  --accent-bg: var(--accent-blue-bg);
+  --accent-bg-hover: var(--accent-blue-bg-hover);
+  --accent-bd: var(--accent-blue-bd);
+}
+[data-accent="success"] {
+  --accent-solid: var(--accent-green-solid);
+  --accent-on: var(--accent-green-on);
+  --accent-fg: var(--accent-green-fg);
+  --accent-bg: var(--accent-green-bg);
+  --accent-bg-hover: var(--accent-green-bg-hover);
+  --accent-bd: var(--accent-green-bd);
+}
+[data-accent="warn"] {
+  --accent-solid: var(--accent-amber-solid);
+  --accent-on: var(--accent-amber-on);
+  --accent-fg: var(--accent-amber-fg);
+  --accent-bg: var(--accent-amber-bg);
+  --accent-bg-hover: var(--accent-amber-bg-hover);
+  --accent-bd: var(--accent-amber-bd);
+}
+[data-accent="danger"] {
+  --accent-solid: var(--accent-red-solid);
+  --accent-on: var(--accent-red-on);
+  --accent-fg: var(--accent-red-fg);
+  --accent-bg: var(--accent-red-bg);
+  --accent-bg-hover: var(--accent-red-bg-hover);
+  --accent-bd: var(--accent-red-bd);
+}
+[data-accent="neutral"] {
+  --accent-solid: var(--accent-gray-solid);
+  --accent-on: var(--accent-gray-on);
+  --accent-fg: var(--accent-gray-fg);
+  --accent-bg: var(--accent-gray-bg);
+  --accent-bg-hover: var(--accent-gray-bg-hover);
+  --accent-bd: var(--accent-gray-bd);
+}
+
+/* ════════════════════════════════════════════════════════════
+   ACCENT-AWARE COMPONENT VARIANTS
+   Each of these is the accent-channel twin of an existing class,
+   so adopting colour is one extra class + one attribute rather
+   than a rewrite.
+   ════════════════════════════════════════════════════════════ */
+
+/* Badge — soft by default, `badge-solid` for the loud form. */
+.badge-accent {
+  background: var(--accent-bg);
+  color: var(--accent-fg);
+}
+.badge-accent.badge-solid {
+  background: var(--accent-solid);
+  color: var(--accent-on);
+  border-color: transparent;
+}
+.badge-accent.badge-bordered {
+  border-color: var(--accent-bd);
+}
+
+/* A leading dot in the accent's solid tone — the Attio "select" pill.
+   Reads as a category marker even when the tint is subtle. */
+.badge-dot::before,
+.tag-dot::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-solid);
+  flex: none;
+}
+
+/* Tag — user-applied metadata. Same tint, squarer corners (see `.tag`). */
+.tag-accent {
+  background: var(--accent-bg);
+  color: var(--accent-fg);
+}
+.tag-accent .x:hover {
+  background: var(--accent-bg-hover);
+  color: var(--accent-fg);
+}
+.tag-accent.tag-bordered {
+  border: 1px solid var(--accent-bd);
+}
+
+/* Chip — interactive. Hover deepens the tint rather than graying out. */
+.chip-accent {
+  background: var(--accent-bg);
+  border-color: var(--accent-bd);
+  color: var(--accent-fg);
+}
+.chip-accent:hover {
+  background: var(--accent-bg-hover);
+  border-color: var(--accent-bd);
+}
+
+/* Avatar — the initials fallback, tinted. `avatar-accent-solid` is the
+   loud form for a single hero avatar. */
+.avatar-accent {
+  background: var(--accent-bg);
+  color: var(--accent-fg);
+}
+.avatar-accent.avatar-accent-solid {
+  background: var(--accent-solid);
+  color: var(--accent-on);
+}
+
+/* Status dot — recolour both the mark and the label. */
+.status-dot.status-accent {
+  color: var(--accent-fg);
+}
+.status-dot.status-accent::before,
+.status-dot.status-accent .status-dot-mark {
+  background: var(--accent-solid);
+}
+.status-dot.status-accent.ring::before,
+.status-dot.status-accent.ring .status-dot-mark {
+  background: transparent;
+  border: 1.5px solid var(--accent-solid);
+  box-sizing: border-box;
+}
+
+/* Icon tile — the rounded tinted square behind a glyph. The system
+   already hand-rolls this five times (`.nc-ic`, `.fr-ic`, `.n-av`,
+   `.ft-thumb`, `.dh-mark`); this is the one to reach for now. */
+.icon-tile {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: var(--accent-bg);
+  color: var(--accent-fg);
+  font: 600 12px/1 var(--font-sans);
+}
+.icon-tile svg,
+.icon-tile .icon {
+  width: 16px;
+  height: 16px;
+}
+.icon-tile-xs { width: 20px; height: 20px; border-radius: var(--radius-xs); font-size: 10px; }
+.icon-tile-xs svg, .icon-tile-xs .icon { width: 12px; height: 12px; }
+.icon-tile-sm { width: 26px; height: 26px; border-radius: var(--radius-sm); font-size: 11px; }
+.icon-tile-sm svg, .icon-tile-sm .icon { width: 14px; height: 14px; }
+.icon-tile-lg { width: 40px; height: 40px; border-radius: var(--radius-lg); font-size: 15px; }
+.icon-tile-lg svg, .icon-tile-lg .icon { width: 20px; height: 20px; }
+.icon-tile-xl { width: 52px; height: 52px; border-radius: var(--radius-xl); font-size: 19px; }
+.icon-tile-xl svg, .icon-tile-xl .icon { width: 24px; height: 24px; }
+
+.icon-tile-round { border-radius: var(--radius-pill); }
+.icon-tile-solid { background: var(--accent-solid); color: var(--accent-on); }
+.icon-tile-outline {
+  background: var(--accent-bg);
+  box-shadow: inset 0 0 0 1px var(--accent-bd);
+}
+
+/* Accent rail — a 3 px colour bar down the leading edge of a row or
+   card. Carries a category without spending any horizontal space, and
+   it's how the reference screenshots mark an active meeting row. */
+.accent-rail {
+  box-shadow: inset 3px 0 0 var(--accent-solid);
+}
+.accent-rail-soft {
+  box-shadow: inset 3px 0 0 var(--accent-bd);
+}
+
+/* Accent surface — a whole tinted panel (grouped section, callout,
+   selected row). Border included so it holds its edge on the canvas. */
+.accent-surface {
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-bd);
+  color: var(--accent-fg);
+}
+
+/* Kanban column head — tint the label strip, not the whole column, so a
+   six-column board doesn't turn into a paint chart. */
+.kanban-col-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-bg);
+  color: var(--accent-fg);
+  font: 600 12px/1.2 var(--font-sans);
+}
+.kanban-col-head .kanban-col-count {
+  margin-left: auto;
+  font: 600 11px/1 var(--font-mono);
+  opacity: 0.7;
+}
+
+/* ── Swatch — a plain colour chip, for pickers and legends ──── */
+.accent-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--accent-solid);
+  box-shadow: inset 0 0 0 1px rgba(22, 24, 29, 0.12);
+  flex: none;
+}

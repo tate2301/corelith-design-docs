@@ -2,6 +2,101 @@
 
 All notable changes to `@corelithzw/react` are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+Colour release. The system had one saturated hue and four semantic tones, which
+is right for a settings page and wrong for a record page — used on a real site
+the components read as grayscale. This adds the categorical colour layer, the
+compact record grid, and conversation surfaces with iOS emoji.
+
+### Added
+
+- **Accent palette** (`styles/accents.css`). Thirteen hues — gray, red, orange,
+  amber, yellow, green, teal, cyan, blue, indigo, violet, pink, brown — each
+  with six roles: `solid`, `on`, `fg`, `bg`, `bg-hover`, `bd`. `on` is a real
+  token, not an assumed white: orange, amber and yellow can't carry white text
+  at AA, so their `on` is a dark ink.
+- **The accent channel.** `data-accent="violet"` on any element rebinds the six
+  unprefixed `--accent-*` variables for it and its subtree, so one attribute
+  recolours a whole component. Semantic aliases (`brand`, `info`, `success`,
+  `warn`, `danger`, `neutral`) resolve to hues through the same mechanism, so
+  the existing tone vocabulary is unchanged.
+- **`accentFor(seed)`** — a deterministic FNV-1a hash from any stable string to
+  a hue. Avatars, tags and channels get colour from their own name, with nothing
+  stored and nothing to assign; the same name yields the same hue on every
+  client. Also `accentVar`, `resolveAccent`, `ACCENT_HUES`, `ACCENT_CYCLE`.
+- **Chart series tokens** `--chart-1…10`, plus `chartSeriesVar(i)` and
+  `CHART_SERIES`.
+- `accent` (and `solid`/`bordered`/`dot` where they apply) on `Badge`, `Tag`,
+  `Chip`, `Avatar` and `Status`.
+- **`IconTile`** — the rounded tinted square behind an icon, emoji or letter
+  stub. The system had grown five hand-rolled versions of this shape
+  (`.nc-ic`, `.fr-ic`, `.n-av`, `.ft-thumb`, `.dh-mark`); this is the one to
+  reach for now.
+- **`Table` gains a `grid` density** — the compact scanning layout: 36 px rows,
+  vertical column rules, brand-tinted selected rows. Knobs: `gridDensity`,
+  `rowHeight`, `borderless`, `zebra`. It layers onto `.dtable` so it inherits
+  the dense table's sticky-header and row-action rules rather than restating
+  them. `Table.HeaderCell` takes an `icon`.
+- **`RecordChip`** / **`RecordChipGroup`** — linked-record cells (avatar + name
+  in a pill, hue derived from the name), with overflow collapsing to `+N`.
+- **`CellPill`** — an accent-tinted pill for a typed cell value: an email, a
+  URL, a select option.
+- **`SelectionBar`** — floating quick-actions bar for selected rows. `DataTable`
+  renders it from `selectionActions`, passing the selected keys to each handler.
+- `DataTable` gains `density`, `gridDensity`, `borderless`, `zebra`,
+  `stickyHeader`, `stickyFirstColumn`, `maxHeight`, `selectionActions`,
+  `selectionOverflow`, `selectionLabel`, and a per-column `icon`.
+- **Emoji data layer** (`utils/emoji.ts`) — ~1,070 curated glyphs across eight
+  categories with search keywords, shortcode aliases (`:+1:`, `:tada:`), skin
+  tones, and a tokenizer that keeps ZWJ sequences, regional-indicator flags and
+  keycaps whole. Exports `EMOJI`, `EMOJI_CATEGORIES`, `SKIN_TONES`,
+  `searchEmoji`, `emojiByShortcode`, `applySkinTone`, `tokenizeEmojiText`,
+  `isEmojiOnly`, `replaceShortcodes`.
+- **`Emoji` / `EmojiText` / `EmojiProvider`** — iOS artwork rather than the
+  platform font. Native emoji only look like iOS *on* iOS; Windows renders
+  Segoe UI Emoji and most Linux renders Noto. The artwork is Apple's, from
+  `emoji-datasource-apple`, addressed by codepoint. That package is **not** a
+  dependency — it unpacks to 103 MB — so images load from jsDelivr's copy by
+  default and `assetBase` points at your own host. Anything that fails to load
+  falls back to the native glyph; `set="native"` opts out of images entirely.
+- **`EmojiPicker` / `EmojiSelect`** — searchable grid with category rail, skin
+  tones, recents and full keyboard navigation. Arrows walk the visible grid
+  while focus stays in the search field, so search → arrow → Enter needs no Tab.
+- **`Conversation` / `ConversationRenderer` / `ReactionBar` / `Composer`** —
+  message threads with day dividers, unread markers, author grouping,
+  accent-derived avatars, emoji bodies (jumbo when a message is emoji-only),
+  attachments tinted by file type, and reactions. `Composer` autogrows, sends on
+  Enter or Cmd+Enter, expands shortcodes on send, and exposes `focus`/`clear`/
+  `insert` through a ref.
+
+### Changed
+
+- **`Avatar`'s initials fallback is now coloured**, tinted by a hash of `name`
+  instead of a single gray. This is a deliberate visual change — a list of
+  people was previously a column of identical discs. `accent="gray"` restores
+  the old look; `tone="clay"` and `tone="ink"` are untouched.
+- **`DataTable` defaults to `density="grid"`.** Pass `density="compact"` for the
+  previous appearance.
+- **`Chart` series colours come from `--chart-1…10`** instead of hard-coded
+  Tailwind hex (`#10b981`, `#f59e0b`, `#8b5cf6`), which matched nothing else in
+  the system. Retokening the palette now retints charts.
+- **`KanbanBoard` colour-codes its columns** by position in the accent rotation,
+  tinting the header strip and giving each card a leading rail. `colorful={false}`
+  restores the monochrome board.
+- `ConversationRenderer` copies known message fields explicitly instead of
+  spreading the whole object, so extra fields you carry on a message (a day
+  label, a channel id, a raw payload) reach your callbacks without leaking to
+  the DOM.
+
+### Fixed
+
+- `Composer` clears synchronously when `onSend` is synchronous. Awaiting
+  unconditionally deferred the clear by a microtask, showing a frame of the
+  just-sent text still in the box.
+- `bundle-css.mjs` split source paths on `/` only, so on Windows the generated
+  banner carried the whole absolute path instead of the file name.
+
 ## [0.4.0] - 2026-07-27
 
 Convergence release. Driven by migrating `tate2301/huchu`'s `components/ui/*`

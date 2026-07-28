@@ -1,6 +1,7 @@
 import { forwardRef, type HTMLAttributes } from 'react';
 import { cn } from '../utils/cn';
 import { Slot } from '../utils/Slot';
+import { type Accent } from '../tokens/accents';
 
 export type StatusTone = 'success' | 'warn' | 'danger' | 'info' | 'neutral';
 export type StatusSize = 'sm' | 'md';
@@ -8,6 +9,12 @@ export type StatusSize = 'sm' | 'md';
 interface StatusBaseProps extends HTMLAttributes<HTMLSpanElement> {
   /** Visual tone of the dot + label. @default 'neutral' */
   tone?: StatusTone;
+  /**
+   * Accent hue for the dot and label. Takes precedence over `tone` — for
+   * pipeline stages and other categorical states that the five semantic
+   * tones can't tell apart.
+   */
+  accent?: Accent;
   /** Render the dot as a hollow ring (signals "open" / unread). */
   ring?: boolean;
   /** Dot + label scale. @default 'md' */
@@ -65,6 +72,7 @@ const TONE_CLASS: Record<StatusTone, string> = {
 export const Status = forwardRef<HTMLSpanElement, StatusProps>(function Status(
   {
     tone = 'neutral',
+    accent,
     ring,
     size = 'md',
     hideLabel,
@@ -85,7 +93,9 @@ export const Status = forwardRef<HTMLSpanElement, StatusProps>(function Status(
     ref: ref as React.Ref<HTMLElement>,
     className: cn(
       'status-dot',
-      TONE_CLASS[tone],
+      // The accent variant paints dot and label itself; keeping the tone class
+      // alongside it would leave the tone's colour winning on the cascade.
+      accent ? 'status-accent' : TONE_CLASS[tone],
       ring && 'ring',
       size === 'sm' && 'status-dot-sm',
       elementDot && 'status-dot-el',
@@ -93,6 +103,7 @@ export const Status = forwardRef<HTMLSpanElement, StatusProps>(function Status(
       className,
     ),
     'data-slot': 'status',
+    'data-accent': accent,
     'data-state': ring ? 'open' : undefined,
     role: role ?? (hideLabel ? 'img' : undefined),
     ...rest,

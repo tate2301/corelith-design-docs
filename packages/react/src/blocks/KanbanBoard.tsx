@@ -2,27 +2,41 @@
 
 import { forwardRef, type HTMLAttributes, type ReactNode } from 'react';
 import { cn } from '../utils/cn';
+import { ACCENT_CYCLE, type Accent } from '../tokens/accents';
 
 export interface KanbanCardData {
   id: string;
   title: ReactNode;
   description?: ReactNode;
   tags?: ReactNode[];
+  /** Accent for the card's leading rail. Inherits the column's when omitted. */
+  accent?: Accent;
 }
 
 export interface KanbanColumnData {
   id: string;
   title: ReactNode;
   cards: KanbanCardData[];
+  /**
+   * Column accent. Defaults to the column's position in the accent rotation,
+   * so a board is colour-coded left to right with nothing to configure.
+   */
+  accent?: Accent;
 }
 
 export interface KanbanBoardProps extends HTMLAttributes<HTMLDivElement> {
   columns: KanbanColumnData[];
   onCardMove?: (cardId: string, fromColumnId: string, toColumnId: string) => void;
+  /**
+   * Colour the column headers and card rails. Turn off for a board where the
+   * columns are stages of one thing and colour would imply a distinction that
+   * isn't there. @default true
+   */
+  colorful?: boolean;
 }
 
 export const KanbanBoard = forwardRef<HTMLDivElement, KanbanBoardProps>(function KanbanBoard(
-  { columns = [], onCardMove, className, style, ...props },
+  { columns = [], onCardMove, colorful = true, className, style, ...props },
   ref,
 ) {
   return (
@@ -39,10 +53,14 @@ export const KanbanBoard = forwardRef<HTMLDivElement, KanbanBoardProps>(function
       }}
       {...props}
     >
-      {columns.map((col) => (
+      {columns.map((col, colIndex) => {
+        const hue: Accent =
+          col.accent ?? (colorful ? ACCENT_CYCLE[colIndex % ACCENT_CYCLE.length]! : 'gray');
+        return (
         <div
           key={col.id}
           className="b-kanban-column"
+          data-accent={hue}
           style={{
             flex: '0 0 280px',
             backgroundColor: 'var(--surface-muted, #f8fafc)',
@@ -55,42 +73,28 @@ export const KanbanBoard = forwardRef<HTMLDivElement, KanbanBoardProps>(function
             minHeight: 200,
           }}
         >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              paddingBottom: 8,
-              borderBottom: '1px solid var(--border, #e2e8f0)',
-            }}
-          >
-            <span style={{ font: '600 13px/1.2 var(--font-sans)', color: 'var(--text-strong)' }}>
-              {col.title}
-            </span>
-            <span
-              style={{
-                font: '600 11px/1 var(--font-mono)',
-                color: 'var(--text-subtle)',
-                backgroundColor: 'var(--surface)',
-                padding: '2px 6px',
-                borderRadius: 9999,
-              }}
-            >
-              {col.cards.length}
-            </span>
+          {/* The tint sits on the header strip, not the column body — a
+              six-column board with six tinted columns is a paint chart. */}
+          <div className="kanban-col-head">
+            <span>{col.title}</span>
+            <span className="kanban-col-count">{col.cards.length}</span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {col.cards.map((card) => (
               <div
                 key={card.id}
-                className="b-kanban-card"
+                // The card inherits the column's hue unless it names its own,
+                // and wears it as a leading rail — colour without a second
+                // tinted surface stacked on the first.
+                className={cn('b-kanban-card', colorful && 'accent-rail')}
+                data-accent={card.accent ?? hue}
                 style={{
                   backgroundColor: 'var(--surface, #ffffff)',
                   border: '1px solid var(--border, #e2e8f0)',
                   borderRadius: 8,
                   padding: 12,
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                  paddingLeft: colorful ? 14 : 12,
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 6,
@@ -115,7 +119,8 @@ export const KanbanBoard = forwardRef<HTMLDivElement, KanbanBoardProps>(function
             ))}
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 });
