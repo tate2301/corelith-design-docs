@@ -1,0 +1,812 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    /* ══ Corelith v1 tokens — approved. Do not invent values. ══ */
+    :root{
+      --ground:#fbfbfc; --surface:#ffffff; --wash:#f5f6f9; --sunken:#eef0f5;
+      --line:#e7e9ef; --line-strong:#d5d8e2; --hairline:#f1f2f6;
+      --ink:#0b0c14; --muted:#5c5e6b; --subtle:#8a8c98;
+      --accent:#2563eb; --accent-soft:#eff4ff; --accent-line:#dbe5fb; --accent-ink:#1b4bc4;
+      --sell:#2563eb; --books:#12805c; --stock:#0e7490; --fiscal:#6549d5;
+      --maint:#b45309; --crit:#c2321b; --campus:#0e7490;
+      --ok-bg:#e8f4ef; --ok-line:#c9e5da; --warn-bg:#fdf3e2; --warn-line:#f2ddb6;
+      --crit-bg:#fdece9; --crit-line:#f6cec6;
+      --sans:"Atkinson Hyperlegible Next","Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+      --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+      /* density · default mode */
+      --h-xs:22px; --h-sm:26px; --h-md:30px; --h-lg:36px;
+      --row:32px; --pad:12px; --fs:13px;
+      --r-ctl:6px; --r-card:10px;
+      --shadow-pop:0 10px 30px -12px rgba(11,12,20,.20),0 2px 6px rgba(11,12,20,.05);
+    }
+    [data-d="compact"]{--h-xs:20px;--h-sm:24px;--h-md:26px;--h-lg:30px;--row:28px;--pad:10px;--fs:12.5px;}
+    [data-d="comfortable"]{--h-xs:24px;--h-sm:30px;--h-md:36px;--h-lg:44px;--row:44px;--pad:14px;--fs:14px;}
+    *,*::before,*::after{box-sizing:border-box;}
+    body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+      font-size:var(--fs);line-height:1.5;-webkit-font-smoothing:antialiased;}
+    a{color:var(--accent);text-decoration:underline;text-underline-offset:2px;}
+    a:hover{color:var(--accent-ink);}
+    h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.012em;}
+    p{margin:0;}
+    .mono,.num{font-family:var(--mono);font-variant-numeric:tabular-nums;}
+
+    /* ══ sheet chrome — every component sheet uses these ══ */
+    .sheet{padding:28px 32px;display:flex;flex-direction:column;gap:26px;}
+    .sheet-h{display:flex;align-items:baseline;gap:10px;padding-bottom:9px;
+      border-bottom:1px solid var(--line);}
+    .sheet-h h2{font-size:17px;}
+    .sheet-h .sub{color:var(--muted);font-size:12.5px;}
+    .sheet-h .tag{margin-left:auto;font:500 10.5px/1 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .grp{display:flex;flex-direction:column;gap:11px;}
+    .grp-l{font:500 10.5px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;
+      color:var(--subtle);}
+    .rowset{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+    .colset{display:flex;flex-direction:column;gap:10px;}
+    .cols{display:grid;gap:20px;}
+    .panel{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      overflow:hidden;}
+    .panel-h{display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--wash);
+      border-bottom:1px solid var(--line);font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .panel-h .rt{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:400;
+      font-size:12px;}
+    .panel-b{padding:14px;}
+    .panel-b.flush{padding:0;}
+    .note{color:var(--muted);font-size:12px;line-height:1.55;max-width:64ch;}
+
+    /* ══ controls ══ */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--h-md);
+      padding:0 11px;border-radius:var(--r-ctl);border:1px solid var(--line-strong);
+      background:var(--surface);color:var(--ink);font:500 var(--fs)/1 var(--sans);
+      cursor:pointer;white-space:nowrap;}
+    .btn:hover{background:var(--wash);}
+    .btn.solid{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn.solid:hover{background:var(--accent-ink);}
+    .btn.danger{background:var(--crit);border-color:var(--crit);color:#fff;}
+    .btn.soft{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .btn.ghost{border-color:transparent;background:transparent;color:var(--muted);}
+    .btn.ghost:hover{background:var(--wash);color:var(--ink);}
+    .btn.xs{height:var(--h-xs);padding:0 7px;font-size:11.5px;}
+    .btn.sm{height:var(--h-sm);padding:0 9px;font-size:12.5px;}
+    .btn.lg{height:var(--h-lg);padding:0 14px;font-size:14px;}
+    .btn.icon{width:var(--h-md);padding:0;}
+    .btn.sm.icon{width:var(--h-sm);}
+    .btn[disabled],.btn.off{opacity:.45;cursor:default;}
+    .bgrp{display:inline-flex;}
+    .bgrp .btn{border-radius:0;margin-left:-1px;}
+    .bgrp .btn:first-child{border-radius:var(--r-ctl) 0 0 var(--r-ctl);margin-left:0;}
+    .bgrp .btn:last-child{border-radius:0 var(--r-ctl) var(--r-ctl) 0;}
+
+    .fld{display:flex;align-items:center;gap:7px;height:var(--h-md);padding:0 10px;
+      border:1px solid var(--line-strong);border-radius:var(--r-ctl);background:var(--surface);
+      font-size:var(--fs);color:var(--ink);min-width:0;}
+    .fld.foc{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+    .fld.bad{border-color:var(--crit);box-shadow:0 0 0 3px var(--crit-bg);}
+    .fld .ph{color:var(--subtle);}
+    .fld .pre{color:var(--muted);font-family:var(--mono);font-size:12px;flex:none;}
+    .lab{display:flex;flex-direction:column;gap:5px;}
+    .lab > span{font:500 12px/1.3 var(--sans);color:var(--ink);}
+    .hint{font-size:11.5px;color:var(--muted);}
+    .hint.bad{color:var(--crit);}
+
+    .pill{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;
+      border-radius:999px;font:500 11px/1 var(--sans);border:1px solid var(--line);
+      background:var(--wash);color:var(--muted);white-space:nowrap;}
+    .pill.ok{background:var(--ok-bg);border-color:var(--ok-line);color:var(--books);}
+    .pill.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--maint);}
+    .pill.crit{background:var(--crit-bg);border-color:var(--crit-line);color:var(--crit);}
+    .pill.acc{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .pill .dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex:none;}
+    .pill.hollow .dot{background:transparent;border:1.5px solid currentColor;width:7px;height:7px;}
+    .cnt{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+      padding:0 5px;border-radius:999px;background:var(--sunken);color:var(--muted);
+      font:500 11px/1 var(--mono);}
+    .cnt.urgent{background:var(--crit);color:#fff;}
+    .kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+      padding:0 4px;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;
+      background:var(--surface);font:500 10.5px/1 var(--mono);color:var(--muted);}
+
+    /* ══ identity ══ */
+    .av{position:relative;flex:none;display:inline-block;border-radius:50%;overflow:hidden;
+      background:var(--sunken);}
+    .av svg{display:block;width:100%;height:100%;}
+    .av-16{width:16px;height:16px}.av-20{width:20px;height:20px}.av-24{width:24px;height:24px}
+    .av-32{width:32px;height:32px}.av-40{width:40px;height:40px}.av-64{width:64px;height:64px}
+    .av.ent{border-radius:6px;}
+    .av-40.ent,.av-64.ent{border-radius:8px;}
+    .av.ent .mk{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+      font:600 11px/1 var(--sans);color:#fff;}
+    .av-32.ent .mk{font-size:12px}.av-40.ent .mk{font-size:13px}.av-64.ent .mk{font-size:20px}
+    .avw{position:relative;flex:none;display:inline-block;line-height:0;}
+    .pres{position:absolute;right:-1px;bottom:-1px;border-radius:50%;border:2px solid var(--surface);}
+    .av-24 + .pres{width:9px;height:9px}
+    .av-32 + .pres{width:11px;height:11px}
+    .av-40 + .pres{width:13px;height:13px}
+    .p-on{background:var(--books)}.p-away{background:var(--maint)}
+    .p-busy{background:var(--crit)}.p-off{background:var(--subtle)}
+    .avg{display:inline-flex;align-items:center;}
+    .avg .avw,.avg > .av{margin-left:-7px;box-shadow:0 0 0 2px var(--surface);}
+    .avg .avw:first-child,.avg > .av:first-child{margin-left:0;}
+    .avg .more{display:inline-flex;align-items:center;justify-content:center;background:var(--sunken);
+      color:var(--muted);font:500 10px/1 var(--mono);border-radius:50%;}
+    .idn{display:flex;align-items:center;gap:8px;min-width:0;}
+    .idn-t{min-width:0;display:flex;flex-direction:column;gap:1px;}
+    .idn-n{font:500 var(--fs)/1.3 var(--sans);color:var(--ink);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .idn-s{font:400 11px/1.3 var(--sans);color:var(--muted);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .idn.in{gap:6px;}
+    .idn.lg{gap:12px;}
+    .idn.lg .idn-n{font:600 15px/1.3 var(--sans);}
+    .idn.lg .idn-s{font-size:12px;}
+    .idn.xl{gap:14px;}
+    .idn.xl .idn-n{font:600 20px/1.25 var(--sans);letter-spacing:-.015em;}
+    .idn.xl .idn-s{font-size:13px;}
+    .rchip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px 0 3px;
+      border-radius:999px;border:1px solid var(--line);background:var(--surface);
+      font:500 12px/1 var(--sans);color:var(--ink);}
+
+    /* ══ table ══ */
+    table.d{width:100%;border-collapse:collapse;font-size:var(--fs);}
+    table.d th{text-align:left;font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);padding:0 var(--pad) 7px;
+      border-bottom:1px solid var(--line);white-space:nowrap;}
+    table.d td{padding:0 var(--pad);height:var(--row);border-bottom:1px solid var(--hairline);
+      vertical-align:middle;}
+    table.d tbody tr:last-child td{border-bottom:0;}
+    table.d tr.hov td{background:var(--wash);}
+    table.d tr.sel td{background:var(--accent-soft);}
+    table.d .r{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;
+      font-size:12px;}
+    table.d th.r{text-align:right;}
+    table.d tr.grp-row td{background:var(--wash);font:500 11px/1 var(--sans);
+      letter-spacing:.05em;text-transform:uppercase;color:var(--muted);height:26px;}
+    table.d tfoot td{height:var(--row);font-weight:600;border-top:1px solid var(--line-strong);
+      border-bottom:0;background:var(--surface);}
+
+    /* ══ rows, cards ══ */
+    .lrow{display:flex;align-items:center;gap:10px;padding:7px var(--pad);
+      border-bottom:1px solid var(--hairline);}
+    .lrow:last-child{border-bottom:0;}
+    .lrow .tail{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none;}
+    .kard{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      padding:13px;display:flex;flex-direction:column;gap:10px;}
+    .meta{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:12px;}
+    .meta dt{font:500 10.5px/1.5 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .meta dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12px;}
+    .stat{display:flex;flex-direction:column;gap:3px;}
+    .stat b{font:600 24px/1.1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
+    .stat span{font:500 10.5px/1.3 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .bar{height:5px;border-radius:999px;background:var(--sunken);overflow:hidden;}
+    .bar i{display:block;height:100%;background:var(--accent);}
+
+    /* ══ sheet-local: icon primitives ══ */
+    .ic{display:inline-block;flex:none;line-height:0;}
+    .ic svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.4;
+      stroke-linecap:round;stroke-linejoin:round;}
+    .ic-12{width:12px;height:12px;}  .ic-12 svg{stroke-width:1.85;}
+    .ic-14{width:14px;height:14px;}  .ic-14 svg{stroke-width:1.6;}
+    .ic-16{width:16px;height:16px;}
+    .ic-20{width:20px;height:20px;}  .ic-20 svg{stroke-width:1.12;}
+
+    /* ══ sheet-local: the stage — a page fragment with a scrim over it ══ */
+    .stage{position:relative;border:1px solid var(--line);border-radius:var(--r-card);
+      background:var(--surface);overflow:hidden;}
+    .frag{padding:12px 14px;display:flex;flex-direction:column;gap:11px;}
+    .frag-h{display:flex;align-items:center;gap:9px;}
+    .frag-h .rt{margin-left:auto;display:flex;align-items:center;gap:7px;}
+    .crumb{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);}
+    .crumb .ic{color:var(--subtle);}
+    .crumb b{font-weight:500;color:var(--ink);}
+    .scrim{position:absolute;inset:0;background:rgba(11,12,20,.38);}
+    .cen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+      padding:16px;}
+    .cen.top{align-items:flex-start;padding-top:34px;}
+    .shadow-modal{box-shadow:0 20px 48px -14px rgba(11,12,20,.26),0 3px 10px rgba(11,12,20,.07);}
+
+    /* ══ sheet-local: modal ══ */
+    .modal{width:100%;max-width:404px;border-radius:var(--r-card);background:var(--surface);
+      overflow:hidden;display:flex;flex-direction:column;
+      box-shadow:0 20px 48px -14px rgba(11,12,20,.26),0 3px 10px rgba(11,12,20,.07);}
+    .modal.wide{max-width:452px;}
+    .acbar{height:3px;background:var(--accent);flex:none;}
+    .acbar.danger{background:var(--crit);}
+    .m-h{display:flex;align-items:flex-start;gap:10px;padding:13px 14px 0;}
+    .m-h .ttl{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+    .m-h h3{font-size:15px;}
+    .m-h .sub{font-size:12px;color:var(--muted);}
+    .m-b{padding:9px 14px 14px;display:flex;flex-direction:column;gap:11px;font-size:13px;
+      color:var(--muted);line-height:1.55;}
+    .m-b .ink{color:var(--ink);}
+    .m-f{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--wash);
+      border-top:1px solid var(--line);}
+    .m-f .rt{margin-left:auto;display:flex;align-items:center;gap:8px;}
+    .sumbox{border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--wash);
+      padding:10px 11px;}
+
+    /* ══ sheet-local: drawer ══ */
+    .drawer{position:absolute;top:0;right:0;bottom:0;width:376px;background:var(--surface);
+      border-left:1px solid var(--line);display:flex;flex-direction:column;
+      box-shadow:-22px 0 48px -18px rgba(11,12,20,.26);}
+    .d-h{display:flex;align-items:center;gap:9px;padding:11px 13px;
+      border-bottom:1px solid var(--line);}
+    .d-h .rt{margin-left:auto;display:flex;align-items:center;gap:6px;}
+    .d-b{flex:1;min-height:0;padding:12px 13px;display:flex;flex-direction:column;gap:13px;
+      overflow:hidden;}
+    .d-f{display:flex;align-items:center;gap:8px;padding:10px 13px;
+      border-top:1px solid var(--line);background:var(--wash);}
+    .d-f .rt{margin-left:auto;display:flex;align-items:center;gap:8px;}
+
+    /* ══ sheet-local: popover, hover card, tooltip ══ */
+    .pop{position:relative;width:264px;border:1px solid var(--line);border-radius:8px;
+      background:var(--surface);box-shadow:var(--shadow-pop);}
+    .pop .arw{position:absolute;top:-5px;left:22px;width:9px;height:9px;background:var(--surface);
+      border-left:1px solid var(--line);border-top:1px solid var(--line);transform:rotate(45deg);}
+    .pop-h{display:flex;align-items:center;gap:7px;padding:9px 11px 0;font:500 12.5px/1 var(--sans);}
+    .pop-b{padding:9px 11px;display:flex;flex-direction:column;gap:9px;}
+    .pop-f{display:flex;align-items:center;gap:7px;padding:8px 11px;
+      border-top:1px solid var(--hairline);}
+    .pop-f .rt{margin-left:auto;}
+    .hcard{width:288px;border:1px solid var(--line);border-radius:var(--r-card);
+      background:var(--surface);box-shadow:var(--shadow-pop);overflow:hidden;}
+    .hc-b{padding:12px;display:flex;flex-direction:column;gap:11px;}
+    .hc-f{display:flex;align-items:center;gap:7px;padding:8px 12px;background:var(--wash);
+      border-top:1px solid var(--line);}
+    .hc-f .rt{margin-left:auto;}
+    .tip{position:relative;display:inline-flex;align-items:center;gap:7px;height:24px;
+      padding:0 8px;border-radius:5px;background:var(--ink);color:var(--surface);
+      font:400 12px/1 var(--sans);white-space:nowrap;}
+    .tip .kbd{background:transparent;border-color:var(--muted);color:var(--surface);}
+    .tip .arw{position:absolute;bottom:-3px;left:calc(50% - 4px);width:8px;height:8px;
+      background:var(--ink);transform:rotate(45deg);}
+    .tip.side .arw{bottom:auto;left:-3px;top:calc(50% - 4px);}
+    .anch{display:inline-flex;align-items:center;justify-content:center;height:var(--h-md);
+      padding:0 11px;border:1px dashed var(--line-strong);border-radius:var(--r-ctl);
+      color:var(--muted);font:500 var(--fs)/1 var(--sans);background:var(--surface);}
+
+    /* ══ sheet-local: toasts ══ */
+    .tstack{display:flex;flex-direction:column;gap:9px;align-items:flex-end;}
+    .toast{width:348px;display:flex;align-items:flex-start;gap:9px;padding:10px 11px;
+      border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      box-shadow:var(--shadow-pop);}
+    .toast .lead{flex:none;padding-top:2px;color:var(--muted);}
+    .toast.ok .lead{color:var(--books);}
+    .toast.warn .lead{color:var(--maint);}
+    .toast.crit .lead{color:var(--crit);}
+    .toast.acc .lead{color:var(--accent);}
+    .toast .tt{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;}
+    .toast .tt b{font:500 13px/1.4 var(--sans);color:var(--ink);}
+    .toast .tt span{font-size:12px;color:var(--muted);line-height:1.5;}
+    .toast .tt .row{display:flex;align-items:center;gap:8px;}
+    .tprog{height:2px;border-radius:999px;background:var(--sunken);overflow:hidden;}
+    .tprog i{display:block;height:100%;background:var(--line-strong);}
+
+    /* ══ sheet-local: bottom sheet ══ */
+    .phone{position:relative;height:100%;background:var(--surface);display:flex;
+      flex-direction:column;}
+    .pbar{display:flex;align-items:center;gap:8px;height:26px;padding:0 12px;
+      border-bottom:1px solid var(--hairline);font:500 11px/1 var(--mono);color:var(--subtle);}
+    .pbar .rt{margin-left:auto;}
+    .bsheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);
+      border-top:1px solid var(--line);border-radius:14px 14px 0 0;display:flex;
+      flex-direction:column;box-shadow:0 -22px 48px -18px rgba(11,12,20,.26);}
+    .grab{width:34px;height:4px;border-radius:999px;background:var(--line-strong);}
+    .bs-h{display:flex;flex-direction:column;align-items:center;gap:9px;padding:7px 0 9px;}
+    .bs-t{display:flex;align-items:center;gap:8px;width:100%;padding:0 14px 2px;}
+    .bs-t .rt{margin-left:auto;}
+    .bs-r{display:flex;align-items:center;gap:11px;height:46px;padding:0 14px;
+      border-top:1px solid var(--hairline);font-size:14px;}
+    .bs-r .ic{color:var(--subtle);}
+    .bs-r.crit{color:var(--crit);}
+    .bs-r.crit .ic{color:var(--crit);}
+    .bs-f{padding:10px 14px 14px;display:flex;flex-direction:column;gap:8px;
+      border-top:1px solid var(--line);}
+
+    /* ══ sheet-local: command palette ══ */
+    .pal{width:576px;border:1px solid var(--line);border-radius:var(--r-card);
+      background:var(--surface);overflow:hidden;
+      box-shadow:0 20px 48px -14px rgba(11,12,20,.26),0 3px 10px rgba(11,12,20,.07);}
+    .pal .q{display:flex;align-items:center;gap:9px;height:44px;padding:0 14px;
+      border-bottom:1px solid var(--line);font-size:14px;}
+    .pal .q .ic{color:var(--subtle);}
+    .pal .q .rt{margin-left:auto;}
+    .pal .sec{padding:8px 14px 4px;font:500 10.5px/1 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .pal .r{display:flex;align-items:center;gap:9px;height:32px;padding:0 14px;font-size:13px;}
+    .pal .r .ic{color:var(--subtle);}
+    .pal .r.on{background:var(--accent-soft);}
+    .pal .r.on .ic{color:var(--accent-ink);}
+    .pal .r .rt{margin-left:auto;display:flex;align-items:center;gap:6px;flex:none;
+      color:var(--subtle);font-size:11.5px;}
+    .pal .ftr{display:flex;align-items:center;gap:12px;height:34px;padding:0 14px;
+      border-top:1px solid var(--line);background:var(--wash);font-size:11.5px;
+      color:var(--muted);}
+    .pal .ftr i{display:inline-flex;align-items:center;gap:4px;font-style:normal;}
+    .pal .ftr .rt{margin-left:auto;}
+
+    /* ══ sheet-local: annotation ══ */
+    .aria{display:inline-flex;align-items:center;gap:5px;padding:1px 6px;border-radius:4px;
+      background:var(--sunken);font:400 11px/1.6 var(--mono);color:var(--muted);}
+    .fnote{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12px;
+      color:var(--muted);line-height:1.5;}
+    .fnote dt{font:500 10.5px/1.6 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);white-space:nowrap;}
+    .fnote dd{margin:0;}
+    .fnote dd b{font-weight:500;color:var(--ink);}
+    .lay{display:flex;align-items:center;gap:10px;font-size:12px;}
+    .lay code{font-family:var(--mono);font-size:11.5px;color:var(--muted);min-width:34px;}
+    .lay b{font-weight:500;min-width:118px;}
+    .lay .rail{flex:1;height:1px;background:var(--hairline);}
+  </style>
+</helmet>
+<div class="sheet" style="width:1400px;background:var(--ground)">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+ <symbol id="f1" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e6ebf5"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#3f5b8c"/><circle cx="20" cy="16.5" r="7.8" fill="#6b4630"/><path d="M12.2 16.4c0-5 3.2-8.3 7.8-8.3s7.8 3.3 7.8 8.3c0-2.4-1.1-3.7-2.4-4.3-1.9-.9-3.4.3-5.4.3s-3.5-1.2-5.4-.3c-1.3.6-2.4 1.9-2.4 4.3Z" fill="#1a1512"/></symbol>
+ <symbol id="f2" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e8f0ec"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#2f6b57"/><circle cx="20" cy="16.5" r="7.8" fill="#8a5a3c"/><path d="M11.6 16.6c0-5.3 3.5-8.5 8.4-8.5s8.4 3.2 8.4 8.5v7.2a1.6 1.6 0 1 1-3.2 0v-7.4c-1.6.9-3.4 1.4-5.2 1.4s-3.6-.5-5.2-1.4v7.4a1.6 1.6 0 1 1-3.2 0Z" fill="#2a211b"/></symbol>
+ <symbol id="f3" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f0e9f2"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#6b4a7d"/><circle cx="20" cy="16.5" r="7.8" fill="#a9714b"/><path d="M12.4 17.2c-.6-5.6 2.8-9.1 7.6-9.1s8.2 3.5 7.6 9.1c-.3-2.6-1.6-3.9-3-4.4-2.2-.8-3 .5-4.6.5s-2.4-1.3-4.6-.5c-1.4.5-2.7 1.8-3 4.4Z" fill="#3d2a1e"/><circle cx="27.4" cy="9.4" r="2.9" fill="#3d2a1e"/></symbol>
+ <symbol id="f4" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f5ebe8"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#8c4a3f"/><circle cx="20" cy="16.5" r="7.8" fill="#5a3a28"/><path d="M12.3 15.8c0-4.8 3.3-7.7 7.7-7.7s7.7 2.9 7.7 7.7c0-1.7-.9-2.7-2.1-3.1-1.8-.6-3.2.6-5.6.6s-3.8-1.2-5.6-.6c-1.2.4-2.1 1.4-2.1 3.1Z" fill="#1a1512"/></symbol>
+ <symbol id="f5" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eceef3"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#3d4756"/><circle cx="20" cy="16.5" r="7.8" fill="#7c4f35"/><path d="M11.9 17.8c-.4-6.2 3.1-9.7 8.1-9.7s8.5 3.5 8.1 9.7c-.9-1.2-1.4-3.2-1.4-5-2 1.3-4.3 2-6.7 2s-4.7-.7-6.7-2c0 1.8-.5 3.8-1.4 5Z" fill="#2a211b"/></symbol>
+ <symbol id="f6" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e9f0f4"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#46617a"/><circle cx="20" cy="16.5" r="7.8" fill="#b98254"/><path d="M12.2 16.4c0-5 3.2-8.3 7.8-8.3s7.8 3.3 7.8 8.3c0-2.4-1.1-3.7-2.4-4.3-1.9-.9-3.4.3-5.4.3s-3.5-1.2-5.4-.3c-1.3.6-2.4 1.9-2.4 4.3Z" fill="#3d2a1e"/></symbol>
+ <symbol id="f7" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f2eee6"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#7a6a4a"/><circle cx="20" cy="16.5" r="7.8" fill="#6b4630"/><path d="M11.5 15.4c0-5 3.8-8.3 8.5-8.3s8.5 3.3 8.5 8.3c0 1-.5 1.9-1.3 2.4l-1.2-4.8a20 20 0 0 1-12 0l-1.2 4.8c-.8-.5-1.3-1.4-1.3-2.4Z" fill="#5d4d8a"/></symbol>
+ <symbol id="f8" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eaf1ee"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#4a7a68"/><circle cx="20" cy="16.5" r="7.8" fill="#8a5a3c"/><path d="M12.6 14.9c0-4.5 3.1-7.3 7.4-7.3s7.4 2.8 7.4 7.3c0-1.3-.8-2.1-1.8-2.4-1.6-.5-3.2.7-5.6.7s-4-1.2-5.6-.7c-1 .3-1.8 1.1-1.8 2.4Z" fill="#1a1512"/></symbol>
+ <symbol id="c1" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e4eef2"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#1f5f7a"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#6b4630"/><path d="M12.9 17.8c0-4.7 3-7.7 7.1-7.7s7.1 3 7.1 7.7c0-2.2-1-3.4-2.2-4-1.7-.8-3.1.3-4.9.3s-3.2-1.1-4.9-.3c-1.2.6-2.2 1.8-2.2 4Z" fill="#1a1512"/></symbol>
+ <symbol id="c2" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eef1e6"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#2f6b57"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#8a5a3c"/><path d="M12.4 18c0-4.9 3.2-7.9 7.6-7.9s7.6 3 7.6 7.9v6a1.5 1.5 0 1 1-3 0v-6.2c-1.4.8-3 1.2-4.6 1.2s-3.2-.4-4.6-1.2V24a1.5 1.5 0 1 1-3 0Z" fill="#2a211b"/></symbol>
+ <symbol id="c3" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f4ece4"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#8c4a3f"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#a9714b"/><path d="M12.9 18.4c-.5-5.2 2.6-8.3 7.1-8.3s7.6 3.1 7.1 8.3c-.3-2.4-1.5-3.6-2.8-4-2-.8-2.8.4-4.3.4s-2.2-1.2-4.3-.4c-1.3.4-2.5 1.6-2.8 4Z" fill="#3d2a1e"/><circle cx="26.8" cy="11.4" r="2.6" fill="#3d2a1e"/></symbol>
+</defs></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+ <symbol id="i-chevron-right" viewBox="0 0 16 16"><path d="M6 3.4 10.6 8 6 12.6"></path></symbol>
+ <symbol id="i-chevron-down" viewBox="0 0 16 16"><path d="M3.4 6 8 10.6 12.6 6"></path></symbol>
+ <symbol id="i-chevron-up" viewBox="0 0 16 16"><path d="M3.4 10 8 5.4 12.6 10"></path></symbol>
+ <symbol id="i-close" viewBox="0 0 16 16"><path d="M4.1 4.1 11.9 11.9M11.9 4.1 4.1 11.9"></path></symbol>
+ <symbol id="i-search" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.3"></circle><path d="M10.2 10.2 13.6 13.6"></path></symbol>
+ <symbol id="i-filter" viewBox="0 0 16 16"><path d="M2.4 3.4h11.2L9.2 8.6v4.3L6.8 14.1V8.6Z"></path></symbol>
+ <symbol id="i-more" viewBox="0 0 16 16"><circle cx="3.5" cy="8" r="1.15" fill="currentColor" stroke="none"></circle><circle cx="8" cy="8" r="1.15" fill="currentColor" stroke="none"></circle><circle cx="12.5" cy="8" r="1.15" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-plus" viewBox="0 0 16 16"><path d="M8 3.2v9.6M3.2 8h9.6"></path></symbol>
+ <symbol id="i-customer" viewBox="0 0 16 16"><circle cx="8" cy="5.5" r="2.8"></circle><path d="M2.9 13.6c0-2.9 2.3-4.6 5.1-4.6s5.1 1.7 5.1 4.6"></path></symbol>
+ <symbol id="i-invoice" viewBox="0 0 16 16"><path d="M3.4 1.7h6.1l3.1 3.1v9.5H3.4Z"></path><path d="M9.5 1.7v3.1h3.1"></path><path d="M5.7 8.4h4.6M5.7 11h3"></path></symbol>
+ <symbol id="i-receipt" viewBox="0 0 16 16"><path d="M3.3 1.7h9.4v12.6l-1.6-1.1-1.6 1.1-1.5-1.1-1.6 1.1-1.5-1.1-1.6 1.1Z"></path><path d="M5.9 5.3h4.2M5.9 8.1h4.2"></path></symbol>
+ <symbol id="i-journal" viewBox="0 0 16 16"><path d="M8 4.5C7.1 3.2 5.5 2.6 2.8 2.6v8.8c2.7 0 4.3.6 5.2 1.9.9-1.3 2.5-1.9 5.2-1.9V2.6c-2.7 0-4.3.6-5.2 1.9Z"></path><path d="M8 4.5v8.8"></path></symbol>
+ <symbol id="i-stock" viewBox="0 0 16 16"><path d="M8 1.8 14 5v6l-6 3.2L2 11V5Z"></path><path d="M2 5l6 3.2L14 5M8 8.2v6"></path></symbol>
+ <symbol id="i-branch" viewBox="0 0 16 16"><path d="M1.9 13.8h12.2M3.9 13.8V2.9h8.2v10.9"></path><path d="M6.1 5.6h1.3M8.6 5.6h1.3M6.1 8.2h1.3M8.6 8.2h1.3"></path><path d="M6.9 13.8v-2.7h2.2v2.7"></path></symbol>
+ <symbol id="i-till" viewBox="0 0 16 16"><path d="M4.4 2.2h7.2v3.4H4.4z"></path><path d="M1.9 7.4h12.2v6.4H1.9z"></path><path d="M6.2 10.6h3.6"></path></symbol>
+ <symbol id="i-delete" viewBox="0 0 16 16"><path d="M2.6 4.3h10.8"></path><path d="M6.1 4.3V2.6h3.8v1.7"></path><path d="M4.1 4.3l.7 9.4h6.4l.7-9.4"></path><path d="M6.5 6.8v4.4M9.5 6.8v4.4"></path></symbol>
+ <symbol id="i-export" viewBox="0 0 16 16"><path d="M2.6 10.1v3.3h10.8v-3.3"></path><path d="M8 2.4v7.1"></path><path d="M5.3 5.1 8 2.4l2.7 2.7"></path></symbol>
+ <symbol id="i-print" viewBox="0 0 16 16"><path d="M4.3 6.1V2.4h7.4v3.7"></path><path d="M4.3 11.5H2.4V7.1h11.2v4.4h-1.9"></path><path d="M4.3 9.5h7.4v4.1H4.3z"></path><circle cx="11.7" cy="8.8" r=".75" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-approve" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M5.4 8.2 7.2 10l3.5-3.9"></path></symbol>
+ <symbol id="i-reject" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M6 6 10 10M10 6 6 10"></path></symbol>
+ <symbol id="i-refresh" viewBox="0 0 16 16"><path d="M13.2 7.4a5.2 5.2 0 0 0-8.9-2.8L2.8 6.1"></path><path d="M6.1 6.1H2.8V2.8"></path><path d="M2.8 8.6a5.2 5.2 0 0 0 8.9 2.8l1.5-1.5"></path><path d="M9.9 9.9h3.3v3.3"></path></symbol>
+ <symbol id="i-lock" viewBox="0 0 16 16"><path d="M3.5 7.1h9v6.4h-9z"></path><path d="M5.5 7.1V5.2a2.5 2.5 0 0 1 5 0v1.9"></path><circle cx="8" cy="10.3" r=".95" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-clock" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M8 4.6v3.6l2.5 1.5"></path></symbol>
+ <symbol id="i-warning" viewBox="0 0 16 16"><path d="M8 2.2 14.4 13.4H1.6Z"></path><path d="M8 6.4v3.2"></path><circle cx="8" cy="11.5" r=".8" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-info" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M8 7.4v3.7"></path><circle cx="8" cy="5.1" r=".8" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-mail" viewBox="0 0 16 16"><path d="M1.9 3.6h12.2v8.8H1.9z"></path><path d="m1.9 4.4 6.1 4.3 6.1-4.3"></path></symbol>
+ <symbol id="i-sync" viewBox="0 0 16 16"><path d="M12.9 5.6a5.2 5.2 0 0 0-9.4.6"></path><path d="M6.6 6.2H3.3V2.9"></path><path d="M3.1 10.4a5.2 5.2 0 0 0 9.4-.6"></path><path d="M9.4 9.8h3.3v3.3"></path><circle cx="8" cy="8" r="1.1" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-move" viewBox="0 0 16 16"><path d="M2.4 8h11.2"></path><path d="M10.6 4.8 13.6 8l-3 3.2"></path><path d="M2.4 3.4v9.2"></path></symbol>
+</defs></svg>
+
+  <div class="sheet-h">
+    <h2>Overlays</h2>
+    <span class="sub">Every floating surface &middot; twelve layers, twelve focus contracts</span>
+    <span class="tag">Sheet 12</span>
+  </div>
+
+  <div class="cols" style="grid-template-columns:1fr 1fr">
+    <div class="grp">
+      <span class="grp-l">Modal &mdash; confirm</span>
+      <div class="stage" style="height:318px">
+        <div class="frag">
+          <div class="frag-h">
+            <div class="crumb"><span>Books</span><span class="ic ic-12"><svg><use href="#i-chevron-right"></use></svg></span><b>Journals</b></div>
+            <span class="rt"><span class="btn sm"><span class="ic ic-12"><svg><use href="#i-export"></use></svg></span>Export</span><span class="btn sm solid">Post</span></span>
+          </div>
+          <table class="d">
+            <thead><tr><th>Journal</th><th>Period</th><th>Status</th><th class="r">Debit</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">JNL-88214</td><td>Aug 2026</td><td><span class="pill hollow"><span class="dot"></span>Draft</span></td><td class="r">4,318.75</td></tr>
+              <tr><td class="mono">JNL-88213</td><td>Aug 2026</td><td><span class="pill ok"><span class="dot"></span>Posted</span></td><td class="r">1,902.00</td></tr>
+              <tr><td class="mono">JNL-88212</td><td>Aug 2026</td><td><span class="pill ok"><span class="dot"></span>Posted</span></td><td class="r">640.40</td></tr>
+              <tr><td class="mono">JNL-88211</td><td>Jul 2026</td><td><span class="pill ok"><span class="dot"></span>Posted</span></td><td class="r">12,088.15</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="scrim"></div>
+        <div class="cen">
+          <div class="modal">
+            <div class="acbar"></div>
+            <div class="m-h">
+              <div class="ttl"><h3>Post journal JNL-88214</h3><span class="sub">August 2026 &middot; 8 lines</span></div>
+              <span class="btn sm icon ghost"><span class="ic ic-14"><svg><use href="#i-close"></use></svg></span></span>
+            </div>
+            <div class="m-b">
+              <p>Posting writes the journal to the ledger and closes it to further edits. A posted journal can only be reversed.</p>
+              <div class="sumbox">
+                <dl class="meta">
+                  <dt>Debit</dt><dd>US$4,318.75</dd>
+                  <dt>Credit</dt><dd>US$4,318.75</dd>
+                  <dt>Prepared by</dt><dd style="font-family:var(--sans)"><span class="idn in"><span class="av av-16"><svg><use href="#f1"></use></svg></span>Tendai Mukamba</span></dd>
+                </dl>
+              </div>
+            </div>
+            <div class="m-f">
+              <span class="hint"><span class="kbd">Esc</span> to cancel</span>
+              <span class="rt"><span class="btn ghost">Cancel</span><span class="btn solid">Post journal</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="note"><b>Focus.</b> On open, focus moves to the modal container itself &mdash; not to the primary button, which would let a stray Return post the journal. Tab cycles inside the modal and cannot reach the page behind it; Escape closes and is equivalent to Cancel; on close focus returns to the row's Post button that opened it. <span class="aria">role="dialog" aria-modal="true"</span> labelled by the title.</p>
+    </div>
+
+    <div class="grp">
+      <span class="grp-l">Modal &mdash; form</span>
+      <div class="stage" style="height:318px">
+        <div class="frag">
+          <div class="frag-h">
+            <div class="crumb"><span>Sell</span><span class="ic ic-12"><svg><use href="#i-chevron-right"></use></svg></span><b>Customers</b></div>
+            <span class="rt"><span class="btn sm"><span class="ic ic-12"><svg><use href="#i-filter"></use></svg></span>Filter</span><span class="btn sm solid"><span class="ic ic-12"><svg><use href="#i-plus"></use></svg></span>New customer</span></span>
+          </div>
+          <table class="d">
+            <thead><tr><th>Customer</th><th>Account</th><th class="r">Balance</th></tr></thead>
+            <tbody>
+              <tr><td><span class="idn in"><span class="av av-20 ent" style="background:var(--sell)"><span class="mk">GS</span></span>The Gate Shops</span></td><td class="mono">ACC-0142</td><td class="r">8,412.30</td></tr>
+              <tr><td><span class="idn in"><span class="av av-20 ent" style="background:var(--books)"><span class="mk">HM</span></span>Huchu Mine</span></td><td class="mono">ACC-0188</td><td class="r">2,140.00</td></tr>
+              <tr><td><span class="idn in"><span class="av av-20 ent" style="background:var(--fiscal)"><span class="mk">LL</span></span>Lux Liquor</span></td><td class="mono">ACC-0203</td><td class="r">0.00</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="scrim"></div>
+        <div class="cen">
+          <div class="modal wide">
+            <div class="acbar"></div>
+            <div class="m-h">
+              <div class="ttl"><h3>New customer</h3><span class="sub">Account number is issued on save</span></div>
+              <span class="btn sm icon ghost"><span class="ic ic-14"><svg><use href="#i-close"></use></svg></span></span>
+            </div>
+            <div class="m-b" style="gap:10px">
+              <label class="lab"><span>Trading name</span><span class="fld foc"><span>Lux Liquor (Borrowdale)</span></span></label>
+              <div class="cols" style="grid-template-columns:1fr 1fr;gap:10px">
+                <label class="lab"><span>VAT number</span><span class="fld bad"><span class="mono">2201</span></span><span class="hint bad">A VAT number is 10 digits.</span></label>
+                <label class="lab"><span>Terms</span><span class="fld"><span>30 days</span><span class="ic ic-12" style="margin-left:auto;color:var(--subtle)"><svg><use href="#i-chevron-down"></use></svg></span></span><span class="hint">Applies to new invoices.</span></label>
+              </div>
+            </div>
+            <div class="m-f">
+              <span class="hint bad">One field needs attention.</span>
+              <span class="rt"><span class="btn ghost">Cancel</span><span class="btn solid">Save customer</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="note"><b>Focus.</b> A form modal is the one case where focus goes to the first editable field, because there is nothing to read first. Escape closes only while the form is untouched; once a field has been edited it asks before discarding, so a half-typed customer is never lost to a stray key. Errors are announced by <span class="aria">aria-live="polite"</span> and focus moves to the first bad field on submit.</p>
+    </div>
+  </div>
+
+  <div class="cols" style="grid-template-columns:1fr 1fr">
+    <div class="grp">
+      <span class="grp-l">Alert dialog &mdash; destructive</span>
+      <div class="stage" style="height:312px">
+        <div class="frag">
+          <div class="frag-h">
+            <div class="crumb"><span>Fiscal</span><span class="ic ic-12"><svg><use href="#i-chevron-right"></use></svg></span><b>Receipt #10238</b></div>
+            <span class="rt"><span class="btn sm"><span class="ic ic-12"><svg><use href="#i-print"></use></svg></span>Print</span><span class="btn sm"><span class="ic ic-12"><svg><use href="#i-more"></use></svg></span></span></span>
+          </div>
+          <div class="kard" style="gap:9px">
+            <div class="idn"><span class="av av-32 ent" style="background:var(--fiscal)"><span class="mk">GS</span></span><span class="idn-t"><span class="idn-n">The Gate Shops &middot; Avondale till 2</span><span class="idn-s">Receipt #10238 &middot; 14:06:05</span></span></div>
+            <dl class="meta"><dt>Total</dt><dd>US$142.60</dd><dt>VAT 15%</dt><dd>US$18.60</dd><dt>Tender</dt><dd style="font-family:var(--sans)">EcoCash</dd></dl>
+          </div>
+        </div>
+        <div class="scrim"></div>
+        <div class="cen">
+          <div class="modal">
+            <div class="acbar danger"></div>
+            <div class="m-h">
+              <div class="ttl"><h3>Void receipt #10238</h3><span class="sub">US$142.60 &middot; already fiscalised</span></div>
+            </div>
+            <div class="m-b">
+              <p>This receipt has a ZIMRA FDMS signature. Voiding it files a credit note against the same signature and cannot be undone.</p>
+              <p class="ink">Type the receipt number to confirm.</p>
+              <span class="fld" style="max-width:150px"><span class="ph mono">10238</span></span>
+            </div>
+            <div class="m-f">
+              <span class="rt"><span class="btn ghost">Keep receipt</span><span class="btn danger">Void and credit</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="note"><b>Focus.</b> Focus lands on the confirmation field, and the danger button stays inert until the number matches &mdash; there is no keyboard path that destroys a fiscalised receipt in one stroke. There is no close cross: the only ways out are Keep receipt and Escape, both of which cancel. <span class="aria">role="alertdialog"</span>, described by the warning paragraph.</p>
+    </div>
+
+    <div class="grp">
+      <span class="grp-l">Right drawer</span>
+      <div class="stage" style="height:312px">
+        <div class="frag">
+          <div class="frag-h">
+            <div class="crumb"><span>Stock</span><span class="ic ic-12"><svg><use href="#i-chevron-right"></use></svg></span><b>Msasa warehouse</b></div>
+          </div>
+          <table class="d">
+            <thead><tr><th>Item</th><th>Bin</th><th class="r">On hand</th></tr></thead>
+            <tbody>
+              <tr class="sel"><td class="mono">SKU-4471</td><td>A-12</td><td class="r">148</td></tr>
+              <tr><td class="mono">SKU-4472</td><td>A-13</td><td class="r">96</td></tr>
+              <tr><td class="mono">SKU-4480</td><td>B-02</td><td class="r">12</td></tr>
+              <tr><td class="mono">SKU-4488</td><td>B-07</td><td class="r">0</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="scrim"></div>
+        <div class="drawer">
+          <div class="d-h">
+            <span class="ic ic-16" style="color:var(--stock)"><svg><use href="#i-stock"></use></svg></span>
+            <span class="idn-t"><span class="idn-n">SKU-4471 &middot; Castle Lager 340ml</span><span class="idn-s">Msasa warehouse &middot; bin A-12</span></span>
+            <span class="rt"><span class="btn sm icon ghost"><span class="ic ic-14"><svg><use href="#i-more"></use></svg></span></span><span class="btn sm icon ghost"><span class="ic ic-14"><svg><use href="#i-close"></use></svg></span></span></span>
+          </div>
+          <div class="d-b">
+            <div class="rowset" style="gap:20px">
+              <div class="stat"><b>148</b><span>On hand</span></div>
+              <div class="stat"><b>24</b><span>Allocated</span></div>
+              <div class="stat"><b>124</b><span>Free</span></div>
+            </div>
+            <dl class="meta">
+              <dt>Cost</dt><dd>US$1.05</dd>
+              <dt>Sell</dt><dd>US$1.60</dd>
+              <dt>Counted</dt><dd>SC-0091 &middot; Wed</dd>
+              <dt>Counted by</dt><dd style="font-family:var(--sans)"><span class="idn in"><span class="av av-16"><svg><use href="#f5"></use></svg></span>Blessing Ncube</span></dd>
+            </dl>
+          </div>
+          <div class="d-f">
+            <span class="hint">Unsaved</span>
+            <span class="rt"><span class="btn ghost">Close</span><span class="btn solid">Adjust stock</span></span>
+          </div>
+        </div>
+      </div>
+      <p class="note"><b>Focus.</b> The drawer takes focus on open and traps it exactly as a modal does; the difference is only that the record behind stays legible. Escape closes it and returns focus to the selected row, which keeps its selection so arrow keys carry on where they left off. The drawer is a live region for its own save state, not for the page.</p>
+    </div>
+  </div>
+
+  <div class="cols" style="grid-template-columns:1fr 1fr 1fr">
+    <div class="grp">
+      <span class="grp-l">Popover &middot; anchored, with an arrow</span>
+      <div class="stage" style="height:300px;background:var(--wash)">
+        <div class="frag">
+          <div class="frag-h"><span class="anch">Change status</span></div>
+        </div>
+        <div style="position:absolute;left:14px;top:62px">
+          <div class="pop">
+            <span class="arw"></span>
+            <div class="pop-h">Set status &middot; <span class="mono" style="font-weight:400;color:var(--muted)">ACC-0142</span></div>
+            <div class="pop-b" style="gap:2px">
+              <div class="lrow" style="border:0;padding:5px 0;gap:8px"><span class="pill ok"><span class="dot"></span>Trading</span><span class="tail"><span class="ic ic-14" style="color:var(--accent)"><svg><use href="#i-approve"></use></svg></span></span></div>
+              <div class="lrow" style="border:0;padding:5px 0;gap:8px"><span class="pill warn"><span class="dot"></span>Needs approval</span></div>
+              <div class="lrow" style="border:0;padding:5px 0;gap:8px"><span class="pill hollow"><span class="dot"></span>Closed off</span></div>
+            </div>
+            <div class="pop-f"><span class="hint">Takes effect at once</span><span class="rt"><span class="btn xs">Done</span></span></div>
+          </div>
+        </div>
+      </div>
+      <p class="note"><b>Focus.</b> Opens on click only, never on hover, and focus moves to the first option so arrow keys work immediately. Focus is contained but not trapped: Tab past the last item closes it and moves on. Escape closes and returns focus to the anchor. The arrow is 9px and always points at the anchor's centre.</p>
+    </div>
+
+    <div class="grp">
+      <span class="grp-l">Hover card &middot; a record, previewed</span>
+      <div class="stage" style="height:300px;background:var(--wash)">
+        <div class="frag">
+          <div class="frag-h"><span style="font-size:12.5px;color:var(--muted)">Invoice INV-4471 to <a href="#">The Gate Shops</a></span></div>
+        </div>
+        <div style="position:absolute;left:14px;top:58px">
+          <div class="hcard">
+            <div class="hc-b">
+              <div class="idn lg"><span class="av av-40 ent" style="background:var(--sell)"><span class="mk">GS</span></span><span class="idn-t"><span class="idn-n">The Gate Shops</span><span class="idn-s">ACC-0142 &middot; Avondale, Harare</span></span></div>
+              <div class="rowset" style="gap:6px"><span class="pill ok"><span class="dot"></span>Trading</span><span class="pill warn"><span class="dot"></span>ITF263 expires in 9 days</span></div>
+              <dl class="meta">
+                <dt>Balance</dt><dd>US$8,412.30</dd>
+                <dt>Over 60 days</dt><dd>US$1,940.00</dd>
+                <dt>Terms</dt><dd>14 days</dd>
+                <dt>Owner</dt><dd style="font-family:var(--sans)"><span class="idn in"><span class="av av-16"><svg><use href="#f3"></use></svg></span>Rutendo Chiweshe</span></dd>
+              </dl>
+            </div>
+            <div class="hc-f"><span class="hint">Last receipt #10238 &middot; 14:06:05</span><span class="rt"><span class="btn xs ghost">Open<span class="ic ic-12"><svg><use href="#i-chevron-right"></use></svg></span></span></span></div>
+          </div>
+        </div>
+      </div>
+      <p class="note"><b>Focus.</b> A hover card never takes focus and never traps: it opens after 400ms of hover or on keyboard focus of the link, and closes on blur or on pointer leaving both link and card. Escape hides it without moving focus. It carries no control a person can only reach by hovering &mdash; Open is also the link itself.</p>
+    </div>
+
+    <div class="grp">
+      <span class="grp-l">Tooltip &middot; label, never content</span>
+      <div class="stage" style="height:300px;background:var(--wash)">
+        <div class="frag" style="gap:22px;padding-top:26px">
+          <div class="rowset" style="gap:26px;align-items:flex-start">
+            <div class="colset" style="gap:9px;align-items:center;width:96px">
+              <span class="tip">Export<span class="kbd">E</span><span class="arw"></span></span>
+              <span class="btn icon"><span class="ic ic-16"><svg><use href="#i-export"></use></svg></span></span>
+            </div>
+            <div class="colset" style="gap:9px;align-items:center;width:96px">
+              <span class="tip">Reconcile<span class="arw"></span></span>
+              <span class="btn icon"><span class="ic ic-16"><svg><use href="#i-sync"></use></svg></span></span>
+            </div>
+            <div class="rowset" style="gap:8px;align-items:center">
+              <span class="anch" style="height:26px;font-family:var(--mono);font-size:12px">JNL-88214&#8230;</span>
+              <span class="tip side">Journal JNL-88214 &middot; August 2026<span class="arw"></span></span>
+            </div>
+          </div>
+          <div class="colset" style="gap:6px">
+            <span class="grp-l">Never a tooltip</span>
+            <div class="rowset" style="gap:7px"><span class="pill crit"><span class="dot"></span>A control's only label</span><span class="pill crit"><span class="dot"></span>Anything clickable inside</span></div>
+          </div>
+        </div>
+      </div>
+      <p class="note"><b>Focus.</b> A tooltip holds no focus at all. It appears on hover after 300ms and instantly on keyboard focus, and vanishes on blur or Escape. Because it can disappear, it may only repeat a name or a shortcut &mdash; anything a person must read to decide belongs in a popover. <span class="aria">aria-describedby</span>, never <span class="aria">aria-label</span> alone.</p>
+    </div>
+  </div>
+
+  <div class="cols" style="grid-template-columns:1fr 390px">
+    <div class="grp">
+      <span class="grp-l">Toast stack &mdash; newest at the bottom, four at most</span>
+      <div class="stage" style="height:360px;background:var(--wash)">
+        <div class="frag">
+          <div class="frag-h">
+            <div class="crumb"><span>Fiscal</span><span class="ic ic-12"><svg><use href="#i-chevron-right"></use></svg></span><b>Today</b></div>
+            <span class="rt"><span class="btn sm">Mutare depot</span></span>
+          </div>
+          <table class="d">
+            <thead><tr><th>Receipt</th><th>Till</th><th>Signature</th><th class="r">Total</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">#10238</td><td>Avondale 2</td><td><span class="pill ok"><span class="dot"></span>Signed</span></td><td class="r">142.60</td></tr>
+              <tr><td class="mono">#10237</td><td>Avondale 1</td><td><span class="pill ok"><span class="dot"></span>Signed</span></td><td class="r">88.00</td></tr>
+              <tr><td class="mono">#10229</td><td>Mbare 1</td><td><span class="pill acc"><span class="dot"></span>Queued</span></td><td class="r">61.15</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="position:absolute;right:14px;bottom:14px">
+          <div class="tstack">
+            <div class="toast ok">
+              <span class="lead ic ic-16"><svg><use href="#i-approve"></use></svg></span>
+              <span class="tt"><b>Journal JNL-88214 posted</b><span>US$4,318.75 across 8 accounts.</span></span>
+              <span class="btn xs icon ghost"><span class="ic ic-12"><svg><use href="#i-close"></use></svg></span></span>
+            </div>
+            <div class="toast warn">
+              <span class="lead ic ic-16"><svg><use href="#i-warning"></use></svg></span>
+              <span class="tt"><b>ITF263 expires in 9 days</b><span>The Gate Shops (ACC-0142). Invoicing continues until then.</span></span>
+              <span class="btn xs icon ghost"><span class="ic ic-12"><svg><use href="#i-close"></use></svg></span></span>
+            </div>
+            <div class="toast crit">
+              <span class="lead ic ic-16"><svg><use href="#i-reject"></use></svg></span>
+              <span class="tt"><b>Receipt #10229 could not be fiscalised</b><span>The FDMS gateway timed out. The receipt is queued and will be retried.</span></span>
+              <span class="btn xs icon ghost"><span class="ic ic-12"><svg><use href="#i-close"></use></svg></span></span>
+            </div>
+            <div class="toast acc">
+              <span class="lead ic ic-16"><svg><use href="#i-move"></use></svg></span>
+              <span class="tt"><b>3 receipts moved to Mutare depot</b><span class="row"><span class="btn xs">Undo</span><span>Closing in 6s</span></span><span class="tprog"><i style="width:62%"></i></span></span>
+              <span class="btn xs icon ghost"><span class="ic ic-12"><svg><use href="#i-close"></use></svg></span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="note"><b>Focus.</b> A toast never takes focus &mdash; it would tear a person out of whatever they were typing. The stack is a single <span class="aria">aria-live="polite"</span> region, except the danger toast, which is <span class="aria">role="alert"</span> and announced at once. Any toast carrying an action, or a danger toast, does not auto-dismiss; the rest close after 6s, and every one has a visible cross so a dismissal never depends on waiting. The stack is reachable from the keyboard with <span class="kbd">F6</span>.</p>
+    </div>
+
+    <div class="grp">
+      <span class="grp-l">Bottom sheet &middot; 390px</span>
+      <div class="stage" style="height:360px">
+        <div class="phone">
+          <div class="pbar"><span>08:41</span><span class="rt">Corelith</span></div>
+          <div class="frag" style="gap:9px">
+            <div class="idn"><span class="av av-32 ent" style="background:var(--fiscal)"><span class="mk">GS</span></span><span class="idn-t"><span class="idn-n">Receipt #10238</span><span class="idn-s">Avondale till 2 &middot; 14:06:05</span></span></div>
+          </div>
+        </div>
+        <div class="scrim"></div>
+        <div class="bsheet">
+          <div class="bs-h">
+            <span class="grab"></span>
+            <div class="bs-t"><b style="font:600 14px/1.3 var(--sans)">Receipt #10238</b><span class="rt"><span class="btn sm icon ghost"><span class="ic ic-14"><svg><use href="#i-close"></use></svg></span></span></span></div>
+          </div>
+          <div class="bs-r"><span class="ic ic-16"><svg><use href="#i-print"></use></svg></span><span>Print a copy</span></div>
+          <div class="bs-r"><span class="ic ic-16"><svg><use href="#i-mail"></use></svg></span><span>Email to customer</span></div>
+          <div class="bs-r"><span class="ic ic-16"><svg><use href="#i-refresh"></use></svg></span><span>Reprint fiscal copy</span></div>
+          <div class="bs-r crit"><span class="ic ic-16"><svg><use href="#i-delete"></use></svg></span><span>Void and credit</span></div>
+          <div class="bs-f"><span class="btn lg" style="width:100%">Cancel</span></div>
+        </div>
+      </div>
+      <p class="note"><b>Focus.</b> The same contract as a modal: focus enters the sheet, is trapped, and returns to the row that opened it. It closes on Escape, on the scrim, or on a downward drag past the grabber &mdash; the grabber is decoration, the cross is the accessible control. The destructive row still opens the alert dialog; nothing is destroyed from a sheet.</p>
+    </div>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">Command palette</span>
+    <div class="stage" style="height:400px">
+      <div class="frag">
+        <div class="frag-h">
+          <div class="crumb"><span>Sell</span><span class="ic ic-12"><svg><use href="#i-chevron-right"></use></svg></span><span>Customers</span><span class="ic ic-12"><svg><use href="#i-chevron-right"></use></svg></span><b>The Gate Shops</b></div>
+          <span class="rt"><span class="btn sm">Statement</span><span class="btn sm solid">New invoice</span></span>
+        </div>
+        <table class="d">
+          <thead><tr><th>Document</th><th>Date</th><th>Status</th><th class="r">Amount</th><th class="r">Outstanding</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">INV-4471</td><td class="mono">04 Sep</td><td><span class="pill hollow"><span class="dot"></span>Open</span></td><td class="r">2,140.00</td><td class="r">2,140.00</td></tr>
+            <tr><td class="mono">INV-4460</td><td class="mono">28 Aug</td><td><span class="pill crit"><span class="dot"></span>Overdue</span></td><td class="r">1,940.00</td><td class="r">1,940.00</td></tr>
+            <tr><td class="mono">INV-4448</td><td class="mono">19 Aug</td><td><span class="pill ok"><span class="dot"></span>Matched</span></td><td class="r">4,332.30</td><td class="r">0.00</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="scrim"></div>
+      <div class="cen top">
+        <div class="pal">
+          <div class="q"><span class="ic ic-16"><svg><use href="#i-search"></use></svg></span><span>gate</span><span class="rt"><span class="kbd">Esc</span></span></div>
+          <div class="sec">Records</div>
+          <div class="r on"><span class="av av-20 ent" style="background:var(--sell)"><span class="mk">GS</span></span><span>The Gate Shops</span><span class="rt"><span class="mono">ACC-0142</span><span class="ic ic-12"><svg><use href="#i-chevron-right"></use></svg></span></span></div>
+          <div class="r"><span class="ic ic-16"><svg><use href="#i-branch"></use></svg></span><span>The Gate Shops &middot; Borrowdale</span><span class="rt"><span class="mono">BR-04</span></span></div>
+          <div class="r"><span class="ic ic-16"><svg><use href="#i-invoice"></use></svg></span><span>INV-4460 &middot; The Gate Shops</span><span class="rt"><span class="mono">US$1,940.00</span></span></div>
+          <div class="sec">Actions</div>
+          <div class="r"><span class="ic ic-16"><svg><use href="#i-invoice"></use></svg></span><span>New invoice for The Gate Shops</span><span class="rt"><span class="kbd">I</span></span></div>
+          <div class="r"><span class="ic ic-16"><svg><use href="#i-mail"></use></svg></span><span>Email statement to The Gate Shops</span><span class="rt"><span class="kbd">S</span></span></div>
+          <div class="sec">Go to</div>
+          <div class="r"><span class="ic ic-16"><svg><use href="#i-till"></use></svg></span><span>Tills &middot; Avondale</span><span class="rt"><span class="kbd">G</span><span class="kbd">T</span></span></div>
+          <div class="ftr"><i><span class="kbd">&#8593;</span><span class="kbd">&#8595;</span> Move</i><i><span class="kbd">&#9166;</span> Open</i><i><span class="kbd">Esc</span> Close</i><span class="rt">7 of 34 results</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="note"><b>Focus.</b> Focus goes to the query field on open and stays there for the whole life of the palette: arrow keys move a highlight, never focus, so what a person types is never swallowed by a list item. The list is <span class="aria">role="listbox"</span> with <span class="aria">aria-activedescendant</span>, and the result count is announced politely as it changes. Escape closes and restores focus to whatever had it &mdash; a table cell, a field mid-edit &mdash; with any selection intact.</p>
+  </div>
+
+  <div class="cols" style="grid-template-columns:352px 1fr">
+    <div class="grp">
+      <span class="grp-l">Layer scale</span>
+      <div class="panel">
+        <div class="panel-b">
+          <div class="colset" style="gap:8px">
+            <div class="lay"><code>400</code><b>Tooltip</b><span class="rail"></span></div>
+            <div class="lay"><code>300</code><b>Toast stack</b><span class="rail"></span></div>
+            <div class="lay"><code>200</code><b>Popover &middot; hover card</b><span class="rail"></span></div>
+            <div class="lay"><code>120</code><b>Modal &middot; alert &middot; palette</b><span class="rail"></span></div>
+            <div class="lay"><code>110</code><b>Drawer &middot; bottom sheet</b><span class="rail"></span></div>
+            <div class="lay"><code>100</code><b>Scrim</b><span class="rail"></span></div>
+            <div class="lay"><code>10</code><b>Sticky header</b><span class="rail"></span></div>
+          </div>
+        </div>
+      </div>
+      <p class="note">One scrim, ink at 38%, and only surfaces that trap focus are allowed to raise it. A popover over a modal keeps the modal's scrim &mdash; there is never a second one.</p>
+    </div>
+
+    <div class="grp">
+      <span class="grp-l">The focus contract &mdash; all twelve surfaces</span>
+      <div class="panel">
+        <div class="panel-b flush">
+          <table class="d">
+            <thead>
+              <tr><th>Surface</th><th>Focus on open</th><th>Traps</th><th>Escape</th><th>Restores to</th><th>Role</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Modal &middot; confirm</td><td>Dialog container</td><td>Yes</td><td>Cancels</td><td>Invoking control</td><td class="mono">dialog</td></tr>
+              <tr><td>Modal &middot; form</td><td>First field</td><td>Yes</td><td>Cancels, asks if edited</td><td>Invoking control</td><td class="mono">dialog</td></tr>
+              <tr><td>Alert dialog</td><td>Confirmation field</td><td>Yes</td><td>Cancels</td><td>Invoking control</td><td class="mono">alertdialog</td></tr>
+              <tr><td>Right drawer</td><td>Drawer container</td><td>Yes</td><td>Closes</td><td>Selected row</td><td class="mono">dialog</td></tr>
+              <tr><td>Bottom sheet</td><td>Sheet container</td><td>Yes</td><td>Closes</td><td>Invoking row</td><td class="mono">dialog</td></tr>
+              <tr><td>Command palette</td><td>Query field</td><td>Yes</td><td>Closes</td><td>Prior focus, selection kept</td><td class="mono">dialog + listbox</td></tr>
+              <tr><td>Popover</td><td>First option</td><td>Contains, Tab exits</td><td>Closes</td><td>Anchor</td><td class="mono">dialog</td></tr>
+              <tr><td>Hover card</td><td>Nothing</td><td>No</td><td>Hides</td><td>Focus never moved</td><td class="mono">tooltip-ish, labelled</td></tr>
+              <tr><td>Tooltip</td><td>Nothing</td><td>No</td><td>Hides</td><td>Focus never moved</td><td class="mono">tooltip</td></tr>
+              <tr><td>Toast</td><td>Nothing</td><td>No</td><td>Dismisses newest</td><td>Focus never moved</td><td class="mono">status</td></tr>
+              <tr><td>Toast &middot; with action</td><td>Nothing, <span class="kbd">F6</span> to reach</td><td>No</td><td>Returns to prior focus</td><td>Prior focus</td><td class="mono">alert</td></tr>
+              <tr><td>Scrim</td><td>Nothing</td><td>Blocks the page</td><td>Closes its owner</td><td>Owner's restore target</td><td class="mono">aria-hidden page</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p class="note">Twelve surfaces, one rule read three ways: whatever opens takes focus only if it also traps it; whatever traps focus dims the page behind it; and whatever closes hands focus back to the exact control that opened it. Everything that does not trap &mdash; tooltip, hover card, toast &mdash; must never move focus at all, because a person mid-sentence in a journal line cannot be interrupted by a notice.</p>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

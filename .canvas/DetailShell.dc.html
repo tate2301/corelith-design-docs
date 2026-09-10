@@ -1,0 +1,776 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    /* ══ Corelith v1 tokens — approved. Do not invent values. ══ */
+    :root{
+      --ground:#fbfbfc; --surface:#ffffff; --wash:#f5f6f9; --sunken:#eef0f5;
+      --line:#e7e9ef; --line-strong:#d5d8e2; --hairline:#f1f2f6;
+      --ink:#0b0c14; --muted:#5c5e6b; --subtle:#8a8c98;
+      --accent:#2563eb; --accent-soft:#eff4ff; --accent-line:#dbe5fb; --accent-ink:#1b4bc4;
+      --sell:#2563eb; --books:#12805c; --stock:#0e7490; --fiscal:#6549d5;
+      --maint:#b45309; --crit:#c2321b; --campus:#0e7490;
+      --ok-bg:#e8f4ef; --ok-line:#c9e5da; --warn-bg:#fdf3e2; --warn-line:#f2ddb6;
+      --crit-bg:#fdece9; --crit-line:#f6cec6;
+      --sans:"Atkinson Hyperlegible Next","Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+      --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+      /* density · default mode */
+      --h-xs:22px; --h-sm:26px; --h-md:30px; --h-lg:36px;
+      --row:32px; --pad:12px; --fs:13px;
+      --r-ctl:6px; --r-card:10px;
+      --shadow-pop:0 10px 30px -12px rgba(11,12,20,.20),0 2px 6px rgba(11,12,20,.05);
+    }
+    [data-d="compact"]{--h-xs:20px;--h-sm:24px;--h-md:26px;--h-lg:30px;--row:28px;--pad:10px;--fs:12.5px;}
+    [data-d="comfortable"]{--h-xs:24px;--h-sm:30px;--h-md:36px;--h-lg:44px;--row:44px;--pad:14px;--fs:14px;}
+    *,*::before,*::after{box-sizing:border-box;}
+    body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+      font-size:var(--fs);line-height:1.5;-webkit-font-smoothing:antialiased;}
+    a{color:var(--accent);text-decoration:underline;text-underline-offset:2px;}
+    a:hover{color:var(--accent-ink);}
+    h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.012em;}
+    p{margin:0;}
+    .mono,.num{font-family:var(--mono);font-variant-numeric:tabular-nums;}
+
+    /* ══ sheet chrome — every component sheet uses these ══ */
+    .sheet{padding:28px 32px;display:flex;flex-direction:column;gap:26px;}
+    .sheet-h{display:flex;align-items:baseline;gap:10px;padding-bottom:9px;
+      border-bottom:1px solid var(--line);}
+    .sheet-h h2{font-size:17px;}
+    .sheet-h .sub{color:var(--muted);font-size:12.5px;}
+    .sheet-h .tag{margin-left:auto;font:500 10.5px/1 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .grp{display:flex;flex-direction:column;gap:11px;}
+    .grp-l{font:500 10.5px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;
+      color:var(--subtle);}
+    .rowset{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+    .colset{display:flex;flex-direction:column;gap:10px;}
+    .cols{display:grid;gap:20px;}
+    .panel{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      overflow:hidden;}
+    .panel-h{display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--wash);
+      border-bottom:1px solid var(--line);font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .panel-h .rt{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:400;
+      font-size:12px;}
+    .panel-b{padding:14px;}
+    .panel-b.flush{padding:0;}
+    .note{color:var(--muted);font-size:12px;line-height:1.55;max-width:64ch;}
+
+    /* ══ controls ══ */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--h-md);
+      padding:0 11px;border-radius:var(--r-ctl);border:1px solid var(--line-strong);
+      background:var(--surface);color:var(--ink);font:500 var(--fs)/1 var(--sans);
+      cursor:pointer;white-space:nowrap;}
+    .btn:hover{background:var(--wash);}
+    .btn.solid{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn.solid:hover{background:var(--accent-ink);}
+    .btn.danger{background:var(--crit);border-color:var(--crit);color:#fff;}
+    .btn.soft{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .btn.ghost{border-color:transparent;background:transparent;color:var(--muted);}
+    .btn.ghost:hover{background:var(--wash);color:var(--ink);}
+    .btn.xs{height:var(--h-xs);padding:0 7px;font-size:11.5px;}
+    .btn.sm{height:var(--h-sm);padding:0 9px;font-size:12.5px;}
+    .btn.lg{height:var(--h-lg);padding:0 14px;font-size:14px;}
+    .btn.icon{width:var(--h-md);padding:0;}
+    .btn.sm.icon{width:var(--h-sm);}
+    .btn[disabled],.btn.off{opacity:.45;cursor:default;}
+    .bgrp{display:inline-flex;}
+    .bgrp .btn{border-radius:0;margin-left:-1px;}
+    .bgrp .btn:first-child{border-radius:var(--r-ctl) 0 0 var(--r-ctl);margin-left:0;}
+    .bgrp .btn:last-child{border-radius:0 var(--r-ctl) var(--r-ctl) 0;}
+
+    .fld{display:flex;align-items:center;gap:7px;height:var(--h-md);padding:0 10px;
+      border:1px solid var(--line-strong);border-radius:var(--r-ctl);background:var(--surface);
+      font-size:var(--fs);color:var(--ink);min-width:0;}
+    .fld.foc{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+    .fld.bad{border-color:var(--crit);box-shadow:0 0 0 3px var(--crit-bg);}
+    .fld .ph{color:var(--subtle);}
+    .fld .pre{color:var(--muted);font-family:var(--mono);font-size:12px;flex:none;}
+    .lab{display:flex;flex-direction:column;gap:5px;}
+    .lab > span{font:500 12px/1.3 var(--sans);color:var(--ink);}
+    .hint{font-size:11.5px;color:var(--muted);}
+    .hint.bad{color:var(--crit);}
+
+    .pill{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;
+      border-radius:999px;font:500 11px/1 var(--sans);border:1px solid var(--line);
+      background:var(--wash);color:var(--muted);white-space:nowrap;}
+    .pill.ok{background:var(--ok-bg);border-color:var(--ok-line);color:var(--books);}
+    .pill.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--maint);}
+    .pill.crit{background:var(--crit-bg);border-color:var(--crit-line);color:var(--crit);}
+    .pill.acc{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .pill .dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex:none;}
+    .pill.hollow .dot{background:transparent;border:1.5px solid currentColor;width:7px;height:7px;}
+    .cnt{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+      padding:0 5px;border-radius:999px;background:var(--sunken);color:var(--muted);
+      font:500 11px/1 var(--mono);}
+    .cnt.urgent{background:var(--crit);color:#fff;}
+    .kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+      padding:0 4px;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;
+      background:var(--surface);font:500 10.5px/1 var(--mono);color:var(--muted);}
+
+    /* ══ identity ══ */
+    .av{position:relative;flex:none;display:inline-block;border-radius:50%;overflow:hidden;
+      background:var(--sunken);}
+    .av svg{display:block;width:100%;height:100%;}
+    .av-16{width:16px;height:16px}.av-20{width:20px;height:20px}.av-24{width:24px;height:24px}
+    .av-32{width:32px;height:32px}.av-40{width:40px;height:40px}.av-64{width:64px;height:64px}
+    .av.ent{border-radius:6px;}
+    .av-40.ent,.av-64.ent{border-radius:8px;}
+    .av.ent .mk{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+      font:600 11px/1 var(--sans);color:#fff;}
+    .av-32.ent .mk{font-size:12px}.av-40.ent .mk{font-size:13px}.av-64.ent .mk{font-size:20px}
+    .avw{position:relative;flex:none;display:inline-block;line-height:0;}
+    .pres{position:absolute;right:-1px;bottom:-1px;border-radius:50%;border:2px solid var(--surface);}
+    .av-24 + .pres{width:9px;height:9px}
+    .av-32 + .pres{width:11px;height:11px}
+    .av-40 + .pres{width:13px;height:13px}
+    .p-on{background:var(--books)}.p-away{background:var(--maint)}
+    .p-busy{background:var(--crit)}.p-off{background:var(--subtle)}
+    .avg{display:inline-flex;align-items:center;}
+    .avg .avw,.avg > .av{margin-left:-7px;box-shadow:0 0 0 2px var(--surface);}
+    .avg .avw:first-child,.avg > .av:first-child{margin-left:0;}
+    .avg .more{display:inline-flex;align-items:center;justify-content:center;background:var(--sunken);
+      color:var(--muted);font:500 10px/1 var(--mono);border-radius:50%;}
+    .idn{display:flex;align-items:center;gap:8px;min-width:0;}
+    .idn-t{min-width:0;display:flex;flex-direction:column;gap:1px;}
+    .idn-n{font:500 var(--fs)/1.3 var(--sans);color:var(--ink);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .idn-s{font:400 11px/1.3 var(--sans);color:var(--muted);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .idn.in{gap:6px;}
+    .idn.lg{gap:12px;}
+    .idn.lg .idn-n{font:600 15px/1.3 var(--sans);}
+    .idn.lg .idn-s{font-size:12px;}
+    .idn.xl{gap:14px;}
+    .idn.xl .idn-n{font:600 20px/1.25 var(--sans);letter-spacing:-.015em;}
+    .idn.xl .idn-s{font-size:13px;}
+    .rchip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px 0 3px;
+      border-radius:999px;border:1px solid var(--line);background:var(--surface);
+      font:500 12px/1 var(--sans);color:var(--ink);}
+
+    /* ══ table ══ */
+    table.d{width:100%;border-collapse:collapse;font-size:var(--fs);}
+    table.d th{text-align:left;font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);padding:0 var(--pad) 7px;
+      border-bottom:1px solid var(--line);white-space:nowrap;}
+    table.d td{padding:0 var(--pad);height:var(--row);border-bottom:1px solid var(--hairline);
+      vertical-align:middle;}
+    table.d tbody tr:last-child td{border-bottom:0;}
+    table.d tr.hov td{background:var(--wash);}
+    table.d tr.sel td{background:var(--accent-soft);}
+    table.d .r{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;
+      font-size:12px;}
+    table.d th.r{text-align:right;}
+    table.d tr.grp-row td{background:var(--wash);font:500 11px/1 var(--sans);
+      letter-spacing:.05em;text-transform:uppercase;color:var(--muted);height:26px;}
+    table.d tfoot td{height:var(--row);font-weight:600;border-top:1px solid var(--line-strong);
+      border-bottom:0;background:var(--surface);}
+
+    /* ══ rows, cards ══ */
+    .lrow{display:flex;align-items:center;gap:10px;padding:7px var(--pad);
+      border-bottom:1px solid var(--hairline);}
+    .lrow:last-child{border-bottom:0;}
+    .lrow .tail{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none;}
+    .kard{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      padding:13px;display:flex;flex-direction:column;gap:10px;}
+    .meta{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:12px;}
+    .meta dt{font:500 10.5px/1.5 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .meta dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12px;}
+    .stat{display:flex;flex-direction:column;gap:3px;}
+    .stat b{font:600 24px/1.1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
+    .stat span{font:500 10.5px/1.3 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .bar{height:5px;border-radius:999px;background:var(--sunken);overflow:hidden;}
+    .bar i{display:block;height:100%;background:var(--accent);}
+
+    /* ══ sheet-local: icon primitives ══ */
+    .ic{display:inline-block;flex:none;line-height:0;}
+    .ic svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.4;
+      stroke-linecap:round;stroke-linejoin:round;}
+    .ic-12{width:12px;height:12px;}  .ic-12 svg{stroke-width:1.85;}
+    .ic-14{width:14px;height:14px;}  .ic-14 svg{stroke-width:1.6;}
+    .ic-16{width:16px;height:16px;}
+    .ic-20{width:20px;height:20px;}  .ic-20 svg{stroke-width:1.12;}
+
+    /* ══ sheet-local: the shell is full-bleed — it is a screen, not a specimen sheet ══ */
+    .sheet.shell{padding:0;gap:0;}
+    .app{display:flex;align-items:stretch;background:var(--surface);overflow:hidden;}
+
+    /* ══ sheet-local: sidebar ══ */
+    .side{width:248px;flex:none;background:var(--ground);border-right:1px solid var(--line);
+      display:flex;flex-direction:column;padding:10px 10px 0;overflow:hidden;}
+    .wsw{display:flex;align-items:center;gap:8px;height:40px;padding:0 8px 0 7px;flex:none;
+      border:1px solid var(--line-strong);border-radius:var(--r-ctl);background:var(--surface);
+      box-shadow:0 1px 1px rgba(11,12,20,.04);}
+    .wsw .nm{font:500 13px/1.2 var(--sans);min-width:0;white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .wsw .dv{width:1px;height:20px;background:var(--line);flex:none;margin-left:auto;}
+    .wsw .ic{color:var(--subtle);}
+    .sgap{height:8px;flex:none;}
+    .sgap.lg{height:12px;}
+    .snav{display:flex;flex-direction:column;gap:1px;min-height:0;}
+    .smicro{display:flex;align-items:center;gap:7px;padding:11px 8px 5px;flex:none;
+      font:500 10.5px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;
+      color:var(--subtle);}
+    .smicro .cnt{margin-left:auto;}
+    .smicro .ic{color:var(--subtle);}
+    .sit{position:relative;display:flex;align-items:center;gap:8px;height:28px;padding:0 8px;
+      border:1px solid transparent;border-radius:var(--r-ctl);text-decoration:none;
+      color:var(--muted);font:400 12.5px/1 var(--sans);min-width:0;flex:none;}
+    .sit > .lb{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .sit .ic{color:var(--subtle);}
+    .sit .tail{margin-left:auto;display:flex;align-items:center;gap:6px;flex:none;}
+    .sit.hov{background:var(--sunken);color:var(--ink);}
+    .sit.on{background:var(--surface);border-color:var(--line);color:var(--ink);font-weight:500;
+      box-shadow:0 1px 2px rgba(11,12,20,.05);}
+    .sit.on .ic{color:var(--accent-ink);}
+    .sit.on::before{content:"";position:absolute;left:-1px;top:6px;bottom:6px;width:2px;
+      border-radius:999px;background:var(--accent);}
+    .sit.off{color:var(--subtle);opacity:.5;cursor:default;}
+    .subw{display:flex;padding-left:15px;flex:none;}
+    .subw .guide{width:1px;background:var(--line-strong);flex:none;}
+    .subl{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;padding-left:9px;}
+    .subl .sit{height:26px;font-size:12.5px;}
+    .ssp{flex:1;min-height:10px;}
+    .sfoot{flex:none;margin:0 -10px;padding:11px 16px 13px;border-top:1px solid var(--line);
+      display:flex;align-items:center;gap:9px;}
+    .mark{width:22px;height:22px;border-radius:6px;background:#0F62FE;flex:none;
+      display:flex;align-items:center;justify-content:center;}
+    .mark svg{display:block;}
+    .wm{font:600 13.5px/1 var(--sans);letter-spacing:-.012em;}
+    .sfoot .v{margin-left:auto;font:400 10.5px/1 var(--mono);color:var(--subtle);}
+
+    /* ══ sheet-local: main column chrome ══ */
+    .main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--surface);
+      overflow:hidden;}
+    .crumb{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);}
+    .crumb a{color:var(--muted);text-decoration:none;}
+    .crumb a:hover{color:var(--ink);}
+    .crumb .ic{color:var(--line-strong);}
+    .crumb .now{color:var(--ink);font-weight:500;}
+    .vsep{width:1px;height:18px;background:var(--line);flex:none;}
+
+    /* ══ sheet-local: record header ══ */
+    .rhd{flex:none;display:flex;flex-direction:column;gap:12px;padding:15px 24px 0;}
+    .rid{display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:14px;row-gap:6px;
+      align-items:center;}
+    .rid > .av{grid-column:1;grid-row:1 / span 2;}
+    .rid-n{grid-column:2;grid-row:1;display:flex;align-items:center;gap:9px;min-width:0;}
+    .rid-n h1{font:600 21px/1.2 var(--sans);letter-spacing:-.02em;white-space:nowrap;}
+    .rid-a{grid-column:3;grid-row:1;display:flex;align-items:center;gap:8px;}
+    .rid-s{grid-column:2 / span 2;grid-row:2;font-size:12.5px;color:var(--muted);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .tabs{display:flex;align-items:flex-end;gap:20px;border-bottom:1px solid var(--line);
+      padding:0 24px;flex:none;}
+    .tabs a{display:flex;align-items:center;gap:6px;height:36px;padding:0 1px;
+      border-bottom:2px solid transparent;text-decoration:none;color:var(--muted);
+      font:500 13px/1 var(--sans);white-space:nowrap;}
+    .tabs a.on{color:var(--ink);border-bottom-color:var(--accent);}
+    .tabs a.hov{color:var(--ink);border-bottom-color:var(--line-strong);}
+    .tabs .ovf{margin-left:auto;flex:none;align-self:center;}
+
+    .rbody{flex:1;min-height:0;display:flex;flex-direction:column;gap:16px;
+      padding:16px 24px 0;overflow:hidden;}
+
+    /* ══ sheet-local: composer (shared with the feed sheet) ══ */
+    .comp{display:flex;align-items:flex-start;gap:10px;flex:none;}
+    .cbox{flex:1;min-width:0;border:1px solid var(--line-strong);border-radius:var(--r-card);
+      background:var(--surface);display:flex;flex-direction:column;}
+    .cbox.foc{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+    .cb-b{padding:10px 12px;min-height:50px;font-size:13px;line-height:1.7;color:var(--ink);}
+    .cb-b .ph{color:var(--subtle);}
+    .cb-f{display:flex;align-items:center;gap:4px;padding:6px 8px;
+      border-top:1px solid var(--hairline);}
+    .cb-f .rt{margin-left:auto;display:flex;align-items:center;gap:8px;}
+    .caret{display:inline-block;width:1px;height:15px;background:var(--accent);vertical-align:-3px;}
+    .ment{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px 0 3px;
+      border-radius:999px;background:var(--accent-soft);border:1px solid var(--accent-line);
+      color:var(--accent-ink);font:500 12.5px/1 var(--sans);vertical-align:-4px;}
+    .ment.ent{background:var(--wash);border-color:var(--line);color:var(--ink);}
+    .av-14{width:14px;height:14px;}
+    .av-22{width:22px;height:22px;}
+
+    /* ══ sheet-local: the feed spine (shared with the feed sheet) ══ */
+    .feed{position:relative;display:flex;flex-direction:column;gap:14px;}
+    .feed::before{content:"";position:absolute;left:11px;top:11px;bottom:11px;width:1px;
+      background:var(--line);}
+    .fev{position:relative;padding-left:26px;min-height:22px;display:flex;flex-direction:column;
+      gap:8px;}
+    .fev.card{padding-left:34px;}
+    .fnode{position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;
+      background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;
+      justify-content:center;color:var(--muted);}
+    .fnode.face{border:0;background:none;box-shadow:0 0 0 2px var(--surface);}
+    .fnode.dash{border-style:dashed;border-color:var(--line-strong);color:var(--subtle);}
+    .fline{display:flex;align-items:center;gap:6px;min-height:22px;padding:0 8px;border-radius:6px;
+      font-size:13px;color:var(--muted);line-height:1.45;}
+    .fline b{font-weight:500;color:var(--ink);}
+    .fline .obj{font-weight:500;color:var(--ink);white-space:nowrap;}
+    .fline .obj.mono{font-size:12px;}
+    .fline .sep{color:var(--line-strong);}
+    .fline .t{margin-left:auto;padding-left:10px;font:400 12px/1 var(--mono);color:var(--subtle);
+      flex:none;}
+    .fline .act{margin-left:auto;padding-left:10px;display:flex;align-items:center;gap:8px;flex:none;}
+    .fline .act .t{margin-left:0;padding-left:0;}
+    .fev.hov .fline{background:var(--wash);color:var(--ink);}
+    .rollup{display:inline-flex;align-items:center;gap:6px;}
+    .expand{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;height:22px;
+      padding:0 8px;border-radius:6px;font:500 12.5px/1 var(--sans);color:var(--accent-ink);}
+    .fcard{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      display:flex;flex-direction:column;}
+    .fc-h{display:flex;align-items:center;gap:8px;padding:8px 12px;
+      border-bottom:1px solid var(--hairline);font-size:12.5px;color:var(--muted);}
+    .fc-h b{font-weight:500;color:var(--ink);}
+    .fc-h .t{margin-left:auto;font:400 12px/1 var(--mono);color:var(--subtle);flex:none;}
+    .fc-b{padding:11px 12px;font-size:13px;line-height:1.6;color:var(--ink);display:flex;
+      flex-direction:column;gap:9px;}
+    .fc-f{display:flex;align-items:center;gap:8px;padding:7px 10px;
+      border-top:1px solid var(--hairline);background:var(--wash);}
+    .fc-f .rt{margin-left:auto;display:flex;align-items:center;gap:8px;}
+    .hdr-mail{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:12px;
+      color:var(--muted);margin:0;}
+    .hdr-mail dt{font:500 10.5px/1.5 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .hdr-mail dd{margin:0;}
+    .fsec{position:relative;padding-left:34px;display:flex;align-items:center;gap:10px;height:22px;}
+    .fsec::before{content:"";position:absolute;left:5px;top:-7px;bottom:-7px;width:13px;
+      background:var(--surface);}
+    .fsec .l{flex:none;font:500 10.5px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;
+      color:var(--subtle);}
+    .fsec .rule{flex:1;height:1px;background:var(--hairline);}
+    .fsec .cnt{flex:none;}
+    .rct{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;
+      border-radius:999px;border:1px solid var(--line);background:var(--surface);
+      font:500 11.5px/1 var(--sans);color:var(--muted);}
+    .rct.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .endcap{display:flex;align-items:center;gap:8px;padding-left:34px;font-size:11.5px;
+      color:var(--subtle);}
+
+    /* ══ sheet-local: right panel ══ */
+    .rpan{width:344px;flex:none;border-left:1px solid var(--line);background:var(--surface);
+      display:flex;flex-direction:column;overflow:hidden;}
+    .rp-head{flex:none;padding:12px 16px 13px;display:flex;flex-direction:column;gap:10px;}
+    .rp-head .bgrp{display:flex;}
+    .rp-head .bgrp .btn{flex:1;}
+    .rp-sec{flex:none;padding:10px 16px 11px;border-top:1px solid var(--line);display:flex;
+      flex-direction:column;gap:8px;}
+    .rp-sec > .hd{display:flex;align-items:center;gap:8px;}
+    .rp-sec > .hd .l{font:500 10.5px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;
+      color:var(--subtle);}
+    .rp-sec > .hd .rt{margin-left:auto;}
+    .gr{display:flex;align-items:center;gap:10px;font-size:12.5px;min-height:20px;}
+    .gr .k{flex:none;font:500 10.5px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .gr .v{margin-left:auto;display:flex;align-items:center;gap:7px;font-family:var(--mono);
+      font-variant-numeric:tabular-nums;font-size:12px;}
+    .gr .v.plain{font-family:var(--sans);font-size:12.5px;}
+    .crow{display:flex;align-items:baseline;gap:8px;font-size:12.5px;}
+    .crow .k{font:500 10.5px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .crow .v{margin-left:auto;font-family:var(--mono);font-variant-numeric:tabular-nums;
+      font-size:12px;color:var(--ink);}
+    .attrs{display:grid;grid-template-columns:1fr 1fr;gap:11px 14px;}
+    .attr{display:flex;flex-direction:column;gap:3px;min-width:0;}
+    .attr .l{font:500 10.5px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .attr .v{font-size:12.5px;color:var(--ink);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .attr .v.mono{font-family:var(--mono);font-size:12px;}
+    .chips{display:flex;flex-wrap:wrap;gap:6px;}
+    .mrow{display:flex;align-items:center;gap:9px;height:21px;font-size:12.5px;}
+    .mrow .sq{width:6px;height:6px;border-radius:2px;flex:none;}
+    .mrow .rt{margin-left:auto;display:flex;align-items:center;gap:7px;flex:none;
+      font-family:var(--mono);font-size:11.5px;color:var(--muted);}
+    .rp-foot{margin-top:auto;flex:none;padding:11px 16px 13px;border-top:1px solid var(--line);
+      background:var(--wash);font-size:11.5px;color:var(--subtle);display:flex;
+      flex-direction:column;gap:2px;}
+  </style>
+</helmet>
+<div class="sheet shell" style="width:1440px;background:var(--ground)">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+ <symbol id="f1" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e6ebf5"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#3f5b8c"/><circle cx="20" cy="16.5" r="7.8" fill="#6b4630"/><path d="M12.2 16.4c0-5 3.2-8.3 7.8-8.3s7.8 3.3 7.8 8.3c0-2.4-1.1-3.7-2.4-4.3-1.9-.9-3.4.3-5.4.3s-3.5-1.2-5.4-.3c-1.3.6-2.4 1.9-2.4 4.3Z" fill="#1a1512"/></symbol>
+ <symbol id="f2" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e8f0ec"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#2f6b57"/><circle cx="20" cy="16.5" r="7.8" fill="#8a5a3c"/><path d="M11.6 16.6c0-5.3 3.5-8.5 8.4-8.5s8.4 3.2 8.4 8.5v7.2a1.6 1.6 0 1 1-3.2 0v-7.4c-1.6.9-3.4 1.4-5.2 1.4s-3.6-.5-5.2-1.4v7.4a1.6 1.6 0 1 1-3.2 0Z" fill="#2a211b"/></symbol>
+ <symbol id="f3" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f0e9f2"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#6b4a7d"/><circle cx="20" cy="16.5" r="7.8" fill="#a9714b"/><path d="M12.4 17.2c-.6-5.6 2.8-9.1 7.6-9.1s8.2 3.5 7.6 9.1c-.3-2.6-1.6-3.9-3-4.4-2.2-.8-3 .5-4.6.5s-2.4-1.3-4.6-.5c-1.4.5-2.7 1.8-3 4.4Z" fill="#3d2a1e"/><circle cx="27.4" cy="9.4" r="2.9" fill="#3d2a1e"/></symbol>
+ <symbol id="f4" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f5ebe8"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#8c4a3f"/><circle cx="20" cy="16.5" r="7.8" fill="#5a3a28"/><path d="M12.3 15.8c0-4.8 3.3-7.7 7.7-7.7s7.7 2.9 7.7 7.7c0-1.7-.9-2.7-2.1-3.1-1.8-.6-3.2.6-5.6.6s-3.8-1.2-5.6-.6c-1.2.4-2.1 1.4-2.1 3.1Z" fill="#1a1512"/></symbol>
+ <symbol id="f5" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eceef3"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#3d4756"/><circle cx="20" cy="16.5" r="7.8" fill="#7c4f35"/><path d="M11.9 17.8c-.4-6.2 3.1-9.7 8.1-9.7s8.5 3.5 8.1 9.7c-.9-1.2-1.4-3.2-1.4-5-2 1.3-4.3 2-6.7 2s-4.7-.7-6.7-2c0 1.8-.5 3.8-1.4 5Z" fill="#2a211b"/></symbol>
+ <symbol id="f6" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e9f0f4"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#46617a"/><circle cx="20" cy="16.5" r="7.8" fill="#b98254"/><path d="M12.2 16.4c0-5 3.2-8.3 7.8-8.3s7.8 3.3 7.8 8.3c0-2.4-1.1-3.7-2.4-4.3-1.9-.9-3.4.3-5.4.3s-3.5-1.2-5.4-.3c-1.3.6-2.4 1.9-2.4 4.3Z" fill="#3d2a1e"/></symbol>
+ <symbol id="f7" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f2eee6"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#7a6a4a"/><circle cx="20" cy="16.5" r="7.8" fill="#6b4630"/><path d="M11.5 15.4c0-5 3.8-8.3 8.5-8.3s8.5 3.3 8.5 8.3c0 1-.5 1.9-1.3 2.4l-1.2-4.8a20 20 0 0 1-12 0l-1.2 4.8c-.8-.5-1.3-1.4-1.3-2.4Z" fill="#5d4d8a"/></symbol>
+ <symbol id="f8" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eaf1ee"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#4a7a68"/><circle cx="20" cy="16.5" r="7.8" fill="#8a5a3c"/><path d="M12.6 14.9c0-4.5 3.1-7.3 7.4-7.3s7.4 2.8 7.4 7.3c0-1.3-.8-2.1-1.8-2.4-1.6-.5-3.2.7-5.6.7s-4-1.2-5.6-.7c-1 .3-1.8 1.1-1.8 2.4Z" fill="#1a1512"/></symbol>
+ <symbol id="c1" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e4eef2"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#1f5f7a"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#6b4630"/><path d="M12.9 17.8c0-4.7 3-7.7 7.1-7.7s7.1 3 7.1 7.7c0-2.2-1-3.4-2.2-4-1.7-.8-3.1.3-4.9.3s-3.2-1.1-4.9-.3c-1.2.6-2.2 1.8-2.2 4Z" fill="#1a1512"/></symbol>
+ <symbol id="c2" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eef1e6"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#2f6b57"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#8a5a3c"/><path d="M12.4 18c0-4.9 3.2-7.9 7.6-7.9s7.6 3 7.6 7.9v6a1.5 1.5 0 1 1-3 0v-6.2c-1.4.8-3 1.2-4.6 1.2s-3.2-.4-4.6-1.2V24a1.5 1.5 0 1 1-3 0Z" fill="#2a211b"/></symbol>
+ <symbol id="c3" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f4ece4"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#8c4a3f"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#a9714b"/><path d="M12.9 18.4c-.5-5.2 2.6-8.3 7.1-8.3s7.6 3.1 7.1 8.3c-.3-2.4-1.5-3.6-2.8-4-2-.8-2.8.4-4.3.4s-2.2-1.2-4.3-.4c-1.3.4-2.5 1.6-2.8 4Z" fill="#3d2a1e"/><circle cx="26.8" cy="11.4" r="2.6" fill="#3d2a1e"/></symbol>
+</defs></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+ <symbol id="i-chevron-right" viewBox="0 0 16 16"><path d="M6 3.4 10.6 8 6 12.6"></path></symbol>
+ <symbol id="i-chevron-down" viewBox="0 0 16 16"><path d="M3.4 6 8 10.6 12.6 6"></path></symbol>
+ <symbol id="i-chevron-left" viewBox="0 0 16 16"><path d="M10 3.4 5.4 8 10 12.6"></path></symbol>
+ <symbol id="i-chevron-up" viewBox="0 0 16 16"><path d="M3.4 10 8 5.4 12.6 10"></path></symbol>
+ <symbol id="i-search" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.3"></circle><path d="M10.2 10.2 13.6 13.6"></path></symbol>
+ <symbol id="i-filter" viewBox="0 0 16 16"><path d="M2.4 3.4h11.2L9.2 8.6v4.3L6.8 14.1V8.6Z"></path></symbol>
+ <symbol id="i-sort" viewBox="0 0 16 16"><path d="M2.8 4.4h10.4M2.8 8h6.8M2.8 11.6h3.6"></path></symbol>
+ <symbol id="i-menu" viewBox="0 0 16 16"><path d="M2.4 4.4h11.2M2.4 8h11.2M2.4 11.6h11.2"></path></symbol>
+ <symbol id="i-close" viewBox="0 0 16 16"><path d="M4.1 4.1 11.9 11.9M11.9 4.1 4.1 11.9"></path></symbol>
+ <symbol id="i-plus" viewBox="0 0 16 16"><path d="M8 3.2v9.6M3.2 8h9.6"></path></symbol>
+ <symbol id="i-more" viewBox="0 0 16 16"><circle cx="3.5" cy="8" r="1.15" fill="currentColor" stroke="none"></circle><circle cx="8" cy="8" r="1.15" fill="currentColor" stroke="none"></circle><circle cx="12.5" cy="8" r="1.15" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-customer" viewBox="0 0 16 16"><circle cx="8" cy="5.5" r="2.8"></circle><path d="M2.9 13.6c0-2.9 2.3-4.6 5.1-4.6s5.1 1.7 5.1 4.6"></path></symbol>
+ <symbol id="i-supplier" viewBox="0 0 16 16"><path d="M1.4 4.3h7.5v6.8H1.4zM8.9 6.7h2.8l2 2.2v2.2H8.9"></path><circle cx="4.4" cy="12.3" r="1.3"></circle><circle cx="11.3" cy="12.3" r="1.3"></circle></symbol>
+ <symbol id="i-invoice" viewBox="0 0 16 16"><path d="M3.4 1.7h6.1l3.1 3.1v9.5H3.4Z"></path><path d="M9.5 1.7v3.1h3.1"></path><path d="M5.7 8.4h4.6M5.7 11h3"></path></symbol>
+ <symbol id="i-receipt" viewBox="0 0 16 16"><path d="M3.3 1.7h9.4v12.6l-1.6-1.1-1.6 1.1-1.5-1.1-1.6 1.1-1.5-1.1-1.6 1.1Z"></path><path d="M5.9 5.3h4.2M5.9 8.1h4.2"></path></symbol>
+ <symbol id="i-journal" viewBox="0 0 16 16"><path d="M8 4.5C7.1 3.2 5.5 2.6 2.8 2.6v8.8c2.7 0 4.3.6 5.2 1.9.9-1.3 2.5-1.9 5.2-1.9V2.6c-2.7 0-4.3.6-5.2 1.9Z"></path><path d="M8 4.5v8.8"></path></symbol>
+ <symbol id="i-stock" viewBox="0 0 16 16"><path d="M8 1.8 14 5v6l-6 3.2L2 11V5Z"></path><path d="M2 5l6 3.2L14 5M8 8.2v6"></path></symbol>
+ <symbol id="i-branch" viewBox="0 0 16 16"><path d="M1.9 13.8h12.2M3.9 13.8V2.9h8.2v10.9"></path><path d="M6.1 5.6h1.3M8.6 5.6h1.3M6.1 8.2h1.3M8.6 8.2h1.3"></path><path d="M6.9 13.8v-2.7h2.2v2.7"></path></symbol>
+ <symbol id="i-till" viewBox="0 0 16 16"><path d="M4.4 2.2h7.2v3.4H4.4z"></path><path d="M1.9 7.4h12.2v6.4H1.9z"></path><path d="M6.2 10.6h3.6"></path></symbol>
+ <symbol id="i-device" viewBox="0 0 16 16"><path d="M4.2 1.7h7.6v12.6H4.2Z"></path><path d="M6.7 3.7h2.6M6.6 12.3h2.8"></path></symbol>
+ <symbol id="i-edit" viewBox="0 0 16 16"><path d="M11.1 2.2 13.8 4.9l-8 8-3.6.9.9-3.6Z"></path><path d="M9.6 3.7l2.7 2.7"></path></symbol>
+ <symbol id="i-delete" viewBox="0 0 16 16"><path d="M2.6 4.3h10.8"></path><path d="M6.1 4.3V2.6h3.8v1.7"></path><path d="M4.1 4.3l.7 9.4h6.4l.7-9.4"></path><path d="M6.5 6.8v4.4M9.5 6.8v4.4"></path></symbol>
+ <symbol id="i-export" viewBox="0 0 16 16"><path d="M2.6 10.1v3.3h10.8v-3.3"></path><path d="M8 2.4v7.1"></path><path d="M5.3 5.1 8 2.4l2.7 2.7"></path></symbol>
+ <symbol id="i-print" viewBox="0 0 16 16"><path d="M4.3 6.1V2.4h7.4v3.7"></path><path d="M4.3 11.5H2.4V7.1h11.2v4.4h-1.9"></path><path d="M4.3 9.5h7.4v4.1H4.3z"></path><circle cx="11.7" cy="8.8" r=".75" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-attach" viewBox="0 0 16 16"><path d="M10.9 7.3 6.8 11.4a2.4 2.4 0 0 1-3.4-3.4l5.2-5.2a1.7 1.7 0 0 1 2.4 2.4l-5.2 5.2a.85.85 0 0 1-1.2-1.2l4.6-4.6"></path></symbol>
+ <symbol id="i-approve" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M5.4 8.2 7.2 10l3.5-3.9"></path></symbol>
+ <symbol id="i-reject" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M6 6 10 10M10 6 6 10"></path></symbol>
+ <symbol id="i-refresh" viewBox="0 0 16 16"><path d="M13.2 7.4a5.2 5.2 0 0 0-8.9-2.8L2.8 6.1"></path><path d="M6.1 6.1H2.8V2.8"></path><path d="M2.8 8.6a5.2 5.2 0 0 0 8.9 2.8l1.5-1.5"></path><path d="M9.9 9.9h3.3v3.3"></path></symbol>
+ <symbol id="i-lock" viewBox="0 0 16 16"><path d="M3.5 7.1h9v6.4h-9z"></path><path d="M5.5 7.1V5.2a2.5 2.5 0 0 1 5 0v1.9"></path><circle cx="8" cy="10.3" r=".95" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-clock" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M8 4.6v3.6l2.5 1.5"></path></symbol>
+ <symbol id="i-warning" viewBox="0 0 16 16"><path d="M8 2.2 14.4 13.4H1.6Z"></path><path d="M8 6.4v3.2"></path><circle cx="8" cy="11.5" r=".8" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-info" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M8 7.4v3.7"></path><circle cx="8" cy="5.1" r=".8" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-offline" viewBox="0 0 16 16"><path d="M4.9 12.4h6.4a2.6 2.6 0 0 0 .3-5.2 3.9 3.9 0 0 0-6.9-1.4"></path><path d="M4.3 6.8a2.8 2.8 0 0 0 .6 5.6"></path><path d="M2.2 2.2 13.8 13.8"></path></symbol>
+ <symbol id="i-sync" viewBox="0 0 16 16"><path d="M12.9 5.6a5.2 5.2 0 0 0-9.4.6"></path><path d="M6.6 6.2H3.3V2.9"></path><path d="M3.1 10.4a5.2 5.2 0 0 0 9.4-.6"></path><path d="M9.4 9.8h3.3v3.3"></path><circle cx="8" cy="8" r="1.1" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-arrow-right" viewBox="0 0 16 16"><path d="M2.6 8h10.8"></path><path d="M9.6 4.2 13.4 8l-3.8 3.8"></path></symbol>
+ <symbol id="i-minus" viewBox="0 0 16 16"><path d="M3.2 8h9.6"></path></symbol>
+ <symbol id="i-check" viewBox="0 0 16 16"><path d="M3.2 8.4 6.4 11.6 12.8 4.8"></path></symbol>
+ <symbol id="i-calendar" viewBox="0 0 16 16"><path d="M2.2 3.9h11.6v10H2.2z"></path><path d="M2.2 6.7h11.6"></path><path d="M5.2 2.1v3.1M10.8 2.1v3.1"></path></symbol>
+ <symbol id="i-upload" viewBox="0 0 16 16"><path d="M2.6 10.4v3h10.8v-3"></path><path d="M8 10.2V2.6"></path><path d="M5.2 5.4 8 2.6l2.8 2.8"></path></symbol>
+ <symbol id="i-swap" viewBox="0 0 16 16"><path d="M2.6 5.4h10.8"></path><path d="M10.6 2.6 13.4 5.4l-2.8 2.8"></path><path d="M13.4 10.6H2.6"></path><path d="M5.4 7.8 2.6 10.6l2.8 2.8"></path></symbol>
+ <symbol id="i-scale" viewBox="0 0 16 16"><path d="M8 2.6v10.8"></path><path d="M4.4 4.1h7.2"></path><path d="M2.2 9.4 4.4 4.4 6.6 9.4a2.4 2.4 0 0 1-4.4 0Z"></path><path d="M9.4 9.4 11.6 4.4 13.8 9.4a2.4 2.4 0 0 1-4.4 0Z"></path></symbol>
+ <symbol id="i-home" viewBox="0 0 16 16"><path d="M2.2 7 8 2.2 13.8 7v6.8H2.2Z"></path><path d="M6.3 13.8V9.4h3.4v4.4"></path></symbol>
+ <symbol id="i-grid" viewBox="0 0 16 16"><path d="M2.4 2.4h4.4v4.4H2.4zM9.2 2.4h4.4v4.4H9.2zM2.4 9.2h4.4v4.4H2.4zM9.2 9.2h4.4v4.4H9.2z"></path></symbol>
+ <symbol id="i-bell" viewBox="0 0 16 16"><path d="M4 11.4V7.2a4 4 0 0 1 8 0v4.2l1.3 1.6H2.7Z"></path><path d="M6.6 13v.3a1.4 1.4 0 0 0 2.8 0V13"></path></symbol>
+ <symbol id="i-settings" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.2"></circle><path d="M8 1.9 9.3 3.6l2.1-.4.5 2.1 1.8 1.1-1 1.9 1 1.9-1.8 1.1-.5 2.1-2.1-.4L8 14.8l-1.3-1.8-2.1.4-.5-2.1L2.3 10.2l1-1.9-1-1.9 1.8-1.1.5-2.1 2.1.4Z"></path></symbol>
+ <symbol id="i-command" viewBox="0 0 16 16"><path d="M5.6 5.6h4.8v4.8H5.6z"></path><path d="M5.6 5.6H4a1.6 1.6 0 1 1 1.6-1.6ZM10.4 5.6H12A1.6 1.6 0 1 0 10.4 4ZM5.6 10.4H4A1.6 1.6 0 1 0 5.6 12ZM10.4 10.4H12a1.6 1.6 0 1 1-1.6 1.6Z"></path></symbol>
+ <symbol id="i-enter" viewBox="0 0 16 16"><path d="M13.4 3.2v5.2H3.4"></path><path d="M6.2 5.6 3.4 8.4l2.8 2.8"></path></symbol>
+ <symbol id="i-logout" viewBox="0 0 16 16"><path d="M6.4 2.6H2.6v10.8h3.8"></path><path d="M9.6 4.8 12.8 8l-3.2 3.2"></path><path d="M12.8 8H5.6"></path></symbol>
+ <symbol id="i-users" viewBox="0 0 16 16"><circle cx="6.2" cy="5.6" r="2.5"></circle><path d="M1.9 13.4c0-2.5 1.9-4 4.3-4s4.3 1.5 4.3 4"></path><path d="M11 3.4a2.4 2.4 0 0 1 0 4.5"></path><path d="M12.1 9.9c1.3.5 2 1.7 2 3.5"></path></symbol>
+ <symbol id="i-copy" viewBox="0 0 16 16"><path d="M5.6 5.6h7.8v7.8H5.6z"></path><path d="M10.4 5.6V2.6H2.6v7.8h3"></path></symbol>
+ <symbol id="i-star" viewBox="0 0 16 16"><path d="m8 2.2 1.8 3.7 4.1.6-3 2.9.7 4.1L8 11.6l-3.6 1.9.7-4.1-3-2.9 4.1-.6Z"></path></symbol>
+ <symbol id="i-chart" viewBox="0 0 16 16"><path d="M2.2 13.4h11.6"></path><path d="M4.2 13.4V8.2M7.4 13.4V4.4M10.6 13.4v-3.6M13 13.4V6.2"></path></symbol>
+ <symbol id="i-book" viewBox="0 0 16 16"><path d="M3.2 2.6h6.6a2 2 0 0 1 2 2v8.8H5.2a2 2 0 0 1-2-2Z"></path><path d="M11.8 4.6h1.4v8.8"></path><path d="M5.6 5.6h3.6"></path></symbol>
+ <symbol id="i-bank" viewBox="0 0 16 16"><path d="M8 2.2 14.2 5.6H1.8Z"></path><path d="M3.4 5.6v6.2M6.5 5.6v6.2M9.5 5.6v6.2M12.6 5.6v6.2"></path><path d="M1.8 13.8h12.4"></path></symbol>
+ <symbol id="i-report" viewBox="0 0 16 16"><path d="M3.4 1.9h9.2v12.2H3.4z"></path><path d="M5.9 5.4h4.2M5.9 8h4.2M5.9 10.6h2.6"></path></symbol>
+ <symbol id="i-at" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.6"></circle><path d="M10.6 5.4v3.4a1.9 1.9 0 0 0 3.1 1.5A6.2 6.2 0 1 0 11 13.2"></path></symbol>
+ <symbol id="i-columns" viewBox="0 0 16 16"><path d="M2.2 2.9h11.6v10.2H2.2z"></path><path d="M6.1 2.9v10.2M9.9 2.9v10.2"></path></symbol>
+ <symbol id="i-comment" viewBox="0 0 16 16"><path d="M2.2 3.2h11.6v7.9H8.4L5.1 14v-2.9H2.2Z"></path></symbol>
+ <symbol id="i-grip" viewBox="0 0 16 16"><circle cx="6" cy="3.6" r="1.05" fill="currentColor" stroke="none"></circle><circle cx="10" cy="3.6" r="1.05" fill="currentColor" stroke="none"></circle><circle cx="6" cy="8" r="1.05" fill="currentColor" stroke="none"></circle><circle cx="10" cy="8" r="1.05" fill="currentColor" stroke="none"></circle><circle cx="6" cy="12.4" r="1.05" fill="currentColor" stroke="none"></circle><circle cx="10" cy="12.4" r="1.05" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-mail" viewBox="0 0 16 16"><path d="M1.9 3.6h12.2v8.8H1.9z"></path><path d="m1.9 4.4 6.1 4.3 6.1-4.3"></path></symbol>
+ <symbol id="i-move" viewBox="0 0 16 16"><path d="M2.4 8h11.2"></path><path d="M10.6 4.8 13.6 8l-3 3.2"></path><path d="M2.4 3.4v9.2"></path></symbol>
+ <symbol id="i-note" viewBox="0 0 16 16"><path d="M3.4 1.9h9.2v12.2H3.4z"></path><path d="M5.9 5.3h4.2M5.9 8h4.2M5.9 10.7h2.6"></path></symbol>
+ <symbol id="i-reply" viewBox="0 0 16 16"><path d="M6.1 3.2 2.4 6.7l3.7 3.5"></path><path d="M2.4 6.7h6.9a4.3 4.3 0 0 1 4.3 4.3v1.8"></path></symbol>
+ <symbol id="i-external" viewBox="0 0 16 16"><path d="M9.4 2.6h4v4"></path><path d="M13.4 2.6 7.9 8.1"></path><path d="M11.4 9.3v4.1H2.6V4.6h4.1"></path></symbol>
+ <symbol id="i-phone" viewBox="0 0 16 16"><path d="M5.7 2.3 7.4 5.5 5.9 7.1a8.8 8.8 0 0 0 3 3l1.6-1.5 3.2 1.7v2.3a1.4 1.4 0 0 1-1.5 1.4C6.5 13.6 2.4 9.5 2 3.8a1.4 1.4 0 0 1 1.4-1.5Z"></path></symbol>
+ <symbol id="i-pin" viewBox="0 0 16 16"><path d="M6.1 1.9h3.8l-.5 4.3 2.6 2.6H4l2.6-2.6Z"></path><path d="M8 8.8v5.3"></path></symbol>
+ <symbol id="i-tag" viewBox="0 0 16 16"><path d="M2.4 2.4h5.3l6 6-5.3 5.3-6-6Z"></path><circle cx="5.2" cy="5.2" r="1.05" fill="currentColor" stroke="none"></circle></symbol>
+</defs></svg>
+
+<div class="app" style="height:920px">
+
+  <!-- ═══════════ sidebar ═══════════ -->
+  <div class="side">
+
+    <div class="wsw">
+      <span class="av av-24 ent" style="background:var(--books)"><span class="mk" style="font-size:9px">MG</span></span>
+      <span class="nm">Msasa Group</span>
+      <span class="dv"></span>
+      <span class="avw"><span class="av av-24"><svg><use href="#f1"></use></svg></span><span class="pres p-on"></span></span>
+      <span class="ic ic-12"><svg><use href="#i-chevron-down"></use></svg></span>
+    </div>
+
+    <div class="sgap"></div>
+
+    <div class="fld" style="padding:0 5px 0 9px;flex:none">
+      <span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-search"></use></svg></span>
+      <span class="ph">Search records</span>
+      <span style="margin-left:auto;display:flex;gap:3px;flex:none"><span class="kbd">&#8984;</span><span class="kbd">K</span></span>
+    </div>
+
+    <div class="snav">
+
+      <div class="smicro"><span class="ic ic-12"><svg><use href="#i-chevron-down"></use></svg></span>Records</div>
+      <a href="#" class="sit"><span class="ic ic-16"><svg><use href="#i-customer"></use></svg></span><span class="lb">Trade accounts</span><span class="tail"><span class="cnt">318</span><span class="ic ic-12"><svg><use href="#i-chevron-down"></use></svg></span></span></a>
+      <div class="subw">
+        <span class="guide"></span>
+        <div class="subl">
+          <a href="#" class="sit"><span class="lb">All accounts</span></a>
+          <a href="#" class="sit hov"><span class="lb">Overdue</span><span class="tail"><span class="cnt urgent">27</span></span></a>
+          <a href="#" class="sit"><span class="lb">Watchlist</span></a>
+        </div>
+      </div>
+      <a href="#" class="sit"><span class="ic ic-16"><svg><use href="#i-supplier"></use></svg></span><span class="lb">Suppliers</span></a>
+      <a href="#" class="sit"><span class="ic ic-16"><svg><use href="#i-users"></use></svg></span><span class="lb">People</span></a>
+      <a href="#" class="sit"><span class="ic ic-16"><svg><use href="#i-tag"></use></svg></span><span class="lb">Items</span></a>
+
+      <div class="smicro"><span class="ic ic-12"><svg><use href="#i-chevron-down"></use></svg></span>Modules</div>
+      <a href="#" class="sit"><span class="ic ic-16"><svg><use href="#i-till"></use></svg></span><span class="lb">Sell</span></a>
+      <a href="#" class="sit"><span class="ic ic-16"><svg><use href="#i-journal"></use></svg></span><span class="lb">Books</span></a>
+      <a href="#" class="sit"><span class="ic ic-16"><svg><use href="#i-stock"></use></svg></span><span class="lb">Stock</span></a>
+      <a href="#" class="sit"><span class="ic ic-16"><svg><use href="#i-receipt"></use></svg></span><span class="lb">Fiscal</span></a>
+      <a href="#" class="sit"><span class="ic ic-16"><svg><use href="#i-branch"></use></svg></span><span class="lb">Maintenance</span></a>
+      <a href="#" class="sit off"><span class="ic ic-16"><svg><use href="#i-book"></use></svg></span><span class="lb">Campus</span></a>
+
+      <div class="smicro"><span class="ic ic-12"><svg><use href="#i-chevron-down"></use></svg></span>Industry suites</div>
+      <a href="#" class="sit"><span class="ic ic-16"><svg><use href="#i-device"></use></svg></span><span class="lb">CCTV &amp; Surveillance</span><span class="tail"><span class="ic ic-12" style="color:var(--subtle)"><svg><use href="#i-external"></use></svg></span></span></a>
+      <a href="#" class="sit"><span class="ic ic-16"><svg><use href="#i-book"></use></svg></span><span class="lb">School management</span><span class="tail"><span class="ic ic-12" style="color:var(--subtle)"><svg><use href="#i-external"></use></svg></span></span></a>
+      <a href="#" class="sit"><span class="ic ic-16"><svg><use href="#i-scale"></use></svg></span><span class="lb">Gold &amp; mining</span><span class="tail"><span class="ic ic-12" style="color:var(--subtle)"><svg><use href="#i-external"></use></svg></span></span></a>
+
+      <div class="smicro"><span class="ic ic-12"><svg><use href="#i-chevron-down"></use></svg></span>Pinned</div>
+      <a href="#" class="sit on"><span class="av av-16 ent" style="background:var(--sell)"><span class="mk" style="font-size:7px">GS</span></span><span class="lb">The Gate Shops</span><span class="tail"><span class="pill crit" style="height:16px;padding:0 6px;font-size:10px"><span class="dot"></span>62 d</span></span></a>
+      <a href="#" class="sit"><span class="av av-16 ent" style="background:var(--stock)"><span class="mk" style="font-size:7px">HM</span></span><span class="lb">Huchu Mine</span><span class="tail"><span class="pill ok" style="height:16px;padding:0 6px;font-size:10px"><span class="dot"></span>Trading</span></span></a>
+      <a href="#" class="sit"><span class="av av-16 ent" style="background:var(--maint)"><span class="mk" style="font-size:7px">LL</span></span><span class="lb">Lux Liquor</span></a>
+      <a href="#" class="sit"><span class="av av-16"><svg><use href="#f1"></use></svg></span><span class="lb">Tendai Mukamba</span></a>
+
+      <div class="smicro"><span class="ic ic-12"><svg><use href="#i-chevron-right"></use></svg></span>Saved views<span class="cnt">6</span></div>
+
+    </div>
+
+    <span class="ssp"></span>
+
+    <div class="sfoot">
+      <span class="mark"><svg width="13" height="13" viewBox="0 0 16 16"><path d="M8 1.9 13.3 5v6.1L8 14.1 2.7 11.1V5Z" fill="#ffffff"></path></svg></span>
+      <span class="wm">Corelith</span>
+      <span class="v">v1.4.2</span>
+    </div>
+
+  </div>
+
+  <!-- ═══════════ record centre ═══════════ -->
+  <div class="main">
+
+    <div class="rhd">
+      <div class="crumb">
+        <a href="#">Records</a>
+        <span class="ic ic-12"><svg><use href="#i-chevron-right"></use></svg></span>
+        <a href="#">Trade accounts</a>
+        <span class="ic ic-12"><svg><use href="#i-chevron-right"></use></svg></span>
+        <span class="now">The Gate Shops</span>
+      </div>
+      <div class="rid">
+        <span class="av av-64 ent" style="background:var(--sell)"><span class="mk">GS</span></span>
+        <div class="rid-n">
+          <h1>The Gate Shops</h1>
+          <span class="pill ok"><span class="dot"></span>Trading</span>
+          <span class="pill crit"><span class="dot"></span>Overdue 62 d</span>
+        </div>
+        <div class="rid-a">
+          <span class="bgrp">
+            <span class="btn sm icon"><span class="ic ic-14"><svg><use href="#i-star"></use></svg></span></span>
+            <span class="btn sm"><span class="ic ic-14"><svg><use href="#i-invoice"></use></svg></span>Invoice</span>
+            <span class="btn sm"><span class="ic ic-14"><svg><use href="#i-report"></use></svg></span>Statement</span>
+          </span>
+          <span class="btn sm solid"><span class="ic ic-14"><svg><use href="#i-receipt"></use></svg></span>Record payment</span>
+          <span class="btn sm icon"><span class="ic ic-12"><svg><use href="#i-chevron-down"></use></svg></span></span>
+        </div>
+        <div class="rid-s"><span class="mono">ACC-0142</span> &middot; Hardware retail &middot; Avondale, Borrowdale and Msasa &middot; Net 30 &middot; trading since 04 Mar 2021 &middot; 6 people on the account</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <a href="#" class="on">Timeline</a>
+      <a href="#">Documents<span class="cnt">24</span></a>
+      <a href="#">Visits<span class="cnt">8</span></a>
+      <a href="#" class="hov">Comments<span class="cnt">12</span></a>
+      <a href="#">People<span class="cnt">6</span></a>
+      <a href="#">Deals<span class="cnt">2</span></a>
+      <a href="#">Financial summary</a>
+      <span class="ovf"><span class="btn xs ghost icon"><span class="ic ic-12"><svg><use href="#i-more"></use></svg></span></span></span>
+    </div>
+
+    <div class="rbody">
+
+      <div class="comp">
+        <span class="av av-32"><svg><use href="#f1"></use></svg></span>
+        <div class="cbox foc">
+          <div class="cb-b">Held the Borrowdale order until the over-60 balance clears. <span class="ment"><span class="av av-14"><svg><use href="#f3"></use></svg></span>Rutendo Chiweshe</span> is calling <span class="ment ent"><span class="av av-14 ent" style="background:var(--sell)"><span class="mk" style="font-size:7px">GS</span></span>The Gate Shops</span> on Friday<span class="caret"></span></div>
+          <div class="cb-f">
+            <span class="btn sm icon ghost"><span class="ic ic-14"><svg><use href="#i-attach"></use></svg></span></span>
+            <span class="btn sm icon ghost"><span class="ic ic-14"><svg><use href="#i-at"></use></svg></span></span>
+            <span class="btn sm icon ghost"><span class="ic ic-14"><svg><use href="#i-calendar"></use></svg></span></span>
+            <span class="rt"><span class="hint"><span class="kbd">&#8984;</span><span class="kbd">&#9166;</span> to post</span><span class="btn sm solid">Post note</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="feed">
+
+        <div class="fsec"><span class="l">Today &middot; Thu 10 Sep 2026</span><span class="cnt">9</span><span class="rule"></span></div>
+
+        <div class="fev card">
+          <span class="fnode face"><span class="av av-22"><svg><use href="#f3"></use></svg></span></span>
+          <div class="fcard">
+            <div class="fc-h">
+              <span class="ic ic-14" style="color:var(--maint)"><svg><use href="#i-note"></use></svg></span>
+              <b>Rutendo Chiweshe</b><span>posted a note</span>
+              <span class="t">13:18</span>
+            </div>
+            <div class="fc-b">
+              <p>Spoke to the Avondale branch manager. They will clear the <span class="mono">US$1,940.00</span> that is over 60 days by the 30th and want the Borrowdale fit-out order held until then. Leaving the account Trading, and the credit limit unchanged for now.</p>
+            </div>
+            <div class="fc-f">
+              <span class="rct on"><span class="ic ic-12"><svg><use href="#i-approve"></use></svg></span>3</span>
+              <span class="rct">Add reaction</span>
+              <span class="rt"><span class="btn xs ghost"><span class="ic ic-12"><svg><use href="#i-reply"></use></svg></span>Reply</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="fev">
+          <span class="fnode"><span class="ic ic-12" style="color:var(--fiscal)"><svg><use href="#i-receipt"></use></svg></span></span>
+          <div class="fline"><span class="av av-16"><svg><use href="#f1"></use></svg></span><b>Tendai Mukamba</b><span>took a payment</span><span class="obj mono">#10238</span><span class="sep">&middot;</span><span class="mono">US$412.30</span><span class="sep">&middot;</span><span>Cash</span><span class="act"><span class="pill ok"><span class="dot"></span>Posted</span><span class="t">14:06:05</span></span></div>
+        </div>
+
+        <div class="fev hov">
+          <span class="fnode"><span class="ic ic-12" style="color:var(--sell)"><svg><use href="#i-invoice"></use></svg></span></span>
+          <div class="fline"><span class="av av-16"><svg><use href="#f4"></use></svg></span><b>Simba Marondera</b><span>issued</span><span class="obj mono">INV-4491</span><span class="sep">&middot;</span><span class="mono">US$1,864.30</span><span class="sep">&middot;</span><span>Net 30</span><span class="act"><span class="btn xs ghost icon"><span class="ic ic-12"><svg><use href="#i-more"></use></svg></span></span><span class="t">11:24</span></span></div>
+        </div>
+
+        <div class="fev">
+          <span class="fnode"><span class="ic ic-12" style="color:var(--fiscal)"><svg><use href="#i-receipt"></use></svg></span></span>
+          <div class="fline"><span class="rollup"><span class="obj num">6</span><span>receipts fiscalised</span></span><span class="sep">&middot;</span><span class="mono">US$1,210.45</span><span class="sep">&middot;</span><span>ZIMRA FDMS</span><span class="t">17:00</span></div>
+        </div>
+        <div class="fev">
+          <span class="fnode dash"><span class="ic ic-12"><svg><use href="#i-chevron-down"></use></svg></span></span>
+          <span class="expand">Show 6 receipts &middot; <span class="mono">#10238</span>&#8202;&ndash;&#8202;<span class="mono">#10262</span></span>
+        </div>
+
+        <div class="fsec"><span class="l">Yesterday</span><span class="cnt">14</span><span class="rule"></span></div>
+
+        <div class="fev card">
+          <span class="fnode face"><span class="av av-22"><svg><use href="#f6"></use></svg></span></span>
+          <div class="fcard">
+            <div class="fc-h">
+              <span class="ic ic-14" style="color:var(--sell)"><svg><use href="#i-mail"></use></svg></span>
+              <b>Nyasha Dube</b><span>emailed</span>
+              <span class="idn in"><span class="av av-16 ent" style="background:var(--sell)"><span class="mk" style="font-size:7px">GS</span></span><b>The Gate Shops</b></span>
+              <span class="t">09:12</span>
+            </div>
+            <div class="fc-b">
+              <dl class="hdr-mail">
+                <dt>Subject</dt><dd>Statement to 31 August &middot; ACC-0142</dd>
+                <dt>To</dt><dd class="mono">accounts@gateshops.co.zw</dd>
+              </dl>
+              <p>Attached is the August statement. Of the balance carried forward, <span class="mono">US$1,940.00</span> is over 60 days. Could you confirm which of the two March invoices the 14 August payment was meant to settle.</p>
+            </div>
+            <div class="fc-f">
+              <span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-attach"></use></svg></span>
+              <span class="hint">STMT-ACC-0142-08.pdf &middot; 214 KB</span>
+              <span class="rt"><span class="pill hollow"><span class="dot"></span>3 more in thread</span><span class="btn xs">Open thread</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="fev">
+          <span class="fnode"><span class="ic ic-12" style="color:var(--crit)"><svg><use href="#i-reject"></use></svg></span></span>
+          <div class="fline" style="color:var(--crit)"><span class="obj mono" style="color:var(--crit)">#10236</span><span>failed fiscalisation</span><span class="sep">&middot;</span><span>FDMS gateway timed out</span><span class="act"><span class="btn xs"><span class="ic ic-12"><svg><use href="#i-refresh"></use></svg></span>Retry</span><span class="t" style="color:var(--crit)">16:58</span></span></div>
+        </div>
+
+        <div class="endcap"><span class="ic ic-12"><svg><use href="#i-clock"></use></svg></span>Account opened 04 Mar 2021 &middot; 1,412 earlier events</div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ═══════════ right panel ═══════════ -->
+  <div class="rpan">
+
+    <div class="rp-head">
+      <div class="idn">
+        <span class="av av-32 ent" style="background:var(--sell)"><span class="mk">GS</span></span>
+        <span class="idn-t">
+          <span class="idn-n">The Gate Shops</span>
+          <span class="idn-s"><span class="mono">ACC-0142</span> &middot; Avondale</span>
+        </span>
+        <span class="btn sm icon ghost" style="margin-left:auto"><span class="ic ic-14"><svg><use href="#i-more"></use></svg></span></span>
+      </div>
+      <div class="bgrp">
+        <span class="btn sm"><span class="ic ic-14"><svg><use href="#i-phone"></use></svg></span>Call</span>
+        <span class="btn sm"><span class="ic ic-14"><svg><use href="#i-mail"></use></svg></span>Email</span>
+        <span class="btn sm"><span class="ic ic-14"><svg><use href="#i-comment"></use></svg></span>WhatsApp</span>
+      </div>
+    </div>
+
+    <div class="rp-sec">
+      <div class="hd"><span class="l">At a glance</span><span class="rt"><span class="hint">as at 17:58</span></span></div>
+      <div class="stat" style="gap:2px">
+        <span>Balance</span>
+        <b style="font-size:26px">US$4,820.00</b>
+      </div>
+      <p class="hint">4 open invoices &middot; last paid <span class="mono">US$1,200.00</span>, 08 Aug</p>
+      <div class="gr"><span class="k">Overdue</span><span class="v"><span class="pill crit"><span class="dot"></span>62 d</span>US$1,940.00</span></div>
+      <div class="gr"><span class="k">Terms</span><span class="v">Net 30</span></div>
+      <div class="gr"><span class="k">Next follow-up</span><span class="v plain"><span class="mono" style="font-size:12px">12 Sep</span><span class="idn in"><span class="av av-16"><svg><use href="#f3"></use></svg></span><span class="idn-n" style="font-size:12.5px">Rutendo Chiweshe</span></span></span></div>
+      <div class="colset" style="gap:6px">
+        <div class="crow"><span class="k">Credit used</span><span class="v">60 of 200</span></div>
+        <div class="bar"><i style="width:30%"></i></div>
+        <p class="hint">US$ thousand &middot; limit reviewed 01 Sep 2026 by Farai Mutasa</p>
+      </div>
+    </div>
+
+    <div class="rp-sec">
+      <div class="hd"><span class="l">Open deal</span><span class="rt"><span class="cnt">1</span></span></div>
+      <div class="kard" style="padding:11px;gap:8px">
+        <div class="idn">
+          <span class="idn-n">Borrowdale fit-out &middot; 2026</span>
+          <span class="pill acc" style="margin-left:auto"><span class="dot"></span>In progress</span>
+        </div>
+        <div class="idn-s"><span class="mono">DL-0087</span> &middot; <span class="mono">US$12,400.00</span> &middot; closes 30 Sep 2026</div>
+        <div class="bar"><i style="width:60%"></i></div>
+        <div class="gr"><span class="k">Stage 3 of 5</span><span class="v plain"><span class="idn in"><span class="av av-20"><svg><use href="#f4"></use></svg></span><span class="idn-n" style="font-size:12.5px">Simba Marondera</span></span></span></div>
+      </div>
+    </div>
+
+    <div class="rp-sec">
+      <div class="hd"><span class="l">Attributes</span><span class="rt"><span class="btn xs ghost"><span class="ic ic-12"><svg><use href="#i-edit"></use></svg></span>Edit</span></span></div>
+      <div class="attrs">
+        <div class="attr"><span class="l">Account manager</span><span class="v"><span class="idn in"><span class="av av-20"><svg><use href="#f3"></use></svg></span><span class="idn-n" style="font-size:12.5px">Rutendo Chiweshe</span></span></span></div>
+        <div class="attr"><span class="l">Region</span><span class="v">Harare</span></div>
+        <div class="attr"><span class="l">VAT number</span><span class="v mono">22041877</span></div>
+        <div class="attr"><span class="l">ITF263 clearance</span><span class="v"><span class="pill ok"><span class="dot"></span>Filed</span> <span class="mono" style="font-size:11px;color:var(--muted)">to 31 Dec</span></span></div>
+      </div>
+    </div>
+
+    <div class="rp-sec">
+      <div class="hd"><span class="l">Linked records</span><span class="rt"><span class="cnt">4</span></span></div>
+      <div class="chips">
+        <span class="rchip"><span class="av av-16 ent" style="background:var(--stock)"><span class="mk" style="font-size:7px">HM</span></span>Huchu Mine</span>
+        <span class="rchip"><span class="av av-16 ent" style="background:var(--maint)"><span class="mk" style="font-size:7px">LL</span></span>Lux Liquor</span>
+        <span class="rchip"><span class="av av-16"><svg><use href="#f1"></use></svg></span>Tendai Mukamba</span>
+        <span class="rchip" style="padding:0 8px"><span class="ic ic-12" style="color:var(--sell)"><svg><use href="#i-invoice"></use></svg></span><span class="mono" style="font-size:11.5px">INV-4471</span></span>
+      </div>
+    </div>
+
+    <div class="rp-sec">
+      <div class="hd"><span class="l">Module coverage</span><span class="rt"><span class="hint">4 of 6</span></span></div>
+      <div class="colset" style="gap:0">
+        <div class="mrow"><span class="sq" style="background:var(--sell)"></span>Sell<span class="rt">148 documents</span></div>
+        <div class="mrow"><span class="sq" style="background:var(--books)"></span>Books<span class="rt">62 journals</span></div>
+        <div class="mrow"><span class="sq" style="background:var(--stock)"></span>Stock<span class="rt">24 deliveries</span></div>
+        <div class="mrow"><span class="sq" style="background:var(--fiscal)"></span>Fiscal<span class="rt">141 receipts</span></div>
+        <div class="mrow"><span class="sq" style="background:var(--sunken)"></span><span style="color:var(--subtle)">Maintenance</span><span class="rt"><span class="pill hollow"><span class="dot"></span>Not started</span></span></div>
+        <div class="mrow"><span class="sq" style="background:var(--sunken)"></span><span style="color:var(--subtle)">Campus</span><span class="rt"><span class="pill hollow"><span class="dot"></span>Not started</span></span></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</div>
+</x-dc>
+</body>
+</html>

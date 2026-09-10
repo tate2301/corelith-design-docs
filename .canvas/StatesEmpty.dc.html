@@ -1,0 +1,805 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    /* ══ Corelith v1 tokens — approved. Do not invent values. ══ */
+    :root{
+      --ground:#fbfbfc; --surface:#ffffff; --wash:#f5f6f9; --sunken:#eef0f5;
+      --line:#e7e9ef; --line-strong:#d5d8e2; --hairline:#f1f2f6;
+      --ink:#0b0c14; --muted:#5c5e6b; --subtle:#8a8c98;
+      --accent:#2563eb; --accent-soft:#eff4ff; --accent-line:#dbe5fb; --accent-ink:#1b4bc4;
+      --sell:#2563eb; --books:#12805c; --stock:#0e7490; --fiscal:#6549d5;
+      --maint:#b45309; --crit:#c2321b; --campus:#0e7490;
+      --ok-bg:#e8f4ef; --ok-line:#c9e5da; --warn-bg:#fdf3e2; --warn-line:#f2ddb6;
+      --crit-bg:#fdece9; --crit-line:#f6cec6;
+      --sans:"Atkinson Hyperlegible Next","Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+      --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+      /* density · default mode */
+      --h-xs:22px; --h-sm:26px; --h-md:30px; --h-lg:36px;
+      --row:32px; --pad:12px; --fs:13px;
+      --r-ctl:6px; --r-card:10px;
+      --shadow-pop:0 10px 30px -12px rgba(11,12,20,.20),0 2px 6px rgba(11,12,20,.05);
+    }
+    [data-d="compact"]{--h-xs:20px;--h-sm:24px;--h-md:26px;--h-lg:30px;--row:28px;--pad:10px;--fs:12.5px;}
+    [data-d="comfortable"]{--h-xs:24px;--h-sm:30px;--h-md:36px;--h-lg:44px;--row:44px;--pad:14px;--fs:14px;}
+    *,*::before,*::after{box-sizing:border-box;}
+    body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+      font-size:var(--fs);line-height:1.5;-webkit-font-smoothing:antialiased;}
+    a{color:var(--accent);text-decoration:underline;text-underline-offset:2px;}
+    a:hover{color:var(--accent-ink);}
+    h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.012em;}
+    p{margin:0;}
+    .mono,.num{font-family:var(--mono);font-variant-numeric:tabular-nums;}
+
+    /* ══ sheet chrome — every component sheet uses these ══ */
+    .sheet{padding:28px 32px;display:flex;flex-direction:column;gap:26px;}
+    .sheet-h{display:flex;align-items:baseline;gap:10px;padding-bottom:9px;
+      border-bottom:1px solid var(--line);}
+    .sheet-h h2{font-size:17px;}
+    .sheet-h .sub{color:var(--muted);font-size:12.5px;}
+    .sheet-h .tag{margin-left:auto;font:500 10.5px/1 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .grp{display:flex;flex-direction:column;gap:11px;}
+    .grp-l{font:500 10.5px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;
+      color:var(--subtle);}
+    .rowset{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+    .colset{display:flex;flex-direction:column;gap:10px;}
+    .cols{display:grid;gap:20px;}
+    .panel{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      overflow:hidden;}
+    .panel-h{display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--wash);
+      border-bottom:1px solid var(--line);font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .panel-h .rt{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:400;
+      font-size:12px;}
+    .panel-b{padding:14px;}
+    .panel-b.flush{padding:0;}
+    .note{color:var(--muted);font-size:12px;line-height:1.55;max-width:64ch;}
+
+    /* ══ controls ══ */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--h-md);
+      padding:0 11px;border-radius:var(--r-ctl);border:1px solid var(--line-strong);
+      background:var(--surface);color:var(--ink);font:500 var(--fs)/1 var(--sans);
+      cursor:pointer;white-space:nowrap;}
+    .btn:hover{background:var(--wash);}
+    .btn.solid{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn.solid:hover{background:var(--accent-ink);}
+    .btn.danger{background:var(--crit);border-color:var(--crit);color:#fff;}
+    .btn.soft{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .btn.ghost{border-color:transparent;background:transparent;color:var(--muted);}
+    .btn.ghost:hover{background:var(--wash);color:var(--ink);}
+    .btn.xs{height:var(--h-xs);padding:0 7px;font-size:11.5px;}
+    .btn.sm{height:var(--h-sm);padding:0 9px;font-size:12.5px;}
+    .btn.lg{height:var(--h-lg);padding:0 14px;font-size:14px;}
+    .btn.icon{width:var(--h-md);padding:0;}
+    .btn.sm.icon{width:var(--h-sm);}
+    .btn[disabled],.btn.off{opacity:.45;cursor:default;}
+    .bgrp{display:inline-flex;}
+    .bgrp .btn{border-radius:0;margin-left:-1px;}
+    .bgrp .btn:first-child{border-radius:var(--r-ctl) 0 0 var(--r-ctl);margin-left:0;}
+    .bgrp .btn:last-child{border-radius:0 var(--r-ctl) var(--r-ctl) 0;}
+
+    .fld{display:flex;align-items:center;gap:7px;height:var(--h-md);padding:0 10px;
+      border:1px solid var(--line-strong);border-radius:var(--r-ctl);background:var(--surface);
+      font-size:var(--fs);color:var(--ink);min-width:0;}
+    .fld.foc{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+    .fld.bad{border-color:var(--crit);box-shadow:0 0 0 3px var(--crit-bg);}
+    .fld .ph{color:var(--subtle);}
+    .fld .pre{color:var(--muted);font-family:var(--mono);font-size:12px;flex:none;}
+    .lab{display:flex;flex-direction:column;gap:5px;}
+    .lab > span{font:500 12px/1.3 var(--sans);color:var(--ink);}
+    .hint{font-size:11.5px;color:var(--muted);}
+    .hint.bad{color:var(--crit);}
+
+    .pill{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;
+      border-radius:999px;font:500 11px/1 var(--sans);border:1px solid var(--line);
+      background:var(--wash);color:var(--muted);white-space:nowrap;}
+    .pill.ok{background:var(--ok-bg);border-color:var(--ok-line);color:var(--books);}
+    .pill.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--maint);}
+    .pill.crit{background:var(--crit-bg);border-color:var(--crit-line);color:var(--crit);}
+    .pill.acc{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .pill .dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex:none;}
+    .pill.hollow .dot{background:transparent;border:1.5px solid currentColor;width:7px;height:7px;}
+    .cnt{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+      padding:0 5px;border-radius:999px;background:var(--sunken);color:var(--muted);
+      font:500 11px/1 var(--mono);}
+    .cnt.urgent{background:var(--crit);color:#fff;}
+    .kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+      padding:0 4px;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;
+      background:var(--surface);font:500 10.5px/1 var(--mono);color:var(--muted);}
+
+    /* ══ identity ══ */
+    .av{position:relative;flex:none;display:inline-block;border-radius:50%;overflow:hidden;
+      background:var(--sunken);}
+    .av svg{display:block;width:100%;height:100%;}
+    .av-16{width:16px;height:16px}.av-20{width:20px;height:20px}.av-24{width:24px;height:24px}
+    .av-32{width:32px;height:32px}.av-40{width:40px;height:40px}.av-64{width:64px;height:64px}
+    .av.ent{border-radius:6px;}
+    .av-40.ent,.av-64.ent{border-radius:8px;}
+    .av.ent .mk{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+      font:600 11px/1 var(--sans);color:#fff;}
+    .av-32.ent .mk{font-size:12px}.av-40.ent .mk{font-size:13px}.av-64.ent .mk{font-size:20px}
+    .avw{position:relative;flex:none;display:inline-block;line-height:0;}
+    .pres{position:absolute;right:-1px;bottom:-1px;border-radius:50%;border:2px solid var(--surface);}
+    .av-24 + .pres{width:9px;height:9px}
+    .av-32 + .pres{width:11px;height:11px}
+    .av-40 + .pres{width:13px;height:13px}
+    .p-on{background:var(--books)}.p-away{background:var(--maint)}
+    .p-busy{background:var(--crit)}.p-off{background:var(--subtle)}
+    .avg{display:inline-flex;align-items:center;}
+    .avg .avw,.avg > .av{margin-left:-7px;box-shadow:0 0 0 2px var(--surface);}
+    .avg .avw:first-child,.avg > .av:first-child{margin-left:0;}
+    .avg .more{display:inline-flex;align-items:center;justify-content:center;background:var(--sunken);
+      color:var(--muted);font:500 10px/1 var(--mono);border-radius:50%;}
+    .idn{display:flex;align-items:center;gap:8px;min-width:0;}
+    .idn-t{min-width:0;display:flex;flex-direction:column;gap:1px;}
+    .idn-n{font:500 var(--fs)/1.3 var(--sans);color:var(--ink);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .idn-s{font:400 11px/1.3 var(--sans);color:var(--muted);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .idn.in{gap:6px;}
+    .idn.lg{gap:12px;}
+    .idn.lg .idn-n{font:600 15px/1.3 var(--sans);}
+    .idn.lg .idn-s{font-size:12px;}
+    .idn.xl{gap:14px;}
+    .idn.xl .idn-n{font:600 20px/1.25 var(--sans);letter-spacing:-.015em;}
+    .idn.xl .idn-s{font-size:13px;}
+    .rchip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px 0 3px;
+      border-radius:999px;border:1px solid var(--line);background:var(--surface);
+      font:500 12px/1 var(--sans);color:var(--ink);}
+
+    /* ══ table ══ */
+    table.d{width:100%;border-collapse:collapse;font-size:var(--fs);}
+    table.d th{text-align:left;font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);padding:0 var(--pad) 7px;
+      border-bottom:1px solid var(--line);white-space:nowrap;}
+    table.d td{padding:0 var(--pad);height:var(--row);border-bottom:1px solid var(--hairline);
+      vertical-align:middle;}
+    table.d tbody tr:last-child td{border-bottom:0;}
+    table.d tr.hov td{background:var(--wash);}
+    table.d tr.sel td{background:var(--accent-soft);}
+    table.d .r{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;
+      font-size:12px;}
+    table.d th.r{text-align:right;}
+    table.d tr.grp-row td{background:var(--wash);font:500 11px/1 var(--sans);
+      letter-spacing:.05em;text-transform:uppercase;color:var(--muted);height:26px;}
+    table.d tfoot td{height:var(--row);font-weight:600;border-top:1px solid var(--line-strong);
+      border-bottom:0;background:var(--surface);}
+
+    /* ══ rows, cards ══ */
+    .lrow{display:flex;align-items:center;gap:10px;padding:7px var(--pad);
+      border-bottom:1px solid var(--hairline);}
+    .lrow:last-child{border-bottom:0;}
+    .lrow .tail{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none;}
+    .kard{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      padding:13px;display:flex;flex-direction:column;gap:10px;}
+    .meta{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:12px;}
+    .meta dt{font:500 10.5px/1.5 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .meta dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12px;}
+    .stat{display:flex;flex-direction:column;gap:3px;}
+    .stat b{font:600 24px/1.1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
+    .stat span{font:500 10.5px/1.3 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .bar{height:5px;border-radius:999px;background:var(--sunken);overflow:hidden;}
+    .bar i{display:block;height:100%;background:var(--accent);}
+
+    /* ══ sheet-local: icon primitives ══ */
+    .ic{display:inline-block;flex:none;line-height:0;}
+    .ic svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.4;
+      stroke-linecap:round;stroke-linejoin:round;}
+    .ic-12{width:12px;height:12px;}  .ic-12 svg{stroke-width:1.85;}
+    .ic-14{width:14px;height:14px;}  .ic-14 svg{stroke-width:1.6;}
+    .ic-16{width:16px;height:16px;}
+    .ic-20{width:20px;height:20px;}  .ic-20 svg{stroke-width:1.12;}
+
+    /* ══ shared chrome ══ */
+    .mstrip{display:flex;align-items:center;gap:12px;padding:9px 13px;background:var(--surface);
+      border-bottom:1px solid var(--line);flex-wrap:wrap;}
+    .mstrip .rt{margin-left:auto;display:flex;align-items:center;gap:8px;}
+    .vr{width:1px;align-self:stretch;background:var(--line);flex:none;}
+    .hr{height:1px;background:var(--line);}
+    .cap{font:400 11.5px/1.45 var(--sans);color:var(--muted);}
+    .cap.q{color:var(--subtle);}
+    .sub-h{display:flex;align-items:center;gap:8px;padding:8px 13px;background:var(--wash);
+      border-bottom:1px solid var(--line);font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .sub-h .rt{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:400;font-size:12px;}
+    .shadow-modal{box-shadow:0 20px 48px -14px rgba(11,12,20,.26),0 3px 10px rgba(11,12,20,.07);}
+
+    /* ══ 1 · empty states ══ */
+    .empty{display:flex;flex-direction:column;align-items:center;gap:11px;padding:30px 22px 28px;
+      text-align:center;border:1px solid var(--line);border-radius:var(--r-card);
+      background:var(--surface);}
+    .empty .gly{width:64px;height:64px;color:var(--line-strong);}
+    .empty .gly svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;
+      stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round;}
+    .empty .gly .k{stroke:var(--subtle);}
+    .empty h4{font-size:14px;}
+    .empty p{font-size:12.5px;color:var(--muted);max-width:36ch;line-height:1.55;}
+    .empty .foot{display:flex;align-items:center;gap:8px;}
+
+    /* ══ 2 · skeletons ══ */
+    .sk{display:block;height:8px;border-radius:999px;background:var(--sunken);}
+    .sk.h10{height:10px;} .sk.h14{height:14px;} .sk.h20{height:20px;}
+    .sk.dim{background:var(--hairline);}
+    .sk-av{width:24px;height:24px;border-radius:50%;background:var(--sunken);flex:none;}
+    .sk-av.a32{width:32px;height:32px;}
+    .sk-ent{width:24px;height:24px;border-radius:6px;background:var(--sunken);flex:none;}
+    .loadbar{height:2px;background:var(--accent-soft);position:relative;overflow:hidden;}
+    .loadbar i{position:absolute;left:6%;top:0;bottom:0;width:34%;background:var(--accent);
+      border-radius:999px;}
+    table.d td .sk{margin:0;}
+    .skrow{display:flex;align-items:center;gap:10px;padding:7px 13px;
+      border-bottom:1px solid var(--hairline);}
+    .skrow:last-child{border-bottom:0;}
+    .skrow .t{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1;}
+    .skrow .rt{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none;}
+
+    /* ══ 3 · banners and inline failure ══ */
+    .bn{display:flex;align-items:flex-start;gap:10px;padding:10px 13px;border-radius:var(--r-card);
+      border:1px solid var(--line);background:var(--surface);}
+    .bn .bd{display:flex;flex-direction:column;gap:3px;min-width:0;}
+    .bn b{font:500 12.5px/1.4 var(--sans);}
+    .bn p{font-size:12px;color:var(--muted);line-height:1.5;}
+    .bn .rt{margin-left:auto;display:flex;align-items:center;gap:7px;flex:none;
+      align-self:center;}
+    .bn.warn{background:var(--warn-bg);border-color:var(--warn-line);}
+    .bn.warn .ic{color:var(--maint);}
+    .bn.warn p{color:var(--maint);}
+    .bn.crit{background:var(--crit-bg);border-color:var(--crit-line);}
+    .bn.crit .ic{color:var(--crit);}
+    .bn.crit p{color:var(--crit);}
+    .bn.acc{background:var(--accent-soft);border-color:var(--accent-line);}
+    .bn.acc .ic{color:var(--accent-ink);}
+    .bn.ink{background:var(--ink);border-color:var(--ink);color:#fff;}
+    .bn.ink p{color:var(--line-strong);}
+    .bn.ink .ic{color:#fff;}
+    .bn.ink .btn{background:transparent;border-color:var(--muted);color:#fff;}
+    .bn.ink .btn:hover{background:var(--muted);}
+    .bn.ink .elapsed{font:400 12px/1 var(--mono);color:#fff;padding:0 9px;height:22px;
+      display:inline-flex;align-items:center;border-radius:999px;background:transparent;
+      border:1px solid var(--muted);}
+    .inerr{display:flex;align-items:center;gap:10px;padding:16px 14px;background:var(--crit-bg);
+      border:1px solid var(--crit-line);border-radius:var(--r-ctl);}
+    .inerr .bd{display:flex;flex-direction:column;gap:2px;}
+    .inerr b{font:500 12.5px/1.4 var(--sans);color:var(--crit);}
+    .inerr span{font-size:11.5px;color:var(--crit);}
+    .inerr .rt{margin-left:auto;display:flex;align-items:center;gap:7px;}
+
+    /* ══ 4 · device sync ══ */
+    .dev{display:flex;align-items:center;gap:11px;padding:9px 13px;
+      border-bottom:1px solid var(--hairline);}
+    .dev:last-child{border-bottom:0;}
+    .dev .t{display:flex;flex-direction:column;gap:1px;min-width:0;}
+    .dev .t b{font:500 12.5px/1.3 var(--sans);}
+    .dev .t span{font:400 11px/1.3 var(--sans);color:var(--muted);}
+    .dev .rt{margin-left:auto;display:flex;align-items:center;gap:9px;flex:none;}
+    .dev .q{display:flex;flex-direction:column;gap:3px;width:96px;}
+    .dev .q .cap{font-size:10.5px;}
+    .devi{width:28px;height:28px;border-radius:7px;flex:none;display:flex;align-items:center;
+      justify-content:center;background:var(--wash);border:1px solid var(--line);
+      color:var(--muted);}
+    .devi.ok{background:var(--ok-bg);border-color:var(--ok-line);color:var(--books);}
+    .devi.wn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--maint);}
+
+    /* ══ 5 · conflict ══ */
+    .cf{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      overflow:hidden;}
+    .cf-h{display:flex;align-items:flex-start;gap:11px;padding:13px;
+      border-bottom:1px solid var(--line);}
+    .cf-h .bd{display:flex;flex-direction:column;gap:2px;}
+    .cf-h .rt{margin-left:auto;}
+    .cfg{display:grid;grid-template-columns:132px 1fr 1fr;}
+    .cfg > div{padding:8px 11px;border-bottom:1px solid var(--hairline);
+      border-left:1px solid var(--hairline);min-width:0;}
+    .cfg > div:nth-child(3n+1){border-left:0;}
+    .cfg .hd{background:var(--wash);border-bottom:1px solid var(--line);
+      font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;text-transform:uppercase;
+      color:var(--subtle);display:flex;align-items:center;gap:6px;}
+    .cfg .fn{font:400 12px/1.4 var(--sans);color:var(--muted);display:flex;align-items:center;
+      min-height:36px;}
+    .cfv{display:flex;align-items:center;gap:8px;min-height:36px;font:400 12.5px/1.4 var(--sans);}
+    .cfv .val{font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums;}
+    .cfg > div.pick{background:var(--accent-soft);}
+    .cfv.same{color:var(--subtle);}
+    .rad{width:14px;height:14px;border-radius:50%;border:1px solid var(--line-strong);
+      background:var(--surface);flex:none;display:flex;align-items:center;justify-content:center;}
+    .rad.on{border-color:var(--accent);border-width:4px;}
+    .rad.off{opacity:.5;}
+    .cf-f{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--wash);
+      border-top:1px solid var(--line);}
+    .cf-f .rt{margin-left:auto;display:flex;align-items:center;gap:8px;}
+    .seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:var(--r-ctl);
+      overflow:hidden;background:var(--surface);}
+    .seg i{display:inline-flex;align-items:center;height:26px;padding:0 10px;
+      border-left:1px solid var(--line);font:500 12px/1 var(--sans);color:var(--muted);
+      font-style:normal;}
+    .seg i:first-child{border-left:0;}
+    .seg i.on{background:var(--accent-soft);color:var(--accent-ink);}
+
+    /* ══ 6 · locks and refusals ══ */
+    .lockstrip{display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--sunken);
+      border:1px solid var(--line-strong);border-radius:var(--r-ctl);}
+    .lockstrip .rt{margin-left:auto;display:flex;align-items:center;gap:8px;}
+    .fld.lock{background:var(--sunken);border-color:var(--line);color:var(--subtle);}
+    .denied{display:flex;flex-direction:column;align-items:center;gap:11px;padding:26px 22px;
+      text-align:center;}
+    .denied .gly{width:56px;height:56px;color:var(--line-strong);}
+    .denied .gly svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;
+      stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round;}
+    .denied .gly .k{stroke:var(--subtle);}
+    .denied h4{font-size:14px;}
+    .denied p{font-size:12.5px;color:var(--muted);max-width:44ch;line-height:1.55;}
+    .grantrow{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;
+      border:1px solid var(--line);background:var(--surface);}
+  </style>
+</helmet>
+<div class="sheet" style="width:1240px;background:var(--ground)">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+ <symbol id="f1" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e6ebf5"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#3f5b8c"/><circle cx="20" cy="16.5" r="7.8" fill="#6b4630"/><path d="M12.2 16.4c0-5 3.2-8.3 7.8-8.3s7.8 3.3 7.8 8.3c0-2.4-1.1-3.7-2.4-4.3-1.9-.9-3.4.3-5.4.3s-3.5-1.2-5.4-.3c-1.3.6-2.4 1.9-2.4 4.3Z" fill="#1a1512"/></symbol>
+ <symbol id="f2" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e8f0ec"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#2f6b57"/><circle cx="20" cy="16.5" r="7.8" fill="#8a5a3c"/><path d="M11.6 16.6c0-5.3 3.5-8.5 8.4-8.5s8.4 3.2 8.4 8.5v7.2a1.6 1.6 0 1 1-3.2 0v-7.4c-1.6.9-3.4 1.4-5.2 1.4s-3.6-.5-5.2-1.4v7.4a1.6 1.6 0 1 1-3.2 0Z" fill="#2a211b"/></symbol>
+ <symbol id="f3" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f0e9f2"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#6b4a7d"/><circle cx="20" cy="16.5" r="7.8" fill="#a9714b"/><path d="M12.4 17.2c-.6-5.6 2.8-9.1 7.6-9.1s8.2 3.5 7.6 9.1c-.3-2.6-1.6-3.9-3-4.4-2.2-.8-3 .5-4.6.5s-2.4-1.3-4.6-.5c-1.4.5-2.7 1.8-3 4.4Z" fill="#3d2a1e"/><circle cx="27.4" cy="9.4" r="2.9" fill="#3d2a1e"/></symbol>
+ <symbol id="f4" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f5ebe8"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#8c4a3f"/><circle cx="20" cy="16.5" r="7.8" fill="#5a3a28"/><path d="M12.3 15.8c0-4.8 3.3-7.7 7.7-7.7s7.7 2.9 7.7 7.7c0-1.7-.9-2.7-2.1-3.1-1.8-.6-3.2.6-5.6.6s-3.8-1.2-5.6-.6c-1.2.4-2.1 1.4-2.1 3.1Z" fill="#1a1512"/></symbol>
+ <symbol id="f5" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eceef3"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#3d4756"/><circle cx="20" cy="16.5" r="7.8" fill="#7c4f35"/><path d="M11.9 17.8c-.4-6.2 3.1-9.7 8.1-9.7s8.5 3.5 8.1 9.7c-.9-1.2-1.4-3.2-1.4-5-2 1.3-4.3 2-6.7 2s-4.7-.7-6.7-2c0 1.8-.5 3.8-1.4 5Z" fill="#2a211b"/></symbol>
+ <symbol id="f6" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e9f0f4"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#46617a"/><circle cx="20" cy="16.5" r="7.8" fill="#b98254"/><path d="M12.2 16.4c0-5 3.2-8.3 7.8-8.3s7.8 3.3 7.8 8.3c0-2.4-1.1-3.7-2.4-4.3-1.9-.9-3.4.3-5.4.3s-3.5-1.2-5.4-.3c-1.3.6-2.4 1.9-2.4 4.3Z" fill="#3d2a1e"/></symbol>
+ <symbol id="f7" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f2eee6"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#7a6a4a"/><circle cx="20" cy="16.5" r="7.8" fill="#6b4630"/><path d="M11.5 15.4c0-5 3.8-8.3 8.5-8.3s8.5 3.3 8.5 8.3c0 1-.5 1.9-1.3 2.4l-1.2-4.8a20 20 0 0 1-12 0l-1.2 4.8c-.8-.5-1.3-1.4-1.3-2.4Z" fill="#5d4d8a"/></symbol>
+ <symbol id="f8" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eaf1ee"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#4a7a68"/><circle cx="20" cy="16.5" r="7.8" fill="#8a5a3c"/><path d="M12.6 14.9c0-4.5 3.1-7.3 7.4-7.3s7.4 2.8 7.4 7.3c0-1.3-.8-2.1-1.8-2.4-1.6-.5-3.2.7-5.6.7s-4-1.2-5.6-.7c-1 .3-1.8 1.1-1.8 2.4Z" fill="#1a1512"/></symbol>
+ <symbol id="c1" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e4eef2"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#1f5f7a"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#6b4630"/><path d="M12.9 17.8c0-4.7 3-7.7 7.1-7.7s7.1 3 7.1 7.7c0-2.2-1-3.4-2.2-4-1.7-.8-3.1.3-4.9.3s-3.2-1.1-4.9-.3c-1.2.6-2.2 1.8-2.2 4Z" fill="#1a1512"/></symbol>
+ <symbol id="c2" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eef1e6"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#2f6b57"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#8a5a3c"/><path d="M12.4 18c0-4.9 3.2-7.9 7.6-7.9s7.6 3 7.6 7.9v6a1.5 1.5 0 1 1-3 0v-6.2c-1.4.8-3 1.2-4.6 1.2s-3.2-.4-4.6-1.2V24a1.5 1.5 0 1 1-3 0Z" fill="#2a211b"/></symbol>
+ <symbol id="c3" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f4ece4"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#8c4a3f"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#a9714b"/><path d="M12.9 18.4c-.5-5.2 2.6-8.3 7.1-8.3s7.6 3.1 7.1 8.3c-.3-2.4-1.5-3.6-2.8-4-2-.8-2.8.4-4.3.4s-2.2-1.2-4.3-.4c-1.3.4-2.5 1.6-2.8 4Z" fill="#3d2a1e"/><circle cx="26.8" cy="11.4" r="2.6" fill="#3d2a1e"/></symbol>
+</defs></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+ <symbol id="i-chevron-right" viewBox="0 0 16 16"><path d="M6 3.4 10.6 8 6 12.6"></path></symbol>
+ <symbol id="i-chevron-down" viewBox="0 0 16 16"><path d="M3.4 6 8 10.6 12.6 6"></path></symbol>
+ <symbol id="i-close" viewBox="0 0 16 16"><path d="M4.1 4.1 11.9 11.9M11.9 4.1 4.1 11.9"></path></symbol>
+ <symbol id="i-check" viewBox="0 0 16 16"><path d="M3.2 8.4 6.4 11.6 12.8 4.8"></path></symbol>
+ <symbol id="i-plus" viewBox="0 0 16 16"><path d="M8 3.2v9.6M3.2 8h9.6"></path></symbol>
+ <symbol id="i-minus" viewBox="0 0 16 16"><path d="M3.2 8h9.6"></path></symbol>
+ <symbol id="i-search" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.3"></circle><path d="M10.2 10.2 13.6 13.6"></path></symbol>
+ <symbol id="i-filter" viewBox="0 0 16 16"><path d="M2.4 3.4h11.2L9.2 8.6v4.3L6.8 14.1V8.6Z"></path></symbol>
+ <symbol id="i-more" viewBox="0 0 16 16"><circle cx="3.5" cy="8" r="1.15" fill="currentColor" stroke="none"></circle><circle cx="8" cy="8" r="1.15" fill="currentColor" stroke="none"></circle><circle cx="12.5" cy="8" r="1.15" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-clock" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M8 4.6v3.6l2.5 1.5"></path></symbol>
+ <symbol id="i-lock" viewBox="0 0 16 16"><path d="M3.5 7.1h9v6.4h-9z"></path><path d="M5.5 7.1V5.2a2.5 2.5 0 0 1 5 0v1.9"></path><circle cx="8" cy="10.3" r=".95" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-warning" viewBox="0 0 16 16"><path d="M8 2.2 14.4 13.4H1.6Z"></path><path d="M8 6.4v3.2"></path><circle cx="8" cy="11.5" r=".8" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-info" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M8 7.4v3.7"></path><circle cx="8" cy="5.1" r=".8" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-refresh" viewBox="0 0 16 16"><path d="M13.2 7.4a5.2 5.2 0 0 0-8.9-2.8L2.8 6.1"></path><path d="M6.1 6.1H2.8V2.8"></path><path d="M2.8 8.6a5.2 5.2 0 0 0 8.9 2.8l1.5-1.5"></path><path d="M9.9 9.9h3.3v3.3"></path></symbol>
+ <symbol id="i-sync" viewBox="0 0 16 16"><path d="M12.9 5.6a5.2 5.2 0 0 0-9.4.6"></path><path d="M6.6 6.2H3.3V2.9"></path><path d="M3.1 10.4a5.2 5.2 0 0 0 9.4-.6"></path><path d="M9.4 9.8h3.3v3.3"></path><circle cx="8" cy="8" r="1.1" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-offline" viewBox="0 0 16 16"><path d="M2.1 6.1a11 11 0 0 1 3.2-1.8"></path><path d="M8.9 4.2a11 11 0 0 1 5 1.9"></path><path d="M4.4 8.6a7.3 7.3 0 0 1 1.9-1.1"></path><path d="M9.9 7.6a7.3 7.3 0 0 1 1.7 1"></path><path d="M6.4 11a3.6 3.6 0 0 1 3.2.2"></path><circle cx="8" cy="13.2" r=".85" fill="currentColor" stroke="none"></circle><path d="M2.3 2.3 13.7 13.7"></path></symbol>
+ <symbol id="i-device" viewBox="0 0 16 16"><path d="M4.2 1.7h7.6v12.6H4.2Z"></path><path d="M6.7 3.7h2.6M6.6 12.3h2.8"></path></symbol>
+ <symbol id="i-till" viewBox="0 0 16 16"><path d="M4.4 2.2h7.2v3.4H4.4z"></path><path d="M1.9 7.4h12.2v6.4H1.9z"></path><path d="M6.2 10.6h3.6"></path></symbol>
+ <symbol id="i-branch" viewBox="0 0 16 16"><path d="M1.9 13.8h12.2M3.9 13.8V2.9h8.2v10.9"></path><path d="M6.1 5.6h1.3M8.6 5.6h1.3M6.1 8.2h1.3M8.6 8.2h1.3"></path><path d="M6.9 13.8v-2.7h2.2v2.7"></path></symbol>
+ <symbol id="i-invoice" viewBox="0 0 16 16"><path d="M3.4 1.7h6.1l3.1 3.1v9.5H3.4Z"></path><path d="M9.5 1.7v3.1h3.1"></path><path d="M5.7 8.4h4.6M5.7 11h3"></path></symbol>
+ <symbol id="i-receipt" viewBox="0 0 16 16"><path d="M3.3 1.7h9.4v12.6l-1.6-1.1-1.6 1.1-1.5-1.1-1.6 1.1-1.5-1.1-1.6 1.1Z"></path><path d="M5.9 5.3h4.2M5.9 8.1h4.2"></path></symbol>
+ <symbol id="i-customer" viewBox="0 0 16 16"><circle cx="8" cy="5.5" r="2.8"></circle><path d="M2.9 13.6c0-2.9 2.3-4.6 5.1-4.6s5.1 1.7 5.1 4.6"></path></symbol>
+ <symbol id="i-shield" viewBox="0 0 16 16"><path d="M8 1.9 13.2 3.7v4.6c0 3-2.2 5.1-5.2 5.8-3-.7-5.2-2.8-5.2-5.8V3.7Z"></path></symbol>
+ <symbol id="i-eye" viewBox="0 0 16 16"><path d="M1.6 8S4.2 3.9 8 3.9 14.4 8 14.4 8 11.8 12.1 8 12.1 1.6 8 1.6 8Z"></path><circle cx="8" cy="8" r="1.9"></circle></symbol>
+ <symbol id="i-calendar" viewBox="0 0 16 16"><path d="M2.2 3.9h11.6v10H2.2z"></path><path d="M2.2 6.7h11.6"></path><path d="M5.2 2.1v3.1M10.8 2.1v3.1"></path></symbol>
+ <symbol id="i-approve" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M5.4 8.2 7.2 10l3.5-3.9"></path></symbol>
+ <symbol id="i-journal" viewBox="0 0 16 16"><path d="M8 4.5C7.1 3.2 5.5 2.6 2.8 2.6v8.8c2.7 0 4.3.6 5.2 1.9.9-1.3 2.5-1.9 5.2-1.9V2.6c-2.7 0-4.3.6-5.2 1.9Z"></path><path d="M8 4.5v8.8"></path></symbol>
+ <symbol id="i-merge" viewBox="0 0 16 16"><path d="M4.4 2.6v3.1c0 1.9 1.5 3.4 3.4 3.4h4.4"></path><path d="M4.4 13.4v-3.1c0-1.9 1.5-3.4 3.4-3.4h4.4"></path><circle cx="4.4" cy="8" r="1.1" fill="currentColor" stroke="none"></circle></symbol>
+</defs></svg>
+
+  <div class="sheet-h">
+    <h2>StatesEmpty</h2>
+    <span class="sub">Every state that is not the happy path &mdash; designed, not defaulted</span>
+    <span class="tag">Sheet 14</span>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">Empty &mdash; three different reasons, three different drawings</span>
+    <div class="cols" style="grid-template-columns:1fr 1fr 1fr">
+
+      <div class="empty">
+        <span class="gly">
+          <svg viewBox="0 0 64 64">
+            <path d="M21 8h22"></path>
+            <path d="M15.5 15h33"></path>
+            <path d="M13 22h38a3 3 0 0 1 3 3v28a3 3 0 0 1-3 3H13a3 3 0 0 1-3-3V25a3 3 0 0 1 3-3Z"></path>
+            <path class="k" d="M10 41h11l3.5 5.5h15L43 41h11"></path>
+          </svg>
+        </span>
+        <h4>No invoices yet</h4>
+        <p>Invoices raised against The Gate Shops will collect here. The first one takes about a minute.</p>
+        <div class="foot"><button class="btn sm solid"><span class="ic ic-14"><svg><use href="#i-plus"></use></svg></span>New invoice</button></div>
+      </div>
+
+      <div class="empty">
+        <span class="gly">
+          <svg viewBox="0 0 64 64">
+            <path d="M9 11h46L38 32v14l-11 5V32Z"></path>
+            <circle class="k" cx="47" cy="47" r="9"></circle>
+            <path class="k" d="M41.5 52.5 52.5 41.5"></path>
+          </svg>
+        </span>
+        <h4>Nothing matches this filter</h4>
+        <p>No invoice between 01 Aug and 09 Sep carries a balance over US$500.00. Widen the dates or drop the balance rule.</p>
+        <div class="foot"><button class="btn sm">Clear filters</button></div>
+      </div>
+
+      <div class="empty">
+        <span class="gly">
+          <svg viewBox="0 0 64 64">
+            <path d="M14 12h36a3 3 0 0 1 3 3v38a3 3 0 0 1-3 3H14a3 3 0 0 1-3-3V15a3 3 0 0 1 3-3Z"></path>
+            <path class="k" d="M27 6h10a2 2 0 0 1 2 2v6H25V8a2 2 0 0 1 2-2Z"></path>
+            <circle class="k" cx="23" cy="31" r="4.5"></circle>
+            <path d="M32 31h14"></path>
+            <circle class="k" cx="23" cy="44" r="4.5"></circle>
+            <path d="M32 44h9"></path>
+          </svg>
+        </span>
+        <h4>Nothing assigned to you</h4>
+        <p>Approvals routed to Blessing Ncube land here. The queue is clear as of 14:06.</p>
+        <div class="foot"><button class="btn sm">View all approvals</button></div>
+      </div>
+
+    </div>
+    <p class="note">An empty state answers three questions in order: what belongs here, why it is not here, and what one action would change that. One button only &mdash; a second choice at an empty screen is a person being asked to decide before they have anything to decide about.</p>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">Loading &mdash; a skeleton is a tracing of the component it replaces, at the same metrics</span>
+    <div class="cols" style="grid-template-columns:1fr 380px">
+
+      <div class="panel">
+        <div class="panel-h">Trade accounts ageing<span class="rt"><span class="pill acc"><span class="dot"></span>Loading</span></span></div>
+        <div class="loadbar"><i></i></div>
+        <table class="d">
+          <thead>
+            <tr>
+              <th>Account</th>
+              <th style="width:130px">Invoice</th>
+              <th style="width:104px">Due</th>
+              <th class="r" style="width:118px">Balance</th>
+              <th style="width:118px">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span style="display:flex;align-items:center;gap:8px"><span class="sk-av"></span><span class="sk" style="width:132px"></span></span></td>
+              <td><span class="sk" style="width:78px"></span></td>
+              <td><span class="sk" style="width:62px"></span></td>
+              <td><span style="display:flex;justify-content:flex-end"><span class="sk" style="width:70px"></span></span></td>
+              <td><span class="sk h14" style="width:74px;border-radius:999px"></span></td>
+            </tr>
+            <tr>
+              <td><span style="display:flex;align-items:center;gap:8px"><span class="sk-ent"></span><span class="sk" style="width:104px"></span></span></td>
+              <td><span class="sk" style="width:78px"></span></td>
+              <td><span class="sk" style="width:62px"></span></td>
+              <td><span style="display:flex;justify-content:flex-end"><span class="sk" style="width:58px"></span></span></td>
+              <td><span class="sk h14" style="width:62px;border-radius:999px"></span></td>
+            </tr>
+            <tr>
+              <td><span style="display:flex;align-items:center;gap:8px"><span class="sk-av"></span><span class="sk" style="width:154px"></span></span></td>
+              <td><span class="sk" style="width:78px"></span></td>
+              <td><span class="sk" style="width:62px"></span></td>
+              <td><span style="display:flex;justify-content:flex-end"><span class="sk" style="width:82px"></span></span></td>
+              <td><span class="sk h14" style="width:70px;border-radius:999px"></span></td>
+            </tr>
+            <tr>
+              <td><span style="display:flex;align-items:center;gap:8px"><span class="sk-av dim"></span><span class="sk dim" style="width:118px"></span></span></td>
+              <td><span class="sk dim" style="width:78px"></span></td>
+              <td><span class="sk dim" style="width:62px"></span></td>
+              <td><span style="display:flex;justify-content:flex-end"><span class="sk dim" style="width:64px"></span></span></td>
+              <td><span class="sk h14 dim" style="width:66px;border-radius:999px"></span></td>
+            </tr>
+            <tr>
+              <td><span style="display:flex;align-items:center;gap:8px"><span class="sk-av dim"></span><span class="sk dim" style="width:142px"></span></span></td>
+              <td><span class="sk dim" style="width:78px"></span></td>
+              <td><span class="sk dim" style="width:62px"></span></td>
+              <td><span style="display:flex;justify-content:flex-end"><span class="sk dim" style="width:74px"></span></span></td>
+              <td><span class="sk h14 dim" style="width:58px;border-radius:999px"></span></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Total</td>
+              <td></td>
+              <td></td>
+              <td><span style="display:flex;justify-content:flex-end"><span class="sk" style="width:88px;height:10px"></span></span></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div class="colset" style="gap:14px">
+        <div class="colset" style="gap:7px">
+          <span class="grp-l">KPI tile &mdash; real, then loading</span>
+          <div class="cols" style="grid-template-columns:1fr 1fr;gap:10px">
+            <div class="kard">
+              <div class="stat"><b>US$412.00</b><span>Unreconciled</span></div>
+              <div class="bar"><i style="width:80%;background:var(--books)"></i></div>
+            </div>
+            <div class="kard">
+              <div class="stat" style="gap:6px"><span class="sk h20" style="width:118px"></span><span class="sk" style="width:74px;height:7px"></span></div>
+              <div class="bar"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="colset" style="gap:7px">
+          <span class="grp-l">Record card</span>
+          <div class="kard">
+            <div style="display:flex;align-items:center;gap:9px">
+              <span class="sk-ent" style="width:32px;height:32px;border-radius:8px"></span>
+              <span style="display:flex;flex-direction:column;gap:6px;flex:1"><span class="sk h10" style="width:150px"></span><span class="sk" style="width:96px"></span></span>
+              <span class="sk h14" style="width:60px;border-radius:999px"></span>
+            </div>
+            <div class="hr"></div>
+            <div style="display:grid;grid-template-columns:auto 1fr;gap:8px 14px;align-items:center">
+              <span class="sk" style="width:54px;height:7px"></span><span class="sk" style="width:86px"></span>
+              <span class="sk" style="width:44px;height:7px"></span><span class="sk" style="width:120px"></span>
+              <span class="sk dim" style="width:60px;height:7px"></span><span class="sk dim" style="width:70px"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="colset" style="gap:7px">
+          <span class="grp-l">Identity row</span>
+          <div class="panel">
+            <div class="skrow">
+              <span class="sk-av a32"></span>
+              <span class="t"><span class="sk h10" style="width:142px"></span><span class="sk" style="width:98px"></span></span>
+              <span class="rt"><span class="sk h14" style="width:56px;border-radius:999px"></span></span>
+            </div>
+            <div class="skrow">
+              <span class="sk-av a32"></span>
+              <span class="t"><span class="sk h10" style="width:116px"></span><span class="sk" style="width:132px"></span></span>
+              <span class="rt"><span class="sk h14" style="width:44px;border-radius:999px"></span></span>
+            </div>
+            <div class="skrow">
+              <span class="sk-av a32 dim"></span>
+              <span class="t"><span class="sk dim h10" style="width:158px"></span><span class="sk dim" style="width:84px"></span></span>
+              <span class="rt"><span class="sk dim h14" style="width:52px;border-radius:999px"></span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <p class="note">The circle stays a circle. If the real row shows a face, the skeleton shows a disc of the same diameter at the same offset, so nothing shifts on arrival. Rows further down the list are drawn a shade fainter &mdash; not animated, because a page of moving bars reads as broken rather than busy.</p>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">Failure &mdash; say what broke, how much of it, and what one press would do</span>
+    <div class="cols" style="grid-template-columns:1fr 1fr">
+
+      <div class="colset" style="gap:12px">
+        <div class="panel">
+          <div class="panel-h">Ageing summary<span class="rt"><span class="mono" style="font-size:11.5px;color:var(--muted)">09 Sep 14:06</span></span></div>
+          <div class="panel-b">
+            <div class="inerr">
+              <span class="ic ic-20"><svg><use href="#i-warning"></use></svg></span>
+              <span class="bd">
+                <b>Could not load the ageing totals</b>
+                <span>The books service did not answer in 10 seconds. Nothing was changed.</span>
+              </span>
+              <span class="rt">
+                <span class="mono" style="font-size:11px;color:var(--crit);opacity:.8">LD&#8209;4471</span>
+                <button class="btn sm"><span class="ic ic-14"><svg><use href="#i-refresh"></use></svg></span>Retry</button>
+              </span>
+            </div>
+          </div>
+          <div class="mstrip" style="border-bottom:0;border-top:1px solid var(--line);background:var(--wash)">
+            <span class="cap">The panel keeps its frame and its title. Only the figures are missing, so only the figures are replaced.</span>
+          </div>
+        </div>
+
+        <div class="colset" style="gap:7px">
+          <span class="grp-l">Period lock</span>
+          <div class="lockstrip">
+            <span class="ic ic-16" style="color:var(--muted)"><svg><use href="#i-lock"></use></svg></span>
+            <span style="display:flex;flex-direction:column;gap:1px">
+              <b style="font:500 12.5px/1.3 var(--sans)">August closed off &mdash; figures are final</b>
+              <span class="cap">Closed by Blessing Ncube on 01 Sep at 08:10. VAT7 filed.</span>
+            </span>
+            <span class="rt">
+              <span class="pill hollow"><span class="dot"></span>Closed off</span>
+              <button class="btn sm">Request a reopen</button>
+            </span>
+          </div>
+          <div class="panel">
+            <div class="panel-b" style="display:flex;align-items:flex-end;gap:12px">
+              <label class="lab" style="width:190px">
+                <span>Posting date</span>
+                <span class="fld lock"><span class="ic ic-14"><svg><use href="#i-calendar"></use></svg></span><span class="mono" style="font-size:12px">18 Aug 2025</span><span class="ic ic-14" style="margin-left:auto"><svg><use href="#i-lock"></use></svg></span></span>
+                <span class="hint">01&#8211;31 Aug is closed. Post to September instead.</span>
+              </label>
+              <label class="lab" style="width:190px">
+                <span>Suggested date</span>
+                <span class="fld foc"><span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-calendar"></use></svg></span><span class="mono" style="font-size:12px">01 Sep 2025</span></span>
+                <span class="hint">First open day in the ledger.</span>
+              </label>
+              <button class="btn">Use 01 Sep</button>
+            </div>
+          </div>
+          <p class="note">A locked period is stated once at the top of the screen and again on the field that refuses. Neither is a dialog: a person who cannot post to August needs the date, not an interruption.</p>
+        </div>
+      </div>
+
+      <div class="colset" style="gap:12px">
+        <div class="bn warn">
+          <span class="ic ic-16"><svg><use href="#i-warning"></use></svg></span>
+          <span class="bd">
+            <b>9 of 11 branches reported</b>
+            <p>Msasa and Mutare depot have not answered since 13:40. Totals below exclude them and will move when they do.</p>
+          </span>
+          <span class="rt">
+            <button class="btn sm">Show which</button>
+            <button class="btn sm"><span class="ic ic-14"><svg><use href="#i-refresh"></use></svg></span>Retry the two</button>
+          </span>
+        </div>
+
+        <div class="bn ink">
+          <span class="ic ic-16"><svg><use href="#i-offline"></use></svg></span>
+          <span class="bd">
+            <b>Working offline</b>
+            <p>6 changes are held on this device. Nothing is lost &mdash; they post in order once the line is back.</p>
+          </span>
+          <span class="rt">
+            <span class="elapsed">14:32</span>
+            <button class="btn sm"><span class="ic ic-14"><svg><use href="#i-refresh"></use></svg></span>Retry now</button>
+          </span>
+        </div>
+
+        <div class="bn acc">
+          <span class="ic ic-16"><svg><use href="#i-sync"></use></svg></span>
+          <span class="bd">
+            <b>Reconnecting</b>
+            <p>Attempt 3. Next try in 8 seconds.</p>
+          </span>
+          <span class="rt"><button class="btn sm ghost">Stay offline</button></span>
+        </div>
+
+        <div class="bn crit">
+          <span class="ic ic-16"><svg><use href="#i-warning"></use></svg></span>
+          <span class="bd">
+            <b>2 of 6 held changes were refused</b>
+            <p>Receipt #10238 and journal JNL&#8209;88214 were rejected by the server. The other four posted.</p>
+          </span>
+          <span class="rt"><button class="btn sm">Review the two</button></span>
+        </div>
+
+        <div class="colset" style="gap:7px">
+          <span class="grp-l">Sync status, per device</span>
+          <div class="panel">
+            <div class="dev">
+              <span class="devi ok"><span class="ic ic-16"><svg><use href="#i-device"></use></svg></span></span>
+              <span class="t"><b>Kora <span class="mono">KOR&#8209;0114</span></b><span>Avondale &middot; till 2</span></span>
+              <span class="rt">
+                <span class="pill ok"><span class="dot"></span>Synced</span>
+                <span class="cap mono">12s ago</span>
+                <span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-chevron-right"></use></svg></span>
+              </span>
+            </div>
+            <div class="dev">
+              <span class="devi wn"><span class="ic ic-16"><svg><use href="#i-device"></use></svg></span></span>
+              <span class="t"><b>Kora <span class="mono">KOR&#8209;0121</span></b><span>Borrowdale &middot; till 1</span></span>
+              <span class="rt">
+                <span class="q"><span class="bar"><i style="width:45%;background:var(--maint)"></i></span><span class="cap">queue depth <span class="mono">9</span></span></span>
+                <span class="pill warn"><span class="dot"></span>Queued</span>
+                <span class="cap mono">14:06:05</span>
+                <span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-chevron-right"></use></svg></span>
+              </span>
+            </div>
+            <div class="dev">
+              <span class="devi"><span class="ic ic-16"><svg><use href="#i-till"></use></svg></span></span>
+              <span class="t"><b>CounterMini <span class="mono">CTR&#8209;0002</span></b><span>Mbare &middot; till 1</span></span>
+              <span class="rt">
+                <span class="pill hollow"><span class="dot"></span>Closed off</span>
+                <span class="cap mono">08 Sep 18:02</span>
+                <span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-chevron-right"></use></svg></span>
+              </span>
+            </div>
+          </div>
+          <p class="note">Queued is not an error. It gets a depth and a last-seen time so a manager can tell a slow line from a dead one, and a device that has been closed off for the day gets a neutral word rather than an alarm.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">Conflict and refusal &mdash; two states that must never be a shrug</span>
+    <div class="cols" style="grid-template-columns:1fr 400px">
+
+      <div class="cf shadow-modal">
+        <div class="cf-h">
+          <span class="ic ic-20" style="color:var(--maint)"><svg><use href="#i-merge"></use></svg></span>
+          <span class="bd">
+            <b style="font:600 14px/1.3 var(--sans)">This record changed while you were offline</b>
+            <span class="cap">The Gate Shops &middot; <span class="mono">ACC&#8209;0142</span> &mdash; edited by Rutendo Chiweshe at 11:20:41, ten minutes after your device lost the line.</span>
+          </span>
+          <span class="rt"><span class="ic ic-16" style="color:var(--subtle)"><svg><use href="#i-close"></use></svg></span></span>
+        </div>
+
+        <div class="cfg">
+          <div class="hd">Field</div>
+          <div class="hd"><span class="ic ic-12"><svg><use href="#i-device"></use></svg></span>Yours &middot; Kora KOR&#8209;0121</div>
+          <div class="hd"><span class="ic ic-12"><svg><use href="#i-sync"></use></svg></span>On the server</div>
+
+          <div class="fn">Credit limit</div>
+          <div class="pick"><span class="cfv"><span class="rad on"></span><span class="val">US$8,500.00</span></span></div>
+          <div><span class="cfv"><span class="rad off"></span><span class="val">US$6,000.00</span></span></div>
+
+          <div class="fn">Delivery address</div>
+          <div><span class="cfv"><span class="rad off"></span>Stand 4, Msasa Industrial Park</span></div>
+          <div class="pick"><span class="cfv"><span class="rad on"></span>12 Kwame Nkrumah Ave, Harare</span></div>
+
+          <div class="fn">Price list</div>
+          <div><span class="cfv"><span class="rad off"></span>Trade &mdash; Harare</span></div>
+          <div class="pick"><span class="cfv"><span class="rad on"></span>Trade &mdash; national</span></div>
+
+          <div class="fn">Telephone</div>
+          <div><span class="cfv same"><span class="val">+263 77 214 0142</span></span></div>
+          <div><span class="cfv same"><span class="val">+263 77 214 0142</span><span class="pill hollow" style="margin-left:auto"><span class="dot"></span>Same</span></span></div>
+
+          <div class="fn" style="border-bottom:0">Salesperson</div>
+          <div style="border-bottom:0"><span class="cfv same">Tapiwa Moyo</span></div>
+          <div style="border-bottom:0"><span class="cfv same">Tapiwa Moyo<span class="pill hollow" style="margin-left:auto"><span class="dot"></span>Same</span></span></div>
+        </div>
+
+        <div class="cf-f">
+          <span class="seg"><i>Keep mine</i><i>Keep the server</i><i class="on">Choose per field</i></span>
+          <span class="cap">3 fields differ &middot; 2 are already identical and are not offered as a choice.</span>
+          <span class="rt">
+            <button class="btn sm ghost">Cancel</button>
+            <button class="btn sm">Save mine as a copy</button>
+            <button class="btn sm solid">Apply 3 choices</button>
+          </span>
+        </div>
+      </div>
+
+      <div class="colset" style="gap:12px">
+        <div class="panel">
+          <div class="panel-h">Permission denied<span class="rt"><span class="pill hollow"><span class="dot"></span>Books &middot; Payroll</span></span></div>
+          <div class="denied">
+            <span class="gly">
+              <svg viewBox="0 0 56 56">
+                <path d="M28 4 46 10v14.5C46 35 39 42.5 28 45.5 17 42.5 10 35 10 24.5V10Z"></path>
+                <path class="k" d="M22 25h12v10H22z"></path>
+                <path class="k" d="M24.5 25v-3a3.5 3.5 0 0 1 7 0v3"></path>
+              </svg>
+            </span>
+            <h4>You cannot see payroll figures</h4>
+            <p>Your role is Branch manager, scoped to Bulawayo. Payroll is limited to the Accountant and to Directors.</p>
+            <div class="colset" style="gap:7px;width:100%">
+              <span class="grp-l" style="text-align:left">Who can grant this</span>
+              <div class="grantrow"><span class="av av-24"><svg><use href="#f6"></use></svg></span><span style="font:500 12.5px/1 var(--sans)">Nyasha Dube</span><span class="cap" style="margin-left:auto">Director</span></div>
+              <div class="grantrow"><span class="av av-24"><svg><use href="#f7"></use></svg></span><span style="font:500 12.5px/1 var(--sans)">Chipo Zvobgo</span><span class="cap" style="margin-left:auto">Accountant</span></div>
+            </div>
+            <button class="btn sm solid">Request access</button>
+          </div>
+          <div class="mstrip" style="border-bottom:0;border-top:1px solid var(--line);background:var(--wash)">
+            <span class="cap">Refusal reference <span class="mono">PRM&#8209;0219</span> &middot; written to the audit trail</span>
+            <span class="rt"><span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-shield"></use></svg></span></span>
+          </div>
+        </div>
+
+        <p class="note">A refusal names the role a person holds, the scope it carries and the two people who could change it. Anything less turns into a support ticket, and a support ticket is a state we designed by accident.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">The rule these all follow</span>
+    <div class="cols" style="grid-template-columns:1fr 1fr 1fr">
+      <p class="note">A sparse page is left sparse. Where there is one figure to show we show one figure, at full size, on a page that is mostly ground &mdash; we do not add a second chart, a tip card or a carousel of things a person did not ask for to make the screen look busy. Emptiness is information about the business.</p>
+      <p class="note">Every one of these states is reachable on a normal Tuesday in Msasa: the line drops, a till queues, August closes, two people edit the same account. None of them is an exception, so none of them is left to a browser default or a spinner.</p>
+      <p class="note">Colour is spent only where somebody must act. Queued, Closed off and Not started stay neutral. Amber means a person should look today; red means a figure is wrong or a change was refused. Nothing else earns a hue.</p>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,780 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    /* ══ Corelith v1 tokens — approved. Do not invent values. ══ */
+    :root{
+      --ground:#fbfbfc; --surface:#ffffff; --wash:#f5f6f9; --sunken:#eef0f5;
+      --line:#e7e9ef; --line-strong:#d5d8e2; --hairline:#f1f2f6;
+      --ink:#0b0c14; --muted:#5c5e6b; --subtle:#8a8c98;
+      --accent:#2563eb; --accent-soft:#eff4ff; --accent-line:#dbe5fb; --accent-ink:#1b4bc4;
+      --sell:#2563eb; --books:#12805c; --stock:#0e7490; --fiscal:#6549d5;
+      --maint:#b45309; --crit:#c2321b; --campus:#0e7490;
+      --ok-bg:#e8f4ef; --ok-line:#c9e5da; --warn-bg:#fdf3e2; --warn-line:#f2ddb6;
+      --crit-bg:#fdece9; --crit-line:#f6cec6;
+      --sans:"Atkinson Hyperlegible Next","Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+      --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+      /* density · default mode */
+      --h-xs:22px; --h-sm:26px; --h-md:30px; --h-lg:36px;
+      --row:32px; --pad:12px; --fs:13px;
+      --r-ctl:6px; --r-card:10px;
+      --shadow-pop:0 10px 30px -12px rgba(11,12,20,.20),0 2px 6px rgba(11,12,20,.05);
+    }
+    [data-d="compact"]{--h-xs:20px;--h-sm:24px;--h-md:26px;--h-lg:30px;--row:28px;--pad:10px;--fs:12.5px;}
+    [data-d="comfortable"]{--h-xs:24px;--h-sm:30px;--h-md:36px;--h-lg:44px;--row:44px;--pad:14px;--fs:14px;}
+    *,*::before,*::after{box-sizing:border-box;}
+    body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+      font-size:var(--fs);line-height:1.5;-webkit-font-smoothing:antialiased;}
+    a{color:var(--accent);text-decoration:underline;text-underline-offset:2px;}
+    a:hover{color:var(--accent-ink);}
+    h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.012em;}
+    p{margin:0;}
+    .mono,.num{font-family:var(--mono);font-variant-numeric:tabular-nums;}
+
+    /* ══ sheet chrome — every component sheet uses these ══ */
+    .sheet{padding:28px 32px;display:flex;flex-direction:column;gap:26px;}
+    .sheet-h{display:flex;align-items:baseline;gap:10px;padding-bottom:9px;
+      border-bottom:1px solid var(--line);}
+    .sheet-h h2{font-size:17px;}
+    .sheet-h .sub{color:var(--muted);font-size:12.5px;}
+    .sheet-h .tag{margin-left:auto;font:500 10.5px/1 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .grp{display:flex;flex-direction:column;gap:11px;}
+    .grp-l{font:500 10.5px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;
+      color:var(--subtle);}
+    .rowset{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+    .colset{display:flex;flex-direction:column;gap:10px;}
+    .cols{display:grid;gap:20px;}
+    .panel{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      overflow:hidden;}
+    .panel-h{display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--wash);
+      border-bottom:1px solid var(--line);font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .panel-h .rt{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:400;
+      font-size:12px;}
+    .panel-b{padding:14px;}
+    .panel-b.flush{padding:0;}
+    .note{color:var(--muted);font-size:12px;line-height:1.55;max-width:64ch;}
+
+    /* ══ controls ══ */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--h-md);
+      padding:0 11px;border-radius:var(--r-ctl);border:1px solid var(--line-strong);
+      background:var(--surface);color:var(--ink);font:500 var(--fs)/1 var(--sans);
+      cursor:pointer;white-space:nowrap;}
+    .btn:hover{background:var(--wash);}
+    .btn.solid{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn.solid:hover{background:var(--accent-ink);}
+    .btn.danger{background:var(--crit);border-color:var(--crit);color:#fff;}
+    .btn.soft{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .btn.ghost{border-color:transparent;background:transparent;color:var(--muted);}
+    .btn.ghost:hover{background:var(--wash);color:var(--ink);}
+    .btn.xs{height:var(--h-xs);padding:0 7px;font-size:11.5px;}
+    .btn.sm{height:var(--h-sm);padding:0 9px;font-size:12.5px;}
+    .btn.lg{height:var(--h-lg);padding:0 14px;font-size:14px;}
+    .btn.icon{width:var(--h-md);padding:0;}
+    .btn.sm.icon{width:var(--h-sm);}
+    .btn[disabled],.btn.off{opacity:.45;cursor:default;}
+    .bgrp{display:inline-flex;}
+    .bgrp .btn{border-radius:0;margin-left:-1px;}
+    .bgrp .btn:first-child{border-radius:var(--r-ctl) 0 0 var(--r-ctl);margin-left:0;}
+    .bgrp .btn:last-child{border-radius:0 var(--r-ctl) var(--r-ctl) 0;}
+
+    .fld{display:flex;align-items:center;gap:7px;height:var(--h-md);padding:0 10px;
+      border:1px solid var(--line-strong);border-radius:var(--r-ctl);background:var(--surface);
+      font-size:var(--fs);color:var(--ink);min-width:0;}
+    .fld.foc{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+    .fld.bad{border-color:var(--crit);box-shadow:0 0 0 3px var(--crit-bg);}
+    .fld .ph{color:var(--subtle);}
+    .fld .pre{color:var(--muted);font-family:var(--mono);font-size:12px;flex:none;}
+    .lab{display:flex;flex-direction:column;gap:5px;}
+    .lab > span{font:500 12px/1.3 var(--sans);color:var(--ink);}
+    .hint{font-size:11.5px;color:var(--muted);}
+    .hint.bad{color:var(--crit);}
+
+    .pill{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;
+      border-radius:999px;font:500 11px/1 var(--sans);border:1px solid var(--line);
+      background:var(--wash);color:var(--muted);white-space:nowrap;}
+    .pill.ok{background:var(--ok-bg);border-color:var(--ok-line);color:var(--books);}
+    .pill.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--maint);}
+    .pill.crit{background:var(--crit-bg);border-color:var(--crit-line);color:var(--crit);}
+    .pill.acc{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .pill .dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex:none;}
+    .pill.hollow .dot{background:transparent;border:1.5px solid currentColor;width:7px;height:7px;}
+    .cnt{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+      padding:0 5px;border-radius:999px;background:var(--sunken);color:var(--muted);
+      font:500 11px/1 var(--mono);}
+    .cnt.urgent{background:var(--crit);color:#fff;}
+    .kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+      padding:0 4px;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;
+      background:var(--surface);font:500 10.5px/1 var(--mono);color:var(--muted);}
+
+    /* ══ identity ══ */
+    .av{position:relative;flex:none;display:inline-block;border-radius:50%;overflow:hidden;
+      background:var(--sunken);}
+    .av svg{display:block;width:100%;height:100%;}
+    .av-16{width:16px;height:16px}.av-20{width:20px;height:20px}.av-24{width:24px;height:24px}
+    .av-32{width:32px;height:32px}.av-40{width:40px;height:40px}.av-64{width:64px;height:64px}
+    .av.ent{border-radius:6px;}
+    .av-40.ent,.av-64.ent{border-radius:8px;}
+    .av.ent .mk{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+      font:600 11px/1 var(--sans);color:#fff;}
+    .av-32.ent .mk{font-size:12px}.av-40.ent .mk{font-size:13px}.av-64.ent .mk{font-size:20px}
+    .avw{position:relative;flex:none;display:inline-block;line-height:0;}
+    .pres{position:absolute;right:-1px;bottom:-1px;border-radius:50%;border:2px solid var(--surface);}
+    .av-24 + .pres{width:9px;height:9px}
+    .av-32 + .pres{width:11px;height:11px}
+    .av-40 + .pres{width:13px;height:13px}
+    .p-on{background:var(--books)}.p-away{background:var(--maint)}
+    .p-busy{background:var(--crit)}.p-off{background:var(--subtle)}
+    .avg{display:inline-flex;align-items:center;}
+    .avg .avw,.avg > .av{margin-left:-7px;box-shadow:0 0 0 2px var(--surface);}
+    .avg .avw:first-child,.avg > .av:first-child{margin-left:0;}
+    .avg .more{display:inline-flex;align-items:center;justify-content:center;background:var(--sunken);
+      color:var(--muted);font:500 10px/1 var(--mono);border-radius:50%;}
+    .idn{display:flex;align-items:center;gap:8px;min-width:0;}
+    .idn-t{min-width:0;display:flex;flex-direction:column;gap:1px;}
+    .idn-n{font:500 var(--fs)/1.3 var(--sans);color:var(--ink);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .idn-s{font:400 11px/1.3 var(--sans);color:var(--muted);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .idn.in{gap:6px;}
+    .idn.lg{gap:12px;}
+    .idn.lg .idn-n{font:600 15px/1.3 var(--sans);}
+    .idn.lg .idn-s{font-size:12px;}
+    .idn.xl{gap:14px;}
+    .idn.xl .idn-n{font:600 20px/1.25 var(--sans);letter-spacing:-.015em;}
+    .idn.xl .idn-s{font-size:13px;}
+    .rchip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px 0 3px;
+      border-radius:999px;border:1px solid var(--line);background:var(--surface);
+      font:500 12px/1 var(--sans);color:var(--ink);}
+
+    /* ══ table ══ */
+    table.d{width:100%;border-collapse:collapse;font-size:var(--fs);}
+    table.d th{text-align:left;font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);padding:0 var(--pad) 7px;
+      border-bottom:1px solid var(--line);white-space:nowrap;}
+    table.d td{padding:0 var(--pad);height:var(--row);border-bottom:1px solid var(--hairline);
+      vertical-align:middle;}
+    table.d tbody tr:last-child td{border-bottom:0;}
+    table.d tr.hov td{background:var(--wash);}
+    table.d tr.sel td{background:var(--accent-soft);}
+    table.d .r{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;
+      font-size:12px;}
+    table.d th.r{text-align:right;}
+    table.d tr.grp-row td{background:var(--wash);font:500 11px/1 var(--sans);
+      letter-spacing:.05em;text-transform:uppercase;color:var(--muted);height:26px;}
+    table.d tfoot td{height:var(--row);font-weight:600;border-top:1px solid var(--line-strong);
+      border-bottom:0;background:var(--surface);}
+
+    /* ══ rows, cards ══ */
+    .lrow{display:flex;align-items:center;gap:10px;padding:7px var(--pad);
+      border-bottom:1px solid var(--hairline);}
+    .lrow:last-child{border-bottom:0;}
+    .lrow .tail{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none;}
+    .kard{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      padding:13px;display:flex;flex-direction:column;gap:10px;}
+    .meta{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:12px;}
+    .meta dt{font:500 10.5px/1.5 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .meta dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12px;}
+    .stat{display:flex;flex-direction:column;gap:3px;}
+    .stat b{font:600 24px/1.1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
+    .stat span{font:500 10.5px/1.3 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .bar{height:5px;border-radius:999px;background:var(--sunken);overflow:hidden;}
+    .bar i{display:block;height:100%;background:var(--accent);}
+
+    /* ══ sheet-local: icon primitives ══ */
+    .ic{display:inline-block;flex:none;line-height:0;}
+    .ic svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.4;
+      stroke-linecap:round;stroke-linejoin:round;}
+    .ic-12{width:12px;height:12px;}  .ic-12 svg{stroke-width:1.85;}
+    .ic-14{width:14px;height:14px;}  .ic-14 svg{stroke-width:1.6;}
+    .ic-16{width:16px;height:16px;}
+    .ic-20{width:20px;height:20px;}  .ic-20 svg{stroke-width:1.12;}
+
+    /* ══ sheet-local: two avatar sizes the feed spine and the mention chip need ══ */
+    .av-14{width:14px;height:14px;}
+    .av-22{width:22px;height:22px;}
+
+    /* ══ sheet-local: the feed spine ══ */
+    .feed{position:relative;display:flex;flex-direction:column;gap:14px;}
+    .feed::before{content:"";position:absolute;left:11px;top:11px;bottom:11px;width:1px;
+      background:var(--line);}
+    .fev{position:relative;padding-left:26px;min-height:22px;display:flex;
+      flex-direction:column;gap:8px;}
+    .fev.card{padding-left:34px;}
+    .fnode{position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;
+      background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;
+      justify-content:center;color:var(--muted);}
+    .fnode.face{border:0;background:none;box-shadow:0 0 0 2px var(--surface);}
+    .fnode.dash{border-style:dashed;border-color:var(--line-strong);color:var(--subtle);
+      cursor:pointer;}
+    .fnode.dash.hov{border-color:var(--accent-line);color:var(--accent-ink);
+      background:var(--accent-soft);}
+
+    /* ══ sheet-local: inline (machine-written) event ══ */
+    .fline{display:flex;align-items:center;gap:6px;min-height:22px;padding:0 8px;
+      border-radius:6px;font-size:13px;color:var(--muted);line-height:1.45;}
+    .fline b{font-weight:500;color:var(--ink);}
+    .fline .obj{font-weight:500;color:var(--ink);white-space:nowrap;}
+    .fline .obj.mono{font-size:12px;}
+    .fline .sep{color:var(--line-strong);}
+    .fline .t{margin-left:auto;padding-left:10px;font:400 12px/1 var(--mono);color:var(--subtle);
+      flex:none;}
+    .fline .act{margin-left:auto;padding-left:10px;display:flex;align-items:center;gap:8px;
+      flex:none;}
+    .fline .act .t{margin-left:0;padding-left:0;}
+    .fev.hov .fline{background:var(--wash);color:var(--ink);}
+    .fev.foc .fline{background:var(--surface);color:var(--ink);
+      box-shadow:0 0 0 2px var(--accent);}
+    .rollup{display:inline-flex;align-items:center;gap:6px;}
+    .expand{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;height:22px;
+      padding:0 8px;border-radius:6px;font:500 12.5px/1 var(--sans);color:var(--accent-ink);
+      cursor:pointer;}
+    .expand.hov{background:var(--accent-soft);}
+
+    /* ══ sheet-local: card (person-written) event ══ */
+    .fcard{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      display:flex;flex-direction:column;}
+    .fcard.stack{box-shadow:0 3px 0 -1px #fff,0 4px 0 -1px #e7e9ef,0 6px 0 -2px #fff,
+      0 7px 0 -2px #e7e9ef;}
+    .fc-h{display:flex;align-items:center;gap:8px;padding:8px 12px;
+      border-bottom:1px solid var(--hairline);font-size:12.5px;color:var(--muted);}
+    .fc-h b{font-weight:500;color:var(--ink);}
+    .fc-h .t{margin-left:auto;font:400 12px/1 var(--mono);color:var(--subtle);flex:none;}
+    .fc-b{padding:11px 12px;font-size:13px;line-height:1.6;color:var(--ink);display:flex;
+      flex-direction:column;gap:9px;}
+    .fc-b .q{color:var(--muted);}
+    .fc-f{display:flex;align-items:center;gap:8px;padding:7px 10px;
+      border-top:1px solid var(--hairline);background:var(--wash);}
+    .fc-f .rt{margin-left:auto;display:flex;align-items:center;gap:8px;}
+    .hdr-mail{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:12px;
+      color:var(--muted);}
+    .hdr-mail dt{font:500 10.5px/1.5 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .hdr-mail dd{margin:0;}
+
+    /* ══ sheet-local: time-range break ══ */
+    .fsec{position:relative;padding-left:34px;display:flex;align-items:center;gap:10px;height:22px;}
+    .fsec::before{content:"";position:absolute;left:5px;top:-7px;bottom:-7px;width:13px;
+      background:var(--surface);}
+    .fsec .l{flex:none;font:500 10.5px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;
+      color:var(--subtle);}
+    .fsec .rule{flex:1;height:1px;background:var(--hairline);}
+    .fsec .cnt{flex:none;}
+
+    /* ══ sheet-local: composer ══ */
+    .comp{display:flex;align-items:flex-start;gap:10px;}
+    .cbox{flex:1;min-width:0;border:1px solid var(--line-strong);border-radius:var(--r-card);
+      background:var(--surface);display:flex;flex-direction:column;}
+    .cbox.foc{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+    .cbox.bad{border-color:var(--crit);box-shadow:0 0 0 3px var(--crit-bg);}
+    .cb-b{padding:10px 12px;min-height:54px;font-size:13px;line-height:1.7;color:var(--ink);}
+    .cb-b .ph{color:var(--subtle);}
+    .cb-f{display:flex;align-items:center;gap:4px;padding:6px 8px;
+      border-top:1px solid var(--hairline);}
+    .cb-f .rt{margin-left:auto;display:flex;align-items:center;gap:8px;}
+    .caret{display:inline-block;width:1px;height:15px;background:var(--accent);
+      vertical-align:-3px;}
+    .ment{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px 0 3px;
+      border-radius:999px;background:var(--accent-soft);border:1px solid var(--accent-line);
+      color:var(--accent-ink);font:500 12.5px/1 var(--sans);vertical-align:-4px;}
+    .ment.ent{background:var(--wash);border-color:var(--line);color:var(--ink);}
+    .mpick{width:236px;border:1px solid var(--line);border-radius:8px;background:var(--surface);
+      box-shadow:var(--shadow-pop);overflow:hidden;}
+    .mpick .r{display:flex;align-items:center;gap:8px;padding:5px 9px;font-size:12.5px;}
+    .mpick .r.on{background:var(--accent-soft);}
+    .mpick .r .k{margin-left:auto;font:400 11px/1 var(--mono);color:var(--subtle);}
+    .mpick .hd{padding:6px 9px;background:var(--wash);border-bottom:1px solid var(--line);
+      font:500 10.5px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;
+      color:var(--subtle);}
+
+    /* ══ sheet-local: comment thread ══ */
+    .cthread{display:flex;flex-direction:column;gap:13px;}
+    .cmt{display:flex;align-items:flex-start;gap:9px;}
+    .cmt-t{min-width:0;flex:1;display:flex;flex-direction:column;gap:4px;}
+    .cmt-h{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);}
+    .cmt-h b{font-weight:500;color:var(--ink);}
+    .cmt-h .t{margin-left:auto;font:400 12px/1 var(--mono);color:var(--subtle);}
+    .cmt-b{font-size:13px;line-height:1.6;color:var(--ink);}
+    .cmt-a{display:flex;align-items:center;gap:10px;font:500 12px/1 var(--sans);
+      color:var(--muted);}
+    .creplies{position:relative;padding-left:33px;display:flex;flex-direction:column;gap:13px;}
+    .creplies::before{content:"";position:absolute;left:12px;top:2px;bottom:2px;width:1px;
+      background:var(--hairline);}
+    .rct{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;
+      border-radius:999px;border:1px solid var(--line);background:var(--surface);
+      font:500 11.5px/1 var(--sans);color:var(--muted);}
+    .rct.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+
+    /* ══ sheet-local: feed states ══ */
+    .skel{border-radius:4px;background:var(--sunken);}
+    .empt{display:flex;flex-direction:column;align-items:center;gap:7px;padding:26px 16px;
+      text-align:center;}
+    .empt b{font:500 13px/1.3 var(--sans);}
+    .empt span{font-size:12px;color:var(--muted);max-width:34ch;line-height:1.5;}
+    .fail{border:1px solid var(--crit-line);border-radius:var(--r-card);background:var(--crit-bg);
+      padding:9px 11px;display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--crit);}
+    .fail .rt{margin-left:auto;}
+    .endcap{display:flex;align-items:center;gap:8px;padding-left:34px;font-size:11.5px;
+      color:var(--subtle);}
+    .spec{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:12px;}
+    .spec dt{font:500 10.5px/1.5 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .spec dd{margin:0;color:var(--muted);line-height:1.5;}
+    .spec dd .mono{color:var(--ink);}
+    .dim{position:relative;border:1px dashed var(--accent-line);border-radius:8px;padding:14px 12px;
+      background:var(--surface);}
+    .dimlab{position:absolute;top:-7px;left:10px;padding:0 5px;background:var(--surface);
+      font:400 10px/1 var(--mono);color:var(--accent-ink);}
+  </style>
+</helmet>
+<div class="sheet" style="width:1240px;background:var(--ground)">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+ <symbol id="f1" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e6ebf5"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#3f5b8c"/><circle cx="20" cy="16.5" r="7.8" fill="#6b4630"/><path d="M12.2 16.4c0-5 3.2-8.3 7.8-8.3s7.8 3.3 7.8 8.3c0-2.4-1.1-3.7-2.4-4.3-1.9-.9-3.4.3-5.4.3s-3.5-1.2-5.4-.3c-1.3.6-2.4 1.9-2.4 4.3Z" fill="#1a1512"/></symbol>
+ <symbol id="f2" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e8f0ec"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#2f6b57"/><circle cx="20" cy="16.5" r="7.8" fill="#8a5a3c"/><path d="M11.6 16.6c0-5.3 3.5-8.5 8.4-8.5s8.4 3.2 8.4 8.5v7.2a1.6 1.6 0 1 1-3.2 0v-7.4c-1.6.9-3.4 1.4-5.2 1.4s-3.6-.5-5.2-1.4v7.4a1.6 1.6 0 1 1-3.2 0Z" fill="#2a211b"/></symbol>
+ <symbol id="f3" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f0e9f2"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#6b4a7d"/><circle cx="20" cy="16.5" r="7.8" fill="#a9714b"/><path d="M12.4 17.2c-.6-5.6 2.8-9.1 7.6-9.1s8.2 3.5 7.6 9.1c-.3-2.6-1.6-3.9-3-4.4-2.2-.8-3 .5-4.6.5s-2.4-1.3-4.6-.5c-1.4.5-2.7 1.8-3 4.4Z" fill="#3d2a1e"/><circle cx="27.4" cy="9.4" r="2.9" fill="#3d2a1e"/></symbol>
+ <symbol id="f4" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f5ebe8"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#8c4a3f"/><circle cx="20" cy="16.5" r="7.8" fill="#5a3a28"/><path d="M12.3 15.8c0-4.8 3.3-7.7 7.7-7.7s7.7 2.9 7.7 7.7c0-1.7-.9-2.7-2.1-3.1-1.8-.6-3.2.6-5.6.6s-3.8-1.2-5.6-.6c-1.2.4-2.1 1.4-2.1 3.1Z" fill="#1a1512"/></symbol>
+ <symbol id="f5" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eceef3"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#3d4756"/><circle cx="20" cy="16.5" r="7.8" fill="#7c4f35"/><path d="M11.9 17.8c-.4-6.2 3.1-9.7 8.1-9.7s8.5 3.5 8.1 9.7c-.9-1.2-1.4-3.2-1.4-5-2 1.3-4.3 2-6.7 2s-4.7-.7-6.7-2c0 1.8-.5 3.8-1.4 5Z" fill="#2a211b"/></symbol>
+ <symbol id="f6" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e9f0f4"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#46617a"/><circle cx="20" cy="16.5" r="7.8" fill="#b98254"/><path d="M12.2 16.4c0-5 3.2-8.3 7.8-8.3s7.8 3.3 7.8 8.3c0-2.4-1.1-3.7-2.4-4.3-1.9-.9-3.4.3-5.4.3s-3.5-1.2-5.4-.3c-1.3.6-2.4 1.9-2.4 4.3Z" fill="#3d2a1e"/></symbol>
+ <symbol id="f7" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f2eee6"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#7a6a4a"/><circle cx="20" cy="16.5" r="7.8" fill="#6b4630"/><path d="M11.5 15.4c0-5 3.8-8.3 8.5-8.3s8.5 3.3 8.5 8.3c0 1-.5 1.9-1.3 2.4l-1.2-4.8a20 20 0 0 1-12 0l-1.2 4.8c-.8-.5-1.3-1.4-1.3-2.4Z" fill="#5d4d8a"/></symbol>
+ <symbol id="f8" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eaf1ee"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#4a7a68"/><circle cx="20" cy="16.5" r="7.8" fill="#8a5a3c"/><path d="M12.6 14.9c0-4.5 3.1-7.3 7.4-7.3s7.4 2.8 7.4 7.3c0-1.3-.8-2.1-1.8-2.4-1.6-.5-3.2.7-5.6.7s-4-1.2-5.6-.7c-1 .3-1.8 1.1-1.8 2.4Z" fill="#1a1512"/></symbol>
+ <symbol id="c1" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e4eef2"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#1f5f7a"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#6b4630"/><path d="M12.9 17.8c0-4.7 3-7.7 7.1-7.7s7.1 3 7.1 7.7c0-2.2-1-3.4-2.2-4-1.7-.8-3.1.3-4.9.3s-3.2-1.1-4.9-.3c-1.2.6-2.2 1.8-2.2 4Z" fill="#1a1512"/></symbol>
+ <symbol id="c2" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eef1e6"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#2f6b57"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#8a5a3c"/><path d="M12.4 18c0-4.9 3.2-7.9 7.6-7.9s7.6 3 7.6 7.9v6a1.5 1.5 0 1 1-3 0v-6.2c-1.4.8-3 1.2-4.6 1.2s-3.2-.4-4.6-1.2V24a1.5 1.5 0 1 1-3 0Z" fill="#2a211b"/></symbol>
+ <symbol id="c3" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f4ece4"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#8c4a3f"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#a9714b"/><path d="M12.9 18.4c-.5-5.2 2.6-8.3 7.1-8.3s7.6 3.1 7.1 8.3c-.3-2.4-1.5-3.6-2.8-4-2-.8-2.8.4-4.3.4s-2.2-1.2-4.3-.4c-1.3.4-2.5 1.6-2.8 4Z" fill="#3d2a1e"/><circle cx="26.8" cy="11.4" r="2.6" fill="#3d2a1e"/></symbol>
+</defs></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+ <symbol id="i-chevron-right" viewBox="0 0 16 16"><path d="M6 3.4 10.6 8 6 12.6"></path></symbol>
+ <symbol id="i-chevron-down" viewBox="0 0 16 16"><path d="M3.4 6 8 10.6 12.6 6"></path></symbol>
+ <symbol id="i-close" viewBox="0 0 16 16"><path d="M4.1 4.1 11.9 11.9M11.9 4.1 4.1 11.9"></path></symbol>
+ <symbol id="i-more" viewBox="0 0 16 16"><circle cx="3.5" cy="8" r="1.15" fill="currentColor" stroke="none"></circle><circle cx="8" cy="8" r="1.15" fill="currentColor" stroke="none"></circle><circle cx="12.5" cy="8" r="1.15" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-customer" viewBox="0 0 16 16"><circle cx="8" cy="5.5" r="2.8"></circle><path d="M2.9 13.6c0-2.9 2.3-4.6 5.1-4.6s5.1 1.7 5.1 4.6"></path></symbol>
+ <symbol id="i-invoice" viewBox="0 0 16 16"><path d="M3.4 1.7h6.1l3.1 3.1v9.5H3.4Z"></path><path d="M9.5 1.7v3.1h3.1"></path><path d="M5.7 8.4h4.6M5.7 11h3"></path></symbol>
+ <symbol id="i-receipt" viewBox="0 0 16 16"><path d="M3.3 1.7h9.4v12.6l-1.6-1.1-1.6 1.1-1.5-1.1-1.6 1.1-1.5-1.1-1.6 1.1Z"></path><path d="M5.9 5.3h4.2M5.9 8.1h4.2"></path></symbol>
+ <symbol id="i-journal" viewBox="0 0 16 16"><path d="M8 4.5C7.1 3.2 5.5 2.6 2.8 2.6v8.8c2.7 0 4.3.6 5.2 1.9.9-1.3 2.5-1.9 5.2-1.9V2.6c-2.7 0-4.3.6-5.2 1.9Z"></path><path d="M8 4.5v8.8"></path></symbol>
+ <symbol id="i-stock" viewBox="0 0 16 16"><path d="M8 1.8 14 5v6l-6 3.2L2 11V5Z"></path><path d="M2 5l6 3.2L14 5M8 8.2v6"></path></symbol>
+ <symbol id="i-approve" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M5.4 8.2 7.2 10l3.5-3.9"></path></symbol>
+ <symbol id="i-reject" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M6 6 10 10M10 6 6 10"></path></symbol>
+ <symbol id="i-warning" viewBox="0 0 16 16"><path d="M8 2.2 14.4 13.4H1.6Z"></path><path d="M8 6.4v3.2"></path><circle cx="8" cy="11.5" r=".8" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-clock" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M8 4.6v3.6l2.5 1.5"></path></symbol>
+ <symbol id="i-refresh" viewBox="0 0 16 16"><path d="M13.2 7.4a5.2 5.2 0 0 0-8.9-2.8L2.8 6.1"></path><path d="M6.1 6.1H2.8V2.8"></path><path d="M2.8 8.6a5.2 5.2 0 0 0 8.9 2.8l1.5-1.5"></path><path d="M9.9 9.9h3.3v3.3"></path></symbol>
+ <symbol id="i-attach" viewBox="0 0 16 16"><path d="M10.9 7.3 6.8 11.4a2.4 2.4 0 0 1-3.4-3.4l5.2-5.2a1.7 1.7 0 0 1 2.4 2.4l-5.2 5.2a.85.85 0 0 1-1.2-1.2l4.6-4.6"></path></symbol>
+ <symbol id="i-lock" viewBox="0 0 16 16"><path d="M3.5 7.1h9v6.4h-9z"></path><path d="M5.5 7.1V5.2a2.5 2.5 0 0 1 5 0v1.9"></path><circle cx="8" cy="10.3" r=".95" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-mail" viewBox="0 0 16 16"><path d="M1.9 3.6h12.2v8.8H1.9z"></path><path d="m1.9 4.4 6.1 4.3 6.1-4.3"></path></symbol>
+ <symbol id="i-note" viewBox="0 0 16 16"><path d="M3.4 1.9h9.2v12.2H3.4z"></path><path d="M5.9 5.3h4.2M5.9 8h4.2M5.9 10.7h2.6"></path></symbol>
+ <symbol id="i-comment" viewBox="0 0 16 16"><path d="M2.2 3.2h11.6v7.9H8.4L5.1 14v-2.9H2.2Z"></path></symbol>
+ <symbol id="i-at" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.6"></circle><path d="M10.6 5.4v3.4a1.9 1.9 0 0 0 3.1 1.5A6.2 6.2 0 1 0 11 13.2"></path></symbol>
+ <symbol id="i-reply" viewBox="0 0 16 16"><path d="M6.1 3.2 2.4 6.7l3.7 3.5"></path><path d="M2.4 6.7h6.9a4.3 4.3 0 0 1 4.3 4.3v1.8"></path></symbol>
+</defs></svg>
+
+  <div class="sheet-h">
+    <h2>Feed and activity</h2>
+    <span class="sub">One spine &middot; machine events roll up, written words never do</span>
+    <span class="tag">Sheet 11</span>
+  </div>
+
+  <div class="cols" style="grid-template-columns:1fr 1fr">
+    <div class="grp">
+      <span class="grp-l">Anatomy of the spine</span>
+      <div class="panel">
+        <div class="panel-b">
+          <div class="cols" style="grid-template-columns:1fr 232px;gap:18px;align-items:start">
+            <div class="dim">
+              <span class="dimlab">34px content offset &middot; 14px between events</span>
+              <div class="feed">
+                <div class="fev">
+                  <span class="fnode"><span class="ic ic-12" style="color:var(--fiscal)"><svg><use href="#i-receipt"></use></svg></span></span>
+                  <div class="fline"><span class="av av-16"><svg><use href="#f1"></use></svg></span><b>Tendai Mukamba</b><span>fiscalised</span><span class="obj mono">#10238</span><span class="t">14:06:05</span></div>
+                </div>
+                <div class="fev">
+                  <span class="fnode"><span class="ic ic-12" style="color:var(--books)"><svg><use href="#i-journal"></use></svg></span></span>
+                  <div class="fline"><span class="av av-16"><svg><use href="#f3"></use></svg></span><b>Rutendo Chiweshe</b><span>posted</span><span class="obj mono">JNL-88214</span><span class="t">14:22</span></div>
+                </div>
+                <div class="fev">
+                  <span class="fnode"><span class="ic ic-12" style="color:var(--stock)"><svg><use href="#i-stock"></use></svg></span></span>
+                  <div class="fline"><span class="av av-16"><svg><use href="#f5"></use></svg></span><b>Blessing Ncube</b><span>closed off</span><span class="obj mono">SC-0091</span><span class="t">14:41</span></div>
+                </div>
+              </div>
+            </div>
+            <dl class="spec">
+              <dt>Spine</dt><dd><span class="mono">1px</span> &middot; line, centred at <span class="mono">11px</span></dd>
+              <dt>Badge</dt><dd><span class="mono">22px</span> circle, surface fill, hairline ring</dd>
+              <dt>Glyph</dt><dd><span class="mono">12px</span> &middot; the only coloured thing</dd>
+              <dt>Content</dt><dd>starts at <span class="mono">34px</span></dd>
+              <dt>Gap</dt><dd><span class="mono">14px</span> between events</dd>
+              <dt>Time</dt><dd>mono <span class="mono">12px</span>, subtle, last, never bold</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+      <p class="note">The badge never takes the module colour as a fill. A column of filled discs turns a quiet ledger into a string of lights; a white disc with a coloured glyph keeps the spine readable at forty events and still says which module wrote the line.</p>
+    </div>
+
+    <div class="grp">
+      <span class="grp-l">Badge by origin &mdash; glyph carries the hue</span>
+      <div class="panel">
+        <div class="panel-b">
+          <div class="rowset" style="gap:18px">
+            <div class="colset" style="gap:7px;align-items:center;width:74px">
+              <span class="fnode" style="position:static"><span class="ic ic-12" style="color:var(--sell)"><svg><use href="#i-invoice"></use></svg></span></span>
+              <span class="hint">Sell</span>
+            </div>
+            <div class="colset" style="gap:7px;align-items:center;width:74px">
+              <span class="fnode" style="position:static"><span class="ic ic-12" style="color:var(--books)"><svg><use href="#i-journal"></use></svg></span></span>
+              <span class="hint">Books</span>
+            </div>
+            <div class="colset" style="gap:7px;align-items:center;width:74px">
+              <span class="fnode" style="position:static"><span class="ic ic-12" style="color:var(--stock)"><svg><use href="#i-stock"></use></svg></span></span>
+              <span class="hint">Stock</span>
+            </div>
+            <div class="colset" style="gap:7px;align-items:center;width:74px">
+              <span class="fnode" style="position:static"><span class="ic ic-12" style="color:var(--fiscal)"><svg><use href="#i-receipt"></use></svg></span></span>
+              <span class="hint">Fiscal</span>
+            </div>
+            <div class="colset" style="gap:7px;align-items:center;width:74px">
+              <span class="fnode" style="position:static"><span class="ic ic-12" style="color:var(--maint)"><svg><use href="#i-warning"></use></svg></span></span>
+              <span class="hint">Maintenance</span>
+            </div>
+            <div class="colset" style="gap:7px;align-items:center;width:74px">
+              <span class="fnode" style="position:static"><span class="ic ic-12" style="color:var(--crit)"><svg><use href="#i-reject"></use></svg></span></span>
+              <span class="hint">Failure</span>
+            </div>
+            <div class="colset" style="gap:7px;align-items:center;width:74px">
+              <span class="fnode face" style="position:static"><span class="av av-22"><svg><use href="#f6"></use></svg></span></span>
+              <span class="hint">Written</span>
+            </div>
+            <div class="colset" style="gap:7px;align-items:center;width:74px">
+              <span class="fnode dash" style="position:static"><span class="ic ic-12"><svg><use href="#i-chevron-down"></use></svg></span></span>
+              <span class="hint">Expander</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="note">Two badges break the rule on purpose. A card event puts the writer's face on the spine, because the person is the event; a roll-up expander uses a dashed ring, because the thing it stands for is not an event but a count.</p>
+    </div>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">The timeline &mdash; The Gate Shops (ACC-0142), account activity</span>
+    <div class="panel">
+      <div class="panel-h"><span>Activity</span><span class="rt"><span class="pill hollow"><span class="dot"></span>All events</span></span></div>
+      <div class="panel-b" style="padding:16px 14px">
+        <div class="feed">
+
+          <div class="fsec"><span class="l">This week</span><span class="cnt">23</span><span class="rule"></span></div>
+
+          <div class="fev card">
+            <span class="fnode face"><span class="av av-22"><svg><use href="#f6"></use></svg></span></span>
+            <div class="fcard stack">
+              <div class="fc-h">
+                <span class="ic ic-14" style="color:var(--sell)"><svg><use href="#i-mail"></use></svg></span>
+                <b>Nyasha Dube</b><span>emailed</span>
+                <span class="idn in"><span class="av av-16 ent" style="background:var(--sell)"><span class="mk">GS</span></span><b>The Gate Shops</b></span>
+                <span class="t">Tue 09:12</span>
+              </div>
+              <div class="fc-b">
+                <dl class="hdr-mail">
+                  <dt>Subject</dt><dd>Statement to 31 August &middot; ACC-0142</dd>
+                  <dt>To</dt><dd class="mono">accounts@gateshops.co.zw</dd>
+                </dl>
+                <p>Attached is the August statement. The balance carried forward is US$8,412.30, of which US$1,940.00 is over 60 days. Could you confirm which of the two March invoices the 14 August payment was meant to settle.</p>
+              </div>
+              <div class="fc-f">
+                <span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-attach"></use></svg></span>
+                <span class="hint">STMT-ACC-0142-08.pdf &middot; 214 KB</span>
+                <span class="rt"><span class="pill hollow"><span class="dot"></span>3 more in thread</span><span class="btn xs">Open thread</span></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="fev">
+            <span class="fnode"><span class="ic ic-12" style="color:var(--books)"><svg><use href="#i-journal"></use></svg></span></span>
+            <div class="fline"><span class="av av-16"><svg><use href="#f1"></use></svg></span><b>Tendai Mukamba</b><span>posted</span><span class="obj mono">JNL-88214</span><span class="sep">&middot;</span><span class="mono">US$4,318.75</span><span class="act"><span class="pill ok"><span class="dot"></span>Posted</span><span class="t">Tue 16:42</span></span></div>
+          </div>
+
+          <div class="fev">
+            <span class="fnode"><span class="ic ic-12" style="color:var(--fiscal)"><svg><use href="#i-receipt"></use></svg></span></span>
+            <div class="fline"><span class="rollup"><span class="obj num">14</span><span>receipts fiscalised</span></span><span class="sep">&middot;</span><span class="mono">US$1,204.60</span><span class="sep">&middot;</span><span>ZIMRA FDMS</span><span class="t">Tue 17:00</span></div>
+          </div>
+          <div class="fev">
+            <span class="fnode dash"><span class="ic ic-12"><svg><use href="#i-chevron-down"></use></svg></span></span>
+            <span class="expand">Show 14 receipts &middot; <span class="mono">#10231</span>&#8202;&ndash;&#8202;<span class="mono">#10244</span></span>
+          </div>
+
+          <div class="fev">
+            <span class="fnode"><span class="ic ic-12" style="color:var(--sell)"><svg><use href="#i-invoice"></use></svg></span></span>
+            <div class="fline"><span class="av av-16"><svg><use href="#f3"></use></svg></span><b>Rutendo Chiweshe</b><span>changed terms on</span><span class="obj mono">ACC-0142</span><span class="sep">&middot;</span><span>30 days to 14 days</span><span class="t">Wed 08:05</span></div>
+          </div>
+
+          <div class="fev card">
+            <span class="fnode face"><span class="av av-22"><svg><use href="#f2"></use></svg></span></span>
+            <div class="fcard">
+              <div class="fc-h">
+                <span class="ic ic-14" style="color:var(--maint)"><svg><use href="#i-note"></use></svg></span>
+                <b>Farai Mutasa</b><span>posted a note</span>
+                <span class="t">Wed 11:26</span>
+              </div>
+              <div class="fc-b">
+                <p>Spoke to the Avondale branch manager. They will settle the two March invoices by the 30th and want the Borrowdale orders held until then. I have left the account Trading but dropped the limit to US$5,000.00.</p>
+              </div>
+              <div class="fc-f">
+                <span class="rct on"><span class="ic ic-12"><svg><use href="#i-approve"></use></svg></span>2</span>
+                <span class="rct">Add reaction</span>
+                <span class="rt"><span class="btn xs ghost"><span class="ic ic-12"><svg><use href="#i-reply"></use></svg></span>Reply</span></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="fev hov">
+            <span class="fnode"><span class="ic ic-12" style="color:var(--stock)"><svg><use href="#i-stock"></use></svg></span></span>
+            <div class="fline"><span class="av av-16"><svg><use href="#f5"></use></svg></span><b>Blessing Ncube</b><span>closed off</span><span class="obj mono">SC-0091</span><span class="sep">&middot;</span><span>Msasa warehouse</span><span class="act"><span class="btn xs ghost icon"><span class="ic ic-12"><svg><use href="#i-more"></use></svg></span></span><span class="t">Wed 15:38</span></span></div>
+          </div>
+
+          <div class="fsec"><span class="l">Last week</span><span class="cnt">41</span><span class="rule"></span></div>
+
+          <div class="fev">
+            <span class="fnode"><span class="ic ic-12" style="color:var(--crit)"><svg><use href="#i-reject"></use></svg></span></span>
+            <div class="fline" style="color:var(--crit)"><span class="obj mono" style="color:var(--crit)">#10229</span><span>failed fiscalisation</span><span class="sep">&middot;</span><span>FDMS gateway timed out</span><span class="act"><span class="btn xs"><span class="ic ic-12"><svg><use href="#i-refresh"></use></svg></span>Retry</span><span class="t" style="color:var(--crit)">Fri 16:58</span></span></div>
+          </div>
+
+          <div class="fev card">
+            <span class="fnode face"><span class="av av-22"><svg><use href="#f7"></use></svg></span></span>
+            <div class="fcard">
+              <div class="fc-h">
+                <span class="ic ic-14" style="color:var(--accent)"><svg><use href="#i-comment"></use></svg></span>
+                <b>Chipo Zvobgo</b><span>commented</span>
+                <span class="t">Fri 10:04</span>
+              </div>
+              <div class="fc-b">
+                <p><span class="ment"><span class="av av-14"><svg><use href="#f8"></use></svg></span>Tapiwa Moyo</span> the ZWG leg on this one was converted at <span class="mono">33.5500</span>, not the rate on the receipt. It is US$18.40 out. Worth a look before the VAT7 goes in.</p>
+              </div>
+              <div class="fc-f">
+                <span class="rct">Add reaction</span>
+                <span class="rt"><span class="pill acc"><span class="dot"></span>2 replies</span><span class="btn xs ghost"><span class="ic ic-12"><svg><use href="#i-reply"></use></svg></span>Reply</span></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="fev">
+            <span class="fnode"><span class="ic ic-12" style="color:var(--maint)"><svg><use href="#i-lock"></use></svg></span></span>
+            <div class="fline"><span class="av av-16"><svg><use href="#f4"></use></svg></span><b>Simba Marondera</b><span>put</span><span class="obj mono">ACC-0142</span><span>on hold</span><span class="sep">&middot;</span><span>ITF263 expired</span><span class="act"><span class="pill warn"><span class="dot"></span>Needs approval</span><span class="t">Thu 09:47</span></span></div>
+          </div>
+
+          <div class="fev">
+            <span class="fnode"><span class="ic ic-12" style="color:var(--fiscal)"><svg><use href="#i-receipt"></use></svg></span></span>
+            <div class="fline"><span class="rollup"><span class="obj num">96</span><span>receipts fiscalised</span></span><span class="sep">&middot;</span><span class="mono">US$11,806.15</span><span class="t">Mon&#8202;&ndash;&#8202;Fri</span></div>
+          </div>
+          <div class="fev">
+            <span class="fnode dash hov"><span class="ic ic-12"><svg><use href="#i-chevron-down"></use></svg></span></span>
+            <span class="expand hov">Show 96 receipts</span>
+          </div>
+
+          <div class="endcap"><span class="ic ic-12"><svg><use href="#i-clock"></use></svg></span><span>Account opened 14 March 2023 &middot; earlier activity is archived</span></div>
+
+        </div>
+      </div>
+    </div>
+    <p class="note">Machine-written events roll up: fourteen fiscalisations become one line with a count and a total, and the expander beneath restores them. Anything a person wrote &mdash; a note, an email, a comment &mdash; never rolls up, however many arrive together, because a summary of what somebody said is not what they said. Time sits at the end of the line and stays regular weight; it is the one thing on every row and would otherwise be the loudest.</p>
+  </div>
+
+  <div class="cols" style="grid-template-columns:1fr 1fr">
+    <div class="grp">
+      <span class="grp-l">Composer</span>
+      <div class="colset" style="gap:14px">
+        <div class="panel">
+          <div class="panel-h"><span>Resting</span></div>
+          <div class="panel-b">
+            <div class="comp">
+              <span class="av av-32"><svg><use href="#f8"></use></svg></span>
+              <div class="cbox">
+                <div class="cb-b"><span class="ph">Write a comment, or @ someone</span></div>
+                <div class="cb-f">
+                  <span class="btn sm icon ghost"><span class="ic ic-14"><svg><use href="#i-attach"></use></svg></span></span>
+                  <span class="btn sm icon ghost"><span class="ic ic-14"><svg><use href="#i-at"></use></svg></span></span>
+                  <span class="rt"><span class="btn sm solid off">Comment</span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-h"><span>Focused &middot; mention picker open</span></div>
+          <div class="panel-b">
+            <div class="comp">
+              <span class="av av-32"><svg><use href="#f8"></use></svg></span>
+              <div class="colset" style="flex:1;min-width:0;gap:8px">
+                <div class="cbox foc">
+                  <div class="cb-b">The ZWG leg was converted at <span class="mono">33.5500</span>. <span class="ment ent"><span class="av av-14 ent" style="background:var(--sell)"><span class="mk">GS</span></span>The Gate Shops</span> should see the corrected receipt before Friday &mdash; <span class="mono">@ru</span><span class="caret"></span></div>
+                  <div class="cb-f">
+                    <span class="btn sm icon ghost"><span class="ic ic-14"><svg><use href="#i-attach"></use></svg></span></span>
+                    <span class="btn sm icon ghost"><span class="ic ic-14"><svg><use href="#i-at"></use></svg></span></span>
+                    <span class="rt"><span class="hint"><span class="kbd">&#8984;</span><span class="kbd">&#9166;</span> to send</span><span class="btn sm solid">Comment</span></span>
+                  </div>
+                </div>
+                <div class="mpick">
+                  <div class="hd">People on this account</div>
+                  <div class="r on"><span class="av av-20"><svg><use href="#f3"></use></svg></span><span>Rutendo Chiweshe</span><span class="k">Books</span></div>
+                  <div class="r"><span class="av av-20"><svg><use href="#f8"></use></svg></span><span>Rutendo Marange</span><span class="k">Sell</span></div>
+                  <div class="r"><span class="av av-20 ent" style="background:var(--books)"><span class="mk">HM</span></span><span>Huchu Mine</span><span class="k">ACC-0188</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-h"><span>Sending &middot; and rejected</span></div>
+          <div class="panel-b">
+            <div class="colset" style="gap:12px">
+              <div class="comp">
+                <span class="av av-32"><svg><use href="#f8"></use></svg></span>
+                <div class="cbox">
+                  <div class="cb-b" style="color:var(--muted)">Corrected receipt raised as <span class="mono">#10245</span>.</div>
+                  <div class="cb-f">
+                    <span class="hint"><span class="ic ic-12" style="vertical-align:-2px"><svg><use href="#i-clock"></use></svg></span> Sending</span>
+                    <span class="rt"><span class="btn sm solid off">Comment</span></span>
+                  </div>
+                </div>
+              </div>
+              <div class="comp">
+                <span class="av av-32"><svg><use href="#f8"></use></svg></span>
+                <div class="colset" style="flex:1;min-width:0;gap:5px">
+                  <div class="cbox bad">
+                    <div class="cb-b" style="min-height:34px">&nbsp;</div>
+                    <div class="cb-f">
+                      <span class="rt"><span class="btn sm solid">Comment</span></span>
+                    </div>
+                  </div>
+                  <span class="hint bad">A comment cannot be empty.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="note">The composer carries the current user's face at 32px so a person can see, before typing, which account they are about to speak from. A mention is a chip and not blue text: it holds a 14px avatar, so an @ of a person and an @ of a company are told apart without reading.</p>
+    </div>
+
+    <div class="grp">
+      <span class="grp-l">Comment thread &middot; replies indent once, and only once</span>
+      <div class="panel">
+        <div class="panel-h"><span>Receipt #10238</span><span class="rt"><span class="mono">14:06:05</span> &middot; US$142.60</span></div>
+        <div class="panel-b">
+          <div class="cthread">
+            <div class="cmt">
+              <span class="av av-24"><svg><use href="#f7"></use></svg></span>
+              <div class="cmt-t">
+                <div class="cmt-h"><b>Chipo Zvobgo</b><span class="pill hollow"><span class="dot"></span>Books</span><span class="t">Fri 10:04</span></div>
+                <div class="cmt-b"><span class="ment"><span class="av av-14"><svg><use href="#f8"></use></svg></span>Tapiwa Moyo</span> the ZWG leg was converted at <span class="mono">33.5500</span>, not the rate on the receipt. It is US$18.40 out.</div>
+                <div class="cmt-a"><span class="rct on"><span class="ic ic-12"><svg><use href="#i-approve"></use></svg></span>2</span><a href="#">Reply</a><a href="#">Copy link</a></div>
+              </div>
+            </div>
+            <div class="creplies">
+              <div class="cmt">
+                <span class="av av-24"><svg><use href="#f8"></use></svg></span>
+                <div class="cmt-t">
+                  <div class="cmt-h"><b>Tapiwa Moyo</b><span class="t">Fri 10:19</span></div>
+                  <div class="cmt-b">Confirmed. The till took the rate from the morning sync and the FDMS reply came back after the rate moved. I will raise a credit and re-fiscalise.</div>
+                  <div class="cmt-a"><span class="rct">Add reaction</span><a href="#">Reply</a></div>
+                </div>
+              </div>
+              <div class="cmt">
+                <span class="av av-24"><svg><use href="#f3"></use></svg></span>
+                <div class="cmt-t">
+                  <div class="cmt-h"><b>Rutendo Chiweshe</b><span class="t">Fri 11:02</span></div>
+                  <div class="cmt-b">Credit note <span class="mono">CRN-0417</span> is on the account and <span class="mono">#10245</span> replaces it. Nothing to change on the VAT7.</div>
+                  <div class="cmt-a"><span class="rct">Add reaction</span><a href="#">Reply</a></div>
+                </div>
+              </div>
+              <div class="comp">
+                <span class="av av-24"><svg><use href="#f8"></use></svg></span>
+                <div class="cbox" style="border-radius:8px">
+                  <div class="cb-b" style="min-height:0;padding:7px 10px"><span class="ph">Reply to Chipo</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="cmt">
+              <span class="av av-24"><svg><use href="#f5"></use></svg></span>
+              <div class="cmt-t">
+                <div class="cmt-h"><b>Blessing Ncube</b><span class="t">Fri 15:40</span></div>
+                <div class="cmt-b">Reconciled against the Mutare depot banking. <span class="pill ok"><span class="dot"></span>Matched</span></div>
+                <div class="cmt-a"><span class="rct">Add reaction</span><a href="#">Reply</a></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="note">Replies indent by the same 33px the spine uses and carry their own hairline, so a thread reads as one shape rather than as a staircase. There is no second level: a reply to a reply is still a reply, addressed with a mention.</p>
+    </div>
+  </div>
+
+  <div class="cols" style="grid-template-columns:1fr 1fr 1fr">
+    <div class="grp">
+      <span class="grp-l">Empty</span>
+      <div class="panel" style="min-height:172px">
+        <div class="panel-b">
+          <div class="empt">
+            <span class="ic ic-20" style="color:var(--subtle)"><svg><use href="#i-comment"></use></svg></span>
+            <b>Nothing has happened here yet</b>
+            <span>Activity appears the moment this account trades, is invoiced or is edited.</span>
+            <span class="btn sm"><span class="ic ic-12"><svg><use href="#i-note"></use></svg></span>Post a note</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="grp">
+      <span class="grp-l">Loading</span>
+      <div class="panel" style="min-height:172px">
+        <div class="panel-b">
+          <div class="feed">
+            <div class="fev">
+              <span class="fnode" style="border-style:dashed;border-color:var(--line)"></span>
+              <div class="fline" style="gap:8px;padding-left:8px"><span class="skel" style="width:96px;height:9px"></span><span class="skel" style="width:132px;height:9px"></span><span class="skel" style="width:38px;height:9px;margin-left:auto"></span></div>
+            </div>
+            <div class="fev">
+              <span class="fnode" style="border-style:dashed;border-color:var(--line)"></span>
+              <div class="fline" style="gap:8px;padding-left:8px"><span class="skel" style="width:78px;height:9px"></span><span class="skel" style="width:104px;height:9px"></span><span class="skel" style="width:38px;height:9px;margin-left:auto"></span></div>
+            </div>
+            <div class="fev card">
+              <span class="fnode" style="border-style:dashed;border-color:var(--line)"></span>
+              <div class="skel" style="height:62px;border-radius:var(--r-card)"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="grp">
+      <span class="grp-l">Could not load &middot; partial feed</span>
+      <div class="panel" style="min-height:172px">
+        <div class="panel-b">
+          <div class="feed">
+            <div class="fev">
+              <span class="fnode"><span class="ic ic-12" style="color:var(--books)"><svg><use href="#i-journal"></use></svg></span></span>
+              <div class="fline"><span class="av av-16"><svg><use href="#f1"></use></svg></span><b>Tendai Mukamba</b><span>posted</span><span class="obj mono">JNL-88214</span><span class="t">16:42</span></div>
+            </div>
+            <div class="fev card">
+              <span class="fnode"><span class="ic ic-12" style="color:var(--crit)"><svg><use href="#i-warning"></use></svg></span></span>
+              <div class="fail">
+                <span>Older activity could not be loaded.</span>
+                <span class="rt"><span class="btn xs"><span class="ic ic-12"><svg><use href="#i-refresh"></use></svg></span>Try again</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="note" style="max-width:none">Every actor on this sheet has a face at 16px inline, 22px on the spine or 24px in a thread &mdash; a name in the feed is never a bare string, including inside a mention. Machine-written events are the only ones that ever collapse; the roll-up keeps a count and a total so the line still answers &ldquo;how much&rdquo; without being opened.</p>
+
+</div>
+</x-dc>
+</body>
+</html>

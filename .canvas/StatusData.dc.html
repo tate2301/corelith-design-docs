@@ -1,0 +1,975 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    /* ══ Corelith v1 tokens — approved. Do not invent values. ══ */
+    :root{
+      --ground:#fbfbfc; --surface:#ffffff; --wash:#f5f6f9; --sunken:#eef0f5;
+      --line:#e7e9ef; --line-strong:#d5d8e2; --hairline:#f1f2f6;
+      --ink:#0b0c14; --muted:#5c5e6b; --subtle:#8a8c98;
+      --accent:#2563eb; --accent-soft:#eff4ff; --accent-line:#dbe5fb; --accent-ink:#1b4bc4;
+      --sell:#2563eb; --books:#12805c; --stock:#0e7490; --fiscal:#6549d5;
+      --maint:#b45309; --crit:#c2321b; --campus:#0e7490;
+      --ok-bg:#e8f4ef; --ok-line:#c9e5da; --warn-bg:#fdf3e2; --warn-line:#f2ddb6;
+      --crit-bg:#fdece9; --crit-line:#f6cec6;
+      --sans:"Atkinson Hyperlegible Next","Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+      --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+      /* density · default mode */
+      --h-xs:22px; --h-sm:26px; --h-md:30px; --h-lg:36px;
+      --row:32px; --pad:12px; --fs:13px;
+      --r-ctl:6px; --r-card:10px;
+      --shadow-pop:0 10px 30px -12px rgba(11,12,20,.20),0 2px 6px rgba(11,12,20,.05);
+    }
+    [data-d="compact"]{--h-xs:20px;--h-sm:24px;--h-md:26px;--h-lg:30px;--row:28px;--pad:10px;--fs:12.5px;}
+    [data-d="comfortable"]{--h-xs:24px;--h-sm:30px;--h-md:36px;--h-lg:44px;--row:44px;--pad:14px;--fs:14px;}
+    *,*::before,*::after{box-sizing:border-box;}
+    body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+      font-size:var(--fs);line-height:1.5;-webkit-font-smoothing:antialiased;}
+    a{color:var(--accent);text-decoration:underline;text-underline-offset:2px;}
+    a:hover{color:var(--accent-ink);}
+    h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.012em;}
+    p{margin:0;}
+    .mono,.num{font-family:var(--mono);font-variant-numeric:tabular-nums;}
+
+    /* ══ sheet chrome — every component sheet uses these ══ */
+    .sheet{padding:28px 32px;display:flex;flex-direction:column;gap:26px;}
+    .sheet-h{display:flex;align-items:baseline;gap:10px;padding-bottom:9px;
+      border-bottom:1px solid var(--line);}
+    .sheet-h h2{font-size:17px;}
+    .sheet-h .sub{color:var(--muted);font-size:12.5px;}
+    .sheet-h .tag{margin-left:auto;font:500 10.5px/1 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .grp{display:flex;flex-direction:column;gap:11px;}
+    .grp-l{font:500 10.5px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;
+      color:var(--subtle);}
+    .rowset{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+    .colset{display:flex;flex-direction:column;gap:10px;}
+    .cols{display:grid;gap:20px;}
+    .panel{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      overflow:hidden;}
+    .panel-h{display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--wash);
+      border-bottom:1px solid var(--line);font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .panel-h .rt{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:400;
+      font-size:12px;}
+    .panel-b{padding:14px;}
+    .panel-b.flush{padding:0;}
+    .note{color:var(--muted);font-size:12px;line-height:1.55;max-width:64ch;}
+
+    /* ══ controls ══ */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--h-md);
+      padding:0 11px;border-radius:var(--r-ctl);border:1px solid var(--line-strong);
+      background:var(--surface);color:var(--ink);font:500 var(--fs)/1 var(--sans);
+      cursor:pointer;white-space:nowrap;}
+    .btn:hover{background:var(--wash);}
+    .btn.solid{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn.solid:hover{background:var(--accent-ink);}
+    .btn.danger{background:var(--crit);border-color:var(--crit);color:#fff;}
+    .btn.soft{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .btn.ghost{border-color:transparent;background:transparent;color:var(--muted);}
+    .btn.ghost:hover{background:var(--wash);color:var(--ink);}
+    .btn.xs{height:var(--h-xs);padding:0 7px;font-size:11.5px;}
+    .btn.sm{height:var(--h-sm);padding:0 9px;font-size:12.5px;}
+    .btn.lg{height:var(--h-lg);padding:0 14px;font-size:14px;}
+    .btn.icon{width:var(--h-md);padding:0;}
+    .btn.sm.icon{width:var(--h-sm);}
+    .btn[disabled],.btn.off{opacity:.45;cursor:default;}
+    .bgrp{display:inline-flex;}
+    .bgrp .btn{border-radius:0;margin-left:-1px;}
+    .bgrp .btn:first-child{border-radius:var(--r-ctl) 0 0 var(--r-ctl);margin-left:0;}
+    .bgrp .btn:last-child{border-radius:0 var(--r-ctl) var(--r-ctl) 0;}
+
+    .fld{display:flex;align-items:center;gap:7px;height:var(--h-md);padding:0 10px;
+      border:1px solid var(--line-strong);border-radius:var(--r-ctl);background:var(--surface);
+      font-size:var(--fs);color:var(--ink);min-width:0;}
+    .fld.foc{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+    .fld.bad{border-color:var(--crit);box-shadow:0 0 0 3px var(--crit-bg);}
+    .fld .ph{color:var(--subtle);}
+    .fld .pre{color:var(--muted);font-family:var(--mono);font-size:12px;flex:none;}
+    .lab{display:flex;flex-direction:column;gap:5px;}
+    .lab > span{font:500 12px/1.3 var(--sans);color:var(--ink);}
+    .hint{font-size:11.5px;color:var(--muted);}
+    .hint.bad{color:var(--crit);}
+
+    .pill{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;
+      border-radius:999px;font:500 11px/1 var(--sans);border:1px solid var(--line);
+      background:var(--wash);color:var(--muted);white-space:nowrap;}
+    .pill.ok{background:var(--ok-bg);border-color:var(--ok-line);color:var(--books);}
+    .pill.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--maint);}
+    .pill.crit{background:var(--crit-bg);border-color:var(--crit-line);color:var(--crit);}
+    .pill.acc{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .pill .dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex:none;}
+    .pill.hollow .dot{background:transparent;border:1.5px solid currentColor;width:7px;height:7px;}
+    .cnt{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+      padding:0 5px;border-radius:999px;background:var(--sunken);color:var(--muted);
+      font:500 11px/1 var(--mono);}
+    .cnt.urgent{background:var(--crit);color:#fff;}
+    .kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+      padding:0 4px;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;
+      background:var(--surface);font:500 10.5px/1 var(--mono);color:var(--muted);}
+
+    /* ══ identity ══ */
+    .av{position:relative;flex:none;display:inline-block;border-radius:50%;overflow:hidden;
+      background:var(--sunken);}
+    .av svg{display:block;width:100%;height:100%;}
+    .av-16{width:16px;height:16px}.av-20{width:20px;height:20px}.av-24{width:24px;height:24px}
+    .av-32{width:32px;height:32px}.av-40{width:40px;height:40px}.av-64{width:64px;height:64px}
+    .av.ent{border-radius:6px;}
+    .av-40.ent,.av-64.ent{border-radius:8px;}
+    .av.ent .mk{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+      font:600 11px/1 var(--sans);color:#fff;}
+    .av-32.ent .mk{font-size:12px}.av-40.ent .mk{font-size:13px}.av-64.ent .mk{font-size:20px}
+    .avw{position:relative;flex:none;display:inline-block;line-height:0;}
+    .pres{position:absolute;right:-1px;bottom:-1px;border-radius:50%;border:2px solid var(--surface);}
+    .av-24 + .pres{width:9px;height:9px}
+    .av-32 + .pres{width:11px;height:11px}
+    .av-40 + .pres{width:13px;height:13px}
+    .p-on{background:var(--books)}.p-away{background:var(--maint)}
+    .p-busy{background:var(--crit)}.p-off{background:var(--subtle)}
+    .avg{display:inline-flex;align-items:center;}
+    .avg .avw,.avg > .av{margin-left:-7px;box-shadow:0 0 0 2px var(--surface);}
+    .avg .avw:first-child,.avg > .av:first-child{margin-left:0;}
+    .avg .more{display:inline-flex;align-items:center;justify-content:center;background:var(--sunken);
+      color:var(--muted);font:500 10px/1 var(--mono);border-radius:50%;}
+    .idn{display:flex;align-items:center;gap:8px;min-width:0;}
+    .idn-t{min-width:0;display:flex;flex-direction:column;gap:1px;}
+    .idn-n{font:500 var(--fs)/1.3 var(--sans);color:var(--ink);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .idn-s{font:400 11px/1.3 var(--sans);color:var(--muted);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .idn.in{gap:6px;}
+    .idn.lg{gap:12px;}
+    .idn.lg .idn-n{font:600 15px/1.3 var(--sans);}
+    .idn.lg .idn-s{font-size:12px;}
+    .idn.xl{gap:14px;}
+    .idn.xl .idn-n{font:600 20px/1.25 var(--sans);letter-spacing:-.015em;}
+    .idn.xl .idn-s{font-size:13px;}
+    .rchip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px 0 3px;
+      border-radius:999px;border:1px solid var(--line);background:var(--surface);
+      font:500 12px/1 var(--sans);color:var(--ink);}
+
+    /* ══ table ══ */
+    table.d{width:100%;border-collapse:collapse;font-size:var(--fs);}
+    table.d th{text-align:left;font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);padding:0 var(--pad) 7px;
+      border-bottom:1px solid var(--line);white-space:nowrap;}
+    table.d td{padding:0 var(--pad);height:var(--row);border-bottom:1px solid var(--hairline);
+      vertical-align:middle;}
+    table.d tbody tr:last-child td{border-bottom:0;}
+    table.d tr.hov td{background:var(--wash);}
+    table.d tr.sel td{background:var(--accent-soft);}
+    table.d .r{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;
+      font-size:12px;}
+    table.d th.r{text-align:right;}
+    table.d tr.grp-row td{background:var(--wash);font:500 11px/1 var(--sans);
+      letter-spacing:.05em;text-transform:uppercase;color:var(--muted);height:26px;}
+    table.d tfoot td{height:var(--row);font-weight:600;border-top:1px solid var(--line-strong);
+      border-bottom:0;background:var(--surface);}
+
+    /* ══ rows, cards ══ */
+    .lrow{display:flex;align-items:center;gap:10px;padding:7px var(--pad);
+      border-bottom:1px solid var(--hairline);}
+    .lrow:last-child{border-bottom:0;}
+    .lrow .tail{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none;}
+    .kard{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      padding:13px;display:flex;flex-direction:column;gap:10px;}
+    .meta{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:12px;}
+    .meta dt{font:500 10.5px/1.5 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .meta dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12px;}
+    .stat{display:flex;flex-direction:column;gap:3px;}
+    .stat b{font:600 24px/1.1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
+    .stat span{font:500 10.5px/1.3 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .bar{height:5px;border-radius:999px;background:var(--sunken);overflow:hidden;}
+    .bar i{display:block;height:100%;background:var(--accent);}
+
+    /* ══ sheet-local: the icon family, one stroke, four widths ══ */
+    .ic{display:inline-block;flex:none;line-height:0;}
+    .ic svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.4;
+      stroke-linecap:round;stroke-linejoin:round;}
+    .ic-10{width:10px;height:10px;} .ic-10 svg{stroke-width:2.1;}
+    .ic-12{width:12px;height:12px;} .ic-12 svg{stroke-width:1.85;}
+    .ic-14{width:14px;height:14px;} .ic-14 svg{stroke-width:1.6;}
+    .ic-16{width:16px;height:16px;}
+
+    /* ══ sheet-local: the matrix scaffold ══ */
+    .mx{display:grid;gap:1px;background:var(--line);}
+    .mx > div{background:var(--surface);display:flex;align-items:center;padding:11px 14px;min-width:0;}
+    .mx .hd{background:var(--wash);padding:9px 14px;font:500 10.5px/1.3 var(--sans);
+      letter-spacing:.07em;text-transform:uppercase;color:var(--subtle);align-items:flex-end;}
+    .mx .vh{flex-direction:column;align-items:flex-start;gap:2px;background:var(--wash);}
+    .mx .vh b{font:500 12.5px/1.3 var(--sans);color:var(--ink);}
+    .mx .vh code{font:400 11px/1.3 var(--mono);color:var(--muted);}
+
+    /* ══ sheet-local: the second pill size the kit does not carry ══ */
+    .pill.lg{height:24px;padding:0 10px;font-size:12px;}
+    .pill.lg .dot{width:6px;height:6px;}
+    .pill.lg.hollow .dot{width:8px;height:8px;}
+    .pill .num{font-size:11px;letter-spacing:-.01em;}
+
+    /* ══ sheet-local: Tag and Chip ══ */
+    .tg{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 7px;border-radius:4px;
+      background:var(--sunken);color:var(--muted);font:500 11px/1 var(--sans);white-space:nowrap;}
+    .tg .sq{width:6px;height:6px;border-radius:2px;flex:none;}
+    .tg.on{background:var(--accent-soft);color:var(--accent-ink);}
+    .chp{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 4px 0 9px;
+      border-radius:999px;border:1px solid var(--line);background:var(--surface);
+      font:500 12px/1 var(--sans);color:var(--ink);white-space:nowrap;}
+    .chp.plain{padding:0 9px;}
+    .chp .x{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;
+      border-radius:50%;color:var(--subtle);flex:none;}
+    .chp .x:hover{background:var(--sunken);color:var(--ink);}
+    .chp.hov{background:var(--wash);}
+    .chp.foc{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+    .chp.dis{opacity:.45;}
+
+    /* ══ sheet-local: figure cells ══ */
+    .num.neg{color:var(--crit);}
+    .num.nil,.num.zero{color:var(--subtle);}
+    .num.pos{color:var(--ink);}
+    .cellw{display:flex;flex-direction:column;align-items:flex-end;gap:1px;}
+    .cellw .sub{font:400 10.5px/1.2 var(--mono);color:var(--subtle);}
+
+    /* ══ sheet-local: trend delta ══ */
+    .tdelta{display:inline-flex;align-items:center;gap:3px;height:18px;padding:0 6px 0 4px;
+      border-radius:4px;font:500 11px/1 var(--mono);font-variant-numeric:tabular-nums;}
+    .tdelta.up{background:var(--ok-bg);color:var(--books);}
+    .tdelta.dn{background:var(--crit-bg);color:var(--crit);}
+    .tdelta.flat{background:var(--sunken);color:var(--muted);}
+
+    /* ══ sheet-local: meter with a threshold mark ══ */
+    .mtr{position:relative;height:6px;border-radius:999px;background:var(--sunken);}
+    .mtr > i{display:block;height:100%;border-radius:999px;background:var(--accent);}
+    .mtr > i.ok{background:var(--books);}
+    .mtr > i.warn{background:var(--maint);}
+    .mtr > i.crit{background:var(--crit);}
+    .mtr .th{position:absolute;top:-4px;bottom:-4px;width:1.5px;background:var(--ink);opacity:.5;}
+    .mtr-l{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 var(--mono);color:var(--muted);}
+    .mtr-l b{font:500 12.5px/1.3 var(--mono);color:var(--ink);}
+    .mtr-l .rt{margin-left:auto;}
+
+    /* ══ sheet-local: progress and allocation ══ */
+    .bar.lg{height:8px;}
+    .bar i.ok{background:var(--books);}
+    .bar i.warn{background:var(--maint);}
+    .bar.ind i{width:36%;animation:cslide 1.5s cubic-bezier(.22,1,.36,1) infinite;}
+    @keyframes cslide{0%{transform:translateX(-110%)}100%{transform:translateX(310%)}}
+    .alloc{display:flex;height:8px;border-radius:999px;overflow:hidden;background:var(--sunken);}
+    .alloc i{display:block;height:100%;}
+    .lgd{display:flex;align-items:center;gap:6px;font:400 11px/1.3 var(--sans);color:var(--muted);}
+    .lgd .sq{width:8px;height:8px;border-radius:2px;flex:none;}
+    .lgd b{font:500 11px/1.3 var(--mono);color:var(--ink);}
+
+    /* ══ sheet-local: spinner ══ */
+    .spn{display:inline-block;border-radius:50%;border-style:solid;border-color:currentColor;
+      border-right-color:transparent;animation:cspin .7s linear infinite;flex:none;}
+    .spn-12{width:12px;height:12px;border-width:1.6px;}
+    .spn-16{width:16px;height:16px;border-width:2px;}
+    .spn-24{width:24px;height:24px;border-width:2.6px;}
+    @keyframes cspin{to{transform:rotate(360deg)}}
+
+    /* ══ sheet-local: dual currency ══ */
+    .dual{display:inline-flex;flex-direction:column;align-items:flex-end;gap:1px;}
+    .dual b{font:500 13px/1.25 var(--mono);font-variant-numeric:tabular-nums;}
+    .dual span{font:400 11px/1.25 var(--mono);color:var(--muted);}
+    .rate{font:400 10.5px/1.3 var(--mono);color:var(--subtle);white-space:nowrap;}
+
+    /* ══ sheet-local: sparkline ══ */
+    .spark{line-height:0;display:inline-block;}
+    .spark svg{display:block;overflow:visible;}
+    .spark .ln{fill:none;stroke:var(--accent);stroke-width:1.3;stroke-linejoin:round;stroke-linecap:round;}
+    .spark .ln.dn{stroke:var(--crit);}
+    .spark .fillw{fill:var(--accent-soft);stroke:none;}
+    .spark .end{fill:var(--accent);}
+    .spark .end.dn{fill:var(--crit);}
+
+    /* ══ sheet-local: a mono declaration line ══ */
+    .decl{font:400 11.5px/1.5 var(--mono);color:var(--muted);background:var(--wash);
+      border:1px solid var(--line);border-radius:6px;padding:7px 10px;display:block;}
+    .decl b{font-weight:500;color:var(--ink);}
+    .skel{background:var(--sunken);border-radius:4px;display:block;}
+  </style>
+</helmet>
+<div class="sheet" style="width:1240px;background:var(--ground)">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+ <symbol id="f1" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e6ebf5"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#3f5b8c"/><circle cx="20" cy="16.5" r="7.8" fill="#6b4630"/><path d="M12.2 16.4c0-5 3.2-8.3 7.8-8.3s7.8 3.3 7.8 8.3c0-2.4-1.1-3.7-2.4-4.3-1.9-.9-3.4.3-5.4.3s-3.5-1.2-5.4-.3c-1.3.6-2.4 1.9-2.4 4.3Z" fill="#1a1512"/></symbol>
+ <symbol id="f2" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e8f0ec"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#2f6b57"/><circle cx="20" cy="16.5" r="7.8" fill="#8a5a3c"/><path d="M11.6 16.6c0-5.3 3.5-8.5 8.4-8.5s8.4 3.2 8.4 8.5v7.2a1.6 1.6 0 1 1-3.2 0v-7.4c-1.6.9-3.4 1.4-5.2 1.4s-3.6-.5-5.2-1.4v7.4a1.6 1.6 0 1 1-3.2 0Z" fill="#2a211b"/></symbol>
+ <symbol id="f3" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f0e9f2"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#6b4a7d"/><circle cx="20" cy="16.5" r="7.8" fill="#a9714b"/><path d="M12.4 17.2c-.6-5.6 2.8-9.1 7.6-9.1s8.2 3.5 7.6 9.1c-.3-2.6-1.6-3.9-3-4.4-2.2-.8-3 .5-4.6.5s-2.4-1.3-4.6-.5c-1.4.5-2.7 1.8-3 4.4Z" fill="#3d2a1e"/><circle cx="27.4" cy="9.4" r="2.9" fill="#3d2a1e"/></symbol>
+ <symbol id="f4" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f5ebe8"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#8c4a3f"/><circle cx="20" cy="16.5" r="7.8" fill="#5a3a28"/><path d="M12.3 15.8c0-4.8 3.3-7.7 7.7-7.7s7.7 2.9 7.7 7.7c0-1.7-.9-2.7-2.1-3.1-1.8-.6-3.2.6-5.6.6s-3.8-1.2-5.6-.6c-1.2.4-2.1 1.4-2.1 3.1Z" fill="#1a1512"/></symbol>
+ <symbol id="f5" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eceef3"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#3d4756"/><circle cx="20" cy="16.5" r="7.8" fill="#7c4f35"/><path d="M11.9 17.8c-.4-6.2 3.1-9.7 8.1-9.7s8.5 3.5 8.1 9.7c-.9-1.2-1.4-3.2-1.4-5-2 1.3-4.3 2-6.7 2s-4.7-.7-6.7-2c0 1.8-.5 3.8-1.4 5Z" fill="#2a211b"/></symbol>
+ <symbol id="f6" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e9f0f4"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#46617a"/><circle cx="20" cy="16.5" r="7.8" fill="#b98254"/><path d="M12.2 16.4c0-5 3.2-8.3 7.8-8.3s7.8 3.3 7.8 8.3c0-2.4-1.1-3.7-2.4-4.3-1.9-.9-3.4.3-5.4.3s-3.5-1.2-5.4-.3c-1.3.6-2.4 1.9-2.4 4.3Z" fill="#3d2a1e"/></symbol>
+ <symbol id="f7" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f2eee6"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#7a6a4a"/><circle cx="20" cy="16.5" r="7.8" fill="#6b4630"/><path d="M11.5 15.4c0-5 3.8-8.3 8.5-8.3s8.5 3.3 8.5 8.3c0 1-.5 1.9-1.3 2.4l-1.2-4.8a20 20 0 0 1-12 0l-1.2 4.8c-.8-.5-1.3-1.4-1.3-2.4Z" fill="#5d4d8a"/></symbol>
+ <symbol id="f8" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eaf1ee"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#4a7a68"/><circle cx="20" cy="16.5" r="7.8" fill="#8a5a3c"/><path d="M12.6 14.9c0-4.5 3.1-7.3 7.4-7.3s7.4 2.8 7.4 7.3c0-1.3-.8-2.1-1.8-2.4-1.6-.5-3.2.7-5.6.7s-4-1.2-5.6-.7c-1 .3-1.8 1.1-1.8 2.4Z" fill="#1a1512"/></symbol>
+ <symbol id="c1" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e4eef2"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#1f5f7a"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#6b4630"/><path d="M12.9 17.8c0-4.7 3-7.7 7.1-7.7s7.1 3 7.1 7.7c0-2.2-1-3.4-2.2-4-1.7-.8-3.1.3-4.9.3s-3.2-1.1-4.9-.3c-1.2.6-2.2 1.8-2.2 4Z" fill="#1a1512"/></symbol>
+ <symbol id="c2" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eef1e6"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#2f6b57"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#8a5a3c"/><path d="M12.4 18c0-4.9 3.2-7.9 7.6-7.9s7.6 3 7.6 7.9v6a1.5 1.5 0 1 1-3 0v-6.2c-1.4.8-3 1.2-4.6 1.2s-3.2-.4-4.6-1.2V24a1.5 1.5 0 1 1-3 0Z" fill="#2a211b"/></symbol>
+ <symbol id="c3" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f4ece4"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#8c4a3f"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#a9714b"/><path d="M12.9 18.4c-.5-5.2 2.6-8.3 7.1-8.3s7.6 3.1 7.1 8.3c-.3-2.4-1.5-3.6-2.8-4-2-.8-2.8.4-4.3.4s-2.2-1.2-4.3-.4c-1.3.4-2.5 1.6-2.8 4Z" fill="#3d2a1e"/><circle cx="26.8" cy="11.4" r="2.6" fill="#3d2a1e"/></symbol>
+</defs></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+ <symbol id="i-chevron-right" viewBox="0 0 16 16"><path d="M6 3.4 10.6 8 6 12.6"></path></symbol>
+ <symbol id="i-chevron-down" viewBox="0 0 16 16"><path d="M3.4 6 8 10.6 12.6 6"></path></symbol>
+ <symbol id="i-chevron-left" viewBox="0 0 16 16"><path d="M10 3.4 5.4 8 10 12.6"></path></symbol>
+ <symbol id="i-chevron-up" viewBox="0 0 16 16"><path d="M3.4 10 8 5.4 12.6 10"></path></symbol>
+ <symbol id="i-search" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.3"></circle><path d="M10.2 10.2 13.6 13.6"></path></symbol>
+ <symbol id="i-filter" viewBox="0 0 16 16"><path d="M2.4 3.4h11.2L9.2 8.6v4.3L6.8 14.1V8.6Z"></path></symbol>
+ <symbol id="i-sort" viewBox="0 0 16 16"><path d="M2.8 4.4h10.4M2.8 8h6.8M2.8 11.6h3.6"></path></symbol>
+ <symbol id="i-menu" viewBox="0 0 16 16"><path d="M2.4 4.4h11.2M2.4 8h11.2M2.4 11.6h11.2"></path></symbol>
+ <symbol id="i-close" viewBox="0 0 16 16"><path d="M4.1 4.1 11.9 11.9M11.9 4.1 4.1 11.9"></path></symbol>
+ <symbol id="i-plus" viewBox="0 0 16 16"><path d="M8 3.2v9.6M3.2 8h9.6"></path></symbol>
+ <symbol id="i-more" viewBox="0 0 16 16"><circle cx="3.5" cy="8" r="1.15" fill="currentColor" stroke="none"></circle><circle cx="8" cy="8" r="1.15" fill="currentColor" stroke="none"></circle><circle cx="12.5" cy="8" r="1.15" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-customer" viewBox="0 0 16 16"><circle cx="8" cy="5.5" r="2.8"></circle><path d="M2.9 13.6c0-2.9 2.3-4.6 5.1-4.6s5.1 1.7 5.1 4.6"></path></symbol>
+ <symbol id="i-supplier" viewBox="0 0 16 16"><path d="M1.4 4.3h7.5v6.8H1.4zM8.9 6.7h2.8l2 2.2v2.2H8.9"></path><circle cx="4.4" cy="12.3" r="1.3"></circle><circle cx="11.3" cy="12.3" r="1.3"></circle></symbol>
+ <symbol id="i-invoice" viewBox="0 0 16 16"><path d="M3.4 1.7h6.1l3.1 3.1v9.5H3.4Z"></path><path d="M9.5 1.7v3.1h3.1"></path><path d="M5.7 8.4h4.6M5.7 11h3"></path></symbol>
+ <symbol id="i-receipt" viewBox="0 0 16 16"><path d="M3.3 1.7h9.4v12.6l-1.6-1.1-1.6 1.1-1.5-1.1-1.6 1.1-1.5-1.1-1.6 1.1Z"></path><path d="M5.9 5.3h4.2M5.9 8.1h4.2"></path></symbol>
+ <symbol id="i-journal" viewBox="0 0 16 16"><path d="M8 4.5C7.1 3.2 5.5 2.6 2.8 2.6v8.8c2.7 0 4.3.6 5.2 1.9.9-1.3 2.5-1.9 5.2-1.9V2.6c-2.7 0-4.3.6-5.2 1.9Z"></path><path d="M8 4.5v8.8"></path></symbol>
+ <symbol id="i-stock" viewBox="0 0 16 16"><path d="M8 1.8 14 5v6l-6 3.2L2 11V5Z"></path><path d="M2 5l6 3.2L14 5M8 8.2v6"></path></symbol>
+ <symbol id="i-branch" viewBox="0 0 16 16"><path d="M1.9 13.8h12.2M3.9 13.8V2.9h8.2v10.9"></path><path d="M6.1 5.6h1.3M8.6 5.6h1.3M6.1 8.2h1.3M8.6 8.2h1.3"></path><path d="M6.9 13.8v-2.7h2.2v2.7"></path></symbol>
+ <symbol id="i-till" viewBox="0 0 16 16"><path d="M4.4 2.2h7.2v3.4H4.4z"></path><path d="M1.9 7.4h12.2v6.4H1.9z"></path><path d="M6.2 10.6h3.6"></path></symbol>
+ <symbol id="i-device" viewBox="0 0 16 16"><path d="M4.2 1.7h7.6v12.6H4.2Z"></path><path d="M6.7 3.7h2.6M6.6 12.3h2.8"></path></symbol>
+ <symbol id="i-edit" viewBox="0 0 16 16"><path d="M11.1 2.2 13.8 4.9l-8 8-3.6.9.9-3.6Z"></path><path d="M9.6 3.7l2.7 2.7"></path></symbol>
+ <symbol id="i-delete" viewBox="0 0 16 16"><path d="M2.6 4.3h10.8"></path><path d="M6.1 4.3V2.6h3.8v1.7"></path><path d="M4.1 4.3l.7 9.4h6.4l.7-9.4"></path><path d="M6.5 6.8v4.4M9.5 6.8v4.4"></path></symbol>
+ <symbol id="i-export" viewBox="0 0 16 16"><path d="M2.6 10.1v3.3h10.8v-3.3"></path><path d="M8 2.4v7.1"></path><path d="M5.3 5.1 8 2.4l2.7 2.7"></path></symbol>
+ <symbol id="i-print" viewBox="0 0 16 16"><path d="M4.3 6.1V2.4h7.4v3.7"></path><path d="M4.3 11.5H2.4V7.1h11.2v4.4h-1.9"></path><path d="M4.3 9.5h7.4v4.1H4.3z"></path><circle cx="11.7" cy="8.8" r=".75" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-attach" viewBox="0 0 16 16"><path d="M10.9 7.3 6.8 11.4a2.4 2.4 0 0 1-3.4-3.4l5.2-5.2a1.7 1.7 0 0 1 2.4 2.4l-5.2 5.2a.85.85 0 0 1-1.2-1.2l4.6-4.6"></path></symbol>
+ <symbol id="i-approve" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M5.4 8.2 7.2 10l3.5-3.9"></path></symbol>
+ <symbol id="i-reject" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M6 6 10 10M10 6 6 10"></path></symbol>
+ <symbol id="i-refresh" viewBox="0 0 16 16"><path d="M13.2 7.4a5.2 5.2 0 0 0-8.9-2.8L2.8 6.1"></path><path d="M6.1 6.1H2.8V2.8"></path><path d="M2.8 8.6a5.2 5.2 0 0 0 8.9 2.8l1.5-1.5"></path><path d="M9.9 9.9h3.3v3.3"></path></symbol>
+ <symbol id="i-lock" viewBox="0 0 16 16"><path d="M3.5 7.1h9v6.4h-9z"></path><path d="M5.5 7.1V5.2a2.5 2.5 0 0 1 5 0v1.9"></path><circle cx="8" cy="10.3" r=".95" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-clock" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M8 4.6v3.6l2.5 1.5"></path></symbol>
+ <symbol id="i-warning" viewBox="0 0 16 16"><path d="M8 2.2 14.4 13.4H1.6Z"></path><path d="M8 6.4v3.2"></path><circle cx="8" cy="11.5" r=".8" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-info" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M8 7.4v3.7"></path><circle cx="8" cy="5.1" r=".8" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-offline" viewBox="0 0 16 16"><path d="M4.9 12.4h6.4a2.6 2.6 0 0 0 .3-5.2 3.9 3.9 0 0 0-6.9-1.4"></path><path d="M4.3 6.8a2.8 2.8 0 0 0 .6 5.6"></path><path d="M2.2 2.2 13.8 13.8"></path></symbol>
+ <symbol id="i-sync" viewBox="0 0 16 16"><path d="M12.9 5.6a5.2 5.2 0 0 0-9.4.6"></path><path d="M6.6 6.2H3.3V2.9"></path><path d="M3.1 10.4a5.2 5.2 0 0 0 9.4-.6"></path><path d="M9.4 9.8h3.3v3.3"></path><circle cx="8" cy="8" r="1.1" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-arrow-right" viewBox="0 0 16 16"><path d="M2.6 8h10.8"></path><path d="M9.6 4.2 13.4 8l-3.8 3.8"></path></symbol>
+</defs></svg>
+
+  <div class="sheet-h">
+    <h2>Status and data</h2>
+    <span class="sub">Pills, badges and the figure primitives a ledger actually needs</span>
+    <span class="tag">Sheet 08</span>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">Pill — five tones and a hollow, two sizes, with and without the dot</span>
+    <div class="panel">
+      <div class="mx" style="grid-template-columns:168px repeat(4,minmax(0,1fr)) 1.5fr">
+        <div class="hd">Tone</div>
+        <div class="hd">sm · 20 · dot</div>
+        <div class="hd">sm · 20</div>
+        <div class="hd">lg · 24 · dot</div>
+        <div class="hd">lg · 24</div>
+        <div class="hd">Spent on</div>
+
+        <div class="vh"><b>Neutral</b><code>.pill</code></div>
+        <div><span class="pill"><span class="dot"></span>Draft</span></div>
+        <div><span class="pill">Draft</span></div>
+        <div><span class="pill lg"><span class="dot"></span>Draft</span></div>
+        <div><span class="pill lg">Draft</span></div>
+        <div><span class="note" style="font-size:11.5px">A state nobody has to act on.</span></div>
+
+        <div class="vh"><b>Positive</b><code>.pill.ok</code></div>
+        <div><span class="pill ok"><span class="dot"></span>Posted</span></div>
+        <div><span class="pill ok">Posted</span></div>
+        <div><span class="pill ok lg"><span class="dot"></span>Posted</span></div>
+        <div><span class="pill ok lg">Posted</span></div>
+        <div><span class="note" style="font-size:11.5px">Done and irreversible — posted, signed, matched.</span></div>
+
+        <div class="vh"><b>Attention</b><code>.pill.warn</code></div>
+        <div><span class="pill warn"><span class="dot"></span>Needs approval</span></div>
+        <div><span class="pill warn">Needs approval</span></div>
+        <div><span class="pill warn lg"><span class="dot"></span>Needs approval</span></div>
+        <div><span class="pill warn lg">Needs approval</span></div>
+        <div><span class="note" style="font-size:11.5px">Waiting on a person, today.</span></div>
+
+        <div class="vh"><b>Critical</b><code>.pill.crit</code></div>
+        <div><span class="pill crit"><span class="dot"></span>Overdue</span></div>
+        <div><span class="pill crit">Overdue</span></div>
+        <div><span class="pill crit lg"><span class="dot"></span>Overdue</span></div>
+        <div><span class="pill crit lg">Overdue</span></div>
+        <div><span class="note" style="font-size:11.5px">Money or compliance is already lost time.</span></div>
+
+        <div class="vh"><b>Accent</b><code>.pill.acc</code></div>
+        <div><span class="pill acc"><span class="dot"></span>In progress</span></div>
+        <div><span class="pill acc">In progress</span></div>
+        <div><span class="pill acc lg"><span class="dot"></span>In progress</span></div>
+        <div><span class="pill acc lg">In progress</span></div>
+        <div><span class="note" style="font-size:11.5px">Running now — queued, trading, in progress.</span></div>
+
+        <div class="vh"><b>Hollow</b><code>.pill.hollow</code></div>
+        <div><span class="pill hollow"><span class="dot"></span>Not started</span></div>
+        <div><span class="pill hollow">Not started</span></div>
+        <div><span class="pill lg hollow"><span class="dot"></span>Not started</span></div>
+        <div><span class="pill lg hollow">Not started</span></div>
+        <div><span class="note" style="font-size:11.5px">Neutral by intent — a ring, never a colour.</span></div>
+      </div>
+    </div>
+    <p class="note">The dot exists so a pill still reads when it sits in a dense column and the eye is scanning
+    shapes, not words. Drop it only where the pill is alone on a line.</p>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">The status vocabulary — fixed, closed, and not ours to extend</span>
+    <div class="panel">
+      <div class="panel-b" style="display:flex;flex-direction:column;gap:12px;padding:15px 16px">
+        <div class="rowset" style="gap:6px">
+          <span class="pill ok"><span class="dot"></span>Posted</span>
+          <span class="pill ok"><span class="dot"></span>Signed</span>
+          <span class="pill ok"><span class="dot"></span>Reconciled</span>
+          <span class="pill ok"><span class="dot"></span>Matched</span>
+          <span class="pill ok"><span class="dot"></span>Filed</span>
+          <span class="pill ok"><span class="dot"></span>Final</span>
+        </div>
+        <div class="rowset" style="gap:6px">
+          <span class="pill acc"><span class="dot"></span>Queued</span>
+          <span class="pill acc"><span class="dot"></span>In progress</span>
+          <span class="pill acc"><span class="dot"></span>Trading</span>
+          <span class="pill acc"><span class="dot"></span>Prepared</span>
+        </div>
+        <div class="rowset" style="gap:6px">
+          <span class="pill warn"><span class="dot"></span>Needs approval</span>
+          <span class="pill warn"><span class="dot"></span>Unmatched</span>
+          <span class="pill crit"><span class="dot"></span>Overdue</span>
+        </div>
+        <div class="rowset" style="gap:6px">
+          <span class="pill hollow"><span class="dot"></span>Draft</span>
+          <span class="pill hollow"><span class="dot"></span>Open</span>
+          <span class="pill hollow"><span class="dot"></span>Closed off</span>
+          <span class="pill hollow"><span class="dot"></span>Not started</span>
+        </div>
+      </div>
+    </div>
+    <p class="note">Seventeen words, four tones. A new state needs a new word from the ledger, not a new colour —
+    if the accountant does not say it out loud, it does not get a pill.</p>
+  </div>
+
+  <div class="cols" style="grid-template-columns:1fr 1fr 1.15fr">
+    <div class="grp">
+      <span class="grp-l">CountBadge</span>
+      <div class="panel">
+        <div class="panel-b" style="display:flex;flex-direction:column;gap:0;padding:0">
+          <div class="lrow"><span style="font-size:12.5px">Approvals</span><span class="tail"><span class="cnt">12</span></span></div>
+          <div class="lrow"><span style="font-size:12.5px">Unmatched receipts</span><span class="tail"><span class="cnt urgent">3</span></span></div>
+          <div class="lrow"><span style="font-size:12.5px">Filed returns</span><span class="tail"><span class="cnt">0</span></span></div>
+          <div class="lrow"><span style="font-size:12.5px">Queued for FDMS</span><span class="tail"><span class="cnt">99+</span></span></div>
+        </div>
+      </div>
+      <p class="note">Grey is a count. Red is a count someone is late on. A zero still renders — the row must not
+      change height when the last item clears.</p>
+    </div>
+
+    <div class="grp">
+      <span class="grp-l">Tag</span>
+      <div class="panel">
+        <div class="panel-b" style="display:flex;flex-direction:column;gap:11px;padding:15px 16px">
+          <div class="rowset" style="gap:6px">
+            <span class="tg"><span class="sq" style="background:var(--sell)"></span>Sell</span>
+            <span class="tg"><span class="sq" style="background:var(--books)"></span>Books</span>
+            <span class="tg"><span class="sq" style="background:var(--stock)"></span>Stock</span>
+            <span class="tg"><span class="sq" style="background:var(--fiscal)"></span>Fiscal</span>
+          </div>
+          <div class="rowset" style="gap:6px">
+            <span class="tg">VAT 15%</span>
+            <span class="tg">Msasa</span>
+            <span class="tg">On account</span>
+            <span class="tg on">EcoCash</span>
+          </div>
+          <div class="rowset" style="gap:6px">
+            <span class="tg">ITF263</span>
+            <span class="tg">QPD</span>
+            <span class="tg">NSSA</span>
+            <span class="tg">P2</span>
+          </div>
+        </div>
+      </div>
+      <p class="note">A tag is a label the user owns; a pill is a state the system owns. Square corners keep the two
+      apart at a glance.</p>
+    </div>
+
+    <div class="grp">
+      <span class="grp-l">Chip — with remove, and its states</span>
+      <div class="panel">
+        <div class="panel-b" style="display:flex;flex-direction:column;gap:11px;padding:15px 16px">
+          <div class="rowset" style="gap:7px">
+            <span class="chp">Cash<span class="x"><span class="ic ic-12"><svg viewBox="0 0 16 16"><use href="#i-close"></use></svg></span></span></span>
+            <span class="chp">Card<span class="x"><span class="ic ic-12"><svg viewBox="0 0 16 16"><use href="#i-close"></use></svg></span></span></span>
+            <span class="chp">EcoCash<span class="x"><span class="ic ic-12"><svg viewBox="0 0 16 16"><use href="#i-close"></use></svg></span></span></span>
+          </div>
+          <div class="rowset" style="gap:7px">
+            <span class="chp hov">On account<span class="x"><span class="ic ic-12"><svg viewBox="0 0 16 16"><use href="#i-close"></use></svg></span></span></span>
+            <span class="chp foc">Swipe<span class="x"><span class="ic ic-12"><svg viewBox="0 0 16 16"><use href="#i-close"></use></svg></span></span></span>
+            <span class="chp dis">Voucher<span class="x"><span class="ic ic-12"><svg viewBox="0 0 16 16"><use href="#i-close"></use></svg></span></span></span>
+          </div>
+          <div class="rowset" style="gap:7px">
+            <span class="chp plain">Msasa</span>
+            <span class="chp plain">Avondale</span>
+            <span class="chp plain">Mutare depot</span>
+            <span class="cnt">+2</span>
+          </div>
+        </div>
+      </div>
+      <p class="note">Hover · focus · disabled. The remove target is a 16px hit inside a 24px chip — it grows a
+      background only on hover so a row of chips stays quiet.</p>
+    </div>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">NumericCell — the audit found no primitive for this, so every table wrote its own</span>
+    <div class="panel">
+      <table class="d">
+        <thead>
+          <tr>
+            <th>Account</th>
+            <th class="r">Movement</th>
+            <th class="r">Balance US$</th>
+            <th>Value</th>
+            <th>Rule</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="idn"><span class="av av-24 ent" style="background:var(--sell)"><span class="mk">GS</span></span><span class="idn-t"><span class="idn-n">The Gate Shops</span><span class="idn-s">ACC-0142</span></span></span></td>
+            <td class="r">+1,240.00</td>
+            <td class="r"><span class="num pos">1,240.00</span></td>
+            <td class="mono" style="font-size:11.5px;color:var(--muted)">1240</td>
+            <td><span class="note" style="font-size:11.5px">Positive — ink, no sign, no colour.</span></td>
+          </tr>
+          <tr>
+            <td><span class="idn"><span class="av av-24 ent" style="background:var(--books)"><span class="mk">HM</span></span><span class="idn-t"><span class="idn-n">Huchu Mine</span><span class="idn-s">ACC-0188</span></span></span></td>
+            <td class="r"><span class="num neg">-318.75</span></td>
+            <td class="r"><span class="num neg">-318.75</span></td>
+            <td class="mono" style="font-size:11.5px;color:var(--muted)">-318.75</td>
+            <td><span class="note" style="font-size:11.5px">Negative — critical red, minus sign, never brackets.</span></td>
+          </tr>
+          <tr>
+            <td><span class="idn"><span class="av av-24 ent" style="background:var(--stock)"><span class="mk">LL</span></span><span class="idn-t"><span class="idn-n">Lux Liquor</span><span class="idn-s">ACC-0203</span></span></span></td>
+            <td class="r"><span class="num zero">0.00</span></td>
+            <td class="r"><span class="num zero">0.00</span></td>
+            <td class="mono" style="font-size:11.5px;color:var(--muted)">0</td>
+            <td><span class="note" style="font-size:11.5px">Zero — subtle ink. A real nil, still two decimals.</span></td>
+          </tr>
+          <tr>
+            <td><span class="idn"><span class="av av-24 ent" style="background:var(--maint)"><span class="mk">MM</span></span><span class="idn-t"><span class="idn-n">Msasa Motors</span><span class="idn-s">ACC-0231</span></span></span></td>
+            <td class="r"><span class="num nil">—</span></td>
+            <td class="r"><span class="num nil">—</span></td>
+            <td class="mono" style="font-size:11.5px;color:var(--muted)">null</td>
+            <td><span class="note" style="font-size:11.5px">Null — em dash. Not a zero, and never blank.</span></td>
+          </tr>
+          <tr>
+            <td><span class="idn"><span class="av av-24"><span class="gl"><svg viewBox="0 0 16 16"><use href="#i-branch"></use></svg></span></span><span class="idn-t"><span class="idn-n" style="color:var(--subtle)">Loading</span></span></span></td>
+            <td class="r"><span class="skel" style="width:56px;height:9px;margin-left:auto"></span></td>
+            <td class="r"><span class="skel" style="width:64px;height:9px;margin-left:auto"></span></td>
+            <td class="mono" style="font-size:11.5px;color:var(--muted)">pending</td>
+            <td><span class="note" style="font-size:11.5px">A bar at the figure's width, right-aligned like the figure.</span></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr><td>Total</td><td class="r">+921.25</td><td class="r">921.25</td><td></td><td></td></tr>
+        </tfoot>
+      </table>
+    </div>
+    <p class="note">Every figure is mono, tabular and right-aligned so the decimal points stack into a line the eye
+    can run down. A number that is not right-aligned is a bug, not a preference.</p>
+  </div>
+
+  <div class="cols" style="grid-template-columns:1.5fr 1fr">
+    <div class="grp">
+      <span class="grp-l">VarianceCell — the signed count and what it costs</span>
+      <div class="panel">
+        <table class="d">
+          <thead>
+            <tr><th>Item</th><th class="r">Counted</th><th class="r">System</th><th class="r">Variance</th><th class="r">At cost US$</th><th></th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Castle Lager 340ml</td>
+              <td class="r">148</td><td class="r">152</td>
+              <td class="r"><span class="num neg">-4</span></td>
+              <td class="r"><span class="num neg">-6.40</span></td>
+              <td><span class="pill crit"><span class="dot"></span>Under</span></td>
+            </tr>
+            <tr>
+              <td>Mazoe Orange 2L</td>
+              <td class="r">63</td><td class="r">60</td>
+              <td class="r"><span class="num pos">+3</span></td>
+              <td class="r"><span class="num pos">10.35</span></td>
+              <td><span class="pill warn"><span class="dot"></span>Over</span></td>
+            </tr>
+            <tr>
+              <td>Cement 50kg</td>
+              <td class="r">40</td><td class="r">40</td>
+              <td class="r"><span class="num zero">0</span></td>
+              <td class="r"><span class="num zero">0.00</span></td>
+              <td><span class="pill ok"><span class="dot"></span>Matched</span></td>
+            </tr>
+            <tr>
+              <td>Cooking oil 750ml</td>
+              <td class="r"><span class="num nil">—</span></td><td class="r">86</td>
+              <td class="r"><span class="num nil">—</span></td>
+              <td class="r"><span class="num nil">—</span></td>
+              <td><span class="pill hollow"><span class="dot"></span>Not started</span></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr><td>Net variance</td><td class="r">251</td><td class="r">252</td><td class="r"><span class="num neg">-1</span></td><td class="r"><span class="num pos">3.95</span></td><td></td></tr>
+          </tfoot>
+        </table>
+      </div>
+      <p class="note">Two columns, not one: the count tells the storeman what to recount, the cost tells the
+      accountant what to write off. A variance of -4 on beer and -4 on cement are not the same event.</p>
+    </div>
+
+    <div class="grp">
+      <span class="grp-l">TrendDeltaChip</span>
+      <div class="panel">
+        <div class="panel-b" style="display:flex;flex-direction:column;gap:0;padding:0">
+          <div class="lrow" style="padding:11px 13px">
+            <div class="stat"><b>4,182.60</b><span>Takings today US$</span></div>
+            <span class="tail"><span class="tdelta up"><span class="ic ic-10"><svg viewBox="0 0 16 16"><use href="#i-chevron-up"></use></svg></span>9.1%</span></span>
+          </div>
+          <div class="lrow" style="padding:11px 13px">
+            <div class="stat"><b>31.4%</b><span>Gross margin</span></div>
+            <span class="tail"><span class="tdelta dn"><span class="ic ic-10"><svg viewBox="0 0 16 16"><use href="#i-chevron-down"></use></svg></span>4.2%</span></span>
+          </div>
+          <div class="lrow" style="padding:11px 13px">
+            <div class="stat"><b>168</b><span>Receipts issued</span></div>
+            <span class="tail"><span class="tdelta flat">0.0%</span></span>
+          </div>
+        </div>
+      </div>
+      <p class="note">The chevron carries direction and the colour carries judgement — they can disagree. A rising
+      cost of sales is an up chevron on a red chip, and the sheet never invents an arrow to say so.</p>
+    </div>
+  </div>
+
+  <div class="cols" style="grid-template-columns:1fr 1fr">
+    <div class="grp">
+      <span class="grp-l">AgeingBadge — 30 and 60 days are the thresholds</span>
+      <div class="panel">
+        <table class="d">
+          <thead><tr><th>Invoice</th><th>Account</th><th class="r">Amount US$</th><th>Age</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="mono" style="font-size:12px">INV-4471</td>
+              <td><span class="idn in"><span class="av av-20 ent" style="background:var(--sell)"><span class="mk">GS</span></span><span class="idn-t"><span class="idn-n">The Gate Shops</span></span></span></td>
+              <td class="r">1,240.00</td>
+              <td><span class="pill hollow"><span class="dot"></span><span class="num">3 d</span></span></td>
+            </tr>
+            <tr>
+              <td class="mono" style="font-size:12px">INV-4468</td>
+              <td><span class="idn in"><span class="av av-20 ent" style="background:var(--books)"><span class="mk">HM</span></span><span class="idn-t"><span class="idn-n">Huchu Mine</span></span></span></td>
+              <td class="r">3,880.00</td>
+              <td><span class="pill hollow"><span class="dot"></span><span class="num">14 d</span></span></td>
+            </tr>
+            <tr>
+              <td class="mono" style="font-size:12px">INV-4402</td>
+              <td><span class="idn in"><span class="av av-20 ent" style="background:var(--stock)"><span class="mk">LL</span></span><span class="idn-t"><span class="idn-n">Lux Liquor</span></span></span></td>
+              <td class="r">612.50</td>
+              <td><span class="pill warn"><span class="dot"></span><span class="num">41 d</span></span></td>
+            </tr>
+            <tr>
+              <td class="mono" style="font-size:12px">INV-4331</td>
+              <td><span class="idn in"><span class="av av-20 ent" style="background:var(--crit)"><span class="mk">BD</span></span><span class="idn-t"><span class="idn-n">Bulawayo Depot</span></span></span></td>
+              <td class="r">947.20</td>
+              <td><span class="pill crit"><span class="dot"></span><span class="num">62 d</span></span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="rowset" style="gap:14px">
+        <span class="lgd"><span class="pill hollow"><span class="dot"></span><span class="num">0–30 d</span></span>Current</span>
+        <span class="lgd"><span class="pill warn"><span class="dot"></span><span class="num">31–60 d</span></span>Chasing</span>
+        <span class="lgd"><span class="pill crit"><span class="dot"></span><span class="num">60 d +</span></span>Provision</span>
+      </div>
+      <p class="note">The bands are the ones the statement already prints, so a badge and the ageing report never
+      disagree in front of a customer.</p>
+    </div>
+
+    <div class="grp">
+      <span class="grp-l">ExpiryCountdown — batch shelf life</span>
+      <div class="panel">
+        <table class="d">
+          <thead><tr><th>Batch</th><th>Item</th><th class="r">On hand</th><th>Expiry</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="mono" style="font-size:12px">B-2291</td>
+              <td>Mazoe Orange 2L</td>
+              <td class="r">240</td>
+              <td><span class="pill hollow"><span class="dot"></span><span class="num">96 d</span></span></td>
+            </tr>
+            <tr>
+              <td class="mono" style="font-size:12px">B-2107</td>
+              <td>Cascade 2L</td>
+              <td class="r">64</td>
+              <td><span class="pill warn"><span class="dot"></span><span class="num">21 d</span></span></td>
+            </tr>
+            <tr>
+              <td class="mono" style="font-size:12px">B-1988</td>
+              <td>Fresh milk 500ml</td>
+              <td class="r">18</td>
+              <td><span class="pill crit"><span class="dot"></span>Expired <span class="num">4 d</span></span></td>
+            </tr>
+            <tr>
+              <td class="mono" style="font-size:12px">B-2310</td>
+              <td>Cement 50kg</td>
+              <td class="r">40</td>
+              <td><span class="num nil">—</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="rowset" style="gap:14px">
+        <span class="lgd"><span class="pill hollow"><span class="dot"></span><span class="num">90 d +</span></span>Sell through</span>
+        <span class="lgd"><span class="pill warn"><span class="dot"></span><span class="num">&lt; 30 d</span></span>Mark down</span>
+        <span class="lgd"><span class="pill crit"><span class="dot"></span>Expired</span>Quarantine</span>
+      </div>
+      <p class="note">Once expired the badge stops counting down and starts counting up, so a batch that has been
+      sitting for a month cannot hide behind a zero.</p>
+    </div>
+  </div>
+
+  <div class="cols" style="grid-template-columns:1fr 1fr">
+    <div class="grp">
+      <span class="grp-l">DualCurrencyAmount — US$ over ZWG, with the rate it was written at</span>
+      <div class="panel">
+        <div class="panel-b" style="display:flex;flex-direction:column;gap:0;padding:0">
+          <div class="lrow" style="padding:11px 13px">
+            <span class="idn in"><span class="av av-20 ent" style="background:var(--sell)"><span class="mk">GS</span></span><span class="idn-t"><span class="idn-n">INV-4471 · The Gate Shops</span></span></span>
+            <span class="tail" style="gap:12px">
+              <span class="rate">@ 33.5500</span>
+              <span class="dual"><b>US$ 1,240.00</b><span>ZWG 41,602.00</span></span>
+            </span>
+          </div>
+          <div class="lrow" style="padding:11px 13px">
+            <span class="idn in"><span class="av av-20 ent" style="background:var(--stock)"><span class="mk">LL</span></span><span class="idn-t"><span class="idn-n">INV-4402 · Lux Liquor</span></span></span>
+            <span class="tail" style="gap:12px">
+              <span class="rate">@ 33.5500</span>
+              <span class="dual"><b>US$ 612.50</b><span>ZWG 20,549.38</span></span>
+            </span>
+          </div>
+          <div class="lrow" style="padding:11px 13px;background:var(--wash)">
+            <span class="fx" style="font-size:12.5px"><b style="font-weight:500">Receipt #10238</b> · 14:06:05 · Cash</span>
+            <span class="tail" style="gap:12px">
+              <span class="rate">@ 33.5500</span>
+              <span class="dual"><b>US$ 18.60</b><span>ZWG 624.03</span></span>
+            </span>
+          </div>
+          <div class="lrow" style="padding:11px 13px">
+            <span class="fx" style="font-size:12.5px">Inline, in a sentence</span>
+            <span class="tail"><span class="fx" style="font-size:12.5px">Settled <span class="num">US$ 18.60</span> <span class="rate">(ZWG 624.03 @ 33.5500)</span></span></span>
+          </div>
+        </div>
+      </div>
+      <p class="note">The rate is stored on the record, not looked up at render time. A receipt reprinted six months
+      from now shows <span class="mono">33.5500</span> — the rate the receipt was written at — because that is the
+      number ZIMRA fiscalised and the only one the customer ever saw.</p>
+    </div>
+
+    <div class="grp">
+      <span class="grp-l">Meter — a figure against a limit it can cross</span>
+      <div class="panel">
+        <div class="panel-b" style="display:flex;flex-direction:column;gap:0;padding:0">
+          <div style="padding:12px 13px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--hairline)">
+            <div class="mtr-l">
+              <span class="idn in"><span class="av av-20 ent" style="background:var(--sell)"><span class="mk">GS</span></span><span class="idn-t"><span class="idn-n">The Gate Shops</span></span></span>
+              <span class="rt"><b>US$ 60.00</b> of 200.00</span>
+            </div>
+            <div class="mtr"><i style="width:30%"></i><span class="th" style="left:80%"></span></div>
+            <div class="mtr-l"><span class="rate">Credit used · 30%</span><span class="rt rate">Warn at 80% · US$ 160.00</span></div>
+          </div>
+          <div style="padding:12px 13px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--hairline)">
+            <div class="mtr-l">
+              <span class="idn in"><span class="av av-20 ent" style="background:var(--books)"><span class="mk">HM</span></span><span class="idn-t"><span class="idn-n">Huchu Mine</span></span></span>
+              <span class="rt"><b>US$ 178.00</b> of 200.00</span>
+            </div>
+            <div class="mtr"><i class="warn" style="width:89%"></i><span class="th" style="left:80%"></span></div>
+            <div class="mtr-l"><span class="rate">Credit used · 89%</span><span class="rt"><span class="pill warn"><span class="dot"></span>Over threshold</span></span></div>
+          </div>
+          <div style="padding:12px 13px;display:flex;flex-direction:column;gap:8px">
+            <div class="mtr-l">
+              <span class="idn in"><span class="av av-20 ent" style="background:var(--crit)"><span class="mk">BD</span></span><span class="idn-t"><span class="idn-n">Bulawayo Depot</span></span></span>
+              <span class="rt"><b>US$ 214.00</b> of 200.00</span>
+            </div>
+            <div class="mtr"><i class="crit" style="width:100%"></i><span class="th" style="left:80%"></span></div>
+            <div class="mtr-l"><span class="rate">Over limit by US$ 14.00</span><span class="rt"><span class="pill crit"><span class="dot"></span>Overdue</span></span></div>
+          </div>
+        </div>
+      </div>
+      <p class="note">The threshold is a hairline tick, not a second fill. The bar can reach the end but never past
+      it — an over-limit account says how far over in words, because a bar cannot draw 107%.</p>
+    </div>
+  </div>
+
+  <div class="cols" style="grid-template-columns:1fr 1fr 1fr">
+    <div class="grp">
+      <span class="grp-l">Progress</span>
+      <div class="panel">
+        <div class="panel-b" style="display:flex;flex-direction:column;gap:15px;padding:15px 16px">
+          <div class="colset" style="gap:7px">
+            <div class="mtr-l"><span>Posting journal JNL-88214</span><span class="rt"><b>63%</b></span></div>
+            <div class="bar lg"><i style="width:63%"></i></div>
+            <span class="rate">214 of 340 lines · determinate</span>
+          </div>
+          <div class="colset" style="gap:7px">
+            <div class="mtr-l"><span>Fiscalising with ZIMRA FDMS</span><span class="rt"><span class="spn spn-12" style="color:var(--accent)"></span></span></div>
+            <div class="bar lg ind"><i></i></div>
+            <span class="rate">No total yet · indeterminate</span>
+          </div>
+          <div class="colset" style="gap:7px">
+            <div class="mtr-l"><span>Bank statement matched</span><span class="rt"><span class="pill ok"><span class="dot"></span>Reconciled</span></span></div>
+            <div class="bar lg"><i class="ok" style="width:100%"></i></div>
+            <span class="rate">88 of 88 lines · complete</span>
+          </div>
+        </div>
+      </div>
+      <p class="note">Determinate whenever a total exists. The indeterminate bar is a confession that the server has
+      not told us how many there are.</p>
+    </div>
+
+    <div class="grp">
+      <span class="grp-l">Credit-limit allocation</span>
+      <div class="panel">
+        <div class="panel-b" style="display:flex;flex-direction:column;gap:11px;padding:15px 16px">
+          <div class="mtr-l">
+            <span class="idn in"><span class="av av-20 ent" style="background:var(--sell)"><span class="mk">GS</span></span><span class="idn-t"><span class="idn-n">The Gate Shops</span><span class="idn-s">ACC-0142 · 30 days</span></span></span>
+            <span class="rt"><b>US$ 200.00</b></span>
+          </div>
+          <div class="alloc">
+            <i style="width:30%;background:var(--accent)"></i>
+            <i style="width:17.5%;background:var(--accent-line)"></i>
+          </div>
+          <div class="colset" style="gap:6px">
+            <div class="lgd"><span class="sq" style="background:var(--accent)"></span>Invoiced<b style="margin-left:auto">60.00</b></div>
+            <div class="lgd"><span class="sq" style="background:var(--accent-line)"></span>Orders not yet invoiced<b style="margin-left:auto">35.00</b></div>
+            <div class="lgd"><span class="sq" style="background:var(--sunken)"></span>Available<b style="margin-left:auto">105.00</b></div>
+          </div>
+        </div>
+      </div>
+      <p class="note">One bar, three claims on the same limit. An unbilled order is already spent credit, and the
+      salesman needs to see that before he writes the next one.</p>
+    </div>
+
+    <div class="grp">
+      <span class="grp-l">Coverage in days</span>
+      <div class="panel">
+        <table class="d">
+          <thead><tr><th>Item</th><th class="r">On hand</th><th class="r">Cover</th></tr></thead>
+          <tbody>
+            <tr><td>Castle Lager 340ml</td><td class="r">148</td><td class="r"><span class="num">42 d</span></td></tr>
+            <tr><td>Mazoe Orange 2L</td><td class="r">63</td><td class="r"><span class="num">19 d</span></td></tr>
+            <tr><td>Cement 50kg</td><td class="r">40</td>
+              <td class="r"><span class="cellw"><span class="num neg">6 d</span><span class="sub">min 14 d</span></span></td></tr>
+            <tr><td>Cooking oil 750ml</td><td class="r"><span class="num zero">0</span></td>
+              <td class="r"><span class="cellw"><span class="num neg">0 d</span><span class="sub">out of stock</span></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="rowset" style="gap:8px">
+        <span class="pill crit"><span class="ic ic-10"><svg viewBox="0 0 16 16"><use href="#i-warning"></use></svg></span>2 below minimum</span>
+        <span class="rate">Minimum set per item, per branch</span>
+      </div>
+      <p class="note">Days, not units — 40 bags of cement is a fortnight at Msasa and a morning at the Mutare depot.
+      Below the minimum the figure turns red and states the minimum underneath it.</p>
+    </div>
+  </div>
+
+  <div class="cols" style="grid-template-columns:1fr 1.35fr">
+    <div class="grp">
+      <span class="grp-l">Spinner — three sizes, and where each belongs</span>
+      <div class="panel">
+        <div class="panel-b" style="display:flex;flex-direction:column;gap:0;padding:0">
+          <div class="lrow" style="padding:11px 13px">
+            <span class="spn spn-12" style="color:var(--accent)"></span>
+            <span class="fx">12 — inside a control or beside a label</span>
+          </div>
+          <div class="lrow" style="padding:11px 13px">
+            <span class="spn spn-16" style="color:var(--accent)"></span>
+            <span class="fx">16 — a panel fetching its own body</span>
+          </div>
+          <div class="lrow" style="padding:11px 13px">
+            <span class="spn spn-24" style="color:var(--accent)"></span>
+            <span class="fx">24 — a full page, and nothing smaller than a page</span>
+          </div>
+          <div class="lrow" style="padding:11px 13px">
+            <button class="btn solid" type="button" disabled="disabled"><span class="spn spn-12"></span>Posting</button>
+            <span class="tail"><span class="fx">In a button the label stays; only the icon changes.</span></span>
+          </div>
+          <div style="padding:14px 13px;display:flex;flex-direction:column;gap:9px;border-top:1px solid var(--hairline)">
+            <span class="grp-l">Empty, not loading</span>
+            <div style="border:1px dashed var(--line-strong);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:5px;align-items:center">
+              <span class="ic ic-16" style="color:var(--subtle)"><svg viewBox="0 0 16 16"><use href="#i-receipt"></use></svg></span>
+              <span style="font:500 12.5px/1.3 var(--sans)">No unmatched receipts</span>
+              <span class="rate">Everything on this till is reconciled</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="note">A spinner means the system does not yet know. An empty state means it knows, and the answer is
+      none — the two must never be shown by the same component.</p>
+    </div>
+
+    <div class="grp">
+      <span class="grp-l">Sparkline — twelve points, and the one that matters</span>
+      <div class="panel">
+        <div class="panel-b" style="display:flex;flex-direction:column;gap:0;padding:0">
+          <div class="lrow" style="padding:13px">
+            <div class="stat"><b>4,182.60</b><span>Takings · 12 days US$</span></div>
+            <span class="tail" style="gap:14px">
+              <span class="spark">
+                <svg width="96" height="28" viewBox="0 0 96 28" aria-hidden="true">
+                  <path class="fillw" d="M0 22 L8.7 19 L17.5 23 L26.2 17 L34.9 18 L43.6 13 L52.4 15 L61.1 10 L69.8 12 L78.5 7 L87.3 9 L96 4 L96 28 L0 28 Z"></path>
+                  <path class="ln" d="M0 22 L8.7 19 L17.5 23 L26.2 17 L34.9 18 L43.6 13 L52.4 15 L61.1 10 L69.8 12 L78.5 7 L87.3 9 L96 4"></path>
+                  <circle class="end" cx="96" cy="4" r="2.4"></circle>
+                </svg>
+              </span>
+              <span class="tdelta up"><span class="ic ic-10"><svg viewBox="0 0 16 16"><use href="#i-chevron-up"></use></svg></span>9.1%</span>
+            </span>
+          </div>
+          <div class="lrow" style="padding:13px">
+            <div class="stat"><b>31.4%</b><span>Gross margin · 12 days</span></div>
+            <span class="tail" style="gap:14px">
+              <span class="spark">
+                <svg width="96" height="28" viewBox="0 0 96 28" aria-hidden="true">
+                  <path class="ln dn" d="M0 6 L8.7 9 L17.5 7 L26.2 12 L34.9 10 L43.6 15 L52.4 13 L61.1 18 L69.8 16 L78.5 20 L87.3 19 L96 24"></path>
+                  <circle class="end dn" cx="96" cy="24" r="2.4"></circle>
+                </svg>
+              </span>
+              <span class="tdelta dn"><span class="ic ic-10"><svg viewBox="0 0 16 16"><use href="#i-chevron-down"></use></svg></span>4.2%</span>
+            </span>
+          </div>
+          <div class="lrow" style="padding:13px">
+            <div class="stat"><b><span class="num nil">—</span></b><span>Receipts · Mutare depot</span></div>
+            <span class="tail" style="gap:14px">
+              <span class="rate">No trading days in range</span>
+              <span class="tdelta flat">0.0%</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <p class="note">No axes, no grid, no hover. The line gives the shape and the endpoint dot gives today; the
+      figure beside it gives the value. A sparkline that needs a legend has stopped being a sparkline.</p>
+    </div>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">Rules</span>
+    <div class="cols" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+      <p class="note">Colour on a figure means one of two things only: negative, or past a threshold. A large number
+      is not coloured for being large.</p>
+      <p class="note">Every figure primitive renders a null as an em dash. A blank cell is indistinguishable from a
+      failed fetch, and in a ledger that difference is the whole job.</p>
+      <p class="note">Thresholds live on the record — the credit limit, the minimum cover, the ageing band. The
+      component reads them; it never carries a default of its own.</p>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>
