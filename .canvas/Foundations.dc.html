@@ -1,0 +1,334 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    /* ══ Corelith v1 tokens — approved. Do not invent values. ══ */
+    :root{
+      --ground:#fbfbfc; --surface:#ffffff; --wash:#f5f6f9; --sunken:#eef0f5;
+      --line:#e7e9ef; --line-strong:#d5d8e2; --hairline:#f1f2f6;
+      --ink:#0b0c14; --muted:#5c5e6b; --subtle:#8a8c98;
+      --accent:#2563eb; --accent-soft:#eff4ff; --accent-line:#dbe5fb; --accent-ink:#1b4bc4;
+      --sell:#2563eb; --books:#12805c; --stock:#0e7490; --fiscal:#6549d5;
+      --maint:#b45309; --crit:#c2321b; --campus:#0e7490;
+      --ok-bg:#e8f4ef; --ok-line:#c9e5da; --warn-bg:#fdf3e2; --warn-line:#f2ddb6;
+      --crit-bg:#fdece9; --crit-line:#f6cec6;
+      --sans:"Atkinson Hyperlegible Next","Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+      --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+      /* density · default mode */
+      --h-xs:22px; --h-sm:26px; --h-md:30px; --h-lg:36px;
+      --row:32px; --pad:12px; --fs:13px;
+      --r-ctl:6px; --r-card:10px;
+      --shadow-pop:0 10px 30px -12px rgba(11,12,20,.20),0 2px 6px rgba(11,12,20,.05);
+    }
+    [data-d="compact"]{--h-xs:20px;--h-sm:24px;--h-md:26px;--h-lg:30px;--row:28px;--pad:10px;--fs:12.5px;}
+    [data-d="comfortable"]{--h-xs:24px;--h-sm:30px;--h-md:36px;--h-lg:44px;--row:44px;--pad:14px;--fs:14px;}
+    *,*::before,*::after{box-sizing:border-box;}
+    body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+      font-size:var(--fs);line-height:1.5;-webkit-font-smoothing:antialiased;}
+    a{color:var(--accent);text-decoration:underline;text-underline-offset:2px;}
+    a:hover{color:var(--accent-ink);}
+    h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.012em;}
+    p{margin:0;}
+    .mono,.num{font-family:var(--mono);font-variant-numeric:tabular-nums;}
+
+    /* ══ sheet chrome — every component sheet uses these ══ */
+    .sheet{padding:28px 32px;display:flex;flex-direction:column;gap:26px;}
+    .sheet-h{display:flex;align-items:baseline;gap:10px;padding-bottom:9px;
+      border-bottom:1px solid var(--line);}
+    .sheet-h h2{font-size:17px;}
+    .sheet-h .sub{color:var(--muted);font-size:12.5px;}
+    .sheet-h .tag{margin-left:auto;font:500 10.5px/1 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .grp{display:flex;flex-direction:column;gap:11px;}
+    .grp-l{font:500 10.5px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;
+      color:var(--subtle);}
+    .rowset{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+    .colset{display:flex;flex-direction:column;gap:10px;}
+    .cols{display:grid;gap:20px;}
+    .panel{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      overflow:hidden;}
+    .panel-h{display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--wash);
+      border-bottom:1px solid var(--line);font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .panel-h .rt{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:400;
+      font-size:12px;}
+    .panel-b{padding:14px;}
+    .panel-b.flush{padding:0;}
+    .note{color:var(--muted);font-size:12px;line-height:1.55;max-width:64ch;}
+
+    /* ══ controls ══ */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--h-md);
+      padding:0 11px;border-radius:var(--r-ctl);border:1px solid var(--line-strong);
+      background:var(--surface);color:var(--ink);font:500 var(--fs)/1 var(--sans);
+      cursor:pointer;white-space:nowrap;}
+    .btn:hover{background:var(--wash);}
+    .btn.solid{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn.solid:hover{background:var(--accent-ink);}
+    .btn.danger{background:var(--crit);border-color:var(--crit);color:#fff;}
+    .btn.soft{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .btn.ghost{border-color:transparent;background:transparent;color:var(--muted);}
+    .btn.ghost:hover{background:var(--wash);color:var(--ink);}
+    .btn.xs{height:var(--h-xs);padding:0 7px;font-size:11.5px;}
+    .btn.sm{height:var(--h-sm);padding:0 9px;font-size:12.5px;}
+    .btn.lg{height:var(--h-lg);padding:0 14px;font-size:14px;}
+    .btn.icon{width:var(--h-md);padding:0;}
+    .btn.sm.icon{width:var(--h-sm);}
+    .btn[disabled],.btn.off{opacity:.45;cursor:default;}
+    .bgrp{display:inline-flex;}
+    .bgrp .btn{border-radius:0;margin-left:-1px;}
+    .bgrp .btn:first-child{border-radius:var(--r-ctl) 0 0 var(--r-ctl);margin-left:0;}
+    .bgrp .btn:last-child{border-radius:0 var(--r-ctl) var(--r-ctl) 0;}
+
+    .fld{display:flex;align-items:center;gap:7px;height:var(--h-md);padding:0 10px;
+      border:1px solid var(--line-strong);border-radius:var(--r-ctl);background:var(--surface);
+      font-size:var(--fs);color:var(--ink);min-width:0;}
+    .fld.foc{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+    .fld.bad{border-color:var(--crit);box-shadow:0 0 0 3px var(--crit-bg);}
+    .fld .ph{color:var(--subtle);}
+    .fld .pre{color:var(--muted);font-family:var(--mono);font-size:12px;flex:none;}
+    .lab{display:flex;flex-direction:column;gap:5px;}
+    .lab > span{font:500 12px/1.3 var(--sans);color:var(--ink);}
+    .hint{font-size:11.5px;color:var(--muted);}
+    .hint.bad{color:var(--crit);}
+
+    .pill{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;
+      border-radius:999px;font:500 11px/1 var(--sans);border:1px solid var(--line);
+      background:var(--wash);color:var(--muted);white-space:nowrap;}
+    .pill.ok{background:var(--ok-bg);border-color:var(--ok-line);color:var(--books);}
+    .pill.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--maint);}
+    .pill.crit{background:var(--crit-bg);border-color:var(--crit-line);color:var(--crit);}
+    .pill.acc{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .pill .dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex:none;}
+    .pill.hollow .dot{background:transparent;border:1.5px solid currentColor;width:7px;height:7px;}
+    .cnt{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+      padding:0 5px;border-radius:999px;background:var(--sunken);color:var(--muted);
+      font:500 11px/1 var(--mono);}
+    .cnt.urgent{background:var(--crit);color:#fff;}
+    .kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+      padding:0 4px;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;
+      background:var(--surface);font:500 10.5px/1 var(--mono);color:var(--muted);}
+
+    /* ══ identity ══ */
+    .av{position:relative;flex:none;display:inline-block;border-radius:50%;overflow:hidden;
+      background:var(--sunken);}
+    .av svg{display:block;width:100%;height:100%;}
+    .av-16{width:16px;height:16px}.av-20{width:20px;height:20px}.av-24{width:24px;height:24px}
+    .av-32{width:32px;height:32px}.av-40{width:40px;height:40px}.av-64{width:64px;height:64px}
+    .av.ent{border-radius:6px;}
+    .av-40.ent,.av-64.ent{border-radius:8px;}
+    .av.ent .mk{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+      font:600 11px/1 var(--sans);color:#fff;}
+    .av-32.ent .mk{font-size:12px}.av-40.ent .mk{font-size:13px}.av-64.ent .mk{font-size:20px}
+    .avw{position:relative;flex:none;display:inline-block;line-height:0;}
+    .pres{position:absolute;right:-1px;bottom:-1px;border-radius:50%;border:2px solid var(--surface);}
+    .av-24 + .pres{width:9px;height:9px}
+    .av-32 + .pres{width:11px;height:11px}
+    .av-40 + .pres{width:13px;height:13px}
+    .p-on{background:var(--books)}.p-away{background:var(--maint)}
+    .p-busy{background:var(--crit)}.p-off{background:var(--subtle)}
+    .avg{display:inline-flex;align-items:center;}
+    .avg .avw,.avg > .av{margin-left:-7px;box-shadow:0 0 0 2px var(--surface);}
+    .avg .avw:first-child,.avg > .av:first-child{margin-left:0;}
+    .avg .more{display:inline-flex;align-items:center;justify-content:center;background:var(--sunken);
+      color:var(--muted);font:500 10px/1 var(--mono);border-radius:50%;}
+    .idn{display:flex;align-items:center;gap:8px;min-width:0;}
+    .idn-t{min-width:0;display:flex;flex-direction:column;gap:1px;}
+    .idn-n{font:500 var(--fs)/1.3 var(--sans);color:var(--ink);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .idn-s{font:400 11px/1.3 var(--sans);color:var(--muted);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .idn.in{gap:6px;}
+    .idn.lg{gap:12px;}
+    .idn.lg .idn-n{font:600 15px/1.3 var(--sans);}
+    .idn.lg .idn-s{font-size:12px;}
+    .idn.xl{gap:14px;}
+    .idn.xl .idn-n{font:600 20px/1.25 var(--sans);letter-spacing:-.015em;}
+    .idn.xl .idn-s{font-size:13px;}
+    .rchip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px 0 3px;
+      border-radius:999px;border:1px solid var(--line);background:var(--surface);
+      font:500 12px/1 var(--sans);color:var(--ink);}
+
+    /* ══ table ══ */
+    table.d{width:100%;border-collapse:collapse;font-size:var(--fs);}
+    table.d th{text-align:left;font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);padding:0 var(--pad) 7px;
+      border-bottom:1px solid var(--line);white-space:nowrap;}
+    table.d td{padding:0 var(--pad);height:var(--row);border-bottom:1px solid var(--hairline);
+      vertical-align:middle;}
+    table.d tbody tr:last-child td{border-bottom:0;}
+    table.d tr.hov td{background:var(--wash);}
+    table.d tr.sel td{background:var(--accent-soft);}
+    table.d .r{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;
+      font-size:12px;}
+    table.d th.r{text-align:right;}
+    table.d tr.grp-row td{background:var(--wash);font:500 11px/1 var(--sans);
+      letter-spacing:.05em;text-transform:uppercase;color:var(--muted);height:26px;}
+    table.d tfoot td{height:var(--row);font-weight:600;border-top:1px solid var(--line-strong);
+      border-bottom:0;background:var(--surface);}
+
+    /* ══ rows, cards ══ */
+    .lrow{display:flex;align-items:center;gap:10px;padding:7px var(--pad);
+      border-bottom:1px solid var(--hairline);}
+    .lrow:last-child{border-bottom:0;}
+    .lrow .tail{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none;}
+    .kard{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      padding:13px;display:flex;flex-direction:column;gap:10px;}
+    .meta{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:12px;}
+    .meta dt{font:500 10.5px/1.5 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .meta dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12px;}
+    .stat{display:flex;flex-direction:column;gap:3px;}
+    .stat b{font:600 24px/1.1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
+    .stat span{font:500 10.5px/1.3 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .bar{height:5px;border-radius:999px;background:var(--sunken);overflow:hidden;}
+    .bar i{display:block;height:100%;background:var(--accent);}
+    .ramp{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+    .ramp > div{display:flex;flex-direction:column;}
+    .ramp .chip{height:52px;}
+    .ramp .m{padding:8px 10px;border-top:1px solid var(--line);border-left:1px solid var(--line);background:var(--surface);}
+    .ramp > div:first-child .m{border-left:0;}
+    .ramp .m b{display:block;font:500 11.5px/1.3 var(--sans);}
+    .ramp .m span{display:block;font:400 10.5px/1.4 var(--mono);color:var(--muted);margin-top:1px;}
+    .hue{display:flex;align-items:center;gap:9px;}
+    .hue .sq{width:9px;height:9px;border-radius:2px;flex:none;}
+    .hue b{font:500 12.5px/1 var(--sans);min-width:96px;}
+    .hue code{font-family:var(--mono);font-size:11.5px;color:var(--muted);}
+    .dk{background:#0e0f14;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:13px;}
+    .dk .ramp{border-color:#282a33;}
+    .dk .ramp .m{background:#16171d;border-color:#282a33;}
+    .dk .ramp .m b{color:#eceef4;}
+    .dk .ramp .m span{color:#9b9daa;}
+    .dk .grp-l{color:#71747f;}
+  </style>
+</helmet>
+<div class="sheet" data-d="{{density}}" style="width:1240px;background:var(--ground)">
+
+  <div class="sheet-h">
+    <h2>Foundations</h2>
+    <span class="sub">Colour · the approved v1 palette</span>
+    <span class="tag">Sheet 01</span>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">Neutrals and ink</span>
+    <div class="ramp">
+      <div><div class="chip" style="background:#fbfbfc"></div><div class="m"><b>Ground</b><span>#fbfbfc</span></div></div>
+      <div><div class="chip" style="background:#ffffff"></div><div class="m"><b>Surface</b><span>#ffffff</span></div></div>
+      <div><div class="chip" style="background:#f5f6f9"></div><div class="m"><b>Wash</b><span>#f5f6f9</span></div></div>
+      <div><div class="chip" style="background:#e7e9ef"></div><div class="m"><b>Line</b><span>#e7e9ef</span></div></div>
+      <div><div class="chip" style="background:#5c5e6b"></div><div class="m"><b>Muted</b><span>#5c5e6b</span></div></div>
+      <div><div class="chip" style="background:#0b0c14"></div><div class="m"><b>Ink</b><span>#0b0c14</span></div></div>
+    </div>
+    <p class="note">No pure black. Ink carries enough blue to sit under the accent without arguing with it.</p>
+  </div>
+
+  <div class="cols" style="grid-template-columns:1fr 1fr">
+    <div class="grp">
+      <span class="grp-l">Accent — one, and only one</span>
+      <div class="ramp" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+        <div><div class="chip" style="background:#eff4ff"></div><div class="m"><b>Soft</b><span>#eff4ff</span></div></div>
+        <div><div class="chip" style="background:#dbe5fb"></div><div class="m"><b>Line</b><span>#dbe5fb</span></div></div>
+        <div><div class="chip" style="background:#2563eb"></div><div class="m"><b>Accent</b><span>#2563eb</span></div></div>
+        <div><div class="chip" style="background:#1b4bc4"></div><div class="m"><b>Ink</b><span>#1b4bc4</span></div></div>
+      </div>
+      <p class="note">The logo mark keeps <span class="mono">#0F62FE</span>. A mark is allowed its own value; the interface is not.</p>
+    </div>
+    <div class="grp">
+      <span class="grp-l">Module hues — a record's origin</span>
+      <div class="colset" style="gap:7px">
+        <div class="hue"><span class="sq" style="background:#2563eb"></span><b>Sell</b><code>#2563eb</code></div>
+        <div class="hue"><span class="sq" style="background:#12805c"></span><b>Books</b><code>#12805c</code></div>
+        <div class="hue"><span class="sq" style="background:#0e7490"></span><b>Stock · Campus</b><code>#0e7490</code></div>
+        <div class="hue"><span class="sq" style="background:#6549d5"></span><b>Fiscal</b><code>#6549d5</code></div>
+        <div class="hue"><span class="sq" style="background:#b45309"></span><b>Maintenance</b><code>#b45309</code></div>
+        <div class="hue"><span class="sq" style="background:#c2321b"></span><b>Critical</b><code>#c2321b</code></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">Status — the product's own vocabulary, not ours</span>
+    <div class="rowset" style="gap:6px">
+      <span class="pill ok"><span class="dot"></span>Posted</span>
+      <span class="pill ok"><span class="dot"></span>Signed</span>
+      <span class="pill ok"><span class="dot"></span>Reconciled</span>
+      <span class="pill ok"><span class="dot"></span>Matched</span>
+      <span class="pill acc"><span class="dot"></span>Queued</span>
+      <span class="pill acc"><span class="dot"></span>In progress</span>
+      <span class="pill acc"><span class="dot"></span>Trading</span>
+      <span class="pill warn"><span class="dot"></span>Needs approval</span>
+      <span class="pill warn"><span class="dot"></span>Unmatched</span>
+      <span class="pill crit"><span class="dot"></span>Failed</span>
+      <span class="pill crit"><span class="dot"></span>Overdue</span>
+      <span class="pill hollow"><span class="dot"></span>Draft</span>
+      <span class="pill hollow"><span class="dot"></span>Open</span>
+      <span class="pill hollow"><span class="dot"></span>Closed off</span>
+      <span class="pill hollow"><span class="dot"></span>Not started</span>
+    </div>
+    <p class="note">A neutral state gets a hollow ring and a word, never a coloured badge. Colour is spent on the states that need a person to act.</p>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">Dark — built by layering lightness, not by adding shadow</span>
+    <div class="dk">
+      <div class="ramp">
+        <div><div class="chip" style="background:#0e0f14"></div><div class="m"><b>Ground</b><span>#0e0f14</span></div></div>
+        <div><div class="chip" style="background:#16171d"></div><div class="m"><b>Surface</b><span>#16171d</span></div></div>
+        <div><div class="chip" style="background:#1b1d24"></div><div class="m"><b>Wash</b><span>#1b1d24</span></div></div>
+        <div><div class="chip" style="background:#282a33"></div><div class="m"><b>Line</b><span>#282a33</span></div></div>
+        <div><div class="chip" style="background:#6c94f7"></div><div class="m"><b>Accent</b><span>#6c94f7</span></div></div>
+        <div><div class="chip" style="background:#eceef4"></div><div class="m"><b>Ink</b><span>#eceef4</span></div></div>
+      </div>
+    </div>
+    <p class="note">Each surface is a step lighter than the one behind it. The accent lifts to <span class="mono">#6c94f7</span> — the light-mode blue measures 3.1:1 on this ground and cannot carry text.</p>
+  </div>
+
+  <div class="cols" style="grid-template-columns:1fr 1fr 1fr">
+    <div class="grp">
+      <span class="grp-l">Radii — two bands</span>
+      <div class="rowset">
+        <div style="width:56px;height:40px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface);display:flex;align-items:center;justify-content:center;font:400 11px var(--mono);color:var(--muted)">6</div>
+        <div style="width:56px;height:40px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);display:flex;align-items:center;justify-content:center;font:400 11px var(--mono);color:var(--muted)">10</div>
+        <div style="width:56px;height:40px;border:1px solid var(--line-strong);border-radius:999px;background:var(--surface);display:flex;align-items:center;justify-content:center;font:400 11px var(--mono);color:var(--muted)">pill</div>
+      </div>
+      <p class="note">Controls 6, cards 10, pills full. Nothing else.</p>
+    </div>
+    <div class="grp">
+      <span class="grp-l">Shadow — three, all floating</span>
+      <div class="rowset">
+        <div style="width:76px;height:40px;border:1px solid var(--line);border-radius:8px;background:var(--surface);box-shadow:var(--shadow-pop);display:flex;align-items:center;justify-content:center;font:400 10.5px var(--mono);color:var(--muted)">popover</div>
+        <div style="width:76px;height:40px;border:1px solid var(--line);border-radius:8px;background:var(--surface);box-shadow:0 20px 48px -14px rgba(11,12,20,.26),0 3px 10px rgba(11,12,20,.07);display:flex;align-items:center;justify-content:center;font:400 10.5px var(--mono);color:var(--muted)">modal</div>
+      </div>
+      <p class="note">A card is a hairline, not a shadow. Only genuinely floating surfaces cast one.</p>
+    </div>
+    <div class="grp">
+      <span class="grp-l">Motion</span>
+      <div class="colset" style="gap:5px;font-size:12px">
+        <div class="hue"><b style="min-width:74px">instant</b><code>80ms</code></div>
+        <div class="hue"><b style="min-width:74px">fast</b><code>140ms</code></div>
+        <div class="hue"><b style="min-width:74px">base</b><code>200ms</code></div>
+        <div class="hue"><b style="min-width:74px">ease-out</b><code>.22 1 .36 1</code></div>
+      </div>
+      <p class="note">Fades and small translates. No bounce, no spring.</p>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"density":{"editor":"enum","options":["compact","default","comfortable"],"default":"default","section":"Density"}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { density: this.props.density ?? 'default' };
+  }
+}
+</script>
+</body>
+</html>
