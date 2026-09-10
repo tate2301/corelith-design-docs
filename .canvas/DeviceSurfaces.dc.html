@@ -1,0 +1,829 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    /* ══ Corelith v1 tokens — approved. Do not invent values. ══ */
+    :root{
+      --ground:#fbfbfc; --surface:#ffffff; --wash:#f5f6f9; --sunken:#eef0f5;
+      --line:#e7e9ef; --line-strong:#d5d8e2; --hairline:#f1f2f6;
+      --ink:#0b0c14; --muted:#5c5e6b; --subtle:#8a8c98;
+      --accent:#2563eb; --accent-soft:#eff4ff; --accent-line:#dbe5fb; --accent-ink:#1b4bc4;
+      --sell:#2563eb; --books:#12805c; --stock:#0e7490; --fiscal:#6549d5;
+      --maint:#b45309; --crit:#c2321b; --campus:#0e7490;
+      --ok-bg:#e8f4ef; --ok-line:#c9e5da; --warn-bg:#fdf3e2; --warn-line:#f2ddb6;
+      --crit-bg:#fdece9; --crit-line:#f6cec6;
+      --sans:"Atkinson Hyperlegible Next","Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+      --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+      /* density · default mode */
+      --h-xs:22px; --h-sm:26px; --h-md:30px; --h-lg:36px;
+      --row:32px; --pad:12px; --fs:13px;
+      --r-ctl:6px; --r-card:10px;
+      --shadow-pop:0 10px 30px -12px rgba(11,12,20,.20),0 2px 6px rgba(11,12,20,.05);
+    }
+    [data-d="compact"]{--h-xs:20px;--h-sm:24px;--h-md:26px;--h-lg:30px;--row:28px;--pad:10px;--fs:12.5px;}
+    [data-d="comfortable"]{--h-xs:24px;--h-sm:30px;--h-md:36px;--h-lg:44px;--row:44px;--pad:14px;--fs:14px;}
+    *,*::before,*::after{box-sizing:border-box;}
+    body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+      font-size:var(--fs);line-height:1.5;-webkit-font-smoothing:antialiased;}
+    a{color:var(--accent);text-decoration:underline;text-underline-offset:2px;}
+    a:hover{color:var(--accent-ink);}
+    h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.012em;}
+    p{margin:0;}
+    .mono,.num{font-family:var(--mono);font-variant-numeric:tabular-nums;}
+
+    /* ══ sheet chrome — every component sheet uses these ══ */
+    .sheet{padding:28px 32px;display:flex;flex-direction:column;gap:26px;}
+    .sheet-h{display:flex;align-items:baseline;gap:10px;padding-bottom:9px;
+      border-bottom:1px solid var(--line);}
+    .sheet-h h2{font-size:17px;}
+    .sheet-h .sub{color:var(--muted);font-size:12.5px;}
+    .sheet-h .tag{margin-left:auto;font:500 10.5px/1 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .grp{display:flex;flex-direction:column;gap:11px;}
+    .grp-l{font:500 10.5px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;
+      color:var(--subtle);}
+    .rowset{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+    .colset{display:flex;flex-direction:column;gap:10px;}
+    .cols{display:grid;gap:20px;}
+    .panel{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      overflow:hidden;}
+    .panel-h{display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--wash);
+      border-bottom:1px solid var(--line);font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .panel-h .rt{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:400;
+      font-size:12px;}
+    .panel-b{padding:14px;}
+    .panel-b.flush{padding:0;}
+    .note{color:var(--muted);font-size:12px;line-height:1.55;max-width:64ch;}
+
+    /* ══ controls ══ */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--h-md);
+      padding:0 11px;border-radius:var(--r-ctl);border:1px solid var(--line-strong);
+      background:var(--surface);color:var(--ink);font:500 var(--fs)/1 var(--sans);
+      cursor:pointer;white-space:nowrap;}
+    .btn:hover{background:var(--wash);}
+    .btn.solid{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn.solid:hover{background:var(--accent-ink);}
+    .btn.danger{background:var(--crit);border-color:var(--crit);color:#fff;}
+    .btn.soft{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .btn.ghost{border-color:transparent;background:transparent;color:var(--muted);}
+    .btn.ghost:hover{background:var(--wash);color:var(--ink);}
+    .btn.xs{height:var(--h-xs);padding:0 7px;font-size:11.5px;}
+    .btn.sm{height:var(--h-sm);padding:0 9px;font-size:12.5px;}
+    .btn.lg{height:var(--h-lg);padding:0 14px;font-size:14px;}
+    .btn.icon{width:var(--h-md);padding:0;}
+    .btn.sm.icon{width:var(--h-sm);}
+    .btn[disabled],.btn.off{opacity:.45;cursor:default;}
+    .bgrp{display:inline-flex;}
+    .bgrp .btn{border-radius:0;margin-left:-1px;}
+    .bgrp .btn:first-child{border-radius:var(--r-ctl) 0 0 var(--r-ctl);margin-left:0;}
+    .bgrp .btn:last-child{border-radius:0 var(--r-ctl) var(--r-ctl) 0;}
+
+    .fld{display:flex;align-items:center;gap:7px;height:var(--h-md);padding:0 10px;
+      border:1px solid var(--line-strong);border-radius:var(--r-ctl);background:var(--surface);
+      font-size:var(--fs);color:var(--ink);min-width:0;}
+    .fld.foc{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+    .fld.bad{border-color:var(--crit);box-shadow:0 0 0 3px var(--crit-bg);}
+    .fld .ph{color:var(--subtle);}
+    .fld .pre{color:var(--muted);font-family:var(--mono);font-size:12px;flex:none;}
+    .lab{display:flex;flex-direction:column;gap:5px;}
+    .lab > span{font:500 12px/1.3 var(--sans);color:var(--ink);}
+    .hint{font-size:11.5px;color:var(--muted);}
+    .hint.bad{color:var(--crit);}
+
+    .pill{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;
+      border-radius:999px;font:500 11px/1 var(--sans);border:1px solid var(--line);
+      background:var(--wash);color:var(--muted);white-space:nowrap;}
+    .pill.ok{background:var(--ok-bg);border-color:var(--ok-line);color:var(--books);}
+    .pill.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--maint);}
+    .pill.crit{background:var(--crit-bg);border-color:var(--crit-line);color:var(--crit);}
+    .pill.acc{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .pill .dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex:none;}
+    .pill.hollow .dot{background:transparent;border:1.5px solid currentColor;width:7px;height:7px;}
+    .cnt{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+      padding:0 5px;border-radius:999px;background:var(--sunken);color:var(--muted);
+      font:500 11px/1 var(--mono);}
+    .cnt.urgent{background:var(--crit);color:#fff;}
+    .kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+      padding:0 4px;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;
+      background:var(--surface);font:500 10.5px/1 var(--mono);color:var(--muted);}
+
+    /* ══ identity ══ */
+    .av{position:relative;flex:none;display:inline-block;border-radius:50%;overflow:hidden;
+      background:var(--sunken);}
+    .av svg{display:block;width:100%;height:100%;}
+    .av-16{width:16px;height:16px}.av-20{width:20px;height:20px}.av-24{width:24px;height:24px}
+    .av-32{width:32px;height:32px}.av-40{width:40px;height:40px}.av-64{width:64px;height:64px}
+    .av.ent{border-radius:6px;}
+    .av-40.ent,.av-64.ent{border-radius:8px;}
+    .av.ent .mk{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+      font:600 11px/1 var(--sans);color:#fff;}
+    .av-32.ent .mk{font-size:12px}.av-40.ent .mk{font-size:13px}.av-64.ent .mk{font-size:20px}
+    .avw{position:relative;flex:none;display:inline-block;line-height:0;}
+    .pres{position:absolute;right:-1px;bottom:-1px;border-radius:50%;border:2px solid var(--surface);}
+    .av-24 + .pres{width:9px;height:9px}
+    .av-32 + .pres{width:11px;height:11px}
+    .av-40 + .pres{width:13px;height:13px}
+    .p-on{background:var(--books)}.p-away{background:var(--maint)}
+    .p-busy{background:var(--crit)}.p-off{background:var(--subtle)}
+    .avg{display:inline-flex;align-items:center;}
+    .avg .avw,.avg > .av{margin-left:-7px;box-shadow:0 0 0 2px var(--surface);}
+    .avg .avw:first-child,.avg > .av:first-child{margin-left:0;}
+    .avg .more{display:inline-flex;align-items:center;justify-content:center;background:var(--sunken);
+      color:var(--muted);font:500 10px/1 var(--mono);border-radius:50%;}
+    .idn{display:flex;align-items:center;gap:8px;min-width:0;}
+    .idn-t{min-width:0;display:flex;flex-direction:column;gap:1px;}
+    .idn-n{font:500 var(--fs)/1.3 var(--sans);color:var(--ink);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .idn-s{font:400 11px/1.3 var(--sans);color:var(--muted);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .idn.in{gap:6px;}
+    .idn.lg{gap:12px;}
+    .idn.lg .idn-n{font:600 15px/1.3 var(--sans);}
+    .idn.lg .idn-s{font-size:12px;}
+    .idn.xl{gap:14px;}
+    .idn.xl .idn-n{font:600 20px/1.25 var(--sans);letter-spacing:-.015em;}
+    .idn.xl .idn-s{font-size:13px;}
+    .rchip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px 0 3px;
+      border-radius:999px;border:1px solid var(--line);background:var(--surface);
+      font:500 12px/1 var(--sans);color:var(--ink);}
+
+    /* ══ table ══ */
+    table.d{width:100%;border-collapse:collapse;font-size:var(--fs);}
+    table.d th{text-align:left;font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);padding:0 var(--pad) 7px;
+      border-bottom:1px solid var(--line);white-space:nowrap;}
+    table.d td{padding:0 var(--pad);height:var(--row);border-bottom:1px solid var(--hairline);
+      vertical-align:middle;}
+    table.d tbody tr:last-child td{border-bottom:0;}
+    table.d tr.hov td{background:var(--wash);}
+    table.d tr.sel td{background:var(--accent-soft);}
+    table.d .r{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;
+      font-size:12px;}
+    table.d th.r{text-align:right;}
+    table.d tr.grp-row td{background:var(--wash);font:500 11px/1 var(--sans);
+      letter-spacing:.05em;text-transform:uppercase;color:var(--muted);height:26px;}
+    table.d tfoot td{height:var(--row);font-weight:600;border-top:1px solid var(--line-strong);
+      border-bottom:0;background:var(--surface);}
+
+    /* ══ rows, cards ══ */
+    .lrow{display:flex;align-items:center;gap:10px;padding:7px var(--pad);
+      border-bottom:1px solid var(--hairline);}
+    .lrow:last-child{border-bottom:0;}
+    .lrow .tail{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none;}
+    .kard{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      padding:13px;display:flex;flex-direction:column;gap:10px;}
+    .meta{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:12px;}
+    .meta dt{font:500 10.5px/1.5 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .meta dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12px;}
+    .stat{display:flex;flex-direction:column;gap:3px;}
+    .stat b{font:600 24px/1.1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
+    .stat span{font:500 10.5px/1.3 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .bar{height:5px;border-radius:999px;background:var(--sunken);overflow:hidden;}
+    .bar i{display:block;height:100%;background:var(--accent);}
+
+    /* ══ sheet-local: icon primitives ══ */
+    .ic{display:inline-block;flex:none;line-height:0;}
+    .ic svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.4;
+      stroke-linecap:round;stroke-linejoin:round;}
+    .ic-12{width:12px;height:12px;}  .ic-12 svg{stroke-width:1.85;}
+    .ic-14{width:14px;height:14px;}  .ic-14 svg{stroke-width:1.6;}
+    .ic-16{width:16px;height:16px;}
+    .ic-20{width:20px;height:20px;}  .ic-20 svg{stroke-width:1.12;}
+    .ic-24{width:24px;height:24px;}  .ic-24 svg{stroke-width:1;}
+    .vsep{width:1px;height:20px;background:var(--line);flex:none;}
+    .cap{font:400 11.5px/1.35 var(--sans);color:var(--muted);}
+
+    /* ══ sheet-local: a device is a plain rectangle at its own size ══ */
+    .dev{display:flex;flex-direction:column;gap:8px;}
+    .devh{display:flex;align-items:baseline;gap:9px;}
+    .devh b{font:600 14px/1.2 var(--sans);}
+    .devh .sp{font:400 11.5px/1.2 var(--mono);font-variant-numeric:tabular-nums;color:var(--muted);}
+    .devh .rt{margin-left:auto;}
+    .frame{border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);
+      overflow:hidden;flex:none;}
+    .scr{display:flex;flex-direction:column;height:100%;min-height:0;background:var(--ground);}
+
+    /* ══ sheet-local: Kora — handheld, aisle ══ */
+    .kbar{flex:none;display:flex;align-items:center;gap:9px;height:52px;padding:0 12px;
+      background:var(--surface);border-bottom:1px solid var(--line);}
+    .kbar .rt{margin-left:auto;flex:none;}
+    .kbody{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;padding:12px;}
+    .kfoot{flex:none;display:flex;align-items:center;gap:8px;padding:10px 12px;
+      background:var(--surface);border-top:1px solid var(--line);}
+    .kfoot .btn{flex:1;height:48px;}
+    .kfoot .btn.icon{flex:none;width:48px;}
+    .icard{flex:none;border:1px solid var(--accent-line);border-radius:var(--r-card);
+      background:var(--surface);padding:12px;display:flex;flex-direction:column;gap:8px;
+      box-shadow:0 1px 2px rgba(11,12,20,.05);}
+    .icard .top{display:flex;align-items:flex-start;gap:10px;}
+    .icard .nm{font:600 15px/1.25 var(--sans);}
+    .icard .sb{font:400 11.5px/1.35 var(--mono);font-variant-numeric:tabular-nums;color:var(--muted);}
+    .icard .pr{margin-left:auto;flex:none;font:600 22px/1 var(--mono);
+      font-variant-numeric:tabular-nums;letter-spacing:-.022em;}
+    .icard .mrow{display:flex;align-items:center;gap:7px;}
+    .icard .arow{display:flex;align-items:center;gap:8px;}
+    .icard .arow .btn{flex:1;height:44px;}
+    .qbox{display:inline-flex;align-items:center;gap:3px;flex:none;}
+    .qbtn{width:44px;height:44px;border:1px solid var(--line-strong);border-radius:var(--r-ctl);
+      background:var(--surface);display:inline-flex;align-items:center;justify-content:center;
+      color:var(--muted);flex:none;}
+    .qnum{min-width:30px;text-align:center;font:600 15px/1 var(--mono);
+      font-variant-numeric:tabular-nums;}
+    .bstrip{flex:none;display:flex;align-items:center;gap:9px;height:52px;padding:0 12px;
+      border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--surface);}
+    .bstrip .v{margin-left:auto;font:600 15px/1 var(--mono);font-variant-numeric:tabular-nums;}
+    .pk{flex:none;display:flex;flex-direction:column;gap:6px;padding:9px 12px;
+      border:1px solid var(--line);border-radius:var(--r-ctl);background:var(--surface);}
+    .pk .l{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);}
+    .pk .l .v{margin-left:auto;font:500 12px/1 var(--mono);font-variant-numeric:tabular-nums;
+      color:var(--ink);}
+    .kl{flex:none;display:flex;align-items:center;gap:7px;font:500 10.5px/1 var(--sans);
+      letter-spacing:.07em;text-transform:uppercase;color:var(--subtle);}
+    .kl .rt{margin-left:auto;text-transform:none;letter-spacing:0;font-size:11px;
+      font-family:var(--mono);}
+    .rlist{flex:none;border:1px solid var(--line);border-radius:var(--r-card);
+      background:var(--surface);overflow:hidden;}
+    .rrow{display:flex;align-items:center;gap:9px;height:44px;padding:0 12px;
+      border-bottom:1px solid var(--hairline);}
+    .rrow:last-child{border-bottom:0;}
+    .rrow .t{min-width:0;display:flex;flex-direction:column;gap:0;}
+    .rrow .t b{font:500 12.5px/1.25 var(--sans);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .rrow .t span{font:400 10.5px/1.25 var(--mono);font-variant-numeric:tabular-nums;
+      color:var(--muted);}
+    .rrow .v{margin-left:auto;font:500 12.5px/1 var(--mono);font-variant-numeric:tabular-nums;}
+    .ksp{flex:1;min-height:0;}
+
+    /* ══ sheet-local: CounterMini — counter unit beside the till ══ */
+    .cbar{flex:none;display:flex;align-items:center;gap:10px;height:44px;padding:0 14px;
+      background:var(--surface);border-bottom:1px solid var(--line);}
+    .cbar .rt{margin-left:auto;display:flex;align-items:center;gap:9px;flex:none;}
+    .cbody{flex:1;min-height:0;display:flex;align-items:stretch;}
+    .clist{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--surface);
+      border-right:1px solid var(--line);}
+    .clist .hd{flex:none;display:flex;align-items:center;gap:8px;height:36px;padding:0 14px;
+      border-bottom:1px solid var(--hairline);font:500 13px/1 var(--sans);}
+    .clist .hd .rt{margin-left:auto;font:400 11.5px/1 var(--mono);color:var(--muted);}
+    .clist .bd{flex:1;min-height:0;overflow:hidden;}
+    .ctot{width:300px;flex:none;display:flex;flex-direction:column;gap:6px;padding:12px 14px;
+      background:var(--wash);}
+    .ctot .r1{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);}
+    .ctot .r1 .v{margin-left:auto;font-family:var(--mono);font-variant-numeric:tabular-nums;
+      font-size:12.5px;color:var(--ink);}
+    .ctot .pay{display:flex;flex-direction:column;gap:2px;padding-top:9px;
+      border-top:1px solid var(--line-strong);}
+    .ctot .pay .l{font:500 10.5px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;
+      color:var(--subtle);}
+    .ctot .pay b{font:600 30px/1.05 var(--mono);font-variant-numeric:tabular-nums;
+      letter-spacing:-.028em;}
+    .ctot .leg{display:flex;align-items:center;gap:7px;height:22px;font-size:11.5px;
+      color:var(--muted);}
+    .ctot .leg .v{margin-left:auto;font-family:var(--mono);font-variant-numeric:tabular-nums;
+      font-size:11.5px;color:var(--ink);}
+    .csp{flex:1;min-height:0;}
+    .ctend{flex:none;display:flex;gap:8px;padding:8px 14px;background:var(--surface);
+      border-top:1px solid var(--line);}
+    .tend{flex:1;min-width:0;min-height:44px;display:flex;align-items:center;justify-content:center;
+      gap:7px;padding:0 8px;border:1px solid var(--line-strong);border-radius:var(--r-ctl);
+      background:var(--surface);font:500 13px/1 var(--sans);color:var(--ink);}
+    .tend .ic{color:var(--muted);}
+    .tend.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink);}
+    .tend.on .ic{color:var(--accent-ink);}
+    .tend.off{background:var(--wash);border-color:var(--line);color:var(--subtle);}
+    .tend.off .ic{color:var(--subtle);}
+
+    /* ══ sheet-local: the states both surfaces must also carry ══ */
+    .sgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;}
+    .scard{display:flex;flex-direction:column;gap:7px;}
+    .sbox{height:120px;border:1px solid var(--line-strong);border-radius:10px;
+      background:var(--surface);padding:12px;display:flex;flex-direction:column;gap:8px;
+      align-items:center;justify-content:center;text-align:center;}
+    .sbox .t{font:500 13px/1.3 var(--sans);}
+    .sbox .s{font:400 11.5px/1.4 var(--sans);color:var(--muted);max-width:26ch;}
+    .sbox .ring{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;
+      justify-content:center;background:var(--sunken);color:var(--subtle);}
+    .sbox .ring.bad{background:var(--crit-bg);color:var(--crit);}
+    .sbox .ring.acc{background:var(--accent-soft);color:var(--accent-ink);}
+    .sbox .bar{width:100%;}
+
+    /* ══ sheet-local: fleet + held queue ══ */
+    .dcell{display:flex;align-items:center;gap:9px;min-width:0;}
+    .dg{width:26px;height:26px;border-radius:6px;flex:none;display:flex;align-items:center;
+      justify-content:center;background:var(--sunken);color:var(--muted);}
+    .dg.on{background:var(--accent-soft);color:var(--accent-ink);}
+    .dt{min-width:0;display:flex;flex-direction:column;gap:0;}
+    .dt b{font:500 13px/1.3 var(--sans);}
+    .dt span{font:400 11px/1.3 var(--mono);font-variant-numeric:tabular-nums;color:var(--muted);}
+    .qbar{display:flex;align-items:center;gap:8px;justify-content:flex-end;}
+    .qbar .bar{width:56px;flex:none;}
+    .qhd{display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--wash);
+      border-bottom:1px solid var(--line);}
+    .qhd .t{display:flex;flex-direction:column;gap:1px;}
+    .qhd .t b{font:600 13px/1.25 var(--sans);}
+    .qhd .t span{font:400 11.5px/1.25 var(--mono);font-variant-numeric:tabular-nums;
+      color:var(--muted);}
+    .qhd .rt{margin-left:auto;display:flex;align-items:center;gap:9px;flex:none;}
+  </style>
+</helmet>
+<div class="sheet" style="width:1240px;background:var(--ground)">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+ <symbol id="f1" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e6ebf5"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#3f5b8c"/><circle cx="20" cy="16.5" r="7.8" fill="#6b4630"/><path d="M12.2 16.4c0-5 3.2-8.3 7.8-8.3s7.8 3.3 7.8 8.3c0-2.4-1.1-3.7-2.4-4.3-1.9-.9-3.4.3-5.4.3s-3.5-1.2-5.4-.3c-1.3.6-2.4 1.9-2.4 4.3Z" fill="#1a1512"/></symbol>
+ <symbol id="f2" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e8f0ec"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#2f6b57"/><circle cx="20" cy="16.5" r="7.8" fill="#8a5a3c"/><path d="M11.6 16.6c0-5.3 3.5-8.5 8.4-8.5s8.4 3.2 8.4 8.5v7.2a1.6 1.6 0 1 1-3.2 0v-7.4c-1.6.9-3.4 1.4-5.2 1.4s-3.6-.5-5.2-1.4v7.4a1.6 1.6 0 1 1-3.2 0Z" fill="#2a211b"/></symbol>
+ <symbol id="f3" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f0e9f2"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#6b4a7d"/><circle cx="20" cy="16.5" r="7.8" fill="#a9714b"/><path d="M12.4 17.2c-.6-5.6 2.8-9.1 7.6-9.1s8.2 3.5 7.6 9.1c-.3-2.6-1.6-3.9-3-4.4-2.2-.8-3 .5-4.6.5s-2.4-1.3-4.6-.5c-1.4.5-2.7 1.8-3 4.4Z" fill="#3d2a1e"/><circle cx="27.4" cy="9.4" r="2.9" fill="#3d2a1e"/></symbol>
+ <symbol id="f4" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f5ebe8"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#8c4a3f"/><circle cx="20" cy="16.5" r="7.8" fill="#5a3a28"/><path d="M12.3 15.8c0-4.8 3.3-7.7 7.7-7.7s7.7 2.9 7.7 7.7c0-1.7-.9-2.7-2.1-3.1-1.8-.6-3.2.6-5.6.6s-3.8-1.2-5.6-.6c-1.2.4-2.1 1.4-2.1 3.1Z" fill="#1a1512"/></symbol>
+ <symbol id="f5" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eceef3"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#3d4756"/><circle cx="20" cy="16.5" r="7.8" fill="#7c4f35"/><path d="M11.9 17.8c-.4-6.2 3.1-9.7 8.1-9.7s8.5 3.5 8.1 9.7c-.9-1.2-1.4-3.2-1.4-5-2 1.3-4.3 2-6.7 2s-4.7-.7-6.7-2c0 1.8-.5 3.8-1.4 5Z" fill="#2a211b"/></symbol>
+ <symbol id="f6" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e9f0f4"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#46617a"/><circle cx="20" cy="16.5" r="7.8" fill="#b98254"/><path d="M12.2 16.4c0-5 3.2-8.3 7.8-8.3s7.8 3.3 7.8 8.3c0-2.4-1.1-3.7-2.4-4.3-1.9-.9-3.4.3-5.4.3s-3.5-1.2-5.4-.3c-1.3.6-2.4 1.9-2.4 4.3Z" fill="#3d2a1e"/></symbol>
+ <symbol id="f7" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f2eee6"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#7a6a4a"/><circle cx="20" cy="16.5" r="7.8" fill="#6b4630"/><path d="M11.5 15.4c0-5 3.8-8.3 8.5-8.3s8.5 3.3 8.5 8.3c0 1-.5 1.9-1.3 2.4l-1.2-4.8a20 20 0 0 1-12 0l-1.2 4.8c-.8-.5-1.3-1.4-1.3-2.4Z" fill="#5d4d8a"/></symbol>
+ <symbol id="f8" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eaf1ee"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#4a7a68"/><circle cx="20" cy="16.5" r="7.8" fill="#8a5a3c"/><path d="M12.6 14.9c0-4.5 3.1-7.3 7.4-7.3s7.4 2.8 7.4 7.3c0-1.3-.8-2.1-1.8-2.4-1.6-.5-3.2.7-5.6.7s-4-1.2-5.6-.7c-1 .3-1.8 1.1-1.8 2.4Z" fill="#1a1512"/></symbol>
+ <symbol id="c1" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e4eef2"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#1f5f7a"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#6b4630"/><path d="M12.9 17.8c0-4.7 3-7.7 7.1-7.7s7.1 3 7.1 7.7c0-2.2-1-3.4-2.2-4-1.7-.8-3.1.3-4.9.3s-3.2-1.1-4.9-.3c-1.2.6-2.2 1.8-2.2 4Z" fill="#1a1512"/></symbol>
+ <symbol id="c2" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eef1e6"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#2f6b57"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#8a5a3c"/><path d="M12.4 18c0-4.9 3.2-7.9 7.6-7.9s7.6 3 7.6 7.9v6a1.5 1.5 0 1 1-3 0v-6.2c-1.4.8-3 1.2-4.6 1.2s-3.2-.4-4.6-1.2V24a1.5 1.5 0 1 1-3 0Z" fill="#2a211b"/></symbol>
+ <symbol id="c3" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f4ece4"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#8c4a3f"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#a9714b"/><path d="M12.9 18.4c-.5-5.2 2.6-8.3 7.1-8.3s7.6 3.1 7.1 8.3c-.3-2.4-1.5-3.6-2.8-4-2-.8-2.8.4-4.3.4s-2.2-1.2-4.3-.4c-1.3.4-2.5 1.6-2.8 4Z" fill="#3d2a1e"/><circle cx="26.8" cy="11.4" r="2.6" fill="#3d2a1e"/></symbol>
+</defs></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+ <symbol id="i-chevron-right" viewBox="0 0 16 16"><path d="M6 3.4 10.6 8 6 12.6"></path></symbol>
+ <symbol id="i-chevron-down" viewBox="0 0 16 16"><path d="M3.4 6 8 10.6 12.6 6"></path></symbol>
+ <symbol id="i-chevron-left" viewBox="0 0 16 16"><path d="M10 3.4 5.4 8 10 12.6"></path></symbol>
+ <symbol id="i-chevron-up" viewBox="0 0 16 16"><path d="M3.4 10 8 5.4 12.6 10"></path></symbol>
+ <symbol id="i-search" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.3"></circle><path d="M10.2 10.2 13.6 13.6"></path></symbol>
+ <symbol id="i-filter" viewBox="0 0 16 16"><path d="M2.4 3.4h11.2L9.2 8.6v4.3L6.8 14.1V8.6Z"></path></symbol>
+ <symbol id="i-sort" viewBox="0 0 16 16"><path d="M2.8 4.4h10.4M2.8 8h6.8M2.8 11.6h3.6"></path></symbol>
+ <symbol id="i-menu" viewBox="0 0 16 16"><path d="M2.4 4.4h11.2M2.4 8h11.2M2.4 11.6h11.2"></path></symbol>
+ <symbol id="i-close" viewBox="0 0 16 16"><path d="M4.1 4.1 11.9 11.9M11.9 4.1 4.1 11.9"></path></symbol>
+ <symbol id="i-plus" viewBox="0 0 16 16"><path d="M8 3.2v9.6M3.2 8h9.6"></path></symbol>
+ <symbol id="i-more" viewBox="0 0 16 16"><circle cx="3.5" cy="8" r="1.15" fill="currentColor" stroke="none"></circle><circle cx="8" cy="8" r="1.15" fill="currentColor" stroke="none"></circle><circle cx="12.5" cy="8" r="1.15" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-customer" viewBox="0 0 16 16"><circle cx="8" cy="5.5" r="2.8"></circle><path d="M2.9 13.6c0-2.9 2.3-4.6 5.1-4.6s5.1 1.7 5.1 4.6"></path></symbol>
+ <symbol id="i-supplier" viewBox="0 0 16 16"><path d="M1.4 4.3h7.5v6.8H1.4zM8.9 6.7h2.8l2 2.2v2.2H8.9"></path><circle cx="4.4" cy="12.3" r="1.3"></circle><circle cx="11.3" cy="12.3" r="1.3"></circle></symbol>
+ <symbol id="i-invoice" viewBox="0 0 16 16"><path d="M3.4 1.7h6.1l3.1 3.1v9.5H3.4Z"></path><path d="M9.5 1.7v3.1h3.1"></path><path d="M5.7 8.4h4.6M5.7 11h3"></path></symbol>
+ <symbol id="i-receipt" viewBox="0 0 16 16"><path d="M3.3 1.7h9.4v12.6l-1.6-1.1-1.6 1.1-1.5-1.1-1.6 1.1-1.5-1.1-1.6 1.1Z"></path><path d="M5.9 5.3h4.2M5.9 8.1h4.2"></path></symbol>
+ <symbol id="i-journal" viewBox="0 0 16 16"><path d="M8 4.5C7.1 3.2 5.5 2.6 2.8 2.6v8.8c2.7 0 4.3.6 5.2 1.9.9-1.3 2.5-1.9 5.2-1.9V2.6c-2.7 0-4.3.6-5.2 1.9Z"></path><path d="M8 4.5v8.8"></path></symbol>
+ <symbol id="i-stock" viewBox="0 0 16 16"><path d="M8 1.8 14 5v6l-6 3.2L2 11V5Z"></path><path d="M2 5l6 3.2L14 5M8 8.2v6"></path></symbol>
+ <symbol id="i-branch" viewBox="0 0 16 16"><path d="M1.9 13.8h12.2M3.9 13.8V2.9h8.2v10.9"></path><path d="M6.1 5.6h1.3M8.6 5.6h1.3M6.1 8.2h1.3M8.6 8.2h1.3"></path><path d="M6.9 13.8v-2.7h2.2v2.7"></path></symbol>
+ <symbol id="i-till" viewBox="0 0 16 16"><path d="M4.4 2.2h7.2v3.4H4.4z"></path><path d="M1.9 7.4h12.2v6.4H1.9z"></path><path d="M6.2 10.6h3.6"></path></symbol>
+ <symbol id="i-device" viewBox="0 0 16 16"><path d="M4.2 1.7h7.6v12.6H4.2Z"></path><path d="M6.7 3.7h2.6M6.6 12.3h2.8"></path></symbol>
+ <symbol id="i-edit" viewBox="0 0 16 16"><path d="M11.1 2.2 13.8 4.9l-8 8-3.6.9.9-3.6Z"></path><path d="M9.6 3.7l2.7 2.7"></path></symbol>
+ <symbol id="i-delete" viewBox="0 0 16 16"><path d="M2.6 4.3h10.8"></path><path d="M6.1 4.3V2.6h3.8v1.7"></path><path d="M4.1 4.3l.7 9.4h6.4l.7-9.4"></path><path d="M6.5 6.8v4.4M9.5 6.8v4.4"></path></symbol>
+ <symbol id="i-export" viewBox="0 0 16 16"><path d="M2.6 10.1v3.3h10.8v-3.3"></path><path d="M8 2.4v7.1"></path><path d="M5.3 5.1 8 2.4l2.7 2.7"></path></symbol>
+ <symbol id="i-print" viewBox="0 0 16 16"><path d="M4.3 6.1V2.4h7.4v3.7"></path><path d="M4.3 11.5H2.4V7.1h11.2v4.4h-1.9"></path><path d="M4.3 9.5h7.4v4.1H4.3z"></path><circle cx="11.7" cy="8.8" r=".75" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-attach" viewBox="0 0 16 16"><path d="M10.9 7.3 6.8 11.4a2.4 2.4 0 0 1-3.4-3.4l5.2-5.2a1.7 1.7 0 0 1 2.4 2.4l-5.2 5.2a.85.85 0 0 1-1.2-1.2l4.6-4.6"></path></symbol>
+ <symbol id="i-approve" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M5.4 8.2 7.2 10l3.5-3.9"></path></symbol>
+ <symbol id="i-reject" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M6 6 10 10M10 6 6 10"></path></symbol>
+ <symbol id="i-refresh" viewBox="0 0 16 16"><path d="M13.2 7.4a5.2 5.2 0 0 0-8.9-2.8L2.8 6.1"></path><path d="M6.1 6.1H2.8V2.8"></path><path d="M2.8 8.6a5.2 5.2 0 0 0 8.9 2.8l1.5-1.5"></path><path d="M9.9 9.9h3.3v3.3"></path></symbol>
+ <symbol id="i-lock" viewBox="0 0 16 16"><path d="M3.5 7.1h9v6.4h-9z"></path><path d="M5.5 7.1V5.2a2.5 2.5 0 0 1 5 0v1.9"></path><circle cx="8" cy="10.3" r=".95" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-clock" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M8 4.6v3.6l2.5 1.5"></path></symbol>
+ <symbol id="i-warning" viewBox="0 0 16 16"><path d="M8 2.2 14.4 13.4H1.6Z"></path><path d="M8 6.4v3.2"></path><circle cx="8" cy="11.5" r=".8" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-info" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M8 7.4v3.7"></path><circle cx="8" cy="5.1" r=".8" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-offline" viewBox="0 0 16 16"><path d="M4.9 12.4h6.4a2.6 2.6 0 0 0 .3-5.2 3.9 3.9 0 0 0-6.9-1.4"></path><path d="M4.3 6.8a2.8 2.8 0 0 0 .6 5.6"></path><path d="M2.2 2.2 13.8 13.8"></path></symbol>
+ <symbol id="i-sync" viewBox="0 0 16 16"><path d="M12.9 5.6a5.2 5.2 0 0 0-9.4.6"></path><path d="M6.6 6.2H3.3V2.9"></path><path d="M3.1 10.4a5.2 5.2 0 0 0 9.4-.6"></path><path d="M9.4 9.8h3.3v3.3"></path><circle cx="8" cy="8" r="1.1" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-arrow-right" viewBox="0 0 16 16"><path d="M2.6 8h10.8"></path><path d="M9.6 4.2 13.4 8l-3.8 3.8"></path></symbol>
+ <symbol id="i-minus" viewBox="0 0 16 16"><path d="M3.2 8h9.6"></path></symbol>
+ <symbol id="i-check" viewBox="0 0 16 16"><path d="M3.2 8.4 6.4 11.6 12.8 4.8"></path></symbol>
+ <symbol id="i-calendar" viewBox="0 0 16 16"><path d="M2.2 3.9h11.6v10H2.2z"></path><path d="M2.2 6.7h11.6"></path><path d="M5.2 2.1v3.1M10.8 2.1v3.1"></path></symbol>
+ <symbol id="i-upload" viewBox="0 0 16 16"><path d="M2.6 10.4v3h10.8v-3"></path><path d="M8 10.2V2.6"></path><path d="M5.2 5.4 8 2.6l2.8 2.8"></path></symbol>
+ <symbol id="i-swap" viewBox="0 0 16 16"><path d="M2.6 5.4h10.8"></path><path d="M10.6 2.6 13.4 5.4l-2.8 2.8"></path><path d="M13.4 10.6H2.6"></path><path d="M5.4 7.8 2.6 10.6l2.8 2.8"></path></symbol>
+ <symbol id="i-scale" viewBox="0 0 16 16"><path d="M8 2.6v10.8"></path><path d="M4.4 4.1h7.2"></path><path d="M2.2 9.4 4.4 4.4 6.6 9.4a2.4 2.4 0 0 1-4.4 0Z"></path><path d="M9.4 9.4 11.6 4.4 13.8 9.4a2.4 2.4 0 0 1-4.4 0Z"></path></symbol>
+ <symbol id="i-home" viewBox="0 0 16 16"><path d="M2.2 7 8 2.2 13.8 7v6.8H2.2Z"></path><path d="M6.3 13.8V9.4h3.4v4.4"></path></symbol>
+ <symbol id="i-grid" viewBox="0 0 16 16"><path d="M2.4 2.4h4.4v4.4H2.4zM9.2 2.4h4.4v4.4H9.2zM2.4 9.2h4.4v4.4H2.4zM9.2 9.2h4.4v4.4H9.2z"></path></symbol>
+ <symbol id="i-bell" viewBox="0 0 16 16"><path d="M4 11.4V7.2a4 4 0 0 1 8 0v4.2l1.3 1.6H2.7Z"></path><path d="M6.6 13v.3a1.4 1.4 0 0 0 2.8 0V13"></path></symbol>
+ <symbol id="i-settings" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.2"></circle><path d="M8 1.9 9.3 3.6l2.1-.4.5 2.1 1.8 1.1-1 1.9 1 1.9-1.8 1.1-.5 2.1-2.1-.4L8 14.8l-1.3-1.8-2.1.4-.5-2.1L2.3 10.2l1-1.9-1-1.9 1.8-1.1.5-2.1 2.1.4Z"></path></symbol>
+ <symbol id="i-command" viewBox="0 0 16 16"><path d="M5.6 5.6h4.8v4.8H5.6z"></path><path d="M5.6 5.6H4a1.6 1.6 0 1 1 1.6-1.6ZM10.4 5.6H12A1.6 1.6 0 1 0 10.4 4ZM5.6 10.4H4A1.6 1.6 0 1 0 5.6 12ZM10.4 10.4H12a1.6 1.6 0 1 1-1.6 1.6Z"></path></symbol>
+ <symbol id="i-enter" viewBox="0 0 16 16"><path d="M13.4 3.2v5.2H3.4"></path><path d="M6.2 5.6 3.4 8.4l2.8 2.8"></path></symbol>
+ <symbol id="i-logout" viewBox="0 0 16 16"><path d="M6.4 2.6H2.6v10.8h3.8"></path><path d="M9.6 4.8 12.8 8l-3.2 3.2"></path><path d="M12.8 8H5.6"></path></symbol>
+ <symbol id="i-users" viewBox="0 0 16 16"><circle cx="6.2" cy="5.6" r="2.5"></circle><path d="M1.9 13.4c0-2.5 1.9-4 4.3-4s4.3 1.5 4.3 4"></path><path d="M11 3.4a2.4 2.4 0 0 1 0 4.5"></path><path d="M12.1 9.9c1.3.5 2 1.7 2 3.5"></path></symbol>
+ <symbol id="i-copy" viewBox="0 0 16 16"><path d="M5.6 5.6h7.8v7.8H5.6z"></path><path d="M10.4 5.6V2.6H2.6v7.8h3"></path></symbol>
+ <symbol id="i-star" viewBox="0 0 16 16"><path d="m8 2.2 1.8 3.7 4.1.6-3 2.9.7 4.1L8 11.6l-3.6 1.9.7-4.1-3-2.9 4.1-.6Z"></path></symbol>
+ <symbol id="i-chart" viewBox="0 0 16 16"><path d="M2.2 13.4h11.6"></path><path d="M4.2 13.4V8.2M7.4 13.4V4.4M10.6 13.4v-3.6M13 13.4V6.2"></path></symbol>
+ <symbol id="i-book" viewBox="0 0 16 16"><path d="M3.2 2.6h6.6a2 2 0 0 1 2 2v8.8H5.2a2 2 0 0 1-2-2Z"></path><path d="M11.8 4.6h1.4v8.8"></path><path d="M5.6 5.6h3.6"></path></symbol>
+ <symbol id="i-bank" viewBox="0 0 16 16"><path d="M8 2.2 14.2 5.6H1.8Z"></path><path d="M3.4 5.6v6.2M6.5 5.6v6.2M9.5 5.6v6.2M12.6 5.6v6.2"></path><path d="M1.8 13.8h12.4"></path></symbol>
+ <symbol id="i-report" viewBox="0 0 16 16"><path d="M3.4 1.9h9.2v12.2H3.4z"></path><path d="M5.9 5.4h4.2M5.9 8h4.2M5.9 10.6h2.6"></path></symbol>
+ <symbol id="i-at" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.6"></circle><path d="M10.6 5.4v3.4a1.9 1.9 0 0 0 3.1 1.5A6.2 6.2 0 1 0 11 13.2"></path></symbol>
+ <symbol id="i-columns" viewBox="0 0 16 16"><path d="M2.2 2.9h11.6v10.2H2.2z"></path><path d="M6.1 2.9v10.2M9.9 2.9v10.2"></path></symbol>
+ <symbol id="i-comment" viewBox="0 0 16 16"><path d="M2.2 3.2h11.6v7.9H8.4L5.1 14v-2.9H2.2Z"></path></symbol>
+ <symbol id="i-grip" viewBox="0 0 16 16"><circle cx="6" cy="3.6" r="1.05" fill="currentColor" stroke="none"></circle><circle cx="10" cy="3.6" r="1.05" fill="currentColor" stroke="none"></circle><circle cx="6" cy="8" r="1.05" fill="currentColor" stroke="none"></circle><circle cx="10" cy="8" r="1.05" fill="currentColor" stroke="none"></circle><circle cx="6" cy="12.4" r="1.05" fill="currentColor" stroke="none"></circle><circle cx="10" cy="12.4" r="1.05" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-mail" viewBox="0 0 16 16"><path d="M1.9 3.6h12.2v8.8H1.9z"></path><path d="m1.9 4.4 6.1 4.3 6.1-4.3"></path></symbol>
+ <symbol id="i-move" viewBox="0 0 16 16"><path d="M2.4 8h11.2"></path><path d="M10.6 4.8 13.6 8l-3 3.2"></path><path d="M2.4 3.4v9.2"></path></symbol>
+ <symbol id="i-note" viewBox="0 0 16 16"><path d="M3.4 1.9h9.2v12.2H3.4z"></path><path d="M5.9 5.3h4.2M5.9 8h4.2M5.9 10.7h2.6"></path></symbol>
+ <symbol id="i-reply" viewBox="0 0 16 16"><path d="M6.1 3.2 2.4 6.7l3.7 3.5"></path><path d="M2.4 6.7h6.9a4.3 4.3 0 0 1 4.3 4.3v1.8"></path></symbol>
+ <symbol id="i-external" viewBox="0 0 16 16"><path d="M9.4 2.6h4v4"></path><path d="M13.4 2.6 7.9 8.1"></path><path d="M11.4 9.3v4.1H2.6V4.6h4.1"></path></symbol>
+ <symbol id="i-phone" viewBox="0 0 16 16"><path d="M5.7 2.3 7.4 5.5 5.9 7.1a8.8 8.8 0 0 0 3 3l1.6-1.5 3.2 1.7v2.3a1.4 1.4 0 0 1-1.5 1.4C6.5 13.6 2.4 9.5 2 3.8a1.4 1.4 0 0 1 1.4-1.5Z"></path></symbol>
+ <symbol id="i-pin" viewBox="0 0 16 16"><path d="M6.1 1.9h3.8l-.5 4.3 2.6 2.6H4l2.6-2.6Z"></path><path d="M8 8.8v5.3"></path></symbol>
+ <symbol id="i-tag" viewBox="0 0 16 16"><path d="M2.4 2.4h5.3l6 6-5.3 5.3-6-6Z"></path><circle cx="5.2" cy="5.2" r="1.05" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-barcode" viewBox="0 0 16 16"><path d="M2.4 3.2v9.6M4.7 3.2v9.6M6.8 3.2v9.6M9.1 3.2v9.6M11.2 3.2v9.6M13.6 3.2v9.6"></path></symbol>
+ <symbol id="i-scan" viewBox="0 0 16 16"><path d="M2.4 5.8V2.6h3.2M13.6 5.8V2.6h-3.2M2.4 10.2v3.2h3.2M13.6 10.2v3.2h-3.2"></path><path d="M3.6 8h8.8"></path></symbol>
+ <symbol id="i-backspace" viewBox="0 0 16 16"><path d="M5.7 3.2h8.1v9.6H5.7L1.7 8Z"></path><path d="M8 6.3 11.2 9.7M11.2 6.3 8 9.7"></path></symbol>
+ <symbol id="i-cash" viewBox="0 0 16 16"><path d="M1.7 4.1h12.6v7.8H1.7z"></path><circle cx="8" cy="8" r="1.9"></circle><path d="M4.3 6.5v3M11.7 6.5v3"></path></symbol>
+ <symbol id="i-card" viewBox="0 0 16 16"><path d="M1.7 3.6h12.6v8.8H1.7z"></path><path d="M1.7 6.6h12.6"></path><path d="M4.1 9.7h2.7"></path></symbol>
+ <symbol id="i-pause" viewBox="0 0 16 16"><path d="M5.9 3.4v9.2M10.1 3.4v9.2"></path></symbol>
+ <symbol id="i-battery" viewBox="0 0 16 16"><path d="M1.7 5.2h10.2v5.6H1.7z"></path><path d="M13.4 7v2"></path><path d="M3.3 7h4.7v2H3.3z"></path></symbol>
+ <symbol id="i-signal" viewBox="0 0 16 16"><path d="M2.6 13.4v-2.6M6.2 13.4V8.3M9.8 13.4V5.5M13.4 13.4V2.7"></path></symbol>
+ <symbol id="i-discount" viewBox="0 0 16 16"><circle cx="5.1" cy="5.1" r="1.8"></circle><circle cx="10.9" cy="10.9" r="1.8"></circle><path d="M3.9 12.1 12.1 3.9"></path></symbol>
+ <symbol id="i-basket" viewBox="0 0 16 16"><path d="M1.9 5.9h12.2l-1.3 7.5H3.2Z"></path><path d="M5.4 5.9 7.2 2.4M10.6 5.9 8.8 2.4"></path><path d="M6.4 8.6v2.3M9.6 8.6v2.3"></path></symbol>
+ <symbol id="i-drawer" viewBox="0 0 16 16"><path d="M1.9 6.4h12.2v7.2H1.9z"></path><path d="M3.4 6.4 4.8 2.4h6.4l1.4 4"></path><path d="M6.4 9.8h3.2"></path></symbol>
+</defs></svg>
+
+  <div class="sheet-h">
+    <h2>Device surfaces</h2>
+    <span class="sub">Kora and CounterMini &mdash; the two screens the site sells and the system has never drawn</span>
+    <span class="tag">Sheet 20</span>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">Drawn at the size each device actually runs</span>
+    <div class="cols" style="grid-template-columns:360px 768px;gap:24px;align-items:start">
+
+      <div class="dev">
+        <div class="devh">
+          <b>Kora</b>
+          <span class="sp">5.0 in &middot; 720 &times; 1280 at 2&times; &middot; 360 &times; 640</span>
+        </div>
+        <div class="frame" style="width:360px;height:640px">
+          <div class="scr" data-d="comfortable">
+
+            <div class="kbar">
+              <span class="avw"><span class="av av-24"><svg><use href="#f1"></use></svg></span><span class="pres p-on"></span></span>
+              <span class="idn-t">
+                <span class="idn-n">Tendai Mukamba</span>
+                <span class="idn-s">KOR&#8209;0114 &middot; Avondale</span>
+              </span>
+              <span class="rt"><span class="pill ok"><span class="dot"></span>Synced 12s</span></span>
+            </div>
+
+            <div class="kbody">
+              <div class="fld foc" style="height:48px">
+                <span class="ic ic-20" style="color:var(--accent-ink)"><svg><use href="#i-barcode"></use></svg></span>
+                <span class="ph">Scan or type a code</span>
+                <span class="ic ic-16" style="margin-left:auto;color:var(--subtle)"><svg><use href="#i-scan"></use></svg></span>
+              </div>
+
+              <div class="icard">
+                <div class="top">
+                  <span style="min-width:0">
+                    <span class="nm" style="display:block">Zambezi Lager 375ml</span>
+                    <span class="sb">BEV&#8209;0412 &middot; scanned 14:10:58</span>
+                  </span>
+                  <span class="pr">1.20</span>
+                </div>
+                <div class="mrow">
+                  <span class="pill ok"><span class="dot"></span>148 on hand</span>
+                  <span class="pill hollow"><span class="dot"></span>Bin A3</span>
+                  <span class="cap" style="margin-left:auto">Avondale</span>
+                </div>
+                <div class="arow">
+                  <span class="qbox">
+                    <span class="qbtn"><span class="ic ic-14"><svg><use href="#i-minus"></use></svg></span></span>
+                    <span class="qnum">6</span>
+                    <span class="qbtn"><span class="ic ic-14"><svg><use href="#i-plus"></use></svg></span></span>
+                  </span>
+                  <button class="btn solid"><span class="ic ic-14"><svg><use href="#i-plus"></use></svg></span>Add 6 &middot; 7.20</button>
+                </div>
+              </div>
+
+              <div class="bstrip">
+                <span class="ic ic-16" style="color:var(--subtle)"><svg><use href="#i-basket"></use></svg></span>
+                <span>Basket <span class="cap">3 lines &middot; 15 units</span></span>
+                <span class="v">37.90</span>
+                <span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-chevron-right"></use></svg></span>
+              </div>
+
+              <div class="pk">
+                <div class="l">
+                  <span class="ic ic-14"><svg><use href="#i-report"></use></svg></span>
+                  Pick list PL&#8209;0342
+                  <span class="v">12 of 18</span>
+                </div>
+                <div class="bar"><i style="width:67%"></i></div>
+              </div>
+
+              <div class="kl">Last scans<span class="rt">14:09:12</span></div>
+              <div class="rlist">
+                <div class="rrow">
+                  <span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-barcode"></use></svg></span>
+                  <span class="t"><b>Two Keys Gin 750ml</b><span>SPR&#8209;0088 &middot; 14:09:12</span></span>
+                  <span class="v">&times;1</span>
+                </div>
+                <div class="rrow">
+                  <span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-barcode"></use></svg></span>
+                  <span class="t"><b>Mazoe Orange 2L</b><span>GRO&#8209;0231 &middot; 14:08:44</span></span>
+                  <span class="v">&times;2</span>
+                </div>
+                <div class="rrow">
+                  <span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-barcode"></use></svg></span>
+                  <span class="t"><b>Castle Lite 340ml</b><span>BEV&#8209;0455 &middot; 14:08:10</span></span>
+                  <span class="v">&times;12</span>
+                </div>
+              </div>
+
+              <div class="ksp"></div>
+            </div>
+
+            <div class="kfoot">
+              <button class="btn icon"><span class="ic ic-16"><svg><use href="#i-till"></use></svg></span></button>
+              <button class="btn solid">Take payment &middot; US$37.90</button>
+            </div>
+
+          </div>
+        </div>
+        <p class="note">One thumb, standing in an aisle. The scan field keeps focus between pulls, the just-scanned item is the largest thing on the screen, and the running basket sits where the thumb already is.</p>
+      </div>
+
+      <div class="dev">
+        <div class="devh">
+          <b>CounterMini</b>
+          <span class="sp">7.0 in &middot; 1024 &times; 600 at 1.33&times; &middot; 768 &times; 450</span>
+          <span class="rt"><span class="pill hollow"><span class="dot"></span>Companion to till 2</span></span>
+        </div>
+        <div class="frame" style="width:768px;height:450px">
+          <div class="scr" data-d="comfortable">
+
+            <div class="cbar">
+              <span class="av av-24 ent" style="background:var(--sell)"><span class="mk">T2</span></span>
+              <span style="font:500 13px/1 var(--sans)">Till 2 &middot; Avondale</span>
+              <span class="vsep"></span>
+              <span class="idn in">
+                <span class="av av-24"><svg><use href="#f3"></use></svg></span>
+                <span class="idn-n">Rutendo Chiweshe</span>
+              </span>
+              <span class="rt">
+                <span class="pill warn"><span class="dot"></span>Offline &middot; 9 held</span>
+                <span class="mono" style="font-size:12.5px">14:11:07</span>
+              </span>
+            </div>
+
+            <div class="cbody">
+              <div class="clist">
+                <div class="hd">
+                  <span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-basket"></use></svg></span>
+                  Sale #10239
+                  <span class="rt">5 lines &middot; 22 units</span>
+                </div>
+                <div class="bd">
+                  <table class="d">
+                    <thead>
+                      <tr>
+                        <th style="width:60px">Qty</th>
+                        <th>Item</th>
+                        <th class="r" style="width:74px">Unit</th>
+                        <th class="r" style="width:84px">Line</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr><td class="r" style="text-align:left">6</td><td>Zambezi Lager 375ml</td><td class="r">1.20</td><td class="r">7.20</td></tr>
+                      <tr><td class="r" style="text-align:left">1</td><td>Two Keys Gin 750ml</td><td class="r">12.50</td><td class="r">12.50</td></tr>
+                      <tr class="sel"><td class="r" style="text-align:left">12</td><td>Castle Lite 340ml</td><td class="r">1.35</td><td class="r">16.20</td></tr>
+                      <tr><td class="r" style="text-align:left">2</td><td>Mazoe Orange 2L</td><td class="r">4.60</td><td class="r">9.20</td></tr>
+                      <tr><td class="r" style="text-align:left">1</td><td>Tanganda Tea 250g <span class="pill warn"><span class="dot"></span>Needs approval</span></td><td class="r">2.85</td><td class="r">2.85</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="ctot">
+                <div class="r1"><span>Subtotal</span><span class="v">47.95</span></div>
+                <div class="r1"><span>Staff discount 5%</span><span class="v">&minus;2.40</span></div>
+                <div class="r1"><span>VAT 15% inclusive</span><span class="v">5.94</span></div>
+                <div class="pay"><span class="l">To pay</span><b>US$45.55</b></div>
+                <div class="r1" style="padding-top:4px"><span class="grp-l">Split tender</span></div>
+                <div class="leg"><span class="ic ic-12"><svg><use href="#i-cash"></use></svg></span>Cash<span class="v">20.00</span></div>
+                <div class="leg"><span class="ic ic-12"><svg><use href="#i-phone"></use></svg></span>EcoCash<span class="v">15.00</span></div>
+                <div class="leg"><span class="ic ic-12"><svg><use href="#i-card"></use></svg></span>Card<span class="v">10.55</span></div>
+                <div class="csp"></div>
+                <div class="r1"><span class="pill ok"><span class="dot"></span>Remaining US$0.00</span><span class="v">ZWG 1,528.20</span></div>
+              </div>
+            </div>
+
+            <div class="ctend">
+              <span class="tend"><span class="ic ic-16"><svg><use href="#i-cash"></use></svg></span>Cash</span>
+              <span class="tend on"><span class="ic ic-16"><svg><use href="#i-card"></use></svg></span>Card</span>
+              <span class="tend"><span class="ic ic-16"><svg><use href="#i-phone"></use></svg></span>EcoCash</span>
+              <span class="tend off"><span class="ic ic-16"><svg><use href="#i-customer"></use></svg></span>On account</span>
+              <span class="tend"><span class="ic ic-16"><svg><use href="#i-swap"></use></svg></span>Swipe</span>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="grp" style="gap:9px">
+          <span class="grp-l">The states both surfaces must also carry</span>
+          <div class="sgrid">
+            <div class="scard">
+              <div class="sbox">
+                <span class="ring"><span class="ic ic-16"><svg><use href="#i-scan"></use></svg></span></span>
+                <span class="t">Nothing scanned yet</span>
+                <span class="s">The field keeps focus, so the next trigger pull lands in it.</span>
+              </div>
+            </div>
+            <div class="scard">
+              <div class="sbox">
+                <span class="ring bad"><span class="ic ic-16"><svg><use href="#i-warning"></use></svg></span></span>
+                <span class="t"><span class="mono">8901234</span> is not in the catalogue</span>
+                <span class="s">Search by name, or sell it as a quick line and code it later.</span>
+              </div>
+            </div>
+            <div class="scard">
+              <div class="sbox">
+                <span class="ring acc"><span class="ic ic-16"><svg><use href="#i-sync"></use></svg></span></span>
+                <span class="t">Posting held sales</span>
+                <span class="s">3 of 9 posted &middot; #10232 in progress</span>
+                <span class="bar"><i style="width:33%"></i></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="note">Neither screen is drawn inside a photograph of a device. A border and the real pixel size are enough to judge whether a control is reachable; a bezel, a notch and a borrowed status bar only make the sheet lie about how much room there is.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">Device fleet</span>
+    <div class="panel">
+      <div class="panel-h">Devices trading today<span class="rt">4 of 4 reporting &middot; 1 closed off</span></div>
+      <div class="panel-b flush">
+        <table class="d">
+          <thead>
+            <tr>
+              <th>Device</th>
+              <th>Signed in</th>
+              <th>Location</th>
+              <th class="r">Last seen</th>
+              <th class="r" style="width:210px">Queue</th>
+              <th style="width:120px">State</th>
+              <th style="width:34px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="hov">
+              <td>
+                <span class="dcell">
+                  <span class="dg"><span class="ic ic-14"><svg><use href="#i-device"></use></svg></span></span>
+                  <span class="dt"><b>Kora</b><span>KOR&#8209;0114</span></span>
+                </span>
+              </td>
+              <td><span class="idn in"><span class="av av-20"><svg><use href="#f1"></use></svg></span><span class="idn-n">Tendai Mukamba</span></span></td>
+              <td>Avondale &middot; aisle</td>
+              <td class="r">12s ago</td>
+              <td class="r"><span class="qbar"><span class="cap">nothing waiting</span><span class="bar"><i style="width:0%"></i></span><span class="mono">0</span></span></td>
+              <td><span class="pill acc"><span class="dot"></span>Trading</span></td>
+              <td><span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-chevron-right"></use></svg></span></td>
+            </tr>
+            <tr class="sel">
+              <td>
+                <span class="dcell">
+                  <span class="dg on"><span class="ic ic-14"><svg><use href="#i-till"></use></svg></span></span>
+                  <span class="dt"><b>CounterMini</b><span>CTR&#8209;0004</span></span>
+                </span>
+              </td>
+              <td><span class="idn in"><span class="av av-20"><svg><use href="#f3"></use></svg></span><span class="idn-n">Rutendo Chiweshe</span></span></td>
+              <td>Avondale &middot; till 2</td>
+              <td class="r">13:00:41</td>
+              <td class="r"><span class="qbar"><span class="cap">US$412.85</span><span class="bar"><i style="width:90%;background:var(--maint)"></i></span><span class="mono">9</span></span></td>
+              <td><span class="pill warn"><span class="dot"></span>Queued</span></td>
+              <td><span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-chevron-right"></use></svg></span></td>
+            </tr>
+            <tr>
+              <td>
+                <span class="dcell">
+                  <span class="dg"><span class="ic ic-14"><svg><use href="#i-device"></use></svg></span></span>
+                  <span class="dt"><b>Kora</b><span>KOR&#8209;0121</span></span>
+                </span>
+              </td>
+              <td><span class="idn in"><span class="av av-20"><svg><use href="#f4"></use></svg></span><span class="idn-n">Blessing Ncube</span></span></td>
+              <td>Borrowdale &middot; till 1</td>
+              <td class="r">41s ago</td>
+              <td class="r"><span class="qbar"><span class="cap">US$21.30</span><span class="bar"><i style="width:20%;background:var(--maint)"></i></span><span class="mono">2</span></span></td>
+              <td><span class="pill warn"><span class="dot"></span>Queued</span></td>
+              <td><span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-chevron-right"></use></svg></span></td>
+            </tr>
+            <tr>
+              <td>
+                <span class="dcell">
+                  <span class="dg"><span class="ic ic-14"><svg><use href="#i-till"></use></svg></span></span>
+                  <span class="dt"><b>CounterMini</b><span>CTR&#8209;0002</span></span>
+                </span>
+              </td>
+              <td><span class="idn in"><span class="av av-20"><svg><use href="#f7"></use></svg></span><span class="idn-n">Farai Mutasa</span></span></td>
+              <td>Mbare &middot; till 1</td>
+              <td class="r">08 Sep 18:02</td>
+              <td class="r"><span class="qbar"><span class="cap">cashed up 18:02</span><span class="bar"><i style="width:0%"></i></span><span class="mono">0</span></span></td>
+              <td><span class="pill hollow"><span class="dot"></span>Closed off</span></td>
+              <td><span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-chevron-right"></use></svg></span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="note">Queued is not a failure and does not get a red badge. A queue gets a depth, a value and a last-seen time, which is what tells a manager a slow line from a dead terminal. Only a posting the server has refused earns critical colour.</p>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">Offline queue &mdash; what is sitting on CTR&#8209;0004</span>
+    <div class="panel">
+      <div class="qhd">
+        <span class="dg on"><span class="ic ic-14"><svg><use href="#i-till"></use></svg></span></span>
+        <span class="t">
+          <b>9 sales held on this terminal</b>
+          <span>Till 2, Avondale &middot; line last reached 13:00:41</span>
+        </span>
+        <span class="rt">
+          <span class="pill crit"><span class="dot"></span>1 failed</span>
+          <span class="pill warn"><span class="dot"></span>Queued</span>
+          <button class="btn sm"><span class="ic ic-14"><svg><use href="#i-refresh"></use></svg></span>Retry now</button>
+          <button class="btn sm icon"><span class="ic ic-14"><svg><use href="#i-more"></use></svg></span></button>
+        </span>
+      </div>
+      <table class="d">
+        <thead>
+          <tr>
+            <th style="width:110px">Receipt</th>
+            <th style="width:96px">Taken</th>
+            <th>Tender</th>
+            <th class="r" style="width:110px">Total</th>
+            <th class="r" style="width:120px">ZWG</th>
+            <th style="width:150px">State</th>
+            <th style="width:34px"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="mono">#10230</td><td class="mono">13:02:11</td><td>Cash</td>
+            <td class="r">24.60</td><td class="r">825.33</td>
+            <td><span class="pill acc"><span class="dot"></span>In progress</span></td>
+            <td><span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-chevron-right"></use></svg></span></td>
+          </tr>
+          <tr>
+            <td class="mono">#10231</td><td class="mono">13:11:47</td><td>EcoCash &middot; ref 7719</td>
+            <td class="r">8.40</td><td class="r">281.82</td>
+            <td><span class="pill hollow"><span class="dot"></span>Queued</span></td>
+            <td><span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-chevron-right"></use></svg></span></td>
+          </tr>
+          <tr>
+            <td class="mono">#10232</td><td class="mono">13:24:05</td><td>Card &middot; auth 004488</td>
+            <td class="r">62.15</td><td class="r">2,085.13</td>
+            <td><span class="pill hollow"><span class="dot"></span>Queued</span></td>
+            <td><span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-chevron-right"></use></svg></span></td>
+          </tr>
+          <tr>
+            <td class="mono">#10233</td><td class="mono">13:38:52</td><td>Cash</td>
+            <td class="r">11.80</td><td class="r">395.89</td>
+            <td><span class="pill hollow"><span class="dot"></span>Queued</span></td>
+            <td><span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-chevron-right"></use></svg></span></td>
+          </tr>
+          <tr>
+            <td class="mono">#10234</td><td class="mono">13:47:19</td><td>Swipe &middot; ZB terminal</td>
+            <td class="r">96.30</td><td class="r">3,230.86</td>
+            <td><span class="pill hollow"><span class="dot"></span>Queued</span></td>
+            <td><span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-chevron-right"></use></svg></span></td>
+          </tr>
+          <tr>
+            <td class="mono">#10235</td><td class="mono">13:52:40</td><td>Cash</td>
+            <td class="r">5.25</td><td class="r">176.14</td>
+            <td><span class="pill hollow"><span class="dot"></span>Queued</span></td>
+            <td><span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-chevron-right"></use></svg></span></td>
+          </tr>
+          <tr>
+            <td class="mono">#10236</td><td class="mono">13:58:03</td>
+            <td><span class="idn in"><span class="av av-20 ent" style="background:var(--books)"><span class="mk">GS</span></span><span class="idn-n">On account &middot; The Gate Shops</span></span></td>
+            <td class="r">148.00</td><td class="r">4,965.40</td>
+            <td><span class="pill hollow"><span class="dot"></span>Queued</span></td>
+            <td><span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-chevron-right"></use></svg></span></td>
+          </tr>
+          <tr>
+            <td class="mono">#10237</td><td class="mono">14:01:26</td><td>EcoCash &middot; ref 7802</td>
+            <td class="r">7.90</td><td class="r">265.05</td>
+            <td><span class="pill hollow"><span class="dot"></span>Queued</span></td>
+            <td><span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-chevron-right"></use></svg></span></td>
+          </tr>
+          <tr>
+            <td class="mono">#10238</td><td class="mono">14:06:05</td><td>Card &middot; auth 004501</td>
+            <td class="r">48.45</td><td class="r">1,625.50</td>
+            <td><span class="pill crit"><span class="dot"></span>Failed</span></td>
+            <td><span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-chevron-right"></use></svg></span></td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3">9 sales held &middot; oldest 13:02:11</td>
+            <td class="r">412.85</td>
+            <td class="r">13,851.12</td>
+            <td colspan="2"><span class="cap">ZWG at 33.5500</span></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <p class="note">The queue posts in the order it was taken, so the oldest sale is the one in progress. <span class="mono">#10238</span> was refused by ZIMRA FDMS &mdash; a duplicate signature &mdash; and holds its place rather than being skipped, because a receipt number that has already been given to a customer cannot be quietly dropped. Retry sends the whole queue; the refused one opens on its own.</p>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,626 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    /* ══ Corelith v1 tokens — approved. Do not invent values. ══ */
+    :root{
+      --ground:#fbfbfc; --surface:#ffffff; --wash:#f5f6f9; --sunken:#eef0f5;
+      --line:#e7e9ef; --line-strong:#d5d8e2; --hairline:#f1f2f6;
+      --ink:#0b0c14; --muted:#5c5e6b; --subtle:#8a8c98;
+      --accent:#2563eb; --accent-soft:#eff4ff; --accent-line:#dbe5fb; --accent-ink:#1b4bc4;
+      --sell:#2563eb; --books:#12805c; --stock:#0e7490; --fiscal:#6549d5;
+      --maint:#b45309; --crit:#c2321b; --campus:#0e7490;
+      --ok-bg:#e8f4ef; --ok-line:#c9e5da; --warn-bg:#fdf3e2; --warn-line:#f2ddb6;
+      --crit-bg:#fdece9; --crit-line:#f6cec6;
+      --sans:"Atkinson Hyperlegible Next","Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+      --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+      /* density · default mode */
+      --h-xs:22px; --h-sm:26px; --h-md:30px; --h-lg:36px;
+      --row:32px; --pad:12px; --fs:13px;
+      --r-ctl:6px; --r-card:10px;
+      --shadow-pop:0 10px 30px -12px rgba(11,12,20,.20),0 2px 6px rgba(11,12,20,.05);
+    }
+    [data-d="compact"]{--h-xs:20px;--h-sm:24px;--h-md:26px;--h-lg:30px;--row:28px;--pad:10px;--fs:12.5px;}
+    [data-d="comfortable"]{--h-xs:24px;--h-sm:30px;--h-md:36px;--h-lg:44px;--row:44px;--pad:14px;--fs:14px;}
+    *,*::before,*::after{box-sizing:border-box;}
+    body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+      font-size:var(--fs);line-height:1.5;-webkit-font-smoothing:antialiased;}
+    a{color:var(--accent);text-decoration:underline;text-underline-offset:2px;}
+    a:hover{color:var(--accent-ink);}
+    h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.012em;}
+    p{margin:0;}
+    .mono,.num{font-family:var(--mono);font-variant-numeric:tabular-nums;}
+
+    /* ══ sheet chrome — every component sheet uses these ══ */
+    .sheet{padding:28px 32px;display:flex;flex-direction:column;gap:26px;}
+    .sheet-h{display:flex;align-items:baseline;gap:10px;padding-bottom:9px;
+      border-bottom:1px solid var(--line);}
+    .sheet-h h2{font-size:17px;}
+    .sheet-h .sub{color:var(--muted);font-size:12.5px;}
+    .sheet-h .tag{margin-left:auto;font:500 10.5px/1 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .grp{display:flex;flex-direction:column;gap:11px;}
+    .grp-l{font:500 10.5px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;
+      color:var(--subtle);}
+    .rowset{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+    .colset{display:flex;flex-direction:column;gap:10px;}
+    .cols{display:grid;gap:20px;}
+    .panel{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      overflow:hidden;}
+    .panel-h{display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--wash);
+      border-bottom:1px solid var(--line);font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .panel-h .rt{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:400;
+      font-size:12px;}
+    .panel-b{padding:14px;}
+    .panel-b.flush{padding:0;}
+    .note{color:var(--muted);font-size:12px;line-height:1.55;max-width:64ch;}
+
+    /* ══ controls ══ */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--h-md);
+      padding:0 11px;border-radius:var(--r-ctl);border:1px solid var(--line-strong);
+      background:var(--surface);color:var(--ink);font:500 var(--fs)/1 var(--sans);
+      cursor:pointer;white-space:nowrap;}
+    .btn:hover{background:var(--wash);}
+    .btn.solid{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn.solid:hover{background:var(--accent-ink);}
+    .btn.danger{background:var(--crit);border-color:var(--crit);color:#fff;}
+    .btn.soft{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .btn.ghost{border-color:transparent;background:transparent;color:var(--muted);}
+    .btn.ghost:hover{background:var(--wash);color:var(--ink);}
+    .btn.xs{height:var(--h-xs);padding:0 7px;font-size:11.5px;}
+    .btn.sm{height:var(--h-sm);padding:0 9px;font-size:12.5px;}
+    .btn.lg{height:var(--h-lg);padding:0 14px;font-size:14px;}
+    .btn.icon{width:var(--h-md);padding:0;}
+    .btn.sm.icon{width:var(--h-sm);}
+    .btn[disabled],.btn.off{opacity:.45;cursor:default;}
+    .bgrp{display:inline-flex;}
+    .bgrp .btn{border-radius:0;margin-left:-1px;}
+    .bgrp .btn:first-child{border-radius:var(--r-ctl) 0 0 var(--r-ctl);margin-left:0;}
+    .bgrp .btn:last-child{border-radius:0 var(--r-ctl) var(--r-ctl) 0;}
+
+    .fld{display:flex;align-items:center;gap:7px;height:var(--h-md);padding:0 10px;
+      border:1px solid var(--line-strong);border-radius:var(--r-ctl);background:var(--surface);
+      font-size:var(--fs);color:var(--ink);min-width:0;}
+    .fld.foc{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+    .fld.bad{border-color:var(--crit);box-shadow:0 0 0 3px var(--crit-bg);}
+    .fld .ph{color:var(--subtle);}
+    .fld .pre{color:var(--muted);font-family:var(--mono);font-size:12px;flex:none;}
+    .lab{display:flex;flex-direction:column;gap:5px;}
+    .lab > span{font:500 12px/1.3 var(--sans);color:var(--ink);}
+    .hint{font-size:11.5px;color:var(--muted);}
+    .hint.bad{color:var(--crit);}
+
+    .pill{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;
+      border-radius:999px;font:500 11px/1 var(--sans);border:1px solid var(--line);
+      background:var(--wash);color:var(--muted);white-space:nowrap;}
+    .pill.ok{background:var(--ok-bg);border-color:var(--ok-line);color:var(--books);}
+    .pill.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--maint);}
+    .pill.crit{background:var(--crit-bg);border-color:var(--crit-line);color:var(--crit);}
+    .pill.acc{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .pill .dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex:none;}
+    .pill.hollow .dot{background:transparent;border:1.5px solid currentColor;width:7px;height:7px;}
+    .cnt{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+      padding:0 5px;border-radius:999px;background:var(--sunken);color:var(--muted);
+      font:500 11px/1 var(--mono);}
+    .cnt.urgent{background:var(--crit);color:#fff;}
+    .kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+      padding:0 4px;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;
+      background:var(--surface);font:500 10.5px/1 var(--mono);color:var(--muted);}
+
+    /* ══ identity ══ */
+    .av{position:relative;flex:none;display:inline-block;border-radius:50%;overflow:hidden;
+      background:var(--sunken);}
+    .av svg{display:block;width:100%;height:100%;}
+    .av-16{width:16px;height:16px}.av-20{width:20px;height:20px}.av-24{width:24px;height:24px}
+    .av-32{width:32px;height:32px}.av-40{width:40px;height:40px}.av-64{width:64px;height:64px}
+    .av.ent{border-radius:6px;}
+    .av-40.ent,.av-64.ent{border-radius:8px;}
+    .av.ent .mk{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+      font:600 11px/1 var(--sans);color:#fff;}
+    .av-32.ent .mk{font-size:12px}.av-40.ent .mk{font-size:13px}.av-64.ent .mk{font-size:20px}
+    .avw{position:relative;flex:none;display:inline-block;line-height:0;}
+    .pres{position:absolute;right:-1px;bottom:-1px;border-radius:50%;border:2px solid var(--surface);}
+    .av-24 + .pres{width:9px;height:9px}
+    .av-32 + .pres{width:11px;height:11px}
+    .av-40 + .pres{width:13px;height:13px}
+    .p-on{background:var(--books)}.p-away{background:var(--maint)}
+    .p-busy{background:var(--crit)}.p-off{background:var(--subtle)}
+    .avg{display:inline-flex;align-items:center;}
+    .avg .avw,.avg > .av{margin-left:-7px;box-shadow:0 0 0 2px var(--surface);}
+    .avg .avw:first-child,.avg > .av:first-child{margin-left:0;}
+    .avg .more{display:inline-flex;align-items:center;justify-content:center;background:var(--sunken);
+      color:var(--muted);font:500 10px/1 var(--mono);border-radius:50%;}
+    .idn{display:flex;align-items:center;gap:8px;min-width:0;}
+    .idn-t{min-width:0;display:flex;flex-direction:column;gap:1px;}
+    .idn-n{font:500 var(--fs)/1.3 var(--sans);color:var(--ink);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .idn-s{font:400 11px/1.3 var(--sans);color:var(--muted);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .idn.in{gap:6px;}
+    .idn.lg{gap:12px;}
+    .idn.lg .idn-n{font:600 15px/1.3 var(--sans);}
+    .idn.lg .idn-s{font-size:12px;}
+    .idn.xl{gap:14px;}
+    .idn.xl .idn-n{font:600 20px/1.25 var(--sans);letter-spacing:-.015em;}
+    .idn.xl .idn-s{font-size:13px;}
+    .rchip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px 0 3px;
+      border-radius:999px;border:1px solid var(--line);background:var(--surface);
+      font:500 12px/1 var(--sans);color:var(--ink);}
+
+    /* ══ table ══ */
+    table.d{width:100%;border-collapse:collapse;font-size:var(--fs);}
+    table.d th{text-align:left;font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);padding:0 var(--pad) 7px;
+      border-bottom:1px solid var(--line);white-space:nowrap;}
+    table.d td{padding:0 var(--pad);height:var(--row);border-bottom:1px solid var(--hairline);
+      vertical-align:middle;}
+    table.d tbody tr:last-child td{border-bottom:0;}
+    table.d tr.hov td{background:var(--wash);}
+    table.d tr.sel td{background:var(--accent-soft);}
+    table.d .r{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;
+      font-size:12px;}
+    table.d th.r{text-align:right;}
+    table.d tr.grp-row td{background:var(--wash);font:500 11px/1 var(--sans);
+      letter-spacing:.05em;text-transform:uppercase;color:var(--muted);height:26px;}
+    table.d tfoot td{height:var(--row);font-weight:600;border-top:1px solid var(--line-strong);
+      border-bottom:0;background:var(--surface);}
+
+    /* ══ rows, cards ══ */
+    .lrow{display:flex;align-items:center;gap:10px;padding:7px var(--pad);
+      border-bottom:1px solid var(--hairline);}
+    .lrow:last-child{border-bottom:0;}
+    .lrow .tail{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none;}
+    .kard{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      padding:13px;display:flex;flex-direction:column;gap:10px;}
+    .meta{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:12px;}
+    .meta dt{font:500 10.5px/1.5 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .meta dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12px;}
+    .stat{display:flex;flex-direction:column;gap:3px;}
+    .stat b{font:600 24px/1.1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
+    .stat span{font:500 10.5px/1.3 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .bar{height:5px;border-radius:999px;background:var(--sunken);overflow:hidden;}
+    .bar i{display:block;height:100%;background:var(--accent);}
+
+    /* ══ artboard 24 · report card ══ */
+    .pv{background:var(--sunken);border-radius:var(--r-card);padding:16px;display:flex;
+      flex-direction:column;gap:14px;align-items:center;}
+    .pvb{display:flex;align-items:center;gap:8px;width:100%;}
+    .doc{width:744px;background:var(--surface);border:1px solid var(--line-strong);border-radius:2px;
+      box-shadow:0 20px 48px -14px rgba(11,12,20,.26),0 3px 10px rgba(11,12,20,.07);
+      padding:40px 40px 34px;font-size:16px;line-height:1.55;color:var(--ink);
+      display:flex;flex-direction:column;gap:22px;}
+    .doc .rule{height:1px;background:var(--line);flex:none;}
+    .doc .rule.hv{height:2px;background:var(--ink);flex:none;}
+    .doc h1{font-size:22px;letter-spacing:-.016em;}
+    .dmicro{font:500 10px/1.3 var(--sans);letter-spacing:.09em;text-transform:uppercase;
+      color:var(--subtle);}
+    .dgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+    .dpair{display:flex;flex-direction:column;gap:3px;}
+    .dpair b{font:500 16px/1.3 var(--mono);font-variant-numeric:tabular-nums;}
+    .dfig{display:flex;gap:34px;padding:14px 0;border-top:1px solid var(--line-strong);
+      border-bottom:1px solid var(--line-strong);}
+    .dfig .v{font:600 26px/1.1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
+    .dt{width:100%;border-collapse:collapse;font-size:16px;}
+    .dt th{text-align:left;font:500 10px/1.3 var(--sans);letter-spacing:.09em;text-transform:uppercase;
+      color:var(--subtle);padding:0 12px 8px 0;border-bottom:1px solid var(--ink);}
+    .dt th.r{text-align:right;}
+    .dt td{padding:10px 12px 10px 0;border-bottom:1px solid var(--hairline);vertical-align:top;}
+    .dt th:last-child,.dt td:last-child{padding-right:0;}
+    .dt .r{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;}
+    .dt tfoot td{border-bottom:0;border-top:1px solid var(--line-strong);font-weight:600;}
+    .dcmt{font-size:16px;line-height:1.45;}
+    .dsay{border-left:2px solid var(--line-strong);padding-left:14px;font-size:16px;line-height:1.5;}
+    .sig{display:grid;grid-template-columns:1fr 1fr 132px;gap:26px;align-items:end;}
+    .sigln{border-bottom:1px solid var(--ink);height:34px;}
+    .stamp{width:110px;height:110px;border:1px dashed var(--line-strong);border-radius:50%;
+      display:flex;align-items:center;justify-content:center;text-align:center;
+      font:500 9px/1.4 var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--subtle);
+      padding:0 14px;}
+    .strip{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:var(--r-card);
+      overflow:hidden;background:var(--surface);}
+    .strip > div{flex:1;padding:11px 14px;border-left:1px solid var(--line);display:flex;
+      flex-direction:column;gap:7px;}
+    .strip > div:first-child{border-left:0;}
+    .strip > div.on{background:var(--accent-soft);}
+    .strip .cap{font-size:11.5px;line-height:1.45;color:var(--muted);}
+    .chk{display:flex;align-items:flex-start;gap:10px;padding:11px 13px;
+      border-bottom:1px solid var(--hairline);}
+    .chk:last-child{border-bottom:0;}
+    .chk .ic{width:16px;height:16px;flex:none;margin-top:1px;}
+    .chk .bd{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1;}
+    .chk .tl{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:500;}
+    .rrow{display:flex;align-items:flex-start;gap:9px;padding:9px 11px;border:1px solid var(--line);
+      border-radius:8px;background:var(--surface);cursor:pointer;}
+    .rrow.on{border-color:var(--accent-line);background:var(--accent-soft);}
+    .rrow.off{opacity:.45;cursor:default;}
+    .rad{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--line-strong);flex:none;
+      position:relative;background:var(--surface);margin-top:1px;}
+    .rad.on{border-color:var(--accent);}
+    .rad.on::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--accent);}
+    .sk{height:9px;border-radius:999px;background:var(--sunken);}
+    .spin{width:12px;height:12px;border-radius:50%;border:1.6px solid var(--accent-line);
+      border-top-color:var(--accent);flex:none;}
+    .sep{width:1px;align-self:stretch;background:var(--line);}
+  </style>
+</helmet>
+<div class="sheet" style="width:1240px;background:var(--ground)">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+ <symbol id="f1" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e6ebf5"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#3f5b8c"/><circle cx="20" cy="16.5" r="7.8" fill="#6b4630"/><path d="M12.2 16.4c0-5 3.2-8.3 7.8-8.3s7.8 3.3 7.8 8.3c0-2.4-1.1-3.7-2.4-4.3-1.9-.9-3.4.3-5.4.3s-3.5-1.2-5.4-.3c-1.3.6-2.4 1.9-2.4 4.3Z" fill="#1a1512"/></symbol>
+ <symbol id="f2" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e8f0ec"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#2f6b57"/><circle cx="20" cy="16.5" r="7.8" fill="#8a5a3c"/><path d="M11.6 16.6c0-5.3 3.5-8.5 8.4-8.5s8.4 3.2 8.4 8.5v7.2a1.6 1.6 0 1 1-3.2 0v-7.4c-1.6.9-3.4 1.4-5.2 1.4s-3.6-.5-5.2-1.4v7.4a1.6 1.6 0 1 1-3.2 0Z" fill="#2a211b"/></symbol>
+ <symbol id="f3" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f0e9f2"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#6b4a7d"/><circle cx="20" cy="16.5" r="7.8" fill="#a9714b"/><path d="M12.4 17.2c-.6-5.6 2.8-9.1 7.6-9.1s8.2 3.5 7.6 9.1c-.3-2.6-1.6-3.9-3-4.4-2.2-.8-3 .5-4.6.5s-2.4-1.3-4.6-.5c-1.4.5-2.7 1.8-3 4.4Z" fill="#3d2a1e"/><circle cx="27.4" cy="9.4" r="2.9" fill="#3d2a1e"/></symbol>
+ <symbol id="f4" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f5ebe8"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#8c4a3f"/><circle cx="20" cy="16.5" r="7.8" fill="#5a3a28"/><path d="M12.3 15.8c0-4.8 3.3-7.7 7.7-7.7s7.7 2.9 7.7 7.7c0-1.7-.9-2.7-2.1-3.1-1.8-.6-3.2.6-5.6.6s-3.8-1.2-5.6-.6c-1.2.4-2.1 1.4-2.1 3.1Z" fill="#1a1512"/></symbol>
+ <symbol id="f5" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eceef3"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#3d4756"/><circle cx="20" cy="16.5" r="7.8" fill="#7c4f35"/><path d="M11.9 17.8c-.4-6.2 3.1-9.7 8.1-9.7s8.5 3.5 8.1 9.7c-.9-1.2-1.4-3.2-1.4-5-2 1.3-4.3 2-6.7 2s-4.7-.7-6.7-2c0 1.8-.5 3.8-1.4 5Z" fill="#2a211b"/></symbol>
+ <symbol id="f6" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e9f0f4"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#46617a"/><circle cx="20" cy="16.5" r="7.8" fill="#b98254"/><path d="M12.2 16.4c0-5 3.2-8.3 7.8-8.3s7.8 3.3 7.8 8.3c0-2.4-1.1-3.7-2.4-4.3-1.9-.9-3.4.3-5.4.3s-3.5-1.2-5.4-.3c-1.3.6-2.4 1.9-2.4 4.3Z" fill="#3d2a1e"/></symbol>
+ <symbol id="f7" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f2eee6"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#7a6a4a"/><circle cx="20" cy="16.5" r="7.8" fill="#6b4630"/><path d="M11.5 15.4c0-5 3.8-8.3 8.5-8.3s8.5 3.3 8.5 8.3c0 1-.5 1.9-1.3 2.4l-1.2-4.8a20 20 0 0 1-12 0l-1.2 4.8c-.8-.5-1.3-1.4-1.3-2.4Z" fill="#5d4d8a"/></symbol>
+ <symbol id="f8" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eaf1ee"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#4a7a68"/><circle cx="20" cy="16.5" r="7.8" fill="#8a5a3c"/><path d="M12.6 14.9c0-4.5 3.1-7.3 7.4-7.3s7.4 2.8 7.4 7.3c0-1.3-.8-2.1-1.8-2.4-1.6-.5-3.2.7-5.6.7s-4-1.2-5.6-.7c-1 .3-1.8 1.1-1.8 2.4Z" fill="#1a1512"/></symbol>
+ <symbol id="c1" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e4eef2"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#1f5f7a"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#6b4630"/><path d="M12.9 17.8c0-4.7 3-7.7 7.1-7.7s7.1 3 7.1 7.7c0-2.2-1-3.4-2.2-4-1.7-.8-3.1.3-4.9.3s-3.2-1.1-4.9-.3c-1.2.6-2.2 1.8-2.2 4Z" fill="#1a1512"/></symbol>
+ <symbol id="c2" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eef1e6"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#2f6b57"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#8a5a3c"/><path d="M12.4 18c0-4.9 3.2-7.9 7.6-7.9s7.6 3 7.6 7.9v6a1.5 1.5 0 1 1-3 0v-6.2c-1.4.8-3 1.2-4.6 1.2s-3.2-.4-4.6-1.2V24a1.5 1.5 0 1 1-3 0Z" fill="#2a211b"/></symbol>
+ <symbol id="c3" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f4ece4"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#8c4a3f"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#a9714b"/><path d="M12.9 18.4c-.5-5.2 2.6-8.3 7.1-8.3s7.6 3.1 7.1 8.3c-.3-2.4-1.5-3.6-2.8-4-2-.8-2.8.4-4.3.4s-2.2-1.2-4.3-.4c-1.3.4-2.5 1.6-2.8 4Z" fill="#3d2a1e"/><circle cx="26.8" cy="11.4" r="2.6" fill="#3d2a1e"/></symbol>
+</defs></svg>
+
+  <div class="sheet-h">
+    <h2>Campus — report card</h2>
+    <span class="sub">Print preview and the builder that fills it</span>
+    <span class="tag">Sheet 24</span>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">Report card status</span>
+    <div class="strip">
+      <div>
+        <span class="pill hollow"><span class="dot"></span>Not started</span>
+        <span class="cap">No marks in. The card exists as a shell against the learner.</span>
+      </div>
+      <div class="on">
+        <span class="pill acc"><span class="dot"></span>In progress</span>
+        <span class="cap"><span class="mono">7</span> of <span class="mono">8</span> subjects marked · 2 comments outstanding.</span>
+      </div>
+      <div>
+        <span class="pill acc"><span class="dot"></span>Ready</span>
+        <span class="cap">Everything in and checked. Waiting on the head to release it.</span>
+      </div>
+      <div>
+        <span class="pill ok"><span class="dot"></span>Issued</span>
+        <span class="cap">Sent to guardians. The card is frozen and any change makes a new version.</span>
+      </div>
+    </div>
+    <p class="note">Four states, one direction. A card only moves backwards when the head reopens it, and that is recorded against the card rather than hidden.</p>
+  </div>
+
+  <div class="cols" style="grid-template-columns:776px 380px">
+
+    <div class="pv">
+      <div class="pvb">
+        <span class="pill hollow"><span class="dot"></span>Draft</span>
+        <span class="mono" style="font-size:11.5px;color:var(--muted)">A4 · portrait · 210 × 297</span>
+        <span style="font-size:11.5px;color:var(--muted)">Page 1 of 1</span>
+        <div class="bgrp" style="margin-left:auto">
+          <button class="btn sm icon" aria-label="Zoom out"><svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="7.3" width="10" height="1.4"></rect></svg></button>
+          <button class="btn sm" style="width:56px"><span class="mono" style="font-size:11.5px">100%</span></button>
+          <button class="btn sm icon" aria-label="Zoom in"><svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><rect x="3" y="7.3" width="10" height="1.4"></rect><rect x="7.3" y="3" width="1.4" height="10"></rect></svg></button>
+        </div>
+        <button class="btn sm">Print</button>
+        <button class="btn sm">Download PDF</button>
+      </div>
+
+      <div class="doc">
+        <div style="display:flex;align-items:flex-start;gap:16px">
+          <span class="av av-40 ent" style="background:var(--campus)"><span class="mk">BP</span></span>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <h1>Borrowdale Park High School</h1>
+            <span style="font-size:13px;color:var(--muted)">Enterprise Road, Borrowdale, Harare</span>
+          </div>
+          <div style="margin-left:auto;text-align:right;display:flex;flex-direction:column;gap:3px">
+            <span class="dmicro">Terminal report</span>
+            <span class="mono" style="font-size:15px">RPT-2026-T2-0417</span>
+            <span style="font-size:13px;color:var(--muted)">Term 2 2026 · <span class="mono">05 May &ndash; 11 Sep</span></span>
+          </div>
+        </div>
+
+        <div class="rule hv"></div>
+
+        <div style="display:flex;align-items:center;gap:18px">
+          <span class="av av-64"><svg><use href="#c2"></use></svg></span>
+          <div style="display:flex;flex-direction:column;gap:2px">
+            <span style="font:600 22px/1.25 var(--sans);letter-spacing:-.016em">Tapiwa Moyo</span>
+            <span style="font-size:14px;color:var(--muted)">Form 3 Blue · 34 learners in the class</span>
+          </div>
+        </div>
+
+        <div class="dgrid">
+          <div class="dpair"><span class="dmicro">Admission number</span><b>ADM-2023-0417</b></div>
+          <div class="dpair"><span class="dmicro">Class</span><b>Form 3 Blue</b></div>
+          <div class="dpair"><span class="dmicro">Position in class</span><b>6 of 34</b></div>
+          <div class="dpair"><span class="dmicro">Date of issue</span><b>10 Sep 2026</b></div>
+        </div>
+
+        <table class="dt">
+          <thead>
+            <tr>
+              <th style="width:150px">Subject</th>
+              <th class="r" style="width:64px">Score</th>
+              <th class="r" style="width:60px">Grade</th>
+              <th class="r" style="width:92px">Class average</th>
+              <th>Subject teacher&rsquo;s comment</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Mathematics</td><td class="r">74.9</td><td class="r">B</td><td class="r">61.4</td>
+              <td>Method is sound; must show full working.</td>
+            </tr>
+            <tr>
+              <td>English</td><td class="r">68.0</td><td class="r">B</td><td class="r">64.2</td>
+              <td>Reads widely. Essays need a tighter structure.</td>
+            </tr>
+            <tr>
+              <td>Shona</td><td class="r">71.0</td><td class="r">B</td><td class="r">66.8</td>
+              <td>Confident in oral work; spelling is improving.</td>
+            </tr>
+            <tr>
+              <td>Combined Science</td><td class="r">66.0</td><td class="r">B</td><td class="r">59.7</td>
+              <td>Practical work is careful. Theory needs revision.</td>
+            </tr>
+            <tr>
+              <td style="color:var(--muted)">Geography</td>
+              <td class="r" style="color:var(--subtle)">&mdash;</td>
+              <td class="r" style="color:var(--subtle)">&mdash;</td>
+              <td class="r" style="color:var(--subtle)">&mdash;</td>
+              <td style="color:var(--subtle);font-size:14px">Marks not yet in. The subject prints only when it is complete.</td>
+            </tr>
+            <tr>
+              <td>History</td><td class="r">58.0</td><td class="r">C</td><td class="r">55.1</td>
+              <td style="color:var(--subtle);font-size:14px">Comment outstanding.</td>
+            </tr>
+            <tr>
+              <td>Principles of Accounts</td><td class="r">63.0</td><td class="r">C</td><td class="r">57.9</td>
+              <td>Ledgers are neat. Watch the trial balance.</td>
+            </tr>
+            <tr>
+              <td>Computer Science</td><td class="r">77.0</td><td class="r">A</td><td class="r">68.3</td>
+              <td>Strong project work. The best result of his term.</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td>Average</td><td class="r">68.3</td><td class="r">B</td><td class="r">61.9</td>
+              <td style="font-weight:400;font-size:14px;color:var(--muted)">Over the 7 subjects marked</td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div class="dfig">
+          <div class="dpair"><span class="dmicro">Term average</span><span class="v">68.3</span></div>
+          <div class="dpair"><span class="dmicro">Overall grade</span><span class="v">B</span></div>
+          <div class="dpair"><span class="dmicro">Attendance</span><span class="v">94.6%</span></div>
+          <div class="dpair"><span class="dmicro">Days present</span><span class="v">87 / 92</span></div>
+          <div class="dpair" style="margin-left:auto;align-items:flex-end"><span class="dmicro">Grading scale</span><span class="mono" style="font-size:12.5px;color:var(--muted)">A 75+ · B 65 · C 55 · D 45 · E 35</span></div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:11px">
+          <span class="dmicro">Class teacher&rsquo;s comment</span>
+          <p class="dsay">A steady term. Tapiwa has moved up four places since Term 1 and his written work is far tidier than it was. He should join the science clinic on Thursdays before the end-of-year examinations.</p>
+          <div class="idn">
+            <span class="av av-24"><svg><use href="#f2"></use></svg></span>
+            <span class="idn-t"><span class="idn-n">Rutendo Chiweshe</span><span class="idn-s">Class teacher · Form 3 Blue</span></span>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:11px">
+          <span class="dmicro">Head&rsquo;s comment</span>
+          <div style="border:1px solid var(--line);border-radius:6px;background:var(--wash);padding:12px 14px;display:flex;align-items:center;gap:10px">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="var(--subtle)" style="flex:none"><path d="M8 1.4a6.6 6.6 0 1 0 0 13.2A6.6 6.6 0 0 0 8 1.4Zm0 1.4a5.2 5.2 0 1 1 0 10.4A5.2 5.2 0 0 1 8 2.8Zm0 2a.9.9 0 0 0-.9.9v2.6a.9.9 0 0 0 1.8 0V5.7A.9.9 0 0 0 8 4.8Zm0 5.4a.9.9 0 1 0 0 1.8.9.9 0 0 0 0-1.8Z"></path></svg>
+            <span style="font-size:14px;color:var(--muted)">Awaiting the head&rsquo;s comment. The card cannot be issued until it is written.</span>
+          </div>
+        </div>
+
+        <div class="rule"></div>
+
+        <div class="sig">
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <div class="sigln"></div>
+            <span class="dmicro">Class teacher · Rutendo Chiweshe</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <div class="sigln"></div>
+            <span class="dmicro">Head · Chipo Zvobgo</span>
+          </div>
+          <div class="stamp">School stamp</div>
+        </div>
+
+        <div style="display:flex;align-items:baseline;gap:12px;padding-top:2px">
+          <span style="font-size:12px;color:var(--subtle)">This report is not valid without the school stamp.</span>
+          <span class="mono" style="margin-left:auto;font-size:11px;color:var(--subtle)">RPT-2026-T2-0417 · 10 Sep 2026 14:06 · Page 1 of 1</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="colset" style="gap:20px;align-self:start">
+
+      <div class="panel">
+        <div class="panel-h">Waiting on<span class="rt"><span class="mono">2</span> of <span class="mono">6</span> done</span></div>
+        <div class="panel-b" style="padding:11px 13px;border-bottom:1px solid var(--line)">
+          <div class="bar"><i style="width:33%"></i></div>
+        </div>
+        <div class="panel-b flush">
+
+          <div class="chk">
+            <span class="ic"><svg width="16" height="16" viewBox="0 0 16 16" fill="var(--accent)"><path d="M8 1.4a6.6 6.6 0 1 0 0 13.2A6.6 6.6 0 0 0 8 1.4Zm0 1.5v5.8l4.1 2.4A5.1 5.1 0 0 1 8 13.1 5.1 5.1 0 1 1 8 2.9Z"></path></svg></span>
+            <div class="bd">
+              <div class="tl">Marks in<span class="pill acc" style="margin-left:auto"><span class="dot"></span>7 of 8</span></div>
+              <div class="bar"><i style="width:87.5%"></i></div>
+              <div class="lrow" style="padding:2px 0 0;border:0">
+                <span class="idn in"><span class="av av-20"><svg><use href="#f4"></use></svg></span><span class="idn-t"><span class="idn-n" style="font-size:12px">Farai Mutasa</span><span class="idn-s" style="font-size:10.5px">Geography · 12 of 34 entered</span></span></span>
+                <span class="tail"><button class="btn xs">Nudge</button></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chk">
+            <span class="ic"><svg width="16" height="16" viewBox="0 0 16 16" fill="var(--books)"><path d="M8 1.4a6.6 6.6 0 1 0 0 13.2A6.6 6.6 0 0 0 8 1.4Zm3.4 5.1-4 4.1a.75.75 0 0 1-1.1 0L4.6 8.9a.75.75 0 0 1 1.1-1.1l1.2 1.2 3.4-3.6a.75.75 0 1 1 1.1 1.1Z"></path></svg></span>
+            <div class="bd">
+              <div class="tl">Attendance closed off<span class="pill ok" style="margin-left:auto"><span class="dot"></span>Closed off</span></div>
+              <span class="hint"><span class="mono">87</span> of <span class="mono">92</span> days present · <span class="mono">94.6%</span> · closed by the registrar on <span class="mono">09 Sep</span></span>
+            </div>
+          </div>
+
+          <div class="chk">
+            <span class="ic"><svg width="16" height="16" viewBox="0 0 16 16" fill="var(--maint)"><path d="M7.1 2.3 1.4 12.2a1 1 0 0 0 .9 1.5h11.4a1 1 0 0 0 .9-1.5L8.9 2.3a1 1 0 0 0-1.8 0ZM8 5.4c.4 0 .7.3.7.7v3a.7.7 0 0 1-1.4 0v-3c0-.4.3-.7.7-.7Zm0 5.2a.8.8 0 1 1 0 1.6.8.8 0 0 1 0-1.6Z"></path></svg></span>
+            <div class="bd">
+              <div class="tl">Subject comments<span class="pill warn" style="margin-left:auto"><span class="dot"></span>2 outstanding</span></div>
+              <div class="lrow" style="padding:2px 0 0;border:0">
+                <span class="idn in"><span class="avw"><span class="av av-20"><svg><use href="#f4"></use></svg></span></span><span class="idn-t"><span class="idn-n" style="font-size:12px">Farai Mutasa</span><span class="idn-s" style="font-size:10.5px">Geography · asked <span class="mono">06 Sep</span></span></span></span>
+                <span class="tail"><button class="btn xs">Nudge</button></span>
+              </div>
+              <div class="lrow" style="padding:2px 0 0;border:0">
+                <span class="idn in"><span class="av av-20"><svg><use href="#f5"></use></svg></span><span class="idn-t"><span class="idn-n" style="font-size:12px">Nyasha Dube</span><span class="idn-s" style="font-size:10.5px">History · asked <span class="mono">06 Sep</span></span></span></span>
+                <span class="tail"><button class="btn xs">Nudge</button></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chk">
+            <span class="ic"><svg width="16" height="16" viewBox="0 0 16 16" fill="var(--books)"><path d="M8 1.4a6.6 6.6 0 1 0 0 13.2A6.6 6.6 0 0 0 8 1.4Zm3.4 5.1-4 4.1a.75.75 0 0 1-1.1 0L4.6 8.9a.75.75 0 0 1 1.1-1.1l1.2 1.2 3.4-3.6a.75.75 0 1 1 1.1 1.1Z"></path></svg></span>
+            <div class="bd">
+              <div class="tl">Class teacher&rsquo;s comment<span class="pill ok" style="margin-left:auto"><span class="dot"></span>Signed</span></div>
+              <div class="lrow" style="padding:2px 0 0;border:0">
+                <span class="idn in"><span class="av av-20"><svg><use href="#f2"></use></svg></span><span class="idn-t"><span class="idn-n" style="font-size:12px">Rutendo Chiweshe</span><span class="idn-s" style="font-size:10.5px">Written <span class="mono">09 Sep 16:20</span></span></span></span>
+                <span class="tail"><button class="btn xs ghost">Read</button></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chk">
+            <span class="ic"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--subtle)" stroke-width="1.4"><circle cx="8" cy="8" r="6.1"></circle></svg></span>
+            <div class="bd">
+              <div class="tl" style="color:var(--muted)">Head&rsquo;s comment<span class="pill hollow" style="margin-left:auto"><span class="dot"></span>Not started</span></div>
+              <div class="lrow" style="padding:2px 0 0;border:0">
+                <span class="idn in"><span class="avw"><span class="av av-20"><svg><use href="#f3"></use></svg></span><span class="pres p-away" style="width:8px;height:8px"></span></span><span class="idn-t"><span class="idn-n" style="font-size:12px">Chipo Zvobgo</span><span class="idn-s" style="font-size:10.5px">Head · 34 cards in the queue</span></span></span>
+                <span class="tail"><button class="btn xs">Request</button></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chk">
+            <span class="ic"><svg width="16" height="16" viewBox="0 0 16 16" fill="var(--crit)"><path d="M7.1 2.3 1.4 12.2a1 1 0 0 0 .9 1.5h11.4a1 1 0 0 0 .9-1.5L8.9 2.3a1 1 0 0 0-1.8 0ZM8 5.4c.4 0 .7.3.7.7v3a.7.7 0 0 1-1.4 0v-3c0-.4.3-.7.7-.7Zm0 5.2a.8.8 0 1 1 0 1.6.8.8 0 0 1 0-1.6Z"></path></svg></span>
+            <div class="bd">
+              <div class="tl">Guardian contacts<span class="pill crit" style="margin-left:auto"><span class="dot"></span>1 missing</span></div>
+              <span class="hint bad">One guardian has no email or mobile number on file and will receive a printed copy only.</span>
+              <div class="rowset" style="gap:7px;padding-top:2px"><button class="btn xs">Add a contact</button><button class="btn xs ghost">Skip for now</button></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h">Promotion<span class="rt">Set by the class teacher</span></div>
+        <div class="panel-b" style="display:flex;flex-direction:column;gap:8px">
+          <div class="rrow on">
+            <span class="rad on"></span>
+            <span class="idn-t"><span class="idn-n">Promoted to Form 4</span><span class="idn-s">Term average <span class="mono">68.3</span> is above the <span class="mono">50.0</span> threshold</span></span>
+          </div>
+          <div class="rrow">
+            <span class="rad"></span>
+            <span class="idn-t"><span class="idn-n">Repeat Form 3</span><span class="idn-s">Needs the head&rsquo;s approval and a guardian meeting</span></span>
+          </div>
+          <div class="rrow">
+            <span class="rad"></span>
+            <span class="idn-t"><span class="idn-n">Provisional</span><span class="idn-s">Reviewed in the first week of Term 1</span></span>
+          </div>
+          <div class="rrow off">
+            <span class="rad"></span>
+            <span class="idn-t"><span class="idn-n">Withdrawn</span><span class="idn-s">Only the registrar can set this</span></span>
+          </div>
+          <p class="note">The threshold is the school&rsquo;s, not ours. Corelith shows the figure it was measured against so the teacher can see why the default landed where it did.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h">Issue to guardians<span class="rt"><span class="mono">4</span> on file</span></div>
+        <div class="panel-b" style="display:flex;flex-direction:column;gap:12px">
+          <div class="lrow" style="padding:0;border:0">
+            <span class="avg">
+              <span class="av av-24"><svg><use href="#f1"></use></svg></span>
+              <span class="av av-24"><svg><use href="#f6"></use></svg></span>
+              <span class="av av-24"><svg><use href="#f7"></use></svg></span>
+              <span class="av av-24"><svg><use href="#f8"></use></svg></span>
+            </span>
+            <span style="font-size:12.5px;color:var(--muted)">4 guardians will receive this card</span>
+          </div>
+          <div class="colset" style="gap:9px">
+            <div class="lrow" style="padding:0;border:0">
+              <span class="idn in"><span class="av av-24"><svg><use href="#f1"></use></svg></span><span class="idn-t"><span class="idn-n">Anesu Moyo</span><span class="idn-s">Father · <span class="mono">a.moyo@…</span></span></span></span>
+              <span class="tail"><span class="pill hollow">Email</span></span>
+            </div>
+            <div class="lrow" style="padding:0;border:0">
+              <span class="idn in"><span class="av av-24"><svg><use href="#f6"></use></svg></span><span class="idn-t"><span class="idn-n">Blessing Moyo</span><span class="idn-s">Mother · <span class="mono">+263 77 ••• 4192</span></span></span></span>
+              <span class="tail"><span class="pill hollow">SMS</span></span>
+            </div>
+            <div class="lrow" style="padding:0;border:0">
+              <span class="idn in"><span class="avg"><span class="av av-24"><svg><use href="#f7"></use></svg></span><span class="av av-24"><svg><use href="#f8"></use></svg></span></span><span class="idn-t"><span class="idn-n">2 more guardians</span><span class="idn-s">Printed copy · collected at the office</span></span></span>
+              <span class="tail"><a href="#" style="font-size:12px">Manage</a></span>
+            </div>
+          </div>
+          <div style="height:1px;background:var(--hairline)"></div>
+          <button class="btn solid off" disabled="disabled">Issue report card</button>
+          <span class="hint bad">Two subject comments and the head&rsquo;s comment are still outstanding.</span>
+          <div class="bgrp">
+            <button class="btn sm">Preview PDF</button>
+            <button class="btn sm">Print 34 cards</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">Issuing — the action in five states</span>
+    <div class="cols" style="grid-template-columns:repeat(5,1fr)">
+      <div class="kard">
+        <span class="grp-l">Ready</span>
+        <button class="btn solid">Issue report card</button>
+        <span class="hint">Everything is in. <span class="mono">4</span> guardians, 2 by email and 2 by SMS.</span>
+      </div>
+      <div class="kard">
+        <span class="grp-l">Blocked</span>
+        <button class="btn solid off" disabled="disabled">Issue report card</button>
+        <span class="hint bad">Two comments outstanding.</span>
+      </div>
+      <div class="kard">
+        <span class="grp-l">Issuing</span>
+        <button class="btn off" disabled="disabled"><span class="spin"></span>Issuing</button>
+        <span class="hint"><span class="mono">2</span> of <span class="mono">4</span> delivered</span>
+        <div class="bar"><i style="width:50%"></i></div>
+      </div>
+      <div class="kard">
+        <span class="grp-l">Issued</span>
+        <div class="rowset" style="gap:7px"><span class="pill ok"><span class="dot"></span>Issued</span><span class="mono" style="font-size:11.5px;color:var(--muted)">10 Sep 14:06</span></div>
+        <span class="hint">Version <span class="mono">1</span> is frozen. A change makes version <span class="mono">2</span>.</span>
+      </div>
+      <div class="kard">
+        <span class="grp-l">Delivery failed</span>
+        <div class="rowset" style="gap:7px"><span class="pill crit"><span class="dot"></span>Failed</span><span class="hint" style="color:var(--crit)">1 of 4</span></div>
+        <span class="hint">The number for Blessing Moyo bounced.</span>
+        <div class="bgrp"><button class="btn xs">Retry</button><button class="btn xs">Edit contact</button></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="note" style="max-width:100%">The card sets at 16px, which is 12pt on paper &mdash; a guardian may be reading it at arm&rsquo;s length under a veranda light, and this is the one Corelith surface that leaves the screen. Only the field captions and the small print drop below that, and neither carries a figure anybody has to read. The document is a hairline drawing: two rules the eye can find, a 2px rule under the school&rsquo;s name and a 1px rule under the table head, and nothing else painted.</p>
+
+</div>
+</x-dc>
+</body>
+</html>
