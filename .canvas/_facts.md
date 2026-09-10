@@ -54,7 +54,7 @@ Term 3 fee invoices were raised 08 Sep. Never place today inside Term 2.
 | Rufaro Chiweshe | ADM-2468 | Form 3 Blue | Day learner | Part-paid |
 | Munashe Dube | ADM-2472 | Form 3 Blue | Boarder | In arrears US$550.00 |
 | Vimbai Mukamba | ADM-2480 | Form 3 Blue | Day learner | Settled |
-| Kudzai Sibanda | ADM-2433 | Grade 6 Green | Day learner | On a payment plan |
+| Kudzai Sibanda | ADM-2433 | Form 1 Green | Day learner | On a payment plan |
 
 Learners are **never** also staff. A learner shown in Grade 4 Blue in one artboard
 and Form 3 Blue in another is a bug — use the class in this table.
@@ -67,6 +67,13 @@ class. Use **plain names**, not honorifics — "Rutendo Chiweshe", never "Mrs Ch
 
 **Guardians** — Farai Mutasa, father of **two**: Anesu Chikafu and Tapiwa Moyo.
 Nyasha Dube (Campus), mother of Anesu Chikafu only. May-collect is set per guardian.
+
+**Forms and rolls** — Grade 4 · 34, Form 1 · 29, Form 2 · 26, Form 3 · 34,
+Form 4 · 23, Form 5 · 20 (not started this term). Six forms, **166 on roll**.
+Streams sit inside a form: Form 3 Blue is a stream of Form 3, Grade 4 Blue of
+Grade 4. In arrears by form: Grade 4 · 4 · US$1,240.00, Form 1 · 7 · US$2,180.00,
+Form 2 · 6 · US$1,860.00, Form 3 · 9 · US$4,820.00, Form 4 · 5 · US$1,510.00,
+Form 5 · 6 · US$3,975.00 — 37 learners, US$15,585.00.
 
 **School totals** — 166 on roll. **37 in arrears**, **US$15,585.00** outstanding
 (ZWG 522,876.75 at 33.5500). Of the 37: 26 reachable by SMS, 7 by email, 4 with no
