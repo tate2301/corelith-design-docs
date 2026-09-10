@@ -43,7 +43,9 @@
 `.av .av-16/20/24/32/40/64 .av.ent .avw .pres .avg .idn .idn-t .idn-n .idn-s .rchip`
 `table.d (th, td, .r, tr.hov, tr.sel, tr.grp-row, tfoot) .lrow .kard .meta .stat .bar`
 Add new CSS only for what the kit genuinely lacks, and build it from the kit's tokens.
-NEVER introduce a colour that is not a token in `_kit.css`.
+NEVER introduce a colour that is not a token in `_kit.css`. The one sanctioned
+exception is the Corelith logo mark, `#0F62FE` — a mark is allowed its own value.
+The face sprite's skin, hair and clothing hex is likewise outside the token set.
 
 ## The house rules — these bind absolutely
 1. **Every person and every organisation renders an avatar beside the name.** A name is
@@ -60,6 +62,9 @@ NEVER introduce a colour that is not a token in `_kit.css`.
 9. Neutral states get `.pill.hollow`, not a coloured badge.
 
 ## Content — real Corelith data only, never lorem
+
+**`_facts.md` is the source of truth for every name, number, date and status tone.
+Read it and conform to it exactly. Where an artboard disagrees, the artboard is wrong.**
 - Companies: The Gate Shops (ACC-0142), Huchu Mine (ACC-0188), Lux Liquor (ACC-0203).
 - People: Tendai Mukamba, Rutendo Chiweshe, Blessing Ncube, Farai Mutasa, Nyasha Dube,
   Simba Marondera, Chipo Zvobgo, Tapiwa Moyo, Kudzai Sibanda, Anesu Chikafu.
