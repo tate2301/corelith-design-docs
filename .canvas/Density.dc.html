@@ -1,0 +1,510 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    /* ══ Corelith v1 tokens — approved. Do not invent values. ══ */
+    :root{
+      --ground:#fbfbfc; --surface:#ffffff; --wash:#f5f6f9; --sunken:#eef0f5;
+      --line:#e7e9ef; --line-strong:#d5d8e2; --hairline:#f1f2f6;
+      --ink:#0b0c14; --muted:#5c5e6b; --subtle:#8a8c98;
+      --accent:#2563eb; --accent-soft:#eff4ff; --accent-line:#dbe5fb; --accent-ink:#1b4bc4;
+      --sell:#2563eb; --books:#12805c; --stock:#0e7490; --fiscal:#6549d5;
+      --maint:#b45309; --crit:#c2321b; --campus:#0e7490;
+      --ok-bg:#e8f4ef; --ok-line:#c9e5da; --warn-bg:#fdf3e2; --warn-line:#f2ddb6;
+      --crit-bg:#fdece9; --crit-line:#f6cec6;
+      --sans:"Atkinson Hyperlegible Next","Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+      --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+      /* density · default mode */
+      --h-xs:22px; --h-sm:26px; --h-md:30px; --h-lg:36px;
+      --row:32px; --pad:12px; --fs:13px;
+      --r-ctl:6px; --r-card:10px;
+      --shadow-pop:0 10px 30px -12px rgba(11,12,20,.20),0 2px 6px rgba(11,12,20,.05);
+    }
+    [data-d="compact"]{--h-xs:20px;--h-sm:24px;--h-md:26px;--h-lg:30px;--row:28px;--pad:10px;--fs:12.5px;}
+    [data-d="comfortable"]{--h-xs:24px;--h-sm:30px;--h-md:36px;--h-lg:44px;--row:44px;--pad:14px;--fs:14px;}
+    *,*::before,*::after{box-sizing:border-box;}
+    body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+      font-size:var(--fs);line-height:1.5;-webkit-font-smoothing:antialiased;}
+    a{color:var(--accent);text-decoration:underline;text-underline-offset:2px;}
+    a:hover{color:var(--accent-ink);}
+    h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.012em;}
+    p{margin:0;}
+    .mono,.num{font-family:var(--mono);font-variant-numeric:tabular-nums;}
+
+    /* ══ sheet chrome — every component sheet uses these ══ */
+    .sheet{padding:28px 32px;display:flex;flex-direction:column;gap:26px;}
+    .sheet-h{display:flex;align-items:baseline;gap:10px;padding-bottom:9px;
+      border-bottom:1px solid var(--line);}
+    .sheet-h h2{font-size:17px;}
+    .sheet-h .sub{color:var(--muted);font-size:12.5px;}
+    .sheet-h .tag{margin-left:auto;font:500 10.5px/1 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .grp{display:flex;flex-direction:column;gap:11px;}
+    .grp-l{font:500 10.5px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;
+      color:var(--subtle);}
+    .rowset{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+    .colset{display:flex;flex-direction:column;gap:10px;}
+    .cols{display:grid;gap:20px;}
+    .panel{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      overflow:hidden;}
+    .panel-h{display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--wash);
+      border-bottom:1px solid var(--line);font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .panel-h .rt{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:400;
+      font-size:12px;}
+    .panel-b{padding:14px;}
+    .panel-b.flush{padding:0;}
+    .note{color:var(--muted);font-size:12px;line-height:1.55;max-width:64ch;}
+
+    /* ══ controls ══ */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--h-md);
+      padding:0 11px;border-radius:var(--r-ctl);border:1px solid var(--line-strong);
+      background:var(--surface);color:var(--ink);font:500 var(--fs)/1 var(--sans);
+      cursor:pointer;white-space:nowrap;}
+    .btn:hover{background:var(--wash);}
+    .btn.solid{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn.solid:hover{background:var(--accent-ink);}
+    .btn.danger{background:var(--crit);border-color:var(--crit);color:#fff;}
+    .btn.soft{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .btn.ghost{border-color:transparent;background:transparent;color:var(--muted);}
+    .btn.ghost:hover{background:var(--wash);color:var(--ink);}
+    .btn.xs{height:var(--h-xs);padding:0 7px;font-size:11.5px;}
+    .btn.sm{height:var(--h-sm);padding:0 9px;font-size:12.5px;}
+    .btn.lg{height:var(--h-lg);padding:0 14px;font-size:14px;}
+    .btn.icon{width:var(--h-md);padding:0;}
+    .btn.sm.icon{width:var(--h-sm);}
+    .btn[disabled],.btn.off{opacity:.45;cursor:default;}
+    .bgrp{display:inline-flex;}
+    .bgrp .btn{border-radius:0;margin-left:-1px;}
+    .bgrp .btn:first-child{border-radius:var(--r-ctl) 0 0 var(--r-ctl);margin-left:0;}
+    .bgrp .btn:last-child{border-radius:0 var(--r-ctl) var(--r-ctl) 0;}
+
+    .fld{display:flex;align-items:center;gap:7px;height:var(--h-md);padding:0 10px;
+      border:1px solid var(--line-strong);border-radius:var(--r-ctl);background:var(--surface);
+      font-size:var(--fs);color:var(--ink);min-width:0;}
+    .fld.foc{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+    .fld.bad{border-color:var(--crit);box-shadow:0 0 0 3px var(--crit-bg);}
+    .fld .ph{color:var(--subtle);}
+    .fld .pre{color:var(--muted);font-family:var(--mono);font-size:12px;flex:none;}
+    .lab{display:flex;flex-direction:column;gap:5px;}
+    .lab > span{font:500 12px/1.3 var(--sans);color:var(--ink);}
+    .hint{font-size:11.5px;color:var(--muted);}
+    .hint.bad{color:var(--crit);}
+
+    .pill{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;
+      border-radius:999px;font:500 11px/1 var(--sans);border:1px solid var(--line);
+      background:var(--wash);color:var(--muted);white-space:nowrap;}
+    .pill.ok{background:var(--ok-bg);border-color:var(--ok-line);color:var(--books);}
+    .pill.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--maint);}
+    .pill.crit{background:var(--crit-bg);border-color:var(--crit-line);color:var(--crit);}
+    .pill.acc{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .pill .dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex:none;}
+    .pill.hollow .dot{background:transparent;border:1.5px solid currentColor;width:7px;height:7px;}
+    .cnt{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+      padding:0 5px;border-radius:999px;background:var(--sunken);color:var(--muted);
+      font:500 11px/1 var(--mono);}
+    .cnt.urgent{background:var(--crit);color:#fff;}
+    .kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+      padding:0 4px;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;
+      background:var(--surface);font:500 10.5px/1 var(--mono);color:var(--muted);}
+
+    /* ══ identity ══ */
+    .av{position:relative;flex:none;display:inline-block;border-radius:50%;overflow:hidden;
+      background:var(--sunken);}
+    .av svg{display:block;width:100%;height:100%;}
+    .av-16{width:16px;height:16px}.av-20{width:20px;height:20px}.av-24{width:24px;height:24px}
+    .av-32{width:32px;height:32px}.av-40{width:40px;height:40px}.av-64{width:64px;height:64px}
+    .av.ent{border-radius:6px;}
+    .av-40.ent,.av-64.ent{border-radius:8px;}
+    .av.ent .mk{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+      font:600 11px/1 var(--sans);color:#fff;}
+    .av-32.ent .mk{font-size:12px}.av-40.ent .mk{font-size:13px}.av-64.ent .mk{font-size:20px}
+    .avw{position:relative;flex:none;display:inline-block;line-height:0;}
+    .pres{position:absolute;right:-1px;bottom:-1px;border-radius:50%;border:2px solid var(--surface);}
+    .av-24 + .pres{width:9px;height:9px}
+    .av-32 + .pres{width:11px;height:11px}
+    .av-40 + .pres{width:13px;height:13px}
+    .p-on{background:var(--books)}.p-away{background:var(--maint)}
+    .p-busy{background:var(--crit)}.p-off{background:var(--subtle)}
+    .avg{display:inline-flex;align-items:center;}
+    .avg .avw,.avg > .av{margin-left:-7px;box-shadow:0 0 0 2px var(--surface);}
+    .avg .avw:first-child,.avg > .av:first-child{margin-left:0;}
+    .avg .more{display:inline-flex;align-items:center;justify-content:center;background:var(--sunken);
+      color:var(--muted);font:500 10px/1 var(--mono);border-radius:50%;}
+    .idn{display:flex;align-items:center;gap:8px;min-width:0;}
+    .idn-t{min-width:0;display:flex;flex-direction:column;gap:1px;}
+    .idn-n{font:500 var(--fs)/1.3 var(--sans);color:var(--ink);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .idn-s{font:400 11px/1.3 var(--sans);color:var(--muted);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .idn.in{gap:6px;}
+    .idn.lg{gap:12px;}
+    .idn.lg .idn-n{font:600 15px/1.3 var(--sans);}
+    .idn.lg .idn-s{font-size:12px;}
+    .idn.xl{gap:14px;}
+    .idn.xl .idn-n{font:600 20px/1.25 var(--sans);letter-spacing:-.015em;}
+    .idn.xl .idn-s{font-size:13px;}
+    .rchip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px 0 3px;
+      border-radius:999px;border:1px solid var(--line);background:var(--surface);
+      font:500 12px/1 var(--sans);color:var(--ink);}
+
+    /* ══ table ══ */
+    table.d{width:100%;border-collapse:collapse;font-size:var(--fs);}
+    table.d th{text-align:left;font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);padding:0 var(--pad) 7px;
+      border-bottom:1px solid var(--line);white-space:nowrap;}
+    table.d td{padding:0 var(--pad);height:var(--row);border-bottom:1px solid var(--hairline);
+      vertical-align:middle;}
+    table.d tbody tr:last-child td{border-bottom:0;}
+    table.d tr.hov td{background:var(--wash);}
+    table.d tr.sel td{background:var(--accent-soft);}
+    table.d .r{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;
+      font-size:12px;}
+    table.d th.r{text-align:right;}
+    table.d tr.grp-row td{background:var(--wash);font:500 11px/1 var(--sans);
+      letter-spacing:.05em;text-transform:uppercase;color:var(--muted);height:26px;}
+    table.d tfoot td{height:var(--row);font-weight:600;border-top:1px solid var(--line-strong);
+      border-bottom:0;background:var(--surface);}
+
+    /* ══ rows, cards ══ */
+    .lrow{display:flex;align-items:center;gap:10px;padding:7px var(--pad);
+      border-bottom:1px solid var(--hairline);}
+    .lrow:last-child{border-bottom:0;}
+    .lrow .tail{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none;}
+    .kard{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      padding:13px;display:flex;flex-direction:column;gap:10px;}
+    .meta{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:12px;}
+    .meta dt{font:500 10.5px/1.5 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .meta dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12px;}
+    .stat{display:flex;flex-direction:column;gap:3px;}
+    .stat b{font:600 24px/1.1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
+    .stat span{font:500 10.5px/1.3 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .bar{height:5px;border-radius:999px;background:var(--sunken);overflow:hidden;}
+    .bar i{display:block;height:100%;background:var(--accent);}
+
+    /* ══ Density sheet only ══ */
+    .ic{width:16px;height:16px;flex:none;stroke:currentColor;stroke-width:1.4;fill:none;
+      stroke-linecap:round;stroke-linejoin:round;}
+    .ic-12{width:12px;height:12px;}
+    .ic-14{width:14px;height:14px;}
+    .fld .ic{color:var(--subtle);}
+
+    .dh{display:flex;align-items:baseline;gap:9px;padding-bottom:2px;}
+    .dh b{font:600 15px/1.3 var(--sans);letter-spacing:-.008em;}
+    .dh code{font:400 11px/1.4 var(--mono);color:var(--subtle);}
+    .dh .pill{margin-left:auto;align-self:center;}
+    .tbar{display:flex;align-items:center;gap:8px;padding:var(--pad);
+      border-bottom:1px solid var(--line);background:var(--surface);}
+    .stack{display:flex;flex-direction:column;gap:9px;}
+
+    table.d th.dcol,table.d td.dcol{background:var(--accent-soft);}
+    table.d td.dcol{color:var(--accent-ink);}
+    table.d th.dcol{color:var(--accent-ink);}
+    table.d td.tkn{font:500 12px/1.4 var(--mono);color:var(--ink);}
+    table.d td.why{font:400 11.5px/1.4 var(--sans);color:var(--muted);}
+
+    .tgtset{display:flex;align-items:flex-end;gap:34px;}
+    .tgtg{display:flex;flex-direction:column;gap:8px;}
+    .tgtbar{position:relative;display:flex;align-items:flex-end;gap:10px;height:46px;}
+    .tgtbar::after{content:"";position:absolute;left:-8px;right:-8px;bottom:24px;
+      border-top:1px dashed var(--crit);}
+    .tgtbar i{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;
+      width:42px;border:1px solid var(--line-strong);border-radius:var(--r-ctl);
+      background:var(--surface);font:400 11px/1 var(--mono);color:var(--muted);font-style:normal;}
+    .tgtbar i.under{border-color:var(--crit-line);background:var(--crit-bg);color:var(--crit);}
+    .tgtc{font:400 11px/1.4 var(--mono);color:var(--subtle);}
+
+    .fixrow{display:flex;align-items:baseline;gap:10px;padding:5px var(--pad);
+      border-bottom:1px solid var(--hairline);}
+    .fixrow:last-child{border-bottom:0;}
+    .fixrow b{font:400 12.5px/1.5 var(--sans);color:var(--ink);}
+    .fixrow code{margin-left:auto;font:400 11.5px/1.5 var(--mono);color:var(--muted);
+      text-align:right;flex:none;}
+    .mand{display:flex;flex-direction:column;gap:9px;}
+    .mand .hd{display:flex;align-items:center;gap:7px;}
+    .mand .hd b{font:600 13px/1.3 var(--sans);}
+    .mand p{font:400 11.5px/1.5 var(--sans);color:var(--muted);}
+  </style>
+</helmet>
+<div class="sheet" style="width:1240px;background:var(--ground)">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+ <symbol id="f1" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e6ebf5"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#3f5b8c"/><circle cx="20" cy="16.5" r="7.8" fill="#6b4630"/><path d="M12.2 16.4c0-5 3.2-8.3 7.8-8.3s7.8 3.3 7.8 8.3c0-2.4-1.1-3.7-2.4-4.3-1.9-.9-3.4.3-5.4.3s-3.5-1.2-5.4-.3c-1.3.6-2.4 1.9-2.4 4.3Z" fill="#1a1512"/></symbol>
+ <symbol id="f2" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e8f0ec"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#2f6b57"/><circle cx="20" cy="16.5" r="7.8" fill="#8a5a3c"/><path d="M11.6 16.6c0-5.3 3.5-8.5 8.4-8.5s8.4 3.2 8.4 8.5v7.2a1.6 1.6 0 1 1-3.2 0v-7.4c-1.6.9-3.4 1.4-5.2 1.4s-3.6-.5-5.2-1.4v7.4a1.6 1.6 0 1 1-3.2 0Z" fill="#2a211b"/></symbol>
+ <symbol id="f3" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f0e9f2"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#6b4a7d"/><circle cx="20" cy="16.5" r="7.8" fill="#a9714b"/><path d="M12.4 17.2c-.6-5.6 2.8-9.1 7.6-9.1s8.2 3.5 7.6 9.1c-.3-2.6-1.6-3.9-3-4.4-2.2-.8-3 .5-4.6.5s-2.4-1.3-4.6-.5c-1.4.5-2.7 1.8-3 4.4Z" fill="#3d2a1e"/><circle cx="27.4" cy="9.4" r="2.9" fill="#3d2a1e"/></symbol>
+ <symbol id="f4" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f5ebe8"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#8c4a3f"/><circle cx="20" cy="16.5" r="7.8" fill="#5a3a28"/><path d="M12.3 15.8c0-4.8 3.3-7.7 7.7-7.7s7.7 2.9 7.7 7.7c0-1.7-.9-2.7-2.1-3.1-1.8-.6-3.2.6-5.6.6s-3.8-1.2-5.6-.6c-1.2.4-2.1 1.4-2.1 3.1Z" fill="#1a1512"/></symbol>
+ <symbol id="f5" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eceef3"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#3d4756"/><circle cx="20" cy="16.5" r="7.8" fill="#7c4f35"/><path d="M11.9 17.8c-.4-6.2 3.1-9.7 8.1-9.7s8.5 3.5 8.1 9.7c-.9-1.2-1.4-3.2-1.4-5-2 1.3-4.3 2-6.7 2s-4.7-.7-6.7-2c0 1.8-.5 3.8-1.4 5Z" fill="#2a211b"/></symbol>
+ <symbol id="f6" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e9f0f4"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#46617a"/><circle cx="20" cy="16.5" r="7.8" fill="#b98254"/><path d="M12.2 16.4c0-5 3.2-8.3 7.8-8.3s7.8 3.3 7.8 8.3c0-2.4-1.1-3.7-2.4-4.3-1.9-.9-3.4.3-5.4.3s-3.5-1.2-5.4-.3c-1.3.6-2.4 1.9-2.4 4.3Z" fill="#3d2a1e"/></symbol>
+ <symbol id="f7" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f2eee6"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#7a6a4a"/><circle cx="20" cy="16.5" r="7.8" fill="#6b4630"/><path d="M11.5 15.4c0-5 3.8-8.3 8.5-8.3s8.5 3.3 8.5 8.3c0 1-.5 1.9-1.3 2.4l-1.2-4.8a20 20 0 0 1-12 0l-1.2 4.8c-.8-.5-1.3-1.4-1.3-2.4Z" fill="#5d4d8a"/></symbol>
+ <symbol id="f8" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eaf1ee"/><ellipse cx="20" cy="42" rx="14.5" ry="12.5" fill="#4a7a68"/><circle cx="20" cy="16.5" r="7.8" fill="#8a5a3c"/><path d="M12.6 14.9c0-4.5 3.1-7.3 7.4-7.3s7.4 2.8 7.4 7.3c0-1.3-.8-2.1-1.8-2.4-1.6-.5-3.2.7-5.6.7s-4-1.2-5.6-.7c-1 .3-1.8 1.1-1.8 2.4Z" fill="#1a1512"/></symbol>
+ <symbol id="c1" viewBox="0 0 40 40"><rect width="40" height="40" fill="#e4eef2"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#1f5f7a"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#6b4630"/><path d="M12.9 17.8c0-4.7 3-7.7 7.1-7.7s7.1 3 7.1 7.7c0-2.2-1-3.4-2.2-4-1.7-.8-3.1.3-4.9.3s-3.2-1.1-4.9-.3c-1.2.6-2.2 1.8-2.2 4Z" fill="#1a1512"/></symbol>
+ <symbol id="c2" viewBox="0 0 40 40"><rect width="40" height="40" fill="#eef1e6"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#2f6b57"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#8a5a3c"/><path d="M12.4 18c0-4.9 3.2-7.9 7.6-7.9s7.6 3 7.6 7.9v6a1.5 1.5 0 1 1-3 0v-6.2c-1.4.8-3 1.2-4.6 1.2s-3.2-.4-4.6-1.2V24a1.5 1.5 0 1 1-3 0Z" fill="#2a211b"/></symbol>
+ <symbol id="c3" viewBox="0 0 40 40"><rect width="40" height="40" fill="#f4ece4"/><ellipse cx="20" cy="43" rx="13" ry="11.5" fill="#8c4a3f"/><path d="M8 43c1-5 5.6-8.4 12-8.4S31 38 32 43Z" fill="#f0f4f6"/><circle cx="20" cy="18" r="7.2" fill="#a9714b"/><path d="M12.9 18.4c-.5-5.2 2.6-8.3 7.1-8.3s7.6 3.1 7.1 8.3c-.3-2.4-1.5-3.6-2.8-4-2-.8-2.8.4-4.3.4s-2.2-1.2-4.3-.4c-1.3.4-2.5 1.6-2.8 4Z" fill="#3d2a1e"/><circle cx="26.8" cy="11.4" r="2.6" fill="#3d2a1e"/></symbol>
+</defs></svg>
+
+  <div class="sheet-h">
+    <h2>Density</h2>
+    <span class="sub">Three modes, one set of components</span>
+    <span class="tag">Sheet 03</span>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">The same surface in all three modes — nothing below is a different component</span>
+    <div class="cols" style="grid-template-columns:1fr 1fr 1fr">
+
+      <div class="stack">
+        <div class="dh"><b>Compact</b><code>28 · 26 · 12.5</code><span class="pill hollow"><span class="dot"></span>Opt in</span></div>
+        <div data-d="compact">
+          <div class="panel">
+            <div class="tbar">
+              <span class="fld" style="flex:1;min-width:0">
+                <svg class="ic ic-14" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.6"></circle><path d="M10.4 10.4 14 14"></path></svg>
+                <span class="ph">Search takings</span>
+              </span>
+              <span class="bgrp">
+                <button class="btn icon" type="button"><svg class="ic ic-14" viewBox="0 0 16 16"><path d="M2.6 5.2h10.8M2.6 10.8h10.8"></path><circle cx="6" cy="5.2" r="1.8"></circle><circle cx="10.4" cy="10.8" r="1.8"></circle></svg></button>
+                <button class="btn icon" type="button"><svg class="ic ic-14" viewBox="0 0 16 16"><path d="M8 2.8v6.6m0 0 2.8-2.8M8 9.4 5.2 6.6M2.8 12.8h10.4"></path></svg></button>
+                <button class="btn icon" type="button"><svg class="ic ic-14" viewBox="0 0 16 16"><path d="M8 3.2v9.6M3.2 8h9.6"></path></svg></button>
+              </span>
+            </div>
+            <table class="d">
+              <thead><tr><th>Till</th><th>Tender</th><th class="r">US$</th></tr></thead>
+              <tbody>
+                <tr><td>Avondale 1</td><td>Cash</td><td class="r">4,120.50</td></tr>
+                <tr class="hov"><td>Avondale 2</td><td>Card</td><td class="r">5,308.00</td></tr>
+                <tr class="sel"><td>Borrowdale</td><td>EcoCash</td><td class="r">3,996.25</td></tr>
+                <tr><td>Msasa</td><td>On account</td><td class="r">2,410.75</td></tr>
+                <tr><td>Mbare</td><td>Swipe</td><td class="r">2,405.00</td></tr>
+              </tbody>
+              <tfoot><tr><td colspan="2">Total</td><td class="r">18,240.50</td></tr></tfoot>
+            </table>
+            <div class="lrow" style="border-top:1px solid var(--line)">
+              <span class="avw"><span class="av av-24"><svg><use href="#f1"></use></svg></span><span class="pres p-on"></span></span>
+              <div class="idn-t"><span class="idn-n">Tendai Mukamba</span><span class="idn-s">Cashier · Avondale</span></div>
+              <span class="tail">
+                <span class="pill acc"><span class="dot"></span>Trading</span>
+                <svg class="ic ic-14" viewBox="0 0 16 16" style="color:var(--subtle)"><path d="m6.2 3.6 4.6 4.4-4.6 4.4"></path></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+        <p class="note">Back-office grids on a desktop, chosen by the person doing the work: ledger review, stock counts, the reconciliation board.</p>
+      </div>
+
+      <div class="stack">
+        <div class="dh"><b>Default</b><code>32 · 30 · 13</code><span class="pill acc"><span class="dot"></span>Everywhere</span></div>
+        <div>
+          <div class="panel">
+            <div class="tbar">
+              <span class="fld" style="flex:1;min-width:0">
+                <svg class="ic ic-14" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.6"></circle><path d="M10.4 10.4 14 14"></path></svg>
+                <span class="ph">Search takings</span>
+              </span>
+              <span class="bgrp">
+                <button class="btn icon" type="button"><svg class="ic ic-14" viewBox="0 0 16 16"><path d="M2.6 5.2h10.8M2.6 10.8h10.8"></path><circle cx="6" cy="5.2" r="1.8"></circle><circle cx="10.4" cy="10.8" r="1.8"></circle></svg></button>
+                <button class="btn icon" type="button"><svg class="ic ic-14" viewBox="0 0 16 16"><path d="M8 2.8v6.6m0 0 2.8-2.8M8 9.4 5.2 6.6M2.8 12.8h10.4"></path></svg></button>
+                <button class="btn icon" type="button"><svg class="ic ic-14" viewBox="0 0 16 16"><path d="M8 3.2v9.6M3.2 8h9.6"></path></svg></button>
+              </span>
+            </div>
+            <table class="d">
+              <thead><tr><th>Till</th><th>Tender</th><th class="r">US$</th></tr></thead>
+              <tbody>
+                <tr><td>Avondale 1</td><td>Cash</td><td class="r">4,120.50</td></tr>
+                <tr class="hov"><td>Avondale 2</td><td>Card</td><td class="r">5,308.00</td></tr>
+                <tr class="sel"><td>Borrowdale</td><td>EcoCash</td><td class="r">3,996.25</td></tr>
+                <tr><td>Msasa</td><td>On account</td><td class="r">2,410.75</td></tr>
+                <tr><td>Mbare</td><td>Swipe</td><td class="r">2,405.00</td></tr>
+              </tbody>
+              <tfoot><tr><td colspan="2">Total</td><td class="r">18,240.50</td></tr></tfoot>
+            </table>
+            <div class="lrow" style="border-top:1px solid var(--line)">
+              <span class="avw"><span class="av av-24"><svg><use href="#f1"></use></svg></span><span class="pres p-on"></span></span>
+              <div class="idn-t"><span class="idn-n">Tendai Mukamba</span><span class="idn-s">Cashier · Avondale</span></div>
+              <span class="tail">
+                <span class="pill acc"><span class="dot"></span>Trading</span>
+                <svg class="ic ic-14" viewBox="0 0 16 16" style="color:var(--subtle)"><path d="m6.2 3.6 4.6 4.4-4.6 4.4"></path></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+        <p class="note">What a person gets before they have an opinion. Every screenshot, every spec and every review is read at this mode.</p>
+      </div>
+
+      <div class="stack">
+        <div class="dh"><b>Comfortable</b><code>44 · 36 · 14</code><span class="pill ok"><span class="dot"></span>Touch</span></div>
+        <div data-d="comfortable">
+          <div class="panel">
+            <div class="tbar">
+              <span class="fld" style="flex:1;min-width:0">
+                <svg class="ic ic-14" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.6"></circle><path d="M10.4 10.4 14 14"></path></svg>
+                <span class="ph">Search takings</span>
+              </span>
+              <span class="bgrp">
+                <button class="btn icon" type="button"><svg class="ic ic-14" viewBox="0 0 16 16"><path d="M2.6 5.2h10.8M2.6 10.8h10.8"></path><circle cx="6" cy="5.2" r="1.8"></circle><circle cx="10.4" cy="10.8" r="1.8"></circle></svg></button>
+                <button class="btn icon" type="button"><svg class="ic ic-14" viewBox="0 0 16 16"><path d="M8 2.8v6.6m0 0 2.8-2.8M8 9.4 5.2 6.6M2.8 12.8h10.4"></path></svg></button>
+                <button class="btn icon" type="button"><svg class="ic ic-14" viewBox="0 0 16 16"><path d="M8 3.2v9.6M3.2 8h9.6"></path></svg></button>
+              </span>
+            </div>
+            <table class="d">
+              <thead><tr><th>Till</th><th>Tender</th><th class="r">US$</th></tr></thead>
+              <tbody>
+                <tr><td>Avondale 1</td><td>Cash</td><td class="r">4,120.50</td></tr>
+                <tr class="hov"><td>Avondale 2</td><td>Card</td><td class="r">5,308.00</td></tr>
+                <tr class="sel"><td>Borrowdale</td><td>EcoCash</td><td class="r">3,996.25</td></tr>
+                <tr><td>Msasa</td><td>On account</td><td class="r">2,410.75</td></tr>
+                <tr><td>Mbare</td><td>Swipe</td><td class="r">2,405.00</td></tr>
+              </tbody>
+              <tfoot><tr><td colspan="2">Total</td><td class="r">18,240.50</td></tr></tfoot>
+            </table>
+            <div class="lrow" style="border-top:1px solid var(--line)">
+              <span class="avw"><span class="av av-24"><svg><use href="#f1"></use></svg></span><span class="pres p-on"></span></span>
+              <div class="idn-t"><span class="idn-n">Tendai Mukamba</span><span class="idn-s">Cashier · Avondale</span></div>
+              <span class="tail">
+                <span class="pill acc"><span class="dot"></span>Trading</span>
+                <svg class="ic ic-14" viewBox="0 0 16 16" style="color:var(--subtle)"><path d="m6.2 3.6 4.6 4.4-4.6 4.4"></path></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+        <p class="note">Touch, gloves, a counter, a queue. Forced by the shell — not offered as a preference the person can turn off.</p>
+      </div>
+
+    </div>
+    <p class="note">A mode is one attribute on a container — <span class="mono">data-d="compact"</span>. It cascades and it nests: a comfortable tender drawer inside a compact back-office shell is legal, and is how the register sits in the day-close screen. Note what did not move — pill, avatar, hairline and icon are identical in all three.</p>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">The scale — every value the attribute changes</span>
+    <div class="panel">
+      <div class="panel-h">Density tokens<span class="rt">px unless noted</span></div>
+      <div class="panel-b flush">
+        <table class="d">
+          <thead>
+            <tr>
+              <th style="width:168px">Token</th>
+              <th>Role</th>
+              <th class="r" style="width:104px">Compact</th>
+              <th class="r dcol" style="width:104px">Default</th>
+              <th class="r" style="width:120px">Comfortable</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="grp-row"><td colspan="5">Controls</td></tr>
+            <tr><td class="tkn">--h-xs</td><td class="why">Chip actions, inline row buttons, tag removes</td><td class="r">20</td><td class="r dcol">22</td><td class="r">24</td></tr>
+            <tr><td class="tkn">--h-sm</td><td class="why">Toolbar buttons inside a dense panel header</td><td class="r">24</td><td class="r dcol">26</td><td class="r">30</td></tr>
+            <tr><td class="tkn">--h-md</td><td class="why">The default control — button, field, select, menu row</td><td class="r">26</td><td class="r dcol">30</td><td class="r">36</td></tr>
+            <tr><td class="tkn">--h-lg</td><td class="why">Primary action on a form, tender keys on the register</td><td class="r">30</td><td class="r dcol">36</td><td class="r">44</td></tr>
+            <tr class="grp-row"><td colspan="5">Rows</td></tr>
+            <tr><td class="tkn">--row</td><td class="why">Table row and table footer</td><td class="r">28</td><td class="r dcol">32</td><td class="r">44</td></tr>
+            <tr><td class="tkn">list row</td><td class="why">Derived — <span class="mono">--row + 6</span>, for the avatar and the second line</td><td class="r">34</td><td class="r dcol">38</td><td class="r">50</td></tr>
+            <tr><td class="tkn">menu row</td><td class="why">Derived — <span class="mono">--h-md</span>, so a menu item is a button</td><td class="r">26</td><td class="r dcol">30</td><td class="r">36</td></tr>
+            <tr class="grp-row"><td colspan="5">Spacing and text</td></tr>
+            <tr><td class="tkn">--pad</td><td class="why">Cell padding-x, list row padding-x, toolbar inset</td><td class="r">10</td><td class="r dcol">12</td><td class="r">14</td></tr>
+            <tr><td class="tkn">--fs</td><td class="why">Base UI text — the inherited <span class="mono">type.ui</span> step</td><td class="r">12.5</td><td class="r dcol">13</td><td class="r">14</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="note">Nine values, and only two of them are primitives. A list row and a menu row are not tokens of their own: they are arithmetic on <span class="mono">--row</span> and <span class="mono">--h-md</span>, so a fourth mode would need two numbers rather than nine — and no one can quietly set a menu row to something a button cannot match.</p>
+  </div>
+
+  <div class="cols" style="grid-template-columns:minmax(0,1fr) 392px">
+    <div class="grp">
+      <span class="grp-l">Target size — the 24 px floor, WCAG 2.5.8</span>
+      <div class="panel">
+        <div class="panel-b">
+          <div class="tgtset">
+            <div class="tgtg">
+              <span class="grp-l">Compact</span>
+              <div class="tgtbar"><i class="under" style="height:20px">20</i><i style="height:26px">26</i><i style="height:28px">28</i></div>
+              <span class="tgtc">xs · md · row</span>
+            </div>
+            <div class="tgtg">
+              <span class="grp-l">Default</span>
+              <div class="tgtbar"><i class="under" style="height:22px">22</i><i style="height:30px">30</i><i style="height:32px">32</i></div>
+              <span class="tgtc">xs · md · row</span>
+            </div>
+            <div class="tgtg">
+              <span class="grp-l">Comfortable</span>
+              <div class="tgtbar"><i style="height:24px">24</i><i style="height:36px">36</i><i style="height:44px">44</i></div>
+              <span class="tgtc">xs · md · row</span>
+            </div>
+            <div class="tgtg" style="gap:6px">
+              <span class="grp-l" style="color:var(--crit)">24 px floor</span>
+              <p class="note" style="max-width:22ch;font-size:11.5px">The dashed line. Everything a finger or a pointer can hit sits above it.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="note">Every control, table row, list row and menu row clears 24 × 24 in every mode. The one exception is <span class="mono">--h-xs</span> at 20 and 22, which clears the floor through 2.5.8's spacing exception instead: an xs control is only legal in a row at least 24 tall with no other target within 24 of it. It is never the only route to an action — the same action sits on the row menu at <span class="mono">--h-md</span>.</p>
+    </div>
+
+    <div class="grp">
+      <span class="grp-l">What density does not touch</span>
+      <div class="panel">
+        <div class="panel-b flush">
+          <div class="fixrow"><b>Radii</b><code>6 · 10 · 999</code></div>
+          <div class="fixrow"><b>Hairline and border</b><code>1px</code></div>
+          <div class="fixrow"><b>Focus ring</b><code>3px soft</code></div>
+          <div class="fixrow"><b>Icons</b><code>12 · 14 · 16 · 20</code></div>
+          <div class="fixrow"><b>Pill and counter height</b><code>20 · 18</code></div>
+          <div class="fixrow"><b>Avatars</b><code>16 – 64</code></div>
+          <div class="fixrow"><b>Ramp above type.ui</b><code>28 · 20 · 15 · 14</code></div>
+          <div class="fixrow"><b>Colour, in every mode</b><code>identical</code></div>
+        </div>
+      </div>
+      <p class="note">Density is a measure of how much air a row is given, not a zoom. A 28px avatar in comfortable would make the three modes three different products, and a screenshot from one would stop being evidence about another.</p>
+    </div>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">Where comfortable is mandatory — the shell sets it, the person cannot unset it</span>
+    <div class="cols" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+      <div class="kard mand">
+        <div class="hd">
+          <svg class="ic" viewBox="0 0 16 16" style="color:var(--sell)"><rect x="4.4" y="1.6" width="7.2" height="12.8" rx="1.7"></rect><path d="M7 12.3h2"></path></svg>
+          <b>MobileShell</b>
+        </div>
+        <p>One thumb, outdoors, often at a gate or a delivery. Stock counts and approvals are taken standing up.</p>
+        <div class="meta"><dt>Row</dt><dd>44</dd><dt>Primary</dt><dd>44</dd><dt>Text</dt><dd>14</dd></div>
+      </div>
+      <div class="kard mand">
+        <div class="hd">
+          <svg class="ic" viewBox="0 0 16 16" style="color:var(--sell)"><rect x="2.2" y="6.2" width="11.6" height="7.8" rx="1.5"></rect><path d="M4.9 6.2V3.2h6.2v3M5.2 9.6h2.4"></path></svg>
+          <b>POS register</b>
+        </div>
+        <p>A touchscreen with a queue behind it. Tender keys are <span class="mono">--h-lg</span>, and a mis-hit costs a void and a fiscal reversal.</p>
+        <div class="meta"><dt>Tender key</dt><dd>44</dd><dt>Line</dt><dd>44</dd><dt>Text</dt><dd>14</dd></div>
+      </div>
+      <div class="kard mand">
+        <div class="hd">
+          <svg class="ic" viewBox="0 0 16 16" style="color:var(--campus)"><path d="M8 2.4 14.6 5.8 8 9.2 1.4 5.8Z"></path><path d="M4.4 7.4v3.3c0 1.2 1.6 2.2 3.6 2.2s3.6-1 3.6-2.2V7.4"></path></svg>
+          <b>Kora</b>
+        </div>
+        <p>Learners on shared tablets, reading for stretches rather than scanning. Comfortable carries the 14px base with it.</p>
+        <div class="meta"><dt>Row</dt><dd>44</dd><dt>Control</dt><dd>36</dd><dt>Text</dt><dd>14</dd></div>
+      </div>
+      <div class="kard mand">
+        <div class="hd">
+          <svg class="ic" viewBox="0 0 16 16" style="color:var(--stock)"><rect x="2.2" y="3.2" width="11.6" height="9.6" rx="1.5"></rect><path d="M2.2 6.4h11.6M5 9.4h2.4"></path></svg>
+          <b>CounterMini</b>
+        </div>
+        <p>A seven-inch companion beside the till. Nothing on it is pointed at — every control is a touch target.</p>
+        <div class="meta"><dt>Row</dt><dd>44</dd><dt>Control</dt><dd>36</dd><dt>Text</dt><dd>14</dd></div>
+      </div>
+    </div>
+    <p class="note">In these four shells the attribute is set at the root and the density preference is not shown in settings. A preference someone can set is a preference someone can set wrongly, and a 26px tender key on a register is not a taste question — it is a void, a fiscal reversal on JNL-88214, and a customer waiting while a supervisor is found.</p>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

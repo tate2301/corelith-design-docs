@@ -1,0 +1,597 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <style>
+    /* ══ Corelith v1 tokens — approved. Do not invent values. ══ */
+    :root{
+      --ground:#fbfbfc; --surface:#ffffff; --wash:#f5f6f9; --sunken:#eef0f5;
+      --line:#e7e9ef; --line-strong:#d5d8e2; --hairline:#f1f2f6;
+      --ink:#0b0c14; --muted:#5c5e6b; --subtle:#8a8c98;
+      --accent:#2563eb; --accent-soft:#eff4ff; --accent-line:#dbe5fb; --accent-ink:#1b4bc4;
+      --sell:#2563eb; --books:#12805c; --stock:#0e7490; --fiscal:#6549d5;
+      --maint:#b45309; --crit:#c2321b; --campus:#0e7490;
+      --ok-bg:#e8f4ef; --ok-line:#c9e5da; --warn-bg:#fdf3e2; --warn-line:#f2ddb6;
+      --crit-bg:#fdece9; --crit-line:#f6cec6;
+      --sans:"Atkinson Hyperlegible Next","Atkinson Hyperlegible",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+      --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+      /* density · default mode */
+      --h-xs:22px; --h-sm:26px; --h-md:30px; --h-lg:36px;
+      --row:32px; --pad:12px; --fs:13px;
+      --r-ctl:6px; --r-card:10px;
+      --shadow-pop:0 10px 30px -12px rgba(11,12,20,.20),0 2px 6px rgba(11,12,20,.05);
+    }
+    [data-d="compact"]{--h-xs:20px;--h-sm:24px;--h-md:26px;--h-lg:30px;--row:28px;--pad:10px;--fs:12.5px;}
+    [data-d="comfortable"]{--h-xs:24px;--h-sm:30px;--h-md:36px;--h-lg:44px;--row:44px;--pad:14px;--fs:14px;}
+    *,*::before,*::after{box-sizing:border-box;}
+    body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+      font-size:var(--fs);line-height:1.5;-webkit-font-smoothing:antialiased;}
+    a{color:var(--accent);text-decoration:underline;text-underline-offset:2px;}
+    a:hover{color:var(--accent-ink);}
+    h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.012em;}
+    p{margin:0;}
+    .mono,.num{font-family:var(--mono);font-variant-numeric:tabular-nums;}
+
+    /* ══ sheet chrome — every component sheet uses these ══ */
+    .sheet{padding:28px 32px;display:flex;flex-direction:column;gap:26px;}
+    .sheet-h{display:flex;align-items:baseline;gap:10px;padding-bottom:9px;
+      border-bottom:1px solid var(--line);}
+    .sheet-h h2{font-size:17px;}
+    .sheet-h .sub{color:var(--muted);font-size:12.5px;}
+    .sheet-h .tag{margin-left:auto;font:500 10.5px/1 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .grp{display:flex;flex-direction:column;gap:11px;}
+    .grp-l{font:500 10.5px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;
+      color:var(--subtle);}
+    .rowset{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+    .colset{display:flex;flex-direction:column;gap:10px;}
+    .cols{display:grid;gap:20px;}
+    .panel{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      overflow:hidden;}
+    .panel-h{display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--wash);
+      border-bottom:1px solid var(--line);font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);}
+    .panel-h .rt{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:400;
+      font-size:12px;}
+    .panel-b{padding:14px;}
+    .panel-b.flush{padding:0;}
+    .note{color:var(--muted);font-size:12px;line-height:1.55;max-width:64ch;}
+
+    /* ══ controls ══ */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:var(--h-md);
+      padding:0 11px;border-radius:var(--r-ctl);border:1px solid var(--line-strong);
+      background:var(--surface);color:var(--ink);font:500 var(--fs)/1 var(--sans);
+      cursor:pointer;white-space:nowrap;}
+    .btn:hover{background:var(--wash);}
+    .btn.solid{background:var(--accent);border-color:var(--accent);color:#fff;}
+    .btn.solid:hover{background:var(--accent-ink);}
+    .btn.danger{background:var(--crit);border-color:var(--crit);color:#fff;}
+    .btn.soft{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .btn.ghost{border-color:transparent;background:transparent;color:var(--muted);}
+    .btn.ghost:hover{background:var(--wash);color:var(--ink);}
+    .btn.xs{height:var(--h-xs);padding:0 7px;font-size:11.5px;}
+    .btn.sm{height:var(--h-sm);padding:0 9px;font-size:12.5px;}
+    .btn.lg{height:var(--h-lg);padding:0 14px;font-size:14px;}
+    .btn.icon{width:var(--h-md);padding:0;}
+    .btn.sm.icon{width:var(--h-sm);}
+    .btn[disabled],.btn.off{opacity:.45;cursor:default;}
+    .bgrp{display:inline-flex;}
+    .bgrp .btn{border-radius:0;margin-left:-1px;}
+    .bgrp .btn:first-child{border-radius:var(--r-ctl) 0 0 var(--r-ctl);margin-left:0;}
+    .bgrp .btn:last-child{border-radius:0 var(--r-ctl) var(--r-ctl) 0;}
+
+    .fld{display:flex;align-items:center;gap:7px;height:var(--h-md);padding:0 10px;
+      border:1px solid var(--line-strong);border-radius:var(--r-ctl);background:var(--surface);
+      font-size:var(--fs);color:var(--ink);min-width:0;}
+    .fld.foc{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+    .fld.bad{border-color:var(--crit);box-shadow:0 0 0 3px var(--crit-bg);}
+    .fld .ph{color:var(--subtle);}
+    .fld .pre{color:var(--muted);font-family:var(--mono);font-size:12px;flex:none;}
+    .lab{display:flex;flex-direction:column;gap:5px;}
+    .lab > span{font:500 12px/1.3 var(--sans);color:var(--ink);}
+    .hint{font-size:11.5px;color:var(--muted);}
+    .hint.bad{color:var(--crit);}
+
+    .pill{display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;
+      border-radius:999px;font:500 11px/1 var(--sans);border:1px solid var(--line);
+      background:var(--wash);color:var(--muted);white-space:nowrap;}
+    .pill.ok{background:var(--ok-bg);border-color:var(--ok-line);color:var(--books);}
+    .pill.warn{background:var(--warn-bg);border-color:var(--warn-line);color:var(--maint);}
+    .pill.crit{background:var(--crit-bg);border-color:var(--crit-line);color:var(--crit);}
+    .pill.acc{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);}
+    .pill .dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex:none;}
+    .pill.hollow .dot{background:transparent;border:1.5px solid currentColor;width:7px;height:7px;}
+    .cnt{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+      padding:0 5px;border-radius:999px;background:var(--sunken);color:var(--muted);
+      font:500 11px/1 var(--mono);}
+    .cnt.urgent{background:var(--crit);color:#fff;}
+    .kbd{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;
+      padding:0 4px;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;
+      background:var(--surface);font:500 10.5px/1 var(--mono);color:var(--muted);}
+
+    /* ══ identity ══ */
+    .av{position:relative;flex:none;display:inline-block;border-radius:50%;overflow:hidden;
+      background:var(--sunken);}
+    .av svg{display:block;width:100%;height:100%;}
+    .av-16{width:16px;height:16px}.av-20{width:20px;height:20px}.av-24{width:24px;height:24px}
+    .av-32{width:32px;height:32px}.av-40{width:40px;height:40px}.av-64{width:64px;height:64px}
+    .av.ent{border-radius:6px;}
+    .av-40.ent,.av-64.ent{border-radius:8px;}
+    .av.ent .mk{width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+      font:600 11px/1 var(--sans);color:#fff;}
+    .av-32.ent .mk{font-size:12px}.av-40.ent .mk{font-size:13px}.av-64.ent .mk{font-size:20px}
+    .avw{position:relative;flex:none;display:inline-block;line-height:0;}
+    .pres{position:absolute;right:-1px;bottom:-1px;border-radius:50%;border:2px solid var(--surface);}
+    .av-24 + .pres{width:9px;height:9px}
+    .av-32 + .pres{width:11px;height:11px}
+    .av-40 + .pres{width:13px;height:13px}
+    .p-on{background:var(--books)}.p-away{background:var(--maint)}
+    .p-busy{background:var(--crit)}.p-off{background:var(--subtle)}
+    .avg{display:inline-flex;align-items:center;}
+    .avg .avw,.avg > .av{margin-left:-7px;box-shadow:0 0 0 2px var(--surface);}
+    .avg .avw:first-child,.avg > .av:first-child{margin-left:0;}
+    .avg .more{display:inline-flex;align-items:center;justify-content:center;background:var(--sunken);
+      color:var(--muted);font:500 10px/1 var(--mono);border-radius:50%;}
+    .idn{display:flex;align-items:center;gap:8px;min-width:0;}
+    .idn-t{min-width:0;display:flex;flex-direction:column;gap:1px;}
+    .idn-n{font:500 var(--fs)/1.3 var(--sans);color:var(--ink);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .idn-s{font:400 11px/1.3 var(--sans);color:var(--muted);white-space:nowrap;overflow:hidden;
+      text-overflow:ellipsis;}
+    .idn.in{gap:6px;}
+    .idn.lg{gap:12px;}
+    .idn.lg .idn-n{font:600 15px/1.3 var(--sans);}
+    .idn.lg .idn-s{font-size:12px;}
+    .idn.xl{gap:14px;}
+    .idn.xl .idn-n{font:600 20px/1.25 var(--sans);letter-spacing:-.015em;}
+    .idn.xl .idn-s{font-size:13px;}
+    .rchip{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px 0 3px;
+      border-radius:999px;border:1px solid var(--line);background:var(--surface);
+      font:500 12px/1 var(--sans);color:var(--ink);}
+
+    /* ══ table ══ */
+    table.d{width:100%;border-collapse:collapse;font-size:var(--fs);}
+    table.d th{text-align:left;font:500 10.5px/1.3 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;color:var(--subtle);padding:0 var(--pad) 7px;
+      border-bottom:1px solid var(--line);white-space:nowrap;}
+    table.d td{padding:0 var(--pad);height:var(--row);border-bottom:1px solid var(--hairline);
+      vertical-align:middle;}
+    table.d tbody tr:last-child td{border-bottom:0;}
+    table.d tr.hov td{background:var(--wash);}
+    table.d tr.sel td{background:var(--accent-soft);}
+    table.d .r{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;
+      font-size:12px;}
+    table.d th.r{text-align:right;}
+    table.d tr.grp-row td{background:var(--wash);font:500 11px/1 var(--sans);
+      letter-spacing:.05em;text-transform:uppercase;color:var(--muted);height:26px;}
+    table.d tfoot td{height:var(--row);font-weight:600;border-top:1px solid var(--line-strong);
+      border-bottom:0;background:var(--surface);}
+
+    /* ══ rows, cards ══ */
+    .lrow{display:flex;align-items:center;gap:10px;padding:7px var(--pad);
+      border-bottom:1px solid var(--hairline);}
+    .lrow:last-child{border-bottom:0;}
+    .lrow .tail{margin-left:auto;display:flex;align-items:center;gap:8px;flex:none;}
+    .kard{border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);
+      padding:13px;display:flex;flex-direction:column;gap:10px;}
+    .meta{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:12px;}
+    .meta dt{font:500 10.5px/1.5 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .meta dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:12px;}
+    .stat{display:flex;flex-direction:column;gap:3px;}
+    .stat b{font:600 24px/1.1 var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em;}
+    .stat span{font:500 10.5px/1.3 var(--sans);letter-spacing:.06em;text-transform:uppercase;
+      color:var(--subtle);}
+    .bar{height:5px;border-radius:999px;background:var(--sunken);overflow:hidden;}
+    .bar i{display:block;height:100%;background:var(--accent);}
+
+    /* ══ sheet-local: icon primitives ══ */
+    .ic{display:inline-block;flex:none;line-height:0;}
+    .ic svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.4;
+      stroke-linecap:round;stroke-linejoin:round;}
+    .ic-12{width:12px;height:12px;}  .ic-12 svg{stroke-width:1.85;}
+    .ic-14{width:14px;height:14px;}  .ic-14 svg{stroke-width:1.6;}
+    .ic-16{width:16px;height:16px;}
+    .ic-20{width:20px;height:20px;}  .ic-20 svg{stroke-width:1.12;}
+
+    /* ══ sheet-local: the two icon widths the kit does not carry ══ */
+    .btn.xs.icon{width:var(--h-xs);}
+    .btn.lg.icon{width:var(--h-lg);}
+
+    /* ══ sheet-local: static proxies for :hover / :focus-visible / :active ══ */
+    .btn.hov{background:var(--wash);}
+    .btn.solid.hov{background:var(--accent-ink);}
+    .btn.soft.hov{background:var(--accent-line);}
+    .btn.ghost.hov{background:var(--wash);color:var(--ink);}
+    .btn.danger.hov{box-shadow:inset 0 0 0 99px rgba(11,12,20,.16);}
+    .btn.foc{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+    .btn.solid.foc{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent);}
+    .btn.soft.foc{border-color:var(--accent);}
+    .btn.ghost.foc{border-color:var(--accent);background:var(--wash);color:var(--ink);}
+    .btn.danger.foc{border-color:var(--crit);box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--crit);}
+    .btn.act{background:var(--sunken);box-shadow:inset 0 1px 2px rgba(11,12,20,.10);}
+    .btn.solid.act{background:var(--accent-ink);box-shadow:inset 0 1px 3px rgba(11,12,20,.24);}
+    .btn.soft.act{background:var(--accent-line);box-shadow:inset 0 1px 2px rgba(11,12,20,.10);}
+    .btn.danger.act{box-shadow:inset 0 0 0 99px rgba(11,12,20,.24),inset 0 1px 3px rgba(11,12,20,.24);}
+    .btn.wait{cursor:default;}
+    .btn.on{position:relative;z-index:1;background:var(--accent-soft);border-color:var(--accent-line);
+      color:var(--accent-ink);}
+    .spin{width:12px;height:12px;flex:none;border-radius:50%;border:1.6px solid currentColor;
+      border-right-color:transparent;opacity:.9;animation:cspin .7s linear infinite;}
+    @keyframes cspin{to{transform:rotate(360deg)}}
+
+    /* ══ sheet-local: the matrices ══ */
+    .mx{display:grid;gap:1px;background:var(--line);}
+    .mx > div{background:var(--surface);display:flex;align-items:center;padding:13px 14px;min-width:0;}
+    .mx .hd{background:var(--wash);padding:9px 14px;font:500 10.5px/1.3 var(--sans);
+      letter-spacing:.07em;text-transform:uppercase;color:var(--subtle);align-items:flex-end;}
+    .mx .vh{flex-direction:column;align-items:flex-start;gap:2px;background:var(--wash);}
+    .mx .vh b{font:500 12.5px/1.3 var(--sans);color:var(--ink);}
+    .mx .vh code{font:400 11px/1.3 var(--mono);color:var(--muted);}
+    .stk{display:flex;flex-direction:column;gap:6px;align-items:flex-start;}
+    .stk em{font-style:normal;font:400 11px/1.3 var(--sans);color:var(--muted);}
+    .dd{display:flex;align-items:center;gap:6px;font:500 10.5px/1 var(--sans);letter-spacing:.07em;
+      text-transform:uppercase;}
+    .dd.yes{color:var(--books);}
+    .dd.no{color:var(--crit);}
+  </style>
+</helmet>
+<div class="sheet" style="width:1240px;background:var(--ground)">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+ <symbol id="i-chevron-right" viewBox="0 0 16 16"><path d="M6 3.4 10.6 8 6 12.6"></path></symbol>
+ <symbol id="i-chevron-down" viewBox="0 0 16 16"><path d="M3.4 6 8 10.6 12.6 6"></path></symbol>
+ <symbol id="i-chevron-left" viewBox="0 0 16 16"><path d="M10 3.4 5.4 8 10 12.6"></path></symbol>
+ <symbol id="i-chevron-up" viewBox="0 0 16 16"><path d="M3.4 10 8 5.4 12.6 10"></path></symbol>
+ <symbol id="i-search" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.3"></circle><path d="M10.2 10.2 13.6 13.6"></path></symbol>
+ <symbol id="i-filter" viewBox="0 0 16 16"><path d="M2.4 3.4h11.2L9.2 8.6v4.3L6.8 14.1V8.6Z"></path></symbol>
+ <symbol id="i-sort" viewBox="0 0 16 16"><path d="M2.8 4.4h10.4M2.8 8h6.8M2.8 11.6h3.6"></path></symbol>
+ <symbol id="i-menu" viewBox="0 0 16 16"><path d="M2.4 4.4h11.2M2.4 8h11.2M2.4 11.6h11.2"></path></symbol>
+ <symbol id="i-close" viewBox="0 0 16 16"><path d="M4.1 4.1 11.9 11.9M11.9 4.1 4.1 11.9"></path></symbol>
+ <symbol id="i-plus" viewBox="0 0 16 16"><path d="M8 3.2v9.6M3.2 8h9.6"></path></symbol>
+ <symbol id="i-more" viewBox="0 0 16 16"><circle cx="3.5" cy="8" r="1.15" fill="currentColor" stroke="none"></circle><circle cx="8" cy="8" r="1.15" fill="currentColor" stroke="none"></circle><circle cx="12.5" cy="8" r="1.15" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-customer" viewBox="0 0 16 16"><circle cx="8" cy="5.5" r="2.8"></circle><path d="M2.9 13.6c0-2.9 2.3-4.6 5.1-4.6s5.1 1.7 5.1 4.6"></path></symbol>
+ <symbol id="i-supplier" viewBox="0 0 16 16"><path d="M1.4 4.3h7.5v6.8H1.4zM8.9 6.7h2.8l2 2.2v2.2H8.9"></path><circle cx="4.4" cy="12.3" r="1.3"></circle><circle cx="11.3" cy="12.3" r="1.3"></circle></symbol>
+ <symbol id="i-invoice" viewBox="0 0 16 16"><path d="M3.4 1.7h6.1l3.1 3.1v9.5H3.4Z"></path><path d="M9.5 1.7v3.1h3.1"></path><path d="M5.7 8.4h4.6M5.7 11h3"></path></symbol>
+ <symbol id="i-receipt" viewBox="0 0 16 16"><path d="M3.3 1.7h9.4v12.6l-1.6-1.1-1.6 1.1-1.5-1.1-1.6 1.1-1.5-1.1-1.6 1.1Z"></path><path d="M5.9 5.3h4.2M5.9 8.1h4.2"></path></symbol>
+ <symbol id="i-journal" viewBox="0 0 16 16"><path d="M8 4.5C7.1 3.2 5.5 2.6 2.8 2.6v8.8c2.7 0 4.3.6 5.2 1.9.9-1.3 2.5-1.9 5.2-1.9V2.6c-2.7 0-4.3.6-5.2 1.9Z"></path><path d="M8 4.5v8.8"></path></symbol>
+ <symbol id="i-stock" viewBox="0 0 16 16"><path d="M8 1.8 14 5v6l-6 3.2L2 11V5Z"></path><path d="M2 5l6 3.2L14 5M8 8.2v6"></path></symbol>
+ <symbol id="i-branch" viewBox="0 0 16 16"><path d="M1.9 13.8h12.2M3.9 13.8V2.9h8.2v10.9"></path><path d="M6.1 5.6h1.3M8.6 5.6h1.3M6.1 8.2h1.3M8.6 8.2h1.3"></path><path d="M6.9 13.8v-2.7h2.2v2.7"></path></symbol>
+ <symbol id="i-till" viewBox="0 0 16 16"><path d="M4.4 2.2h7.2v3.4H4.4z"></path><path d="M1.9 7.4h12.2v6.4H1.9z"></path><path d="M6.2 10.6h3.6"></path></symbol>
+ <symbol id="i-device" viewBox="0 0 16 16"><path d="M4.2 1.7h7.6v12.6H4.2Z"></path><path d="M6.7 3.7h2.6M6.6 12.3h2.8"></path></symbol>
+ <symbol id="i-edit" viewBox="0 0 16 16"><path d="M11.1 2.2 13.8 4.9l-8 8-3.6.9.9-3.6Z"></path><path d="M9.6 3.7l2.7 2.7"></path></symbol>
+ <symbol id="i-delete" viewBox="0 0 16 16"><path d="M2.6 4.3h10.8"></path><path d="M6.1 4.3V2.6h3.8v1.7"></path><path d="M4.1 4.3l.7 9.4h6.4l.7-9.4"></path><path d="M6.5 6.8v4.4M9.5 6.8v4.4"></path></symbol>
+ <symbol id="i-export" viewBox="0 0 16 16"><path d="M2.6 10.1v3.3h10.8v-3.3"></path><path d="M8 2.4v7.1"></path><path d="M5.3 5.1 8 2.4l2.7 2.7"></path></symbol>
+ <symbol id="i-print" viewBox="0 0 16 16"><path d="M4.3 6.1V2.4h7.4v3.7"></path><path d="M4.3 11.5H2.4V7.1h11.2v4.4h-1.9"></path><path d="M4.3 9.5h7.4v4.1H4.3z"></path><circle cx="11.7" cy="8.8" r=".75" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-attach" viewBox="0 0 16 16"><path d="M10.9 7.3 6.8 11.4a2.4 2.4 0 0 1-3.4-3.4l5.2-5.2a1.7 1.7 0 0 1 2.4 2.4l-5.2 5.2a.85.85 0 0 1-1.2-1.2l4.6-4.6"></path></symbol>
+ <symbol id="i-approve" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M5.4 8.2 7.2 10l3.5-3.9"></path></symbol>
+ <symbol id="i-reject" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M6 6 10 10M10 6 6 10"></path></symbol>
+ <symbol id="i-refresh" viewBox="0 0 16 16"><path d="M13.2 7.4a5.2 5.2 0 0 0-8.9-2.8L2.8 6.1"></path><path d="M6.1 6.1H2.8V2.8"></path><path d="M2.8 8.6a5.2 5.2 0 0 0 8.9 2.8l1.5-1.5"></path><path d="M9.9 9.9h3.3v3.3"></path></symbol>
+ <symbol id="i-lock" viewBox="0 0 16 16"><path d="M3.5 7.1h9v6.4h-9z"></path><path d="M5.5 7.1V5.2a2.5 2.5 0 0 1 5 0v1.9"></path><circle cx="8" cy="10.3" r=".95" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-clock" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M8 4.6v3.6l2.5 1.5"></path></symbol>
+ <symbol id="i-warning" viewBox="0 0 16 16"><path d="M8 2.2 14.4 13.4H1.6Z"></path><path d="M8 6.4v3.2"></path><circle cx="8" cy="11.5" r=".8" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-info" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.7"></circle><path d="M8 7.4v3.7"></path><circle cx="8" cy="5.1" r=".8" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-offline" viewBox="0 0 16 16"><path d="M4.9 12.4h6.4a2.6 2.6 0 0 0 .3-5.2 3.9 3.9 0 0 0-6.9-1.4"></path><path d="M4.3 6.8a2.8 2.8 0 0 0 .6 5.6"></path><path d="M2.2 2.2 13.8 13.8"></path></symbol>
+ <symbol id="i-sync" viewBox="0 0 16 16"><path d="M12.9 5.6a5.2 5.2 0 0 0-9.4.6"></path><path d="M6.6 6.2H3.3V2.9"></path><path d="M3.1 10.4a5.2 5.2 0 0 0 9.4-.6"></path><path d="M9.4 9.8h3.3v3.3"></path><circle cx="8" cy="8" r="1.1" fill="currentColor" stroke="none"></circle></symbol>
+ <symbol id="i-arrow-right" viewBox="0 0 16 16"><path d="M2.6 8h10.8"></path><path d="M9.6 4.2 13.4 8l-3.8 3.8"></path></symbol>
+</defs></svg>
+
+  <div class="sheet-h">
+    <h2>Buttons</h2>
+    <span class="sub">Five variants · four heights · one accent, spent once</span>
+    <span class="tag">Sheet 04</span>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">The matrix — variant down, size across</span>
+    <div class="panel">
+      <div class="mx" style="grid-template-columns:190px repeat(4,minmax(0,1fr))">
+        <div class="hd">Variant</div>
+        <div class="hd">xs · 22</div>
+        <div class="hd">sm · 26</div>
+        <div class="hd">md · 30 · default</div>
+        <div class="hd">lg · 36</div>
+
+        <div class="vh"><b>Solid</b><code>.btn.solid</code></div>
+        <div><button class="btn solid xs" type="button">Post</button></div>
+        <div><button class="btn solid sm" type="button">Post</button></div>
+        <div><button class="btn solid" type="button">Post</button></div>
+        <div><button class="btn solid lg" type="button">Post</button></div>
+
+        <div class="vh"><b>Soft</b><code>.btn.soft</code></div>
+        <div><button class="btn soft xs" type="button">Approve</button></div>
+        <div><button class="btn soft sm" type="button">Approve</button></div>
+        <div><button class="btn soft" type="button">Approve</button></div>
+        <div><button class="btn soft lg" type="button">Approve</button></div>
+
+        <div class="vh"><b>Outline</b><code>.btn</code></div>
+        <div><button class="btn xs" type="button">Export</button></div>
+        <div><button class="btn sm" type="button">Export</button></div>
+        <div><button class="btn" type="button">Export</button></div>
+        <div><button class="btn lg" type="button">Export</button></div>
+
+        <div class="vh"><b>Ghost</b><code>.btn.ghost</code></div>
+        <div><button class="btn ghost xs" type="button">Hold sale</button></div>
+        <div><button class="btn ghost sm" type="button">Hold sale</button></div>
+        <div><button class="btn ghost" type="button">Hold sale</button></div>
+        <div><button class="btn ghost lg" type="button">Hold sale</button></div>
+
+        <div class="vh"><b>Danger</b><code>.btn.danger</code></div>
+        <div><button class="btn danger xs" type="button">Write off</button></div>
+        <div><button class="btn danger sm" type="button">Write off</button></div>
+        <div><button class="btn danger" type="button">Write off</button></div>
+        <div><button class="btn danger lg" type="button">Write off</button></div>
+      </div>
+    </div>
+    <p class="note">Outline is the workhorse and carries no class of its own — a plain <span class="mono">.btn</span> is already the right answer for most actions. Soft exists for the second-most-important action on a screen that has already spent its accent, and never appears beside a solid button.</p>
+  </div>
+
+  <div class="cols" style="grid-template-columns:1fr 1fr">
+    <div class="grp">
+      <span class="grp-l">Anatomy — what each size is for</span>
+      <div class="panel">
+        <table class="d">
+          <thead>
+            <tr><th style="width:52px">Size</th><th class="r">H</th><th class="r">Pad</th><th class="r">Text</th><th class="r">Icon</th><th>Where</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mono">xs</td><td class="r">22</td><td class="r">7</td><td class="r">11.5</td><td class="r">12</td><td>Inside a 32px table row</td></tr>
+            <tr><td class="mono">sm</td><td class="r">26</td><td class="r">9</td><td class="r">12.5</td><td class="r">14</td><td>Panel headers, toolbars</td></tr>
+            <tr class="sel"><td class="mono">md</td><td class="r">30</td><td class="r">11</td><td class="r">13</td><td class="r">16</td><td>Default — page and form actions</td></tr>
+            <tr><td class="mono">lg</td><td class="r">36</td><td class="r">14</td><td class="r">14</td><td class="r">16</td><td>Till, empty states, one decisive act</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Gap between icon and label is 6px at every size — the label moves, the gap does not. Radius stays 6px throughout; a large button is not a rounder button.</p>
+    </div>
+    <div class="grp">
+      <span class="grp-l">Icons in buttons</span>
+      <div class="panel">
+        <div class="panel-b" style="display:flex;flex-direction:column;gap:14px">
+          <div class="rowset" style="gap:8px">
+            <button class="btn xs icon" type="button" aria-label="Edit"><span class="ic ic-12"><svg><use href="#i-edit"></use></svg></span></button>
+            <button class="btn sm icon" type="button" aria-label="Print"><span class="ic ic-14"><svg><use href="#i-print"></use></svg></span></button>
+            <button class="btn icon" type="button" aria-label="Refresh"><span class="ic ic-16"><svg><use href="#i-refresh"></use></svg></span></button>
+            <button class="btn lg icon" type="button" aria-label="Attach"><span class="ic ic-16"><svg><use href="#i-attach"></use></svg></span></button>
+            <button class="btn ghost icon" type="button" aria-label="More"><span class="ic ic-16"><svg><use href="#i-more"></use></svg></span></button>
+            <button class="btn danger icon" type="button" aria-label="Delete"><span class="ic ic-16"><svg><use href="#i-delete"></use></svg></span></button>
+          </div>
+          <div class="rowset" style="gap:8px">
+            <button class="btn" type="button"><span class="ic ic-16"><svg><use href="#i-plus"></use></svg></span>New invoice</button>
+            <button class="btn" type="button"><span class="ic ic-16"><svg><use href="#i-export"></use></svg></span>Export</button>
+            <button class="btn" type="button">Branch<span class="ic ic-14"><svg><use href="#i-chevron-down"></use></svg></span></button>
+            <button class="btn ghost" type="button">All journals<span class="ic ic-14"><svg><use href="#i-chevron-right"></use></svg></span></button>
+          </div>
+          <div class="rowset" style="gap:8px">
+            <button class="btn" type="button"><span class="ic ic-16"><svg><use href="#i-warning"></use></svg></span>Needs approval<span class="cnt urgent">11</span></button>
+            <button class="btn solid" type="button">Post<span class="kbd" style="border-color:var(--accent-ink);background:transparent;color:#fff">&#8984;</span><span class="kbd" style="border-color:var(--accent-ink);background:transparent;color:#fff">&#8629;</span></button>
+            <button class="btn" type="button"><span class="ic ic-16"><svg><use href="#i-lock"></use></svg></span>Close off period</button>
+          </div>
+        </div>
+      </div>
+      <p class="note">A leading icon names the action. A trailing chevron says the button opens something else — a menu below, a screen to the right — and is drawn 14px so it stays subordinate to the label.</p>
+    </div>
+  </div>
+
+  <div class="cols" style="grid-template-columns:1fr 1fr 1fr">
+    <div class="grp">
+      <span class="grp-l">Groups — 2-up and 3-up</span>
+      <div class="panel">
+        <div class="panel-b" style="display:flex;flex-direction:column;gap:12px">
+          <div class="bgrp">
+            <button class="btn" type="button"><span class="ic ic-16"><svg><use href="#i-approve"></use></svg></span>Approve</button>
+            <button class="btn" type="button"><span class="ic ic-16"><svg><use href="#i-reject"></use></svg></span>Reject</button>
+          </div>
+          <div class="bgrp">
+            <button class="btn sm" type="button"><span class="ic ic-14"><svg><use href="#i-export"></use></svg></span>Export</button>
+            <button class="btn sm" type="button"><span class="ic ic-14"><svg><use href="#i-print"></use></svg></span>Print</button>
+            <button class="btn sm icon" type="button" aria-label="More"><span class="ic ic-14"><svg><use href="#i-more"></use></svg></span></button>
+          </div>
+          <div class="bgrp">
+            <button class="btn sm icon" type="button" aria-label="Previous period"><span class="ic ic-14"><svg><use href="#i-chevron-left"></use></svg></span></button>
+            <button class="btn sm" type="button" style="min-width:118px"><span class="mono" style="font-size:12px">Aug 2026</span></button>
+            <button class="btn sm icon" type="button" aria-label="Next period"><span class="ic ic-14"><svg><use href="#i-chevron-right"></use></svg></span></button>
+          </div>
+        </div>
+      </div>
+      <p class="note">Two or more buttons that act on the same object join into one <span class="mono">.bgrp</span>. Loose buttons in a row mean the actions are unrelated.</p>
+    </div>
+    <div class="grp">
+      <span class="grp-l">Segmented filter — counts belong in the control</span>
+      <div class="panel">
+        <div class="panel-b" style="display:flex;flex-direction:column;gap:12px">
+          <div class="bgrp">
+            <button class="btn sm on" type="button">All<span class="cnt">78</span></button>
+            <button class="btn sm" type="button">Failing<span class="cnt">11</span></button>
+            <button class="btn sm" type="button">Compliant<span class="cnt">67</span></button>
+          </div>
+          <div class="bgrp">
+            <button class="btn sm" type="button">All<span class="cnt">78</span></button>
+            <button class="btn sm on" type="button">Failing<span class="cnt urgent">11</span></button>
+            <button class="btn sm" type="button">Compliant<span class="cnt">67</span></button>
+          </div>
+          <div class="bgrp">
+            <button class="btn xs on" type="button">Posted</button>
+            <button class="btn xs" type="button">Draft</button>
+            <button class="btn xs" type="button">Queued</button>
+          </div>
+        </div>
+      </div>
+      <p class="note">ITF263 across 78 customers. The selected segment takes the soft accent, never the solid — a filter is a view, not a decision, and the counts must add up to the "All" segment or the filter is lying.</p>
+    </div>
+    <div class="grp">
+      <span class="grp-l">Split button</span>
+      <div class="panel">
+        <div class="panel-b" style="display:flex;flex-direction:column;gap:12px">
+          <div class="bgrp">
+            <button class="btn solid" type="button">Close the till</button>
+            <button class="btn solid icon" type="button" aria-label="Other closing actions"><span class="ic ic-14"><svg><use href="#i-chevron-down"></use></svg></span></button>
+          </div>
+          <div class="bgrp">
+            <button class="btn" type="button"><span class="ic ic-16"><svg><use href="#i-export"></use></svg></span>Export VAT7</button>
+            <button class="btn icon" type="button" aria-label="Other formats"><span class="ic ic-14"><svg><use href="#i-chevron-down"></use></svg></span></button>
+          </div>
+          <div class="bgrp">
+            <button class="btn sm" type="button">Save draft</button>
+            <button class="btn sm icon" type="button" aria-label="Other save actions"><span class="ic ic-14"><svg><use href="#i-chevron-down"></use></svg></span></button>
+          </div>
+        </div>
+      </div>
+      <p class="note">The left half does the thing named on it without asking. The chevron half opens the variants — close and print, close and hold over, close without a Z-read.</p>
+    </div>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">States — every variant, every state</span>
+    <div class="panel">
+      <div class="mx" style="grid-template-columns:150px repeat(5,minmax(0,1fr))">
+        <div class="hd">State</div>
+        <div class="hd">Solid</div>
+        <div class="hd">Soft</div>
+        <div class="hd">Outline</div>
+        <div class="hd">Ghost</div>
+        <div class="hd">Danger</div>
+
+        <div class="vh"><b>Default</b><code>rest</code></div>
+        <div><button class="btn solid" type="button">Post</button></div>
+        <div><button class="btn soft" type="button">Approve</button></div>
+        <div><button class="btn" type="button">Export</button></div>
+        <div><button class="btn ghost" type="button">Hold sale</button></div>
+        <div><button class="btn danger" type="button">Write off</button></div>
+
+        <div class="vh"><b>Hover</b><code>:hover</code></div>
+        <div><button class="btn solid hov" type="button">Post</button></div>
+        <div><button class="btn soft hov" type="button">Approve</button></div>
+        <div><button class="btn hov" type="button">Export</button></div>
+        <div><button class="btn ghost hov" type="button">Hold sale</button></div>
+        <div><button class="btn danger hov" type="button">Write off</button></div>
+
+        <div class="vh"><b>Focus</b><code>:focus-visible</code></div>
+        <div><button class="btn solid foc" type="button">Post</button></div>
+        <div><button class="btn soft foc" type="button">Approve</button></div>
+        <div><button class="btn foc" type="button">Export</button></div>
+        <div><button class="btn ghost foc" type="button">Hold sale</button></div>
+        <div><button class="btn danger foc" type="button">Write off</button></div>
+
+        <div class="vh"><b>Active</b><code>:active</code></div>
+        <div><button class="btn solid act" type="button">Post</button></div>
+        <div><button class="btn soft act" type="button">Approve</button></div>
+        <div><button class="btn act" type="button">Export</button></div>
+        <div><button class="btn ghost act" type="button">Hold sale</button></div>
+        <div><button class="btn danger act" type="button">Write off</button></div>
+
+        <div class="vh"><b>Disabled</b><code>[disabled]</code></div>
+        <div><button class="btn solid" type="button" disabled>Post</button></div>
+        <div><button class="btn soft" type="button" disabled>Approve</button></div>
+        <div><button class="btn" type="button" disabled>Export</button></div>
+        <div><button class="btn ghost" type="button" disabled>Hold sale</button></div>
+        <div><button class="btn danger" type="button" disabled>Write off</button></div>
+
+        <div class="vh"><b>Loading</b><code>.wait</code></div>
+        <div><button class="btn solid wait" type="button"><span class="spin"></span>Posting</button></div>
+        <div><button class="btn soft wait" type="button"><span class="spin"></span>Approving</button></div>
+        <div><button class="btn wait" type="button"><span class="spin"></span>Exporting</button></div>
+        <div><button class="btn ghost wait" type="button"><span class="spin"></span>Holding</button></div>
+        <div><button class="btn danger wait" type="button"><span class="spin"></span>Writing off</button></div>
+      </div>
+    </div>
+    <div class="cols" style="grid-template-columns:1fr 1fr">
+      <p class="note">The focus ring is 3px of accent-soft on a bordered button, and 2px of surface then 2px of the button's own hue on a filled one — so it reads on white, on blue and on red without a second token. It is never suppressed, and a keyboard-only user must be able to reach Post.</p>
+      <p class="note">Loading keeps the label and its width — the spinner replaces the icon, the verb turns present-continuous, and the button stays exactly as wide as it was. A button that shrinks mid-post moves everything beside it.</p>
+    </div>
+  </div>
+
+  <div class="cols" style="grid-template-columns:1fr 1fr">
+    <div class="grp">
+      <span class="grp-l">Disabled needs a reason</span>
+      <div class="panel">
+        <div class="panel-b" style="display:flex;flex-direction:column;gap:14px">
+          <div class="stk">
+            <button class="btn solid" type="button" disabled>Post</button>
+            <em>Journal <span class="mono">JNL-88214</span> is out of balance by <span class="mono">US$ 0.40</span>.</em>
+          </div>
+          <div class="stk">
+            <button class="btn" type="button" disabled><span class="ic ic-16"><svg><use href="#i-export"></use></svg></span>Export VAT7</button>
+            <em>The period is still open. Close off August before filing.</em>
+          </div>
+          <div class="stk">
+            <button class="btn danger" type="button" disabled>Write off</button>
+            <em>Only Rutendo Chiweshe can write off above <span class="mono">US$ 1,000.00</span>.</em>
+          </div>
+        </div>
+      </div>
+      <p class="note">A disabled button always sits above the sentence that would un-disable it. Without it the person has no move left, and the interface has said no without saying why.</p>
+    </div>
+    <div class="grp">
+      <span class="grp-l">Destructive confirm</span>
+      <div class="panel" style="box-shadow:var(--shadow-pop)">
+        <div class="panel-h">Write off balance<span class="rt"><span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-close"></use></svg></span></span></div>
+        <div class="panel-b" style="display:flex;flex-direction:column;gap:13px">
+          <div class="idn">
+            <span class="av av-32 ent" style="background:var(--sell)"><span class="mk">HM</span></span>
+            <span class="idn-t"><span class="idn-n">Huchu Mine</span><span class="idn-s mono">ACC-0188 · Mutare depot</span></span>
+            <span class="tail" style="margin-left:auto"><span class="mono" style="font-size:13px">US$ 1,240.00</span></span>
+          </div>
+          <p class="note" style="max-width:none">Writing off posts <span class="mono">JNL-88215</span> against bad debts and closes the invoice. It cannot be reversed from this screen — only a credit note will undo it.</p>
+          <div class="rowset" style="gap:8px;justify-content:flex-end">
+            <button class="btn ghost" type="button">Cancel</button>
+            <button class="btn danger foc" type="button">Write off US$ 1,240.00</button>
+          </div>
+        </div>
+      </div>
+      <p class="note">The destructive button names the amount it is about to destroy. Its partner is a ghost, not an outline — cancel should be effortless to hit and invisible to scan past.</p>
+    </div>
+  </div>
+
+  <div class="grp">
+    <span class="grp-l">In place — where the accent actually gets spent</span>
+    <div class="panel">
+      <div class="panel-h">
+        <span class="ic ic-14" style="color:var(--subtle)"><svg><use href="#i-journal"></use></svg></span>
+        Journal JNL-88214
+        <span class="rt">
+          <span class="rowset" style="gap:8px">
+            <span class="pill hollow"><span class="dot"></span>Draft</span>
+            <span class="bgrp">
+              <button class="btn sm" type="button"><span class="ic ic-14"><svg><use href="#i-edit"></use></svg></span>Edit</button>
+              <button class="btn sm" type="button"><span class="ic ic-14"><svg><use href="#i-print"></use></svg></span>Print</button>
+              <button class="btn sm icon" type="button" aria-label="More"><span class="ic ic-14"><svg><use href="#i-more"></use></svg></span></button>
+            </span>
+          </span>
+        </span>
+      </div>
+      <div class="panel-b" style="display:flex;align-items:center;gap:14px">
+        <div class="idn">
+          <span class="avw"><span class="av av-24"><svg><use href="#f2"></use></svg></span><span class="pres p-on"></span></span>
+          <span class="idn-t"><span class="idn-n">Tendai Mukamba</span><span class="idn-s">Prepared 09:41 · 6 lines</span></span>
+        </div>
+        <dl class="meta" style="grid-template-columns:auto auto auto auto;gap:2px 14px">
+          <dt>Debits</dt><dd>US$ 12,480.00</dd>
+          <dt>Credits</dt><dd>US$ 12,480.00</dd>
+        </dl>
+        <div class="rowset" style="gap:8px;margin-left:auto">
+          <button class="btn ghost" type="button">Discard</button>
+          <button class="btn" type="button">Save draft</button>
+          <button class="btn solid" type="button">Post</button>
+        </div>
+      </div>
+    </div>
+    <div class="cols" style="grid-template-columns:1fr 1fr">
+      <p class="note">One solid accent button per screen. Everything else is outline or ghost, and on most records the action a person actually came to do is the bordered one — Export, Print, Save draft. The accent is spent once, on the moment that matters: Post, Approve, Close the till. If two solid buttons ever sit together, one of them is not the primary action.</p>
+      <div class="colset" style="gap:9px">
+        <span class="dd yes"><span class="ic ic-14"><svg><use href="#i-approve"></use></svg></span>Discard · Save draft · <b style="font-weight:500;color:var(--ink)">Post</b></span>
+        <span class="dd no"><span class="ic ic-14"><svg><use href="#i-reject"></use></svg></span>Save draft · Post · Approve, all solid</span>
+        <p class="note">Danger is never the resting state of a screen. It appears inside a confirmation the person opened, beside the ghost that backs out of it, and it does not hold focus when that confirmation opens.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>
